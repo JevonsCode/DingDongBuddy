@@ -258,7 +258,7 @@ Future<String> _knowledgeDirectoryText(Directory directory) async {
         }.contains(path.extension(file.path).toLowerCase()),
       )
       .take(30)
-      .toList(growable: false);
+      .toList();
   files.sort((File left, File right) => left.path.compareTo(right.path));
   final StringBuffer output = StringBuffer();
   for (final File file in files) {
