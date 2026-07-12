@@ -1,0 +1,17 @@
+{
+  "app": "DingDong",
+  "latestVersion": "0.4.0",
+  "latestBuild": "2026071101",
+  "publishedAt": "2026-07-11T15:45:39Z",
+  "website": "https://xn--8ovp9s.xn--m8txu.com/DingDong/",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
+  "downloads": {
+    "appleSilicon": "https://github.com/JevonsCode/DingDongBuddy/releases/latest/download/DingDong-0.4.0-apple-silicon.zip",
+    "intel": "https://github.com/JevonsCode/DingDongBuddy/releases/latest/download/DingDong-0.4.0-intel.zip"
+  },
+  "notes": [
+    "Rebuilt Resource Manager with whole-row selection, a scrollable grouped editor, fixed save actions, clearer enabled and pinned controls, and safer destructive actions.",
+    "Added optional HTTP(S) and GitHub file update links so configured Prompt, Skill, MCP, and Knowledge resources can fetch their latest text with one click while failed updates preserve existing content.",
+    "Restored native macOS editing shortcuts in independent windows by scoping panel shortcuts to their owner window and adding standard Edit commands, while retaining reliable playback of the finish sound selected in Settings."
+  ]
+}

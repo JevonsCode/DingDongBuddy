@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: 3.44.6
+          channel: stable
+          cache: true
+      - run: flutter config --enable-macos-desktop
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build macos --release
+      - name: Seal macOS application bundle
+        run: |
+          chmod +x scripts/sign_macos_bundle.sh
+          scripts/sign_macos_bundle.sh \
+            build/macos/Build/Products/Release/DingDong.app \
+            macos/Runner/Release.entitlements
+      - name: Package macOS application
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/macos/Build/Products/Release/DingDong.app \
+            "dist/DingDong-${VERSION}-macos.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DingDong-macos
+          path: dist/*.zip
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: 3.44.6
+          channel: stable
+          cache: true
+      - run: flutter config --enable-windows-desktop
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test --exclude-tags golden
+      - run: flutter build windows --release
+      - name: Package Windows application
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.Substring(1)
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "build/windows/x64/runner/Release/*" -DestinationPath "dist/DingDong-$version-windows-x64.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DingDong-windows
+          path: dist/*.zip
+          if-no-files-found: error
+
+  publish:
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: DingDong-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "DingDong ${GITHUB_REF_NAME#v}" \
+            --generate-notes

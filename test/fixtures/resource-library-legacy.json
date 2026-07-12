@@ -1,0 +1,16 @@
+[
+  {
+    "id": "4CE39B4E-7D2B-4F69-8292-5D76267A7099",
+    "type": "prompt",
+    "group": "Prompts",
+    "title": "Release note writer",
+    "content": "Write concise release notes from this diff.",
+    "tags": ["writing", "release"],
+    "source": "Codex",
+    "updateURL": "https://example.com/release-prompt.md",
+    "pinned": true,
+    "sortOrder": 3,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "updatedAt": "2026-01-02T03:04:05Z"
+  }
+]

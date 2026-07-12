@@ -1,0 +1,38 @@
+name: dingdong
+description: Cross-platform desktop companion for local AI agents.
+publish_to: none
+version: 0.7.0+7
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  desktop_multi_window:
+    path: packages/desktop_multi_window
+  file_selector: ^1.1.0
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  pasteboard: ^0.5.0
+  path: ^1.9.1
+  screen_retriever: ^0.2.2
+  shared_preferences: ^2.5.5
+  sqlite3: ^3.3.4
+  tray_manager:
+    path: packages/tray_manager
+  url_launcher: ^6.3.2
+  window_manager: ^0.5.2
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - Assets/
+    - Assets/Sounds/
+    - Assets/Symbols/
+    - windows/runner/resources/app_icon.ico

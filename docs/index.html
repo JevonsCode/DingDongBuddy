@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DingDong — Clipboard and resource hub for local agents</title>
+    <meta name="description" content="DingDong keeps clipboard history, prompts, skills, MCP references, and knowledge in one local Mac app. Connect every agent through one MCP and hear when a conversation finishes.">
+    <link rel="icon" href="./assets/dingdong-icon.png">
+    <link rel="stylesheet" href="./styles.css?v=20260711-7">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="DingDong home">
+        <img src="./assets/dingdong-icon.png" alt="">
+        <span>DingDong</span>
+      </a>
+
+      <nav aria-label="Primary navigation">
+        <a href="#product" data-i18n="nav.product">Product</a>
+        <a href="#mcp" data-i18n="nav.mcp">MCP</a>
+        <a href="#sounds" data-i18n="nav.sounds">Sounds</a>
+        <a href="#updates" data-i18n="nav.updates">Updates</a>
+        <a href="#download" data-i18n="nav.download">Download</a>
+        <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
+      </nav>
+
+      <div class="language-switch" aria-label="Language">
+        <button class="active" type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="zh">中文</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="product">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="hero.eyebrow">Clipboard · agent library · finish alerts</p>
+          <h1 data-i18n="hero.title">One MCP for clipboard history and every agent resource.</h1>
+          <p class="lede" data-i18n="hero.lede">
+            Find anything you copied and keep prompts, skills, MCP references, and knowledge in one place. Connect each local agent to the same DingDong MCP instead of maintaining the same setup everywhere.
+          </p>
+          <div class="hero-finish-note">
+            <img src="./assets/dingdong-icon.png" alt="">
+            <p data-i18n="hero.finish">Step away while an agent works. DingDong sounds when the conversation is ready for you.</p>
+          </div>
+          <div class="actions">
+            <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="hero.download">Download latest</a>
+            <a class="secondary" href="#mcp" data-i18n="hero.connect">Connect Codex or Claude Code</a>
+          </div>
+        </div>
+
+        <div class="product-stage" aria-label="DingDong product preview">
+          <div class="menu-chip" aria-label="Unread agent notifications">
+            <img src="./assets/dingdong-alert-icon.png" alt="">
+            <span id="demo-count">3</span>
+          </div>
+
+          <div class="demo-window">
+            <div class="demo-title">
+              <img src="./assets/dingdong-icon.png" alt="">
+              <div>
+                <strong>DingDong</strong>
+                <span data-i18n="demo.subtitle">Local agent workspace</span>
+              </div>
+            </div>
+
+            <div class="demo-tabs" role="tablist" aria-label="DingDong views">
+              <button type="button" role="tab" data-demo-tab="today" aria-selected="false" data-i18n="demo.today">Dynamic</button>
+              <button type="button" role="tab" data-demo-tab="library" aria-selected="false" data-i18n="demo.library">Library</button>
+              <button type="button" role="tab" data-demo-tab="clipboard" aria-selected="true" data-i18n="demo.clipboard">Clipboard</button>
+            </div>
+
+            <div class="demo-panel" id="demo-panel" role="tabpanel" aria-live="polite"></div>
+
+            <div class="demo-footer">
+              <span data-i18n="demo.footer">API listening on 127.0.0.1:2333 · ⇧⌘V ready</span>
+            </div>
+          </div>
+
+          <div class="demo-copy-simulator">
+            <div class="demo-copy-sample">
+              <span data-i18n="demo.copySampleLabel">Copy this sample</span>
+              <code id="demo-copy-value">https://github.com/JevonsCode/DingDongBuddy</code>
+            </div>
+            <button type="button" id="demo-copy-action" data-i18n="demo.copy">Copy</button>
+            <p class="demo-feedback" id="demo-feedback" role="status" aria-live="polite" data-i18n="demo.feedback">The copied value will appear at the top of Clipboard.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="principles">
+        <div>
+          <p class="eyebrow" data-i18n="principles.eyebrow">How it works</p>
+          <h2 data-i18n="principles.title">Open the menu bar panel and get back to work.</h2>
+        </div>
+        <div class="principle-grid">
+          <article>
+            <h3 data-i18n="principles.local.title">Stays on your Mac</h3>
+            <p data-i18n="principles.local.body">DingDong listens on 127.0.0.1. The library and clipboard database stay local unless you export or share something.</p>
+          </article>
+          <article>
+            <h3 data-i18n="principles.summary.title">Loads only what is needed</h3>
+            <p data-i18n="principles.summary.body">Agents receive short resource summaries first, then fetch full content by id when a task actually needs it.</p>
+          </article>
+          <article>
+            <h3 data-i18n="principles.quiet.title">Works from the keyboard</h3>
+            <p data-i18n="principles.quiet.body">Search clipboard history, switch tabs, and paste recent items without leaving the app you are working in.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="feature-grid">
+        <article>
+          <h2 data-i18n="features.library.title">Save reusable material</h2>
+          <p data-i18n="features.library.body">Keep prompts, skills, MCP references, and knowledge notes in the Library after you have named or organized them.</p>
+        </article>
+        <article>
+          <h2 data-i18n="features.clipboard.title">Browse recent copies</h2>
+          <p data-i18n="features.clipboard.body">Text, images, links, commands, code, JSON, and paths stay in Clipboard history until you choose to save one as a resource.</p>
+        </article>
+        <article>
+          <h2 data-i18n="features.bridge.title">Connect local agents</h2>
+          <p data-i18n="features.bridge.body">Codex, Claude Code, Cursor, and scripts can read the same DingDong resources through its local API and MCP bridge.</p>
+        </article>
+        <article>
+          <h2 data-i18n="features.notify.title">Hear when work finishes</h2>
+          <p data-i18n="features.notify.body">DingDong plays the selected sound and marks the menu bar icon when an agent finishes or needs your attention.</p>
+        </article>
+      </section>
+
+      <section class="sound-section" id="sounds">
+        <div class="section-heading sound-heading">
+          <p class="eyebrow" data-i18n="sounds.eyebrow">Finish alerts</p>
+          <h2 data-i18n="sounds.title">Hear when a conversation is ready.</h2>
+          <p data-i18n="sounds.body">Let DingDong notify you when an agent finishes, gets blocked, or needs a decision. Work on something else and come back when you hear it.</p>
+        </div>
+
+        <div class="sound-grid" aria-label="DingDong sound previews">
+          <button class="sound-card" type="button" data-audio="./assets/sounds/ding-wood.wav" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.classic">Classic</strong></span>
+            <span data-i18n="sounds.classicBody">Balanced and familiar</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+          <button class="sound-card" type="button" data-audio="./assets/sounds/ding-soft.wav" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.soft">Soft</strong></span>
+            <span data-i18n="sounds.softBody">Gentle for quiet work</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+          <button class="sound-card" type="button" data-audio="./assets/sounds/ding-bright.wav" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.bright">Bright</strong></span>
+            <span data-i18n="sounds.brightBody">Clear from across the room</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+          <button class="sound-card" type="button" data-audio="./assets/sounds/ding-crisp.wav" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.crisp">Crisp</strong></span>
+            <span data-i18n="sounds.crispBody">Short, dry, and direct</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+          <button class="sound-card" type="button" data-audio="./assets/sounds/ding-deep.wav" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.deep">Deep</strong></span>
+            <span data-i18n="sounds.deepBody">Low and easy to notice</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+        </div>
+
+        <div class="sound-custom">
+          <img src="./assets/dingdong-icon.png" alt="">
+          <div>
+            <h3 data-i18n="sounds.customTitle">Choose your own finish sound</h3>
+            <p data-i18n="sounds.customBody">Pick any built-in sound or import your own audio file. Every connected agent uses the sound selected in DingDong Settings.</p>
+          </div>
+          <p id="sound-status" role="status" aria-live="polite" data-i18n="sounds.ready">Choose a sound to preview it</p>
+        </div>
+      </section>
+
+      <section class="mcp-section" id="mcp">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="mcp.eyebrow">Built-in MCP bridge</p>
+          <h2 data-i18n="mcp.title">One MCP connection for every local agent.</h2>
+          <p data-i18n="mcp.body">DingDong serves only the prompts, skills, MCP references, and knowledge you have enabled. Manage the switches once instead of repeating the same setup in every agent.</p>
+        </div>
+
+        <div class="setup-card">
+          <div>
+            <h3 data-i18n="mcp.installTitle">Agent config</h3>
+            <p data-i18n="mcp.installBody">Add this MCP server to Codex or Claude Code after installing DingDong.</p>
+            <ul class="setup-steps">
+              <li data-i18n="mcp.step1">Install DingDong in /Applications.</li>
+              <li data-i18n="mcp.step2">Register the built-in dingdong-mcp binary in your agent MCP config.</li>
+              <li data-i18n="mcp.step3">Keep prompts, skills, and MCP references in DingDong instead of duplicating them in every agent.</li>
+            </ul>
+          </div>
+          <div class="setup-snippets">
+            <pre><code>{
+  "mcpServers": {
+    "dingdong": {
+      "command": "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"
+    }
+  }
+}</code></pre>
+            <pre><code>[mcp_servers.dingdong]
+command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</code></pre>
+          </div>
+        </div>
+
+        <div class="tool-grid" aria-label="DingDong MCP tools">
+          <article><code>dingdong_bridge</code><p data-i18n="tools.bridge">Start here. Returns task-scoped summaries, recommended resources, and privacy rules.</p></article>
+          <article><code>dingdong_search_assets</code><p data-i18n="tools.search">Search prompts, skills, MCP references, notes, and other resources by query and type.</p></article>
+          <article><code>dingdong_get_asset</code><p data-i18n="tools.asset">Fetch one resource by id. Summary mode hides heavy content; full mode is explicit.</p></article>
+          <article><code>dingdong_load_skill</code><p data-i18n="tools.skill">Load a selected skill resource only after an agent decides it is relevant.</p></article>
+          <article><code>dingdong_recommend_mcp</code><p data-i18n="tools.recommend">Find MCP server references that match the current task.</p></article>
+          <article><code>dingdong_install_native_mcp</code><p data-i18n="tools.install">Dry-run or install a stored MCP reference into Codex or Claude Code config.</p></article>
+          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Trigger the DingDong sound, unread badge, and menu bar notification icon.</p></article>
+        </div>
+      </section>
+
+      <section class="api-band">
+        <div>
+          <p class="eyebrow" data-i18n="api.eyebrow">Loopback HTTP API</p>
+          <h2 data-i18n="api.title">The same data is available over local HTTP.</h2>
+          <p data-i18n="api.body">Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.</p>
+        </div>
+        <div class="endpoint-list">
+          <code>/agent/manifest</code>
+          <code>/agent/bridge</code>
+          <code>/agent/prepare</code>
+          <code>/agent/workbench</code>
+          <code>/agent/resource/{id}</code>
+          <code>/clipboard/insights</code>
+          <code>/library</code>
+          <code>/ding</code>
+        </div>
+      </section>
+
+      <section class="release-section" id="updates">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="updates.eyebrow">Latest update</p>
+          <h2 data-i18n="updates.title">DingDong 0.4.0 makes Agent resources easier to edit and keep current.</h2>
+          <p data-i18n="updates.body">Resource Manager now has a clearer editor, configurable update links, and native macOS text editing shortcuts.</p>
+        </div>
+
+        <div class="release-grid">
+          <article>
+            <span class="feature-kicker">0.4.0</span>
+            <h3 data-i18n="updates.dark.title">Resource Manager rebuilt</h3>
+            <p data-i18n="updates.dark.body">Select a whole resource row, edit in a scrollable grouped form, and keep Save actions visible without losing context.</p>
+          </article>
+          <article>
+            <span class="feature-kicker">Updates</span>
+            <h3 data-i18n="updates.performance.title">Fetch the latest resource text</h3>
+            <p data-i18n="updates.performance.body">Add an HTTP(S) file or GitHub file page to a resource, then refresh it with one click while failed downloads keep the previous content.</p>
+          </article>
+          <article>
+            <span class="feature-kicker">macOS</span>
+            <h3 data-i18n="updates.bridge.title">Native editing shortcuts restored</h3>
+            <p data-i18n="updates.bridge.body">Select All, copy, paste, cut, undo, and redo work in resource fields while panel navigation shortcuts stay inside the panel.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="download-section" id="download">
+        <div>
+          <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
+          <h2 data-i18n="download.title">Native macOS builds.</h2>
+          <p data-i18n="download.body">Ad-hoc signed builds are published for Apple Silicon and Intel Macs. macOS may still ask you to approve the app and Accessibility permission for keyboard paste workflows.</p>
+        </div>
+        <div class="download-actions">
+          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest">
+            <strong data-i18n="download.latest">Latest release</strong>
+            <span data-i18n="download.latestHint">Apple Silicon and Intel archives</span>
+          </a>
+          <a class="download-card" href="./dingdong-release.json">
+            <strong data-i18n="download.metadata">Release metadata JSON</strong>
+            <span data-i18n="download.metadataHint">Used by DingDong Settings</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>DingDong</span>
+      <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
+      <a href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="footer.releases">Releases</a>
+      <a href="./dingdong-release.json" data-i18n="footer.metadata">Metadata</a>
+    </footer>
+
+    <script>
+      const copy = {
+        en: {
+          "nav.product": "Product",
+          "nav.mcp": "MCP",
+          "nav.sounds": "Sounds",
+          "nav.updates": "Updates",
+          "nav.download": "Download",
+          "hero.eyebrow": "Clipboard · agent library · finish alerts",
+          "hero.title": "One MCP for clipboard history and every agent resource.",
+          "hero.lede": "Find anything you copied and keep prompts, skills, MCP references, and knowledge in one place. Connect each local agent to the same DingDong MCP instead of maintaining the same setup everywhere.",
+          "hero.finish": "Step away while an agent works. DingDong sounds when the conversation is ready for you.",
+          "hero.download": "Download latest",
+          "hero.connect": "Connect Codex or Claude Code",
+          "demo.subtitle": "Local agent workspace",
+          "demo.today": "Dynamic",
+          "demo.library": "Library",
+          "demo.clipboard": "Clipboard",
+          "demo.copy": "Copy",
+          "demo.copied": "Copied",
+          "demo.copySampleLabel": "Copy this sample",
+          "demo.feedback": "The copied value will appear at the top of Clipboard.",
+          "demo.copySuccess": "Copied. Clipboard now has a new first item.",
+          "demo.footer": "API listening on 127.0.0.1:2333 · ⇧⌘V ready",
+          "principles.eyebrow": "How it works",
+          "principles.title": "Open the menu bar panel and get back to work.",
+          "principles.local.title": "Stays on your Mac",
+          "principles.local.body": "DingDong listens on 127.0.0.1. The library and clipboard database stay local unless you export or share something.",
+          "principles.summary.title": "Loads only what is needed",
+          "principles.summary.body": "Agents receive short resource summaries first, then fetch full content by id when a task actually needs it.",
+          "principles.quiet.title": "Works from the keyboard",
+          "principles.quiet.body": "Search clipboard history, switch tabs, and paste recent items without leaving the app you are working in.",
+          "features.library.title": "Save reusable material",
+          "features.library.body": "Keep prompts, skills, MCP references, and knowledge notes in the Library after you have named or organized them.",
+          "features.clipboard.title": "Browse recent copies",
+          "features.clipboard.body": "Text, images, links, commands, code, JSON, and paths stay in Clipboard history until you choose to save one as a resource.",
+          "features.bridge.title": "Connect local agents",
+          "features.bridge.body": "Codex, Claude Code, Cursor, and scripts can read the same DingDong resources through its local API and MCP bridge.",
+          "features.notify.title": "Hear when work finishes",
+          "features.notify.body": "DingDong plays the selected sound and marks the menu bar icon when an agent finishes or needs your attention.",
+          "sounds.eyebrow": "Finish alerts",
+          "sounds.title": "Hear when a conversation is ready.",
+          "sounds.body": "Let DingDong notify you when an agent finishes, gets blocked, or needs a decision. Work on something else and come back when you hear it.",
+          "sounds.classic": "Classic",
+          "sounds.classicBody": "Balanced and familiar",
+          "sounds.soft": "Soft",
+          "sounds.softBody": "Gentle for quiet work",
+          "sounds.bright": "Bright",
+          "sounds.brightBody": "Clear from across the room",
+          "sounds.crisp": "Crisp",
+          "sounds.crispBody": "Short, dry, and direct",
+          "sounds.deep": "Deep",
+          "sounds.deepBody": "Low and easy to notice",
+          "sounds.listen": "Listen",
+          "sounds.customTitle": "Choose your own finish sound",
+          "sounds.customBody": "Pick any built-in sound or import your own audio file. Every connected agent uses the sound selected in DingDong Settings.",
+          "sounds.ready": "Choose a sound to preview it",
+          "sounds.playing": "Playing",
+          "sounds.finished": "Ready for another preview",
+          "sounds.error": "This sound could not be played",
+          "mcp.eyebrow": "Built-in MCP bridge",
+          "mcp.title": "One MCP connection for every local agent.",
+          "mcp.body": "DingDong serves only the prompts, skills, MCP references, and knowledge you have enabled. Manage the switches once instead of repeating the same setup in every agent.",
+          "mcp.installTitle": "Agent config",
+          "mcp.installBody": "Add this MCP server to Codex or Claude Code after installing DingDong.",
+          "mcp.step1": "Install DingDong in /Applications.",
+          "mcp.step2": "Register the built-in dingdong-mcp binary in your agent MCP config.",
+          "mcp.step3": "Keep prompts, skills, and MCP references in DingDong instead of duplicating them in every agent.",
+          "tools.bridge": "Start here. Returns task-scoped summaries, recommended resources, and privacy rules.",
+          "tools.search": "Search prompts, skills, MCP references, notes, and other resources by query and type.",
+          "tools.asset": "Fetch one resource by id. Summary mode hides heavy content; full mode is explicit.",
+          "tools.skill": "Load a selected skill resource only after an agent decides it is relevant.",
+          "tools.recommend": "Find MCP server references that match the current task.",
+          "tools.install": "Dry-run or install a stored MCP reference into Codex or Claude Code config.",
+          "tools.notify": "Trigger the DingDong sound, unread badge, and menu bar notification icon.",
+          "api.eyebrow": "Loopback HTTP API",
+          "api.title": "The same data is available over local HTTP.",
+          "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
+          "updates.eyebrow": "Latest update",
+          "updates.title": "DingDong 0.4.0 makes Agent resources easier to edit and keep current.",
+          "updates.body": "Resource Manager now has a clearer editor, configurable update links, and native macOS text editing shortcuts.",
+          "updates.dark.title": "Resource Manager rebuilt",
+          "updates.dark.body": "Select a whole resource row, edit in a scrollable grouped form, and keep Save actions visible without losing context.",
+          "updates.performance.title": "Fetch the latest resource text",
+          "updates.performance.body": "Add an HTTP(S) file or GitHub file page to a resource, then refresh it with one click while failed downloads keep the previous content.",
+          "updates.bridge.title": "Native editing shortcuts restored",
+          "updates.bridge.body": "Select All, copy, paste, cut, undo, and redo work in resource fields while panel navigation shortcuts stay inside the panel.",
+          "download.eyebrow": "Download",
+          "download.title": "Native macOS builds.",
+          "download.body": "Ad-hoc signed builds are published for Apple Silicon and Intel Macs. macOS may still ask you to approve the app and Accessibility permission for keyboard paste workflows.",
+          "download.latest": "Latest release",
+          "download.latestHint": "Apple Silicon and Intel archives",
+          "download.metadata": "Release metadata JSON",
+          "download.metadataHint": "Used by DingDong Settings",
+          "footer.releases": "Releases",
+          "footer.metadata": "Metadata"
+        },
+        zh: {
+          "nav.product": "产品",
+          "nav.mcp": "MCP",
+          "nav.sounds": "声音",
+          "nav.updates": "更新",
+          "nav.download": "下载",
+          "hero.eyebrow": "剪贴板 · Agent 资源 · 完成提醒",
+          "hero.title": "一个 MCP，连起剪贴板和所有 Agent 资源",
+          "hero.lede": "复制记录随时找；提示词、Skill、MCP 和知识库集中管理，还能逐项开关；Codex、Claude Code、Cursor 等本地 Agent 只接入一次，就能共用同一份内容",
+          "hero.finish": "去做别的事也没关系，会话结束时 DingDong 会响一声",
+          "hero.download": "下载 DingDong",
+          "hero.connect": "查看 MCP 接入",
+          "demo.subtitle": "本地 Agent 工具",
+          "demo.today": "动态",
+          "demo.library": "资源库",
+          "demo.clipboard": "剪贴板",
+          "demo.copy": "复制",
+          "demo.copied": "已复制",
+          "demo.copySampleLabel": "试着复制一条",
+          "demo.feedback": "点一下复制，列表顶部会多一条记录",
+          "demo.copySuccess": "已复制，记录已经放到最上面",
+          "demo.footer": "API 正在监听 127.0.0.1:2333 · ⇧⌘V 就绪",
+          "principles.eyebrow": "平时怎么用",
+          "principles.title": "打开菜单栏，找东西，继续干活",
+          "principles.local.title": "内容默认留在 Mac",
+          "principles.local.body": "DingDong 只在本机运行，除非你自己导出或分享",
+          "principles.summary.title": "Agent 先看摘要",
+          "principles.summary.body": "确实用得上，再读取完整提示词、Skill 或 MCP 内容",
+          "principles.quiet.title": "按 ⇧⌘V 找回剪贴板",
+          "principles.quiet.body": "搜索、筛选、粘贴都在一个面板里完成",
+          "features.library.title": "资源库只放整理好的内容",
+          "features.library.body": "提示词、Skill、MCP 和知识笔记，分好类再保存",
+          "features.clipboard.title": "复制记录先留在剪贴板",
+          "features.clipboard.body": "文字、图片、链接、命令和路径随时都能找回来",
+          "features.bridge.title": "几个 Agent 共用一份",
+          "features.bridge.body": "只配置一个 DingDong MCP，Codex、Claude Code、Cursor 和脚本共用同一份资源",
+          "features.notify.title": "干完活再响",
+          "features.notify.body": "任务完成或需要你处理时，播放设置里选中的声音",
+          "sounds.eyebrow": "完成提醒",
+          "sounds.title": "听到这一声，就知道会话跑完了",
+          "sounds.body": "Agent 完成、阻塞或需要你处理时，让 DingDong 提醒你；你可以离开屏幕去做别的事，听到声音再回来",
+          "sounds.classic": "经典叮咚",
+          "sounds.classicBody": "均衡，适合作为默认声",
+          "sounds.soft": "柔和叮咚",
+          "sounds.softBody": "安静工作时不打扰",
+          "sounds.bright": "清亮叮咚",
+          "sounds.brightBody": "离开桌面也容易听见",
+          "sounds.crisp": "利落叮咚",
+          "sounds.crispBody": "短、干脆、不拖尾",
+          "sounds.deep": "低沉叮咚",
+          "sounds.deepBody": "频率更低，辨识度高",
+          "sounds.listen": "试听",
+          "sounds.customTitle": "提示声由你决定",
+          "sounds.customBody": "选择任意内置声音，也可以导入自己的音频文件；每个 Agent 都会使用 DingDong 设置里选中的声音",
+          "sounds.ready": "点一个声音试听",
+          "sounds.playing": "正在播放",
+          "sounds.finished": "可以继续试听",
+          "sounds.error": "这个声音暂时无法播放",
+          "mcp.eyebrow": "接入 Agent",
+          "mcp.title": "本地有几个 Agent，都只接这一份 MCP",
+          "mcp.body": "DingDong 只把已启用的提示词、Skill、MCP 和知识库交给 Agent；开关和内容都在一个地方维护",
+          "mcp.installTitle": "配置内容",
+          "mcp.installBody": "安装好 DingDong，把下面任意一段加到 Agent 的 MCP 配置里",
+          "mcp.step1": "DingDong 放在 /Applications",
+          "mcp.step2": "MCP 命令指向内置的 dingdong-mcp",
+          "mcp.step3": "提示词和 Skill 留在 DingDong，不用每个 Agent 各存一份",
+          "tools.bridge": "任务开始先调它，拿到这次要用的提示词和资源摘要",
+          "tools.search": "按关键词和类型找资源",
+          "tools.asset": "按 id 读取一个资源，默认只返回摘要",
+          "tools.skill": "需要哪个 Skill，再加载哪个",
+          "tools.recommend": "按当前任务找合适的 MCP",
+          "tools.install": "先预览配置，再写入 Codex 或 Claude Code",
+          "tools.notify": "任务结束时播放设置里选中的叮咚声",
+          "api.eyebrow": "本地 API",
+          "api.title": "脚本也能直接调用 DingDong",
+          "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
+          "updates.eyebrow": "0.4.0 更新",
+          "updates.title": "资源更好编辑，也能一键保持最新",
+          "updates.body": "资源管理器换成清晰的分组编辑器，支持更新链接，并恢复 macOS 原生文本快捷键",
+          "updates.dark.title": "资源管理器整体重构",
+          "updates.dark.body": "整行选择资源，在可滚动的分组表单中编辑，保存按钮始终可见，不会丢失上下文",
+          "updates.performance.title": "一键抓取最新资源内容",
+          "updates.performance.body": "配置 HTTP(S) 文件或 GitHub 文件页面后即可更新；下载失败时保留原内容",
+          "updates.bridge.title": "恢复原生编辑快捷键",
+          "updates.bridge.body": "全选、复制、粘贴、剪切和撤销在资源输入框中正常使用，面板导航快捷键只作用于面板",
+          "download.eyebrow": "下载",
+          "download.title": "Apple 芯片和 Intel 都能用",
+          "download.body": "下载对应压缩包，把 DingDong 拖进应用程序；首次打开时 macOS 可能会要求确认",
+          "download.latest": "最新版",
+          "download.latestHint": "Apple Silicon 和 Intel 压缩包",
+          "download.metadata": "版本 JSON",
+          "download.metadataHint": "DingDong 设置页会读取它",
+          "footer.releases": "版本",
+          "footer.metadata": "元数据"
+        }
+      };
+
+      const demoContent = {
+        en: {
+          today: {
+            status: { title: "Clipboard captured", time: "17:02:02", state: "Ready" },
+            metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
+            agents: [
+              { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
+              { source: "Codex", time: "15:36", body: "DingDong 0.4.0 published with the rebuilt Resource Manager." },
+              { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
+              { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
+            ]
+          },
+          library: {
+            subtitle: "Named and organized content that agents can reuse",
+            search: "Search prompts, skills, MCP, and knowledge",
+            filters: ["All", "Prompts", "Skills", "MCP", "Knowledge"],
+            groups: ["All 4", "Prompts 1", "Skills 1", "MCP Servers 1", "Knowledge 1"],
+            items: [
+              { type: "prompt", mark: "P", title: "Sentence prefix marker", body: "Add 🎉 at the end of each completed task.", tags: ["Prompts", "style"], state: "Enabled" },
+              { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "Repository search, code tracing, and architecture context.", tags: ["MCP Servers", "repository"], state: "Manual" },
+              { type: "skill", mark: "S", title: "user-taste", body: "Project preferences for UI, writing, and code decisions.", tags: ["Skills", "product"], state: "Enabled" },
+              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.4.0 and how to install it.", tags: ["Knowledge", "release"], state: "Saved" }
+            ]
+          },
+          clipboard: {
+            search: "Search clipboard",
+            monitor: "Watching",
+            filter: "Filter",
+            items: [
+              { id: "image", kind: "IMG", title: "DingDong 0.4.0 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
+              { id: "path", kind: "PATH", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
+              { id: "command", kind: "CMD", title: "Command: flutter test", body: "flutter test && flutter build macos --release", time: "16:55" },
+              { id: "release", kind: "URL", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
+              { id: "notes", kind: "TEXT", title: "Release notes", body: "Library, clipboard thumbnails, and six Ding sounds.", time: "16:41" },
+              { id: "config", kind: "JSON", title: "MCP config", body: "command: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp", time: "16:32" }
+            ]
+          },
+          labels: { recentAgents: "Recent agents", enabled: "Enabled", library: "Library", manage: "Manage", monitorOff: "Paused", now: "Now" }
+        },
+        zh: {
+          today: {
+            status: { title: "已捕获剪贴板", time: "17:02:02", state: "就绪" },
+            metrics: [["4", "资源"], ["1,000", "剪贴板"], ["在线", "API"]],
+            agents: [
+              { source: "Codex", time: "16:02", body: "网站预览已经按 Mac 面板调整" },
+              { source: "Codex", time: "15:36", body: "DingDong 0.4.0 和新版资源管理器已经发布" },
+              { source: "Codex", time: "15:06", body: "利落叮咚已经加入" },
+              { source: "Codex", time: "14:54", body: "剪贴板缩略图和声音选择检查通过" }
+            ]
+          },
+          library: {
+            subtitle: "整理后可被 Agent 复用的内容",
+            search: "搜索提示词、Skills、MCP、知识库",
+            filters: ["全部", "提示词", "技能", "MCP", "知识库"],
+            groups: ["全部 4", "Prompts 1", "Skills 1", "MCP Servers 1", "知识库 1"],
+            items: [
+              { type: "prompt", mark: "词", title: "Sentence prefix marker", body: "任务结束时加一个「🎉」", tags: ["Prompts", "style"], state: "已启用" },
+              { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "仓库搜索、代码追踪和架构上下文", tags: ["MCP Servers", "repository"], state: "手动" },
+              { type: "skill", mark: "技", title: "user-taste", body: "项目里的 UI、文案和代码偏好", tags: ["Skills", "product"], state: "已启用" },
+              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.4.0 的变化和安装方式", tags: ["知识库", "release"], state: "已保存" }
+            ]
+          },
+          clipboard: {
+            search: "搜索剪贴板",
+            monitor: "监控中",
+            filter: "筛选",
+            items: [
+              { id: "image", kind: "图片", title: "DingDong 0.4.0 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
+              { id: "path", kind: "路径", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
+              { id: "command", kind: "命令", title: "Command: flutter test", body: "flutter test && flutter build macos --release", time: "16:55" },
+              { id: "release", kind: "URL", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
+              { id: "notes", kind: "文本", title: "版本说明", body: "资源库、图片缩略图和六种叮咚声", time: "16:41" },
+              { id: "config", kind: "JSON", title: "MCP 配置", body: "command: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp", time: "16:32" }
+            ]
+          },
+          labels: { recentAgents: "最近 Agent", enabled: "已启用", library: "资源库", manage: "资源管理", monitorOff: "已暂停", now: "现在" }
+        }
+      };
+
+      const buttons = document.querySelectorAll("[data-lang]");
+      const demoTabs = document.querySelectorAll("[data-demo-tab]");
+      const demoPanel = document.getElementById("demo-panel");
+      const demoFeedback = document.getElementById("demo-feedback");
+      const demoCopyAction = document.getElementById("demo-copy-action");
+      const demoCopyValue = document.getElementById("demo-copy-value");
+      const soundCards = document.querySelectorAll("[data-audio]");
+      const soundStatus = document.getElementById("sound-status");
+      let currentSoundAudio = null;
+      let currentSoundCard = null;
+      const demoState = {
+        language: "en",
+        activeTab: "clipboard",
+        libraryFilter: "all",
+        clipboardFilter: false,
+        clipboardMonitoring: true,
+        copies: [],
+        copySerial: 0,
+        highlightedSerial: null,
+        copied: false
+      };
+
+      const createDemoElement = (tag, className, text) => {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = text;
+        return element;
+      };
+
+      const renderTodayDemo = () => {
+        const content = demoContent[demoState.language];
+        const section = createDemoElement("section", "demo-today-view");
+        section.dataset.demoView = "today";
+
+        const status = createDemoElement("article", "demo-status-card");
+        const statusTitle = createDemoElement("b", "", content.today.status.title);
+        const statusMeta = createDemoElement("div", "demo-status-meta");
+        statusMeta.append(
+          createDemoElement("span", "", content.today.status.time),
+          createDemoElement("span", "demo-ready-state", content.today.status.state)
+        );
+        status.append(statusTitle, statusMeta);
+
+        const metrics = createDemoElement("div", "demo-metrics");
+        content.today.metrics.forEach(([value, label]) => {
+          const metric = createDemoElement("article", "demo-metric-card");
+          metric.append(createDemoElement("b", "", value), createDemoElement("span", "", label));
+          metrics.append(metric);
+        });
+
+        const heading = createDemoElement("h4", "demo-section-label", content.labels.recentAgents);
+        const agents = createDemoElement("div", "demo-agent-list");
+        content.today.agents.forEach((agent) => {
+          const row = createDemoElement("article", "demo-agent-row");
+          const meta = createDemoElement("div", "demo-agent-meta");
+          meta.append(createDemoElement("b", "", agent.source), createDemoElement("span", "", agent.time));
+          row.append(meta, createDemoElement("p", "", agent.body));
+          agents.append(row);
+        });
+
+        section.append(status, metrics, heading, agents, createDemoElement("h4", "demo-section-label", content.labels.enabled));
+        return section;
+      };
+
+      const renderLibraryDemo = () => {
+        const content = demoContent[demoState.language];
+        const section = createDemoElement("section", "demo-library-view");
+        section.dataset.demoView = "library";
+
+        const header = createDemoElement("div", "demo-library-header");
+        const title = createDemoElement("div", "");
+        title.append(createDemoElement("b", "", content.labels.library), createDemoElement("span", "", content.library.subtitle));
+        const manage = createDemoElement("button", "demo-manage-button", content.labels.manage);
+        manage.type = "button";
+        manage.addEventListener("click", () => {
+          demoFeedback.textContent = demoState.language === "zh" ? "资源管理会在 Mac 应用中打开" : "Manage opens in the Mac app.";
+        });
+        header.append(title, manage);
+
+        const search = createDemoElement("div", "demo-search-surface", content.library.search);
+        const filters = createDemoElement("div", "demo-library-filters");
+        content.library.filters.forEach((label, index) => {
+          const values = ["all", "prompt", "skill", "mcp", "knowledge"];
+          const button = createDemoElement("button", demoState.libraryFilter === values[index] ? "active" : "", label);
+          button.type = "button";
+          button.dataset.libraryFilter = values[index];
+          button.addEventListener("click", () => {
+            demoState.libraryFilter = values[index];
+            renderDemo();
+          });
+          filters.append(button);
+        });
+
+        const groups = createDemoElement("div", "demo-library-groups");
+        content.library.groups.forEach((group) => groups.append(createDemoElement("span", "", group)));
+
+        const list = createDemoElement("div", "demo-resource-list");
+        content.library.items
+          .filter((item) => demoState.libraryFilter === "all" || item.type === demoState.libraryFilter)
+          .forEach((item) => {
+            const row = createDemoElement("article", `demo-resource-row type-${item.type}`);
+            const mark = createDemoElement("span", "demo-resource-mark", item.mark);
+            const text = createDemoElement("div", "demo-resource-copy");
+            text.append(createDemoElement("b", "", item.title), createDemoElement("p", "", item.body));
+            const tags = createDemoElement("div", "demo-resource-tags");
+            item.tags.forEach((tag) => tags.append(createDemoElement("span", "", tag)));
+            text.append(tags);
+            row.append(mark, text, createDemoElement("span", "demo-resource-state", item.state));
+            list.append(row);
+          });
+
+        section.append(header, search, filters, groups, list);
+        return section;
+      };
+
+      const renderClipboardDemo = () => {
+        const content = demoContent[demoState.language];
+        const section = createDemoElement("section", "demo-clipboard-view");
+        section.dataset.demoView = "clipboard";
+
+        const toolbar = createDemoElement("div", "demo-clipboard-toolbar");
+        const monitor = createDemoElement("button", `demo-monitor-toggle${demoState.clipboardMonitoring ? " active" : ""}`, demoState.clipboardMonitoring ? content.clipboard.monitor : content.labels.monitorOff);
+        monitor.type = "button";
+        monitor.setAttribute("aria-pressed", String(demoState.clipboardMonitoring));
+        monitor.addEventListener("click", () => {
+          demoState.clipboardMonitoring = !demoState.clipboardMonitoring;
+          renderDemo();
+        });
+        const search = createDemoElement("div", "demo-search-surface", content.clipboard.search);
+        const filter = createDemoElement("button", `demo-filter-button${demoState.clipboardFilter ? " active" : ""}`, content.clipboard.filter);
+        filter.type = "button";
+        filter.setAttribute("aria-pressed", String(demoState.clipboardFilter));
+        filter.addEventListener("click", () => {
+          demoState.clipboardFilter = !demoState.clipboardFilter;
+          renderDemo();
+        });
+        toolbar.append(monitor, search, filter);
+
+        const baseItems = content.clipboard.items;
+        const copiedItems = demoState.copies.map((record) => ({
+          id: `copy-${record.serial}`,
+          kind: "URL",
+          title: demoState.language === "zh" ? "URL: DingDong 项目主页" : "URL: DingDong project",
+          body: record.value,
+          time: content.labels.now,
+          isNew: record.serial === demoState.highlightedSerial
+        }));
+        let items = [...copiedItems, ...baseItems];
+        if (demoState.clipboardFilter) items = items.filter((item) => ["URL", "CMD", "命令"].includes(item.kind));
+
+        const list = createDemoElement("div", "demo-clipboard-list");
+        items.slice(0, demoState.copies.length ? 7 : 6).forEach((item) => {
+          const row = createDemoElement("article", `demo-clipboard-row${item.isNew ? " is-new" : ""}`);
+          row.dataset.clipboardItem = item.id;
+          let mark;
+          if (item.thumbnail) {
+            mark = document.createElement("img");
+            mark.className = "demo-clipboard-thumbnail";
+            mark.src = "./assets/dingdong-icon.png";
+            mark.alt = "";
+          } else {
+            mark = createDemoElement("span", "demo-clipboard-kind", item.kind);
+          }
+          const text = createDemoElement("div", "demo-clipboard-copy");
+          text.append(createDemoElement("b", "", item.title), createDemoElement("p", "", item.body));
+          row.append(mark, text, createDemoElement("time", "", item.time));
+          list.append(row);
+        });
+
+        section.append(toolbar, list);
+        return section;
+      };
+
+      const demoRenderers = {
+        today: renderTodayDemo,
+        library: renderLibraryDemo,
+        clipboard: renderClipboardDemo
+      };
+
+      const renderDemo = () => {
+        demoTabs.forEach((button) => {
+          const isSelected = button.dataset.demoTab === demoState.activeTab;
+          button.classList.toggle("active", isSelected);
+          button.setAttribute("aria-selected", String(isSelected));
+          button.setAttribute("tabindex", isSelected ? "0" : "-1");
+        });
+        demoPanel.replaceChildren(demoRenderers[demoState.activeTab]());
+        demoCopyAction.textContent = copy[demoState.language][demoState.copied ? "demo.copied" : "demo.copy"];
+        demoCopyAction.classList.toggle("is-copied", demoState.copied);
+      };
+
+      const writeDemoClipboard = async (value) => {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(value);
+          return;
+        }
+        const input = document.createElement("textarea");
+        input.value = value;
+        input.setAttribute("readonly", "");
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.append(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      };
+
+      const resetSoundPreview = (statusKey = "sounds.finished") => {
+        if (currentSoundCard) {
+          currentSoundCard.classList.remove("is-playing");
+          currentSoundCard.setAttribute("aria-pressed", "false");
+        }
+        currentSoundAudio = null;
+        currentSoundCard = null;
+        soundStatus.textContent = copy[demoState.language][statusKey];
+      };
+
+      const playSoundPreview = async (card) => {
+        if (currentSoundAudio) {
+          currentSoundAudio.pause();
+        }
+        if (currentSoundCard) {
+          currentSoundCard.classList.remove("is-playing");
+          currentSoundCard.setAttribute("aria-pressed", "false");
+        }
+
+        const audio = new Audio(card.dataset.audio);
+        const name = card.querySelector("strong").textContent;
+        currentSoundAudio = audio;
+        currentSoundCard = card;
+        card.classList.add("is-playing");
+        card.setAttribute("aria-pressed", "true");
+        soundStatus.textContent = `${copy[demoState.language]["sounds.playing"]}：${name}`;
+        audio.volume = 0.82;
+        audio.addEventListener("ended", () => resetSoundPreview());
+
+        try {
+          await audio.play();
+        } catch {
+          resetSoundPreview("sounds.error");
+        }
+      };
+
+      const copyDemoSample = () => {
+        demoState.copySerial += 1;
+        demoState.copies.unshift({ serial: demoState.copySerial, value: demoCopyValue.textContent });
+        demoState.copies = demoState.copies.slice(0, 3);
+        demoState.highlightedSerial = demoState.copySerial;
+        demoState.copied = true;
+        demoState.activeTab = "clipboard";
+        demoFeedback.textContent = copy[demoState.language]["demo.copySuccess"];
+        demoFeedback.classList.add("is-success");
+        renderDemo();
+
+        writeDemoClipboard(demoCopyValue.textContent).catch(() => {});
+
+        window.setTimeout(() => {
+          demoState.copied = false;
+          demoState.highlightedSerial = null;
+          demoFeedback.classList.remove("is-success");
+          renderDemo();
+        }, 1600);
+      };
+
+      const applyLanguage = (lang) => {
+        demoState.language = lang;
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          const value = copy[lang][node.dataset.i18n];
+          if (value) node.textContent = value;
+        });
+        buttons.forEach((button) => button.classList.toggle("active", button.dataset.lang === lang));
+        if (currentSoundCard) {
+          const name = currentSoundCard.querySelector("strong").textContent;
+          soundStatus.textContent = `${copy[lang]["sounds.playing"]}：${name}`;
+        } else {
+          soundStatus.textContent = copy[lang]["sounds.ready"];
+        }
+        localStorage.setItem("dingdong-site-language", lang);
+        renderDemo();
+      };
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => applyLanguage(button.dataset.lang));
+      });
+
+      demoTabs.forEach((button) => {
+        button.addEventListener("click", () => {
+          demoState.activeTab = button.dataset.demoTab;
+          demoFeedback.textContent = copy[demoState.language]["demo.feedback"];
+          demoFeedback.classList.remove("is-success");
+          renderDemo();
+        });
+        button.addEventListener("keydown", (event) => {
+          if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+          event.preventDefault();
+          const tabList = Array.from(demoTabs);
+          const currentIndex = tabList.indexOf(button);
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          const nextButton = tabList[(currentIndex + direction + tabList.length) % tabList.length];
+          nextButton.click();
+          nextButton.focus();
+        });
+      });
+
+      demoCopyAction.addEventListener("click", copyDemoSample);
+      soundCards.forEach((card) => {
+        card.addEventListener("click", () => playSoundPreview(card));
+      });
+
+      const preferredLanguage = localStorage.getItem("dingdong-site-language") ||
+        (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
+      applyLanguage(preferredLanguage);
+    </script>
+  </body>
+</html>
