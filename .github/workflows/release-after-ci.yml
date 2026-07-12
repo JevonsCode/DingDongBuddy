@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   tag:
@@ -25,6 +26,7 @@ jobs:
       - name: Tag the tested application version
         env:
           TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           git fetch origin main --tags
@@ -36,10 +38,17 @@ jobs:
 
           version="$(git show "$TESTED_SHA:pubspec.yaml" | sed -n 's/^version: \([^+]*\).*/\1/p')"
           tag="v$version"
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
-            echo "$tag already exists."
+          if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            git tag "$tag" "$TESTED_SHA"
+            git push origin "$tag"
+          fi
+
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "$tag is already published."
             exit 0
           fi
 
-          git tag "$tag" "$TESTED_SHA"
-          git push origin "$tag"
+          gh workflow run release.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f tag="$tag"
