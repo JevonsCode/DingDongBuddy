@@ -105,6 +105,9 @@ void main() {
     final String windowsRunner = File(
       'windows/runner/CMakeLists.txt',
     ).readAsStringSync();
+    final String windowsFlutter = File(
+      'windows/flutter/CMakeLists.txt',
+    ).readAsStringSync();
 
     expect(macProject, contains('dart-sdk/bin/dart'));
     expect(macProject, contains('build cli --target=bin/dingdong_mcp.dart'));
@@ -113,6 +116,10 @@ void main() {
     expect(windowsRunner, contains('dart.exe'));
     expect(windowsRunner, contains('build cli'));
     expect(windowsRunner, contains('dingdong_mcp.dart'));
+    expect(
+      windowsFlutter,
+      contains('FLUTTER_ROOT "\${FLUTTER_ROOT}" PARENT_SCOPE'),
+    );
   });
 
   test('desktop builds bundle every DingDong preview sound', () {

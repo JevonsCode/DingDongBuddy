@@ -46,7 +46,7 @@ add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
     "$<TARGET_FILE_DIR:${BINARY_NAME}>/mcp"
   COMMAND "${FLUTTER_ROOT}/bin/cache/dart-sdk/bin/dart.exe" build cli
     --target=bin/dingdong_mcp.dart
-    --output="$<TARGET_FILE_DIR:${BINARY_NAME}>/mcp"
+    --output "$<TARGET_FILE_DIR:${BINARY_NAME}>/mcp"
     --verbosity=warning
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/.."
   COMMENT "Compiling DingDong MCP bridge"
