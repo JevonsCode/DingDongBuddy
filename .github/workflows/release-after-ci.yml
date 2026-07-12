@@ -1,0 +1,45 @@
+name: Release after desktop CI
+
+on:
+  workflow_run:
+    workflows:
+      - Flutter desktop
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Tag the tested application version
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          git fetch origin main --tags
+          latest_sha="$(git rev-parse origin/main)"
+          if [ "$TESTED_SHA" != "$latest_sha" ]; then
+            echo "A newer main commit is waiting for CI; skipping this run."
+            exit 0
+          fi
+
+          version="$(git show "$TESTED_SHA:pubspec.yaml" | sed -n 's/^version: \([^+]*\).*/\1/p')"
+          tag="v$version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "$tag already exists."
+            exit 0
+          fi
+
+          git tag "$tag" "$TESTED_SHA"
+          git push origin "$tag"

@@ -142,11 +142,16 @@ void main() {
     final String workflow = File(
       '.github/workflows/release.yml',
     ).readAsStringSync();
+    final String releaseGate = File(
+      '.github/workflows/release-after-ci.yml',
+    ).readAsStringSync();
 
     expect(workflow, contains('flutter build macos --release'));
     expect(workflow, contains('scripts/sign_macos_bundle.sh'));
     expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
     expect(workflow, contains('flutter build windows --release'));
+    expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
+    expect(releaseGate, contains('git tag "$tag" "$TESTED_SHA"'));
     expect(workflow, isNot(contains('swift test')));
     expect(
       Directory('Sources').existsSync()
