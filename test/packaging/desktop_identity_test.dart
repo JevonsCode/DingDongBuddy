@@ -151,7 +151,7 @@ void main() {
     expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
     expect(workflow, contains('flutter build windows --release'));
     expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
-    expect(releaseGate, contains('git tag "$tag" "$TESTED_SHA"'));
+    expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
     expect(workflow, isNot(contains('swift test')));
     expect(
       Directory('Sources').existsSync()
