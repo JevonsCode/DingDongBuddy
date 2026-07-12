@@ -6,9 +6,11 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 
 /// Builds a bounded, summary-first context response for agent request startup.
 final class AgentBridge {
-  const AgentBridge(this._store);
+  AgentBridge(this._store, {DateTime Function()? now})
+    : _now = now ?? DateTime.now;
 
   final ResourceStore _store;
+  final DateTime Function() _now;
 
   Future<HttpResponseData> respond(String body) async {
     try {
@@ -24,7 +26,8 @@ final class AgentBridge {
           .split(RegExp(r'[^\p{L}\p{N}_-]+', unicode: true))
           .where((String value) => value.length >= 2)
           .toSet();
-      final List<Resource> selected = (await _store.load())
+      final List<Resource> resources = await _store.load();
+      final List<Resource> selected = resources
           .where((Resource resource) => resource.enabled)
           .where(
             (Resource resource) =>
@@ -34,9 +37,29 @@ final class AgentBridge {
           )
           .take(limit)
           .toList(growable: false);
+      final Set<String> selectedIds = selected
+          .map((Resource resource) => resource.id)
+          .toSet();
+      final DateTime usedAt = _now().toUtc();
+      final List<Resource> updatedResources = resources
+          .map(
+            (Resource resource) => selectedIds.contains(resource.id)
+                ? resource.copyWith(
+                    usageCount: resource.usageCount + 1,
+                    lastUsedAt: usedAt,
+                  )
+                : resource,
+          )
+          .toList(growable: false);
+      if (selectedIds.isNotEmpty) {
+        await _store.save(updatedResources);
+      }
+      final List<Resource> used = updatedResources
+          .where((Resource resource) => selectedIds.contains(resource.id))
+          .toList(growable: false);
 
       List<Map<String, Object?>> items(ResourceType type) {
-        return selected
+        return used
             .where((Resource resource) => resource.type == type)
             .map((Resource resource) {
               final bool contentIncluded =

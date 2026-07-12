@@ -57,6 +57,8 @@ final class Resource {
     this.enabled = true,
     ResourceActivation? activation,
     this.sortOrder,
+    this.usageCount = 0,
+    this.lastUsedAt,
   }) : group = _trimmedOrNull(group) ?? type.defaultGroup,
        title = title.trim(),
        tags = List<String>.unmodifiable(
@@ -87,6 +89,10 @@ final class Resource {
       enabled: json['enabled'] as bool? ?? true,
       activation: ResourceActivation.parse(json['activation'], pinned: pinned),
       sortOrder: json['sortOrder'] as int?,
+      usageCount: json['usageCount'] as int? ?? 0,
+      lastUsedAt: json['lastUsedAt'] == null
+          ? null
+          : DateTime.parse(json['lastUsedAt'] as String).toUtc(),
       createdAt: DateTime.parse(_requiredString(json, 'createdAt')).toUtc(),
       updatedAt: DateTime.parse(_requiredString(json, 'updatedAt')).toUtc(),
     );
@@ -104,6 +110,8 @@ final class Resource {
   final bool enabled;
   final ResourceActivation activation;
   final int? sortOrder;
+  final int usageCount;
+  final DateTime? lastUsedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -121,6 +129,9 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       if (sortOrder != null) 'sortOrder': sortOrder,
+      'usageCount': usageCount,
+      if (lastUsedAt != null)
+        'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
@@ -137,6 +148,9 @@ final class Resource {
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation.name,
+      'usageCount': usageCount,
+      if (lastUsedAt != null)
+        'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
       if (source != null) 'source': source,
@@ -153,6 +167,9 @@ final class Resource {
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation.name,
+      'usageCount': usageCount,
+      if (lastUsedAt != null)
+        'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
       'contentCharacterCount': content.length,
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
@@ -172,6 +189,8 @@ final class Resource {
     bool? enabled,
     ResourceActivation? activation,
     int? sortOrder,
+    int? usageCount,
+    DateTime? lastUsedAt,
     DateTime? updatedAt,
   }) {
     final bool resolvedPinned = pinned ?? this.pinned;
@@ -193,6 +212,8 @@ final class Resource {
       enabled: enabled ?? this.enabled,
       activation: resolvedActivation,
       sortOrder: sortOrder ?? this.sortOrder,
+      usageCount: usageCount ?? this.usageCount,
+      lastUsedAt: lastUsedAt ?? this.lastUsedAt,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -214,6 +235,8 @@ final class Resource {
             enabled == other.enabled &&
             activation == other.activation &&
             sortOrder == other.sortOrder &&
+            usageCount == other.usageCount &&
+            lastUsedAt == other.lastUsedAt &&
             createdAt == other.createdAt &&
             updatedAt == other.updatedAt;
   }
@@ -232,6 +255,8 @@ final class Resource {
     enabled,
     activation,
     sortOrder,
+    usageCount,
+    lastUsedAt,
     createdAt,
     updatedAt,
   );

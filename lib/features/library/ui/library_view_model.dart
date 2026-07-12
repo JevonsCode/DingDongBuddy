@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:flutter/foundation.dart';
@@ -40,6 +40,7 @@ final class LibraryViewModel extends ChangeNotifier {
   bool _pinnedOnly = false;
   Resource? _selectedResource;
   bool _isCreating = false;
+  final Set<String> _transferSelectionIds = <String>{};
 
   String get query => _query;
 
@@ -76,6 +77,10 @@ final class LibraryViewModel extends ChangeNotifier {
   Resource? get selectedResource => _selectedResource;
 
   bool get isCreating => _isCreating;
+
+  int get transferSelectionCount => _transferSelectionIds.length;
+
+  bool isSelectedForTransfer(String id) => _transferSelectionIds.contains(id);
 
   List<Resource> get allResources => List<Resource>.unmodifiable(_resources);
 
@@ -117,6 +122,28 @@ final class LibraryViewModel extends ChangeNotifier {
 
   Future<void> load() async {
     _resources = await _repository.load();
+    _transferSelectionIds.removeWhere(
+      (String id) => !_resources.any((Resource resource) => resource.id == id),
+    );
+    notifyListeners();
+  }
+
+  void toggleTransferSelection(String id) {
+    if (!_transferSelectionIds.add(id)) {
+      _transferSelectionIds.remove(id);
+    }
+    notifyListeners();
+  }
+
+  void selectAllVisibleForTransfer() {
+    _transferSelectionIds.addAll(
+      visibleResources.map((Resource resource) => resource.id),
+    );
+    notifyListeners();
+  }
+
+  void clearTransferSelection() {
+    _transferSelectionIds.clear();
     notifyListeners();
   }
 
@@ -192,6 +219,7 @@ final class LibraryViewModel extends ChangeNotifier {
     _resources = _resources
         .where((Resource resource) => resource.id != selected.id)
         .toList(growable: false);
+    _transferSelectionIds.remove(selected.id);
     await _repository.save(_resources);
     _selectedResource = null;
     notifyListeners();
@@ -251,16 +279,31 @@ final class LibraryViewModel extends ChangeNotifier {
     return result;
   }
 
+  Future<LibraryBundleImportResult> importBundleJson(String contents) async {
+    final LibraryBundleImportResult result = LibraryBundle.decode(
+      contents,
+      existing: _resources,
+    );
+    if (result.imported.isNotEmpty) {
+      _resources = <Resource>[..._resources, ...result.imported];
+      await _repository.save(_resources);
+      _selectedResource = result.imported.first;
+      _isCreating = false;
+      notifyListeners();
+    }
+    return result;
+  }
+
   String exportJson() {
-    return const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-      'service': 'DingDong',
-      'schemaVersion': 1,
-      'generatedAt': _now().toUtc().toIso8601String(),
-      'items': _resources
-          .where((Resource resource) => resource.type.isLibraryResource)
-          .map((Resource resource) => resource.toJson())
-          .toList(growable: false),
-    });
+    final List<Resource> exportable = _transferSelectionIds.isEmpty
+        ? visibleResources
+        : _resources
+              .where(
+                (Resource resource) =>
+                    _transferSelectionIds.contains(resource.id),
+              )
+              .toList(growable: false);
+    return LibraryBundle.encode(exportable, generatedAt: _now());
   }
 }
 

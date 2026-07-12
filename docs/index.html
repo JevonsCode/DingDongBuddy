@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard and resource hub for local agents</title>
     <meta name="description" content="DingDong keeps clipboard history, prompts, skills, MCP references, and knowledge in one local Mac app. Connect every agent through one MCP and hear when a conversation finishes.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260711-7">
+    <link rel="stylesheet" href="./styles.css?v=20260713-072">
   </head>
   <body>
     <header class="site-header">
@@ -34,9 +34,9 @@
       <section class="hero" id="product">
         <div class="hero-copy">
           <p class="eyebrow" data-i18n="hero.eyebrow">Clipboard · agent library · finish alerts</p>
-          <h1 data-i18n="hero.title">One MCP for clipboard history and every agent resource.</h1>
+          <h1 data-i18n="hero.title">Take control of growing AI resource sprawl.</h1>
           <p class="lede" data-i18n="hero.lede">
-            Find anything you copied and keep prompts, skills, MCP references, and knowledge in one place. Connect each local agent to the same DingDong MCP instead of maintaining the same setup everywhere.
+            Prompts, Skills, MCP servers, and knowledge multiply across agents. Keep one local library, switch resources on only when useful, see what AI actually uses, and share only the items you choose.
           </p>
           <div class="hero-finish-note">
             <img src="./assets/dingdong-icon.png" alt="">
@@ -90,7 +90,7 @@
       <section class="principles">
         <div>
           <p class="eyebrow" data-i18n="principles.eyebrow">How it works</p>
-          <h2 data-i18n="principles.title">Open the menu bar panel and get back to work.</h2>
+          <h2 data-i18n="principles.title">AI tools should be in service of people.</h2>
         </div>
         <div class="principle-grid">
           <article>
@@ -111,15 +111,15 @@
       <section class="feature-grid">
         <article>
           <h2 data-i18n="features.library.title">Save reusable material</h2>
-          <p data-i18n="features.library.body">Keep prompts, skills, MCP references, and knowledge notes in the Library after you have named or organized them.</p>
+          <p data-i18n="features.library.body">Keep prompts, Skills, MCP references, and knowledge in one place. Enable each item independently and see its real Agent usage count.</p>
         </article>
         <article>
-          <h2 data-i18n="features.clipboard.title">Browse recent copies</h2>
-          <p data-i18n="features.clipboard.body">Text, images, links, commands, code, JSON, and paths stay in Clipboard history until you choose to save one as a resource.</p>
+          <h2 data-i18n="features.clipboard.title">Share only what you choose</h2>
+          <p data-i18n="features.clipboard.body">Select individual resources for a portable JSON bundle. Stable IDs and content matching prevent repeated imports on another computer.</p>
         </article>
         <article>
-          <h2 data-i18n="features.bridge.title">Connect local agents</h2>
-          <p data-i18n="features.bridge.body">Codex, Claude Code, Cursor, and scripts can read the same DingDong resources through its local API and MCP bridge.</p>
+          <h2 data-i18n="features.bridge.title">Let AI clean up the library</h2>
+          <p data-i18n="features.bridge.body">Fetch everything at once or by category. Usage metadata and duplicate groups help an Agent explain what is redundant or never used.</p>
         </article>
         <article>
           <h2 data-i18n="features.notify.title">Hear when work finishes</h2>
@@ -227,6 +227,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           <code>/agent/resource/{id}</code>
           <code>/clipboard/insights</code>
           <code>/library</code>
+          <code>/library/export?type=skill</code>
+          <code>/library/import</code>
           <code>/ding</code>
         </div>
       </section>
@@ -234,25 +236,25 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <section class="release-section" id="updates">
         <div class="section-heading">
           <p class="eyebrow" data-i18n="updates.eyebrow">Latest update</p>
-          <h2 data-i18n="updates.title">DingDong 0.4.0 makes Agent resources easier to edit and keep current.</h2>
-          <p data-i18n="updates.body">Resource Manager now has a clearer editor, configurable update links, and native macOS text editing shortcuts.</p>
+          <h2 data-i18n="updates.title">DingDong 0.7.2 makes a growing AI library measurable and shareable.</h2>
+          <p data-i18n="updates.body">Track real Agent use, analyze unused and duplicate resources, and move a chosen subset safely between computers.</p>
         </div>
 
         <div class="release-grid">
           <article>
-            <span class="feature-kicker">0.4.0</span>
-            <h3 data-i18n="updates.dark.title">Resource Manager rebuilt</h3>
-            <p data-i18n="updates.dark.body">Select a whole resource row, edit in a scrollable grouped form, and keep Save actions visible without losing context.</p>
+            <span class="feature-kicker">0.7.2</span>
+            <h3 data-i18n="updates.dark.title">Usage that reflects Agent loads</h3>
+            <p data-i18n="updates.dark.body">Ordinary browsing does not affect the count. Bridge selection and full resource loads record use and last-used time.</p>
           </article>
           <article>
-            <span class="feature-kicker">Updates</span>
-            <h3 data-i18n="updates.performance.title">Fetch the latest resource text</h3>
-            <p data-i18n="updates.performance.body">Add an HTTP(S) file or GitHub file page to a resource, then refresh it with one click while failed downloads keep the previous content.</p>
+            <span class="feature-kicker">Share</span>
+            <h3 data-i18n="updates.performance.title">Selective portable bundles</h3>
+            <p data-i18n="updates.performance.body">Choose only the resources you intend to share. Stable IDs and content deduplication make repeated imports safe.</p>
           </article>
           <article>
-            <span class="feature-kicker">macOS</span>
-            <h3 data-i18n="updates.bridge.title">Native editing shortcuts restored</h3>
-            <p data-i18n="updates.bridge.body">Select All, copy, paste, cut, undo, and redo work in resource fields while panel navigation shortcuts stay inside the panel.</p>
+            <span class="feature-kicker">API</span>
+            <h3 data-i18n="updates.bridge.title">One request for the whole library</h3>
+            <p data-i18n="updates.bridge.body">Query all resources, a category, or exact IDs and receive unused IDs plus duplicate groups for AI analysis.</p>
           </article>
         </div>
       </section>
@@ -273,6 +275,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             <span data-i18n="download.metadataHint">Used by DingDong Settings</span>
           </a>
         </div>
+        <div class="download-stats" id="download-stats" aria-live="polite">
+          <strong data-i18n="download.statsTitle">Downloads by version</strong>
+          <p data-i18n="download.statsLoading">Loading GitHub release asset counts…</p>
+        </div>
       </section>
     </main>
 
@@ -292,8 +298,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.updates": "Updates",
           "nav.download": "Download",
           "hero.eyebrow": "Clipboard · agent library · finish alerts",
-          "hero.title": "One MCP for clipboard history and every agent resource.",
-          "hero.lede": "Find anything you copied and keep prompts, skills, MCP references, and knowledge in one place. Connect each local agent to the same DingDong MCP instead of maintaining the same setup everywhere.",
+          "hero.title": "Take control of growing AI resource sprawl.",
+          "hero.lede": "Prompts, Skills, MCP servers, and knowledge multiply across agents. Keep one local library, switch resources on only when useful, see what AI actually uses, and share only the items you choose.",
           "hero.finish": "Step away while an agent works. DingDong sounds when the conversation is ready for you.",
           "hero.download": "Download latest",
           "hero.connect": "Connect Codex or Claude Code",
@@ -308,7 +314,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.copySuccess": "Copied. Clipboard now has a new first item.",
           "demo.footer": "API listening on 127.0.0.1:2333 · ⇧⌘V ready",
           "principles.eyebrow": "How it works",
-          "principles.title": "Open the menu bar panel and get back to work.",
+          "principles.title": "AI tools should be in service of people.",
           "principles.local.title": "Stays on your Mac",
           "principles.local.body": "DingDong listens on 127.0.0.1. The library and clipboard database stay local unless you export or share something.",
           "principles.summary.title": "Loads only what is needed",
@@ -316,11 +322,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "principles.quiet.title": "Works from the keyboard",
           "principles.quiet.body": "Search clipboard history, switch tabs, and paste recent items without leaving the app you are working in.",
           "features.library.title": "Save reusable material",
-          "features.library.body": "Keep prompts, skills, MCP references, and knowledge notes in the Library after you have named or organized them.",
-          "features.clipboard.title": "Browse recent copies",
-          "features.clipboard.body": "Text, images, links, commands, code, JSON, and paths stay in Clipboard history until you choose to save one as a resource.",
-          "features.bridge.title": "Connect local agents",
-          "features.bridge.body": "Codex, Claude Code, Cursor, and scripts can read the same DingDong resources through its local API and MCP bridge.",
+          "features.library.body": "Keep prompts, Skills, MCP references, and knowledge in one place. Enable each item independently and see its real Agent usage count.",
+          "features.clipboard.title": "Share only what you choose",
+          "features.clipboard.body": "Select individual resources for a portable JSON bundle. Stable IDs and content matching prevent repeated imports on another computer.",
+          "features.bridge.title": "Let AI clean up the library",
+          "features.bridge.body": "Fetch everything at once or by category. Usage metadata and duplicate groups help an Agent explain what is redundant or never used.",
           "features.notify.title": "Hear when work finishes",
           "features.notify.body": "DingDong plays the selected sound and marks the menu bar icon when an agent finishes or needs your attention.",
           "sounds.eyebrow": "Finish alerts",
@@ -362,14 +368,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "The same data is available over local HTTP.",
           "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
           "updates.eyebrow": "Latest update",
-          "updates.title": "DingDong 0.4.0 makes Agent resources easier to edit and keep current.",
-          "updates.body": "Resource Manager now has a clearer editor, configurable update links, and native macOS text editing shortcuts.",
-          "updates.dark.title": "Resource Manager rebuilt",
-          "updates.dark.body": "Select a whole resource row, edit in a scrollable grouped form, and keep Save actions visible without losing context.",
-          "updates.performance.title": "Fetch the latest resource text",
-          "updates.performance.body": "Add an HTTP(S) file or GitHub file page to a resource, then refresh it with one click while failed downloads keep the previous content.",
-          "updates.bridge.title": "Native editing shortcuts restored",
-          "updates.bridge.body": "Select All, copy, paste, cut, undo, and redo work in resource fields while panel navigation shortcuts stay inside the panel.",
+          "updates.title": "DingDong 0.7.2 makes a growing AI library measurable and shareable.",
+          "updates.body": "Track real Agent use, analyze unused and duplicate resources, and move a chosen subset safely between computers.",
+          "updates.dark.title": "Usage that reflects Agent loads",
+          "updates.dark.body": "Ordinary browsing does not affect the count. Bridge selection and full resource loads record use and last-used time.",
+          "updates.performance.title": "Selective portable bundles",
+          "updates.performance.body": "Choose only the resources you intend to share. Stable IDs and content deduplication make repeated imports safe.",
+          "updates.bridge.title": "One request for the whole library",
+          "updates.bridge.body": "Query all resources, a category, or exact IDs and receive unused IDs plus duplicate groups for AI analysis.",
           "download.eyebrow": "Download",
           "download.title": "Native macOS builds.",
           "download.body": "Ad-hoc signed builds are published for Apple Silicon and Intel Macs. macOS may still ask you to approve the app and Accessibility permission for keyboard paste workflows.",
@@ -377,6 +383,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "download.latestHint": "Apple Silicon and Intel archives",
           "download.metadata": "Release metadata JSON",
           "download.metadataHint": "Used by DingDong Settings",
+          "download.statsTitle": "Downloads by version",
+          "download.statsLoading": "Loading GitHub release asset counts…",
+          "download.statsError": "Download counts are available on GitHub Releases.",
           "footer.releases": "Releases",
           "footer.metadata": "Metadata"
         },
@@ -387,8 +396,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.updates": "更新",
           "nav.download": "下载",
           "hero.eyebrow": "剪贴板 · Agent 资源 · 完成提醒",
-          "hero.title": "一个 MCP，连起剪贴板和所有 Agent 资源",
-          "hero.lede": "复制记录随时找；提示词、Skill、MCP 和知识库集中管理，还能逐项开关；Codex、Claude Code、Cursor 等本地 Agent 只接入一次，就能共用同一份内容",
+          "hero.title": "管住越来越多的 AI 资源",
+          "hero.lede": "提示词、Skill、MCP 和知识库会散落在不同 Agent 里。DingDong 把它们集中在本地，逐项开关，记录真实使用次数，并且只分享你选中的内容。",
           "hero.finish": "去做别的事也没关系，会话结束时 DingDong 会响一声",
           "hero.download": "下载 DingDong",
           "hero.connect": "查看 MCP 接入",
@@ -403,7 +412,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.copySuccess": "已复制，记录已经放到最上面",
           "demo.footer": "API 正在监听 127.0.0.1:2333 · ⇧⌘V 就绪",
           "principles.eyebrow": "平时怎么用",
-          "principles.title": "打开菜单栏，找东西，继续干活",
+          "principles.title": "AI 工具应该是服务于人类的",
           "principles.local.title": "内容默认留在 Mac",
           "principles.local.body": "DingDong 只在本机运行，除非你自己导出或分享",
           "principles.summary.title": "Agent 先看摘要",
@@ -411,11 +420,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "principles.quiet.title": "按 ⇧⌘V 找回剪贴板",
           "principles.quiet.body": "搜索、筛选、粘贴都在一个面板里完成",
           "features.library.title": "资源库只放整理好的内容",
-          "features.library.body": "提示词、Skill、MCP 和知识笔记，分好类再保存",
-          "features.clipboard.title": "复制记录先留在剪贴板",
-          "features.clipboard.body": "文字、图片、链接、命令和路径随时都能找回来",
-          "features.bridge.title": "几个 Agent 共用一份",
-          "features.bridge.body": "只配置一个 DingDong MCP，Codex、Claude Code、Cursor 和脚本共用同一份资源",
+          "features.library.body": "提示词、Skill、MCP 和知识库集中管理，每项独立开关，还能看到 Agent 实际用了多少次",
+          "features.clipboard.title": "只分享你选中的内容",
+          "features.clipboard.body": "勾选部分资源生成 JSON 包；稳定 ID 和内容查重让另一台电脑重复导入也不会堆出副本",
+          "features.bridge.title": "让 AI 帮你整理资源库",
+          "features.bridge.body": "一次读取全部内容，也能按类别或 ID 查询；未使用项和重复组会直接交给 Agent 分析",
           "features.notify.title": "干完活再响",
           "features.notify.body": "任务完成或需要你处理时，播放设置里选中的声音",
           "sounds.eyebrow": "完成提醒",
@@ -456,15 +465,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.eyebrow": "本地 API",
           "api.title": "脚本也能直接调用 DingDong",
           "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
-          "updates.eyebrow": "0.4.0 更新",
-          "updates.title": "资源更好编辑，也能一键保持最新",
-          "updates.body": "资源管理器换成清晰的分组编辑器，支持更新链接，并恢复 macOS 原生文本快捷键",
-          "updates.dark.title": "资源管理器整体重构",
-          "updates.dark.body": "整行选择资源，在可滚动的分组表单中编辑，保存按钮始终可见，不会丢失上下文",
-          "updates.performance.title": "一键抓取最新资源内容",
-          "updates.performance.body": "配置 HTTP(S) 文件或 GitHub 文件页面后即可更新；下载失败时保留原内容",
-          "updates.bridge.title": "恢复原生编辑快捷键",
-          "updates.bridge.body": "全选、复制、粘贴、剪切和撤销在资源输入框中正常使用，面板导航快捷键只作用于面板",
+          "updates.eyebrow": "0.7.2 更新",
+          "updates.title": "不断增长的 AI 资源库，现在可以衡量、分析和分享",
+          "updates.body": "记录 Agent 的真实使用，找出未用和重复资源，并把选中的部分安全迁移到另一台电脑",
+          "updates.dark.title": "只在 Agent 加载时计数",
+          "updates.dark.body": "普通浏览不会污染统计；Bridge 选中和读取完整内容才记录次数与最后使用时间",
+          "updates.performance.title": "选择性分享资源包",
+          "updates.performance.body": "只打包你勾选的资源；稳定 ID 和内容查重让重复导入保持安全",
+          "updates.bridge.title": "一个请求读取整个资源库",
+          "updates.bridge.body": "查询全部、某一类或指定 ID，并直接获得未使用 ID 和重复组供 AI 分析",
           "download.eyebrow": "下载",
           "download.title": "Apple 芯片和 Intel 都能用",
           "download.body": "下载对应压缩包，把 DingDong 拖进应用程序；首次打开时 macOS 可能会要求确认",
@@ -472,6 +481,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "download.latestHint": "Apple Silicon 和 Intel 压缩包",
           "download.metadata": "版本 JSON",
           "download.metadataHint": "DingDong 设置页会读取它",
+          "download.statsTitle": "各版本下载次数",
+          "download.statsLoading": "正在读取 GitHub Release 资源下载数…",
+          "download.statsError": "可前往 GitHub Releases 查看下载数据",
           "footer.releases": "版本",
           "footer.metadata": "元数据"
         }
@@ -484,7 +496,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
-              { source: "Codex", time: "15:36", body: "DingDong 0.4.0 published with the rebuilt Resource Manager." },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.2 added usage counts and selective sharing." },
               { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
               { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
             ]
@@ -498,7 +510,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { type: "prompt", mark: "P", title: "Sentence prefix marker", body: "Add 🎉 at the end of each completed task.", tags: ["Prompts", "style"], state: "Enabled" },
               { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "Repository search, code tracing, and architecture context.", tags: ["MCP Servers", "repository"], state: "Manual" },
               { type: "skill", mark: "S", title: "user-taste", body: "Project preferences for UI, writing, and code decisions.", tags: ["Skills", "product"], state: "Enabled" },
-              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.4.0 and how to install it.", tags: ["Knowledge", "release"], state: "Saved" }
+              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.7.2 and how to install it.", tags: ["Knowledge", "release"], state: "Saved" }
             ]
           },
           clipboard: {
@@ -506,7 +518,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             monitor: "Watching",
             filter: "Filter",
             items: [
-              { id: "image", kind: "IMG", title: "DingDong 0.4.0 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "IMG", title: "DingDong 0.7.2 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "PATH", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", title: "Command: flutter test", body: "flutter test && flutter build macos --release", time: "16:55" },
               { id: "release", kind: "URL", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -522,7 +534,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "资源"], ["1,000", "剪贴板"], ["在线", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "网站预览已经按 Mac 面板调整" },
-              { source: "Codex", time: "15:36", body: "DingDong 0.4.0 和新版资源管理器已经发布" },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.2 已加入使用统计和选择性分享" },
               { source: "Codex", time: "15:06", body: "利落叮咚已经加入" },
               { source: "Codex", time: "14:54", body: "剪贴板缩略图和声音选择检查通过" }
             ]
@@ -536,7 +548,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { type: "prompt", mark: "词", title: "Sentence prefix marker", body: "任务结束时加一个「🎉」", tags: ["Prompts", "style"], state: "已启用" },
               { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "仓库搜索、代码追踪和架构上下文", tags: ["MCP Servers", "repository"], state: "手动" },
               { type: "skill", mark: "技", title: "user-taste", body: "项目里的 UI、文案和代码偏好", tags: ["Skills", "product"], state: "已启用" },
-              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.4.0 的变化和安装方式", tags: ["知识库", "release"], state: "已保存" }
+              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.7.2 的变化和安装方式", tags: ["知识库", "release"], state: "已保存" }
             ]
           },
           clipboard: {
@@ -544,7 +556,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             monitor: "监控中",
             filter: "筛选",
             items: [
-              { id: "image", kind: "图片", title: "DingDong 0.4.0 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "图片", title: "DingDong 0.7.2 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "路径", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", title: "Command: flutter test", body: "flutter test && flutter build macos --release", time: "16:55" },
               { id: "release", kind: "URL", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -564,8 +576,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoCopyValue = document.getElementById("demo-copy-value");
       const soundCards = document.querySelectorAll("[data-audio]");
       const soundStatus = document.getElementById("sound-status");
+      const downloadStats = document.getElementById("download-stats");
       let currentSoundAudio = null;
       let currentSoundCard = null;
+      let releaseDownloads = null;
+      let releaseDownloadsFailed = false;
       const demoState = {
         language: "en",
         activeTab: "clipboard",
@@ -747,6 +762,59 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         demoCopyAction.classList.toggle("is-copied", demoState.copied);
       };
 
+      const renderDownloadStats = () => {
+        const heading = createDemoElement(
+          "strong",
+          "",
+          copy[demoState.language]["download.statsTitle"]
+        );
+        if (!releaseDownloads) {
+          const key = releaseDownloadsFailed
+            ? "download.statsError"
+            : "download.statsLoading";
+          downloadStats.replaceChildren(
+            heading,
+            createDemoElement("p", "", copy[demoState.language][key])
+          );
+          return;
+        }
+        const list = createDemoElement("div", "download-stat-list");
+        releaseDownloads.forEach((release) => {
+          const row = createDemoElement("div", "download-stat-row");
+          const total = release.assets.reduce(
+            (sum, asset) => sum + (asset.download_count || 0),
+            0
+          );
+          row.append(
+            createDemoElement("span", "", release.tag_name),
+            createDemoElement(
+              "b",
+              "",
+              demoState.language === "zh" ? `${total} 次` : `${total} downloads`
+            )
+          );
+          list.append(row);
+        });
+        downloadStats.replaceChildren(heading, list);
+      };
+
+      const loadDownloadStats = async () => {
+        try {
+          const response = await fetch(
+            "https://api.github.com/repos/JevonsCode/DingDongBuddy/releases?per_page=100",
+            { headers: { Accept: "application/vnd.github+json" } }
+          );
+          if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+          const releases = await response.json();
+          releaseDownloads = releases.filter(
+            (release) => !release.draft && Array.isArray(release.assets)
+          );
+        } catch {
+          releaseDownloadsFailed = true;
+        }
+        renderDownloadStats();
+      };
+
       const writeDemoClipboard = async (value) => {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(value);
@@ -836,6 +904,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         }
         localStorage.setItem("dingdong-site-language", lang);
         renderDemo();
+        renderDownloadStats();
       };
 
       buttons.forEach((button) => {
@@ -869,6 +938,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const preferredLanguage = localStorage.getItem("dingdong-site-language") ||
         (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
       applyLanguage(preferredLanguage);
+      loadDownloadStats();
     </script>
   </body>
 </html>

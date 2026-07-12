@@ -49,12 +49,16 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
           'mode',
           'includeClipboard',
           'includeSensitiveClipboard',
-        ]),
+        ])..['trackUsage'] = 'true',
       ),
       'dingdong_load_skill' => _transport.request(
         method: 'GET',
         path: '/library/${arguments['id'] ?? ''}',
-        query: const <String, String>{'mode': 'full', 'expectedType': 'skill'},
+        query: const <String, String>{
+          'mode': 'full',
+          'expectedType': 'skill',
+          'trackUsage': 'true',
+        },
       ),
       'dingdong_recommend_mcp' => _transport.request(
         method: 'GET',
@@ -90,7 +94,11 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     final Map<String, Object?> detail = await _transport.request(
       method: 'GET',
       path: '/library/$id',
-      query: const <String, String>{'mode': 'full', 'expectedType': 'mcp'},
+      query: const <String, String>{
+        'mode': 'full',
+        'expectedType': 'mcp',
+        'trackUsage': 'true',
+      },
     );
     final Map<String, Object?> item =
         detail['item'] as Map<String, Object?>? ?? <String, Object?>{};

@@ -2,5 +2,7 @@
 abstract interface class LibraryTransferGateway {
   Future<String?> chooseImportDirectory();
 
+  Future<String?> chooseImportJson();
+
   Future<String?> saveExport({required String contents});
 }

@@ -6,6 +6,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/knowledge_indexer.dart';
+import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 
 /// Handles resource-library reads and mutations that share the public API.
@@ -17,8 +18,7 @@ final class LibraryRoutes {
   }) : _now = now ?? _utcNow,
        _importer = LibraryImporter(now: now, idGenerator: idGenerator);
 
-  static const int _defaultExportLimit = 200;
-  static const int _maximumExportLimit = 500;
+  static const int _maximumExportLimit = 100000;
 
   final ResourceStore _store;
   final DateTime Function() _now;
@@ -29,6 +29,29 @@ final class LibraryRoutes {
     try {
       final Map<String, Object?> payload =
           jsonDecode(body) as Map<String, Object?>;
+      final List<Resource> existing = await _store.load();
+      if (payload['items'] is List<Object?>) {
+        final LibraryBundleImportResult result = LibraryBundle.importPayload(
+          payload,
+          existing: existing,
+        );
+        if (result.imported.isNotEmpty) {
+          await _store.save(<Resource>[...existing, ...result.imported]);
+        }
+        return HttpResponseData(
+          statusCode: 200,
+          json: <String, Object?>{
+            'status': 'imported',
+            'importedCount': result.imported.length,
+            'skippedCount': result.skippedCount,
+            'duplicateIds': result.duplicateIds,
+            'conflictIds': result.conflictIds,
+            'items': result.imported
+                .map((Resource item) => item.toApiJson())
+                .toList(growable: false),
+          },
+        );
+      }
       final ResourceType type = ResourceType.parse(payload['type']);
       if (!type.isLibraryResource) {
         return _invalidUpdate('clipboard resources cannot be bulk imported');
@@ -37,7 +60,6 @@ final class LibraryRoutes {
       if (importPath.isEmpty) {
         return _invalidUpdate('path is required');
       }
-      final List<Resource> existing = await _store.load();
       final LibraryImportResult result = await _importer.scan(
         LibraryImportRequest(
           type: type,
@@ -149,16 +171,26 @@ final class LibraryRoutes {
       } on FormatException {
         return _invalidResourceType();
       }
+      if (!selectedType.isLibraryResource) {
+        return _invalidResourceType();
+      }
     }
 
     final String needle = (query['q'] ?? '').trim().toLowerCase();
-    final int requestedLimit =
-        int.tryParse(query['limit'] ?? '') ?? _defaultExportLimit;
-    final int limit = min(max(0, requestedLimit), _maximumExportLimit);
+    final int? requestedLimit = int.tryParse(query['limit'] ?? '');
+    final Set<String>? selectedIds = query['ids']
+        ?.split(',')
+        .map((String id) => id.trim())
+        .where((String id) => id.isNotEmpty)
+        .toSet();
     final List<Resource> matched = (await _store.load())
         .where(
           (Resource resource) =>
               selectedType == null || resource.type == selectedType,
+        )
+        .where(
+          (Resource resource) =>
+              selectedIds == null || selectedIds.contains(resource.id),
         )
         .where((Resource resource) => _matches(resource, needle))
         .toList(growable: false);
@@ -166,6 +198,9 @@ final class LibraryRoutes {
     final List<Resource> visible = matched
         .where((Resource resource) => resource.type.isLibraryResource)
         .toList(growable: false);
+    final int limit = requestedLimit == null
+        ? visible.length
+        : min(max(0, requestedLimit), _maximumExportLimit);
     final List<Resource> returned = visible.take(limit).toList(growable: false);
     final Map<String, int> countsByType = <String, int>{
       for (final ResourceType type in ResourceType.values)
@@ -177,11 +212,12 @@ final class LibraryRoutes {
       json: <String, Object?>{
         'status': 'ok',
         'service': 'DingDong',
-        'schemaVersion': 1,
+        'schemaVersion': 2,
         'generatedAt': _now().toUtc().toIso8601String(),
         'filter': <String, Object?>{
           'type': selectedType?.name ?? 'all',
           'q': query['q'] ?? '',
+          if (selectedIds != null) 'ids': selectedIds.toList(growable: false),
           'limit': limit,
         },
         'privacy': <String, Object?>{
@@ -199,15 +235,25 @@ final class LibraryRoutes {
           'visible': visible.length,
           'returned': returned.length,
           'byType': countsByType,
+          'unused': visible
+              .where((Resource resource) => resource.usageCount == 0)
+              .length,
+        },
+        'analysis': <String, Object?>{
+          'unusedIds': visible
+              .where((Resource resource) => resource.usageCount == 0)
+              .map((Resource resource) => resource.id)
+              .toList(growable: false),
+          'duplicateGroups': LibraryBundle.duplicateGroups(visible),
         },
         'limits': const <String, Object?>{
-          'defaultItems': _defaultExportLimit,
+          'defaultItems': 'all',
           'maxItems': _maximumExportLimit,
           'resourceContentCharacters': 100000,
           'clipboardContentCharacters': 20000,
         },
         'items': returned
-            .map((Resource resource) => resource.toApiJson())
+            .map((Resource resource) => resource.toJson())
             .toList(growable: false),
       },
     );

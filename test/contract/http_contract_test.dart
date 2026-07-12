@@ -280,29 +280,31 @@ void main() {
     'POST /agent/bridge expands prompts while keeping other assets summarized',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 12);
+      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'prompt',
+          type: ResourceType.prompt,
+          title: 'Flutter release',
+          content: 'Use the release checklist.',
+          tags: const <String>['flutter', 'release'],
+          pinned: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'skill',
+          type: ResourceType.skill,
+          title: 'Flutter skill',
+          content: 'Long skill instructions',
+          tags: const <String>['flutter'],
+          pinned: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
       final AgentRouter router = AgentRouter(
-        resourceStore: InMemoryResourceStore(<Resource>[
-          Resource(
-            id: 'prompt',
-            type: ResourceType.prompt,
-            title: 'Flutter release',
-            content: 'Use the release checklist.',
-            tags: const <String>['flutter', 'release'],
-            pinned: true,
-            createdAt: now,
-            updatedAt: now,
-          ),
-          Resource(
-            id: 'skill',
-            type: ResourceType.skill,
-            title: 'Flutter skill',
-            content: 'Long skill instructions',
-            tags: const <String>['flutter'],
-            pinned: true,
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ]),
+        resourceStore: store,
+        now: () => now.add(const Duration(hours: 1)),
       );
 
       final response = await router.route(
@@ -325,6 +327,48 @@ void main() {
         (skills.single as Map<String, Object?>),
         isNot(contains('content')),
       );
+      expect(
+        (await store.load()).map((Resource item) => item.usageCount),
+        <int>[1, 1],
+      );
+      expect(
+        (await store.load()).first.lastUsedAt,
+        now.add(const Duration(hours: 1)),
+      );
+    },
+  );
+
+  test(
+    'tracked full reads increment usage while ordinary reads do not',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'skill-1',
+          type: ResourceType.skill,
+          title: 'Review skill',
+          content: 'Review carefully.',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final AgentRouter router = AgentRouter(
+        resourceStore: store,
+        now: () => now.add(const Duration(minutes: 5)),
+      );
+
+      await router.route(
+        const HttpRequestData(method: 'GET', uri: '/library/skill-1'),
+      );
+      final tracked = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/library/skill-1?mode=full&trackUsage=true',
+        ),
+      );
+
+      expect((await store.load()).single.usageCount, 1);
+      expect((tracked.json['item'] as Map<String, Object?>)['usageCount'], 1);
     },
   );
 
@@ -370,6 +414,87 @@ void main() {
       expect((exported.json['items'] as List<Object?>), hasLength(1));
       expect(deleted.json['status'], 'deleted');
       expect(await store.load(), isEmpty);
+    },
+  );
+
+  test(
+    'library export returns all items with usage and duplicate analysis',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      final List<Resource> resources = List<Resource>.generate(
+        550,
+        (int index) => Resource(
+          id: 'resource-$index',
+          type: index.isEven ? ResourceType.prompt : ResourceType.skill,
+          title: 'Resource $index',
+          content: index == 0 || index == 2 ? 'duplicate body' : 'body $index',
+          usageCount: index == 0 ? 3 : 0,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      final AgentRouter router = AgentRouter(
+        resourceStore: InMemoryResourceStore(resources),
+        now: () => now,
+      );
+
+      final all = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/library/export'),
+      );
+      final selected = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/library/export?type=skill&ids=resource-1,resource-3',
+        ),
+      );
+
+      expect(all.json['schemaVersion'], 2);
+      expect(all.json['items'] as List<Object?>, hasLength(550));
+      expect(
+        (all.json['analysis'] as Map<String, Object?>)['unusedIds']
+            as List<Object?>,
+        hasLength(549),
+      );
+      expect(
+        (all.json['analysis'] as Map<String, Object?>)['duplicateGroups']
+            as List<Object?>,
+        hasLength(1),
+      );
+      expect(selected.json['items'] as List<Object?>, hasLength(2));
+    },
+  );
+
+  test(
+    'bundle import preserves IDs and deduplicates repeated imports',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      final InMemoryResourceStore store = InMemoryResourceStore();
+      final AgentRouter router = AgentRouter(resourceStore: store);
+      final Map<String, Object?> item = Resource(
+        id: 'shared-skill',
+        type: ResourceType.skill,
+        title: 'Shared skill',
+        content: 'Shared instructions',
+        createdAt: now,
+        updatedAt: now,
+      ).toJson();
+      final String body = jsonEncode(<String, Object?>{
+        'schemaVersion': 2,
+        'selectedIds': <String>['shared-skill'],
+        'items': <Object?>[item],
+      });
+
+      final first = await router.route(
+        HttpRequestData(method: 'POST', uri: '/library/import', body: body),
+      );
+      final second = await router.route(
+        HttpRequestData(method: 'POST', uri: '/library/import', body: body),
+      );
+
+      expect(first.json['importedCount'], 1);
+      expect(second.json['importedCount'], 0);
+      expect(second.json['duplicateIds'], <String>['shared-skill']);
+      expect((await store.load()).single.id, 'shared-skill');
     },
   );
 

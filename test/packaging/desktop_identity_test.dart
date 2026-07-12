@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -39,14 +40,14 @@ void main() {
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
   });
 
-  test('desktop hosts consume Flutter version 0.7.0 from pubspec', () {
+  test('desktop hosts consume Flutter version 0.7.2 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.0+7'));
+    expect(pubspec, contains('version: 0.7.2+9'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -71,10 +72,7 @@ void main() {
     expect(mainMenu, contains('DingDong Website'));
     expect(mainMenu, contains('selector="openWebsite:"'));
     expect(appDelegate, contains('@IBAction func openWebsite'));
-    expect(
-      appDelegate,
-      contains('https://xn--8ovp9s.xn--m8txu.com/DingDong/'),
-    );
+    expect(appDelegate, contains('https://xn--8ovp9s.xn--m8txu.com/DingDong/'));
   });
 
   test('migration cleanup removes stale branding and website content', () {
@@ -83,9 +81,11 @@ void main() {
     final String manual = File(
       'docs/product/manual-regression.md',
     ).readAsStringSync();
-    final ProcessResult checksum = Process.runSync('/usr/bin/shasum', <String>[
-      'windows/runner/resources/app_icon.ico',
-    ]);
+    final String checksum = sha1
+        .convert(
+          File('windows/runner/resources/app_icon.ico').readAsBytesSync(),
+        )
+        .toString();
 
     expect(File('Assets/AgentToolMenuBarDarkIcon.png').existsSync(), isFalse);
     expect(File('Assets/Symbols/close.png').existsSync(), isFalse);
@@ -95,10 +95,7 @@ void main() {
     expect(readme, contains('activity/'));
     expect(readme, isNot(contains('today/')));
     expect(manual, isNot(contains('open Today')));
-    expect(
-      checksum.stdout as String,
-      isNot(startsWith('2c6031875648498a461842f54b999f632e6d4f0e')),
-    );
+    expect(checksum, isNot('2c6031875648498a461842f54b999f632e6d4f0e'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -164,9 +161,7 @@ void main() {
     expect(setup.existsSync(), isTrue);
     expect(
       signer,
-      contains(
-        'DINGDONG_LOCAL_SIGNING_IDENTITY:-DingDong Local Development',
-      ),
+      contains('DINGDONG_LOCAL_SIGNING_IDENTITY:-DingDong Local Development'),
     );
     expect(signer, contains('find-identity'));
     expect(signer, contains('CODE_SIGN_IDENTITY'));
@@ -177,7 +172,9 @@ void main() {
       'macos/Runner/DebugProfile.entitlements',
       'macos/Runner/Release.entitlements',
     ]) {
-      final String entitlements = File(path).readAsStringSync();
+      final String entitlements = File(
+        path,
+      ).readAsStringSync().replaceAll('\r\n', '\n');
       expect(
         entitlements,
         contains('<key>com.apple.security.app-sandbox</key>\n\t<false/>'),

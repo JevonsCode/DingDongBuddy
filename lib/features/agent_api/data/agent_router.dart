@@ -172,7 +172,7 @@ final class AgentRouter {
       if (store == null) {
         return _resourceUnavailable();
       }
-      return AgentBridge(store).respond(request.body);
+      return AgentBridge(store, now: _now).respond(request.body);
     }
     if (request.method == 'GET' && request.parsedUri.path == '/library') {
       return _listResources(request.parsedUri.queryParameters);

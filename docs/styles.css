@@ -1263,6 +1263,34 @@ pre {
   margin-top: 0;
 }
 
+.download-stats {
+  grid-column: 1 / -1;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-medium);
+  background: var(--surface);
+}
+
+.download-stat-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.download-stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.download-stat-row b {
+  color: var(--ink);
+}
+
 .download-card {
   display: block;
   flex: 1 1 200px;

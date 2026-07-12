@@ -35,7 +35,7 @@ final class AgentCompatibilityRoutes {
       '/agent/recommend' => _recommend(query),
       '/agent/resolve' => _resolve(query),
       '/agent/context' => _context(query),
-      '/agent/bridge' => AgentBridge(resourceStore).respond(
+      '/agent/bridge' => AgentBridge(resourceStore, now: _now).respond(
         jsonEncode(<String, Object?>{
           'task': query['task'] ?? query['q'] ?? '',
           'source': query['source'] ?? 'Agent',
@@ -219,7 +219,9 @@ final class AgentCompatibilityRoutes {
           )
         : _ok(<String, Object?>{
             'task': task,
-            'item': matches.first.toApiJson(),
+            'item': (await _recordUsage(<Resource>[
+              matches.first,
+            ])).single.toApiJson(),
           });
   }
 
@@ -227,11 +229,14 @@ final class AgentCompatibilityRoutes {
     String id,
     Map<String, String> query,
   ) async {
-    final Resource? item = (await resourceStore.load())
+    Resource? item = (await resourceStore.load())
         .where(
           (Resource value) => value.id == id && value.type.isLibraryResource,
         )
         .firstOrNull;
+    if (item != null && query['mode'] == 'full') {
+      item = (await _recordUsage(<Resource>[item])).single;
+    }
     return item == null
         ? const HttpResponseData(
             statusCode: 404,
@@ -255,14 +260,17 @@ final class AgentCompatibilityRoutes {
               .where((Resource item) => item.type.isLibraryResource)
               .toList(growable: false)
         : await _matching(task);
+    final List<Resource> selected = resources
+        .take(limit)
+        .toList(growable: false);
+    final List<Resource> used = await _recordUsage(selected);
     return _ok(<String, Object?>{
       'task': task,
       'privacy': const <String, Object?>{
         'clipboardIncluded': false,
         'sensitiveClipboardIncluded': false,
       },
-      'items': resources
-          .take(limit)
+      'items': used
           .map((Resource item) => item.toApiJson())
           .toList(growable: false),
     });
@@ -276,6 +284,31 @@ final class AgentCompatibilityRoutes {
     ],
     'commands': _templatesData(),
   });
+
+  Future<List<Resource>> _recordUsage(List<Resource> selected) async {
+    if (selected.isEmpty) {
+      return selected;
+    }
+    final Set<String> ids = selected.map((Resource item) => item.id).toSet();
+    final DateTime usedAt = _now().toUtc();
+    final List<Resource> resources = (await resourceStore.load())
+        .map(
+          (Resource item) => ids.contains(item.id)
+              ? item.copyWith(
+                  usageCount: item.usageCount + 1,
+                  lastUsedAt: usedAt,
+                )
+              : item,
+        )
+        .toList(growable: false);
+    await resourceStore.save(resources);
+    final Map<String, Resource> byId = <String, Resource>{
+      for (final Resource item in resources) item.id: item,
+    };
+    return selected
+        .map((Resource item) => byId[item.id] ?? item)
+        .toList(growable: false);
+  }
 
   String get _origin => _baseUri.toString().replaceFirst(RegExp(r'/$'), '');
 

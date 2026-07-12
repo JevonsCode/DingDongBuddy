@@ -1,4 +1,4 @@
-# DingDong 0.7.0 Manual Regression Checklist
+# DingDong 0.7.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -67,6 +67,6 @@ and macOS golden images; the items below exercise real operating-system state.
 - `flutter build macos --release` contains `Contents/MCP/bundle/bin/dingdong_mcp`.
 - `flutter build windows --release` contains `mcp/bundle/bin/dingdong_mcp.exe`.
 - The bundled MCP executable passes a JSON-RPC `tools/list` smoke test.
-- The macOS app metadata is version `0.7.0` build `7` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.0.7` and product name `DingDong`.
+- The macOS app metadata is version `0.7.2` build `9` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.2.9` and product name `DingDong`.
 - A tag build creates both macOS and Windows ZIP artifacts without modifying release metadata automatically.

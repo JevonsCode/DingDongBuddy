@@ -135,9 +135,11 @@ extension _AgentRouterResourceHandlers on AgentRouter {
     if (store == null) {
       return _resourceUnavailable();
     }
-    final Resource? resource = (await store.load())
-        .where((Resource item) => item.id == id)
-        .firstOrNull;
+    final List<Resource> resources = await store.load();
+    final int resourceIndex = resources.indexWhere(
+      (Resource item) => item.id == id,
+    );
+    Resource? resource = resourceIndex < 0 ? null : resources[resourceIndex];
     if (resource == null || !resource.type.isLibraryResource) {
       return const HttpResponseData(
         statusCode: 404,
@@ -156,6 +158,14 @@ extension _AgentRouterResourceHandlers on AgentRouter {
           'message': 'Resource type does not match',
         },
       );
+    }
+    if (query['trackUsage'] == 'true') {
+      resource = resource.copyWith(
+        usageCount: resource.usageCount + 1,
+        lastUsedAt: _now().toUtc(),
+      );
+      resources[resourceIndex] = resource;
+      await store.save(resources);
     }
     final bool full = query['mode'] == 'full';
     return HttpResponseData(

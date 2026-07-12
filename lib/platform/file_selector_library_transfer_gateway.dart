@@ -18,6 +18,15 @@ final class FileSelectorLibraryTransferGateway
   }
 
   @override
+  Future<String?> chooseImportJson() async {
+    final XFile? file = await openFile(
+      acceptedTypeGroups: const <XTypeGroup>[_json],
+      confirmButtonText: 'Import',
+    );
+    return file?.readAsString();
+  }
+
+  @override
   Future<String?> saveExport({required String contents}) async {
     final FileSaveLocation? location = await getSaveLocation(
       suggestedName: 'dingdong-library.json',

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
 import 'package:dingdong/features/library/ui/library_import_dialog.dart';
@@ -69,6 +70,9 @@ class LibraryScreen extends StatelessWidget {
                     onImport: transferGateway == null
                         ? null
                         : () => _import(context),
+                    onImportJson: transferGateway == null
+                        ? null
+                        : () => _importJson(context),
                     onExport: transferGateway == null
                         ? null
                         : () => _export(context),
@@ -210,6 +214,43 @@ class LibraryScreen extends StatelessWidget {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> _importJson(BuildContext context) async {
+    final String? contents = await transferGateway?.chooseImportJson();
+    if (contents == null) {
+      return;
+    }
+    try {
+      final LibraryBundleImportResult result = await viewModel.importBundleJson(
+        contents,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.localized(
+                'Imported ${result.imported.length}; skipped ${result.skippedCount}.',
+                '已导入 ${result.imported.length} 项，跳过 ${result.skippedCount} 项。',
+              ),
+            ),
+          ),
+        );
+      }
+    } on FormatException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.localized(
+                'The selected JSON is not a DingDongBuddy resource bundle.',
+                '所选 JSON 不是有效的 DingDongBuddy 资源包。',
+              ),
+            ),
+          ),
+        );
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 name: dingdong
 description: Cross-platform desktop companion for local AI agents.
 publish_to: none
-version: 0.7.0+7
+version: 0.7.2+9
 
 environment:
   sdk: ^3.12.2
@@ -25,6 +25,7 @@ dependencies:
   window_manager: ^0.5.2
 
 dev_dependencies:
+  crypto: ^3.0.7
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter

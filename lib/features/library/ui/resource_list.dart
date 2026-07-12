@@ -30,6 +30,9 @@ class ResourceList extends StatelessWidget {
       itemBuilder: (BuildContext context, int index) {
         final Resource resource = resources[index];
         final bool selected = viewModel.selectedResource?.id == resource.id;
+        final bool selectedForTransfer = viewModel.isSelectedForTransfer(
+          resource.id,
+        );
         return Padding(
           key: ValueKey<String>('resource-row-${resource.id}'),
           padding: const EdgeInsets.symmetric(vertical: 3),
@@ -71,8 +74,34 @@ class ResourceList extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (resource.pinned)
-                      const Icon(Icons.push_pin_outlined, size: 16),
+                    const SizedBox(width: 8),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          context.localized(
+                            'Used ${resource.usageCount}×',
+                            '使用 ${resource.usageCount} 次',
+                          ),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        if (resource.pinned)
+                          const Icon(Icons.push_pin_outlined, size: 14),
+                      ],
+                    ),
+                    Tooltip(
+                      message: context.localized(
+                        'Select for sharing',
+                        '选择用于分享',
+                      ),
+                      child: Checkbox(
+                        key: ValueKey<String>('resource-share-${resource.id}'),
+                        value: selectedForTransfer,
+                        onChanged: (_) =>
+                            viewModel.toggleTransferSelection(resource.id),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
                   ],
                 ),
               ),

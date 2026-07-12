@@ -1,11 +1,47 @@
-# DingDong
+<p align="center">
+  <img src="docs/assets/dingdong-icon.png" width="128" alt="DingDong logo">
+</p>
 
-DingDong 0.7.0 is a Flutter desktop companion for local AI agents. It keeps
-clipboard history, prompts, skills, MCP references, and knowledge in one local
-workspace, and exposes them through a loopback HTTP API and a bundled stdio MCP
-bridge.
+<h1 align="center">DingDong</h1>
 
-## Desktop support
+<p align="center"><strong>让 AI 工具服务于人类的，而不是让人被工具牵着走。</strong></p>
+
+DingDong is a local desktop companion for people who work with AI agents. As
+prompts, Skills, MCP servers, and knowledge accumulate, DingDong keeps them in
+one library with individual switches, stable IDs, usage counts, selective
+sharing, and a local API. When an agent finishes while you are doing something
+else, DingDong sounds to bring you back.
+
+## Philosophy
+
+- **服务于人类的 / In service of people.** Automation should return attention
+  to the person using it.
+- **Local and deliberate.** Data stays on your computer. Clipboard history is
+  excluded from library exports, and you choose exactly what to share.
+- **One source of truth.** Maintain reusable AI resources once, enable only what
+  matters, and let every connected agent use the same library.
+- **Quiet until useful.** Agents see summaries first, load full content only
+  when needed, and DingDong gets your attention only when work is ready.
+
+## What DingDong does
+
+- Manages prompts, Skills, MCP references, and knowledge with per-item switches
+- Counts actual Agent use and records when each resource was last used
+- Exposes the whole library—or selected types and IDs—for AI-assisted duplicate
+  and unused-resource analysis
+- Selectively exports and imports portable JSON bundles while stable IDs and
+  content matching prevent repeated imports
+- Connects local agents through a loopback HTTP API and bundled stdio MCP bridge
+- Captures searchable clipboard history with sensitive-content protection
+- Plays a chosen DingDong sound when an agent finishes or needs attention
+- Supports English, Simplified Chinese, light/dark themes, tray controls, and
+  global quick paste
+
+---
+
+## Development
+
+### Desktop support
 
 - macOS 10.15 or newer
 - Windows 10 or newer
@@ -15,17 +51,7 @@ The application preserves the data location and preference keys used by the
 previous native macOS release. Windows uses the current user's `%APPDATA%`
 directory.
 
-## Features
-
-- Virtualized resource and clipboard lists for large local histories
-- Text, file, and image clipboard capture with sensitive-content protection
-- Global quick-paste shortcut, tray controls, and launch at startup
-- Prompt, Skill, MCP, and knowledge management with import/export and update links
-- Local Agent API, durable sessions/handoffs/memories, and MCP JSON-RPC tools
-- English, Simplified Chinese, light, dark, density, opacity, and sound settings
-- Version checks, system usage diagnostics, and custom notification sounds
-
-## Develop
+### Build and test
 
 ```bash
 flutter pub get
@@ -119,6 +145,9 @@ start a second resource database or a second clipboard monitor.
 - `GET /health`
 - `POST /ding`
 - `GET|POST /library`
+- `GET /library/export` (all resources by default; filter with `type`, `ids`, or
+  `q`; includes unused IDs and exact duplicate groups)
+- `POST /library/import` (folder scan or schema-v2 selective JSON bundle)
 - `GET /clipboard/history`
 - `POST /clipboard/capture`
 - `POST /clipboard/restore/{id}`
@@ -135,6 +164,11 @@ Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`. It tests and builds
 Flutter release artifacts on macOS and Windows, packages both distributions, and
 creates the GitHub release. Creating a branch or ordinary commit does not publish
 anything.
+
+The website reads GitHub's public Releases API and totals each version's asset
+`download_count`. GitHub exposes counts for uploaded release assets; the
+automatically generated source-code archives are not part of this metric. See
+the [GitHub Releases API](https://docs.github.com/en/rest/releases/releases).
 
 ## License
 

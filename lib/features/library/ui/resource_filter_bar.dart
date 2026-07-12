@@ -8,12 +8,14 @@ class ResourceFilterBar extends StatelessWidget {
   const ResourceFilterBar({
     required this.viewModel,
     this.onImport,
+    this.onImportJson,
     this.onExport,
     super.key,
   });
 
   final LibraryViewModel viewModel;
   final VoidCallback? onImport;
+  final VoidCallback? onImportJson;
   final VoidCallback? onExport;
 
   @override
@@ -52,6 +54,8 @@ class ResourceFilterBar extends StatelessWidget {
                             viewModel.startCreating();
                           case _LibraryAction.import:
                             onImport?.call();
+                          case _LibraryAction.importJson:
+                            onImportJson?.call();
                           case _LibraryAction.export:
                             onExport?.call();
                         }
@@ -69,6 +73,16 @@ class ResourceFilterBar extends StatelessWidget {
                                 value: _LibraryAction.import,
                                 child: Text(
                                   context.localized('Import folder', '导入文件夹'),
+                                ),
+                              ),
+                            if (onImportJson != null)
+                              PopupMenuItem<_LibraryAction>(
+                                value: _LibraryAction.importJson,
+                                child: Text(
+                                  context.localized(
+                                    'Import shared JSON',
+                                    '导入分享 JSON',
+                                  ),
                                 ),
                               ),
                             if (onExport != null)
@@ -96,6 +110,16 @@ class ResourceFilterBar extends StatelessWidget {
                       Icons.drive_folder_upload_outlined,
                       size: 19,
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.outlined(
+                    key: const Key('library-import-json'),
+                    tooltip: context.localized(
+                      'Import shared JSON',
+                      '导入分享 JSON',
+                    ),
+                    onPressed: onImportJson,
+                    icon: const Icon(Icons.upload_file_outlined, size: 19),
                   ),
                   const SizedBox(width: 8),
                   IconButton.outlined(
@@ -150,6 +174,24 @@ class ResourceFilterBar extends StatelessWidget {
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: viewModel.selectAllVisibleForTransfer,
+                  child: Text(context.localized('Select visible', '选择当前结果')),
+                ),
+                if (viewModel.transferSelectionCount > 0) ...<Widget>[
+                  Text(
+                    context.localized(
+                      '${viewModel.transferSelectionCount} selected',
+                      '已选择 ${viewModel.transferSelectionCount} 项',
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  TextButton(
+                    onPressed: viewModel.clearTransferSelection,
+                    child: Text(context.localized('Clear', '清除')),
+                  ),
+                ],
               ],
             ),
           ),
@@ -159,7 +201,7 @@ class ResourceFilterBar extends StatelessWidget {
   }
 }
 
-enum _LibraryAction { create, import, export }
+enum _LibraryAction { create, import, importJson, export }
 
 String _typeLabel(BuildContext context, ResourceType type) {
   return switch (type) {

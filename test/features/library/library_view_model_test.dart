@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
@@ -143,6 +145,41 @@ void main() {
       );
     },
   );
+
+  test('exports only selected resources and skips them on re-import', () async {
+    final DateTime now = DateTime.utc(2026, 7, 13);
+    Resource resource(String id) => Resource(
+      id: id,
+      type: ResourceType.skill,
+      title: 'Skill $id',
+      content: 'Content $id',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final LibraryViewModel source = LibraryViewModel(
+      _FakeResourceStore(<Resource>[resource('one'), resource('two')]),
+      now: () => now,
+    );
+    await source.load();
+    source.toggleTransferSelection('two');
+
+    final String bundle = source.exportJson();
+    final List<Object?> items =
+        (jsonDecode(bundle) as Map<String, Object?>)['items'] as List<Object?>;
+    expect(items, hasLength(1));
+    expect((items.single as Map<String, Object?>)['id'], 'two');
+
+    final _FakeResourceStore targetStore = _FakeResourceStore(<Resource>[]);
+    final LibraryViewModel target = LibraryViewModel(targetStore);
+    await target.load();
+    final first = await target.importBundleJson(bundle);
+    final second = await target.importBundleJson(bundle);
+
+    expect(first.imported.single.id, 'two');
+    expect(second.imported, isEmpty);
+    expect(second.duplicateIds, <String>['two']);
+    expect(targetStore.savedResources, hasLength(1));
+  });
 }
 
 final class _FakeUpdateFetcher implements ResourceUpdateFetcher {

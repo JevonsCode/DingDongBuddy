@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
@@ -12,6 +14,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  final String todayShortcut = Platform.isMacOS ? '⌘ Q' : 'Ctrl Q';
+
   testWidgets('quick-launch surface is a compact three-tab popup', (
     WidgetTester tester,
   ) async {
@@ -219,15 +223,15 @@ void main() {
     await tester.pumpWidget(const DingDongApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('⌘ Q'), findsNothing);
+    expect(find.text(todayShortcut), findsNothing);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await tester.pump();
-    expect(find.text('⌘ Q'), findsOneWidget);
+    expect(find.text(todayShortcut), findsOneWidget);
 
     await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pump();
-    expect(find.text('⌘ Q'), findsNothing);
+    expect(find.text(todayShortcut), findsNothing);
   });
 
   testWidgets('Command-Q switches the callout to Today instead of quitting', (
@@ -396,7 +400,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 180));
 
-    expect(find.text('⌘ Q'), findsOneWidget);
+    expect(find.text(todayShortcut), findsOneWidget);
     expect(
       tester.getCenter(content).dx,
       lessThan(tester.getCenter(tab).dx - 10),
@@ -406,7 +410,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 180));
 
-    expect(find.text('⌘ Q'), findsNothing);
+    expect(find.text(todayShortcut), findsNothing);
     expect(
       (tester.getCenter(tab).dx - tester.getCenter(content).dx).abs(),
       lessThan(1),
