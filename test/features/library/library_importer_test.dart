@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path/path.dart' as path;
 
 void main() {
   late Directory root;
@@ -61,9 +60,6 @@ void main() {
     );
 
     expect(result.imported.single.type, ResourceType.skill);
-    expect(
-      path.equals(result.imported.single.content, skill.absolute.path),
-      isTrue,
-    );
+    expect(result.imported.single.content, '# Release');
   });
 }

@@ -44,6 +44,7 @@ final class LibraryImporter {
 
   static const int maximumItems = 50;
   static const int maximumPromptCharacters = 20000;
+  static const int maximumPortableCharacters = 100000;
 
   final String Function() _idGenerator;
   final DateTime Function() _now;
@@ -76,7 +77,7 @@ final class LibraryImporter {
     final int limit = request.limit.clamp(1, maximumItems);
     final Set<String> knownContent = existing
         .where((Resource item) => item.type == request.type)
-        .map((Resource item) => _normalizedContent(item.content, item.type))
+        .map((Resource item) => _normalizedContent(item.content))
         .toSet();
     final List<Resource> imported = <Resource>[];
     int skipped = 0;
@@ -87,9 +88,7 @@ final class LibraryImporter {
       }
       final Resource? resource = await _makeResource(child, request);
       if (resource == null ||
-          !knownContent.add(
-            _normalizedContent(resource.content, resource.type),
-          )) {
+          !knownContent.add(_normalizedContent(resource.content))) {
         skipped += 1;
         continue;
       }
@@ -144,14 +143,17 @@ final class LibraryImporter {
     FileSystemEntity entity,
     LibraryImportRequest request,
   ) async {
-    if (entity is! Directory ||
-        !await _containsMarker(entity, const <String>[
-          'SKILL.md',
-          'skill.md',
-        ])) {
+    if (entity is! Directory) {
       return null;
     }
-    return _resource(request, entity, content: entity.absolute.path);
+    final File? marker = await _firstFile(entity, const <String>[
+      'SKILL.md',
+      'skill.md',
+    ]);
+    if (marker == null) {
+      return null;
+    }
+    return _resource(request, entity, content: await marker.readAsString());
   }
 
   Future<Resource?> _mcp(
@@ -159,13 +161,15 @@ final class LibraryImporter {
     LibraryImportRequest request,
   ) async {
     if (entity is Directory) {
-      if (!await _containsMarker(entity, const <String>[
+      final File? marker = await _firstFile(entity, const <String>[
         'package.json',
         'mcp.json',
         'server.json',
-      ])) {
+      ]);
+      if (marker == null) {
         return null;
       }
+      return _resource(request, entity, content: await marker.readAsString());
     } else if (entity is File) {
       if (!<String>{
         '.json',
@@ -178,7 +182,7 @@ final class LibraryImporter {
     } else {
       return null;
     }
-    return _resource(request, entity, content: entity.absolute.path);
+    return _resource(request, entity, content: await entity.readAsString());
   }
 
   Future<Resource?> _knowledge(
@@ -199,7 +203,13 @@ final class LibraryImporter {
     if (entity is! File && entity is! Directory) {
       return null;
     }
-    return _resource(request, entity, content: entity.absolute.path);
+    final String content = entity is File
+        ? await entity.readAsString()
+        : await _knowledgeDirectoryText(entity as Directory);
+    if (content.trim().isEmpty) {
+      return null;
+    }
+    return _resource(request, entity, content: content);
   }
 
   Resource _resource(
@@ -222,13 +232,46 @@ final class LibraryImporter {
   }
 }
 
-Future<bool> _containsMarker(Directory directory, List<String> names) async {
+Future<File?> _firstFile(Directory directory, List<String> names) async {
   for (final String name in names) {
-    if (await File(path.join(directory.path, name)).exists()) {
-      return true;
+    final File file = File(path.join(directory.path, name));
+    if (await file.exists()) {
+      return file;
     }
   }
-  return false;
+  return null;
+}
+
+Future<String> _knowledgeDirectoryText(Directory directory) async {
+  final List<File> files = await directory
+      .list(recursive: true, followLinks: false)
+      .where((FileSystemEntity entity) => entity is File)
+      .cast<File>()
+      .where(
+        (File file) => <String>{
+          '.md',
+          '.markdown',
+          '.txt',
+          '.json',
+          '.yaml',
+          '.yml',
+        }.contains(path.extension(file.path).toLowerCase()),
+      )
+      .take(30)
+      .toList(growable: false);
+  files.sort((File left, File right) => left.path.compareTo(right.path));
+  final StringBuffer output = StringBuffer();
+  for (final File file in files) {
+    final String content = await file.readAsString();
+    final String section =
+        '## ${path.relative(file.path, from: directory.path)}\n\n$content\n\n';
+    if (output.length + section.length >
+        LibraryImporter.maximumPortableCharacters) {
+      break;
+    }
+    output.write(section);
+  }
+  return output.toString().trim();
 }
 
 String _expandedPath(String value) {
@@ -242,12 +285,8 @@ String _expandedPath(String value) {
   return path.normalize(path.absolute(trimmed));
 }
 
-String _normalizedContent(String content, ResourceType type) {
-  return switch (type) {
-    ResourceType.skill || ResourceType.mcp || ResourceType.knowledge =>
-      path.normalize(path.absolute(_expandedPath(content))),
-    ResourceType.prompt || ResourceType.clipboard => content,
-  };
+String _normalizedContent(String content) {
+  return content.replaceAll('\r\n', '\n').trim();
 }
 
 DateTime _utcNow() => DateTime.now().toUtc();

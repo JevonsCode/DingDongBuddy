@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:path/path.dart' as path;
 
 /// Portable, selective resource bundle with stable-ID and content deduplication.
 final class LibraryBundle {
@@ -29,9 +31,7 @@ final class LibraryBundle {
       'selectedIds': items
           .map((Resource resource) => resource.id)
           .toList(growable: false),
-      'items': items
-          .map((Resource resource) => resource.toJson())
-          .toList(growable: false),
+      'items': items.map(_portableJson).toList(growable: false),
     };
   }
 
@@ -126,6 +126,112 @@ final class LibraryBundle {
         .map(List<String>.unmodifiable)
         .toList(growable: false);
   }
+}
+
+Map<String, Object?> _portableJson(Resource resource) {
+  final Map<String, Object?> json = Map<String, Object?>.of(resource.toJson());
+  json['content'] = _portableContent(resource);
+  // These fields can contain machine-specific paths or private URLs and are
+  // intentionally not transferred to another computer.
+  json.remove('source');
+  json.remove('updateURL');
+  return json;
+}
+
+String _portableContent(Resource resource) {
+  if (resource.type == ResourceType.prompt ||
+      !_looksLikeLocalPath(resource.content)) {
+    return resource.content;
+  }
+  final String expanded = resource.content.startsWith('~/')
+      ? path.join(
+          Platform.environment['HOME'] ?? '~',
+          resource.content.substring(2),
+        )
+      : resource.content;
+  final FileSystemEntityType entityType = FileSystemEntity.typeSync(
+    expanded,
+    followLinks: false,
+  );
+  if (entityType == FileSystemEntityType.file) {
+    return File(expanded).readAsStringSync();
+  }
+  if (entityType != FileSystemEntityType.directory) {
+    throw FormatException(
+      'Resource ${resource.id} points to a local path that cannot be shared.',
+    );
+  }
+  final Directory directory = Directory(expanded);
+  if (resource.type == ResourceType.skill) {
+    return _firstPortableFile(directory, const <String>[
+      'SKILL.md',
+      'skill.md',
+    ]).readAsStringSync();
+  }
+  if (resource.type == ResourceType.mcp) {
+    return _firstPortableFile(directory, const <String>[
+      'mcp.json',
+      'server.json',
+      'package.json',
+    ]).readAsStringSync();
+  }
+  return _portableKnowledgeDirectory(directory);
+}
+
+File _firstPortableFile(Directory directory, List<String> names) {
+  for (final String name in names) {
+    final File file = File(path.join(directory.path, name));
+    if (file.existsSync()) {
+      return file;
+    }
+  }
+  throw FormatException(
+    'No portable resource entry was found in ${directory.path}.',
+  );
+}
+
+String _portableKnowledgeDirectory(Directory directory) {
+  final List<File> files =
+      directory
+          .listSync(recursive: true, followLinks: false)
+          .whereType<File>()
+          .where(
+            (File file) => <String>{
+              '.md',
+              '.markdown',
+              '.txt',
+              '.json',
+              '.yaml',
+              '.yml',
+            }.contains(path.extension(file.path).toLowerCase()),
+          )
+          .take(30)
+          .toList(growable: false)
+        ..sort((File left, File right) => left.path.compareTo(right.path));
+  final StringBuffer output = StringBuffer();
+  for (final File file in files) {
+    final String section =
+        '## ${path.relative(file.path, from: directory.path)}\n\n'
+        '${file.readAsStringSync()}\n\n';
+    if (output.length + section.length > 100000) {
+      break;
+    }
+    output.write(section);
+  }
+  final String content = output.toString().trim();
+  if (content.isEmpty) {
+    throw FormatException(
+      'Knowledge resource ${directory.path} has no portable text files.',
+    );
+  }
+  return content;
+}
+
+bool _looksLikeLocalPath(String value) {
+  final String trimmed = value.trim();
+  return trimmed.startsWith('/') ||
+      trimmed.startsWith('~/') ||
+      RegExp(r'^[A-Za-z]:[\\/]').hasMatch(trimmed);
 }
 
 final class LibraryBundleImportResult {

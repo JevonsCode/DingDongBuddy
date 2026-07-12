@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
@@ -86,5 +87,35 @@ void main() {
     );
 
     expect(result.imported.map((Resource item) => item.id), <String>['two']);
+  });
+
+  test('local-path skills export portable text without path metadata', () {
+    final Directory directory = Directory.systemTemp.createTempSync(
+      'dingdong-portable-skill-',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+    File('${directory.path}/SKILL.md').writeAsStringSync('# Portable skill');
+    final DateTime now = DateTime.utc(2026, 7, 13);
+    final Resource resource = Resource(
+      id: 'portable-skill',
+      type: ResourceType.skill,
+      title: 'Portable skill',
+      content: directory.path,
+      source: '/private/company/workspace',
+      updateUrl: 'https://private.example/token',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    final Map<String, Object?> payload = LibraryBundle.payload(<Resource>[
+      resource,
+    ], generatedAt: now);
+    final Map<String, Object?> item =
+        (payload['items'] as List<Object?>).single as Map<String, Object?>;
+
+    expect(item['content'], '# Portable skill');
+    expect(item, isNot(contains('source')));
+    expect(item, isNot(contains('updateURL')));
+    expect(jsonEncode(payload), isNot(contains(directory.path)));
   });
 }

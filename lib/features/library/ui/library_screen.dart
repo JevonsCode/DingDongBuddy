@@ -200,20 +200,35 @@ class LibraryScreen extends StatelessWidget {
   }
 
   Future<void> _export(BuildContext context) async {
-    final String? path = await transferGateway?.saveExport(
-      contents: viewModel.exportJson(),
-    );
-    if (path != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.localized(
-              'Exported resource library to $path',
-              '资源库已导出到 $path',
+    try {
+      final String? path = await transferGateway?.saveExport(
+        contents: viewModel.exportJson(),
+      );
+      if (path != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.localized(
+                'Exported resource library to $path',
+                '资源库已导出到 $path',
+              ),
             ),
           ),
-        ),
-      );
+        );
+      }
+    } on FormatException catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.localized(
+                'A selected local-path resource could not be shared: $error',
+                '所选资源包含无法安全分享的本地路径：$error',
+              ),
+            ),
+          ),
+        );
+      }
     }
   }
 
