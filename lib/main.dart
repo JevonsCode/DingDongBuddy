@@ -66,10 +66,16 @@ Future<void> main(List<String> arguments) async {
       MultiWindowClipboardPreviewLauncher();
   final MultiWindowSettingsLauncher settingsWindowLauncher =
       MultiWindowSettingsLauncher(parentWindowId: windowController.windowId);
+  late final AppDependencies dependencies;
+  late final SettingsViewModel settingsViewModel;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
     onHideAuxiliaryWindows: clipboardPreviewLauncher.hide,
+    clipboardMonitoringState: () =>
+        dependencies.clipboardMonitorService.isRunning,
+    useChineseLabels: () =>
+        _usesChineseLabels(settingsViewModel.settings.language),
   );
-  final AppDependencies dependencies = AppDependencies.production(
+  dependencies = AppDependencies.production(
     onNotification: (request) async {
       activityController.record(
         source: request.source ?? 'Agent',
@@ -92,7 +98,7 @@ Future<void> main(List<String> arguments) async {
   final NativeLaunchAtStartup launchAtStartup = NativeLaunchAtStartup();
   final NativeNotificationGateway notificationGateway =
       NativeNotificationGateway();
-  final SettingsViewModel settingsViewModel = SettingsViewModel(
+  settingsViewModel = SettingsViewModel(
     dependencies.settingsRepository,
     clipboardMonitoring: dependencies.clipboardMonitorService,
     launchAtStartup: launchAtStartup,
@@ -105,12 +111,22 @@ Future<void> main(List<String> arguments) async {
       dependencies.paths.applicationSupportDirectory,
     ),
   );
+  await settingsViewModel.load();
   final DesktopShellService desktopShellService = DesktopShellService(
     gateway: shellGateway,
     controller: shellController,
     activityController: activityController,
     defaultWorkspaceIndex: () =>
         settingsViewModel.settings.defaultWorkspace.index,
+    onClipboardReveal: () async {
+      await dependencies.clipboardCaptureService.capture();
+    },
+    onClipboardMonitoringChanged: settingsViewModel.setClipboardMonitoring,
+    onClearClipboardHistory: () => _clearClipboardHistory(dependencies),
+    onShowSettings: () async {
+      await shellGateway.hide();
+      await settingsWindowLauncher.show();
+    },
   );
   await desktopShellService.start();
   Future<Object?> handleSettingsWindowCall(MethodCall call) async {
@@ -187,6 +203,28 @@ Future<void> main(List<String> arguments) async {
       shellController: shellController,
     ),
   );
+}
+
+bool _usesChineseLabels(AppLanguagePreference language) {
+  return switch (language) {
+    AppLanguagePreference.chinese => true,
+    AppLanguagePreference.english => false,
+    AppLanguagePreference.system =>
+      Platform.localeName.toLowerCase().startsWith('zh'),
+  };
+}
+
+Future<void> _clearClipboardHistory(AppDependencies dependencies) async {
+  for (final ClipboardRecord record in dependencies.clipboardStore.list(
+    limit: 5000,
+  )) {
+    dependencies.clipboardStore.delete(record.id);
+  }
+  final Directory imageDirectory = dependencies.paths.clipboardImagesDirectory;
+  if (await imageDirectory.exists()) {
+    await imageDirectory.delete(recursive: true);
+  }
+  await imageDirectory.create(recursive: true);
 }
 
 Future<void> _runSettingsWindow(

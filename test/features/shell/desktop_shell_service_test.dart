@@ -51,8 +51,36 @@ void main() {
     expect(controller.selectedIndex, 2);
     expect(gateway.toggleCount, 1);
     expect(gateway.showCount, 0);
+    expect(controller.clipboardRefreshRevision, 1);
     await service.stop();
   });
+
+  test(
+    'showing Clipboard performs a fallback capture before refresh',
+    () async {
+      final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
+      final ShellController controller = ShellController();
+      int captureCount = 0;
+      final DesktopShellService service = DesktopShellService(
+        gateway: gateway,
+        controller: controller,
+        activityController: ActivityController(),
+        defaultWorkspaceIndex: () => 0,
+        onClipboardReveal: () async {
+          captureCount += 1;
+        },
+      );
+      await service.start();
+
+      gateway.emit(DesktopShellCommand.showClipboard);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(captureCount, 1);
+      expect(controller.clipboardRefreshRevision, 1);
+      expect(gateway.showCount, 1);
+      await service.stop();
+    },
+  );
 
   test('native filter shortcut reaches the clipboard callout state', () async {
     final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
@@ -71,6 +99,47 @@ void main() {
     expect(controller.clipboardFilterToggleRevision, 1);
     await service.stop();
   });
+
+  test(
+    'tray utility commands update monitoring, history, settings, and search',
+    () async {
+      final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
+      final ShellController controller = ShellController();
+      final List<bool> monitoringChanges = <bool>[];
+      int clearCount = 0;
+      int settingsCount = 0;
+      final DesktopShellService service = DesktopShellService(
+        gateway: gateway,
+        controller: controller,
+        activityController: ActivityController(),
+        defaultWorkspaceIndex: () => 0,
+        onClipboardMonitoringChanged: (bool enabled) async {
+          monitoringChanges.add(enabled);
+        },
+        onClearClipboardHistory: () async {
+          clearCount += 1;
+        },
+        onShowSettings: () async {
+          settingsCount += 1;
+        },
+      );
+      await service.start();
+
+      gateway.emit(DesktopShellCommand.startClipboardMonitoring);
+      gateway.emit(DesktopShellCommand.stopClipboardMonitoring);
+      gateway.emit(DesktopShellCommand.clearClipboardHistory);
+      gateway.emit(DesktopShellCommand.showSettings);
+      gateway.emit(DesktopShellCommand.focusClipboardSearch);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(monitoringChanges, <bool>[true, false]);
+      expect(clearCount, 1);
+      expect(settingsCount, 1);
+      expect(controller.selectedIndex, 2);
+      expect(controller.clipboardSearchFocusRevision, 1);
+      await service.stop();
+    },
+  );
 
   test('tray click opens Dynamic when a completion is unseen', () async {
     final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();

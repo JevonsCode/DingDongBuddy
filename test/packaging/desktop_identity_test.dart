@@ -40,14 +40,14 @@ void main() {
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
   });
 
-  test('desktop hosts consume Flutter version 0.7.2 from pubspec', () {
+  test('desktop hosts consume application version 0.7.3 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.2+9'));
+    expect(pubspec, contains('version: 0.7.3+10'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -59,6 +59,10 @@ void main() {
     );
 
     expect(macAppIcon.readAsBytesSync(), canonicalLogo.readAsBytesSync());
+    final String appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+    expect(appDelegate, contains('NSApp.applicationIconImage = icon'));
   });
 
   test('macOS Help menu links to the DingDong website', () {
@@ -138,31 +142,42 @@ void main() {
     expect(macHost, contains('App.framework/Resources/flutter_assets'));
   });
 
-  test('release automation publishes Flutter macOS and Windows artifacts', () {
-    final String workflow = File(
-      '.github/workflows/release.yml',
-    ).readAsStringSync();
-    final String releaseGate = File(
-      '.github/workflows/release-after-ci.yml',
-    ).readAsStringSync();
+  test(
+    'release automation publishes macOS installer and Windows artifacts',
+    () {
+      final String workflow = File(
+        '.github/workflows/release.yml',
+      ).readAsStringSync();
+      final String releaseGate = File(
+        '.github/workflows/release-after-ci.yml',
+      ).readAsStringSync();
 
-    expect(workflow, contains('flutter build macos --release'));
-    expect(workflow, contains('scripts/sign_macos_bundle.sh'));
-    expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
-    expect(workflow, contains('flutter build windows --release'));
-    expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
-    expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
-    expect(workflow, isNot(contains('swift test')));
-    expect(
-      Directory('Sources').existsSync()
-          ? Directory(
-              'Sources',
-            ).listSync(recursive: true).whereType<File>().toList()
-          : const <File>[],
-      isEmpty,
-    );
-    expect(File('Package.swift').existsSync(), isFalse);
-  });
+      expect(workflow, contains('flutter build macos --release'));
+      expect(workflow, contains('scripts/sign_macos_bundle.sh'));
+      expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
+      expect(workflow, contains('scripts/create_macos_dmg.sh'));
+      expect(workflow, contains('dist/*.dmg'));
+      expect(workflow, contains('scripts/notarize_macos_artifact.sh'));
+      final String dmgBuilder = File(
+        'scripts/create_macos_dmg.sh',
+      ).readAsStringSync();
+      expect(dmgBuilder, contains('/bin/ln -s /Applications'));
+      expect(dmgBuilder, contains('/usr/bin/hdiutil create'));
+      expect(workflow, contains('flutter build windows --release'));
+      expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
+      expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
+      expect(workflow, isNot(contains('swift test')));
+      expect(
+        Directory('Sources').existsSync()
+            ? Directory(
+                'Sources',
+              ).listSync(recursive: true).whereType<File>().toList()
+            : const <File>[],
+        isEmpty,
+      );
+      expect(File('Package.swift').existsSync(), isFalse);
+    },
+  );
 
   test('local macOS upgrades prefer a generic stable signing identity', () {
     final String signer = File(
@@ -195,5 +210,14 @@ void main() {
       expect(entitlements, contains('com.apple.security.network.client'));
       expect(entitlements, contains('<true/>'));
     }
+  });
+
+  test('tray and display plugins share one multi-monitor coordinate space', () {
+    final String trayPlugin = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift',
+    ).readAsStringSync();
+
+    expect(trayPlugin, contains('NSScreen.screens[0].frame'));
+    expect(trayPlugin, isNot(contains('NSScreen.main!.frame')));
   });
 }

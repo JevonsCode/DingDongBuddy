@@ -101,7 +101,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(key: Key('app-version-0.7.2')),
+                        const SizedBox(key: Key('app-version-0.7.3')),
                       ],
                     ),
                   ),
@@ -134,7 +134,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     onTap: () => widget.onOpenWorkspace(1),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: _MetricCard(
                     key: const Key('today-open-clipboard'),
@@ -144,7 +144,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     onTap: () => widget.onOpenWorkspace(2),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: _MetricCard(
                     symbol: 'mcp',

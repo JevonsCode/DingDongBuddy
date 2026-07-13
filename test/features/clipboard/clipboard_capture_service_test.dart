@@ -88,6 +88,51 @@ void main() {
     expect(image.existsSync(), isTrue);
     expect(image.readAsBytesSync(), <int>[0x89, 0x50, 0x4e, 0x47]);
   });
+
+  test('capturing identical text promotes one durable record', () async {
+    final InMemoryClipboardStore store = InMemoryClipboardStore();
+    int clock = 0;
+    int identifier = 0;
+    final ClipboardCaptureService service = ClipboardCaptureService(
+      gateway: _FakeClipboardGateway(
+        const ClipboardSnapshot(text: 'same clipboard value'),
+      ),
+      store: store,
+      idGenerator: () => 'TEXT-${identifier++}',
+      now: () => DateTime.utc(2026, 7, 13, 10, clock++),
+    );
+
+    final first = await service.capture();
+    final second = await service.capture();
+
+    expect(second?.id, first?.id);
+    expect(second?.updatedAt, DateTime.utc(2026, 7, 13, 10, 1));
+    expect(store.list(limit: 10), hasLength(1));
+  });
+
+  test('capturing identical image bytes reuses the stored preview', () async {
+    final Directory directory = Directory.systemTemp.createTempSync(
+      'dingdong-deduplicate-image-',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final InMemoryClipboardStore store = InMemoryClipboardStore();
+    int identifier = 0;
+    final ClipboardCaptureService service = ClipboardCaptureService(
+      gateway: _FakeClipboardGateway(
+        ClipboardSnapshot(imageBytes: Uint8List.fromList(<int>[1, 2, 3, 4])),
+      ),
+      store: store,
+      imageStoreDirectory: directory,
+      idGenerator: () => 'IMAGE-${identifier++}',
+    );
+
+    final first = await service.capture();
+    final second = await service.capture();
+
+    expect(second?.id, first?.id);
+    expect(store.list(limit: 10), hasLength(1));
+    expect(directory.listSync().whereType<File>(), hasLength(1));
+  });
 }
 
 final class _FakeClipboardGateway implements ClipboardGateway {

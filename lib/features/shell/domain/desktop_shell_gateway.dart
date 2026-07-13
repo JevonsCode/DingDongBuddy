@@ -5,6 +5,11 @@ enum DesktopShellCommand {
   showClipboard,
   toggleClipboard,
   toggleClipboardFilters,
+  focusClipboardSearch,
+  showSettings,
+  startClipboardMonitoring,
+  stopClipboardMonitoring,
+  clearClipboardHistory,
   quit,
 }
 

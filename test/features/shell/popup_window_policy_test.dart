@@ -9,9 +9,35 @@ void main() {
     expect(PopupWindowPolicy.maximumSize, const Size(390, 940));
   });
 
-  test('popup defaults near the right edge with breathing room', () {
-    const Rect trayBounds = Rect.fromLTWH(760, 0, 24, 24);
-    const Rect visibleDisplay = Rect.fromLTWH(0, 24, 1440, 876);
+  test('popup shortens to the active display while respecting its minimum', () {
+    expect(
+      PopupWindowPolicy.sizeForVisibleDisplay(
+        const Rect.fromLTWH(0, 24, 1280, 600),
+      ),
+      const Size(390, 560),
+    );
+  });
+
+  test(
+    'popup starts three default insets from the active display left edge',
+    () {
+      const Rect trayBounds = Rect.fromLTWH(760, 0, 24, 24);
+      const Rect visibleDisplay = Rect.fromLTWH(0, 24, 1440, 876);
+
+      expect(
+        PopupWindowPolicy.positionBelowTray(
+          trayBounds: trayBounds,
+          visibleDisplay: visibleDisplay,
+          popupSize: PopupWindowPolicy.initialSize,
+        ),
+        const Offset(60, 44),
+      );
+    },
+  );
+
+  test('popup placement uses the selected display coordinate space', () {
+    const Rect trayBounds = Rect.fromLTWH(2160, 0, 24, 24);
+    const Rect visibleDisplay = Rect.fromLTWH(1440, 24, 1440, 876);
 
     expect(
       PopupWindowPolicy.positionBelowTray(
@@ -19,7 +45,21 @@ void main() {
         visibleDisplay: visibleDisplay,
         popupSize: PopupWindowPolicy.initialSize,
       ),
-      const Offset(1030, 36),
+      const Offset(1500, 44),
+    );
+  });
+
+  test('popup stays inside a shorter visible display', () {
+    const Rect trayBounds = Rect.fromLTWH(760, 0, 24, 24);
+    const Rect visibleDisplay = Rect.fromLTWH(0, 24, 1280, 600);
+
+    expect(
+      PopupWindowPolicy.positionBelowTray(
+        trayBounds: trayBounds,
+        visibleDisplay: visibleDisplay,
+        popupSize: const Size(390, 540),
+      ),
+      const Offset(60, 44),
     );
   });
 

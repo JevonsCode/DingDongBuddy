@@ -11,12 +11,20 @@ final class DesktopShellService {
     required this.controller,
     required this.activityController,
     required this.defaultWorkspaceIndex,
+    this.onClipboardReveal,
+    this.onClipboardMonitoringChanged,
+    this.onClearClipboardHistory,
+    this.onShowSettings,
   });
 
   final DesktopShellGateway gateway;
   final ShellController controller;
   final ActivityController activityController;
   final int Function() defaultWorkspaceIndex;
+  final Future<void> Function()? onClipboardReveal;
+  final Future<void> Function(bool enabled)? onClipboardMonitoringChanged;
+  final Future<void> Function()? onClearClipboardHistory;
+  final Future<void> Function()? onShowSettings;
   StreamSubscription<DesktopShellCommand>? _subscription;
 
   Future<void> start() async {
@@ -37,7 +45,11 @@ final class DesktopShellService {
           controller.open(0);
           activityController.requestReveal();
         } else {
-          controller.open(defaultWorkspaceIndex());
+          final int workspace = defaultWorkspaceIndex();
+          controller.open(workspace);
+          if (workspace == 2) {
+            await _refreshClipboard();
+          }
         }
         await gateway.toggleAndFocus();
       case DesktopShellCommand.showToday:
@@ -45,14 +57,33 @@ final class DesktopShellService {
         await gateway.showAndFocus();
       case DesktopShellCommand.showClipboard:
         controller.open(2);
+        await _refreshClipboard();
         await gateway.showAndFocus();
       case DesktopShellCommand.toggleClipboard:
         controller.open(2);
+        await _refreshClipboard();
         await gateway.toggleAndFocus();
       case DesktopShellCommand.toggleClipboardFilters:
         controller.requestClipboardFilterToggle();
+      case DesktopShellCommand.focusClipboardSearch:
+        controller.open(2);
+        controller.requestClipboardSearchFocus();
+      case DesktopShellCommand.showSettings:
+        await onShowSettings?.call();
+      case DesktopShellCommand.startClipboardMonitoring:
+        await onClipboardMonitoringChanged?.call(true);
+      case DesktopShellCommand.stopClipboardMonitoring:
+        await onClipboardMonitoringChanged?.call(false);
+      case DesktopShellCommand.clearClipboardHistory:
+        await onClearClipboardHistory?.call();
+        controller.requestClipboardRefresh();
       case DesktopShellCommand.quit:
         await gateway.quit();
     }
+  }
+
+  Future<void> _refreshClipboard() async {
+    await onClipboardReveal?.call();
+    controller.requestClipboardRefresh();
   }
 }

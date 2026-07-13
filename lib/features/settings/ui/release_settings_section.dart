@@ -27,8 +27,8 @@ class ReleaseSettingsSection extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 context.localized(
-                  'DingDong $currentAppVersion · Flutter desktop',
-                  'DingDong $currentAppVersion · Flutter 桌面版',
+                  'DingDong $currentAppVersion · Desktop',
+                  'DingDong $currentAppVersion · 桌面版',
                 ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),

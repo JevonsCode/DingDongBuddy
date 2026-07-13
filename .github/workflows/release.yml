@@ -34,7 +34,14 @@ jobs:
   macos:
     needs: validate
     runs-on: macos-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
+    env:
+      MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -49,23 +56,51 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build macos --release
+      - name: Configure Developer ID signing
+        if: env.MACOS_CERTIFICATE_BASE64 != ''
+        run: |
+          chmod +x scripts/setup_macos_distribution_signing.sh
+          scripts/setup_macos_distribution_signing.sh
       - name: Seal macOS application bundle
         run: |
           chmod +x scripts/sign_macos_bundle.sh
           scripts/sign_macos_bundle.sh \
             build/macos/Build/Products/Release/DingDong.app \
             macos/Runner/Release.entitlements
+      - name: Notarize and staple macOS application
+        if: >-
+          env.APPLE_ID != '' &&
+          env.APPLE_TEAM_ID != '' &&
+          env.APPLE_APP_PASSWORD != '' &&
+          env.MACOS_CERTIFICATE_BASE64 != ''
+        run: |
+          chmod +x scripts/notarize_macos_artifact.sh
+          scripts/notarize_macos_artifact.sh \
+            build/macos/Build/Products/Release/DingDong.app
       - name: Package macOS application
         run: |
           VERSION="${RELEASE_TAG#v}"
           mkdir -p dist
+          chmod +x scripts/create_macos_dmg.sh
+          scripts/create_macos_dmg.sh \
+            build/macos/Build/Products/Release/DingDong.app \
+            "dist/DingDong-${VERSION}-macos.dmg"
           ditto -c -k --sequesterRsrc --keepParent \
             build/macos/Build/Products/Release/DingDong.app \
             "dist/DingDong-${VERSION}-macos.zip"
+      - name: Notarize and staple macOS installer
+        if: >-
+          env.APPLE_ID != '' &&
+          env.APPLE_TEAM_ID != '' &&
+          env.APPLE_APP_PASSWORD != '' &&
+          env.MACOS_CERTIFICATE_BASE64 != ''
+        run: scripts/notarize_macos_artifact.sh dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: DingDong-macos
-          path: dist/*.zip
+          path: |
+            dist/*.dmg
+            dist/*.zip
           if-no-files-found: error
 
   windows:
@@ -112,11 +147,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" dist/*.zip \
+            gh release upload "$RELEASE_TAG" dist/* \
               --repo "$GITHUB_REPOSITORY" \
               --clobber
           else
-            gh release create "$RELEASE_TAG" dist/*.zip \
+            gh release create "$RELEASE_TAG" dist/* \
               --repo "$GITHUB_REPOSITORY" \
               --title "DingDong ${RELEASE_TAG#v}" \
               --generate-notes

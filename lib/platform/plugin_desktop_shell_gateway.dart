@@ -14,9 +14,16 @@ import 'package:window_manager/window_manager.dart';
 final class PluginDesktopShellGateway
     with TrayListener, WindowListener
     implements DesktopShellGateway {
-  PluginDesktopShellGateway({this.onHideAuxiliaryWindows});
+  PluginDesktopShellGateway({
+    this.onHideAuxiliaryWindows,
+    bool Function()? clipboardMonitoringState,
+    bool Function()? useChineseLabels,
+  }) : _clipboardMonitoringState = clipboardMonitoringState ?? (() => false),
+       _useChineseLabels = useChineseLabels ?? (() => false);
 
   final Future<void> Function()? onHideAuxiliaryWindows;
+  final bool Function() _clipboardMonitoringState;
+  final bool Function() _useChineseLabels;
   static const MethodChannel _hotKeyChannel = MethodChannel(
     'dingdong/global_hotkey',
   );
@@ -55,25 +62,7 @@ final class PluginDesktopShellGateway
     trayManager.addListener(this);
     await _unreadController.clear();
     await trayManager.setToolTip('DingDong');
-    await trayManager.setContextMenu(
-      Menu(
-        items: <MenuItem>[
-          MenuItem(
-            label: 'Open DingDong',
-            onClick: (_) => _commands.add(DesktopShellCommand.showToday),
-          ),
-          MenuItem(
-            label: 'Clipboard',
-            onClick: (_) => _commands.add(DesktopShellCommand.showClipboard),
-          ),
-          MenuItem.separator(),
-          MenuItem(
-            label: 'Quit DingDong',
-            onClick: (_) => _commands.add(DesktopShellCommand.quit),
-          ),
-        ],
-      ),
-    );
+    await _rebuildContextMenu();
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'pressed') {
         _commands.add(DesktopShellCommand.toggleClipboard);
@@ -83,6 +72,9 @@ final class PluginDesktopShellGateway
       } else if (call.method == 'workspaceShortcut' &&
           call.arguments == 'filters') {
         _commands.add(DesktopShellCommand.toggleClipboardFilters);
+      } else if (call.method == 'workspaceShortcut' &&
+          call.arguments == 'search') {
+        _commands.add(DesktopShellCommand.focusClipboardSearch);
       }
     });
     _modifierChannel.setMethodCallHandler((MethodCall call) async {
@@ -117,6 +109,62 @@ final class PluginDesktopShellGateway
 
   Future<void> markUnread() => _unreadController.markUnread();
 
+  Future<void> _rebuildContextMenu() async {
+    final bool monitoring = _clipboardMonitoringState();
+    final bool chinese = _useChineseLabels();
+    await trayManager.setContextMenu(
+      Menu(
+        items: <MenuItem>[
+          MenuItem(
+            label: chinese ? '打开剪贴板' : 'Open Clipboard',
+            onClick: (_) => _commands.add(DesktopShellCommand.showClipboard),
+          ),
+          MenuItem.separator(),
+          MenuItem.checkbox(
+            label: chinese
+                ? monitoring
+                      ? '正在监听剪贴板'
+                      : '剪贴板监听已暂停'
+                : monitoring
+                ? 'Clipboard Monitoring On'
+                : 'Clipboard Monitoring Paused',
+            checked: monitoring,
+            disabled: true,
+          ),
+          MenuItem(
+            label: chinese
+                ? monitoring
+                      ? '停止监听'
+                      : '开始监听'
+                : monitoring
+                ? 'Stop Monitoring'
+                : 'Start Monitoring',
+            onClick: (_) => _commands.add(
+              monitoring
+                  ? DesktopShellCommand.stopClipboardMonitoring
+                  : DesktopShellCommand.startClipboardMonitoring,
+            ),
+          ),
+          MenuItem(
+            label: chinese ? '清空剪贴板历史' : 'Clear Clipboard History',
+            onClick: (_) =>
+                _commands.add(DesktopShellCommand.clearClipboardHistory),
+          ),
+          MenuItem.separator(),
+          MenuItem(
+            label: chinese ? '设置…' : 'Settings…',
+            onClick: (_) => _commands.add(DesktopShellCommand.showSettings),
+          ),
+          MenuItem.separator(),
+          MenuItem(
+            label: chinese ? '退出 DingDong' : 'Quit DingDong',
+            onClick: (_) => _commands.add(DesktopShellCommand.quit),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _applyUnreadAppearance({
     required bool hot,
     required String title,
@@ -150,16 +198,21 @@ final class PluginDesktopShellGateway
     if (displays.isEmpty) {
       return;
     }
+    final Display primaryDisplay = await screenRetriever.getPrimaryDisplay();
     final Display display = trayBounds == null
-        ? await screenRetriever.getPrimaryDisplay()
+        ? primaryDisplay
         : displays.firstWhere((Display candidate) {
             final Offset position = candidate.visiblePosition ?? Offset.zero;
             final Size size = candidate.visibleSize ?? candidate.size;
             return (position & size).contains(trayBounds.center);
-          }, orElse: () => displays.first);
+          }, orElse: () => primaryDisplay);
     final Offset displayPosition = display.visiblePosition ?? Offset.zero;
     final Size displaySize = display.visibleSize ?? display.size;
     final Rect visibleDisplay = displayPosition & displaySize;
+    final Size popupSize = PopupWindowPolicy.sizeForVisibleDisplay(
+      visibleDisplay,
+    );
+    await windowManager.setSize(popupSize);
     final Rect anchor =
         trayBounds ??
         Rect.fromLTWH(visibleDisplay.right - 24, visibleDisplay.top, 24, 24);
@@ -168,12 +221,12 @@ final class PluginDesktopShellGateway
         ? PopupWindowPolicy.positionAboveTray(
             trayBounds: anchor,
             visibleDisplay: visibleDisplay,
-            popupSize: PopupWindowPolicy.initialSize,
+            popupSize: popupSize,
           )
         : PopupWindowPolicy.positionBelowTray(
             trayBounds: anchor,
             visibleDisplay: visibleDisplay,
-            popupSize: PopupWindowPolicy.initialSize,
+            popupSize: popupSize,
           );
     await windowManager.setPosition(position);
   }
@@ -191,6 +244,7 @@ final class PluginDesktopShellGateway
   Future<void> quit() async {
     await stop();
     await windowManager.destroy();
+    exit(0);
   }
 
   @override
@@ -211,6 +265,16 @@ final class PluginDesktopShellGateway
   @override
   void onTrayIconMouseDown() {
     _commands.add(DesktopShellCommand.openTray);
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    unawaited(_showContextMenu());
+  }
+
+  Future<void> _showContextMenu() async {
+    await _rebuildContextMenu();
+    await trayManager.popUpContextMenu();
   }
 
   @override

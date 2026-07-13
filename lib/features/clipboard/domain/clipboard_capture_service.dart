@@ -28,14 +28,40 @@ final class ClipboardCaptureService {
   final Directory? _imageStoreDirectory;
   final String Function() _idGenerator;
   final DateTime Function() _now;
+  Future<ClipboardRecord?>? _activeCapture;
 
-  Future<ClipboardRecord?> capture() async {
+  /// Reads the current clipboard once, even when the background listener and a
+  /// panel reveal happen at almost the same time.
+  Future<ClipboardRecord?> capture() {
+    final Future<ClipboardRecord?>? activeCapture = _activeCapture;
+    if (activeCapture != null) {
+      return activeCapture;
+    }
+    late final Future<ClipboardRecord?> operation;
+    operation = _captureOnce().whenComplete(() {
+      if (identical(_activeCapture, operation)) {
+        _activeCapture = null;
+      }
+    });
+    _activeCapture = operation;
+    return operation;
+  }
+
+  Future<ClipboardRecord?> _captureOnce() async {
     final ClipboardSnapshot snapshot = await _gateway.read();
     final List<String> filePaths = snapshot.filePaths
         .map((String value) => value.trim())
         .where((String value) => value.isNotEmpty)
         .toList(growable: false);
     if (filePaths.isNotEmpty) {
+      final String content = filePaths.join('\n');
+      final ClipboardRecord? duplicate = _findDuplicate(
+        content,
+        _ClipboardPayload.file,
+      );
+      if (duplicate != null) {
+        return _promoteDuplicate(duplicate);
+      }
       return _storeFileRecord(filePaths, snapshot.source);
     }
     if (snapshot.imageBytes != null && snapshot.imageBytes!.isNotEmpty) {
@@ -50,6 +76,13 @@ final class ClipboardCaptureService {
     final String? text = snapshot.text?.trim();
     if (text == null || text.isEmpty) {
       return null;
+    }
+    final ClipboardRecord? duplicate = _findDuplicate(
+      text,
+      _ClipboardPayload.text,
+    );
+    if (duplicate != null) {
+      return _promoteDuplicate(duplicate);
     }
     final ClipboardClassification classification = ClipboardClassifier.classify(
       text,
@@ -109,6 +142,10 @@ final class ClipboardCaptureService {
     List<int> bytes,
     String source,
   ) async {
+    final ClipboardRecord? duplicate = await _findDuplicateImage(bytes);
+    if (duplicate != null) {
+      return _promoteDuplicate(duplicate);
+    }
     final Directory? directory = _imageStoreDirectory;
     if (directory == null) {
       return null;
@@ -133,6 +170,72 @@ final class ClipboardCaptureService {
       content: target.path,
       tags: const <String>['clipboard', 'ext:png', 'file', 'file-url', 'image'],
       source: source,
+    );
+  }
+
+  ClipboardRecord? _findDuplicate(String content, _ClipboardPayload payload) {
+    for (final ClipboardRecord record in _store.list(limit: 5000)) {
+      if (record.content != content) {
+        continue;
+      }
+      final bool isFile = record.tags.contains('file-url');
+      final bool isImage = record.tags.contains('image');
+      if (payload == _ClipboardPayload.text && !isFile && !isImage) {
+        return record;
+      }
+      if (payload == _ClipboardPayload.file &&
+          isFile &&
+          !_isManagedClipboardImage(record)) {
+        return record;
+      }
+    }
+    return null;
+  }
+
+  Future<ClipboardRecord?> _findDuplicateImage(List<int> bytes) async {
+    final Directory? imageStoreDirectory = _imageStoreDirectory;
+    if (imageStoreDirectory == null) {
+      return null;
+    }
+    final String imageStorePath = path.absolute(imageStoreDirectory.path);
+    for (final ClipboardRecord record in _store.list(limit: 5000)) {
+      if (!record.tags.contains('image')) {
+        continue;
+      }
+      final File candidate = File(record.content);
+      if (!path.isWithin(imageStorePath, path.absolute(candidate.path))) {
+        continue;
+      }
+      try {
+        if (!await candidate.exists() ||
+            await candidate.length() != bytes.length) {
+          continue;
+        }
+        final List<int> storedBytes = await candidate.readAsBytes();
+        if (_sameBytes(storedBytes, bytes)) {
+          return record;
+        }
+      } on FileSystemException {
+        // A stale preview file should not stop newer clipboard captures.
+      }
+    }
+    return null;
+  }
+
+  ClipboardRecord _promoteDuplicate(ClipboardRecord record) {
+    final ClipboardRecord updated = record.copyWith(updatedAt: _now().toUtc());
+    _store.save(updated);
+    return updated;
+  }
+
+  bool _isManagedClipboardImage(ClipboardRecord record) {
+    final Directory? directory = _imageStoreDirectory;
+    if (directory == null || !record.tags.contains('image')) {
+      return false;
+    }
+    return path.isWithin(
+      path.absolute(directory.path),
+      path.absolute(record.content),
     );
   }
 
@@ -161,6 +264,20 @@ final class ClipboardCaptureService {
     _store.save(record);
     return record;
   }
+}
+
+enum _ClipboardPayload { text, file }
+
+bool _sameBytes(List<int> left, List<int> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+  for (int index = 0; index < left.length; index += 1) {
+    if (left[index] != right[index]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 const Set<String> _imageExtensions = <String>{

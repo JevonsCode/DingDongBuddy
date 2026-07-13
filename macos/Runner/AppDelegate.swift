@@ -91,6 +91,9 @@ class AppDelegate: FlutterAppDelegate {
           case "r":
             self.hotKeyChannel?.invokeMethod("workspaceShortcut", arguments: "filters")
             return nil
+          case "f":
+            self.hotKeyChannel?.invokeMethod("workspaceShortcut", arguments: "search")
+            return nil
           default:
             break
           }
@@ -175,6 +178,11 @@ class AppDelegate: FlutterAppDelegate {
       self.launchAtStartupChannel = launchAtStartupChannel
     }
     super.applicationDidFinishLaunching(notification)
+    if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+       let icon = NSImage(contentsOf: iconURL)
+    {
+      NSApp.applicationIconImage = icon
+    }
     NSApp.setActivationPolicy(.accessory)
     mainFlutterWindow?.orderOut(nil)
   }

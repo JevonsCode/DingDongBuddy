@@ -18,6 +18,7 @@ int? _numberShortcutIndex(LogicalKeyboardKey key) {
 class _CompactClipboardToolbar extends StatelessWidget {
   const _CompactClipboardToolbar({
     required this.viewModel,
+    required this.searchFocusNode,
     required this.settingsViewModel,
     required this.filtersExpanded,
     required this.showShortcutHint,
@@ -25,6 +26,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
   });
 
   final ClipboardViewModel viewModel;
+  final FocusNode searchFocusNode;
   final ClipboardSettingsController? settingsViewModel;
   final bool filtersExpanded;
   final bool showShortcutHint;
@@ -51,6 +53,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     key: const Key('clipboard-search'),
+                    focusNode: searchFocusNode,
                     onChanged: viewModel.setQuery,
                     style: const TextStyle(fontSize: 12),
                     decoration: InputDecoration(

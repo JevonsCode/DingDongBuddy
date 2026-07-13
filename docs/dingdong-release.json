@@ -1,17 +1,17 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.2",
-  "latestBuild": "9",
+  "latestVersion": "0.7.3",
+  "latestBuild": "10",
   "publishedAt": "2026-07-13T00:00:00Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDong/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
-    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.2/DingDong-0.7.2-macos.zip",
-    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.2/DingDong-0.7.2-windows-x64.zip"
+    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.3/DingDong-0.7.3-macos.dmg",
+    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.3/DingDong-0.7.3-windows-x64.zip"
   },
   "notes": [
-    "Tracks how often AI agents actually use each Prompt, Skill, MCP reference, and knowledge resource, including the last-used time.",
-    "Exports the full library or selected resources with stable IDs, and safely imports shared JSON bundles without duplicating matching IDs or content.",
-    "Adds all-library and category APIs for AI-assisted unused and duplicate-resource analysis, and fixes macOS and Windows CI portability."
+    "Refreshes the system clipboard every time the panel is revealed and promotes identical text, file, or image records instead of duplicating them.",
+    "Restores the native tray menu with monitoring state, open, start or stop, clear history, Settings, and full Quit actions.",
+    "Adds Command-F search focus, safer multi-display placement, the canonical Dock icon, and a drag-to-Applications macOS DMG."
   ]
 }

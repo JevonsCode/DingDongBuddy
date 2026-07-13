@@ -176,6 +176,39 @@ void main() {
     expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
   });
 
+  testWidgets('Command-F focuses clipboard search', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[_record()]),
+    )..load();
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardScreen(viewModel: model)),
+    );
+    await tester.pump();
+
+    final Finder searchEditable = find.descendant(
+      of: find.byKey(const Key('clipboard-search')),
+      matching: find.byType(EditableText),
+    );
+    expect(
+      tester.widget<EditableText>(searchEditable).focusNode.hasFocus,
+      isFalse,
+    );
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pump();
+
+    final EditableText editable = tester.widget<EditableText>(searchEditable);
+    expect(editable.focusNode.hasFocus, isTrue);
+  });
+
   testWidgets('filter icon explains expand and collapse actions on hover', (
     WidgetTester tester,
   ) async {

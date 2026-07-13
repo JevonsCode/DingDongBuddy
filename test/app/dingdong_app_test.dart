@@ -10,13 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.2', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.3', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.7.2')), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.7.3')), findsOneWidget);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
     expect(find.text('Agent API'), findsWidgets);
@@ -60,7 +60,7 @@ void main() {
 
     expect(
       tester.getSize(find.byKey(const Key('today-metric-library'))).height,
-      64,
+      72,
     );
     expect(
       tester

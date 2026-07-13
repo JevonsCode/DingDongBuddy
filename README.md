@@ -4,8 +4,6 @@
 
 <h1 align="center">DingDong</h1>
 
-<p align="center"><strong>让 AI 工具服务于人类的，而不是让人被工具牵着走。</strong></p>
-
 DingDong is a local desktop companion for people who work with AI agents. As
 prompts, Skills, MCP servers, and knowledge accumulate, DingDong keeps them in
 one library with individual switches, stable IDs, usage counts, selective
@@ -14,8 +12,8 @@ else, DingDong sounds to bring you back.
 
 ## Philosophy
 
-- **服务于人类的 / In service of people.** Automation should return attention
-  to the person using it.
+- **People stay in control.** 让 AI 工具服务于人类，而不是让人被工具牵着走；
+  automation should return attention to the person using it.
 - **Local and deliberate.** Data stays on your computer. Clipboard history is
   excluded from library exports, and you choose exactly what to share.
 - **One source of truth.** Maintain reusable AI resources once, enable only what
@@ -33,9 +31,17 @@ else, DingDong sounds to bring you back.
   content matching prevent repeated imports
 - Connects local agents through a loopback HTTP API and bundled stdio MCP bridge
 - Captures searchable clipboard history with sensitive-content protection
+- Refreshes from the system clipboard whenever the panel is revealed and moves
+  exact matches to the top without creating duplicate history rows
 - Plays a chosen DingDong sound when an agent finishes or needs attention
-- Supports English, Simplified Chinese, light/dark themes, tray controls, and
-  global quick paste
+- Supports English, Simplified Chinese, light/dark themes, a complete tray menu,
+  keyboard-first search, and global quick paste
+
+## Install on macOS
+
+Download the latest `.dmg` from [GitHub Releases](https://github.com/JevonsCode/DingDongBuddy/releases/latest),
+open it, and drag **DingDong** onto the **Applications** shortcut. The ZIP remains
+available for portable or diagnostic use.
 
 ---
 
@@ -45,7 +51,7 @@ else, DingDong sounds to bring you back.
 
 - macOS 10.15 or newer
 - Windows 10 or newer
-- Flutter 3.44.6 / Dart 3.12
+- Project toolchain: 3.44.6 desktop SDK / Dart 3.12
 
 The application preserves the data location and preference keys used by the
 previous native macOS release. Windows uses the current user's `%APPDATA%`
@@ -104,9 +110,9 @@ lib/
     settings/          preferences, release/usage status, desktop settings
     shell/             navigation, tray and global desktop commands
     activity/          Dynamic workspace and Agent completion activity
-  platform/            macOS/Windows Flutter method-channel adapters
-macos/                  Flutter macOS runner
-windows/                Flutter Windows runner
+  platform/            macOS/Windows platform adapters
+macos/                  macOS application host
+windows/                Windows application host
 test/                   unit, contract, widget, performance and golden tests
 bin/dingdong_mcp.dart   bundled stdio MCP entry point
 ```
@@ -161,9 +167,15 @@ origin and privacy notes.
 ## Release
 
 Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`. It tests and builds
-Flutter release artifacts on macOS and Windows, packages both distributions, and
-creates the GitHub release. Creating a branch or ordinary commit does not publish
-anything.
+the macOS and Windows applications, creates a drag-to-Applications macOS DMG plus
+portable ZIPs, and publishes the GitHub release. When Apple distribution secrets
+are configured, the same workflow uses Developer ID signing, notarization, and
+stapling; otherwise it falls back to an ad-hoc signed community build.
+
+Official distribution uses these repository secrets:
+`MACOS_CERTIFICATE_BASE64`, `MACOS_CERTIFICATE_PASSWORD`,
+`MACOS_KEYCHAIN_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, and
+`APPLE_APP_PASSWORD`.
 
 The website reads GitHub's public Releases API and totals each version's asset
 `download_count`. GitHub exposes counts for uploaded release assets; the

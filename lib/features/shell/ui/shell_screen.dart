@@ -78,6 +78,8 @@ class _ShellScreenState extends State<ShellScreen> {
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
   late int _lastClipboardFilterToggleRevision;
+  late int _lastClipboardRefreshRevision;
+  late int _lastSelectedIndex;
   int? _loadingIndex;
 
   @override
@@ -85,6 +87,8 @@ class _ShellScreenState extends State<ShellScreen> {
     super.initState();
     _lastClipboardFilterToggleRevision =
         widget.controller.clipboardFilterToggleRevision;
+    _lastClipboardRefreshRevision = widget.controller.clipboardRefreshRevision;
+    _lastSelectedIndex = widget.controller.selectedIndex;
     widget.controller.addListener(_handleNavigationChanged);
     widget.shortcutHints?.addListener(_handleExternalShortcutHints);
     widget.clipboardViewModel.load();
@@ -99,6 +103,9 @@ class _ShellScreenState extends State<ShellScreen> {
       widget.controller.addListener(_handleNavigationChanged);
       _lastClipboardFilterToggleRevision =
           widget.controller.clipboardFilterToggleRevision;
+      _lastClipboardRefreshRevision =
+          widget.controller.clipboardRefreshRevision;
+      _lastSelectedIndex = widget.controller.selectedIndex;
     }
     if (oldWidget.shortcutHints != widget.shortcutHints) {
       oldWidget.shortcutHints?.removeListener(_handleExternalShortcutHints);
@@ -115,10 +122,20 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   void _handleNavigationChanged() {
+    final int selectedIndex = widget.controller.selectedIndex;
+    if (selectedIndex == 2 && _lastSelectedIndex != 2) {
+      unawaited(widget.clipboardViewModel.captureNow());
+    }
+    _lastSelectedIndex = selectedIndex;
     final ClipboardPreviewLauncher? launcher = widget.clipboardPreviewLauncher;
-    if (widget.controller.selectedIndex != 2 && launcher != null) {
+    if (selectedIndex != 2 && launcher != null) {
       unawaited(launcher.hide());
       _clipboardPreviewOpen = false;
+    }
+    final int refreshRevision = widget.controller.clipboardRefreshRevision;
+    if (refreshRevision != _lastClipboardRefreshRevision) {
+      _lastClipboardRefreshRevision = refreshRevision;
+      widget.clipboardViewModel.load();
     }
     setState(() {
       final int revision = widget.controller.clipboardFilterToggleRevision;
@@ -283,6 +300,16 @@ class _ShellScreenState extends State<ShellScreen> {
             );
           }
         },
+        const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () {
+          if (widget.controller.selectedIndex == 2) {
+            widget.controller.requestClipboardSearchFocus();
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+          if (widget.controller.selectedIndex == 2) {
+            widget.controller.requestClipboardSearchFocus();
+          }
+        },
       },
       child: Focus(
         autofocus: true,
@@ -359,6 +386,7 @@ class _ShellScreenState extends State<ShellScreen> {
             () => _clipboardFiltersExpanded = !_clipboardFiltersExpanded,
           );
         },
+        searchFocusRevision: widget.controller.clipboardSearchFocusRevision,
       ),
       3 => AgentApiScreen(
         settingsViewModel: widget.settingsViewModel,
