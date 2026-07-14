@@ -52,6 +52,9 @@ available for portable or diagnostic use. The branded installer includes
 login-item guidance. Quick Paste needs Accessibility permission; ordinary
 clipboard history does not need Full Disk Access or Screen Recording.
 
+The same macOS installer runs natively on Apple Silicon and Intel. Both the app
+and its bundled MCP executable include `arm64` and `x86_64` code.
+
 ## Feedback and privacy-safe diagnostics
 
 Use **Settings → Version → Report a problem** or **Request a feature** to open a
