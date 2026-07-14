@@ -13,7 +13,7 @@ body:
     attributes:
       label: DingDong version
       description: Find this in Settings → Version.
-      placeholder: 0.7.4 (11)
+      placeholder: 0.7.5 (12)
     validations:
       required: true
   - type: dropdown

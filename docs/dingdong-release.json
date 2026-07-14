@@ -1,17 +1,18 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.4",
-  "latestBuild": "11",
+  "latestVersion": "0.7.5",
+  "latestBuild": "12",
   "publishedAt": "2026-07-15T00:00:00Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDong/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
-    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.4/DingDong-0.7.4-macos.dmg",
-    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.4/DingDong-0.7.4-windows-x64.zip"
+    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.5/DingDong-0.7.5-macos.dmg",
+    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.5/DingDong-0.7.5-windows-x64.zip"
   },
   "notes": [
-    "Fixes a macOS 26 startup crash caused by reframing an already borderless window.",
-    "Adds a branded drag-to-Applications DMG with the DingDong logo, an installation arrow, and an in-volume permissions guide.",
+    "Makes every macOS window-manager titlebar lookup safe for borderless main and preview windows.",
+    "Verifies the app with strict code-signing checks inside the final DMG and removes Finder metadata that could invalidate the signature.",
+    "Includes a branded drag-to-Applications DMG with the DingDong logo, an installation arrow, and an in-volume permissions guide.",
     "Explains first launch, Accessibility, clipboard, and login-item permissions without requesting unrelated access.",
     "Adds guided GitHub forms for problem reports and feature requests, with privacy reminders.",
     "Adds optional, off-by-default Aptabase diagnostics that never include clipboard content, paths, messages, or stack traces."

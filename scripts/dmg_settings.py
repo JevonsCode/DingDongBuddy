@@ -19,7 +19,7 @@ icon_locations = {
     "Applications": (575, 282),
     guide_name: (666, 395),
 }
-hide_extensions = [app_name, guide_name]
+hide_extensions = []
 
 window_rect = ((120, 120), (760, 540))
 default_view = "icon-view"

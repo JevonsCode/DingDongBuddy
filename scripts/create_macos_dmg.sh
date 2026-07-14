@@ -106,6 +106,13 @@ output_path="$(CDPATH= cd -- "$(/usr/bin/dirname -- "$output_path")" && pwd)/$(/
 /usr/bin/xattr -wx com.apple.FinderInfo \
   0000000000000000040000000000000000000000000000000000000000000000 \
   "$mountpoint"
+# Finder's per-file extension-hiding flag invalidates strict bundle signature
+# verification when copied out of the DMG. Keep the visible `.app` extension
+# and remove the flag defensively before sealing the final image.
+/usr/bin/xattr -d com.apple.FinderInfo \
+  "$mountpoint/$(/usr/bin/basename "$app_path")" >/dev/null 2>&1 || true
+/usr/bin/codesign --verify --deep --strict \
+  "$mountpoint/$(/usr/bin/basename "$app_path")"
 /bin/rm -rf "$mountpoint/.fseventsd" "$mountpoint/.Trashes"
 /usr/bin/hdiutil detach "$mountpoint" >/dev/null
 

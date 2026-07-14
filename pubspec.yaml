@@ -1,7 +1,7 @@
 name: dingdong
 description: Cross-platform desktop companion for local AI agents.
 publish_to: none
-version: 0.7.4+11
+version: 0.7.5+12
 
 environment:
   sdk: ^3.12.2
@@ -23,7 +23,8 @@ dependencies:
   tray_manager:
     path: packages/tray_manager
   url_launcher: ^6.3.2
-  window_manager: ^0.5.2
+  window_manager:
+    path: packages/window_manager
 
 dev_dependencies:
   crypto: ^3.0.7

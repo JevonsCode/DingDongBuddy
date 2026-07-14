@@ -40,14 +40,14 @@ void main() {
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
   });
 
-  test('desktop hosts consume application version 0.7.4 from pubspec', () {
+  test('desktop hosts consume application version 0.7.5 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.4+11'));
+    expect(pubspec, contains('version: 0.7.5+12'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -172,6 +172,8 @@ void main() {
       expect(dmgBuilder, contains('AppIcon.icns'));
       expect(dmgBuilder, contains('com.apple.FinderInfo'));
       expect(dmgSettings, contains('background = background_path'));
+      expect(dmgSettings, contains('hide_extensions = []'));
+      expect(dmgBuilder, contains('codesign --verify --deep --strict'));
       expect(
         File('Assets/installer/安装与权限说明.txt').readAsStringSync(),
         contains('辅助功能'),
@@ -278,5 +280,19 @@ void main() {
 
     expect(mainWindow, contains('self.styleMask = [.borderless, .resizable]'));
     expect(gateway, isNot(contains('await windowManager.setAsFrameless();')));
+  });
+
+  test('vendored macOS window manager never force unwraps titlebar views', () {
+    final String pubspec = File('pubspec.yaml').readAsStringSync();
+    final String windowManager = File(
+      'packages/window_manager/macos/window_manager/Sources/window_manager/WindowManager.swift',
+    ).readAsStringSync();
+
+    expect(pubspec, contains('path: packages/window_manager'));
+    expect(windowManager, contains('?.superview?.superview'));
+    expect(
+      windowManager,
+      isNot(contains('standardWindowButton(.closeButton)?.superview)!')),
+    );
   });
 }
