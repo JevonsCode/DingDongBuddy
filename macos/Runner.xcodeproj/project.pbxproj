@@ -337,7 +337,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$PROJECT_DIR/..\"\nrm -rf \"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/MCP\"\n\"$FLUTTER_ROOT/bin/cache/dart-sdk/bin/dart\" build cli --target=bin/dingdong_mcp.dart --output=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/MCP\" --verbosity=warning\nln -sf \"../MCP/bundle/bin/dingdong_mcp\" \"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/MacOS/dingdong-mcp\"\n";
+			shellScript = "\"$PROJECT_DIR/../scripts/build_macos_mcp.sh\" \"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/MCP\" \"$(uname -m)\"\nln -sf \"../MCP/bundle/bin/dingdong_mcp\" \"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/MacOS/dingdong-mcp\"\n";
 		};
 		33CC111E2044C6BF0003C045 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

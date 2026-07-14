@@ -40,14 +40,14 @@ void main() {
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
   });
 
-  test('desktop hosts consume application version 0.7.6 from pubspec', () {
+  test('desktop hosts consume application version 0.7.7 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.6+13'));
+    expect(pubspec, contains('version: 0.7.7+14'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -112,9 +112,26 @@ void main() {
     final String windowsFlutter = File(
       'windows/flutter/CMakeLists.txt',
     ).readAsStringSync();
+    final String macBuilder = File(
+      'scripts/build_macos_mcp.sh',
+    ).readAsStringSync();
+    final String universalBuilder = File(
+      'scripts/create_universal_macos_mcp.sh',
+    ).readAsStringSync();
+    final String macLauncher = File(
+      'scripts/macos_mcp_launcher.sh',
+    ).readAsStringSync();
 
-    expect(macProject, contains('dart-sdk/bin/dart'));
-    expect(macProject, contains('build cli --target=bin/dingdong_mcp.dart'));
+    expect(macProject, contains('scripts/build_macos_mcp.sh'));
+    expect(macBuilder, contains('dart-sdk/bin/dart'));
+    expect(macBuilder, contains('build cli'));
+    expect(macBuilder, contains('--target=bin/dingdong_mcp.dart'));
+    expect(macBuilder, contains('"method":"tools/list"'));
+    expect(universalBuilder, contains('native/arm64'));
+    expect(universalBuilder, contains('native/x86_64'));
+    expect(universalBuilder, contains('macos_mcp_launcher.sh'));
+    expect(macLauncher, contains(r'$(/usr/bin/uname -m)'));
+    expect(macLauncher, contains(r'native/$machine_architecture'));
     expect(macProject, contains('MCP'));
     expect(macProject, contains('MacOS/dingdong-mcp'));
     expect(windowsRunner, contains('dart.exe'));
@@ -151,9 +168,18 @@ void main() {
       final String releaseGate = File(
         '.github/workflows/release-after-ci.yml',
       ).readAsStringSync();
+      final String desktopWorkflow = File(
+        '.github/workflows/flutter-desktop.yml',
+      ).readAsStringSync();
 
       expect(workflow, contains('build macos --release'));
       expect(workflow, contains('scripts/sign_macos_bundle.sh'));
+      expect(workflow, contains('macos-15-intel'));
+      expect(workflow, contains('mcp-macos-arm64'));
+      expect(workflow, contains('mcp-macos-x86_64'));
+      expect(workflow, contains('scripts/create_universal_macos_mcp.sh'));
+      expect(desktopWorkflow, contains('macos-15-intel'));
+      expect(desktopWorkflow, contains('scripts/create_universal_macos_mcp.sh'));
       expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
       expect(workflow, contains('scripts/create_macos_dmg.sh'));
       expect(workflow, contains('dist/*.dmg'));

@@ -11,8 +11,69 @@ permissions:
   contents: read
 
 jobs:
+  macos-mcp:
+    name: macos-mcp-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x86_64
+            runner: macos-15-intel
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: 3.44.6
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build and test native MCP
+        run: |
+          chmod +x scripts/build_macos_mcp.sh
+          scripts/build_macos_mcp.sh "build/mcp-${{ matrix.arch }}" "${{ matrix.arch }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcp-macos-${{ matrix.arch }}
+          path: build/mcp-${{ matrix.arch }}/bundle/
+          if-no-files-found: error
+
+  macos-mcp-universal:
+    needs: macos-mcp
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: mcp-macos-arm64
+          path: ${{ runner.temp }}/mcp-arm64
+      - uses: actions/download-artifact@v4
+        with:
+          name: mcp-macos-x86_64
+          path: ${{ runner.temp }}/mcp-x86_64
+      - name: Create and test dual-architecture MCP
+        run: |
+          chmod +x scripts/create_universal_macos_mcp.sh
+          scripts/create_universal_macos_mcp.sh \
+            "$RUNNER_TEMP/mcp-arm64" \
+            "$RUNNER_TEMP/mcp-x86_64" \
+            "$RUNNER_TEMP/mcp-universal"
+          smoke_output="$RUNNER_TEMP/mcp-universal-tools-list.json"
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
+            | "$RUNNER_TEMP/mcp-universal/bin/dingdong_mcp" \
+            > "$smoke_output"
+          if ! grep -q '"result"' "$smoke_output" \
+            || ! grep -q '"tools"' "$smoke_output"; then
+            cat "$smoke_output"
+            exit 1
+          fi
+
   macos:
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6

@@ -236,25 +236,25 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <section class="release-section" id="updates">
         <div class="section-heading">
           <p class="eyebrow" data-i18n="updates.eyebrow">Latest update</p>
-          <h2 data-i18n="updates.title">DingDong 0.7.6 fixes early macOS settings restoration.</h2>
-          <p data-i18n="updates.body">Native window operations now initialize themselves before dispatch, so restoring saved opacity cannot run ahead of the desktop shell.</p>
+          <h2 data-i18n="updates.title">DingDong 0.7.7 brings the built-in MCP to every Mac.</h2>
+          <p data-i18n="updates.body">One stable MCP command now selects the native Apple Silicon or Intel bundle at launch, so the same DMG supports both kinds of Mac.</p>
         </div>
 
         <div class="release-grid">
           <article>
-            <span class="feature-kicker">0.7.6</span>
-            <h3 data-i18n="updates.dark.title">Initialize before every window call</h3>
-            <p data-i18n="updates.dark.body">Saved opacity and other early settings can no longer reach an uninitialized native window manager.</p>
+            <span class="feature-kicker">0.7.7</span>
+            <h3 data-i18n="updates.dark.title">One MCP, both Mac architectures</h3>
+            <p data-i18n="updates.dark.body">DingDong packages complete arm64 and x86_64 MCP bundles together and selects the matching one at runtime.</p>
           </article>
           <article>
             <span class="feature-kicker">DMG</span>
-            <h3 data-i18n="updates.performance.title">A signature-clean installer</h3>
-            <p data-i18n="updates.performance.body">The DingDong logo, drag arrow, and permission guide stay, while the build now rejects DMGs whose Finder metadata invalidates the app signature.</p>
+            <h3 data-i18n="updates.performance.title">One installer for every supported Mac</h3>
+            <p data-i18n="updates.performance.body">Apple Silicon and Intel users install the same branded DMG and use the same built-in MCP path.</p>
           </article>
           <article>
-            <span class="feature-kicker">Feedback</span>
-            <h3 data-i18n="updates.bridge.title">Report problems without guesswork</h3>
-            <p data-i18n="updates.bridge.body">Settings opens structured GitHub forms for bugs and feature requests, including a privacy checklist before submission.</p>
+            <span class="feature-kicker">CI</span>
+            <h3 data-i18n="updates.bridge.title">Both native builds are tested first</h3>
+            <p data-i18n="updates.bridge.body">Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.</p>
           </article>
         </div>
       </section>
@@ -266,7 +266,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           <p data-i18n="download.body">Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.</p>
         </div>
         <div class="download-actions">
-          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.6/DingDong-0.7.6-macos.dmg">
+          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-macos.dmg">
             <strong data-i18n="download.latest">Download macOS DMG</strong>
             <span data-i18n="download.latestHint">Apple Silicon and Intel · drag to Applications</span>
           </a>
@@ -377,14 +377,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "The same data is available over local HTTP.",
           "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
           "updates.eyebrow": "Latest update",
-          "updates.title": "DingDong 0.7.6 fixes early macOS settings restoration.",
-          "updates.body": "Native window operations now initialize themselves before dispatch, so restoring saved opacity cannot run ahead of the desktop shell.",
-          "updates.dark.title": "Initialize before every window call",
-          "updates.dark.body": "Saved opacity and other early settings can no longer reach an uninitialized native window manager.",
-          "updates.performance.title": "A signature-clean installer",
-          "updates.performance.body": "The DingDong logo, drag arrow, and permission guide stay, while the build now rejects DMGs whose Finder metadata invalidates the app signature.",
-          "updates.bridge.title": "Report problems without guesswork",
-          "updates.bridge.body": "Settings opens structured GitHub forms for bugs and feature requests, including a privacy checklist before submission.",
+          "updates.title": "DingDong 0.7.7 brings the built-in MCP to every Mac.",
+          "updates.body": "One stable MCP command now selects the native Apple Silicon or Intel bundle at launch, so the same DMG supports both kinds of Mac.",
+          "updates.dark.title": "One MCP, both Mac architectures",
+          "updates.dark.body": "DingDong packages complete arm64 and x86_64 MCP bundles together and selects the matching one at runtime.",
+          "updates.performance.title": "One installer for every supported Mac",
+          "updates.performance.body": "Apple Silicon and Intel users install the same branded DMG and use the same built-in MCP path.",
+          "updates.bridge.title": "Both native builds are tested first",
+          "updates.bridge.body": "Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.",
           "download.eyebrow": "Download",
           "download.title": "A familiar macOS installer.",
           "download.body": "Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.",
@@ -479,15 +479,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.eyebrow": "本地 API",
           "api.title": "脚本也能直接调用 DingDong",
           "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
-          "updates.eyebrow": "0.7.6 更新",
-          "updates.title": "修复 macOS 过早恢复窗口设置导致的启动崩溃",
-          "updates.body": "原生窗口操作会在分发前自动初始化，恢复已保存透明度时不会再跑到桌面外壳前面",
-          "updates.dark.title": "每次窗口调用都先确保初始化",
-          "updates.dark.body": "透明度等早期设置不再访问尚未初始化的原生窗口管理器",
-          "updates.performance.title": "签名干净的品牌安装盘",
-          "updates.performance.body": "保留 DingDong LOGO、拖动箭头和权限说明，同时构建会拒绝被 Finder 元数据破坏签名的 DMG",
-          "updates.bridge.title": "上报问题不再靠猜",
-          "updates.bridge.body": "设置页直接打开结构化的 GitHub 问题和需求表单，提交前会提醒清除隐私内容",
+          "updates.eyebrow": "0.7.7 更新",
+          "updates.title": "内置 MCP 现在同时支持 Apple 芯片和 Intel Mac",
+          "updates.body": "同一个 MCP 命令会在启动时选择 Apple 芯片或 Intel 原生包，因此同一个 DMG 可以支持两种 Mac",
+          "updates.dark.title": "一个 MCP，两种 Mac 架构",
+          "updates.dark.body": "DingDong 会同时打包完整的 arm64 和 x86_64 MCP，并在运行时选择匹配的版本",
+          "updates.performance.title": "所有 Mac 使用同一个安装包",
+          "updates.performance.body": "Apple 芯片和 Intel 用户下载同一个品牌 DMG，MCP 配置路径也完全相同",
+          "updates.bridge.title": "两种原生版本先分别测试",
+          "updates.bridge.body": "arm64 和 x86_64 都必须通过 MCP tools/list 测试，之后才允许生成双架构安装包",
           "download.eyebrow": "下载",
           "download.title": "熟悉的 macOS 拖拽安装",
           "download.body": "打开 DMG，把 DingDong 拖到应用程序；配置发布凭证后会自动完成 Developer ID 签名和公证",
@@ -515,7 +515,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.6 initializes every native macOS window call safely." },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.7 ships one MCP command for Apple Silicon and Intel." },
               { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
               { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
             ]
@@ -529,7 +529,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { type: "prompt", mark: "P", title: "Sentence prefix marker", body: "Add 🎉 at the end of each completed task.", tags: ["Prompts", "style"], state: "Enabled" },
               { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "Repository search, code tracing, and architecture context.", tags: ["MCP Servers", "repository"], state: "Manual" },
               { type: "skill", mark: "S", title: "user-taste", body: "Project preferences for UI, writing, and code decisions.", tags: ["Skills", "product"], state: "Enabled" },
-              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.7.6 and how to install the DMG.", tags: ["Knowledge", "release"], state: "Saved" }
+              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.7.7 and how to install the DMG.", tags: ["Knowledge", "release"], state: "Saved" }
             ]
           },
           clipboard: {
@@ -537,7 +537,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             monitor: "Watching",
             filter: "Filter",
             items: [
-              { id: "image", kind: "IMG", title: "DingDong 0.7.6 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "IMG", title: "DingDong 0.7.7 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "PATH", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -553,7 +553,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "资源"], ["1,000", "剪贴板"], ["在线", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "网站预览已经按 Mac 面板调整" },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.6 会安全初始化每一次 macOS 原生窗口调用" },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.7 的内置 MCP 同时支持 Apple 芯片和 Intel" },
               { source: "Codex", time: "15:06", body: "利落叮咚已经加入" },
               { source: "Codex", time: "14:54", body: "剪贴板缩略图和声音选择检查通过" }
             ]
@@ -567,7 +567,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { type: "prompt", mark: "词", title: "Sentence prefix marker", body: "任务结束时加一个「🎉」", tags: ["Prompts", "style"], state: "已启用" },
               { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "仓库搜索、代码追踪和架构上下文", tags: ["MCP Servers", "repository"], state: "手动" },
               { type: "skill", mark: "技", title: "user-taste", body: "项目里的 UI、文案和代码偏好", tags: ["Skills", "product"], state: "已启用" },
-              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.7.6 的变化和 DMG 安装方式", tags: ["知识库", "release"], state: "已保存" }
+              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.7.7 的变化和 DMG 安装方式", tags: ["知识库", "release"], state: "已保存" }
             ]
           },
           clipboard: {
@@ -575,7 +575,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             monitor: "监控中",
             filter: "筛选",
             items: [
-              { id: "image", kind: "图片", title: "DingDong 0.7.6 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "图片", title: "DingDong 0.7.7 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "路径", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
