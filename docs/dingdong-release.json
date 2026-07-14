@@ -1,15 +1,17 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.5",
-  "latestBuild": "12",
+  "latestVersion": "0.7.6",
+  "latestBuild": "13",
   "publishedAt": "2026-07-15T00:00:00Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDong/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
-    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.5/DingDong-0.7.5-macos.dmg",
-    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.5/DingDong-0.7.5-windows-x64.zip"
+    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.6/DingDong-0.7.6-macos.dmg",
+    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.6/DingDong-0.7.6-windows-x64.zip"
   },
   "notes": [
+    "Initializes the native macOS window manager before every method dispatch, independent of Dart call ordering.",
+    "Prevents saved opacity restoration from accessing the native window before the desktop shell starts.",
     "Makes every macOS window-manager titlebar lookup safe for borderless main and preview windows.",
     "Verifies the app with strict code-signing checks inside the final DMG and removes Finder metadata that could invalidate the signature.",
     "Includes a branded drag-to-Applications DMG with the DingDong logo, an installation arrow, and an in-volume permissions guide.",

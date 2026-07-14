@@ -41,6 +41,11 @@ public class WindowManagerPlugin: NSObject, FlutterPlugin {
         let methodName: String = call.method
         let args: [String: Any] = call.arguments as? [String: Any] ?? [:]
 
+        // Some application settings (for example a saved opacity) can be
+        // restored before the shell's explicit ensureInitialized call. Make
+        // every native operation safe regardless of Dart call ordering.
+        ensureInitialized()
+
         switch (methodName) {
         case "ensureInitialized":
             ensureInitialized()

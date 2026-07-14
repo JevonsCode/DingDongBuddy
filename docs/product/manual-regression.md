@@ -1,4 +1,4 @@
-# DingDong 0.7.5 Manual Regression Checklist
+# DingDong 0.7.6 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -7,6 +7,7 @@ and macOS golden images; the items below exercise real operating-system state.
 ## Window, tray, and startup
 
 - A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
+- A saved non-default opacity can be restored before the desktop shell starts without a native window crash.
 - DingDong opens the saved default workspace and restores theme, density, and opacity.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
 - Right-click tray actions open Clipboard, toggle monitoring, clear history, open Settings, and quit the complete process.
@@ -73,8 +74,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - `flutter build macos --release` contains `Contents/MCP/bundle/bin/dingdong_mcp`.
 - `flutter build windows --release` contains `mcp/bundle/bin/dingdong_mcp.exe`.
 - The bundled MCP executable passes a JSON-RPC `tools/list` smoke test.
-- The macOS app metadata is version `0.7.5` build `12` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.5.12` and product name `DingDong`.
+- The macOS app metadata is version `0.7.6` build `13` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.6.13` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

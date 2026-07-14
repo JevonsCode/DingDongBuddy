@@ -40,14 +40,14 @@ void main() {
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
   });
 
-  test('desktop hosts consume application version 0.7.5 from pubspec', () {
+  test('desktop hosts consume application version 0.7.6 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.5+12'));
+    expect(pubspec, contains('version: 0.7.6+13'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -294,5 +294,18 @@ void main() {
       windowManager,
       isNot(contains('standardWindowButton(.closeButton)?.superview)!')),
     );
+  });
+
+  test('macOS window calls initialize the native window before dispatch', () {
+    final String plugin = File(
+      'packages/window_manager/macos/window_manager/Sources/window_manager/WindowManagerPlugin.swift',
+    ).readAsStringSync();
+    final int handle = plugin.indexOf('public func handle');
+    final int initialize = plugin.indexOf('ensureInitialized()', handle);
+    final int dispatch = plugin.indexOf('switch (methodName)', handle);
+
+    expect(handle, greaterThanOrEqualTo(0));
+    expect(initialize, greaterThan(handle));
+    expect(dispatch, greaterThan(initialize));
   });
 }
