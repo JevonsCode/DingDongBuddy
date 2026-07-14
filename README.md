@@ -4,21 +4,22 @@
 
 <h1 align="center">DingDong</h1>
 
-DingDong is built around one idea: hand the work to an agent and let DingDong
-call you back when it is done. The waiting time belongs to your life—do the
-laundry, make a coffee, or spend a little time with your pet.
+DingDong is a local desktop tool for clipboard history and Agent-assisted work.
+It keeps recent clipboard items searchable, organizes reusable prompts, Skills,
+MCP servers, and knowledge, and alerts you when an Agent finishes or needs your
+input.
 
-把任务交给 Agent，完成时 DingDong 会叫你回来。等待的时候，去洗衣服、喝杯
-咖啡，或者陪陪宠物；工具应该把时间还给生活。
+DingDong 是一款围绕剪贴板与 Agent 协作设计的本地桌面工具。它记录并搜索剪贴板
+历史，集中管理提示词、Skill、MCP 和知识库，并在 Agent 完成任务或需要你处理时
+及时提醒，让日常工作衔接得更顺畅。
 
-Alongside finish alerts, DingDong keeps prompts, Skills, MCP servers, and
-knowledge in one local library with individual switches, stable IDs, usage
-counts, selective sharing, and a local API.
+Resources in the local library have individual switches, stable IDs, usage
+counts, selective sharing, and a local API for connected Agents.
 
 ## Philosophy
 
-- **People stay in control.** 让 AI 工具服务于人类，而不是让人被工具牵着走；
-  automation should return attention to the person using it.
+- **People stay in control.** 让 AI 工具服务于人，帮助人更高效地完成工作；
+  decisions and data remain in the user's hands.
 - **Local and deliberate.** Data stays on your computer. Clipboard history is
   excluded from library exports, and you choose exactly what to share.
 - **One source of truth.** Maintain reusable AI resources once, enable only what

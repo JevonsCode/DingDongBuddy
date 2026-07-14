@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Tell us about the time or attention this feature would give back to you. Please do not include private clipboard content, credentials, company information, or local paths.
+        Tell us which workflow this feature should improve. Please do not include private clipboard content, credentials, company information, or local paths.
   - type: textarea
     id: problem
     attributes:
