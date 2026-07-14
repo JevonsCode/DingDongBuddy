@@ -1,1 +1,5 @@
-include: package:mostly_reasonable_lints/analysis_options.yaml
+# Keep the vendored package isolated from the application's stricter rules.
+# Dev dependencies of path packages are intentionally not resolved by pub.
+analyzer:
+  errors:
+    todo: ignore
