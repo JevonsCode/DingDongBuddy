@@ -111,11 +111,17 @@ List<int> _versionParts(String value) {
       .toList(growable: false);
 }
 
-const String currentAppVersion = '0.7.3';
-const String currentAppBuild = '10';
+const String currentAppVersion = '0.7.4';
+const String currentAppBuild = '11';
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDong/',
 );
 final Uri defaultReleasePageUri = Uri.parse(
   'https://github.com/JevonsCode/DingDongBuddy/releases/latest',
+);
+final Uri defaultBugReportUri = Uri.parse(
+  'https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml',
+);
+final Uri defaultFeatureRequestUri = Uri.parse(
+  'https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml',
 );

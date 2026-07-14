@@ -4,11 +4,16 @@
 
 <h1 align="center">DingDong</h1>
 
-DingDong is a local desktop companion for people who work with AI agents. As
-prompts, Skills, MCP servers, and knowledge accumulate, DingDong keeps them in
-one library with individual switches, stable IDs, usage counts, selective
-sharing, and a local API. When an agent finishes while you are doing something
-else, DingDong sounds to bring you back.
+DingDong is built around one idea: hand the work to an agent and let DingDong
+call you back when it is done. The waiting time belongs to your life—do the
+laundry, make a coffee, or spend a little time with your pet.
+
+把任务交给 Agent，完成时 DingDong 会叫你回来。等待的时候，去洗衣服、喝杯
+咖啡，或者陪陪宠物；工具应该把时间还给生活。
+
+Alongside finish alerts, DingDong keeps prompts, Skills, MCP servers, and
+knowledge in one local library with individual switches, stable IDs, usage
+counts, selective sharing, and a local API.
 
 ## Philosophy
 
@@ -41,7 +46,23 @@ else, DingDong sounds to bring you back.
 
 Download the latest `.dmg` from [GitHub Releases](https://github.com/JevonsCode/DingDongBuddy/releases/latest),
 open it, and drag **DingDong** onto the **Applications** shortcut. The ZIP remains
-available for portable or diagnostic use.
+available for portable or diagnostic use. The branded installer includes
+`安装与权限说明.txt` with first-launch, Accessibility, clipboard-access, and
+login-item guidance. Quick Paste needs Accessibility permission; ordinary
+clipboard history does not need Full Disk Access or Screen Recording.
+
+## Feedback and privacy-safe diagnostics
+
+Use **Settings → Version → Report a problem** or **Request a feature** to open a
+guided GitHub form. The forms remind contributors to remove clipboard contents,
+secrets, personal or company information, usernames, and local file paths.
+
+Anonymous diagnostics are optional and off by default. When enabled, DingDong
+can send content-free events such as app starts, clipboard-panel opens, Agent
+notifications, and error type names to Aptabase. It never sends clipboard
+content, user-entered text, file paths, URLs, names, company information, error
+messages, or stack traces. Builds without `APTABASE_APP_KEY` do not initialize
+analytics or make analytics requests.
 
 ---
 

@@ -1,0 +1,38 @@
+DingDong 安装与权限说明
+Installation and Permissions Guide
+
+一、安装 / Install
+
+1. 把安装盘里的 DingDong 拖到 Applications（应用程序）。
+2. 打开“应用程序”文件夹，在 DingDong 上单击右键，选择“打开”。
+3. 如果 macOS 仍然阻止打开：进入“系统设置 → 隐私与安全性”，找到 DingDong，选择“仍要打开”。
+
+二、辅助功能权限 / Accessibility
+
+只有“快速粘贴到上一个应用”需要此权限。普通剪贴板历史与搜索不需要。
+
+1. 打开“系统设置 → 隐私与安全性 → 辅助功能”。
+2. 找到 DingDong 并打开开关。
+3. 如果列表中没有 DingDong，点击“+”，从“应用程序”中选择 DingDong。
+4. 回到 DingDong；如果功能仍未生效，请退出并重新打开应用。
+
+三、剪贴板访问 / Clipboard Access
+
+如果系统询问是否允许 DingDong 读取或粘贴剪贴板内容，请选择“允许”。
+DingDong 的剪贴板历史保存在本机。
+
+四、开机启动 / Launch at Login
+
+如果在 DingDong 设置中打开“开机启动”，macOS 可能要求在
+“系统设置 → 通用 → 登录项与扩展”中确认。
+
+不需要的权限
+
+DingDong 不需要“完全磁盘访问权限”或“屏幕录制权限”。
+请不要为它开启无关权限。
+
+English summary
+
+Drag DingDong to Applications. On first launch, right-click DingDong and choose Open.
+Enable Accessibility only if you use Quick Paste. Allow clipboard access if macOS asks.
+Full Disk Access and Screen Recording are not required.

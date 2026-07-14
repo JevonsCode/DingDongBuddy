@@ -9,6 +9,7 @@ void main() {
           'dingdong.clipboard.monitoring': true,
           'dingdong.language': 'zh',
           'dingdong.panel.themeMode': 'dark',
+          'dingdong.telemetry.anonymous': true,
           'dingdong.panel.backgroundOpacity': 0.75,
           'dingdong.panel.density': 'compact',
           'dingdong.panel.defaultTab': 'clipboard',
@@ -25,6 +26,7 @@ void main() {
     expect(settings.clipboardMonitoring, isTrue);
     expect(settings.language, AppLanguagePreference.chinese);
     expect(settings.themeMode, AppThemePreference.dark);
+    expect(settings.anonymousTelemetry, isTrue);
     expect(settings.backgroundOpacity, 0.82);
     expect(settings.density, PanelDensityPreference.compact);
     expect(settings.defaultWorkspace, DefaultWorkspace.clipboard);
@@ -43,6 +45,7 @@ void main() {
       clipboardMonitoring: true,
       language: AppLanguagePreference.english,
       themeMode: AppThemePreference.system,
+      anonymousTelemetry: true,
       backgroundOpacity: 0.88,
       density: PanelDensityPreference.compact,
       defaultWorkspace: DefaultWorkspace.library,
@@ -59,6 +62,7 @@ void main() {
     expect(backend.values['dingdong.clipboard.monitoring'], isTrue);
     expect(backend.values['dingdong.language'], 'en');
     expect(backend.values['dingdong.panel.themeMode'], 'system');
+    expect(backend.values['dingdong.telemetry.anonymous'], isTrue);
     expect(backend.values['dingdong.panel.backgroundOpacity'], 0.88);
     expect(backend.values['dingdong.panel.density'], 'compact');
     expect(backend.values['dingdong.panel.defaultTab'], 'library');

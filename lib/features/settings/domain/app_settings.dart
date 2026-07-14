@@ -64,6 +64,7 @@ final class AppSettings {
     this.language = AppLanguagePreference.system,
     this.themeMode = AppThemePreference.light,
     this.launchAtStartup = false,
+    this.anonymousTelemetry = false,
     this.backgroundOpacity = 0.90,
     this.density = PanelDensityPreference.comfortable,
     this.defaultWorkspace = DefaultWorkspace.today,
@@ -79,6 +80,7 @@ final class AppSettings {
   final AppLanguagePreference language;
   final AppThemePreference themeMode;
   final bool launchAtStartup;
+  final bool anonymousTelemetry;
   final double backgroundOpacity;
   final PanelDensityPreference density;
   final DefaultWorkspace defaultWorkspace;
@@ -95,6 +97,7 @@ final class AppSettings {
       language: language,
       themeMode: themeMode,
       launchAtStartup: launchAtStartup,
+      anonymousTelemetry: anonymousTelemetry,
       backgroundOpacity: backgroundOpacity.clamp(0.82, 0.96),
       density: density,
       defaultWorkspace: defaultWorkspace,
@@ -116,6 +119,7 @@ final class AppSettings {
     AppLanguagePreference? language,
     AppThemePreference? themeMode,
     bool? launchAtStartup,
+    bool? anonymousTelemetry,
     double? backgroundOpacity,
     PanelDensityPreference? density,
     DefaultWorkspace? defaultWorkspace,
@@ -131,6 +135,7 @@ final class AppSettings {
       language: language ?? this.language,
       themeMode: themeMode ?? this.themeMode,
       launchAtStartup: launchAtStartup ?? this.launchAtStartup,
+      anonymousTelemetry: anonymousTelemetry ?? this.anonymousTelemetry,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       density: density ?? this.density,
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,

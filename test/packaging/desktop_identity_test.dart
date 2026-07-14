@@ -40,14 +40,14 @@ void main() {
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
   });
 
-  test('desktop hosts consume application version 0.7.3 from pubspec', () {
+  test('desktop hosts consume application version 0.7.4 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.3+10'));
+    expect(pubspec, contains('version: 0.7.4+11'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -152,7 +152,7 @@ void main() {
         '.github/workflows/release-after-ci.yml',
       ).readAsStringSync();
 
-      expect(workflow, contains('flutter build macos --release'));
+      expect(workflow, contains('build macos --release'));
       expect(workflow, contains('scripts/sign_macos_bundle.sh'));
       expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
       expect(workflow, contains('scripts/create_macos_dmg.sh'));
@@ -161,9 +161,23 @@ void main() {
       final String dmgBuilder = File(
         'scripts/create_macos_dmg.sh',
       ).readAsStringSync();
-      expect(dmgBuilder, contains('/bin/ln -s /Applications'));
-      expect(dmgBuilder, contains('/usr/bin/hdiutil create'));
-      expect(workflow, contains('flutter build windows --release'));
+      final String dmgSettings = File(
+        'scripts/dmg_settings.py',
+      ).readAsStringSync();
+      expect(workflow, contains('dmgbuild==1.6.7'));
+      expect(dmgBuilder, contains('Assets/AgentToolIcon.png'));
+      expect(dmgBuilder, contains('安装与权限说明.txt'));
+      expect(dmgBuilder, contains('dmg-background.svg'));
+      expect(dmgSettings, contains('"Applications": "/Applications"'));
+      expect(dmgBuilder, contains('AppIcon.icns'));
+      expect(dmgBuilder, contains('com.apple.FinderInfo'));
+      expect(dmgSettings, contains('background = background_path'));
+      expect(
+        File('Assets/installer/安装与权限说明.txt').readAsStringSync(),
+        contains('辅助功能'),
+      );
+      expect(workflow, contains("'build', 'windows', '--release'"));
+      expect(workflow, contains('APTABASE_APP_KEY'));
       expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
       expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
       expect(workflow, isNot(contains('swift test')));
@@ -194,6 +208,39 @@ void main() {
     expect(signer, contains('CODE_SIGN_IDENTITY'));
   });
 
+  test('anonymous diagnostics stay optional and content free', () {
+    final String settings = File(
+      'lib/features/settings/domain/app_settings.dart',
+    ).readAsStringSync();
+    final String telemetry = File(
+      'lib/platform/privacy_preserving_telemetry.dart',
+    ).readAsStringSync();
+    final String main = File('lib/main.dart').readAsStringSync();
+
+    expect(settings, contains('this.anonymousTelemetry = false'));
+    expect(telemetry, contains("String.fromEnvironment('APTABASE_APP_KEY')"));
+    expect(telemetry, contains("track('flutter_error'"));
+    expect(telemetry, contains("track('platform_error'"));
+    expect(telemetry, isNot(contains('details.exception.toString()')));
+    expect(telemetry, isNot(contains('stack.toString()')));
+    expect(main, contains("telemetry.track('agent_notification')"));
+    expect(main, contains("telemetry.track('clipboard_panel_opened')"));
+  });
+
+  test('GitHub feedback forms require a privacy check', () {
+    final String bugForm = File(
+      '.github/ISSUE_TEMPLATE/bug-report.yml',
+    ).readAsStringSync();
+    final String featureForm = File(
+      '.github/ISSUE_TEMPLATE/feature-request.yml',
+    ).readAsStringSync();
+
+    expect(bugForm, contains('Privacy check'));
+    expect(bugForm, contains('required: true'));
+    expect(featureForm, contains('Privacy check'));
+    expect(featureForm, contains('required: true'));
+  });
+
   test('macOS runtime preserves legacy data and loopback access', () {
     for (final String path in <String>[
       'macos/Runner/DebugProfile.entitlements',
@@ -219,5 +266,17 @@ void main() {
 
     expect(trayPlugin, contains('NSScreen.screens[0].frame'));
     expect(trayPlugin, isNot(contains('NSScreen.main!.frame')));
+  });
+
+  test('macOS does not reframe its already borderless main window', () {
+    final String mainWindow = File(
+      'macos/Runner/MainFlutterWindow.swift',
+    ).readAsStringSync();
+    final String gateway = File(
+      'lib/platform/plugin_desktop_shell_gateway.dart',
+    ).readAsStringSync();
+
+    expect(mainWindow, contains('self.styleMask = [.borderless, .resizable]'));
+    expect(gateway, isNot(contains('await windowManager.setAsFrameless();')));
   });
 }

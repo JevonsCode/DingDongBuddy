@@ -149,6 +149,12 @@ final class SettingsViewModel extends ChangeNotifier
     }
   }
 
+  Future<void> setAnonymousTelemetry(bool value) async {
+    _settings = _settings.copyWith(anonymousTelemetry: value);
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setBackgroundOpacity(double value) async {
     _settings = _settings.copyWith(backgroundOpacity: value);
     notifyListeners();
@@ -234,6 +240,14 @@ final class SettingsViewModel extends ChangeNotifier
 
   Future<void> openReleasePage() async {
     await _externalLinkGateway?.open(_releaseStatus.releasePage);
+  }
+
+  Future<void> reportProblem() async {
+    await _externalLinkGateway?.open(defaultBugReportUri);
+  }
+
+  Future<void> requestFeature() async {
+    await _externalLinkGateway?.open(defaultFeatureRequestUri);
   }
 
   @override

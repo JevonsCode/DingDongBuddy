@@ -1,0 +1,58 @@
+name: Report a problem
+description: Tell us what went wrong in DingDong.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve DingDong. Please remove clipboard contents, secrets, personal information, company names, usernames, and local file paths before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: DingDong version
+      description: Find this in Settings → Version.
+      placeholder: 0.7.4 (11)
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS Apple Silicon
+        - macOS Intel
+        - Windows
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open…
+        2. Click…
+        3. See…
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics or screenshots
+      description: Optional. Redact clipboard text, usernames, local paths, company information, tokens, and other private data first.
+      render: shell
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed clipboard contents, secrets, personal/company information, usernames, and local file paths from this report.
+          required: true

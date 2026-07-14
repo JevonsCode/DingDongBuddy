@@ -88,6 +88,22 @@ class ReleaseSettingsSection extends StatelessWidget {
                     icon: const Icon(Icons.open_in_new_rounded, size: 18),
                     label: Text(context.localized('Release', '发布页')),
                   ),
+                  OutlinedButton.icon(
+                    key: const Key('settings-report-problem'),
+                    onPressed: viewModel.reportProblem,
+                    icon: const Icon(Icons.bug_report_outlined, size: 18),
+                    label: Text(
+                      context.localized('Report a problem', '上报问题'),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('settings-request-feature'),
+                    onPressed: viewModel.requestFeature,
+                    icon: const Icon(Icons.lightbulb_outline, size: 18),
+                    label: Text(
+                      context.localized('Request a feature', '提出需求'),
+                    ),
+                  ),
                 ],
               ),
             ],

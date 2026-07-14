@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DingDong — Clipboard and resource hub for local agents</title>
-    <meta name="description" content="DingDong keeps clipboard history, prompts, skills, MCP references, and knowledge in one local Mac app. Connect every agent through one MCP and hear when a conversation finishes.">
+    <title>DingDong — Give waiting time back to your life</title>
+    <meta name="description" content="Hand work to an agent and let DingDong call you back when it is done. Make coffee, do the laundry, or spend time with your pet while DingDong manages local agent resources and clipboard history.">
     <link rel="icon" href="./assets/dingdong-icon.png">
     <link rel="stylesheet" href="./styles.css?v=20260713-073">
   </head>
@@ -34,13 +34,13 @@
       <section class="hero" id="product">
         <div class="hero-copy">
           <p class="eyebrow" data-i18n="hero.eyebrow">Clipboard · agent library · finish alerts</p>
-          <h1 data-i18n="hero.title">Take control of growing AI resource sprawl.</h1>
+          <h1 data-i18n="hero.title">Give the waiting time back to your life.</h1>
           <p class="lede" data-i18n="hero.lede">
-            Prompts, Skills, MCP servers, and knowledge multiply across agents. Keep one local library, switch resources on only when useful, see what AI actually uses, and share only the items you choose.
+            Hand the work to an agent. DingDong calls you back when it is done, so you can make coffee, do the laundry, or spend time with your pet instead of watching a progress indicator.
           </p>
           <div class="hero-finish-note">
             <img src="./assets/dingdong-icon.png" alt="">
-            <p data-i18n="hero.finish">Step away while an agent works. DingDong sounds when the conversation is ready for you.</p>
+            <p data-i18n="hero.finish">Your clipboard and reusable agent resources stay organized locally while you get on with life.</p>
           </div>
           <div class="actions">
             <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="hero.download">Download latest</a>
@@ -236,25 +236,25 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <section class="release-section" id="updates">
         <div class="section-heading">
           <p class="eyebrow" data-i18n="updates.eyebrow">Latest update</p>
-          <h2 data-i18n="updates.title">DingDong 0.7.3 makes Clipboard feel immediate on macOS.</h2>
-          <p data-i18n="updates.body">Every reveal refreshes the latest item, native tray controls are back, keyboard search works, and installation now uses a familiar DMG.</p>
+          <h2 data-i18n="updates.title">DingDong 0.7.4 fixes macOS startup and ships a clearer installer.</h2>
+          <p data-i18n="updates.body">The startup crash is fixed, the branded DMG explains drag-to-Applications and permissions, and Settings now opens guided problem and feature forms.</p>
         </div>
 
         <div class="release-grid">
           <article>
-            <span class="feature-kicker">0.7.3</span>
-            <h3 data-i18n="updates.dark.title">Fresh on every reveal</h3>
-            <p data-i18n="updates.dark.body">DingDong reads the system clipboard when the panel opens and promotes exact matches instead of adding duplicates.</p>
+            <span class="feature-kicker">0.7.4</span>
+            <h3 data-i18n="updates.dark.title">Starts reliably on macOS</h3>
+            <p data-i18n="updates.dark.body">The main window no longer asks the window plugin to make an already borderless window frameless, removing the launch-time crash.</p>
           </article>
           <article>
-            <span class="feature-kicker">Tray</span>
-            <h3 data-i18n="updates.performance.title">Native controls where you expect them</h3>
-            <p data-i18n="updates.performance.body">Right-click the menu bar icon to open Clipboard, toggle monitoring, clear history, open Settings, or fully quit.</p>
+            <span class="feature-kicker">DMG</span>
+            <h3 data-i18n="updates.performance.title">A branded, guided installer</h3>
+            <p data-i18n="updates.performance.body">The DingDong logo, a clear drag arrow, and a bundled permission guide make installation and first launch easier.</p>
           </article>
           <article>
-            <span class="feature-kicker">macOS</span>
-            <h3 data-i18n="updates.bridge.title">Drag DingDong into Applications</h3>
-            <p data-i18n="updates.bridge.body">The standard DMG includes DingDong and an Applications shortcut. Command-F now jumps straight to Clipboard search.</p>
+            <span class="feature-kicker">Feedback</span>
+            <h3 data-i18n="updates.bridge.title">Report problems without guesswork</h3>
+            <p data-i18n="updates.bridge.body">Settings opens structured GitHub forms for bugs and feature requests, including a privacy checklist before submission.</p>
           </article>
         </div>
       </section>
@@ -266,13 +266,21 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           <p data-i18n="download.body">Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.</p>
         </div>
         <div class="download-actions">
-          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.3/DingDong-0.7.3-macos.dmg">
+          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.4/DingDong-0.7.4-macos.dmg">
             <strong data-i18n="download.latest">Download macOS DMG</strong>
             <span data-i18n="download.latestHint">Apple Silicon and Intel · drag to Applications</span>
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
             <span data-i18n="download.metadataHint">Used by DingDong Settings</span>
+          </a>
+          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml">
+            <strong data-i18n="download.report">Report a problem</strong>
+            <span data-i18n="download.reportHint">Guided form with a privacy checklist</span>
+          </a>
+          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml">
+            <strong data-i18n="download.request">Request a feature</strong>
+            <span data-i18n="download.requestHint">Tell us what time DingDong could give back</span>
           </a>
         </div>
         <div class="download-stats" id="download-stats" aria-live="polite">
@@ -286,6 +294,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <span>DingDong</span>
       <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="footer.releases">Releases</a>
+      <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml" data-i18n="footer.feedback">Feedback</a>
       <a href="./dingdong-release.json" data-i18n="footer.metadata">Metadata</a>
     </footer>
 
@@ -298,9 +307,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.updates": "Updates",
           "nav.download": "Download",
           "hero.eyebrow": "Clipboard · agent library · finish alerts",
-          "hero.title": "Take control of growing AI resource sprawl.",
-          "hero.lede": "Prompts, Skills, MCP servers, and knowledge multiply across agents. Keep one local library, switch resources on only when useful, see what AI actually uses, and share only the items you choose.",
-          "hero.finish": "Step away while an agent works. DingDong sounds when the conversation is ready for you.",
+          "hero.title": "Give the waiting time back to your life.",
+          "hero.lede": "Hand the work to an agent. DingDong calls you back when it is done, so you can make coffee, do the laundry, or spend time with your pet instead of watching a progress indicator.",
+          "hero.finish": "Your clipboard and reusable agent resources stay organized locally while you get on with life.",
           "hero.download": "Download latest",
           "hero.connect": "Connect Codex or Claude Code",
           "demo.subtitle": "Local agent workspace",
@@ -368,14 +377,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "The same data is available over local HTTP.",
           "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
           "updates.eyebrow": "Latest update",
-          "updates.title": "DingDong 0.7.3 makes Clipboard feel immediate on macOS.",
-          "updates.body": "Every reveal refreshes the latest item, native tray controls are back, keyboard search works, and installation now uses a familiar DMG.",
-          "updates.dark.title": "Fresh on every reveal",
-          "updates.dark.body": "DingDong reads the system clipboard when the panel opens and promotes exact matches instead of adding duplicates.",
-          "updates.performance.title": "Native controls where you expect them",
-          "updates.performance.body": "Right-click the menu bar icon to open Clipboard, toggle monitoring, clear history, open Settings, or fully quit.",
-          "updates.bridge.title": "Drag DingDong into Applications",
-          "updates.bridge.body": "The standard DMG includes DingDong and an Applications shortcut. Command-F now jumps straight to Clipboard search.",
+          "updates.title": "DingDong 0.7.4 fixes macOS startup and ships a clearer installer.",
+          "updates.body": "The startup crash is fixed, the branded DMG explains drag-to-Applications and permissions, and Settings now opens guided problem and feature forms.",
+          "updates.dark.title": "Starts reliably on macOS",
+          "updates.dark.body": "The main window no longer asks the window plugin to make an already borderless window frameless, removing the launch-time crash.",
+          "updates.performance.title": "A branded, guided installer",
+          "updates.performance.body": "The DingDong logo, a clear drag arrow, and a bundled permission guide make installation and first launch easier.",
+          "updates.bridge.title": "Report problems without guesswork",
+          "updates.bridge.body": "Settings opens structured GitHub forms for bugs and feature requests, including a privacy checklist before submission.",
           "download.eyebrow": "Download",
           "download.title": "A familiar macOS installer.",
           "download.body": "Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.",
@@ -383,11 +392,16 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "download.latestHint": "Apple Silicon and Intel · drag to Applications",
           "download.metadata": "Release metadata JSON",
           "download.metadataHint": "Used by DingDong Settings",
+          "download.report": "Report a problem",
+          "download.reportHint": "Guided form with a privacy checklist",
+          "download.request": "Request a feature",
+          "download.requestHint": "Tell us what time DingDong could give back",
           "download.statsTitle": "Downloads by version",
           "download.statsLoading": "Loading GitHub release asset counts…",
           "download.statsError": "Download counts are available on GitHub Releases.",
           "footer.releases": "Releases",
-          "footer.metadata": "Metadata"
+          "footer.metadata": "Metadata",
+          "footer.feedback": "Feedback"
         },
         zh: {
           "nav.product": "产品",
@@ -396,9 +410,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.updates": "更新",
           "nav.download": "下载",
           "hero.eyebrow": "剪贴板 · Agent 资源 · 完成提醒",
-          "hero.title": "管住越来越多的 AI 资源",
-          "hero.lede": "提示词、Skill、MCP 和知识库会散落在不同 Agent 里。DingDong 把它们集中在本地，逐项开关，记录真实使用次数，并且只分享你选中的内容。",
-          "hero.finish": "去做别的事也没关系，会话结束时 DingDong 会响一声",
+          "hero.title": "把等待的时间，还给生活",
+          "hero.lede": "把任务交给 Agent。完成时 DingDong 会叫你回来；等待的时候，去洗衣服、喝杯咖啡，或者陪陪宠物。工具应该把时间还给生活。",
+          "hero.finish": "剪贴板和 Agent 资源留在本机有序运转，你可以安心去过自己的生活",
           "hero.download": "下载 DingDong",
           "hero.connect": "查看 MCP 接入",
           "demo.subtitle": "本地 Agent 工具",
@@ -465,15 +479,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.eyebrow": "本地 API",
           "api.title": "脚本也能直接调用 DingDong",
           "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
-          "updates.eyebrow": "0.7.3 更新",
-          "updates.title": "剪贴板每次唤出都保持最新，macOS 安装也更自然",
-          "updates.body": "恢复原生状态栏菜单，补齐快捷搜索，并用标准 DMG 完成拖拽安装",
-          "updates.dark.title": "每次唤出都主动刷新",
-          "updates.dark.body": "读取系统剪贴板，把完全相同的内容提升到顶部，不再堆出重复记录",
-          "updates.performance.title": "状态栏右键菜单回来了",
-          "updates.performance.body": "打开剪贴板、启停监听、清空历史、进入设置和完整退出都在菜单里",
-          "updates.bridge.title": "拖进应用程序即可安装",
-          "updates.bridge.body": "DMG 同时展示 DingDong 和应用程序快捷方式；Command-F 会直接聚焦搜索框",
+          "updates.eyebrow": "0.7.4 更新",
+          "updates.title": "修复 macOS 启动崩溃，安装指引也更清楚",
+          "updates.body": "修复启动崩溃；品牌 DMG 说明拖入应用程序和权限设置；设置页新增问题上报和需求入口",
+          "updates.dark.title": "macOS 现在可以稳定启动",
+          "updates.dark.body": "主窗口不再对已经无边框的窗口重复执行无边框操作，移除了启动阶段的崩溃",
+          "updates.performance.title": "有品牌、有指引的安装盘",
+          "updates.performance.body": "DingDong LOGO、清晰的拖动箭头和随附权限说明，让安装和首次打开更顺手",
+          "updates.bridge.title": "上报问题不再靠猜",
+          "updates.bridge.body": "设置页直接打开结构化的 GitHub 问题和需求表单，提交前会提醒清除隐私内容",
           "download.eyebrow": "下载",
           "download.title": "熟悉的 macOS 拖拽安装",
           "download.body": "打开 DMG，把 DingDong 拖到应用程序；配置发布凭证后会自动完成 Developer ID 签名和公证",
@@ -481,11 +495,16 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "download.latestHint": "Apple 芯片和 Intel · 拖入应用程序",
           "download.metadata": "版本 JSON",
           "download.metadataHint": "DingDong 设置页会读取它",
+          "download.report": "上报问题",
+          "download.reportHint": "带隐私检查的引导表单",
+          "download.request": "提出需求",
+          "download.requestHint": "告诉我们 DingDong 还能帮你省下什么时间",
           "download.statsTitle": "各版本下载次数",
           "download.statsLoading": "正在读取 GitHub Release 资源下载数…",
           "download.statsError": "可前往 GitHub Releases 查看下载数据",
           "footer.releases": "版本",
-          "footer.metadata": "元数据"
+          "footer.metadata": "元数据",
+          "footer.feedback": "反馈"
         }
       };
 
@@ -496,7 +515,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.3 restored tray controls and instant Clipboard refresh." },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.4 fixed macOS startup and added a guided installer." },
               { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
               { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
             ]
@@ -510,7 +529,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { type: "prompt", mark: "P", title: "Sentence prefix marker", body: "Add 🎉 at the end of each completed task.", tags: ["Prompts", "style"], state: "Enabled" },
               { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "Repository search, code tracing, and architecture context.", tags: ["MCP Servers", "repository"], state: "Manual" },
               { type: "skill", mark: "S", title: "user-taste", body: "Project preferences for UI, writing, and code decisions.", tags: ["Skills", "product"], state: "Enabled" },
-              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.7.3 and how to install the DMG.", tags: ["Knowledge", "release"], state: "Saved" }
+              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.7.4 and how to install the DMG.", tags: ["Knowledge", "release"], state: "Saved" }
             ]
           },
           clipboard: {
@@ -518,7 +537,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             monitor: "Watching",
             filter: "Filter",
             items: [
-              { id: "image", kind: "IMG", title: "DingDong 0.7.3 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "IMG", title: "DingDong 0.7.4 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "PATH", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -534,7 +553,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "资源"], ["1,000", "剪贴板"], ["在线", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "网站预览已经按 Mac 面板调整" },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.3 已恢复状态栏菜单和唤出刷新" },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.4 已修复 macOS 启动并加入安装指引" },
               { source: "Codex", time: "15:06", body: "利落叮咚已经加入" },
               { source: "Codex", time: "14:54", body: "剪贴板缩略图和声音选择检查通过" }
             ]
@@ -548,7 +567,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { type: "prompt", mark: "词", title: "Sentence prefix marker", body: "任务结束时加一个「🎉」", tags: ["Prompts", "style"], state: "已启用" },
               { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "仓库搜索、代码追踪和架构上下文", tags: ["MCP Servers", "repository"], state: "手动" },
               { type: "skill", mark: "技", title: "user-taste", body: "项目里的 UI、文案和代码偏好", tags: ["Skills", "product"], state: "已启用" },
-              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.7.3 的变化和 DMG 安装方式", tags: ["知识库", "release"], state: "已保存" }
+              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.7.4 的变化和 DMG 安装方式", tags: ["知识库", "release"], state: "已保存" }
             ]
           },
           clipboard: {
@@ -556,7 +575,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             monitor: "监控中",
             filter: "筛选",
             items: [
-              { id: "image", kind: "图片", title: "DingDong 0.7.3 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "图片", title: "DingDong 0.7.4 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "路径", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },

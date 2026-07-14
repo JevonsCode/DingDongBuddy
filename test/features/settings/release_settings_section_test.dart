@@ -24,6 +24,8 @@ void main() {
     expect(find.text('0.8.0'), findsOneWidget);
     expect(find.text('A new version is available'), findsOneWidget);
     expect(find.textContaining('Faster history search'), findsOneWidget);
+    expect(find.byKey(const Key('settings-report-problem')), findsOneWidget);
+    expect(find.byKey(const Key('settings-request-feature')), findsOneWidget);
   });
 }
 

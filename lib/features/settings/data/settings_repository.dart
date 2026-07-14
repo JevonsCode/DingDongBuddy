@@ -15,6 +15,7 @@ final class SettingsRepository {
       _backend.read(_languageKey),
       _backend.read(_themeKey),
       _backend.read(_launchAtStartupKey),
+      _backend.read(_anonymousTelemetryKey),
       _backend.read(_opacityKey),
       _backend.read(_densityKey),
       _backend.read(_defaultWorkspaceKey),
@@ -30,17 +31,18 @@ final class SettingsRepository {
       language: AppLanguagePreference.parse(values[1]),
       themeMode: AppThemePreference.parse(values[2]),
       launchAtStartup: values[3] is bool ? values[3]! as bool : false,
-      backgroundOpacity: values[4] is num
-          ? (values[4]! as num).toDouble()
+      anonymousTelemetry: values[4] is bool ? values[4]! as bool : false,
+      backgroundOpacity: values[5] is num
+          ? (values[5]! as num).toDouble()
           : 0.90,
-      density: PanelDensityPreference.parse(values[5]),
-      defaultWorkspace: DefaultWorkspace.parse(values[6]),
-      clipboardMaxItems: values[7] is int ? values[7]! as int : 1000,
-      clipboardMaxAgeDays: values[8] is int ? values[8]! as int : 90,
-      selectedSound: values[9] is String ? values[9]! as String : 'default',
-      customSoundPath: values[10] as String?,
-      mcpSetupPromptOverride: values[11] as String?,
-      apiPort: values[12] is int ? values[12]! as int : 2333,
+      density: PanelDensityPreference.parse(values[6]),
+      defaultWorkspace: DefaultWorkspace.parse(values[7]),
+      clipboardMaxItems: values[8] is int ? values[8]! as int : 1000,
+      clipboardMaxAgeDays: values[9] is int ? values[9]! as int : 90,
+      selectedSound: values[10] is String ? values[10]! as String : 'default',
+      customSoundPath: values[11] as String?,
+      mcpSetupPromptOverride: values[12] as String?,
+      apiPort: values[13] is int ? values[13]! as int : 2333,
     ).sanitized();
   }
 
@@ -53,6 +55,7 @@ final class SettingsRepository {
           : _backend.write(_languageKey, settings.language.storageValue!),
       _backend.write(_themeKey, settings.themeMode.name),
       _backend.write(_launchAtStartupKey, settings.launchAtStartup),
+      _backend.write(_anonymousTelemetryKey, settings.anonymousTelemetry),
       _backend.write(_opacityKey, settings.backgroundOpacity),
       _backend.write(_densityKey, settings.density.name),
       _backend.write(_defaultWorkspaceKey, settings.defaultWorkspace.name),
@@ -77,6 +80,7 @@ const String _monitoringKey = 'dingdong.clipboard.monitoring';
 const String _languageKey = 'dingdong.language';
 const String _themeKey = 'dingdong.panel.themeMode';
 const String _launchAtStartupKey = 'dingdong.launchAtLogin';
+const String _anonymousTelemetryKey = 'dingdong.telemetry.anonymous';
 const String _opacityKey = 'dingdong.panel.backgroundOpacity';
 const String _densityKey = 'dingdong.panel.density';
 const String _defaultWorkspaceKey = 'dingdong.panel.defaultTab';

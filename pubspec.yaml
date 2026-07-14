@@ -1,12 +1,13 @@
 name: dingdong
 description: Cross-platform desktop companion for local AI agents.
 publish_to: none
-version: 0.7.3+10
+version: 0.7.4+11
 
 environment:
   sdk: ^3.12.2
 
 dependencies:
+  aptabase_flutter: ^0.4.1
   desktop_multi_window:
     path: packages/desktop_multi_window
   file_selector: ^1.1.0

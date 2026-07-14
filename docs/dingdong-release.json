@@ -1,17 +1,19 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.3",
-  "latestBuild": "10",
-  "publishedAt": "2026-07-13T00:00:00Z",
+  "latestVersion": "0.7.4",
+  "latestBuild": "11",
+  "publishedAt": "2026-07-15T00:00:00Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDong/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
-    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.3/DingDong-0.7.3-macos.dmg",
-    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.3/DingDong-0.7.3-windows-x64.zip"
+    "macOS": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.4/DingDong-0.7.4-macos.dmg",
+    "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.4/DingDong-0.7.4-windows-x64.zip"
   },
   "notes": [
-    "Refreshes the system clipboard every time the panel is revealed and promotes identical text, file, or image records instead of duplicating them.",
-    "Restores the native tray menu with monitoring state, open, start or stop, clear history, Settings, and full Quit actions.",
-    "Adds Command-F search focus, safer multi-display placement, the canonical Dock icon, and a drag-to-Applications macOS DMG."
+    "Fixes a macOS 26 startup crash caused by reframing an already borderless window.",
+    "Adds a branded drag-to-Applications DMG with the DingDong logo, an installation arrow, and an in-volume permissions guide.",
+    "Explains first launch, Accessibility, clipboard, and login-item permissions without requesting unrelated access.",
+    "Adds guided GitHub forms for problem reports and feature requests, with privacy reminders.",
+    "Adds optional, off-by-default Aptabase diagnostics that never include clipboard content, paths, messages, or stack traces."
   ]
 }

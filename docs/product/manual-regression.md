@@ -1,4 +1,4 @@
-# DingDong 0.7.3 Manual Regression Checklist
+# DingDong 0.7.4 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -6,6 +6,7 @@ and macOS golden images; the items below exercise real operating-system state.
 
 ## Window, tray, and startup
 
+- A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
 - DingDong opens the saved default workspace and restores theme, density, and opacity.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
 - Right-click tray actions open Clipboard, toggle monitoring, clear history, open Settings, and quit the complete process.
@@ -58,6 +59,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - Built-in, random, system, muted, and custom notification sounds behave as labeled.
 - Choosing a custom sound uses the OS file picker; clearing it returns to the default.
 - Version checking shows current/latest values, notes, failure state, website, and release links.
+- Report a problem and Request a feature open the matching structured GitHub forms.
+- Anonymous diagnostics are off by default and remain inactive without an Aptabase build key.
+- Enabling diagnostics emits only documented event names and error type names, never clipboard content, paths, messages, URLs, or stack traces.
 - Memory and local storage usage can be refreshed without blocking navigation.
 - API port accepts 1024–65535 and states that restart is required.
 
@@ -69,7 +73,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - `flutter build macos --release` contains `Contents/MCP/bundle/bin/dingdong_mcp`.
 - `flutter build windows --release` contains `mcp/bundle/bin/dingdong_mcp.exe`.
 - The bundled MCP executable passes a JSON-RPC `tools/list` smoke test.
-- The macOS app metadata is version `0.7.3` build `10` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.3.10` and product name `DingDong`.
-- The macOS DMG contains `DingDong.app` and an `Applications` shortcut for drag installation.
+- The macOS app metadata is version `0.7.4` build `11` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.4.11` and product name `DingDong`.
+- The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
+- The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - A tag build creates macOS DMG/ZIP and Windows ZIP artifacts without modifying release metadata automatically.

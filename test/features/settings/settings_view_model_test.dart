@@ -156,12 +156,16 @@ void main() {
 
     await model.checkForUpdates();
     await model.openReleasePage();
+    await model.reportProblem();
+    await model.requestFeature();
 
     expect(model.releaseStatus.latestVersion, '0.8.0');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
       Uri.parse('https://example.com/dingdong/releases/0.8.0'),
+      defaultBugReportUri,
+      defaultFeatureRequestUri,
     ]);
   });
 

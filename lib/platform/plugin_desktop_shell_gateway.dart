@@ -49,7 +49,9 @@ final class PluginDesktopShellGateway
       return;
     }
     await windowManager.ensureInitialized();
-    await windowManager.setAsFrameless();
+    // MainFlutterWindow is already borderless. window_manager's macOS
+    // setAsFrameless implementation force-unwraps title-bar buttons and
+    // crashes when those buttons do not exist on an already borderless window.
     await windowManager.setSize(PopupWindowPolicy.initialSize);
     await windowManager.setMinimumSize(PopupWindowPolicy.minimumSize);
     await windowManager.setMaximumSize(PopupWindowPolicy.maximumSize);

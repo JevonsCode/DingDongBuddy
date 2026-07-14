@@ -33,6 +33,7 @@ import 'package:dingdong/platform/native_launch_at_startup.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/native_quick_paste_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
+import 'package:dingdong/platform/privacy_preserving_telemetry.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/services.dart';
@@ -61,6 +62,8 @@ Future<void> main(List<String> arguments) async {
   }
 
   final ShellController shellController = ShellController();
+  final PrivacyPreservingTelemetry telemetry =
+      PrivacyPreservingTelemetry.instance;
   final ActivityController activityController = ActivityController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
       MultiWindowClipboardPreviewLauncher();
@@ -77,6 +80,7 @@ Future<void> main(List<String> arguments) async {
   );
   dependencies = AppDependencies.production(
     onNotification: (request) async {
+      telemetry.track('agent_notification');
       activityController.record(
         source: request.source ?? 'Agent',
         message: request.message,
@@ -112,6 +116,7 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await settingsViewModel.load();
+  await telemetry.setEnabled(settingsViewModel.settings.anonymousTelemetry);
   final DesktopShellService desktopShellService = DesktopShellService(
     gateway: shellGateway,
     controller: shellController,
@@ -119,6 +124,7 @@ Future<void> main(List<String> arguments) async {
     defaultWorkspaceIndex: () =>
         settingsViewModel.settings.defaultWorkspace.index,
     onClipboardReveal: () async {
+      telemetry.track('clipboard_panel_opened');
       await dependencies.clipboardCaptureService.capture();
     },
     onClipboardMonitoringChanged: settingsViewModel.setClipboardMonitoring,
@@ -154,6 +160,9 @@ Future<void> main(List<String> arguments) async {
         return null;
       case 'settings_changed':
         await settingsViewModel.reload();
+        await telemetry.setEnabled(
+          settingsViewModel.settings.anonymousTelemetry,
+        );
         return null;
       case 'settings_sound_preview':
         final Map<Object?, Object?> values = call.arguments! as Map;

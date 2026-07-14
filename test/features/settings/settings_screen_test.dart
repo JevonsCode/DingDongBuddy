@@ -64,6 +64,10 @@ void main() {
         find.byKey(const Key('settings-launch-at-startup')),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const Key('settings-anonymous-telemetry')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('settings-opacity')), findsOneWidget);
       expect(find.byKey(const Key('settings-density')), findsOneWidget);
       expect(
