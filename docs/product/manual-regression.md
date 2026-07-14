@@ -73,9 +73,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - `flutter test --exclude-tags golden` passes on Windows.
 - `flutter build macos --release` contains `Contents/MCP/bundle/bin/dingdong_mcp`.
 - `flutter build windows --release` contains `mcp/bundle/bin/dingdong_mcp.exe`.
-- The thin arm64 and x86_64 MCP bundles each pass a native JSON-RPC `tools/list` smoke test before merging.
-- Every Mach-O file in the final macOS MCP bundle contains both `arm64` and `x86_64` slices.
-- The final Universal MCP passes `tools/list` on both an Apple Silicon Mac and an Intel Mac.
+- The thin arm64 and x86_64 MCP bundles each pass a native JSON-RPC `tools/list` smoke test before packaging.
+- The final MCP bundle contains native `arm64` and `x86_64` sub-bundles and one stable executable launcher path.
+- The launcher selects and runs the native MCP successfully on both an Apple Silicon Mac and an Intel Mac.
 - The Windows MCP executable passes `tools/list` on a Windows x64 machine.
 - The macOS app metadata is version `0.7.7` build `14` and bundle id `com.dingdongbuddy.app`.
 - The Windows executable metadata is version `0.7.7.14` and product name `DingDong`.

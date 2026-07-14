@@ -55,16 +55,22 @@ jobs:
         with:
           name: mcp-macos-x86_64
           path: ${{ runner.temp }}/mcp-x86_64
-      - name: Create and test Universal MCP
+      - name: Create and test dual-architecture MCP
         run: |
           chmod +x scripts/create_universal_macos_mcp.sh
           scripts/create_universal_macos_mcp.sh \
             "$RUNNER_TEMP/mcp-arm64" \
             "$RUNNER_TEMP/mcp-x86_64" \
             "$RUNNER_TEMP/mcp-universal"
+          smoke_output="$RUNNER_TEMP/mcp-universal-tools-list.json"
           printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
             | "$RUNNER_TEMP/mcp-universal/bin/dingdong_mcp" \
-            | grep -q '"tools"'
+            > "$smoke_output"
+          if ! grep -q '"result"' "$smoke_output" \
+            || ! grep -q '"tools"' "$smoke_output"; then
+            cat "$smoke_output"
+            exit 1
+          fi
 
   macos:
     runs-on: macos-15

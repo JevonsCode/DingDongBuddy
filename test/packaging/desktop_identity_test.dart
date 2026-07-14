@@ -118,15 +118,20 @@ void main() {
     final String universalBuilder = File(
       'scripts/create_universal_macos_mcp.sh',
     ).readAsStringSync();
+    final String macLauncher = File(
+      'scripts/macos_mcp_launcher.sh',
+    ).readAsStringSync();
 
     expect(macProject, contains('scripts/build_macos_mcp.sh'));
     expect(macBuilder, contains('dart-sdk/bin/dart'));
     expect(macBuilder, contains('build cli'));
     expect(macBuilder, contains('--target=bin/dingdong_mcp.dart'));
     expect(macBuilder, contains('"method":"tools/list"'));
-    expect(universalBuilder, contains('lipo'));
-    expect(universalBuilder, contains('arm64'));
-    expect(universalBuilder, contains('x86_64'));
+    expect(universalBuilder, contains('native/arm64'));
+    expect(universalBuilder, contains('native/x86_64'));
+    expect(universalBuilder, contains('macos_mcp_launcher.sh'));
+    expect(macLauncher, contains(r'$(/usr/bin/uname -m)'));
+    expect(macLauncher, contains(r'native/$machine_architecture'));
     expect(macProject, contains('MCP'));
     expect(macProject, contains('MacOS/dingdong-mcp'));
     expect(windowsRunner, contains('dart.exe'));

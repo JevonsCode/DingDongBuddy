@@ -9,8 +9,8 @@ fi
 arm64_bundle="$1"
 x86_64_bundle="$2"
 output_bundle="$3"
-temporary_directory="$(mktemp -d "${TMPDIR:-/tmp}/dingdong-universal-mcp.XXXXXX")"
-trap 'rm -rf "$temporary_directory"' EXIT HUP INT TERM
+repository_root="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+launcher="$repository_root/scripts/macos_mcp_launcher.sh"
 
 for bundle in "$arm64_bundle" "$x86_64_bundle"; do
   if [ ! -d "$bundle" ]; then
@@ -19,91 +19,63 @@ for bundle in "$arm64_bundle" "$x86_64_bundle"; do
   fi
 done
 
-lipo_binary="${LIPO_BIN:-}"
-if [ -z "$lipo_binary" ]; then
-  xcode_lipo="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"
-  if [ -x "$xcode_lipo" ]; then
-    lipo_binary="$xcode_lipo"
-  else
-    lipo_binary="$(/usr/bin/xcrun --find lipo)"
-  fi
-fi
-
-(cd "$arm64_bundle" && /usr/bin/find . -type f | LC_ALL=C /usr/bin/sort) \
-  >"$temporary_directory/arm64-files"
-(cd "$x86_64_bundle" && /usr/bin/find . -type f | LC_ALL=C /usr/bin/sort) \
-  >"$temporary_directory/x86_64-files"
-
-if ! /usr/bin/cmp -s \
-  "$temporary_directory/arm64-files" \
-  "$temporary_directory/x86_64-files"; then
-  echo "The arm64 and x86_64 MCP bundles contain different files" >&2
-  /usr/bin/diff -u \
-    "$temporary_directory/arm64-files" \
-    "$temporary_directory/x86_64-files" >&2 || true
-  exit 65
-fi
-
-rm -rf "$output_bundle"
-/usr/bin/ditto "$arm64_bundle" "$output_bundle"
-
-mach_o_count=0
-while IFS= read -r relative_path; do
-  arm64_file="$arm64_bundle/$relative_path"
-  x86_64_file="$x86_64_bundle/$relative_path"
-  output_file="$output_bundle/$relative_path"
-  arm64_description="$(/usr/bin/file -b "$arm64_file")"
-  x86_64_description="$(/usr/bin/file -b "$x86_64_file")"
-
-  case "$arm64_description" in
-    *Mach-O*)
-      case "$x86_64_description" in
-        *Mach-O*) ;;
-        *)
-          echo "Architecture mismatch for $relative_path" >&2
-          exit 65
-          ;;
-      esac
-      "$lipo_binary" -create \
-        "$arm64_file" \
-        "$x86_64_file" \
-        -output "$output_file"
-      /bin/chmod "$(/usr/bin/stat -f '%Lp' "$arm64_file")" "$output_file"
-      mach_o_count=$((mach_o_count + 1))
-      ;;
-    *)
-      if ! /usr/bin/cmp -s "$arm64_file" "$x86_64_file"; then
-        echo "Non-Mach-O bundle file differs by architecture: $relative_path" >&2
-        exit 65
-      fi
-      ;;
-  esac
-done <"$temporary_directory/arm64-files"
-
-if [ "$mach_o_count" -eq 0 ]; then
-  echo "The MCP bundles did not contain any Mach-O files" >&2
-  exit 65
-fi
-
-mcp_executable="$output_bundle/bin/dingdong_mcp"
-if [ ! -f "$mcp_executable" ]; then
-  echo "The Universal MCP executable was not produced: $mcp_executable" >&2
+if [ ! -f "$launcher" ]; then
+  echo "MCP launcher does not exist: $launcher" >&2
   exit 66
 fi
-# GitHub artifact downloads normalize regular-file permissions. Restore the
-# entry point explicitly so the merged bundle is runnable after download.
-/bin/chmod 755 "$mcp_executable"
 
-while IFS= read -r relative_path; do
-  output_file="$output_bundle/$relative_path"
-  case "$(/usr/bin/file -b "$output_file")" in
-    *Mach-O*)
-      architectures="$("$lipo_binary" -archs "$output_file")"
-      case " $architectures " in *" arm64 "*) ;; *) exit 65;; esac
-      case " $architectures " in *" x86_64 "*) ;; *) exit 65;; esac
-      echo "$relative_path: $architectures"
-      ;;
-  esac
-done <"$temporary_directory/arm64-files"
+verify_native_bundle() {
+  bundle="$1"
+  expected_architecture="$2"
+  other_architecture="$3"
+  mach_o_count=0
 
-echo "Created Universal DingDong MCP bundle with $mach_o_count Mach-O files"
+  while IFS= read -r native_file; do
+    description="$(/usr/bin/file -b "$native_file")"
+    case "$description" in
+      *Mach-O*)
+        case "$description" in
+          *"$expected_architecture"*) ;;
+          *)
+            echo "Native MCP file has the wrong architecture: $native_file: $description" >&2
+            exit 65
+            ;;
+        esac
+        case "$description" in
+          *"$other_architecture"*)
+            echo "Native MCP file unexpectedly contains $other_architecture: $native_file" >&2
+            exit 65
+            ;;
+        esac
+        mach_o_count=$((mach_o_count + 1))
+        ;;
+    esac
+  done <<EOF
+$(/usr/bin/find "$bundle" -type f | LC_ALL=C /usr/bin/sort)
+EOF
+
+  if [ "$mach_o_count" -eq 0 ]; then
+    echo "The $expected_architecture MCP bundle did not contain any Mach-O files" >&2
+    exit 65
+  fi
+
+  echo "Verified $mach_o_count native $expected_architecture MCP files"
+}
+
+verify_native_bundle "$arm64_bundle" arm64 x86_64
+verify_native_bundle "$x86_64_bundle" x86_64 arm64
+
+rm -rf "$output_bundle"
+/bin/mkdir -p "$output_bundle/bin" "$output_bundle/native"
+/usr/bin/ditto "$arm64_bundle" "$output_bundle/native/arm64"
+/usr/bin/ditto "$x86_64_bundle" "$output_bundle/native/x86_64"
+/usr/bin/ditto "$launcher" "$output_bundle/bin/dingdong_mcp"
+
+# GitHub artifact downloads normalize regular-file permissions. Restore all
+# entry points explicitly after copying the architecture-specific bundles.
+/bin/chmod 755 \
+  "$output_bundle/bin/dingdong_mcp" \
+  "$output_bundle/native/arm64/bin/dingdong_mcp" \
+  "$output_bundle/native/x86_64/bin/dingdong_mcp"
+
+echo "Created a dual-architecture DingDong MCP bundle"

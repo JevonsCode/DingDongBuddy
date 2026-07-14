@@ -10,8 +10,8 @@
     "windows": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-windows-x64.zip"
   },
   "notes": [
-    "Ships one Universal macOS MCP executable and Universal native libraries for both Apple Silicon and Intel Macs.",
-    "Builds and smoke-tests arm64 and x86_64 MCP bundles independently before merging and signing them.",
+    "Ships one macOS MCP command path backed by native Apple Silicon and Intel bundles.",
+    "Builds and smoke-tests arm64 and x86_64 MCP bundles independently before packaging and signing them together.",
     "Initializes the native macOS window manager before every method dispatch, independent of Dart call ordering.",
     "Prevents saved opacity restoration from accessing the native window before the desktop shell starts.",
     "Makes every macOS window-manager titlebar lookup safe for borderless main and preview windows.",

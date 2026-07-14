@@ -237,14 +237,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         <div class="section-heading">
           <p class="eyebrow" data-i18n="updates.eyebrow">Latest update</p>
           <h2 data-i18n="updates.title">DingDong 0.7.7 brings the built-in MCP to every Mac.</h2>
-          <p data-i18n="updates.body">The MCP executable and its native libraries are now Universal, so the same DMG runs natively on Apple Silicon and Intel.</p>
+          <p data-i18n="updates.body">One stable MCP command now selects the native Apple Silicon or Intel bundle at launch, so the same DMG supports both kinds of Mac.</p>
         </div>
 
         <div class="release-grid">
           <article>
             <span class="feature-kicker">0.7.7</span>
             <h3 data-i18n="updates.dark.title">One MCP, both Mac architectures</h3>
-            <p data-i18n="updates.dark.body">DingDong combines arm64 and x86_64 machine code into every native MCP file before signing the app.</p>
+            <p data-i18n="updates.dark.body">DingDong packages complete arm64 and x86_64 MCP bundles together and selects the matching one at runtime.</p>
           </article>
           <article>
             <span class="feature-kicker">DMG</span>
@@ -254,7 +254,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           <article>
             <span class="feature-kicker">CI</span>
             <h3 data-i18n="updates.bridge.title">Both native builds are tested first</h3>
-            <p data-i18n="updates.bridge.body">Each architecture must pass an MCP tools/list smoke test before the Universal bundle can be created.</p>
+            <p data-i18n="updates.bridge.body">Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.</p>
           </article>
         </div>
       </section>
@@ -378,13 +378,13 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
           "updates.eyebrow": "Latest update",
           "updates.title": "DingDong 0.7.7 brings the built-in MCP to every Mac.",
-          "updates.body": "The MCP executable and its native libraries are now Universal, so the same DMG runs natively on Apple Silicon and Intel.",
+          "updates.body": "One stable MCP command now selects the native Apple Silicon or Intel bundle at launch, so the same DMG supports both kinds of Mac.",
           "updates.dark.title": "One MCP, both Mac architectures",
-          "updates.dark.body": "DingDong combines arm64 and x86_64 machine code into every native MCP file before signing the app.",
+          "updates.dark.body": "DingDong packages complete arm64 and x86_64 MCP bundles together and selects the matching one at runtime.",
           "updates.performance.title": "One installer for every supported Mac",
           "updates.performance.body": "Apple Silicon and Intel users install the same branded DMG and use the same built-in MCP path.",
           "updates.bridge.title": "Both native builds are tested first",
-          "updates.bridge.body": "Each architecture must pass an MCP tools/list smoke test before the Universal bundle can be created.",
+          "updates.bridge.body": "Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.",
           "download.eyebrow": "Download",
           "download.title": "A familiar macOS installer.",
           "download.body": "Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.",
@@ -481,13 +481,13 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
           "updates.eyebrow": "0.7.7 更新",
           "updates.title": "内置 MCP 现在同时支持 Apple 芯片和 Intel Mac",
-          "updates.body": "MCP 可执行文件和原生动态库都已合成为 Universal，同一个 DMG 可以在两种 Mac 上原生运行",
+          "updates.body": "同一个 MCP 命令会在启动时选择 Apple 芯片或 Intel 原生包，因此同一个 DMG 可以支持两种 Mac",
           "updates.dark.title": "一个 MCP，两种 Mac 架构",
-          "updates.dark.body": "签名前会把 arm64 和 x86_64 机器码合并进每一个 MCP 原生文件",
+          "updates.dark.body": "DingDong 会同时打包完整的 arm64 和 x86_64 MCP，并在运行时选择匹配的版本",
           "updates.performance.title": "所有 Mac 使用同一个安装包",
           "updates.performance.body": "Apple 芯片和 Intel 用户下载同一个品牌 DMG，MCP 配置路径也完全相同",
           "updates.bridge.title": "两种原生版本先分别测试",
-          "updates.bridge.body": "arm64 和 x86_64 都必须通过 MCP tools/list 测试，之后才允许合成 Universal 包",
+          "updates.bridge.body": "arm64 和 x86_64 都必须通过 MCP tools/list 测试，之后才允许生成双架构安装包",
           "download.eyebrow": "下载",
           "download.title": "熟悉的 macOS 拖拽安装",
           "download.body": "打开 DMG，把 DingDong 拖到应用程序；配置发布凭证后会自动完成 Developer ID 签名和公证",
@@ -515,7 +515,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.7 ships one Universal MCP for Apple Silicon and Intel." },
+              { source: "Codex", time: "15:36", body: "DingDong 0.7.7 ships one MCP command for Apple Silicon and Intel." },
               { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
               { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
             ]
