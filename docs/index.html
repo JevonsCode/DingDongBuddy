@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard history and Agent workspace</title>
     <meta name="description" content="Search clipboard history, organize reusable Agent resources, and get notified when Agent tasks finish or need input—all in one local desktop tool.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260713-073">
+    <link rel="stylesheet" href="./styles.css?v=20260715-debug">
   </head>
   <body>
     <header class="site-header">
@@ -259,12 +259,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         </div>
       </section>
 
-      <section class="download-section" id="download">
-        <div>
-          <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
-          <h2 data-i18n="download.title">A familiar macOS installer.</h2>
-          <p data-i18n="download.body">Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.</p>
-        </div>
+      <section class="download-section" id="download" aria-label="Download">
         <div class="download-actions">
           <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-macos.dmg">
             <strong data-i18n="download.latest">Download macOS DMG</strong>
@@ -283,7 +278,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             <span data-i18n="download.requestHint">Tell us which workflow DingDong should improve next</span>
           </a>
         </div>
-        <div class="download-stats" id="download-stats" aria-live="polite">
+        <div class="download-stats" id="download-stats" aria-live="polite" hidden>
           <strong data-i18n="download.statsTitle">Downloads by version</strong>
           <p data-i18n="download.statsLoading">Loading GitHub release asset counts…</p>
         </div>
@@ -385,9 +380,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "updates.performance.body": "Apple Silicon and Intel users install the same branded DMG and use the same built-in MCP path.",
           "updates.bridge.title": "Both native builds are tested first",
           "updates.bridge.body": "Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.",
-          "download.eyebrow": "Download",
-          "download.title": "A familiar macOS installer.",
-          "download.body": "Open the DMG and drag DingDong to Applications. Developer ID signing and notarization are applied automatically when distribution credentials are available.",
           "download.latest": "Download macOS DMG",
           "download.latestHint": "Apple Silicon and Intel · drag to Applications",
           "download.metadata": "Release metadata JSON",
@@ -488,9 +480,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "updates.performance.body": "Apple 芯片和 Intel 用户下载同一个品牌 DMG，MCP 配置路径也完全相同",
           "updates.bridge.title": "两种原生版本先分别测试",
           "updates.bridge.body": "arm64 和 x86_64 都必须通过 MCP tools/list 测试，之后才允许生成双架构安装包",
-          "download.eyebrow": "下载",
-          "download.title": "熟悉的 macOS 拖拽安装",
-          "download.body": "打开 DMG，把 DingDong 拖到应用程序；配置发布凭证后会自动完成 Developer ID 签名和公证",
           "download.latest": "下载 macOS DMG",
           "download.latestHint": "Apple 芯片和 Intel · 拖入应用程序",
           "download.metadata": "版本 JSON",
@@ -596,6 +585,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const soundCards = document.querySelectorAll("[data-audio]");
       const soundStatus = document.getElementById("sound-status");
       const downloadStats = document.getElementById("download-stats");
+      const showDownloadStats =
+        new URLSearchParams(window.location.search).get("debug") === "1";
       let currentSoundAudio = null;
       let currentSoundCard = null;
       let releaseDownloads = null;
@@ -831,7 +822,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         } catch {
           releaseDownloadsFailed = true;
         }
-        renderDownloadStats();
+        if (showDownloadStats) renderDownloadStats();
       };
 
       const writeDemoClipboard = async (value) => {
@@ -957,7 +948,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const preferredLanguage = localStorage.getItem("dingdong-site-language") ||
         (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
       applyLanguage(preferredLanguage);
-      loadDownloadStats();
+      if (showDownloadStats) {
+        downloadStats.hidden = false;
+        loadDownloadStats();
+      }
     </script>
   </body>
 </html>

@@ -203,10 +203,12 @@ Official distribution uses these repository secrets:
 `MACOS_KEYCHAIN_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, and
 `APPLE_APP_PASSWORD`.
 
-The website reads GitHub's public Releases API and totals each version's asset
-`download_count`. GitHub exposes counts for uploaded release assets; the
-automatically generated source-code archives are not part of this metric. See
-the [GitHub Releases API](https://docs.github.com/en/rest/releases/releases).
+When the website is opened with `?debug=1`, it reads GitHub's public Releases
+API and totals each version's asset `download_count`. GitHub exposes counts for
+uploaded release assets; the automatically generated source-code archives are
+not part of this metric. The normal website neither displays nor requests these
+diagnostics. See the
+[GitHub Releases API](https://docs.github.com/en/rest/releases/releases).
 
 ## License
 
