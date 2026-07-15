@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard history and Agent workspace</title>
     <meta name="description" content="Search clipboard history, organize reusable Agent resources, and get notified when Agent tasks finish or need input—all in one local desktop tool.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260715-debug">
+    <link rel="stylesheet" href="./styles.css?v=20260715-product">
   </head>
   <body>
     <header class="site-header">
@@ -19,7 +19,6 @@
         <a href="#product" data-i18n="nav.product">Product</a>
         <a href="#mcp" data-i18n="nav.mcp">MCP</a>
         <a href="#sounds" data-i18n="nav.sounds">Sounds</a>
-        <a href="#updates" data-i18n="nav.updates">Updates</a>
         <a href="#download" data-i18n="nav.download">Download</a>
         <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       </nav>
@@ -233,37 +232,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         </div>
       </section>
 
-      <section class="release-section" id="updates">
-        <div class="section-heading">
-          <p class="eyebrow" data-i18n="updates.eyebrow">Latest update</p>
-          <h2 data-i18n="updates.title">DingDong 0.7.7 brings the built-in MCP to every Mac.</h2>
-          <p data-i18n="updates.body">One stable MCP command now selects the native Apple Silicon or Intel bundle at launch, so the same DMG supports both kinds of Mac.</p>
-        </div>
-
-        <div class="release-grid">
-          <article>
-            <span class="feature-kicker">0.7.7</span>
-            <h3 data-i18n="updates.dark.title">One MCP, both Mac architectures</h3>
-            <p data-i18n="updates.dark.body">DingDong packages complete arm64 and x86_64 MCP bundles together and selects the matching one at runtime.</p>
-          </article>
-          <article>
-            <span class="feature-kicker">DMG</span>
-            <h3 data-i18n="updates.performance.title">One installer for every supported Mac</h3>
-            <p data-i18n="updates.performance.body">Apple Silicon and Intel users install the same branded DMG and use the same built-in MCP path.</p>
-          </article>
-          <article>
-            <span class="feature-kicker">CI</span>
-            <h3 data-i18n="updates.bridge.title">Both native builds are tested first</h3>
-            <p data-i18n="updates.bridge.body">Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.</p>
-          </article>
-        </div>
-      </section>
-
       <section class="download-section" id="download" aria-label="Download">
         <div class="download-actions">
-          <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-macos.dmg">
-            <strong data-i18n="download.latest">Download macOS DMG</strong>
-            <span data-i18n="download.latestHint">Apple Silicon and Intel · drag to Applications</span>
+          <a class="download-card" id="primary-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest">
+            <strong data-i18n="download.latest">Download DingDong</strong>
+            <span data-i18n="download.latestHint">Get the latest desktop release</span>
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
@@ -299,7 +272,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.product": "Product",
           "nav.mcp": "MCP",
           "nav.sounds": "Sounds",
-          "nav.updates": "Updates",
           "nav.download": "Download",
           "hero.eyebrow": "Clipboard · agent library · finish alerts",
           "hero.title": "Clipboard and Agent tools, in one place.",
@@ -371,17 +343,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.eyebrow": "Loopback HTTP API",
           "api.title": "The same data is available over local HTTP.",
           "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
-          "updates.eyebrow": "Latest update",
-          "updates.title": "DingDong 0.7.7 brings the built-in MCP to every Mac.",
-          "updates.body": "One stable MCP command now selects the native Apple Silicon or Intel bundle at launch, so the same DMG supports both kinds of Mac.",
-          "updates.dark.title": "One MCP, both Mac architectures",
-          "updates.dark.body": "DingDong packages complete arm64 and x86_64 MCP bundles together and selects the matching one at runtime.",
-          "updates.performance.title": "One installer for every supported Mac",
-          "updates.performance.body": "Apple Silicon and Intel users install the same branded DMG and use the same built-in MCP path.",
-          "updates.bridge.title": "Both native builds are tested first",
-          "updates.bridge.body": "Each architecture must pass an MCP tools/list smoke test before the dual-architecture bundle can be created.",
-          "download.latest": "Download macOS DMG",
-          "download.latestHint": "Apple Silicon and Intel · drag to Applications",
+          "download.latest": "Download DingDong",
+          "download.latestHint": "Get the latest desktop release",
+          "download.macos": "Download for macOS",
+          "download.macosHint": "Latest macOS DMG",
+          "download.windows": "Download for Windows",
+          "download.windowsHint": "Latest Windows x64 ZIP",
           "download.metadata": "Release metadata JSON",
           "download.metadataHint": "Used by DingDong Settings",
           "download.report": "Report a problem",
@@ -399,7 +366,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.product": "产品",
           "nav.mcp": "MCP",
           "nav.sounds": "声音",
-          "nav.updates": "更新",
           "nav.download": "下载",
           "hero.eyebrow": "剪贴板 · Agent 资源 · 完成提醒",
           "hero.title": "让剪贴板和 Agent 协作更顺手",
@@ -471,17 +437,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.eyebrow": "本地 API",
           "api.title": "脚本也能直接调用 DingDong",
           "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
-          "updates.eyebrow": "0.7.7 更新",
-          "updates.title": "内置 MCP 现在同时支持 Apple 芯片和 Intel Mac",
-          "updates.body": "同一个 MCP 命令会在启动时选择 Apple 芯片或 Intel 原生包，因此同一个 DMG 可以支持两种 Mac",
-          "updates.dark.title": "一个 MCP，两种 Mac 架构",
-          "updates.dark.body": "DingDong 会同时打包完整的 arm64 和 x86_64 MCP，并在运行时选择匹配的版本",
-          "updates.performance.title": "所有 Mac 使用同一个安装包",
-          "updates.performance.body": "Apple 芯片和 Intel 用户下载同一个品牌 DMG，MCP 配置路径也完全相同",
-          "updates.bridge.title": "两种原生版本先分别测试",
-          "updates.bridge.body": "arm64 和 x86_64 都必须通过 MCP tools/list 测试，之后才允许生成双架构安装包",
-          "download.latest": "下载 macOS DMG",
-          "download.latestHint": "Apple 芯片和 Intel · 拖入应用程序",
+          "download.latest": "下载 DingDong",
+          "download.latestHint": "获取最新桌面版本",
+          "download.macos": "下载 macOS 版",
+          "download.macosHint": "最新 macOS DMG",
+          "download.windows": "下载 Windows 版",
+          "download.windowsHint": "最新 Windows x64 ZIP",
           "download.metadata": "版本 JSON",
           "download.metadataHint": "DingDong 设置页会读取它",
           "download.report": "上报问题",
@@ -504,7 +465,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.7 ships one MCP command for Apple Silicon and Intel." },
+              { source: "Codex", time: "15:36", body: "Agent finished. DingDong played the selected alert." },
               { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
               { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
             ]
@@ -542,7 +503,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             metrics: [["4", "资源"], ["1,000", "剪贴板"], ["在线", "API"]],
             agents: [
               { source: "Codex", time: "16:02", body: "网站预览已经按 Mac 面板调整" },
-              { source: "Codex", time: "15:36", body: "DingDong 0.7.7 的内置 MCP 同时支持 Apple 芯片和 Intel" },
+              { source: "Codex", time: "15:36", body: "Agent 已完成，DingDong 播放了选中的提醒声音" },
               { source: "Codex", time: "15:06", body: "利落叮咚已经加入" },
               { source: "Codex", time: "14:54", body: "剪贴板缩略图和声音选择检查通过" }
             ]
@@ -584,9 +545,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoCopyValue = document.getElementById("demo-copy-value");
       const soundCards = document.querySelectorAll("[data-audio]");
       const soundStatus = document.getElementById("sound-status");
+      const primaryDownload = document.getElementById("primary-download");
       const downloadStats = document.getElementById("download-stats");
       const showDownloadStats =
         new URLSearchParams(window.location.search).get("debug") === "1";
+      const browserPlatform =
+        (navigator.userAgentData && navigator.userAgentData.platform) ||
+        navigator.platform ||
+        "";
+      const detectedDownloadPlatform = /win/i.test(browserPlatform)
+        ? "windows"
+        : /mac/i.test(browserPlatform)
+          ? "macos"
+          : "other";
       let currentSoundAudio = null;
       let currentSoundCard = null;
       let releaseDownloads = null;
@@ -825,6 +796,32 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         if (showDownloadStats) renderDownloadStats();
       };
 
+      const renderPrimaryDownload = () => {
+        const options = {
+          macos: {
+            href: "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-macos.dmg",
+            title: "download.macos",
+            hint: "download.macosHint"
+          },
+          windows: {
+            href: "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-windows-x64.zip",
+            title: "download.windows",
+            hint: "download.windowsHint"
+          },
+          other: {
+            href: "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
+            title: "download.latest",
+            hint: "download.latestHint"
+          }
+        };
+        const option = options[detectedDownloadPlatform];
+        primaryDownload.href = option.href;
+        primaryDownload.querySelector("strong").textContent =
+          copy[demoState.language][option.title];
+        primaryDownload.querySelector("span").textContent =
+          copy[demoState.language][option.hint];
+      };
+
       const writeDemoClipboard = async (value) => {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(value);
@@ -914,6 +911,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         }
         localStorage.setItem("dingdong-site-language", lang);
         renderDemo();
+        renderPrimaryDownload();
         renderDownloadStats();
       };
 

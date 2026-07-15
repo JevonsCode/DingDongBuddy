@@ -163,7 +163,6 @@ nav a:hover,
 .hero-copy,
 .section-heading,
 .api-band > div:first-child,
-.release-section > div:first-child,
 .download-section > div:first-child {
   min-width: 0;
 }
@@ -875,7 +874,6 @@ h3 {
 .setup-card,
 .tool-grid article,
 .api-band,
-.release-section,
 .download-section,
 .download-card {
   border: 1px solid var(--border);
@@ -908,7 +906,6 @@ h3 {
 .setup-card p,
 .tool-grid p,
 .api-band p,
-.release-section p,
 .download-section p,
 .download-card span {
   color: var(--muted);
@@ -931,26 +928,6 @@ h3 {
   min-width: 0;
   padding: 22px 18px 20px;
   border-radius: var(--radius-medium);
-}
-
-.feature-kicker {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: max-content;
-  max-width: 100%;
-  min-height: 28px;
-  margin: 0 0 18px;
-  padding: 5px 9px;
-  border: 1px solid var(--accent-border);
-  border-radius: 8px;
-  color: var(--accent);
-  background: var(--accent-soft);
-  font-size: 11px;
-  font-weight: 780;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-  white-space: normal;
 }
 
 .feature-grid p {
@@ -1200,40 +1177,6 @@ pre {
   border-radius: var(--radius-large);
 }
 
-.release-section {
-  display: grid;
-  gap: 22px;
-  margin-top: 28px;
-  padding: 24px;
-  border-radius: var(--radius-large);
-}
-
-.release-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.release-grid article {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-medium);
-  background: var(--surface);
-}
-
-.release-grid h3 {
-  margin-top: 0;
-}
-
-.release-grid p {
-  margin: 9px 0 0;
-  font-size: 14px;
-}
-
 .endpoint-list {
   display: flex;
   flex-wrap: wrap;
@@ -1392,10 +1335,6 @@ footer span {
     gap: 14px;
   }
 
-  .release-grid {
-    grid-template-columns: 1fr;
-  }
-
   .sound-custom {
     grid-template-columns: auto 1fr;
   }
@@ -1519,7 +1458,6 @@ footer span {
   }
 
   .api-band,
-  .release-section,
   .download-section,
   .setup-card {
     padding: 18px;

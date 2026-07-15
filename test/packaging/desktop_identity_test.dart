@@ -107,6 +107,10 @@ void main() {
 
     expect(website, isNot(contains('A familiar macOS installer.')));
     expect(website, isNot(contains('熟悉的 macOS 拖拽安装')));
+    expect(website, isNot(contains('Both native builds are tested first')));
+    expect(website, isNot(contains('两种原生版本先分别测试')));
+    expect(website, isNot(contains('Apple Silicon and Intel ·')));
+    expect(website, isNot(contains('id="updates"')));
     expect(
       website,
       contains('id="download-stats" aria-live="polite" hidden'),
@@ -114,6 +118,8 @@ void main() {
     expect(website, contains('new URLSearchParams(window.location.search)'));
     expect(website, contains('.get("debug") === "1"'));
     expect(website, contains('if (showDownloadStats) {'));
+    expect(website, contains('const detectedDownloadPlatform'));
+    expect(website, contains('DingDong-0.7.7-windows-x64.zip'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
