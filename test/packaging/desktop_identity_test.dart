@@ -102,6 +102,20 @@ void main() {
     expect(checksum, isNot('2c6031875648498a461842f54b999f632e6d4f0e'));
   });
 
+  test('website keeps release diagnostics behind debug mode', () {
+    final String website = File('docs/index.html').readAsStringSync();
+
+    expect(website, isNot(contains('A familiar macOS installer.')));
+    expect(website, isNot(contains('熟悉的 macOS 拖拽安装')));
+    expect(
+      website,
+      contains('id="download-stats" aria-live="polite" hidden'),
+    );
+    expect(website, contains('new URLSearchParams(window.location.search)'));
+    expect(website, contains('.get("debug") === "1"'));
+    expect(website, contains('if (showDownloadStats) {'));
+  });
+
   test('desktop builds bundle the compiled DingDong MCP executable', () {
     final String macProject = File(
       'macos/Runner.xcodeproj/project.pbxproj',

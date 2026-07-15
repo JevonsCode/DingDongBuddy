@@ -1251,6 +1251,7 @@ pre {
 }
 
 .download-section {
+  grid-template-columns: 1fr;
   margin-bottom: 56px;
 }
 
@@ -1259,8 +1260,12 @@ pre {
 }
 
 .download-actions {
-  justify-content: flex-end;
+  justify-content: stretch;
   margin-top: 0;
+}
+
+.download-stats[hidden] {
+  display: none;
 }
 
 .download-stats {
