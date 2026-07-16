@@ -296,7 +296,7 @@ class AppDelegate: FlutterAppDelegate {
 
   @IBAction func openWebsite(_ sender: Any?) {
     guard let url = URL(
-      string: "https://xn--8ovp9s.xn--m8txu.com/DingDong/"
+      string: "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/"
     ) else { return }
     NSWorkspace.shared.open(url)
   }

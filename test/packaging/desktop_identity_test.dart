@@ -80,7 +80,10 @@ void main() {
     expect(mainMenu, contains('DingDong Website'));
     expect(mainMenu, contains('selector="openWebsite:"'));
     expect(appDelegate, contains('@IBAction func openWebsite'));
-    expect(appDelegate, contains('https://xn--8ovp9s.xn--m8txu.com/DingDong/'));
+    expect(
+      appDelegate,
+      contains('https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/'),
+    );
   });
 
   test('migration cleanup removes stale branding and website content', () {

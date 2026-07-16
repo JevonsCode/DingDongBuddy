@@ -114,7 +114,7 @@ List<int> _versionParts(String value) {
 const String currentAppVersion = '0.7.8';
 const String currentAppBuild = '15';
 final Uri defaultWebsiteUri = Uri.parse(
-  'https://xn--8ovp9s.xn--m8txu.com/DingDong/',
+  'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',
 );
 final Uri defaultReleasePageUri = Uri.parse(
   'https://github.com/JevonsCode/DingDongBuddy/releases/latest',
