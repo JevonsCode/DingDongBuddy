@@ -94,7 +94,12 @@ jobs:
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - name: Run tests with visual goldens
+        if: matrix.arch == 'arm64'
+        run: flutter test
+      - name: Run tests without architecture-specific visual goldens
+        if: matrix.arch == 'x86_64'
+        run: flutter test --exclude-tags golden
       - run: flutter build macos --debug
       - name: Verify macOS thinning contract
         run: |

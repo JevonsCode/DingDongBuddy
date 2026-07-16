@@ -240,9 +240,25 @@ void main() {
     expect(workflow, contains(r'DingDong-$version-windows-x64-beta.zip'));
     expect(workflow, contains('mcp-macos-arm64'));
     expect(workflow, contains('mcp-macos-x86_64'));
+    expect(
+      workflow,
+      contains("if: matrix.arch == 'x86_64'"),
+    );
+    expect(
+      workflow,
+      contains('flutter test --exclude-tags golden'),
+    );
     expect(workflow, contains('scripts/create_universal_macos_mcp.sh'));
     expect(desktopWorkflow, contains('macos-15-intel'));
     expect(desktopWorkflow, contains(r'runs-on: ${{ matrix.runner }}'));
+    expect(
+      desktopWorkflow,
+      contains("if: matrix.arch == 'x86_64'"),
+    );
+    expect(
+      desktopWorkflow,
+      contains('flutter test --exclude-tags golden'),
+    );
     expect(desktopWorkflow, contains('scripts/thin_macos_app.sh'));
     expect(desktopWorkflow, contains('Verify macOS application architecture'));
     expect(desktopWorkflow, contains('scripts/create_universal_macos_mcp.sh'));
