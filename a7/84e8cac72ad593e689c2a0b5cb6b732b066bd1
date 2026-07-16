@@ -1,0 +1,21 @@
+.github/workflows/release-after-ci.yml
+  s_e1923a1cd1b23c::t_e1dffa9a67ebf0 44
+test/packaging/desktop_identity_test.dart
+  s_e1923a1cd1b23c::t_e1dffa9a67ebf0 302,304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.34-trip",
+  "base_commit_sha": "a784e8cac72ad593e689c2a0b5cb6b732b066bd1",
+  "prompts": {},
+  "sessions": {
+    "s_e1923a1cd1b23c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f650b-3c08-7212-8088-2a428fe6f148",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
