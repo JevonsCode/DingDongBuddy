@@ -1,0 +1,97 @@
+macos/Runner.xcodeproj/project.pbxproj
+  s_e1923a1cd1b23c::t_458663cee8706d 494,576,626
+docs/product/manual-regression.md
+  s_e1923a1cd1b23c::t_166314dcbc0220 1,35-40,52-53,67,71,86-87
+docs/dingdong-release.json
+  s_e1923a1cd1b23c::t_c8baf1903374ef 3-5,9-24,27-35
+test/golden/resource_ui_golden_test.dart
+  s_e1923a1cd1b23c::t_f7c4cd98ba38e2 1-291
+lib/features/agent_api/data/mcp_server.dart
+  s_e1923a1cd1b23c::t_166314dcbc0220 39,102-109,230-231
+docs/index.html
+  s_e1923a1cd1b23c::t_6bb786b386ca3d 59,63-66
+  s_e1923a1cd1b23c::t_9d9afcf9ea9c24 72-73,606
+  s_e1923a1cd1b23c::t_e46dd93f958124 35,38,42,97,101-102,105-106,109-110,117-118,121-122,125-126,129-130,137-138,182-183,188-189,192-193,210-216,223-224,301,303-304,318-332,334-335,354-357,359-367,369-370,383-387,400,402-403,417-431,433-434,453-456,458-460,462-466,468-469,482-486
+  s_e1923a1cd1b23c::t_e097ca3618631a 278,381,480
+  s_e1923a1cd1b23c::t_81a17bb633f6a4 7,544
+  s_e1923a1cd1b23c::t_ec388f08c119ab 676
+  s_e1923a1cd1b23c::t_042619e0252d16 461,511,547
+  s_e1923a1cd1b23c::t_0f4f5078096c9c 6,36,302,401
+  s_e1923a1cd1b23c::t_e702dad7edb8dd 499-500,502-504,508-510,513-515,520-521,523,535-536,538-540,545-546,549-551,556-557,559
+  s_e1923a1cd1b23c::t_886a3059152bd2 9,242-263,373-380,472-479,579-584,597-599,838-868,870-873,965,1000
+lib/features/activity/ui/activity_screen.dart
+  s_e1923a1cd1b23c::t_166314dcbc0220 116
+  s_e1923a1cd1b23c::t_0389862d0af1b9 3,5,11-12,27-29,39-41,62-64,144-145,163,167-168,230-241
+docs/styles.css
+  s_e1923a1cd1b23c::t_6bb786b386ca3d 333-335,340,343,359,367-385,396-399,416-433,575,630,687-703,720-734,774-776,787-794,822-860,868-871,1332-1333,1390-1401,1411-1450,1528,1650-1652
+macos/Runner/AppDelegate.swift
+  s_e1923a1cd1b23c::t_99b408db71b515 27-41
+lib/features/library/ui/resource_browser_cards.dart
+  s_e1923a1cd1b23c::t_d37dfb326bcea3 108,124-126,128-141,143-153,155-171,173-177,179-181
+  s_e1923a1cd1b23c::t_55f776c6412263 293-297,305-309
+  s_e1923a1cd1b23c::t_af74c3c77ffd50 127
+  s_e1923a1cd1b23c::t_b18c57513ce954 94-98,102,117,186-187,189,193,201-203,219,237,239,245,262-263,266-267,280-292,298-304,310-357,383
+docs/release-notes.md
+  s_e1923a1cd1b23c::t_5ecbee5e50e332 1-54
+README.md
+  s_e1923a1cd1b23c::t_458663cee8706d 64
+  s_e1923a1cd1b23c::t_b9144969cdf100 37-50,56
+  s_e1923a1cd1b23c::t_81a17bb633f6a4 151-153
+  s_e1923a1cd1b23c::t_e46dd93f958124 7-9,11-12,16-23,27-35
+lib/features/library/ui/resource_browser_screen.dart
+  s_e1923a1cd1b23c::t_0389862d0af1b9 9,110-111
+test/features/library/resource_card_presentation_test.dart
+  s_e1923a1cd1b23c::t_9442ad9cd1f245 9-15,23-28,38-47,55-58,60-65
+  s_e1923a1cd1b23c::t_3afe3a6214838f 67-83
+  s_e1923a1cd1b23c::t_fb5f1a00de634e 1-8,16-22,29-37,48-54,59,66,84-109
+test/packaging/desktop_identity_test.dart
+  s_e1923a1cd1b23c::t_9a5def2fc6604d 284-287
+  s_e1923a1cd1b23c::t_1c46f08a08d9d3 111-113,122,127-134,143-145,206-279,282-283,288-298,315-319,321-325,328-337,419-449
+  s_e1923a1cd1b23c::t_5ecbee5e50e332 280-281
+  s_e1923a1cd1b23c::t_6e1631cf544acd 42
+  s_e1923a1cd1b23c::t_458663cee8706d 41,43-44
+  s_e1923a1cd1b23c::t_166314dcbc0220 47,54,146
+  s_e1923a1cd1b23c::t_10f0eefe148883 114,138-140
+  s_e1923a1cd1b23c::t_9f633154049ea3 135-137,141-142
+lib/features/activity/ui/activity_cards.dart
+  s_e1923a1cd1b23c::t_b18c57513ce954 142,150,165-169,172-192,194-206,211-242,245,254-259,262-264,268-303,306-321,323-333,335-339,341-372,374-377,379-385,388-420,424-454,471,473-474,479-482
+  s_e1923a1cd1b23c::t_9442ad9cd1f245 304,340,455-460
+pubspec.yaml
+  s_e1923a1cd1b23c::t_166314dcbc0220 4
+test/app/dingdong_app_test.dart
+  s_e1923a1cd1b23c::t_166314dcbc0220 13,19,40-75,226
+lib/features/library/domain/resource_card_presentation.dart
+  s_e1923a1cd1b23c::t_3afe3a6214838f 45,51,53-60
+  s_e1923a1cd1b23c::t_0389862d0af1b9 1-44,46-50,52,61-79,84-146
+  s_e1923a1cd1b23c::t_9442ad9cd1f245 80-83
+lib/features/library/ui/resource_list.dart
+  s_e1923a1cd1b23c::t_0389862d0af1b9 3-6,14-15,21-22,30-47,52,54,58-61,63,65,67,69-88,90-106,109-131,133-157,166-262
+.github/workflows/release.yml
+  s_e1923a1cd1b23c::t_5ecbee5e50e332 69-70,72-83,105-106,108-118,176,179,189,213,219,230-232,250
+lib/features/settings/domain/release_update.dart
+  s_e1923a1cd1b23c::t_166314dcbc0220 114-115
+.github/workflows/release-after-ci.yml
+  s_e1923a1cd1b23c::t_9a5def2fc6604d 44-45
+test/features/shell/popup_shell_test.dart
+  s_e1923a1cd1b23c::t_fb5f1a00de634e 5,7-9,13,17,151-285,301-303,348-374,387-436,567-625,797-814,820,825
+  s_e1923a1cd1b23c::t_55f776c6412263 286-300,375-386
+  s_e1923a1cd1b23c::t_7a0d778dda8b7b 304-347
+.github/ISSUE_TEMPLATE/bug-report.yml
+  s_e1923a1cd1b23c::t_166314dcbc0220 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.34-trip",
+  "base_commit_sha": "0d652d0fee7eb346b467e4fd26dfed5e373c3f07",
+  "prompts": {},
+  "sessions": {
+    "s_e1923a1cd1b23c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f650b-3c08-7212-8088-2a428fe6f148",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
