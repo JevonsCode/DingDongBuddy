@@ -1,0 +1,29 @@
+macos/Runner/AppDelegate.swift
+  s_e1923a1cd1b23c::t_516e03f4ff6a2f 299
+lib/features/settings/domain/release_update.dart
+  s_e1923a1cd1b23c::t_516e03f4ff6a2f 117
+test/packaging/desktop_identity_test.dart
+  s_e1923a1cd1b23c::t_516e03f4ff6a2f 83-86
+docs/dingdong-release.json
+  s_e1923a1cd1b23c::t_516e03f4ff6a2f 6
+.github/ISSUE_TEMPLATE/config.yml
+  s_e1923a1cd1b23c::t_516e03f4ff6a2f 4
+lib/features/settings/data/http_release_metadata_source.dart
+  s_e1923a1cd1b23c::t_516e03f4ff6a2f 79-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.34-trip",
+  "base_commit_sha": "5b06ad3c6fe1b07de154b0f63d18ff396b7675dc",
+  "prompts": {},
+  "sessions": {
+    "s_e1923a1cd1b23c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f650b-3c08-7212-8088-2a428fe6f148",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
