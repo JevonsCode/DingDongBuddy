@@ -299,8 +299,9 @@ void main() {
     expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
     expect(
       releaseGate,
-      contains('the tag event will start the release workflow'),
+      contains('GITHUB_TOKEN tag pushes do not start new workflows'),
     );
+    expect(releaseGate, contains('gh workflow run release.yml'));
     expect(workflow, isNot(contains('swift test')));
     expect(
       Directory('Sources').existsSync()
