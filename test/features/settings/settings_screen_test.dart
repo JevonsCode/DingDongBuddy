@@ -66,7 +66,7 @@ void main() {
       );
       expect(
         find.byKey(const Key('settings-anonymous-telemetry')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.byKey(const Key('settings-opacity')), findsOneWidget);
       expect(find.byKey(const Key('settings-density')), findsOneWidget);

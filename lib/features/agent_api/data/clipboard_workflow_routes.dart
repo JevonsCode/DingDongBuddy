@@ -53,7 +53,7 @@ bool _matches(ClipboardRecord item, String needle) =>
     needle.isEmpty ||
     <String>[
       item.title,
-      item.group,
+      ...item.groupNames,
       item.content,
       ...item.tags,
     ].join(' ').toLowerCase().contains(needle);
@@ -84,7 +84,9 @@ List<Map<String, Object?>> _groupSummaries(List<ClipboardRecord> records) {
   final Map<String, List<ClipboardRecord>> groups =
       <String, List<ClipboardRecord>>{};
   for (final ClipboardRecord record in records) {
-    groups.putIfAbsent(record.group, () => <ClipboardRecord>[]).add(record);
+    for (final String group in record.groupNames) {
+      groups.putIfAbsent(group, () => <ClipboardRecord>[]).add(record);
+    }
   }
   return groups.entries
       .map(

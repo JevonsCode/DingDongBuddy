@@ -60,6 +60,22 @@ final class LibraryImporter {
     if (!await root.exists()) {
       throw FileSystemException('Import path is not a directory', root.path);
     }
+    if (request.type == ResourceType.skill &&
+        await _firstFile(root, const <String>['SKILL.md', 'skill.md']) !=
+            null) {
+      final Resource? resource = await _skill(root, request);
+      final bool duplicate =
+          resource == null ||
+          existing
+              .where((Resource item) => item.type == request.type)
+              .map((Resource item) => _normalizedContent(item.content))
+              .contains(_normalizedContent(resource.content));
+      return LibraryImportResult(
+        imported: duplicate ? const <Resource>[] : <Resource>[resource],
+        skippedCount: duplicate ? 1 : 0,
+        scannedCount: 1,
+      );
+    }
     final List<FileSystemEntity> children = await root
         .list(followLinks: false)
         .where(

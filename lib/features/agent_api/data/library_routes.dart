@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/knowledge_indexer.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
@@ -93,14 +94,32 @@ final class LibraryRoutes {
     }
   }
 
-  HttpResponseData seedDefaults() {
-    return const HttpResponseData(
+  Future<HttpResponseData> seedDefaults() async {
+    final List<Resource> existing = await _store.load();
+    final bool alreadyPresent = existing.any(
+      (Resource resource) => resource.id == builtInReplyMarkerPromptId,
+    );
+    if (alreadyPresent) {
+      return const HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'ok',
+          'inserted': 0,
+          'skipped': 1,
+          'items': <Object?>[],
+        },
+      );
+    }
+
+    final Resource prompt = builtInReplyMarkerPrompt(_now());
+    await _store.save(<Resource>[...existing, prompt]);
+    return HttpResponseData(
       statusCode: 200,
       json: <String, Object?>{
         'status': 'ok',
-        'inserted': 0,
+        'inserted': 1,
         'skipped': 0,
-        'items': <Object?>[],
+        'items': <Object?>[prompt.toApiJson()],
       },
     );
   }
@@ -316,6 +335,11 @@ final class LibraryRoutes {
         enabled: decoded['enabled'] as bool?,
         activation: decoded.containsKey('activation')
             ? ResourceActivation.parse(decoded['activation'], pinned: pinned)
+            : null,
+        triggerGroupIds: decoded.containsKey('triggerGroupIds')
+            ? (decoded['triggerGroupIds'] as List<Object?>)
+                  .map((Object? value) => value as String)
+                  .toList(growable: false)
             : null,
         sortOrder: decoded['sortOrder'] as int?,
         updatedAt: _now().toUtc(),

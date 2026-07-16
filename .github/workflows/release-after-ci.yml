@@ -41,6 +41,8 @@ jobs:
           if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
             git tag "$tag" "$TESTED_SHA"
             git push origin "$tag"
+            echo "$tag was pushed; the tag event will start the release workflow."
+            exit 0
           fi
 
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then

@@ -4,9 +4,11 @@ import 'dart:math';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter/foundation.dart';
 
 /// Observable state and commands for the resource library workspace.
@@ -17,9 +19,11 @@ final class LibraryViewModel extends ChangeNotifier {
     DateTime Function()? now,
     LibraryImporter? importer,
     this.updateFetcher,
+    TriggerGroupStore? triggerGroupStore,
     DataRevisionBus? revisions,
   }) : _idGenerator = idGenerator ?? _generateUuid,
        _now = now ?? _utcNow,
+       _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
        _importer =
            importer ?? LibraryImporter(idGenerator: idGenerator, now: now) {
     _revisionSubscription = revisions?.changes
@@ -32,15 +36,18 @@ final class LibraryViewModel extends ChangeNotifier {
   final DateTime Function() _now;
   final LibraryImporter _importer;
   final ResourceUpdateFetcher? updateFetcher;
+  final TriggerGroupStore _triggerGroupStore;
   StreamSubscription<DataCollection>? _revisionSubscription;
   List<Resource> _resources = const <Resource>[];
+  List<TriggerGroup> _triggerGroups = const <TriggerGroup>[];
   String _query = '';
   ResourceType? _selectedType;
   String? _selectedGroup;
   bool _pinnedOnly = false;
   Resource? _selectedResource;
   bool _isCreating = false;
-  final Set<String> _transferSelectionIds = <String>{};
+  ResourceType _creatingType = ResourceType.prompt;
+  final Set<String> _selectedIds = <String>{};
 
   String get query => _query;
 
@@ -52,7 +59,7 @@ final class LibraryViewModel extends ChangeNotifier {
     final Map<String, int> typeOrderByGroup = <String, int>{};
     for (final Resource resource in _resources) {
       final String group = resource.group.trim();
-      if (!resource.type.isLibraryResource || group.isEmpty) {
+      if (!resource.type.isConfigurableAgentResource || group.isEmpty) {
         continue;
       }
       final int order = resource.type.index;
@@ -78,20 +85,48 @@ final class LibraryViewModel extends ChangeNotifier {
 
   bool get isCreating => _isCreating;
 
-  int get transferSelectionCount => _transferSelectionIds.length;
+  ResourceType get creatingType => _creatingType;
 
-  bool isSelectedForTransfer(String id) => _transferSelectionIds.contains(id);
+  List<TriggerGroup> get triggerGroups {
+    final List<TriggerGroup> groups = List<TriggerGroup>.of(_triggerGroups);
+    groups.sort(
+      (TriggerGroup left, TriggerGroup right) =>
+          left.name.toLowerCase().compareTo(right.name.toLowerCase()),
+    );
+    return List<TriggerGroup>.unmodifiable(groups);
+  }
+
+  int get selectionCount => _selectedIds.length;
+
+  bool isSelected(String id) => _selectedIds.contains(id);
+
+  bool get allVisibleSelected {
+    final List<Resource> visible = visibleResources;
+    return visible.isNotEmpty &&
+        visible.every(
+          (Resource resource) => _selectedIds.contains(resource.id),
+        );
+  }
 
   List<Resource> get allResources => List<Resource>.unmodifiable(_resources);
 
+  List<Resource> get configurableResources => List<Resource>.unmodifiable(
+    _resources.where(
+      (Resource resource) => resource.type.isConfigurableAgentResource,
+    ),
+  );
+
   List<Resource> get pinnedResources => List<Resource>.unmodifiable(
-    _resources.where((Resource resource) => resource.pinned),
+    _resources.where(
+      (Resource resource) =>
+          resource.type.isConfigurableAgentResource && resource.pinned,
+    ),
   );
 
   List<Resource> get visibleResources {
     final String needle = _query.trim().toLowerCase();
     final Iterable<Resource> filtered = _resources.where((Resource resource) {
-      if (!resource.type.isLibraryResource) {
+      if (!resource.type.isConfigurableAgentResource) {
         return false;
       }
       if (_selectedType != null && resource.type != _selectedType) {
@@ -122,28 +157,34 @@ final class LibraryViewModel extends ChangeNotifier {
 
   Future<void> load() async {
     _resources = await _repository.load();
-    _transferSelectionIds.removeWhere(
+    _triggerGroups = await _triggerGroupStore.load();
+    _selectedIds.removeWhere(
       (String id) => !_resources.any((Resource resource) => resource.id == id),
     );
     notifyListeners();
   }
 
-  void toggleTransferSelection(String id) {
-    if (!_transferSelectionIds.add(id)) {
-      _transferSelectionIds.remove(id);
+  void toggleSelection(String id) {
+    if (!_selectedIds.add(id)) {
+      _selectedIds.remove(id);
     }
     notifyListeners();
   }
 
-  void selectAllVisibleForTransfer() {
-    _transferSelectionIds.addAll(
-      visibleResources.map((Resource resource) => resource.id),
-    );
+  void toggleAllVisible() {
+    final Set<String> visibleIds = visibleResources
+        .map((Resource resource) => resource.id)
+        .toSet();
+    if (visibleIds.isNotEmpty && visibleIds.every(_selectedIds.contains)) {
+      _selectedIds.removeAll(visibleIds);
+    } else {
+      _selectedIds.addAll(visibleIds);
+    }
     notifyListeners();
   }
 
-  void clearTransferSelection() {
-    _transferSelectionIds.clear();
+  void clearSelection() {
+    _selectedIds.clear();
     notifyListeners();
   }
 
@@ -182,6 +223,7 @@ final class LibraryViewModel extends ChangeNotifier {
 
   void startCreating() {
     _selectedResource = null;
+    _creatingType = _selectedType ?? ResourceType.prompt;
     _isCreating = true;
     notifyListeners();
   }
@@ -197,13 +239,29 @@ final class LibraryViewModel extends ChangeNotifier {
     required ResourceType type,
     required String title,
     required String content,
+    String? group,
+    List<String>? tags,
+    String? updateUrl,
+    String? note,
+    bool? pinned,
+    bool? enabled,
+    ResourceActivation? activation,
+    List<String>? triggerGroupIds,
   }) async {
     final DateTime timestamp = _now().toUtc();
     final Resource resource = Resource(
       id: _idGenerator(),
       type: type,
+      group: group,
       title: title,
       content: content,
+      tags: tags ?? const <String>[],
+      updateUrl: updateUrl,
+      note: note,
+      pinned: pinned ?? false,
+      enabled: enabled ?? true,
+      activation: activation,
+      triggerGroupIds: triggerGroupIds ?? const <String>[],
       createdAt: timestamp,
       updatedAt: timestamp,
     );
@@ -219,9 +277,25 @@ final class LibraryViewModel extends ChangeNotifier {
     _resources = _resources
         .where((Resource resource) => resource.id != selected.id)
         .toList(growable: false);
-    _transferSelectionIds.remove(selected.id);
+    _selectedIds.remove(selected.id);
     await _repository.save(_resources);
     _selectedResource = null;
+    notifyListeners();
+  }
+
+  Future<void> deleteResources(Set<String> ids) async {
+    if (ids.isEmpty) {
+      return;
+    }
+    _resources = _resources
+        .where((Resource resource) => !ids.contains(resource.id))
+        .toList(growable: false);
+    _selectedIds.removeAll(ids);
+    if (ids.contains(_selectedResource?.id)) {
+      _selectedResource = null;
+      _isCreating = false;
+    }
+    await _repository.save(_resources);
     notifyListeners();
   }
 
@@ -232,6 +306,60 @@ final class LibraryViewModel extends ChangeNotifier {
     ];
     await _repository.save(_resources);
     _selectedResource = resource;
+    notifyListeners();
+  }
+
+  Future<TriggerGroup> createTriggerGroup({
+    required String name,
+    required List<TriggerRule> rules,
+  }) async {
+    final DateTime timestamp = _now().toUtc();
+    final TriggerGroup group = TriggerGroup(
+      id: _idGenerator(),
+      name: name,
+      rules: rules,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    );
+    _triggerGroups = <TriggerGroup>[..._triggerGroups, group];
+    await _triggerGroupStore.save(_triggerGroups);
+    notifyListeners();
+    return group;
+  }
+
+  Future<void> updateTriggerGroup(TriggerGroup group) async {
+    _triggerGroups = <TriggerGroup>[
+      ..._triggerGroups.where((TriggerGroup item) => item.id != group.id),
+      group.copyWith(updatedAt: _now().toUtc()),
+    ];
+    await _triggerGroupStore.save(_triggerGroups);
+    notifyListeners();
+  }
+
+  Future<void> deleteTriggerGroup(String id) async {
+    _triggerGroups = _triggerGroups
+        .where((TriggerGroup group) => group.id != id)
+        .toList(growable: false);
+    _resources = _resources
+        .map(
+          (Resource resource) => resource.triggerGroupIds.contains(id)
+              ? resource.copyWith(
+                  triggerGroupIds: resource.triggerGroupIds
+                      .where((String groupId) => groupId != id)
+                      .toList(growable: false),
+                  updatedAt: _now().toUtc(),
+                )
+              : resource,
+        )
+        .toList(growable: false);
+    await _triggerGroupStore.save(_triggerGroups);
+    await _repository.save(_resources);
+    final String? selectedId = _selectedResource?.id;
+    if (selectedId != null) {
+      _selectedResource = _resources
+          .where((Resource resource) => resource.id == selectedId)
+          .firstOrNull;
+    }
     notifyListeners();
   }
 
@@ -257,6 +385,15 @@ final class LibraryViewModel extends ChangeNotifier {
     );
     await save(updated);
     return updated;
+  }
+
+  Future<String> fetchUpdateContent(String updateUrl) async {
+    final ResourceUpdateFetcher? fetcher = updateFetcher;
+    final String link = updateUrl.trim();
+    if (fetcher == null || link.isEmpty) {
+      throw StateError('Resource update is unavailable.');
+    }
+    return fetcher.fetch(Uri.parse(link));
   }
 
   Future<LibraryImportResult> importDirectory({
@@ -295,13 +432,10 @@ final class LibraryViewModel extends ChangeNotifier {
   }
 
   String exportJson() {
-    final List<Resource> exportable = _transferSelectionIds.isEmpty
+    final List<Resource> exportable = _selectedIds.isEmpty
         ? visibleResources
         : _resources
-              .where(
-                (Resource resource) =>
-                    _transferSelectionIds.contains(resource.id),
-              )
+              .where((Resource resource) => _selectedIds.contains(resource.id))
               .toList(growable: false);
     return LibraryBundle.encode(exportable, generatedAt: _now());
   }

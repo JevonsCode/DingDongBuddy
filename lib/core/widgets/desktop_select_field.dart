@@ -80,10 +80,9 @@ class DesktopSelectField<T> extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 11),
                   decoration: BoxDecoration(
                     color: enabled
-                        ? colors.surfaceContainerLowest
+                        ? colors.surfaceContainerLow
                         : colors.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: theme.dividerColor),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                   child: Row(
                     children: <Widget>[

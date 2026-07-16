@@ -1,14 +1,12 @@
 /// User-facing clipboard content categories.
 enum ClipboardKind { text, url, command, code, json, path, email, file, image }
 
-/// Broad filters shown to users; semantic kinds only select row artwork.
-enum ClipboardCategory { text, link, image, file }
-
 /// One durable clipboard history entry.
 final class ClipboardRecord {
   const ClipboardRecord({
     required this.id,
     required this.group,
+    this.groups = const <String>[],
     required this.title,
     required this.content,
     required this.tags,
@@ -22,7 +20,10 @@ final class ClipboardRecord {
   });
 
   final String id;
+
+  /// Legacy primary group retained for store and API compatibility.
   final String group;
+  final List<String> groups;
   final String title;
   final String content;
   final List<String> tags;
@@ -36,12 +37,16 @@ final class ClipboardRecord {
 
   bool get sensitive => tags.contains('sensitive');
 
-  ClipboardCategory get category => switch (kind) {
-    ClipboardKind.url => ClipboardCategory.link,
-    ClipboardKind.image => ClipboardCategory.image,
-    ClipboardKind.file => ClipboardCategory.file,
-    _ => ClipboardCategory.text,
-  };
+  /// Every user-defined group this record belongs to, in display order.
+  List<String> get groupNames {
+    final Set<String> seen = <String>{};
+    return <String>[group, ...groups]
+        .map((String value) => value.trim())
+        .where(
+          (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
+        )
+        .toList(growable: false);
+  }
 
   ClipboardKind get kind {
     if (tags.contains('image')) {
@@ -67,6 +72,7 @@ final class ClipboardRecord {
 
   ClipboardRecord copyWith({
     String? group,
+    List<String>? groups,
     String? title,
     String? content,
     List<String>? tags,
@@ -76,9 +82,15 @@ final class ClipboardRecord {
     int? sortOrder,
     DateTime? updatedAt,
   }) {
+    final List<String>? resolvedGroups = groups == null
+        ? null
+        : _normalizedGroups(groups);
     return ClipboardRecord(
       id: id,
-      group: group ?? this.group,
+      group: resolvedGroups == null
+          ? group ?? this.group
+          : (resolvedGroups.isEmpty ? '' : resolvedGroups.first),
+      groups: resolvedGroups ?? (group == null ? this.groups : <String>[group]),
       title: title ?? this.title,
       content: content ?? this.content,
       tags: tags ?? this.tags,
@@ -97,6 +109,7 @@ final class ClipboardRecord {
       'id': id,
       'title': title,
       'group': group,
+      'groups': groupNames,
       'classification': kind.name,
       'tags': tags,
       'pinned': pinned,
@@ -116,6 +129,7 @@ final class ClipboardRecord {
       'id': id,
       'type': 'clipboard',
       'group': group,
+      'groups': groupNames,
       'title': title,
       'content': content,
       'tags': tags,
@@ -127,4 +141,14 @@ final class ClipboardRecord {
       if (source != null) 'source': source,
     };
   }
+}
+
+List<String> _normalizedGroups(Iterable<String> values) {
+  final Set<String> seen = <String>{};
+  return values
+      .map((String value) => value.trim())
+      .where(
+        (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
+      )
+      .toList(growable: false);
 }

@@ -5,11 +5,15 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/built_in_resource_installer.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/native_clipboard_change_source.dart';
@@ -22,9 +26,12 @@ final class AppDependencies {
     required this.clipboardStore,
     required this.clipboardGateway,
     required this.clipboardCaptureService,
+    required this.clipboardCategoryRuleStore,
     required this.clipboardMonitorService,
     required this.paths,
     required this.resourceStore,
+    required this.triggerGroupStore,
+    required this.builtInResourceInstaller,
     required this.settingsRepository,
     required this.agentHttpServer,
   });
@@ -39,6 +46,8 @@ final class AppDependencies {
       paths.clipboardDatabaseFile.path,
     );
     final ClipboardGateway clipboardGateway = DesktopClipboardGateway();
+    final ClipboardCategoryRuleStore clipboardCategoryRuleStore =
+        FileClipboardCategoryRuleStore(paths.clipboardCategoryRulesFile);
     final ClipboardCaptureService clipboardCaptureService =
         ClipboardCaptureService(
           gateway: clipboardGateway,
@@ -53,9 +62,15 @@ final class AppDependencies {
     final ResourceStore resourceStore = ResourceRepository(
       ResourceFileService(paths.resourceLibraryFile),
     );
-    final SettingsRepository settingsRepository = SettingsRepository(
-      SharedPreferencesBackend(),
+    final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
+      TriggerGroupFileService(paths.triggerGroupsFile),
     );
+    final SharedPreferencesBackend preferences = SharedPreferencesBackend();
+    final SettingsRepository settingsRepository = SettingsRepository(
+      preferences,
+    );
+    final BuiltInResourceInstaller builtInResourceInstaller =
+        BuiltInResourceInstaller(resourceStore, preferences);
     final NativeNotificationGateway notificationGateway =
         NativeNotificationGateway();
     final AgentRouter router = AgentRouter(
@@ -74,6 +89,7 @@ final class AppDependencies {
       clipboardGateway: clipboardGateway,
       clipboardStore: clipboardStore,
       resourceStore: resourceStore,
+      triggerGroupStore: triggerGroupStore,
       onClipboardMonitoring: (bool enabled) => unawaited(() async {
         if (enabled) {
           await clipboardMonitorService.start();
@@ -91,9 +107,12 @@ final class AppDependencies {
       clipboardStore: clipboardStore,
       clipboardGateway: clipboardGateway,
       clipboardCaptureService: clipboardCaptureService,
+      clipboardCategoryRuleStore: clipboardCategoryRuleStore,
       clipboardMonitorService: clipboardMonitorService,
       paths: paths,
       resourceStore: resourceStore,
+      triggerGroupStore: triggerGroupStore,
+      builtInResourceInstaller: builtInResourceInstaller,
       settingsRepository: settingsRepository,
       agentHttpServer: AgentHttpServer(router),
     );
@@ -102,15 +121,19 @@ final class AppDependencies {
   final AppDataPaths paths;
   final ClipboardGateway clipboardGateway;
   final ClipboardCaptureService clipboardCaptureService;
+  final ClipboardCategoryRuleStore clipboardCategoryRuleStore;
   final ClipboardMonitorService clipboardMonitorService;
   final ClipboardRepository clipboardStore;
   final ResourceStore resourceStore;
+  final TriggerGroupStore triggerGroupStore;
+  final BuiltInResourceInstaller builtInResourceInstaller;
   final SettingsRepository settingsRepository;
   final AgentHttpServer agentHttpServer;
   AppSettings initialSettings = const AppSettings();
 
   Future<void> start() async {
     await paths.applicationSupportDirectory.create(recursive: true);
+    await builtInResourceInstaller.install();
     initialSettings = await settingsRepository.load();
     await agentHttpServer.start(port: initialSettings.apiPort);
     await paths.activePortFile.writeAsString(

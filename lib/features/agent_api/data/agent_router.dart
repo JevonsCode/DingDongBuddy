@@ -21,6 +21,7 @@ import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 
 part 'agent_router_resource_handlers.dart';
 
@@ -32,6 +33,7 @@ final class AgentRouter {
     ClipboardGateway? clipboardGateway,
     ClipboardStore? clipboardStore,
     ResourceStore? resourceStore,
+    TriggerGroupStore? triggerGroupStore,
     String Function()? idGenerator,
     DateTime Function()? now,
     void Function(bool value)? onClipboardMonitoring,
@@ -59,6 +61,7 @@ final class AgentRouter {
            : AgentCompatibilityRoutes(
                resourceStore: resourceStore,
                clipboardStore: clipboardStore,
+               triggerGroupStore: triggerGroupStore,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -82,6 +85,7 @@ final class AgentRouter {
          onShowUi: onShowUi,
        ),
        _resourceStore = resourceStore,
+       _triggerGroupStore = triggerGroupStore,
        _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? DateTime.now;
 
@@ -96,6 +100,7 @@ final class AgentRouter {
   final ClipboardCollectionRoutes? _clipboardCollectionRoutes;
   final DesktopControlRoutes _desktopControlRoutes;
   final ResourceStore? _resourceStore;
+  final TriggerGroupStore? _triggerGroupStore;
   final String Function() _idGenerator;
   final DateTime Function() _now;
 
@@ -172,7 +177,11 @@ final class AgentRouter {
       if (store == null) {
         return _resourceUnavailable();
       }
-      return AgentBridge(store, now: _now).respond(request.body);
+      return AgentBridge(
+        store,
+        triggerGroupStore: _triggerGroupStore,
+        now: _now,
+      ).respond(request.body);
     }
     if (request.method == 'GET' && request.parsedUri.path == '/library') {
       return _listResources(request.parsedUri.queryParameters);

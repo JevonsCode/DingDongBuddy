@@ -114,7 +114,7 @@ bool _matches(ClipboardRecord item, String task) {
       .toSet();
   final String haystack = <String>[
     item.title,
-    item.group,
+    ...item.groupNames,
     item.content,
     ...item.tags,
   ].join(' ').toLowerCase();

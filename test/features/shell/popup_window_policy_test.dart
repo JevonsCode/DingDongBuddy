@@ -18,22 +18,19 @@ void main() {
     );
   });
 
-  test(
-    'popup starts three default insets from the active display left edge',
-    () {
-      const Rect trayBounds = Rect.fromLTWH(760, 0, 24, 24);
-      const Rect visibleDisplay = Rect.fromLTWH(0, 24, 1440, 876);
+  test('popup starts one inset from the active display right edge', () {
+    const Rect trayBounds = Rect.fromLTWH(760, 0, 24, 24);
+    const Rect visibleDisplay = Rect.fromLTWH(0, 24, 1440, 876);
 
-      expect(
-        PopupWindowPolicy.positionBelowTray(
-          trayBounds: trayBounds,
-          visibleDisplay: visibleDisplay,
-          popupSize: PopupWindowPolicy.initialSize,
-        ),
-        const Offset(60, 44),
-      );
-    },
-  );
+    expect(
+      PopupWindowPolicy.positionBelowTray(
+        trayBounds: trayBounds,
+        visibleDisplay: visibleDisplay,
+        popupSize: PopupWindowPolicy.initialSize,
+      ),
+      const Offset(1030, 44),
+    );
+  });
 
   test('popup placement uses the selected display coordinate space', () {
     const Rect trayBounds = Rect.fromLTWH(2160, 0, 24, 24);
@@ -45,7 +42,7 @@ void main() {
         visibleDisplay: visibleDisplay,
         popupSize: PopupWindowPolicy.initialSize,
       ),
-      const Offset(1500, 44),
+      const Offset(2470, 44),
     );
   });
 
@@ -59,7 +56,7 @@ void main() {
         visibleDisplay: visibleDisplay,
         popupSize: const Size(390, 540),
       ),
-      const Offset(60, 44),
+      const Offset(870, 44),
     );
   });
 

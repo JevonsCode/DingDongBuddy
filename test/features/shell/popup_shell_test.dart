@@ -2,13 +2,19 @@ import 'dart:io';
 
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
+import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -142,6 +148,292 @@ void main() {
     expect(events, <String>['hide', 'manager']);
   });
 
+  testWidgets(
+    'resource card de-duplicates tags and toggles its compact status control',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 1);
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 16);
+      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'built-in-prompt',
+          type: ResourceType.prompt,
+          group: 'DingDong',
+          title: 'Reply marker',
+          content: 'Add a marker to the final reply.',
+          tags: const <String>['DingDong', '内置', '验证'],
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        DingDongApp(resourceStore: store, shellController: controller),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder tags = find.byKey(
+        const Key('resource-card-tags-built-in-prompt'),
+      );
+      expect(tags, findsOneWidget);
+      expect(
+        find.descendant(of: tags, matching: find.text('DingDong')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('resource-card-status-built-in-prompt')),
+        findsOneWidget,
+      );
+      final SizedBox actions = tester.widget<SizedBox>(
+        find.byKey(const Key('resource-card-actions-built-in-prompt')),
+      );
+      expect(actions.width, 64);
+
+      await tester.tap(
+        find.byKey(const Key('resource-card-status-built-in-prompt')),
+      );
+      await tester.pumpAndSettle();
+
+      expect((await store.load()).single.enabled, isFalse);
+    },
+  );
+
+  testWidgets(
+    'Skill cards show parsed metadata in the library and enabled list',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController();
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 17);
+      final Resource skill = Resource(
+        id: 'user-taste',
+        type: ResourceType.skill,
+        title: '',
+        content: '''---
+name: user-taste
+description: Use when product decisions should follow saved preferences.
+---
+
+# User Taste
+
+Apply the user's saved preferences.''',
+        updateUrl:
+            'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste',
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await tester.pumpWidget(
+        DingDongApp(
+          resourceStore: InMemoryResourceStore(<Resource>[skill]),
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder enabledCard = find.byKey(
+        const Key('today-enabled-user-taste'),
+      );
+      expect(
+        find.descendant(of: enabledCard, matching: find.text('user-taste')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: enabledCard,
+          matching: find.text(
+            'Use when product decisions should follow saved preferences.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: enabledCard,
+          matching: find.textContaining('--- name:'),
+        ),
+        findsNothing,
+      );
+
+      controller.open(1);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('resource-card-title-user-taste')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('resource-card-summary-user-taste')),
+        findsOneWidget,
+      );
+      expect(find.text('user-taste'), findsOneWidget);
+      expect(
+        find.text(
+          'Use when product decisions should follow saved preferences.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('--- name:'), findsNothing);
+      final Finder tags = find.byKey(
+        const Key('resource-card-tags-user-taste'),
+      );
+      expect(
+        find.descendant(of: tags, matching: find.text('Skill')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: tags, matching: find.text('Online')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: tags, matching: find.text('Skills')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('Skill card content is vertically centered', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ShellController controller = ShellController(initialIndex: 1);
+    addTearDown(controller.dispose);
+    final DateTime now = DateTime.utc(2026, 7, 17);
+
+    await tester.pumpWidget(
+      DingDongApp(
+        shellController: controller,
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'centered-skill',
+            type: ResourceType.skill,
+            title: '',
+            content: '''---
+name: user-taste
+description: Use when product decisions should follow saved preferences.
+---
+
+# User Taste''',
+            updateUrl:
+                'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Rect card = tester.getRect(
+      find.byKey(const Key('resource-card-centered-skill')),
+    );
+    final Rect content = tester.getRect(
+      find.byKey(const Key('resource-card-content-centered-skill')),
+    );
+    expect((card.center.dy - content.center.dy).abs(), lessThanOrEqualTo(1));
+  });
+
+  testWidgets('MCP resource cards use the orange-red accent', (
+    WidgetTester tester,
+  ) async {
+    final ShellController controller = ShellController(initialIndex: 1);
+    addTearDown(controller.dispose);
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    await tester.pumpWidget(
+      DingDongApp(
+        shellController: controller,
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'mcp-resource',
+            type: ResourceType.mcp,
+            title: 'Local MCP',
+            content: 'npx local-mcp',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final PopupSymbolIcon icon = tester.widget<PopupSymbolIcon>(
+      find.byKey(const Key('resource-card-type-mcp-resource')),
+    );
+    expect(icon.color, PopupStyle.mcp);
+    expect(find.text('STDIO · npx local-mcp'), findsOneWidget);
+    final Finder tags = find.byKey(
+      const Key('resource-card-tags-mcp-resource'),
+    );
+    expect(
+      find.descendant(of: tags, matching: find.text('MCP')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: tags, matching: find.text('STDIO')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('enabled resources can be edited or disabled by right click', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'enabled-skill',
+        type: ResourceType.skill,
+        title: 'Enabled skill',
+        content: 'Use this skill.',
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final _FakeResourceManagerLauncher launcher =
+        _FakeResourceManagerLauncher();
+    final _QueuedContextMenuGateway menuGateway = _QueuedContextMenuGateway(
+      <String?>['edit', 'disable'],
+    );
+    await tester.pumpWidget(
+      DingDongApp(
+        resourceStore: store,
+        resourceManagerLauncher: launcher,
+        desktopContextMenuGateway: menuGateway,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder card = find.byKey(const Key('today-enabled-enabled-skill'));
+    await tester.tap(card, buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+    expect(menuGateway.showCount, 1);
+    expect(find.byType(PopupMenuItem), findsNothing);
+    expect(launcher.lastEditingResourceId, 'enabled-skill');
+
+    await tester.tap(card, buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+
+    expect(menuGateway.showCount, 2);
+    expect((await store.load()).single.enabled, isFalse);
+    expect(card, findsNothing);
+  });
+
   testWidgets('settings hides the callout before opening its separate panel', (
     WidgetTester tester,
   ) async {
@@ -271,6 +563,65 @@ void main() {
 
     expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
   });
+
+  testWidgets(
+    'Command-2 restores the second clipboard row from the focused callout shell',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      final _RecordingClipboardGateway clipboard = _RecordingClipboardGateway();
+      final _RecordingQuickPasteGateway quickPaste =
+          _RecordingQuickPasteGateway();
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 15);
+      final List<ClipboardRecord> records = <ClipboardRecord>[
+        ClipboardRecord(
+          id: 'shortcut-first',
+          group: 'Clipboard',
+          title: 'First shortcut item',
+          content: 'first value',
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        ClipboardRecord(
+          id: 'shortcut-second',
+          group: 'Clipboard',
+          title: 'Second shortcut item',
+          content: 'second value',
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: now.subtract(const Duration(seconds: 1)),
+          updatedAt: now.subtract(const Duration(seconds: 1)),
+        ),
+      ];
+      await tester.pumpWidget(
+        DingDongApp(
+          clipboardStore: InMemoryClipboardStore(records),
+          clipboardGateway: clipboard,
+          quickPasteGateway: quickPaste,
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+
+      expect(clipboard.writtenText, 'second value');
+      expect(quickPaste.pasteCount, 1);
+    },
+  );
 
   testWidgets('filter button shows R only while Command is held', (
     WidgetTester tester,
@@ -443,15 +794,35 @@ void main() {
   );
 }
 
+final class _QueuedContextMenuGateway implements DesktopContextMenuGateway {
+  _QueuedContextMenuGateway(this.results);
+
+  final List<String?> results;
+  int showCount = 0;
+
+  @override
+  Future<String?> show({
+    required double x,
+    required double y,
+    required bool useChinese,
+    required List<DesktopContextMenuItem> items,
+  }) async {
+    final int index = showCount++;
+    return index < results.length ? results[index] : null;
+  }
+}
+
 final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
   _FakeResourceManagerLauncher({this.onShow});
 
   final VoidCallback? onShow;
   int openCount = 0;
+  String? lastEditingResourceId;
 
   @override
   Future<void> show({String? editingResourceId}) async {
     openCount += 1;
+    lastEditingResourceId = editingResourceId;
     onShow?.call();
   }
 }

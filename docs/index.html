@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DingDong — Clipboard history and Agent workspace</title>
-    <meta name="description" content="Search clipboard history, organize reusable Agent resources, and get notified when Agent tasks finish or need input—all in one local desktop tool.">
+    <title>DingDong — Find your clipboard. Hear when the Agent is done.</title>
+    <meta name="description" content="Find what you copied, keep prompts and Skills in order, and hear a DingDong when an Agent is done, stuck, or waiting for you.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260715-product">
+    <link rel="stylesheet" href="./styles.css?v=20260717-release">
   </head>
   <body>
     <header class="site-header">
@@ -32,14 +32,14 @@
     <main>
       <section class="hero" id="product">
         <div class="hero-copy">
-          <p class="eyebrow" data-i18n="hero.eyebrow">Clipboard · agent library · finish alerts</p>
-          <h1 data-i18n="hero.title">Clipboard and Agent tools, in one place.</h1>
+          <p class="eyebrow" data-i18n="hero.eyebrow">Clipboard · prompts · finish alerts</p>
+          <h1 data-i18n="hero.title">Find your clipboard. Hear when the Agent is done.</h1>
           <p class="lede" data-i18n="hero.lede">
-            DingDong keeps clipboard history searchable, organizes reusable Agent resources, and notifies you when an Agent finishes or needs input—so everyday work moves forward with fewer interruptions.
+            Find what you copied, keep prompts and Skills in order, and hear a DingDong when an Agent is done, stuck, or waiting for you.
           </p>
           <div class="hero-finish-note">
             <img src="./assets/dingdong-icon.png" alt="">
-            <p data-i18n="hero.finish">Clipboard history, Agent resources, and completion alerts in one local desktop tool.</p>
+            <p data-i18n="hero.finish">Everything close at hand, with a ring when work is ready.</p>
           </div>
           <div class="actions">
             <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="hero.download">Download latest</a>
@@ -56,16 +56,21 @@
           <div class="demo-window">
             <div class="demo-title">
               <img src="./assets/dingdong-icon.png" alt="">
-              <div>
+              <div class="demo-title-copy">
                 <strong>DingDong</strong>
                 <span data-i18n="demo.subtitle">Local agent workspace</span>
+              </div>
+              <div class="demo-title-actions" aria-hidden="true">
+                <span>↻</span>
+                <span>⚙</span>
+                <span>⌃</span>
               </div>
             </div>
 
             <div class="demo-tabs" role="tablist" aria-label="DingDong views">
               <button type="button" role="tab" data-demo-tab="today" aria-selected="false" data-i18n="demo.today">Dynamic</button>
-              <button type="button" role="tab" data-demo-tab="library" aria-selected="false" data-i18n="demo.library">Library</button>
-              <button type="button" role="tab" data-demo-tab="clipboard" aria-selected="true" data-i18n="demo.clipboard">Clipboard</button>
+              <button type="button" role="tab" data-demo-tab="library" aria-selected="true" data-i18n="demo.library">Library</button>
+              <button type="button" role="tab" data-demo-tab="clipboard" aria-selected="false" data-i18n="demo.clipboard">Clipboard</button>
             </div>
 
             <div class="demo-panel" id="demo-panel" role="tabpanel" aria-live="polite"></div>
@@ -89,48 +94,48 @@
       <section class="principles">
         <div>
           <p class="eyebrow" data-i18n="principles.eyebrow">How it works</p>
-          <h2 data-i18n="principles.title">Practical principles, built into the product.</h2>
+          <h2 data-i18n="principles.title">Less setup. Fewer interruptions.</h2>
         </div>
         <div class="principle-grid">
           <article>
-            <h3 data-i18n="principles.local.title">People stay in control</h3>
-            <p data-i18n="principles.local.body">AI tools should serve people. Your library and clipboard stay local unless you deliberately export or share something.</p>
+            <h3 data-i18n="principles.local.title">It stays on your Mac</h3>
+            <p data-i18n="principles.local.body">Clipboard history and saved resources stay local. Nothing leaves unless you choose to export or share it.</p>
           </article>
           <article>
-            <h3 data-i18n="principles.summary.title">Loads only what is needed</h3>
-            <p data-i18n="principles.summary.body">Agents receive short resource summaries first, then fetch full content by id when a task actually needs it.</p>
+            <h3 data-i18n="principles.summary.title">No context pile-up</h3>
+            <p data-i18n="principles.summary.body">An Agent sees the name and a short description first. It opens the full prompt or Skill only when it helps.</p>
           </article>
           <article>
-            <h3 data-i18n="principles.quiet.title">Works from the keyboard</h3>
-            <p data-i18n="principles.quiet.body">Search clipboard history, switch tabs, and paste recent items without leaving the app you are working in.</p>
+            <h3 data-i18n="principles.quiet.title">Keep your hands on the keyboard</h3>
+            <p data-i18n="principles.quiet.body">Search, filter, and paste recent items without leaving the app you are already using.</p>
           </article>
         </div>
       </section>
 
       <section class="feature-grid">
         <article>
-          <h2 data-i18n="features.library.title">Save reusable material</h2>
-          <p data-i18n="features.library.body">Keep prompts, Skills, MCP references, and knowledge in one place. Enable each item independently and see its real Agent usage count.</p>
+          <h2 data-i18n="features.library.title">A proper place for each resource</h2>
+          <p data-i18n="features.library.body">Prompts, Skills, and MCP configurations each get the controls they need. Project rules decide what turns on automatically.</p>
         </article>
         <article>
-          <h2 data-i18n="features.clipboard.title">Share only what you choose</h2>
-          <p data-i18n="features.clipboard.body">Select individual resources for a portable JSON bundle. Stable IDs and content matching prevent repeated imports on another computer.</p>
+          <h2 data-i18n="features.clipboard.title">Take a few things with you</h2>
+          <p data-i18n="features.clipboard.body">Export only the resources you pick. Importing the same bundle again will not fill the library with copies.</p>
         </article>
         <article>
-          <h2 data-i18n="features.bridge.title">Let AI clean up the library</h2>
-          <p data-i18n="features.bridge.body">Fetch everything at once or by category. Usage metadata and duplicate groups help an Agent explain what is redundant or never used.</p>
+          <h2 data-i18n="features.bridge.title">Find what is duplicated or forgotten</h2>
+          <p data-i18n="features.bridge.body">Ask an Agent to look through the library and point out repeated resources or things you no longer use.</p>
         </article>
         <article>
-          <h2 data-i18n="features.notify.title">Hear when work finishes</h2>
-          <p data-i18n="features.notify.body">DingDong plays the selected sound and marks the menu bar icon when an agent finishes or needs your attention.</p>
+          <h2 data-i18n="features.notify.title">Done? DingDong.</h2>
+          <p data-i18n="features.notify.body">Pick a sound and get called back when an Agent finishes or needs your attention.</p>
         </article>
       </section>
 
       <section class="sound-section" id="sounds">
         <div class="section-heading sound-heading">
           <p class="eyebrow" data-i18n="sounds.eyebrow">Finish alerts</p>
-          <h2 data-i18n="sounds.title">Know when an Agent is ready.</h2>
-          <p data-i18n="sounds.body">DingDong notifies you when an Agent finishes, gets blocked, or needs a decision, so you can continue other work without repeatedly checking its status.</p>
+          <h2 data-i18n="sounds.title">Stop watching the progress spinner.</h2>
+          <p data-i18n="sounds.body">Go do something else. DingDong rings when an Agent finishes, gets stuck, or needs you to make a call.</p>
         </div>
 
         <div class="sound-grid" aria-label="DingDong sound previews">
@@ -174,18 +179,18 @@
       <section class="mcp-section" id="mcp">
         <div class="section-heading">
           <p class="eyebrow" data-i18n="mcp.eyebrow">Built-in MCP bridge</p>
-          <h2 data-i18n="mcp.title">One MCP connection for every local agent.</h2>
-          <p data-i18n="mcp.body">DingDong serves only the prompts, skills, MCP references, and knowledge you have enabled. Manage the switches once instead of repeating the same setup in every agent.</p>
+          <h2 data-i18n="mcp.title">Connect once. Use it from every Agent.</h2>
+          <p data-i18n="mcp.body">Keep prompts, Skills, and MCP configurations in DingDong. Codex, Claude Code, and other connected Agents can use the same library.</p>
         </div>
 
         <div class="setup-card">
           <div>
-            <h3 data-i18n="mcp.installTitle">Agent config</h3>
-            <p data-i18n="mcp.installBody">Add this MCP server to Codex or Claude Code after installing DingDong.</p>
+            <h3 data-i18n="mcp.installTitle">Connect an Agent</h3>
+            <p data-i18n="mcp.installBody">Install DingDong, then copy one of these snippets into your Agent's MCP settings.</p>
             <ul class="setup-steps">
               <li data-i18n="mcp.step1">Install DingDong in /Applications.</li>
-              <li data-i18n="mcp.step2">Register the built-in dingdong-mcp binary in your agent MCP config.</li>
-              <li data-i18n="mcp.step3">Keep prompts, skills, and MCP references in DingDong instead of duplicating them in every agent.</li>
+              <li data-i18n="mcp.step2">Point the Agent at DingDong's built-in MCP command.</li>
+              <li data-i18n="mcp.step3">Keep one library instead of making a separate copy for every Agent.</li>
             </ul>
           </div>
           <div class="setup-snippets">
@@ -202,21 +207,21 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         </div>
 
         <div class="tool-grid" aria-label="DingDong MCP tools">
-          <article><code>dingdong_bridge</code><p data-i18n="tools.bridge">Start here. Returns task-scoped summaries, recommended resources, and privacy rules.</p></article>
-          <article><code>dingdong_search_assets</code><p data-i18n="tools.search">Search prompts, skills, MCP references, notes, and other resources by query and type.</p></article>
-          <article><code>dingdong_get_asset</code><p data-i18n="tools.asset">Fetch one resource by id. Summary mode hides heavy content; full mode is explicit.</p></article>
-          <article><code>dingdong_load_skill</code><p data-i18n="tools.skill">Load a selected skill resource only after an agent decides it is relevant.</p></article>
-          <article><code>dingdong_recommend_mcp</code><p data-i18n="tools.recommend">Find MCP server references that match the current task.</p></article>
-          <article><code>dingdong_install_native_mcp</code><p data-i18n="tools.install">Dry-run or install a stored MCP reference into Codex or Claude Code config.</p></article>
-          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Trigger the DingDong sound, unread badge, and menu bar notification icon.</p></article>
+          <article><code>dingdong_bridge</code><p data-i18n="tools.bridge">Ask DingDong what might help with the task at hand.</p></article>
+          <article><code>dingdong_search_assets</code><p data-i18n="tools.search">Find prompts, Skills, and MCP configurations by name or keyword.</p></article>
+          <article><code>dingdong_get_asset</code><p data-i18n="tools.asset">Open one resource. Start with the description, then read the full text if needed.</p></article>
+          <article><code>dingdong_load_skill</code><p data-i18n="tools.skill">Load the Skill the Agent has decided to use.</p></article>
+          <article><code>dingdong_recommend_mcp</code><p data-i18n="tools.recommend">Find an MCP configuration that fits the current task.</p></article>
+          <article><code>dingdong_install_native_mcp</code><p data-i18n="tools.install">Preview the change, then add an MCP configuration to Codex or Claude Code.</p></article>
+          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Ring when the task is done, stuck, or waiting for you.</p></article>
         </div>
       </section>
 
       <section class="api-band">
         <div>
           <p class="eyebrow" data-i18n="api.eyebrow">Loopback HTTP API</p>
-          <h2 data-i18n="api.title">The same data is available over local HTTP.</h2>
-          <p data-i18n="api.body">Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.</p>
+          <h2 data-i18n="api.title">Prefer scripts? There is a local API too.</h2>
+          <p data-i18n="api.body">Check DingDong's status, search resources, read a clipboard overview, or open the page you need.</p>
         </div>
         <div class="endpoint-list">
           <code>/agent/manifest</code>
@@ -234,9 +239,28 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       <section class="download-section" id="download" aria-label="Download">
         <div class="download-actions">
-          <a class="download-card" id="primary-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest">
-            <strong data-i18n="download.latest">Download DingDong</strong>
-            <span data-i18n="download.latestHint">Get the latest desktop release</span>
+          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.8/DingDong-0.7.8-macos-arm64.dmg">
+            <span class="download-card-heading">
+              <strong data-i18n="download.macosArm64">Mac with Apple silicon</strong>
+              <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
+            </span>
+            <span data-i18n="download.macosArm64Hint">DingDong 0.7.8 · DMG · arm64</span>
+          </a>
+          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.8/DingDong-0.7.8-macos-x64-beta.dmg">
+            <span class="download-card-heading">
+              <strong data-i18n="download.macosX64">Mac with Intel chip</strong>
+              <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
+              <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
+            </span>
+            <span data-i18n="download.macosX64Hint">DingDong 0.7.8 · DMG · x64</span>
+          </a>
+          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.8/DingDong-0.7.8-windows-x64-beta.zip">
+            <span class="download-card-heading">
+              <strong data-i18n="download.windowsX64">Windows x64</strong>
+              <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
+              <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
+            </span>
+            <span data-i18n="download.windowsX64Hint">DingDong 0.7.8 · ZIP · x64</span>
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
@@ -251,6 +275,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             <span data-i18n="download.requestHint">Tell us which workflow DingDong should improve next</span>
           </a>
         </div>
+        <p class="download-help" data-i18n="download.macHelp">Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.</p>
         <div class="download-stats" id="download-stats" aria-live="polite" hidden>
           <strong data-i18n="download.statsTitle">Downloads by version</strong>
           <p data-i18n="download.statsLoading">Loading GitHub release asset counts…</p>
@@ -273,10 +298,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.mcp": "MCP",
           "nav.sounds": "Sounds",
           "nav.download": "Download",
-          "hero.eyebrow": "Clipboard · agent library · finish alerts",
-          "hero.title": "Clipboard and Agent tools, in one place.",
-          "hero.lede": "DingDong keeps clipboard history searchable, organizes reusable Agent resources, and notifies you when an Agent finishes or needs input—so everyday work moves forward with fewer interruptions.",
-          "hero.finish": "Clipboard history, Agent resources, and completion alerts in one local desktop tool.",
+          "hero.eyebrow": "Clipboard · prompts · finish alerts",
+          "hero.title": "Find your clipboard. Hear when the Agent is done.",
+          "hero.lede": "Find what you copied, keep prompts and Skills in order, and hear a DingDong when an Agent is done, stuck, or waiting for you.",
+          "hero.finish": "Everything close at hand, with a ring when work is ready.",
           "hero.download": "Download latest",
           "hero.connect": "Connect Codex or Claude Code",
           "demo.subtitle": "Local agent workspace",
@@ -290,24 +315,24 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.copySuccess": "Copied. Clipboard now has a new first item.",
           "demo.footer": "API listening on 127.0.0.1:2333 · ⇧⌘V ready",
           "principles.eyebrow": "How it works",
-          "principles.title": "Practical principles, built into the product.",
-          "principles.local.title": "People stay in control",
-          "principles.local.body": "AI tools should serve people. Your library and clipboard stay local unless you deliberately export or share something.",
-          "principles.summary.title": "Loads only what is needed",
-          "principles.summary.body": "Agents receive short resource summaries first, then fetch full content by id when a task actually needs it.",
-          "principles.quiet.title": "Works from the keyboard",
-          "principles.quiet.body": "Search clipboard history, switch tabs, and paste recent items without leaving the app you are working in.",
-          "features.library.title": "Save reusable material",
-          "features.library.body": "Keep prompts, Skills, MCP references, and knowledge in one place. Enable each item independently and see its real Agent usage count.",
-          "features.clipboard.title": "Share only what you choose",
-          "features.clipboard.body": "Select individual resources for a portable JSON bundle. Stable IDs and content matching prevent repeated imports on another computer.",
-          "features.bridge.title": "Let AI clean up the library",
-          "features.bridge.body": "Fetch everything at once or by category. Usage metadata and duplicate groups help an Agent explain what is redundant or never used.",
-          "features.notify.title": "Hear when work finishes",
-          "features.notify.body": "DingDong plays the selected sound and marks the menu bar icon when an agent finishes or needs your attention.",
+          "principles.title": "Less setup. Fewer interruptions.",
+          "principles.local.title": "It stays on your Mac",
+          "principles.local.body": "Clipboard history and saved resources stay local. Nothing leaves unless you choose to export or share it.",
+          "principles.summary.title": "No context pile-up",
+          "principles.summary.body": "An Agent sees the name and a short description first. It opens the full prompt or Skill only when it helps.",
+          "principles.quiet.title": "Keep your hands on the keyboard",
+          "principles.quiet.body": "Search, filter, and paste recent items without leaving the app you are already using.",
+          "features.library.title": "A proper place for each resource",
+          "features.library.body": "Prompts, Skills, and MCP configurations each get the controls they need. Project rules decide what turns on automatically.",
+          "features.clipboard.title": "Take a few things with you",
+          "features.clipboard.body": "Export only the resources you pick. Importing the same bundle again will not fill the library with copies.",
+          "features.bridge.title": "Find what is duplicated or forgotten",
+          "features.bridge.body": "Ask an Agent to look through the library and point out repeated resources or things you no longer use.",
+          "features.notify.title": "Done? DingDong.",
+          "features.notify.body": "Pick a sound and get called back when an Agent finishes or needs your attention.",
           "sounds.eyebrow": "Finish alerts",
-          "sounds.title": "Know when an Agent is ready.",
-          "sounds.body": "DingDong notifies you when an Agent finishes, gets blocked, or needs a decision, so you can continue other work without repeatedly checking its status.",
+          "sounds.title": "Stop watching the progress spinner.",
+          "sounds.body": "Go do something else. DingDong rings when an Agent finishes, gets stuck, or needs you to make a call.",
           "sounds.classic": "Classic",
           "sounds.classicBody": "Balanced and familiar",
           "sounds.soft": "Soft",
@@ -326,35 +351,40 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.finished": "Ready for another preview",
           "sounds.error": "This sound could not be played",
           "mcp.eyebrow": "Built-in MCP bridge",
-          "mcp.title": "One MCP connection for every local agent.",
-          "mcp.body": "DingDong serves only the prompts, skills, MCP references, and knowledge you have enabled. Manage the switches once instead of repeating the same setup in every agent.",
-          "mcp.installTitle": "Agent config",
-          "mcp.installBody": "Add this MCP server to Codex or Claude Code after installing DingDong.",
+          "mcp.title": "Connect once. Use it from every Agent.",
+          "mcp.body": "Keep prompts, Skills, and MCP configurations in DingDong. Codex, Claude Code, and other connected Agents can use the same library.",
+          "mcp.installTitle": "Connect an Agent",
+          "mcp.installBody": "Install DingDong, then copy one of these snippets into your Agent's MCP settings.",
           "mcp.step1": "Install DingDong in /Applications.",
-          "mcp.step2": "Register the built-in dingdong-mcp binary in your agent MCP config.",
-          "mcp.step3": "Keep prompts, skills, and MCP references in DingDong instead of duplicating them in every agent.",
-          "tools.bridge": "Start here. Returns task-scoped summaries, recommended resources, and privacy rules.",
-          "tools.search": "Search prompts, skills, MCP references, notes, and other resources by query and type.",
-          "tools.asset": "Fetch one resource by id. Summary mode hides heavy content; full mode is explicit.",
-          "tools.skill": "Load a selected skill resource only after an agent decides it is relevant.",
-          "tools.recommend": "Find MCP server references that match the current task.",
-          "tools.install": "Dry-run or install a stored MCP reference into Codex or Claude Code config.",
-          "tools.notify": "Trigger the DingDong sound, unread badge, and menu bar notification icon.",
+          "mcp.step2": "Point the Agent at DingDong's built-in MCP command.",
+          "mcp.step3": "Keep one library instead of making a separate copy for every Agent.",
+          "tools.bridge": "Ask DingDong what might help with the task at hand.",
+          "tools.search": "Find prompts, Skills, and MCP configurations by name or keyword.",
+          "tools.asset": "Open one resource. Start with the description, then read the full text if needed.",
+          "tools.skill": "Load the Skill the Agent has decided to use.",
+          "tools.recommend": "Find an MCP configuration that fits the current task.",
+          "tools.install": "Preview the change, then add an MCP configuration to Codex or Claude Code.",
+          "tools.notify": "Ring when the task is done, stuck, or waiting for you.",
           "api.eyebrow": "Loopback HTTP API",
-          "api.title": "The same data is available over local HTTP.",
-          "api.body": "Scripts can read system status, search resources, inspect clipboard metadata, update task sessions, and open a specific DingDong tab.",
+          "api.title": "Prefer scripts? There is a local API too.",
+          "api.body": "Check DingDong's status, search resources, read a clipboard overview, or open the page you need.",
           "download.latest": "Download DingDong",
           "download.latestHint": "Get the latest desktop release",
-          "download.macos": "Download for macOS",
-          "download.macosHint": "Latest macOS DMG",
-          "download.windows": "Download for Windows",
-          "download.windowsHint": "Latest Windows x64 ZIP",
+          "download.macosArm64": "Mac with Apple silicon",
+          "download.macosArm64Hint": "DingDong 0.7.8 · DMG · arm64",
+          "download.macosX64": "Mac with Intel chip",
+          "download.macosX64Hint": "DingDong 0.7.8 · DMG · x64",
+          "download.windowsX64": "Windows x64",
+          "download.windowsX64Hint": "DingDong 0.7.8 · ZIP · x64",
+          "download.beta": "Beta",
+          "download.recommended": "Recommended",
+          "download.macHelp": "Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.",
           "download.metadata": "Release metadata JSON",
-          "download.metadataHint": "Used by DingDong Settings",
-          "download.report": "Report a problem",
-          "download.reportHint": "Guided form with a privacy checklist",
-          "download.request": "Request a feature",
-          "download.requestHint": "Tell us which workflow DingDong should improve next",
+          "download.metadataHint": "Used to check for new versions",
+          "download.report": "Something went wrong?",
+          "download.reportHint": "The form reminds you to remove private information",
+          "download.request": "Share an idea",
+          "download.requestHint": "Tell us what DingDong could make easier",
           "download.statsTitle": "Downloads by version",
           "download.statsLoading": "Loading GitHub release asset counts…",
           "download.statsError": "Download counts are available on GitHub Releases.",
@@ -367,10 +397,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.mcp": "MCP",
           "nav.sounds": "声音",
           "nav.download": "下载",
-          "hero.eyebrow": "剪贴板 · Agent 资源 · 完成提醒",
-          "hero.title": "让剪贴板和 Agent 协作更顺手",
-          "hero.lede": "DingDong 集中管理可搜索的剪贴板历史和可复用的 Agent 资源，并在任务完成或需要你处理时及时提醒，让日常工作衔接得更顺畅。",
-          "hero.finish": "剪贴板历史、Agent 资源和完成提醒，都集中在一个本地桌面工具里",
+          "hero.eyebrow": "剪贴板 · 提示词 · 完成提醒",
+          "hero.title": "剪贴板随时找，Agent 做完会提醒",
+          "hero.lede": "找回复制过的内容，收好常用的提示词和 Skill。Agent 做完、卡住或等你决定时，DingDong 会叮咚一声。",
+          "hero.finish": "东西随手能找到，任务有结果也不会错过",
           "hero.download": "下载 DingDong",
           "hero.connect": "查看 MCP 接入",
           "demo.subtitle": "本地 Agent 工具",
@@ -384,24 +414,24 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.copySuccess": "已复制，记录已经放到最上面",
           "demo.footer": "API 正在监听 127.0.0.1:2333 · ⇧⌘V 就绪",
           "principles.eyebrow": "平时怎么用",
-          "principles.title": "把产品理念落实到每一次操作里",
-          "principles.local.title": "人始终掌握选择权",
-          "principles.local.body": "让 AI 工具服务于人；资源库和剪贴板默认留在本机，只有你主动操作才会导出或分享",
-          "principles.summary.title": "Agent 先看摘要",
-          "principles.summary.body": "确实用得上，再读取完整提示词、Skill 或 MCP 内容",
-          "principles.quiet.title": "按 ⇧⌘V 找回剪贴板",
-          "principles.quiet.body": "搜索、筛选、粘贴都在一个面板里完成",
-          "features.library.title": "资源库只放整理好的内容",
-          "features.library.body": "提示词、Skill、MCP 和知识库集中管理，每项独立开关，还能看到 Agent 实际用了多少次",
-          "features.clipboard.title": "只分享你选中的内容",
-          "features.clipboard.body": "勾选部分资源生成 JSON 包；稳定 ID 和内容查重让另一台电脑重复导入也不会堆出副本",
-          "features.bridge.title": "让 AI 帮你整理资源库",
-          "features.bridge.body": "一次读取全部内容，也能按类别或 ID 查询；未使用项和重复组会直接交给 Agent 分析",
-          "features.notify.title": "干完活再响",
-          "features.notify.body": "任务完成或需要你处理时，播放设置里选中的声音",
+          "principles.title": "少折腾，也少打断",
+          "principles.local.title": "东西先留在自己电脑里",
+          "principles.local.body": "剪贴板和资源库默认都在本机。要导出、要分享，由你自己点。",
+          "principles.summary.title": "不把东西一股脑塞给 Agent",
+          "principles.summary.body": "先给名称和简介，真要用时再取正文。上下文更清爽，你也更容易看懂它拿了什么。",
+          "principles.quiet.title": "常用动作不必找按钮",
+          "principles.quiet.body": "按 ⇧⌘V，搜索、筛选和粘贴都在一个面板里完成。",
+          "features.library.title": "提示词、Skill、MCP，各放各的位置",
+          "features.library.body": "不同内容用不同方式添加和查看；还可以按项目决定哪些自动启用。",
+          "features.clipboard.title": "带走几条，不必搬整个库",
+          "features.clipboard.body": "只导出你选中的内容；同一个包再导入一次，也不会堆出一串副本。",
+          "features.bridge.title": "重复和吃灰的，让 Agent 帮你找",
+          "features.bridge.body": "让 Agent 看一遍资源库，告诉你哪些重复了，哪些已经很久没用。",
+          "features.notify.title": "做完了，叮咚一声",
+          "features.notify.body": "选一个喜欢的声音，Agent 完成或需要你时就叫你回来。",
           "sounds.eyebrow": "完成提醒",
-          "sounds.title": "Agent 有结果时，及时知道",
-          "sounds.body": "Agent 完成、阻塞或需要你处理时，DingDong 会及时提醒；你可以继续处理其他工作，不用反复查看运行状态",
+          "sounds.title": "不用盯着，听见就知道",
+          "sounds.body": "Agent 做完、卡住或者等你决定时，DingDong 叮咚一声。你先忙别的，听见再回来。",
           "sounds.classic": "经典叮咚",
           "sounds.classicBody": "均衡，适合作为默认声",
           "sounds.soft": "柔和叮咚",
@@ -420,35 +450,40 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.finished": "可以继续试听",
           "sounds.error": "这个声音暂时无法播放",
           "mcp.eyebrow": "接入 Agent",
-          "mcp.title": "本地有几个 Agent，都只接这一份 MCP",
-          "mcp.body": "DingDong 只把已启用的提示词、Skill、MCP 和知识库交给 Agent；开关和内容都在一个地方维护",
-          "mcp.installTitle": "配置内容",
-          "mcp.installBody": "安装好 DingDong，把下面任意一段加到 Agent 的 MCP 配置里",
+          "mcp.title": "接一次，几个 Agent 都能用",
+          "mcp.body": "提示词、Skill 和 MCP 只在 DingDong 里维护。Codex、Claude Code 等接进来后，用的是同一份。",
+          "mcp.installTitle": "接到 Agent",
+          "mcp.installBody": "装好 DingDong，把下面任意一段复制到 Agent 的 MCP 设置里。",
           "mcp.step1": "DingDong 放在 /Applications",
-          "mcp.step2": "MCP 命令指向内置的 dingdong-mcp",
-          "mcp.step3": "提示词和 Skill 留在 DingDong，不用每个 Agent 各存一份",
-          "tools.bridge": "任务开始先调它，拿到这次要用的提示词和资源摘要",
-          "tools.search": "按关键词和类型找资源",
-          "tools.asset": "按 id 读取一个资源，默认只返回摘要",
-          "tools.skill": "需要哪个 Skill，再加载哪个",
-          "tools.recommend": "按当前任务找合适的 MCP",
-          "tools.install": "先预览配置，再写入 Codex 或 Claude Code",
-          "tools.notify": "任务结束时播放设置里选中的叮咚声",
+          "mcp.step2": "让 Agent 指向 DingDong 自带的 MCP 命令",
+          "mcp.step3": "资源只维护一份，不用给每个 Agent 再抄一遍",
+          "tools.bridge": "每个任务开始先问 DingDong：这次可能用到什么？",
+          "tools.search": "按关键词和类型查找提示词、Skill 和 MCP 配置",
+          "tools.asset": "打开一条资源；先看简介，需要时再读正文",
+          "tools.skill": "确定要用哪个 Skill 后再载入",
+          "tools.recommend": "按手头的任务找合适的 MCP",
+          "tools.install": "先看看会改什么，确认后再写入 Codex 或 Claude Code",
+          "tools.notify": "做完、卡住或等你时，叮咚一声",
           "api.eyebrow": "本地 API",
-          "api.title": "脚本也能直接调用 DingDong",
-          "api.body": "查状态、找资源、看剪贴板概览、更新任务，或者直接打开指定页面",
+          "api.title": "喜欢写脚本？也留了本地 API",
+          "api.body": "查状态、找资源、看剪贴板概览，或者直接打开需要的页面。",
           "download.latest": "下载 DingDong",
           "download.latestHint": "获取最新桌面版本",
-          "download.macos": "下载 macOS 版",
-          "download.macosHint": "最新 macOS DMG",
-          "download.windows": "下载 Windows 版",
-          "download.windowsHint": "最新 Windows x64 ZIP",
+          "download.macosArm64": "Mac（Apple 芯片）",
+          "download.macosArm64Hint": "DingDong 0.7.8 · DMG · arm64",
+          "download.macosX64": "Mac（Intel 芯片）",
+          "download.macosX64Hint": "DingDong 0.7.8 · DMG · x64",
+          "download.windowsX64": "Windows x64",
+          "download.windowsX64Hint": "DingDong 0.7.8 · ZIP · x64",
+          "download.beta": "Beta",
+          "download.recommended": "推荐",
+          "download.macHelp": "需要 macOS 13 或更高版本。不确定 Mac 类型？打开苹果菜单  → 关于本机：显示“芯片”是 Apple 芯片，显示“处理器”是 Intel。",
           "download.metadata": "版本 JSON",
-          "download.metadataHint": "DingDong 设置页会读取它",
-          "download.report": "上报问题",
-          "download.reportHint": "带隐私检查的引导表单",
-          "download.request": "提出需求",
-          "download.requestHint": "告诉我们 DingDong 接下来应该改进哪段工作流程",
+          "download.metadataHint": "用来检查新版本",
+          "download.report": "遇到问题",
+          "download.reportHint": "提交前会提醒你去掉敏感信息",
+          "download.request": "提个想法",
+          "download.requestHint": "说说你希望 DingDong 再省哪一步",
           "download.statsTitle": "各版本下载次数",
           "download.statsLoading": "正在读取 GitHub Release 资源下载数…",
           "download.statsError": "可前往 GitHub Releases 查看下载数据",
@@ -461,33 +496,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoContent = {
         en: {
           today: {
-            status: { title: "Clipboard captured", time: "17:02:02", state: "Ready" },
-            metrics: [["4", "Resources"], ["1,000", "Clipboard"], ["Online", "API"]],
+            status: { title: "Clipboard monitoring is ready.", time: "17:17", state: "Ready" },
+            metrics: [["3", "Resources"], ["708", "Clipboard"], ["Online", "Agent API"]],
             agents: [
-              { source: "Codex", time: "16:02", body: "Website preview corrected to match the Mac panel." },
-              { source: "Codex", time: "15:36", body: "Agent finished. DingDong played the selected alert." },
-              { source: "Codex", time: "15:06", body: "The crisp Ding sound was added to the release build." },
-              { source: "Codex", time: "14:54", body: "Clipboard thumbnails and the sound selector passed review." }
+              { source: "Codex", time: "17:16", body: "Release checks passed. DingDong played the selected alert." },
+              { source: "Claude Code", time: "16:42", body: "The online Skill was refreshed from its source." },
+              { source: "Cursor", time: "16:08", body: "Project trigger rules selected the matching resources." }
             ]
           },
           library: {
-            subtitle: "Named and organized content that agents can reuse",
-            search: "Search prompts, skills, MCP, and knowledge",
-            filters: ["All", "Prompts", "Skills", "MCP", "Knowledge"],
-            groups: ["All 4", "Prompts 1", "Skills 1", "MCP Servers 1", "Knowledge 1"],
+            subtitle: "Reusable Agent configuration, organized locally",
+            search: "Search prompts, Skills, and MCP",
+            filters: ["All", "Prompts", "Skills", "MCP"],
+            groups: ["All 3", "DingDong project 2", "Design work 1"],
             items: [
-              { type: "prompt", mark: "P", title: "Sentence prefix marker", body: "Add 🎉 at the end of each completed task.", tags: ["Prompts", "style"], state: "Enabled" },
-              { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "Repository search, code tracing, and architecture context.", tags: ["MCP Servers", "repository"], state: "Manual" },
-              { type: "skill", mark: "S", title: "user-taste", body: "Project preferences for UI, writing, and code decisions.", tags: ["Skills", "product"], state: "Enabled" },
-              { type: "knowledge", mark: "K", title: "DingDong release notes", body: "What changed in 0.7.7 and how to install the DMG.", tags: ["Knowledge", "release"], state: "Saved" }
+              { type: "prompt", mark: "“", title: "End replies with 🌟", body: "Add one 「🌟」 after every complete reply.", tags: ["Prompt", "Built in"], state: "Enabled" },
+              { type: "skill", mark: "✣", title: "user-taste", body: "Use when UI, product, writing, or code decisions need project preferences.", tags: ["Skill", "Online"], state: "Enabled" },
+              { type: "mcp", mark: "MCP", title: "DingDong MCP", body: "Local STDIO bridge for resources and completion notifications.", tags: ["MCP", "STDIO"], state: "Enabled" }
             ]
           },
           clipboard: {
             search: "Search clipboard",
-            monitor: "Watching",
-            filter: "Filter",
+            monitor: "On",
+            filter: "≡",
             items: [
-              { id: "image", kind: "IMG", title: "DingDong 0.7.7 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "IMG", title: "DingDong 0.7.8 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "PATH", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -499,33 +532,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         zh: {
           today: {
-            status: { title: "已捕获剪贴板", time: "17:02:02", state: "就绪" },
-            metrics: [["4", "资源"], ["1,000", "剪贴板"], ["在线", "API"]],
+            status: { title: "剪贴板监听已就绪。", time: "17:17", state: "就绪" },
+            metrics: [["3", "资源"], ["708", "剪贴板"], ["在线", "Agent API"]],
             agents: [
-              { source: "Codex", time: "16:02", body: "网站预览已经按 Mac 面板调整" },
-              { source: "Codex", time: "15:36", body: "Agent 已完成，DingDong 播放了选中的提醒声音" },
-              { source: "Codex", time: "15:06", body: "利落叮咚已经加入" },
-              { source: "Codex", time: "14:54", body: "剪贴板缩略图和声音选择检查通过" }
+              { source: "Codex", time: "17:16", body: "发布检查通过，DingDong 已播放提醒声音" },
+              { source: "Claude Code", time: "16:42", body: "在线 Skill 已从来源更新" },
+              { source: "Cursor", time: "16:08", body: "项目触发规则已选中匹配资源" }
             ]
           },
           library: {
-            subtitle: "整理后可被 Agent 复用的内容",
-            search: "搜索提示词、Skills、MCP、知识库",
-            filters: ["全部", "提示词", "技能", "MCP", "知识库"],
-            groups: ["全部 4", "Prompts 1", "Skills 1", "MCP Servers 1", "知识库 1"],
+            subtitle: "把常用的 Agent 配置收在一起",
+            search: "搜索提示词、Skill 和 MCP",
+            filters: ["全部", "提示词", "技能", "MCP"],
+            groups: ["全部 3", "DingDong 项目 2", "设计工作 1"],
             items: [
-              { type: "prompt", mark: "词", title: "Sentence prefix marker", body: "任务结束时加一个「🎉」", tags: ["Prompts", "style"], state: "已启用" },
-              { type: "mcp", mark: "MCP", title: "codebase-memory-mcp", body: "仓库搜索、代码追踪和架构上下文", tags: ["MCP Servers", "repository"], state: "手动" },
-              { type: "skill", mark: "技", title: "user-taste", body: "项目里的 UI、文案和代码偏好", tags: ["Skills", "product"], state: "已启用" },
-              { type: "knowledge", mark: "知", title: "DingDong 发布说明", body: "0.7.7 的变化和 DMG 安装方式", tags: ["知识库", "release"], state: "已保存" }
+              { type: "prompt", mark: "“", title: "回复末尾添加 🌟", body: "每次完整回复的最后加一个「🌟」", tags: ["提示词", "内置"], state: "已启用" },
+              { type: "skill", mark: "✣", title: "user-taste", body: "UI、产品、文案或代码判断需要项目偏好时使用", tags: ["技能", "在线"], state: "已启用" },
+              { type: "mcp", mark: "MCP", title: "DingDong MCP", body: "用于资源接入和任务完成提醒的本地 STDIO 桥接", tags: ["MCP", "STDIO"], state: "已启用" }
             ]
           },
           clipboard: {
             search: "搜索剪贴板",
-            monitor: "监控中",
-            filter: "筛选",
+            monitor: "开",
+            filter: "≡",
             items: [
-              { id: "image", kind: "图片", title: "DingDong 0.7.7 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
+              { id: "image", kind: "图片", title: "DingDong 0.7.8 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
               { id: "path", kind: "路径", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -545,7 +576,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoCopyValue = document.getElementById("demo-copy-value");
       const soundCards = document.querySelectorAll("[data-audio]");
       const soundStatus = document.getElementById("sound-status");
-      const primaryDownload = document.getElementById("primary-download");
+      const downloadActions = document.querySelector(".download-actions");
+      const downloadCards = {
+        macosArm64: document.getElementById("macos-arm64-download"),
+        macosX64: document.getElementById("macos-x64-download"),
+        windowsX64: document.getElementById("windows-x64-download")
+      };
       const downloadStats = document.getElementById("download-stats");
       const showDownloadStats =
         new URLSearchParams(window.location.search).get("debug") === "1";
@@ -558,13 +594,16 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         : /mac/i.test(browserPlatform)
           ? "macos"
           : "other";
+      let recommendedDownload = detectedDownloadPlatform === "windows"
+        ? "windowsX64"
+        : null;
       let currentSoundAudio = null;
       let currentSoundCard = null;
       let releaseDownloads = null;
       let releaseDownloadsFailed = false;
       const demoState = {
         language: "en",
-        activeTab: "clipboard",
+        activeTab: "library",
         libraryFilter: "all",
         clipboardFilter: false,
         clipboardMonitoring: true,
@@ -634,7 +673,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         const search = createDemoElement("div", "demo-search-surface", content.library.search);
         const filters = createDemoElement("div", "demo-library-filters");
         content.library.filters.forEach((label, index) => {
-          const values = ["all", "prompt", "skill", "mcp", "knowledge"];
+          const values = ["all", "prompt", "skill", "mcp"];
           const button = createDemoElement("button", demoState.libraryFilter === values[index] ? "active" : "", label);
           button.type = "button";
           button.dataset.libraryFilter = values[index];
@@ -796,30 +835,42 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         if (showDownloadStats) renderDownloadStats();
       };
 
-      const renderPrimaryDownload = () => {
-        const options = {
-          macos: {
-            href: "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-macos.dmg",
-            title: "download.macos",
-            hint: "download.macosHint"
-          },
-          windows: {
-            href: "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.7/DingDong-0.7.7-windows-x64.zip",
-            title: "download.windows",
-            hint: "download.windowsHint"
-          },
-          other: {
-            href: "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
-            title: "download.latest",
-            hint: "download.latestHint"
+      const renderDownloadRecommendation = () => {
+        Object.values(downloadCards).forEach((card) => {
+          card.classList.remove("is-recommended");
+          card.querySelector(".recommendation-badge").hidden = true;
+        });
+        const card = downloadCards[recommendedDownload];
+        if (!card) return;
+        card.classList.add("is-recommended");
+        card.querySelector(".recommendation-badge").hidden = false;
+        downloadActions.prepend(card);
+      };
+
+      const detectRecommendedDownload = async () => {
+        if (detectedDownloadPlatform !== "macos") {
+          renderDownloadRecommendation();
+          return;
+        }
+        if (!navigator.userAgentData?.getHighEntropyValues) {
+          renderDownloadRecommendation();
+          return;
+        }
+        try {
+          const hints = await navigator.userAgentData.getHighEntropyValues([
+            "architecture",
+            "bitness"
+          ]);
+          const architecture = `${hints.architecture || ""} ${hints.bitness || ""}`.toLowerCase();
+          if (/arm|aarch64/.test(architecture)) {
+            recommendedDownload = "macosArm64";
+          } else if (/x86|x64|amd64/.test(architecture)) {
+            recommendedDownload = "macosX64";
           }
-        };
-        const option = options[detectedDownloadPlatform];
-        primaryDownload.href = option.href;
-        primaryDownload.querySelector("strong").textContent =
-          copy[demoState.language][option.title];
-        primaryDownload.querySelector("span").textContent =
-          copy[demoState.language][option.hint];
+        } catch {
+          recommendedDownload = null;
+        }
+        renderDownloadRecommendation();
       };
 
       const writeDemoClipboard = async (value) => {
@@ -911,7 +962,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         }
         localStorage.setItem("dingdong-site-language", lang);
         renderDemo();
-        renderPrimaryDownload();
+        renderDownloadRecommendation();
         renderDownloadStats();
       };
 
@@ -946,6 +997,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const preferredLanguage = localStorage.getItem("dingdong-site-language") ||
         (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
       applyLanguage(preferredLanguage);
+      detectRecommendedDownload();
       if (showDownloadStats) {
         downloadStats.hidden = false;
         loadDownloadStats();

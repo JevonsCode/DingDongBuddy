@@ -10,13 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.7', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.8', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.7.7')), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.7.8')), findsOneWidget);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
     expect(find.text('Agent API'), findsWidgets);
@@ -35,6 +35,42 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const Key('clipboard-search')), findsOneWidget);
+  });
+
+  testWidgets('first MCP entry shows a badge and scrolls to MCP access once', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final ShellController controller = ShellController();
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: SettingsRepository(backend),
+        shellController: controller,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('today-mcp-badge')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('today-agent-api')));
+    await tester.pumpAndSettle();
+
+    expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
+    expect(find.byKey(const Key('agent-api-mcp-access')), findsOneWidget);
+    final CustomScrollView scroll = tester.widget<CustomScrollView>(
+      find.byKey(const Key('agent-api-scroll')),
+    );
+    expect(scroll.controller?.offset, greaterThan(0));
+
+    controller.open(0);
+    await tester.pump();
+    expect(find.byKey(const Key('today-mcp-badge')), findsNothing);
   });
 
   testWidgets('Dynamic cards use compact desktop row heights', (
@@ -187,7 +223,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('http://127.0.0.1:2333'), findsOneWidget);
-    expect(find.text('MCP bridge'), findsOneWidget);
+    expect(find.text('MCP access'), findsOneWidget);
     expect(find.byKey(const Key('agent-api-copy-health')), findsOneWidget);
   });
 

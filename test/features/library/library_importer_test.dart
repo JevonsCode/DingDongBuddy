@@ -62,4 +62,26 @@ void main() {
     expect(result.imported.single.type, ResourceType.skill);
     expect(result.imported.single.content, '# Release');
   });
+
+  test('skill import accepts a selected skill folder directly', () async {
+    final Directory skill = Directory('${root.path}/release-skill');
+    await skill.create();
+    await File('${skill.path}/SKILL.md').writeAsString('''---
+name: release-skill
+description: Prepare a release safely.
+---
+
+# Release
+''');
+
+    final result = await LibraryImporter(idGenerator: () => 'skill-2').scan(
+      LibraryImportRequest(type: ResourceType.skill, path: skill.path),
+      existing: const <Resource>[],
+    );
+
+    expect(result.scannedCount, 1);
+    expect(result.skippedCount, 0);
+    expect(result.imported.single.title, 'release-skill');
+    expect(result.imported.single.content, contains('name: release-skill'));
+  });
 }

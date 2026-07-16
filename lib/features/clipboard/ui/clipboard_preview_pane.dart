@@ -68,10 +68,10 @@ class _ClipboardPreview extends StatelessWidget {
                       ),
                       _previewMenuItem(
                         context,
-                        _ClipboardAction.archive,
-                        Icons.archive_outlined,
-                        'Archive',
-                        '归档',
+                        _ClipboardAction.archiveTo,
+                        Icons.create_new_folder_outlined,
+                        'Archive to…',
+                        '归档到…',
                       ),
                       const PopupMenuDivider(),
                       _previewMenuItem(
@@ -80,13 +80,6 @@ class _ClipboardPreview extends StatelessWidget {
                         Icons.format_quote_outlined,
                         'Save as prompt',
                         '保存为提示词',
-                      ),
-                      _previewMenuItem(
-                        context,
-                        _ClipboardAction.promoteKnowledge,
-                        Icons.folder_outlined,
-                        'Save as knowledge',
-                        '保存为知识',
                       ),
                       const PopupMenuDivider(),
                       _previewMenuItem(

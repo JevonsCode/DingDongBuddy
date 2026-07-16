@@ -15,7 +15,6 @@ final class SettingsRepository {
       _backend.read(_languageKey),
       _backend.read(_themeKey),
       _backend.read(_launchAtStartupKey),
-      _backend.read(_anonymousTelemetryKey),
       _backend.read(_opacityKey),
       _backend.read(_densityKey),
       _backend.read(_defaultWorkspaceKey),
@@ -23,26 +22,25 @@ final class SettingsRepository {
       _backend.read(_maxAgeKey),
       _backend.read(_selectedSoundKey),
       _backend.read(_customSoundPathKey),
-      _backend.read(_mcpSetupPromptOverrideKey),
       _backend.read(_apiPortKey),
+      _backend.read(_mcpAccessSeenKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
       language: AppLanguagePreference.parse(values[1]),
       themeMode: AppThemePreference.parse(values[2]),
       launchAtStartup: values[3] is bool ? values[3]! as bool : false,
-      anonymousTelemetry: values[4] is bool ? values[4]! as bool : false,
-      backgroundOpacity: values[5] is num
-          ? (values[5]! as num).toDouble()
+      backgroundOpacity: values[4] is num
+          ? (values[4]! as num).toDouble()
           : 0.90,
-      density: PanelDensityPreference.parse(values[6]),
-      defaultWorkspace: DefaultWorkspace.parse(values[7]),
-      clipboardMaxItems: values[8] is int ? values[8]! as int : 1000,
-      clipboardMaxAgeDays: values[9] is int ? values[9]! as int : 90,
-      selectedSound: values[10] is String ? values[10]! as String : 'default',
-      customSoundPath: values[11] as String?,
-      mcpSetupPromptOverride: values[12] as String?,
-      apiPort: values[13] is int ? values[13]! as int : 2333,
+      density: PanelDensityPreference.parse(values[5]),
+      defaultWorkspace: DefaultWorkspace.parse(values[6]),
+      clipboardMaxItems: values[7] is int ? values[7]! as int : 1000,
+      clipboardMaxAgeDays: values[8] is int ? values[8]! as int : 90,
+      selectedSound: values[9] is String ? values[9]! as String : 'default',
+      customSoundPath: values[10] as String?,
+      apiPort: values[11] is int ? values[11]! as int : 2333,
+      mcpAccessSeen: values[12] is bool ? values[12]! as bool : false,
     ).sanitized();
   }
 
@@ -55,7 +53,7 @@ final class SettingsRepository {
           : _backend.write(_languageKey, settings.language.storageValue!),
       _backend.write(_themeKey, settings.themeMode.name),
       _backend.write(_launchAtStartupKey, settings.launchAtStartup),
-      _backend.write(_anonymousTelemetryKey, settings.anonymousTelemetry),
+      _backend.remove(_legacyAnonymousTelemetryKey),
       _backend.write(_opacityKey, settings.backgroundOpacity),
       _backend.write(_densityKey, settings.density.name),
       _backend.write(_defaultWorkspaceKey, settings.defaultWorkspace.name),
@@ -65,13 +63,9 @@ final class SettingsRepository {
       settings.customSoundPath == null
           ? _backend.remove(_customSoundPathKey)
           : _backend.write(_customSoundPathKey, settings.customSoundPath!),
-      settings.mcpSetupPromptOverride == null
-          ? _backend.remove(_mcpSetupPromptOverrideKey)
-          : _backend.write(
-              _mcpSetupPromptOverrideKey,
-              settings.mcpSetupPromptOverride!,
-            ),
+      _backend.remove(_legacyMcpSetupPromptOverrideKey),
       _backend.write(_apiPortKey, settings.apiPort),
+      _backend.write(_mcpAccessSeenKey, settings.mcpAccessSeen),
     ]);
   }
 }
@@ -80,7 +74,7 @@ const String _monitoringKey = 'dingdong.clipboard.monitoring';
 const String _languageKey = 'dingdong.language';
 const String _themeKey = 'dingdong.panel.themeMode';
 const String _launchAtStartupKey = 'dingdong.launchAtLogin';
-const String _anonymousTelemetryKey = 'dingdong.telemetry.anonymous';
+const String _legacyAnonymousTelemetryKey = 'dingdong.telemetry.anonymous';
 const String _opacityKey = 'dingdong.panel.backgroundOpacity';
 const String _densityKey = 'dingdong.panel.density';
 const String _defaultWorkspaceKey = 'dingdong.panel.defaultTab';
@@ -88,5 +82,7 @@ const String _maxItemsKey = 'dingdong.clipboard.maxItems';
 const String _maxAgeKey = 'dingdong.clipboard.maxAgeDays';
 const String _selectedSoundKey = 'dingdong.selectedSound';
 const String _customSoundPathKey = 'dingdong.customSoundPath';
-const String _mcpSetupPromptOverrideKey = 'dingdong.mcpSetupPromptOverride';
+const String _legacyMcpSetupPromptOverrideKey =
+    'dingdong.mcpSetupPromptOverride';
 const String _apiPortKey = 'dingdong.api.port';
+const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';

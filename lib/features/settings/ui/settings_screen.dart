@@ -114,25 +114,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 value: settings.launchAtStartup,
                                 onChanged: widget.viewModel.setLaunchAtStartup,
                               ),
-                              CompactSwitchListTile(
-                                key: const Key('settings-anonymous-telemetry'),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context.localized(
-                                    'Share anonymous diagnostics',
-                                    '分享匿名诊断数据',
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  context.localized(
-                                    'Optional usage and error events only. Never sends clipboard content, paths, names, or error details.',
-                                    '仅上传可选的使用和错误事件；绝不上传剪贴板内容、路径、姓名或错误详情。',
-                                  ),
-                                ),
-                                value: settings.anonymousTelemetry,
-                                onChanged:
-                                    widget.viewModel.setAnonymousTelemetry,
-                              ),
                             ],
                           ),
                           QuickPastePermissionSection(

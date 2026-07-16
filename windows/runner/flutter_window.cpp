@@ -70,6 +70,55 @@ std::wstring Utf8ToWide(const std::string& value) {
   return result;
 }
 
+std::string WideToUtf8(const std::wstring& value) {
+  if (value.empty()) {
+    return {};
+  }
+  const int size = ::WideCharToMultiByte(
+      CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()), nullptr, 0,
+      nullptr, nullptr);
+  if (size <= 0) {
+    return {};
+  }
+  std::string result(static_cast<size_t>(size), '\0');
+  ::WideCharToMultiByte(
+      CP_UTF8, 0, value.c_str(), static_cast<int>(value.size()),
+      result.data(), size, nullptr, nullptr);
+  return result;
+}
+
+std::string ForegroundApplicationDescription() {
+  const HWND window = ::GetForegroundWindow();
+  if (!window) {
+    return {};
+  }
+  wchar_t title[512] = {};
+  ::GetWindowTextW(window, title, 512);
+  DWORD process_id = 0;
+  ::GetWindowThreadProcessId(window, &process_id);
+  HANDLE process = ::OpenProcess(
+      PROCESS_QUERY_LIMITED_INFORMATION, FALSE, process_id);
+  std::wstring executable;
+  if (process) {
+    wchar_t path[MAX_PATH * 4] = {};
+    DWORD length = MAX_PATH * 4;
+    if (::QueryFullProcessImageNameW(process, 0, path, &length)) {
+      executable.assign(path, length);
+      const size_t separator = executable.find_last_of(L"\\/");
+      if (separator != std::wstring::npos) {
+        executable = executable.substr(separator + 1);
+      }
+    }
+    ::CloseHandle(process);
+  }
+  const std::wstring window_title(title);
+  if (!window_title.empty() && !executable.empty()) {
+    return WideToUtf8(window_title + L" · " + executable);
+  }
+  return WideToUtf8(
+      !executable.empty() ? executable : window_title);
+}
+
 std::optional<std::wstring> FlutterSoundAssetPath(const std::string& sound) {
   const wchar_t* file_name = nullptr;
   if (sound == "default" || sound == "random") {
@@ -170,6 +219,11 @@ bool FlutterWindow::OnCreate() {
         if (call.method_name() == "changeCount") {
           result->Success(flutter::EncodableValue(
               static_cast<int64_t>(::GetClipboardSequenceNumber())));
+          return;
+        }
+        if (call.method_name() == "sourceApplication") {
+          result->Success(
+              flutter::EncodableValue(ForegroundApplicationDescription()));
           return;
         }
         result->NotImplemented();

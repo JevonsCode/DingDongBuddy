@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -48,6 +50,43 @@ void main() {
     expect(model.selectedGroup, 'Skills');
     expect(model.visibleResources.single.title, 'Skill');
   });
+
+  test(
+    'knowledge stays stored but is hidden from resource management',
+    () async {
+      final DateTime now = DateTime.utc(2026);
+      final LibraryViewModel model = LibraryViewModel(
+        _FakeResourceStore(<Resource>[
+          Resource(
+            id: 'prompt',
+            type: ResourceType.prompt,
+            title: 'Prompt',
+            content: 'Prompt content',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'knowledge',
+            type: ResourceType.knowledge,
+            title: 'Legacy knowledge',
+            content: 'Preserve this data',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      );
+
+      await model.load();
+
+      expect(model.allResources, hasLength(2));
+      expect(model.visibleResources.map((Resource item) => item.id), <String>[
+        'prompt',
+      ]);
+      expect(model.groups, isNot(contains('Knowledge')));
+      expect(model.configurableResources, hasLength(1));
+      expect(ResourceType.knowledge.isConfigurableAgentResource, isFalse);
+    },
+  );
 
   test(
     'saving a resource keeps the active search and selects the saved row',
@@ -161,7 +200,7 @@ void main() {
       now: () => now,
     );
     await source.load();
-    source.toggleTransferSelection('two');
+    source.toggleSelection('two');
 
     final String bundle = source.exportJson();
     final List<Object?> items =
@@ -180,6 +219,66 @@ void main() {
     expect(second.duplicateIds, <String>['two']);
     expect(targetStore.savedResources, hasLength(1));
   });
+
+  test('new resource inherits the active type filter', () async {
+    final LibraryViewModel model = LibraryViewModel(
+      _FakeResourceStore(<Resource>[]),
+    );
+    await model.load();
+
+    model.setTypeFilter(ResourceType.mcp);
+    model.startCreating();
+
+    expect(model.isCreating, isTrue);
+    expect(model.creatingType, ResourceType.mcp);
+  });
+
+  test(
+    'trigger groups persist and deleting one clears resource membership',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 16);
+      final TriggerGroup group = TriggerGroup(
+        id: 'group-1',
+        name: 'DingDong',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.contains,
+            value: 'dingdong',
+          ),
+        ],
+        createdAt: now,
+        updatedAt: now,
+      );
+      final _FakeResourceStore resources = _FakeResourceStore(<Resource>[
+        Resource(
+          id: 'skill',
+          type: ResourceType.skill,
+          title: 'Skill',
+          content: 'Skill content',
+          triggerGroupIds: const <String>['group-1'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore triggerGroups = InMemoryTriggerGroupStore(
+        <TriggerGroup>[group],
+      );
+      final LibraryViewModel model = LibraryViewModel(
+        resources,
+        triggerGroupStore: triggerGroups,
+        now: () => now.add(const Duration(hours: 1)),
+      );
+      await model.load();
+      model.selectResource(resources.savedResources.single);
+
+      await model.deleteTriggerGroup('group-1');
+
+      expect(model.triggerGroups, isEmpty);
+      expect(resources.savedResources.single.triggerGroupIds, isEmpty);
+      expect(model.selectedResource?.triggerGroupIds, isEmpty);
+    },
+  );
 }
 
 final class _FakeUpdateFetcher implements ResourceUpdateFetcher {

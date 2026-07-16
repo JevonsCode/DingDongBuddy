@@ -59,6 +59,10 @@ extension _AgentRouterResourceHandlers on AgentRouter {
           json['activation'],
           pinned: pinned,
         ),
+        triggerGroupIds:
+            (json['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
+                .map((Object? value) => value as String)
+                .toList(growable: false),
         sortOrder: json['sortOrder'] as int?,
         createdAt: timestamp,
         updatedAt: timestamp,

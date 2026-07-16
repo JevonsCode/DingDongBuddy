@@ -4,15 +4,9 @@ import 'package:flutter/material.dart';
 
 /// Import metadata collected before opening the native directory chooser.
 final class LibraryImportOptions {
-  const LibraryImportOptions({
-    required this.type,
-    this.group,
-    this.tags = const <String>[],
-  });
+  const LibraryImportOptions({required this.type});
 
   final ResourceType type;
-  final String? group;
-  final List<String> tags;
 }
 
 /// Focused import dialog that keeps the native directory chooser uncluttered.
@@ -24,16 +18,7 @@ final class LibraryImportDialog extends StatefulWidget {
 }
 
 final class _LibraryImportDialogState extends State<LibraryImportDialog> {
-  final TextEditingController _group = TextEditingController();
-  final TextEditingController _tags = TextEditingController();
-  ResourceType _type = ResourceType.knowledge;
-
-  @override
-  void dispose() {
-    _group.dispose();
-    _tags.dispose();
-    super.dispose();
-  }
+  ResourceType _type = ResourceType.skill;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +38,9 @@ final class _LibraryImportDialogState extends State<LibraryImportDialog> {
               key: const Key('library-import-type'),
               value: _type,
               items: ResourceType.values
-                  .where((ResourceType type) => type.isLibraryResource)
+                  .where(
+                    (ResourceType type) => type.isConfigurableAgentResource,
+                  )
                   .map(
                     (ResourceType type) => DesktopSelectItem<ResourceType>(
                       value: type,
@@ -62,19 +49,6 @@ final class _LibraryImportDialogState extends State<LibraryImportDialog> {
                   )
                   .toList(growable: false),
               onChanged: (ResourceType value) => setState(() => _type = value),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _group,
-              decoration: const InputDecoration(labelText: 'Group (optional)'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tags,
-              decoration: const InputDecoration(
-                labelText: 'Tags (optional)',
-                hintText: 'team, release',
-              ),
             ),
           ],
         ),
@@ -86,27 +60,12 @@ final class _LibraryImportDialogState extends State<LibraryImportDialog> {
         ),
         FilledButton.icon(
           key: const Key('library-import-choose-folder'),
-          onPressed: () => Navigator.pop(
-            context,
-            LibraryImportOptions(
-              type: _type,
-              group: _emptyAsNull(_group.text),
-              tags: _tags.text
-                  .split(',')
-                  .map((String value) => value.trim())
-                  .where((String value) => value.isNotEmpty)
-                  .toList(growable: false),
-            ),
-          ),
+          onPressed: () =>
+              Navigator.pop(context, LibraryImportOptions(type: _type)),
           icon: const Icon(Icons.folder_open_outlined, size: 18),
           label: const Text('Choose folder'),
         ),
       ],
     );
   }
-}
-
-String? _emptyAsNull(String value) {
-  final String trimmed = value.trim();
-  return trimmed.isEmpty ? null : trimmed;
 }

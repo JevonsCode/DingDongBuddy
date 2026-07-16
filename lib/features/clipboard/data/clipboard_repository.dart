@@ -60,9 +60,13 @@ final class ClipboardRepository implements ClipboardStore {
     return List<ClipboardRecord>.unmodifiable(
       rows.map((Row row) {
         final List<String> tags = _decodeTags(row['ZTAGSDATA']);
+        final List<String> groups = _decodeGroups(
+          row['ZGROUP'] as String? ?? 'Clipboard',
+        );
         return ClipboardRecord(
           id: row['ZID'] as String? ?? '',
-          group: row['ZGROUP'] as String? ?? 'Clipboard',
+          group: groups.isEmpty ? '' : groups.first,
+          groups: groups,
           title: row['ZTITLE'] as String? ?? '',
           content: row['ZCONTENT'] as String? ?? '',
           tags: tags,
@@ -135,7 +139,7 @@ final class ClipboardRepository implements ClipboardStore {
         _encodeDate(record.updatedAt),
         record.activation,
         record.content,
-        record.group,
+        _encodeGroups(record.groupNames),
         record.id,
         record.source,
         record.title,
@@ -181,6 +185,33 @@ final class ClipboardRepository implements ClipboardStore {
     return List<String>.unmodifiable(values.cast<String>());
   }
 
+  static List<String> _decodeGroups(String value) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return const <String>[];
+    }
+    if (trimmed.startsWith('[')) {
+      try {
+        final Object? decoded = jsonDecode(trimmed);
+        if (decoded is List<Object?>) {
+          return _uniqueGroups(decoded.whereType<String>());
+        }
+      } on FormatException {
+        // Preserve malformed legacy values as one ordinary group.
+      }
+    }
+    return <String>[trimmed];
+  }
+
+  static String _encodeGroups(List<String> values) {
+    final List<String> groups = _uniqueGroups(values);
+    return switch (groups.length) {
+      0 => '',
+      1 => groups.single,
+      _ => jsonEncode(groups),
+    };
+  }
+
   static void _ensureSchema(Database database) {
     database
       ..execute('PRAGMA journal_mode = WAL')
@@ -208,4 +239,14 @@ final class ClipboardRepository implements ClipboardStore {
         'ON ZCLIPBOARDRECORD (ZID COLLATE BINARY ASC)',
       );
   }
+}
+
+List<String> _uniqueGroups(Iterable<String> values) {
+  final Set<String> seen = <String>{};
+  return values
+      .map((String value) => value.trim())
+      .where(
+        (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
+      )
+      .toList(growable: false);
 }

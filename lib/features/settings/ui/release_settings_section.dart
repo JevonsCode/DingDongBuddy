@@ -43,7 +43,7 @@ class ReleaseSettingsSection extends StatelessWidget {
                 value:
                     status.latestVersion ?? context.localized('Unknown', '未知'),
               ),
-              if (status.notes.isNotEmpty)
+              if (status.isUpdateAvailable == true && status.notes.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Column(
@@ -65,8 +65,8 @@ class ReleaseSettingsSection extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: <Widget>[
                   Text(_statusText(context, status)),
-                  OutlinedButton.icon(
-                    key: const Key('settings-check-updates'),
+                  _ReleaseActionButton(
+                    buttonKey: const Key('settings-check-updates'),
                     onPressed: status.isChecking
                         ? null
                         : viewModel.checkForUpdates,
@@ -78,31 +78,29 @@ class ReleaseSettingsSection extends StatelessWidget {
                         : const Icon(Icons.refresh_rounded, size: 18),
                     label: Text(context.localized('Check', '检查更新')),
                   ),
-                  FilledButton.tonalIcon(
+                  _ReleaseActionButton(
+                    buttonKey: const Key('settings-open-website'),
                     onPressed: viewModel.openWebsite,
                     icon: const Icon(Icons.language_rounded, size: 18),
                     label: Text(context.localized('Website', '官网')),
                   ),
-                  OutlinedButton.icon(
+                  _ReleaseActionButton(
+                    buttonKey: const Key('settings-open-release'),
                     onPressed: viewModel.openReleasePage,
                     icon: const Icon(Icons.open_in_new_rounded, size: 18),
                     label: Text(context.localized('Release', '发布页')),
                   ),
-                  OutlinedButton.icon(
-                    key: const Key('settings-report-problem'),
+                  _ReleaseActionButton(
+                    buttonKey: const Key('settings-report-problem'),
                     onPressed: viewModel.reportProblem,
                     icon: const Icon(Icons.bug_report_outlined, size: 18),
-                    label: Text(
-                      context.localized('Report a problem', '上报问题'),
-                    ),
+                    label: Text(context.localized('Report a problem', '上报问题')),
                   ),
-                  OutlinedButton.icon(
-                    key: const Key('settings-request-feature'),
+                  _ReleaseActionButton(
+                    buttonKey: const Key('settings-request-feature'),
                     onPressed: viewModel.requestFeature,
                     icon: const Icon(Icons.lightbulb_outline, size: 18),
-                    label: Text(
-                      context.localized('Request a feature', '提出需求'),
-                    ),
+                    label: Text(context.localized('Request a feature', '提出需求')),
                   ),
                 ],
               ),
@@ -110,6 +108,34 @@ class ReleaseSettingsSection extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _ReleaseActionButton extends StatelessWidget {
+  const _ReleaseActionButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    this.buttonKey,
+  });
+
+  final Key? buttonKey;
+  final VoidCallback? onPressed;
+  final Widget icon;
+  final Widget label;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      key: buttonKey,
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+      ),
+      icon: icon,
+      label: label,
     );
   }
 }

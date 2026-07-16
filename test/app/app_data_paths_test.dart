@@ -20,6 +20,20 @@ void main() {
         ).resourceLibraryFile.path,
         r'C:\Users\example\AppData\Roaming\DingDong\resource-library.json',
       );
+      expect(
+        AppDataPaths.forPlatform(
+          operatingSystem: 'macos',
+          homeDirectory: '/Users/example',
+        ).triggerGroupsFile.path,
+        '/Users/example/Library/Application Support/DingDong/trigger-groups.json',
+      );
+      expect(
+        AppDataPaths.forPlatform(
+          operatingSystem: 'macos',
+          homeDirectory: '/Users/example',
+        ).clipboardCategoryRulesFile.path,
+        '/Users/example/Library/Application Support/DingDong/clipboard-category-rules.json',
+      );
     },
   );
 }

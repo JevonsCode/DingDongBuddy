@@ -30,6 +30,15 @@ void main() {
           'dingdong_notify',
         ],
       );
+      final Map<String, Object?> bridge = tools.first as Map<String, Object?>;
+      final Map<String, Object?> schema =
+          bridge['inputSchema'] as Map<String, Object?>;
+      final Map<String, Object?> properties =
+          schema['properties'] as Map<String, Object?>;
+      expect(
+        properties.keys,
+        containsAll(<String>['workspacePath', 'repositoryUrl']),
+      );
     },
   );
 

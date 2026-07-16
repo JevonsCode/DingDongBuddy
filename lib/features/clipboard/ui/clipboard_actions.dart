@@ -27,8 +27,6 @@ extension _ClipboardActions on _ClipboardScreenState {
             tags: organization.tags,
           );
         }
-      case _ClipboardAction.archive:
-        viewModel.archiveSelected();
       case _ClipboardAction.archiveTo:
         await _archiveTo(context, selected);
       case _ClipboardAction.copy:
@@ -39,8 +37,6 @@ extension _ClipboardActions on _ClipboardScreenState {
         await _editText(context, selected);
       case _ClipboardAction.promotePrompt:
         await _promote(context, ResourceType.prompt);
-      case _ClipboardAction.promoteKnowledge:
-        await _promote(context, ResourceType.knowledge);
       case _ClipboardAction.share:
         await onShare?.call(selected);
       case _ClipboardAction.delete:
@@ -144,35 +140,17 @@ extension _ClipboardActions on _ClipboardScreenState {
   }
 
   Future<void> _archiveTo(BuildContext context, ClipboardRecord record) async {
-    final TextEditingController controller = TextEditingController(
-      text: record.group == 'Archive' ? '' : record.group,
-    );
-    final String? group = await showDialog<String>(
+    final Set<String>? groups = await showDialog<Set<String>>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text(context.localized('Archive to', '归档到')),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: context.localized('e.g. Project drafts', '例如：项目草稿'),
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.localized('Cancel', '取消')),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.localized('Archive', '归档')),
-          ),
-        ],
+      builder: (BuildContext context) => ClipboardGroupDialog(
+        availableGroups: viewModel.groups,
+        selectedGroups: record.groupNames
+            .where(viewModel.groups.contains)
+            .toSet(),
       ),
     );
-    controller.dispose();
-    if (group != null) {
-      viewModel.archiveSelected(group: group);
+    if (groups != null && groups.isNotEmpty) {
+      viewModel.addSelectedToGroups(groups);
     }
   }
 

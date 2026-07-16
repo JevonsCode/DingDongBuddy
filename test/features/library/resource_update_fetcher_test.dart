@@ -15,7 +15,22 @@ void main() {
     );
   });
 
-  test('GitHub repository and folder links are rejected', () {
+  test('GitHub skill folder links resolve to their SKILL.md', () {
+    final Uri result = normalizeResourceUpdateUri(
+      Uri.parse(
+        'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste',
+      ),
+    );
+
+    expect(
+      result,
+      Uri.parse(
+        'https://raw.githubusercontent.com/JevonsCode/codex-skills/main/skills/user-taste/SKILL.md',
+      ),
+    );
+  });
+
+  test('GitHub repository links are rejected', () {
     expect(
       () => normalizeResourceUpdateUri(
         Uri.parse('https://github.com/acme/prompts'),

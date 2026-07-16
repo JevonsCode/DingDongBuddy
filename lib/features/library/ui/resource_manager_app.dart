@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
@@ -20,6 +21,8 @@ class ResourceManagerApp extends StatefulWidget {
     required this.clipboardViewModel,
     required this.settings,
     required this.windowController,
+    this.desktopContextMenuGateway,
+    this.onOpenExternalLink,
     super.key,
   });
 
@@ -27,6 +30,8 @@ class ResourceManagerApp extends StatefulWidget {
   final ClipboardViewModel clipboardViewModel;
   final AppSettings settings;
   final WindowController windowController;
+  final DesktopContextMenuGateway? desktopContextMenuGateway;
+  final Future<void> Function(Uri uri)? onOpenExternalLink;
 
   @override
   State<ResourceManagerApp> createState() => _ResourceManagerAppState();
@@ -64,6 +69,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
     for (final resource in widget.viewModel.allResources) {
       if (resource.id == id) {
         widget.viewModel.selectResource(resource);
+        if (_selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+        }
         return;
       }
     }
@@ -93,44 +101,31 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: Scaffold(
-        body: Column(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: SegmentedButton<int>(
-                  key: const Key('resource-manager-navigation'),
-                  segments: <ButtonSegment<int>>[
-                    ButtonSegment<int>(
-                      value: 0,
-                      icon: const Icon(Icons.layers_outlined),
-                      label: Text(_localized(context, 'Resources', '资源')),
-                    ),
-                    ButtonSegment<int>(
-                      value: 1,
-                      icon: const Icon(Icons.content_paste_outlined),
-                      label: Text(_localized(context, 'Clipboard', '剪贴板')),
-                    ),
-                  ],
-                  selected: <int>{_selectedIndex},
-                  onSelectionChanged: (Set<int> value) =>
-                      setState(() => _selectedIndex = value.single),
-                ),
+      home: Builder(
+        builder: (BuildContext context) => Scaffold(
+          body: Row(
+            children: <Widget>[
+              _WorkspaceSidebar(
+                selectedIndex: _selectedIndex,
+                onSelected: (int value) =>
+                    setState(() => _selectedIndex = value),
               ),
-            ),
-            Expanded(
-              child: _selectedIndex == 0
-                  ? LibraryScreen(
-                      viewModel: widget.viewModel,
-                      transferGateway: FileSelectorLibraryTransferGateway(),
-                    )
-                  : ClipboardManagerScreen(
-                      viewModel: widget.clipboardViewModel,
-                    ),
-            ),
-          ],
+              const VerticalDivider(width: 1),
+              Expanded(
+                child: _selectedIndex == 0
+                    ? LibraryScreen(
+                        viewModel: widget.viewModel,
+                        transferGateway: FileSelectorLibraryTransferGateway(),
+                        contextMenuGateway: widget.desktopContextMenuGateway,
+                        onOpenExternalLink: widget.onOpenExternalLink,
+                      )
+                    : ClipboardManagerScreen(
+                        viewModel: widget.clipboardViewModel,
+                        contextMenuGateway: widget.desktopContextMenuGateway,
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -139,3 +134,145 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
 
 String _localized(BuildContext context, String english, String chinese) =>
     Localizations.localeOf(context).languageCode == 'zh' ? chinese : english;
+
+class _WorkspaceSidebar extends StatelessWidget {
+  const _WorkspaceSidebar({
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Material(
+      key: const Key('resource-manager-navigation'),
+      color: colors.surfaceContainerLowest,
+      child: SizedBox(
+        width: 184,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 18, 10, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 17,
+                      color: colors.onSurface,
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        _localized(context, 'Resource manager', '资源管理'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  _localized(context, 'WORKSPACE', '工作区'),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 7),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-resources'),
+                icon: Icons.layers_outlined,
+                label: _localized(context, 'Resources', '资源'),
+                selected: selectedIndex == 0,
+                onTap: () => onSelected(0),
+              ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-clipboard'),
+                icon: Icons.content_paste_outlined,
+                label: _localized(context, 'Clipboard', '剪贴板'),
+                selected: selectedIndex == 1,
+                onTap: () => onSelected(1),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  _localized(context, 'Stored on this device', '数据保存在本机'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    super.key,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Material(
+      color: selected
+          ? colors.primary.withValues(alpha: 0.09)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(5),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(5),
+        onTap: onTap,
+        child: SizedBox(
+          height: 32,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  icon,
+                  size: 16,
+                  color: selected ? colors.primary : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 9),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

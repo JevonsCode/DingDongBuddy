@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.7.7',
+              'version': '0.7.8',
             },
           },
         });
@@ -99,6 +99,14 @@ final class McpServer {
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(),
+        'workspacePath': _stringProperty(
+          description:
+              'Current project directory. DingDong fills this automatically when omitted.',
+        ),
+        'repositoryUrl': _stringProperty(
+          description:
+              'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
+        ),
         'limit': _integerProperty(maximum: 60),
         'expand': _enumProperty(<String>['none', 'prompts', 'all']),
       },
@@ -219,9 +227,8 @@ Map<String, Object?> _tool({
   };
 }
 
-Map<String, Object?> _stringProperty() => const <String, Object?>{
-  'type': 'string',
-};
+Map<String, Object?> _stringProperty({String? description}) =>
+    <String, Object?>{'type': 'string', 'description': ?description};
 
 Map<String, Object?> _booleanProperty() => const <String, Object?>{
   'type': 'boolean',

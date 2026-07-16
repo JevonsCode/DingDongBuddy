@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
 import 'package:dingdong/features/agent_api/ui/agent_api_screen.dart';
-import 'package:dingdong/features/clipboard/domain/clipboard_context_menu_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
@@ -36,7 +36,7 @@ class ShellScreen extends StatefulWidget {
     required this.controller,
     this.agentBaseUri,
     this.clipboardGateway,
-    this.clipboardContextMenuGateway,
+    this.desktopContextMenuGateway,
     this.clipboardPreviewLauncher,
     this.clipboardShareGateway,
     this.libraryTransferGateway,
@@ -57,7 +57,7 @@ class ShellScreen extends StatefulWidget {
   final ShellController controller;
   final Uri? agentBaseUri;
   final ClipboardGateway? clipboardGateway;
-  final ClipboardContextMenuGateway? clipboardContextMenuGateway;
+  final DesktopContextMenuGateway? desktopContextMenuGateway;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
   final ClipboardShareGateway? clipboardShareGateway;
   final LibraryTransferGateway? libraryTransferGateway;
@@ -77,6 +77,7 @@ class _ShellScreenState extends State<ShellScreen> {
   bool _showShortcutHints = false;
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
+  bool _focusMcpOnOpen = false;
   late int _lastClipboardFilterToggleRevision;
   late int _lastClipboardRefreshRevision;
   late int _lastSelectedIndex;
@@ -183,6 +184,13 @@ class _ShellScreenState extends State<ShellScreen> {
       setState(() => _showShortcutHints = show);
     }
     if (event is KeyDownEvent && widget.controller.selectedIndex == 2) {
+      final int? shortcutIndex = _clipboardShortcutIndex(event.logicalKey);
+      if (shortcutIndex != null &&
+          (HardwareKeyboard.instance.isMetaPressed ||
+              HardwareKeyboard.instance.isControlPressed)) {
+        unawaited(_useClipboardRecordAt(shortcutIndex));
+        return KeyEventResult.handled;
+      }
       if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
         widget.clipboardViewModel.moveSelection(1);
         return KeyEventResult.handled;
@@ -236,6 +244,11 @@ class _ShellScreenState extends State<ShellScreen> {
     await widget.clipboardViewModel.restoreSelected();
   }
 
+  Future<void> _useClipboardRecordAt(int index) async {
+    await _hideClipboardPreview();
+    await widget.clipboardViewModel.restoreVisibleAt(index);
+  }
+
   Future<void> _showClipboardPreview(ClipboardRecord record) async {
     final ClipboardPreviewLauncher? launcher = widget.clipboardPreviewLauncher;
     if (launcher == null) {
@@ -257,6 +270,24 @@ class _ShellScreenState extends State<ShellScreen> {
     }
     await widget.onHideWindow?.call();
     await launcher.show();
+  }
+
+  Future<void> _openAgentApi() async {
+    final bool firstOpen = !widget.settingsViewModel.settings.mcpAccessSeen;
+    if (firstOpen) {
+      await widget.settingsViewModel.markMcpAccessSeen();
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() => _focusMcpOnOpen = firstOpen);
+    widget.controller.open(3);
+  }
+
+  void _handleMcpFocusHandled() {
+    if (_focusMcpOnOpen && mounted) {
+      setState(() => _focusMcpOnOpen = false);
+    }
   }
 
   void _handleEscape() {
@@ -364,6 +395,9 @@ class _ShellScreenState extends State<ShellScreen> {
         libraryViewModel: widget.libraryViewModel,
         settingsViewModel: widget.settingsViewModel,
         onOpenWorkspace: widget.controller.open,
+        onOpenAgentApi: () => unawaited(_openAgentApi()),
+        resourceManagerLauncher: _resourceManagerLauncher(),
+        contextMenuGateway: widget.desktopContextMenuGateway,
         now: widget.now,
       ),
       1 => ResourceBrowserScreen(
@@ -379,7 +413,7 @@ class _ShellScreenState extends State<ShellScreen> {
         onPreview: _showClipboardPreview,
         onDismissPreview: _hideClipboardPreview,
         onShare: widget.clipboardShareGateway?.share,
-        contextMenuGateway: widget.clipboardContextMenuGateway,
+        contextMenuGateway: widget.desktopContextMenuGateway,
         filtersExpanded: _clipboardFiltersExpanded,
         onToggleFilters: () {
           setState(
@@ -392,6 +426,8 @@ class _ShellScreenState extends State<ShellScreen> {
         settingsViewModel: widget.settingsViewModel,
         baseUri: widget.agentBaseUri,
         clipboardGateway: widget.clipboardGateway,
+        focusMcpOnOpen: _focusMcpOnOpen,
+        onMcpFocusHandled: _handleMcpFocusHandled,
       ),
       _ => const SizedBox.shrink(),
     };
@@ -407,6 +443,21 @@ class _ShellScreenState extends State<ShellScreen> {
       onHideWindow: widget.onHideWindow,
     );
   }
+}
+
+int? _clipboardShortcutIndex(LogicalKeyboardKey key) {
+  final int index = const <LogicalKeyboardKey>[
+    LogicalKeyboardKey.digit1,
+    LogicalKeyboardKey.digit2,
+    LogicalKeyboardKey.digit3,
+    LogicalKeyboardKey.digit4,
+    LogicalKeyboardKey.digit5,
+    LogicalKeyboardKey.digit6,
+    LogicalKeyboardKey.digit7,
+    LogicalKeyboardKey.digit8,
+    LogicalKeyboardKey.digit9,
+  ].indexOf(key);
+  return index < 0 ? null : index;
 }
 
 final class _CalloutHidingResourceManagerLauncher

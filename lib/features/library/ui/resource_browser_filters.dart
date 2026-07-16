@@ -12,7 +12,6 @@ class _TypeFilters extends StatelessWidget {
       ResourceType.prompt,
       ResourceType.skill,
       ResourceType.mcp,
-      ResourceType.knowledge,
     ];
     return SizedBox(
       height: 33,
@@ -58,10 +57,16 @@ class _GroupFilters extends StatelessWidget {
           final String? group = groups[index];
           final int count = group == null
               ? viewModel.allResources
-                    .where((Resource item) => item.type.isLibraryResource)
+                    .where(
+                      (Resource item) => item.type.isConfigurableAgentResource,
+                    )
                     .length
               : viewModel.allResources
-                    .where((Resource item) => item.group == group)
+                    .where(
+                      (Resource item) =>
+                          item.type.isConfigurableAgentResource &&
+                          item.group == group,
+                    )
                     .length;
           return _GroupButton(
             label: group ?? context.localized('All', '全部'),

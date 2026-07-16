@@ -6,6 +6,7 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/enabled_status_icon.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
+import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:flutter/material.dart';
@@ -106,8 +107,8 @@ class ResourceBrowserScreen extends StatelessWidget {
                   style: const TextStyle(fontSize: 12),
                   decoration: InputDecoration(
                     hintText: context.localized(
-                      'Search prompts, skills, MCP, knowledge',
-                      '搜索提示词、Skills、MCP、知识库',
+                      'Search prompts, skills, and MCP',
+                      '搜索提示词、Skills 和 MCP',
                     ),
                     hintStyle: const TextStyle(
                       color: PopupStyle.textSecondary,

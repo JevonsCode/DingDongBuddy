@@ -139,6 +139,7 @@ class _MetricCard extends StatelessWidget {
     required this.value,
     required this.label,
     required this.onTap,
+    this.showBadge = false,
     super.key,
   });
 
@@ -146,6 +147,7 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final String label;
   final VoidCallback onTap;
+  final bool showBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -160,46 +162,87 @@ class _MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           height: 72,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Row(
+          child: Stack(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    PopupSymbolIcon(symbol, size: 18, color: PopupStyle.accent),
-                    const SizedBox(width: 7),
-                    Flexible(
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: PopupStyle.textPrimary,
-                          fontSize: 15,
-                          height: 1,
-                          fontWeight: FontWeight.w800,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        PopupSymbolIcon(
+                          symbol,
+                          size: 18,
+                          color: PopupStyle.accent,
                         ),
+                        const SizedBox(width: 7),
+                        Flexible(
+                          child: Text(
+                            value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: PopupStyle.textPrimary,
+                              fontSize: 15,
+                              height: 1,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: PopupStyle.textSecondary,
+                        fontSize: 9,
+                        height: 1,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 7),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: PopupStyle.textSecondary,
-                    fontSize: 9,
-                    height: 1,
-                    fontWeight: FontWeight.w600,
+              ),
+              if (showBadge)
+                Positioned(
+                  key: const Key('today-mcp-badge'),
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: PopupStyle.accent,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: PopupStyle.accent.withValues(alpha: 0.20),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'MCP',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 7,
+                        height: 1,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -208,81 +251,213 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _EnabledResourceCard extends StatelessWidget {
-  const _EnabledResourceCard({required this.resource});
+  const _EnabledResourceCard({
+    required this.resource,
+    required this.onDisable,
+    required this.onEdit,
+    required this.contextMenuGateway,
+  });
 
   final Resource resource;
+  final VoidCallback onDisable;
+  final VoidCallback? onEdit;
+  final DesktopContextMenuGateway? contextMenuGateway;
 
   @override
   Widget build(BuildContext context) {
-    final Color background = resource.type == ResourceType.skill
-        ? PopupStyle.skillSurface
-        : resource.type == ResourceType.prompt
-        ? PopupStyle.warmSurface
-        : PopupStyle.surface;
-    return Container(
-      key: Key('today-enabled-${resource.id}'),
-      height: 92,
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-      decoration: PopupStyle.card(color: background, radius: 9),
-      child: Row(
-        children: <Widget>[
-          SizedBox(
-            width: 34,
-            child: PopupSymbolIcon(
-              resource.type == ResourceType.skill ? 'skill' : 'prompt',
-              color: resource.type == ResourceType.skill
-                  ? const Color(0xFF4C63A1)
-                  : const Color(0xFFA97822),
-              size: 20,
+    final ResourceCardPresentation display =
+        ResourceCardPresentation.fromResource(resource);
+    final Color background = switch (resource.type) {
+      ResourceType.prompt => PopupStyle.warmSurface,
+      ResourceType.skill => PopupStyle.skillSurface,
+      ResourceType.mcp => PopupStyle.mcpSoft,
+      ResourceType.knowledge || ResourceType.clipboard => PopupStyle.surface,
+    };
+    final String symbol = switch (resource.type) {
+      ResourceType.prompt => 'prompt',
+      ResourceType.skill => 'skill',
+      ResourceType.mcp => 'mcp',
+      ResourceType.knowledge => 'knowledge',
+      ResourceType.clipboard => 'clipboard',
+    };
+    final Color accent = switch (resource.type) {
+      ResourceType.prompt => const Color(0xFFA97822),
+      ResourceType.skill => const Color(0xFF4C63A1),
+      ResourceType.mcp => PopupStyle.mcp,
+      ResourceType.knowledge => PopupStyle.accent,
+      ResourceType.clipboard => PopupStyle.textSecondary,
+    };
+    final List<String> tags = _enabledResourceTags(context, resource, display);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onSecondaryTapDown: (TapDownDetails details) =>
+          _showContextMenu(context, details.globalPosition),
+      child: Container(
+        key: Key('today-enabled-${resource.id}'),
+        height: 92,
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+        decoration: PopupStyle.card(color: background, radius: 9),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 34,
+              child: PopupSymbolIcon(symbol, color: accent, size: 20),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  resource.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: PopupStyle.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    display.title,
+                    key: Key('today-enabled-title-${resource.id}'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: PopupStyle.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  resource.content.replaceAll('\n', ' '),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: PopupStyle.textSecondary,
-                    fontSize: 9,
-                    height: 1.25,
+                  const SizedBox(height: 4),
+                  Text(
+                    display.summary,
+                    key: Key('today-enabled-summary-${resource.id}'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: PopupStyle.textSecondary,
+                      fontSize: 9,
+                      height: 1.25,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 5),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 3,
-                  children: <Widget>[
-                    if (resource.group.isNotEmpty)
-                      _TinyTag(label: resource.group),
-                    ...resource.tags
-                        .take(3)
-                        .map((String tag) => _TinyTag(label: tag)),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 5),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 3,
+                    children: <Widget>[
+                      ...tags.take(4).map((String tag) => _TinyTag(label: tag)),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const EnabledStatusIcon(enabled: true),
-        ],
+            const EnabledStatusIcon(enabled: true),
+          ],
+        ),
       ),
     );
   }
+
+  Future<void> _showContextMenu(BuildContext context, Offset position) async {
+    final _EnabledResourceAction? action = contextMenuGateway == null
+        ? await showMenu<_EnabledResourceAction>(
+            context: context,
+            position: desktopContextMenuPosition(context, position),
+            popUpAnimationStyle: AnimationStyle.noAnimation,
+            items: <PopupMenuEntry<_EnabledResourceAction>>[
+              PopupMenuItem<_EnabledResourceAction>(
+                value: _EnabledResourceAction.edit,
+                enabled: onEdit != null,
+                child: Row(
+                  children: <Widget>[
+                    const PopupSymbolIcon(
+                      'edit',
+                      size: 16,
+                      color: PopupStyle.textSecondary,
+                    ),
+                    const SizedBox(width: 9),
+                    Text(context.localized('Edit', '编辑')),
+                  ],
+                ),
+              ),
+              PopupMenuItem<_EnabledResourceAction>(
+                value: _EnabledResourceAction.disable,
+                child: Row(
+                  children: <Widget>[
+                    const PopupSymbolIcon(
+                      'paused',
+                      size: 16,
+                      color: PopupStyle.textSecondary,
+                    ),
+                    const SizedBox(width: 9),
+                    Text(context.localized('Disable', '停用')),
+                  ],
+                ),
+              ),
+            ],
+          )
+        : switch (await contextMenuGateway!.show(
+            x: position.dx,
+            y: position.dy,
+            useChinese: Localizations.localeOf(context).languageCode == 'zh',
+            items: <DesktopContextMenuItem>[
+              DesktopContextMenuItem(
+                id: 'edit',
+                englishLabel: 'Edit',
+                chineseLabel: '编辑',
+                enabled: onEdit != null,
+              ),
+              const DesktopContextMenuItem(
+                id: 'disable',
+                englishLabel: 'Disable',
+                chineseLabel: '停用',
+              ),
+            ],
+          )) {
+            'edit' => _EnabledResourceAction.edit,
+            'disable' => _EnabledResourceAction.disable,
+            _ => null,
+          };
+    switch (action) {
+      case _EnabledResourceAction.edit:
+        onEdit?.call();
+      case _EnabledResourceAction.disable:
+        onDisable();
+      case null:
+        return;
+    }
+  }
+}
+
+enum _EnabledResourceAction { edit, disable }
+
+List<String> _enabledResourceTags(
+  BuildContext context,
+  Resource resource,
+  ResourceCardPresentation display,
+) {
+  final List<String> values = switch (resource.type) {
+    ResourceType.prompt => <String>[
+      if (resource.group.isNotEmpty &&
+          resource.group != resource.type.defaultGroup)
+        resource.group,
+      ...resource.tags,
+    ],
+    ResourceType.skill => <String>[
+      context.localized('Skill', '技能'),
+      context.localized(
+        display.variant == ResourceCardVariant.skillOnline ? 'Online' : 'Local',
+        display.variant == ResourceCardVariant.skillOnline ? '在线' : '本地',
+      ),
+      ...resource.tags,
+    ],
+    ResourceType.mcp => <String>['MCP', display.variantLabel, ...resource.tags],
+    ResourceType.knowledge || ResourceType.clipboard => <String>[
+      if (resource.group.isNotEmpty &&
+          resource.group != resource.type.defaultGroup)
+        resource.group,
+      ...resource.tags,
+    ],
+  };
+  final Set<String> seen = <String>{};
+  return values
+      .where((String value) {
+        final String normalized = value.trim().toLowerCase();
+        return normalized.isNotEmpty && seen.add(normalized);
+      })
+      .toList(growable: false);
 }
 
 class _TinyTag extends StatelessWidget {
@@ -293,18 +468,18 @@ class _TinyTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: PopupStyle.accentSoft,
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: PopupStyle.border),
+        color: PopupStyle.field,
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
         style: const TextStyle(
-          color: PopupStyle.accent,
-          fontSize: 8,
-          fontWeight: FontWeight.w700,
+          color: PopupStyle.textSecondary,
+          fontSize: 9,
+          height: 1,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

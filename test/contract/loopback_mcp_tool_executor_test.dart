@@ -43,6 +43,26 @@ void main() {
     },
   );
 
+  test('bridge adds working directory and repository context', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async =>
+          'https://github.com/example/dingdong.git',
+    );
+
+    await executor.execute('dingdong_bridge', <String, Object?>{
+      'task': 'Review changes',
+    });
+
+    expect(transport.body?['workspacePath'], '/workspace/dingdong');
+    expect(
+      transport.body?['repositoryUrl'],
+      'https://github.com/example/dingdong.git',
+    );
+  });
+
   test('native MCP installation defaults to a no-write preview', () async {
     final Directory directory = Directory.systemTemp.createTempSync(
       'dingdong-loopback-installer-',

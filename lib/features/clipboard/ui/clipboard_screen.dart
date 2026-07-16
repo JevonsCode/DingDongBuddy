@@ -3,11 +3,17 @@ import 'dart:async';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
-import 'package:dingdong/features/clipboard/domain/clipboard_context_menu_gateway.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_organize_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -44,7 +50,7 @@ class ClipboardScreen extends StatefulWidget {
   final Future<void> Function(ClipboardRecord record)? onPreview;
   final Future<void> Function()? onDismissPreview;
   final Future<void> Function(ClipboardRecord record)? onShare;
-  final ClipboardContextMenuGateway? contextMenuGateway;
+  final DesktopContextMenuGateway? contextMenuGateway;
   final bool? filtersExpanded;
   final VoidCallback? onToggleFilters;
   final int searchFocusRevision;
@@ -99,7 +105,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
       widget.onPreview;
   Future<void> Function()? get onDismissPreview => widget.onDismissPreview;
   Future<void> Function(ClipboardRecord record)? get onShare => widget.onShare;
-  ClipboardContextMenuGateway? get contextMenuGateway =>
+  DesktopContextMenuGateway? get contextMenuGateway =>
       widget.contextMenuGateway;
   bool get filtersExpanded => widget.filtersExpanded ?? _showFilters;
 
@@ -192,6 +198,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                       settingsViewModel: settingsViewModel,
                       filtersExpanded: filtersExpanded,
                       showShortcutHint: showShortcutHints,
+                      contextMenuGateway: contextMenuGateway,
                       onToggleFilters: _toggleFilters,
                     )
                   else ...<Widget>[
@@ -234,7 +241,10 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                           _ClipboardKindFilters(viewModel: viewModel),
                           if (viewModel.groups.isNotEmpty) ...<Widget>[
                             const SizedBox(height: 8),
-                            _ClipboardGroupFilters(viewModel: viewModel),
+                            _ClipboardGroupFilters(
+                              viewModel: viewModel,
+                              contextMenuGateway: contextMenuGateway,
+                            ),
                           ],
                         ],
                       ),

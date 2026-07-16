@@ -24,11 +24,23 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: controller.engine.binaryMessenger
       )
       channel.setMethodCallHandler { call, result in
-        guard call.method == "changeCount" else {
+        switch call.method {
+        case "changeCount":
+          result(NSPasteboard.general.changeCount)
+        case "sourceApplication":
+          guard let application = NSWorkspace.shared.frontmostApplication else {
+            result(nil)
+            return
+          }
+          let name = application.localizedName ?? "Unknown"
+          if let identifier = application.bundleIdentifier, !identifier.isEmpty {
+            result("\(name) · \(identifier)")
+          } else {
+            result(name)
+          }
+        default:
           result(FlutterMethodNotImplemented)
-          return
         }
-        result(NSPasteboard.general.changeCount)
       }
       clipboardMonitorChannel = channel
 
@@ -113,14 +125,6 @@ class AppDelegate: FlutterAppDelegate {
           return
         }
         self?.playNotificationSound(arguments)
-        if call.method == "preview" {
-          result(nil)
-          return
-        }
-        let flashCount = min(max(arguments["flashCount"] as? Int ?? 8, 2), 30)
-        for _ in 0..<flashCount {
-          NSApp.requestUserAttention(.criticalRequest)
-        }
         result(nil)
       }
       self.notificationChannel = notificationChannel

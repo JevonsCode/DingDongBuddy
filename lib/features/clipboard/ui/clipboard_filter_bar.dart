@@ -22,6 +22,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
     required this.settingsViewModel,
     required this.filtersExpanded,
     required this.showShortcutHint,
+    required this.contextMenuGateway,
     required this.onToggleFilters,
   });
 
@@ -30,6 +31,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
   final ClipboardSettingsController? settingsViewModel;
   final bool filtersExpanded;
   final bool showShortcutHint;
+  final DesktopContextMenuGateway? contextMenuGateway;
   final VoidCallback onToggleFilters;
 
   @override
@@ -95,40 +97,10 @@ class _CompactClipboardToolbar extends StatelessWidget {
                           'Show categories and groups',
                           '展开分类与分组',
                         ),
-                  child: OutlinedButton(
-                    key: const Key('clipboard-toggle-filters'),
+                  child: _FilterToggleButton(
+                    filtersExpanded: filtersExpanded,
+                    showShortcutHint: showShortcutHint,
                     onPressed: onToggleFilters,
-                    style: OutlinedButton.styleFrom(
-                      fixedSize: const Size(35, 36),
-                      minimumSize: const Size(35, 36),
-                      padding: EdgeInsets.zero,
-                      foregroundColor: PopupStyle.textSecondary,
-                      backgroundColor: PopupStyle.surface,
-                      side: const BorderSide(color: PopupStyle.border),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: showShortcutHint
-                        ? const Text(
-                            'R',
-                            key: Key('clipboard-filter-shortcut'),
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          )
-                        : PopupSymbolIcon(
-                            filtersExpanded ? 'collapse' : 'filter',
-                            key: Key(
-                              filtersExpanded
-                                  ? 'clipboard-collapse-filters-icon'
-                                  : 'clipboard-filter-icon',
-                            ),
-                            size: 17,
-                            color: PopupStyle.textSecondary,
-                          ),
                   ),
                 ),
               ],
@@ -139,10 +111,118 @@ class _CompactClipboardToolbar extends StatelessWidget {
             _ClipboardKindFilters(viewModel: viewModel),
             if (viewModel.groups.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
-              _ClipboardGroupFilters(viewModel: viewModel),
+              _ClipboardGroupFilters(
+                viewModel: viewModel,
+                contextMenuGateway: contextMenuGateway,
+              ),
             ],
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _FilterToggleButton extends StatefulWidget {
+  const _FilterToggleButton({
+    required this.filtersExpanded,
+    required this.showShortcutHint,
+    required this.onPressed,
+  });
+
+  final bool filtersExpanded;
+  final bool showShortcutHint;
+  final VoidCallback onPressed;
+
+  @override
+  State<_FilterToggleButton> createState() => _FilterToggleButtonState();
+}
+
+class _FilterToggleButtonState extends State<_FilterToggleButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  );
+  late final Animation<double> _scale =
+      TweenSequence<double>(<TweenSequenceItem<double>>[
+        TweenSequenceItem<double>(
+          tween: Tween<double>(
+            begin: 1,
+            end: 0.88,
+          ).chain(CurveTween(curve: Curves.easeOut)),
+          weight: 45,
+        ),
+        TweenSequenceItem<double>(
+          tween: Tween<double>(
+            begin: 0.88,
+            end: 1,
+          ).chain(CurveTween(curve: Curves.easeOutBack)),
+          weight: 55,
+        ),
+      ]).animate(_controller);
+
+  @override
+  void didUpdateWidget(covariant _FilterToggleButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.filtersExpanded != widget.filtersExpanded) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Color foreground = widget.filtersExpanded
+        ? PopupStyle.accent
+        : PopupStyle.textSecondary;
+    return ScaleTransition(
+      key: const Key('clipboard-filter-transition'),
+      scale: _scale,
+      child: OutlinedButton(
+        key: const Key('clipboard-toggle-filters'),
+        onPressed: widget.onPressed,
+        style: OutlinedButton.styleFrom(
+          fixedSize: const Size(35, 36),
+          minimumSize: const Size(35, 36),
+          padding: EdgeInsets.zero,
+          foregroundColor: foreground,
+          backgroundColor: widget.filtersExpanded
+              ? PopupStyle.accentSoft
+              : PopupStyle.surface,
+          side: BorderSide(
+            color: widget.filtersExpanded
+                ? PopupStyle.accent.withValues(alpha: 0.32)
+                : PopupStyle.border,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          animationDuration: const Duration(milliseconds: 160),
+        ),
+        child: widget.showShortcutHint
+            ? const Text(
+                'R',
+                key: Key('clipboard-filter-shortcut'),
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              )
+            : PopupSymbolIcon(
+                widget.filtersExpanded ? 'collapse' : 'filter',
+                key: Key(
+                  widget.filtersExpanded
+                      ? 'clipboard-collapse-filters-icon'
+                      : 'clipboard-filter-icon',
+                ),
+                size: 17,
+                color: foreground,
+              ),
       ),
     );
   }
@@ -155,7 +235,8 @@ class _ClipboardKindFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<ClipboardCategory> categories = viewModel.availableCategories;
+    final List<ClipboardCategoryRule> categories =
+        viewModel.availableCategories;
     return SizedBox(
       height: 30,
       child: Row(
@@ -163,105 +244,62 @@ class _ClipboardKindFilters extends StatelessWidget {
           _categoryChip(context, null),
           if (categories.isNotEmpty) const SizedBox(width: 6),
           Expanded(
-            child: ReorderableListView.builder(
+            child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              buildDefaultDragHandles: false,
               itemCount: categories.length,
-              onReorderItem: viewModel.reorderCategories,
-              proxyDecorator: (Widget child, _, _) => Material(
-                color: Colors.transparent,
-                elevation: 3,
-                borderRadius: BorderRadius.circular(8),
-                child: child,
-              ),
-              itemBuilder: (BuildContext context, int index) => Padding(
-                key: ValueKey<String>('category-${categories[index].name}'),
-                padding: const EdgeInsets.only(right: 6),
-                child: ReorderableDragStartListener(
-                  index: index,
-                  child: GestureDetector(
-                    onSecondaryTapUp: (TapUpDetails details) =>
-                        _showCategoryOrderMenu(
-                          context,
-                          details.globalPosition,
-                          index,
-                          categories.length,
-                        ),
-                    child: _categoryChip(context, categories[index]),
-                  ),
-                ),
-              ),
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (BuildContext context, int index) =>
+                  _categoryChip(context, categories[index]),
             ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            key: const Key('clipboard-manage-categories'),
+            tooltip: context.localized('Manage categories', '管理分类'),
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (BuildContext context) =>
+                  ClipboardCategoryRulesDialog(viewModel: viewModel),
+            ),
+            icon: const Icon(Icons.tune_rounded, size: 16),
           ),
         ],
       ),
     );
   }
 
-  Widget _categoryChip(BuildContext context, ClipboardCategory? category) {
-    final String label = switch (category) {
+  Widget _categoryChip(BuildContext context, ClipboardCategoryRule? category) {
+    final String label = switch (category?.id) {
       null => context.localized('All', '全部'),
-      ClipboardCategory.text => context.localized('Text', '文本'),
-      ClipboardCategory.link => context.localized('Links', '链接'),
-      ClipboardCategory.image => context.localized('Images', '图片'),
-      ClipboardCategory.file => context.localized('Files', '文件'),
+      'text' => context.localized('Text', '文本'),
+      'links' => context.localized('Links', '链接'),
+      'images' => context.localized('Images', '图片'),
+      'files' => context.localized('Files', '文件'),
+      _ => category!.name,
     };
     return FilterChip(
-      key: Key('clipboard-category-${category?.name ?? 'all'}'),
+      key: Key('clipboard-category-${category?.id ?? 'all'}'),
       label: Text(
         label,
         style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
       ),
-      selected: viewModel.selectedCategory == category,
-      onSelected: (_) => viewModel.setCategory(category),
+      selected: viewModel.selectedCategoryId == category?.id,
+      onSelected: (_) => viewModel.setCategory(category?.id),
       showCheckmark: false,
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
-
-  Future<void> _showCategoryOrderMenu(
-    BuildContext context,
-    Offset position,
-    int index,
-    int length,
-  ) async {
-    final _FilterMove? move = await showMenu<_FilterMove>(
-      context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, 0, 0),
-      popUpAnimationStyle: AnimationStyle.noAnimation,
-      items: <PopupMenuEntry<_FilterMove>>[
-        PopupMenuItem(
-          value: _FilterMove.earlier,
-          enabled: index > 0,
-          child: Text(context.localized('Move earlier', '往前一位')),
-        ),
-        PopupMenuItem(
-          value: _FilterMove.first,
-          enabled: index > 0,
-          child: Text(context.localized('Move to first', '放到最前')),
-        ),
-        PopupMenuItem(
-          value: _FilterMove.last,
-          enabled: index < length - 1,
-          child: Text(context.localized('Move to last', '放到最后')),
-        ),
-      ],
-    );
-    if (move == null) return;
-    final int target = switch (move) {
-      _FilterMove.earlier => index - 1,
-      _FilterMove.first => 0,
-      _FilterMove.last => length,
-    };
-    viewModel.reorderCategories(index, target);
-  }
 }
 
 class _ClipboardGroupFilters extends StatelessWidget {
-  const _ClipboardGroupFilters({required this.viewModel});
+  const _ClipboardGroupFilters({
+    required this.viewModel,
+    required this.contextMenuGateway,
+  });
 
   final ClipboardViewModel viewModel;
+  final DesktopContextMenuGateway? contextMenuGateway;
 
   @override
   Widget build(BuildContext context) {
@@ -277,24 +315,36 @@ class _ClipboardGroupFilters extends StatelessWidget {
           return Padding(
             key: ValueKey<String>('clipboard-group-$group'),
             padding: const EdgeInsets.only(right: 6),
-            child: ReorderableDragStartListener(
-              index: index,
-              child: FilterChip(
-                avatar: const Icon(Icons.folder_outlined, size: 13),
-                label: Text(
-                  group,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                  ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onSecondaryTapUp: (TapUpDetails details) => unawaited(
+                showClipboardGroupContextMenu(
+                  context,
+                  globalPosition: details.globalPosition,
+                  group: group,
+                  viewModel: viewModel,
+                  gateway: contextMenuGateway,
                 ),
-                selected: viewModel.selectedGroup == group,
-                onSelected: (bool selected) =>
-                    viewModel.setGroup(selected ? group : null),
-                showCheckmark: false,
-                backgroundColor: Colors.transparent,
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: ReorderableDragStartListener(
+                index: index,
+                child: FilterChip(
+                  avatar: const Icon(Icons.folder_outlined, size: 13),
+                  label: Text(
+                    group,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  selected: viewModel.selectedGroup == group,
+                  onSelected: (bool selected) =>
+                      viewModel.setGroup(selected ? group : null),
+                  showCheckmark: false,
+                  backgroundColor: Colors.transparent,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ),
           );
@@ -303,5 +353,3 @@ class _ClipboardGroupFilters extends StatelessWidget {
     );
   }
 }
-
-enum _FilterMove { earlier, first, last }

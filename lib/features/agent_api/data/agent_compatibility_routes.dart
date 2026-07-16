@@ -5,12 +5,14 @@ import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 
 /// Discovery and summary routes retained for native API client compatibility.
 final class AgentCompatibilityRoutes {
   AgentCompatibilityRoutes({
     required this.resourceStore,
     this.clipboardStore,
+    this.triggerGroupStore,
     DateTime Function()? now,
     Uri? baseUri,
   }) : _now = now ?? _utcNow,
@@ -18,6 +20,7 @@ final class AgentCompatibilityRoutes {
 
   final ResourceStore resourceStore;
   final ClipboardStore? clipboardStore;
+  final TriggerGroupStore? triggerGroupStore;
   final DateTime Function() _now;
   Uri _baseUri;
 
@@ -35,14 +38,26 @@ final class AgentCompatibilityRoutes {
       '/agent/recommend' => _recommend(query),
       '/agent/resolve' => _resolve(query),
       '/agent/context' => _context(query),
-      '/agent/bridge' => AgentBridge(resourceStore, now: _now).respond(
-        jsonEncode(<String, Object?>{
-          'task': query['task'] ?? query['q'] ?? '',
-          'source': query['source'] ?? 'Agent',
-          'expand': query['expand'] ?? 'none',
-          'limit': int.tryParse(query['limit'] ?? '') ?? 12,
-        }),
-      ),
+      '/agent/bridge' =>
+        AgentBridge(
+          resourceStore,
+          triggerGroupStore: triggerGroupStore,
+          now: _now,
+        ).respond(
+          jsonEncode(<String, Object?>{
+            'task': query['task'] ?? query['q'] ?? '',
+            'source': query['source'] ?? 'Agent',
+            'expand': query['expand'] ?? 'none',
+            'limit': int.tryParse(query['limit'] ?? '') ?? 12,
+            'workspacePath':
+                query['workspacePath'] ??
+                query['projectPath'] ??
+                query['cwd'] ??
+                '',
+            'repositoryUrl':
+                query['repositoryUrl'] ?? query['repository'] ?? '',
+          }),
+        ),
       '/agent/toolkit' => _toolkit(),
       '/agent/startup' => _startup(query),
       '/agent/prepare' => _prepare(query),

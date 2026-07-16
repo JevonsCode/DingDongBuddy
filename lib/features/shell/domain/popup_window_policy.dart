@@ -6,7 +6,6 @@ abstract final class PopupWindowPolicy {
   static const Size minimumSize = Size(390, 540);
   static const Size maximumSize = Size(390, 940);
   static const double edgeInset = 20;
-  static const double defaultLeftInset = edgeInset * 3;
   static const double trayGap = 12;
 
   static Size sizeForVisibleDisplay(Rect visibleDisplay) {
@@ -55,7 +54,7 @@ abstract final class PopupWindowPolicy {
 
   static double _defaultX(Rect display, Size popupSize) {
     return _clampAxis(
-      display.left + defaultLeftInset,
+      display.right - popupSize.width - edgeInset,
       display.left + edgeInset,
       display.right - popupSize.width - edgeInset,
     );
@@ -72,7 +71,7 @@ abstract final class PopupWindowPolicy {
 /// Remembers whether the user moved the callout during the current process.
 ///
 /// This state intentionally has no persistence backend: relaunching DingDong
-/// creates a new session and restores the standard active-display placement.
+/// creates a new session and restores the standard right-side placement.
 final class PopupPlacementSession {
   bool _userMoved = false;
 

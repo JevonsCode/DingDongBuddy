@@ -66,8 +66,21 @@ jobs:
 
   macos:
     needs: [validate, macos-mcp]
-    runs-on: macos-15
+    name: macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            asset_arch: arm64
+            runner: macos-15
+            beta_suffix: ""
+          - arch: x86_64
+            asset_arch: x64
+            runner: macos-15-intel
+            beta_suffix: -beta
     env:
       MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
       MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -75,7 +88,6 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-      APTABASE_APP_KEY: ${{ secrets.APTABASE_APP_KEY }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -90,13 +102,20 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - name: Build macOS release
-        shell: bash
+        run: flutter build macos --release
+      - name: Thin macOS application to release architecture
         run: |
-          args=(build macos --release)
-          if [ -n "$APTABASE_APP_KEY" ]; then
-            args+=(--dart-define="APTABASE_APP_KEY=$APTABASE_APP_KEY")
-          fi
-          flutter "${args[@]}"
+          chmod +x scripts/thin_macos_app.sh
+          scripts/thin_macos_app.sh \
+            build/macos/Build/Products/Release/DingDong.app \
+            "${{ matrix.arch }}"
+      - name: Verify macOS application architecture
+        run: |
+          app_binary="build/macos/Build/Products/Release/DingDong.app/Contents/MacOS/DingDong"
+          description="$(/usr/bin/file -b "$app_binary")"
+          printf '%s\n' "$description"
+          architectures="$(/usr/bin/lipo -archs "$app_binary")"
+          test "$architectures" = "${{ matrix.arch }}"
       - uses: actions/download-artifact@v4
         with:
           name: mcp-macos-arm64
@@ -154,10 +173,10 @@ jobs:
           DMGBUILD_BIN="$RUNNER_TEMP/dmgbuild/bin/dmgbuild" \
             scripts/create_macos_dmg.sh \
             build/macos/Build/Products/Release/DingDong.app \
-            "dist/DingDong-${VERSION}-macos.dmg"
+            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.dmg"
           ditto -c -k --sequesterRsrc --keepParent \
             build/macos/Build/Products/Release/DingDong.app \
-            "dist/DingDong-${VERSION}-macos.zip"
+            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.zip"
       - name: Notarize and staple macOS installer
         if: >-
           env.APPLE_ID != '' &&
@@ -167,7 +186,7 @@ jobs:
         run: scripts/notarize_macos_artifact.sh dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
-          name: DingDong-macos
+          name: DingDong-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}
           path: |
             dist/*.dmg
             dist/*.zip
@@ -177,8 +196,6 @@ jobs:
     needs: validate
     runs-on: windows-latest
     timeout-minutes: 35
-    env:
-      APTABASE_APP_KEY: ${{ secrets.APTABASE_APP_KEY }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -193,19 +210,13 @@ jobs:
       - run: flutter analyze
       - run: flutter test --exclude-tags golden
       - name: Build Windows release
-        shell: pwsh
-        run: |
-          $arguments = @('build', 'windows', '--release')
-          if ($env:APTABASE_APP_KEY) {
-            $arguments += "--dart-define=APTABASE_APP_KEY=$env:APTABASE_APP_KEY"
-          }
-          flutter @arguments
+        run: flutter build windows --release
       - name: Package Windows application
         shell: pwsh
         run: |
           $version = $env:RELEASE_TAG.Substring(1)
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Compress-Archive -Path "build/windows/x64/runner/Release/*" -DestinationPath "dist/DingDong-$version-windows-x64.zip"
+          Compress-Archive -Path "build/windows/x64/runner/Release/*" -DestinationPath "dist/DingDong-$version-windows-x64-beta.zip"
       - uses: actions/upload-artifact@v4
         with:
           name: DingDong-windows
@@ -216,6 +227,9 @@ jobs:
     needs: [macos, windows]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/download-artifact@v4
         with:
           pattern: DingDong-*
@@ -233,5 +247,5 @@ jobs:
             gh release create "$RELEASE_TAG" dist/* \
               --repo "$GITHUB_REPOSITORY" \
               --title "DingDong ${RELEASE_TAG#v}" \
-              --generate-notes
+              --notes-file docs/release-notes.md
           fi

@@ -18,6 +18,7 @@ void main() {
           'dingdong.selectedSound': 'dingBright',
           'dingdong.customSoundPath': '/tmp/chime.wav',
           'dingdong.mcpSetupPromptOverride': '  custom setup  ',
+          'dingdong.onboarding.mcpAccessSeen': true,
           'dingdong.api.port': 70000,
         });
 
@@ -26,7 +27,6 @@ void main() {
     expect(settings.clipboardMonitoring, isTrue);
     expect(settings.language, AppLanguagePreference.chinese);
     expect(settings.themeMode, AppThemePreference.dark);
-    expect(settings.anonymousTelemetry, isTrue);
     expect(settings.backgroundOpacity, 0.82);
     expect(settings.density, PanelDensityPreference.compact);
     expect(settings.defaultWorkspace, DefaultWorkspace.clipboard);
@@ -34,7 +34,7 @@ void main() {
     expect(settings.clipboardMaxAgeDays, 1);
     expect(settings.selectedSound, 'dingBright');
     expect(settings.customSoundPath, '/tmp/chime.wav');
-    expect(settings.mcpSetupPromptOverride, 'custom setup');
+    expect(settings.mcpAccessSeen, isTrue);
     expect(settings.apiPort, 2333);
   });
 
@@ -45,7 +45,6 @@ void main() {
       clipboardMonitoring: true,
       language: AppLanguagePreference.english,
       themeMode: AppThemePreference.system,
-      anonymousTelemetry: true,
       backgroundOpacity: 0.88,
       density: PanelDensityPreference.compact,
       defaultWorkspace: DefaultWorkspace.library,
@@ -53,7 +52,7 @@ void main() {
       clipboardMaxAgeDays: 30,
       selectedSound: 'muted',
       customSoundPath: '/tmp/quiet.wav',
-      mcpSetupPromptOverride: 'Use this setup',
+      mcpAccessSeen: true,
       apiPort: 2444,
     );
 
@@ -62,7 +61,7 @@ void main() {
     expect(backend.values['dingdong.clipboard.monitoring'], isTrue);
     expect(backend.values['dingdong.language'], 'en');
     expect(backend.values['dingdong.panel.themeMode'], 'system');
-    expect(backend.values['dingdong.telemetry.anonymous'], isTrue);
+    expect(backend.values, isNot(contains('dingdong.telemetry.anonymous')));
     expect(backend.values['dingdong.panel.backgroundOpacity'], 0.88);
     expect(backend.values['dingdong.panel.density'], 'compact');
     expect(backend.values['dingdong.panel.defaultTab'], 'library');
@@ -70,7 +69,8 @@ void main() {
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 30);
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
-    expect(backend.values['dingdong.mcpSetupPromptOverride'], 'Use this setup');
+    expect(backend.values, isNot(contains('dingdong.mcpSetupPromptOverride')));
+    expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
     expect(backend.values['dingdong.api.port'], 2444);
   });
 

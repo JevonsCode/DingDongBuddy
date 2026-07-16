@@ -1,11 +1,15 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/enabled_status_icon.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +24,9 @@ class ActivityScreen extends StatefulWidget {
     required this.libraryViewModel,
     required this.settingsViewModel,
     required this.onOpenWorkspace,
+    required this.onOpenAgentApi,
+    this.contextMenuGateway,
+    this.resourceManagerLauncher,
     this.now,
     super.key,
   });
@@ -29,6 +36,9 @@ class ActivityScreen extends StatefulWidget {
   final LibraryViewModel libraryViewModel;
   final SettingsViewModel settingsViewModel;
   final ValueChanged<int> onOpenWorkspace;
+  final VoidCallback onOpenAgentApi;
+  final DesktopContextMenuGateway? contextMenuGateway;
+  final ResourceManagerLauncher? resourceManagerLauncher;
   final DateTime Function()? now;
 
   @override
@@ -49,7 +59,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ]),
       builder: (BuildContext context, Widget? child) {
         _scheduleSeenAcknowledgement();
-        final List<Resource> enabled = widget.libraryViewModel.allResources
+        final List<Resource> enabled = widget
+            .libraryViewModel
+            .configurableResources
             .where((Resource resource) => resource.enabled)
             .take(3)
             .toList(growable: false);
@@ -101,7 +113,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(key: Key('app-version-0.7.7')),
+                        const SizedBox(key: Key('app-version-0.7.8')),
                       ],
                     ),
                   ),
@@ -129,7 +141,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: _MetricCard(
                     key: const Key('today-metric-library'),
                     symbol: 'library',
-                    value: '${widget.libraryViewModel.allResources.length}',
+                    value:
+                        '${widget.libraryViewModel.configurableResources.length}',
                     label: context.localized('Resource library', '资源'),
                     onTap: () => widget.onOpenWorkspace(1),
                   ),
@@ -147,10 +160,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _MetricCard(
+                    key: const Key('today-agent-api'),
                     symbol: 'mcp',
                     value: context.localized('Online', '在线'),
                     label: 'Agent API',
-                    onTap: () => widget.onOpenWorkspace(3),
+                    showBadge: !widget.settingsViewModel.settings.mcpAccessSeen,
+                    onTap: widget.onOpenAgentApi,
                   ),
                 ),
               ],
@@ -212,7 +227,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ...enabled.map(
                 (Resource resource) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: _EnabledResourceCard(resource: resource),
+                  child: _EnabledResourceCard(
+                    resource: resource,
+                    contextMenuGateway: widget.contextMenuGateway,
+                    onEdit: widget.resourceManagerLauncher == null
+                        ? null
+                        : () => widget.resourceManagerLauncher!.show(
+                            editingResourceId: resource.id,
+                          ),
+                    onDisable: () => widget.libraryViewModel.save(
+                      resource.copyWith(enabled: false),
+                    ),
+                  ),
                 ),
               ),
           ],

@@ -36,8 +36,16 @@ final class AppDataPaths {
     '${applicationSupportDirectory.path}${_separator}resource-library.json',
   );
 
+  File get triggerGroupsFile => File(
+    '${applicationSupportDirectory.path}${_separator}trigger-groups.json',
+  );
+
   File get clipboardDatabaseFile => File(
     '${applicationSupportDirectory.path}${_separator}clipboard-history.sqlite',
+  );
+
+  File get clipboardCategoryRulesFile => File(
+    '${applicationSupportDirectory.path}${_separator}clipboard-category-rules.json',
   );
 
   File get activePortFile =>

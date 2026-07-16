@@ -10,6 +10,7 @@ class ResourceFilterBar extends StatelessWidget {
     this.onImport,
     this.onImportJson,
     this.onExport,
+    this.onDeleteSelection,
     super.key,
   });
 
@@ -17,34 +18,28 @@ class ResourceFilterBar extends StatelessWidget {
   final VoidCallback? onImport;
   final VoidCallback? onImportJson;
   final VoidCallback? onExport;
+  final VoidCallback? onDeleteSelection;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              final Widget search = TextField(
-                key: const Key('resource-search'),
-                onChanged: viewModel.setQuery,
-                decoration: InputDecoration(
-                  hintText: context.localized(
-                    'Search title, tags, group, or content',
-                    '搜索标题、标签、分组或内容',
-                  ),
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              );
               if (constraints.maxWidth < 520) {
                 return Row(
                   children: <Widget>[
-                    Expanded(child: search),
-                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        context.localized('Resources', '资源'),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                     PopupMenuButton<_LibraryAction>(
                       key: const Key('library-actions'),
                       tooltip: context.localized('Resource actions', '资源操作'),
@@ -100,9 +95,21 @@ class ResourceFilterBar extends StatelessWidget {
               }
               return Row(
                 children: <Widget>[
-                  Expanded(child: search),
-                  const SizedBox(width: 12),
-                  IconButton.outlined(
+                  Text(
+                    context.localized('Resources', '资源'),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Text(
+                    '${viewModel.visibleResources.length}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
                     key: const Key('library-import'),
                     tooltip: context.localized('Import folder', '导入文件夹'),
                     onPressed: onImport,
@@ -111,8 +118,7 @@ class ResourceFilterBar extends StatelessWidget {
                       size: 19,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.outlined(
+                  IconButton(
                     key: const Key('library-import-json'),
                     tooltip: context.localized(
                       'Import shared JSON',
@@ -121,8 +127,7 @@ class ResourceFilterBar extends StatelessWidget {
                     onPressed: onImportJson,
                     icon: const Icon(Icons.upload_file_outlined, size: 19),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton.outlined(
+                  IconButton(
                     key: const Key('library-export'),
                     tooltip: context.localized('Export JSON', '导出 JSON'),
                     onPressed: onExport,
@@ -138,62 +143,94 @@ class ResourceFilterBar extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(height: 16),
+          TextField(
+            key: const Key('resource-search'),
+            onChanged: viewModel.setQuery,
+            decoration: InputDecoration(
+              hintText: context.localized('Search name or content', '搜索名称或内容'),
+              prefixIcon: const Icon(Icons.search_rounded, size: 18),
+              prefixIconConstraints: const BoxConstraints(minWidth: 38),
+            ),
+          ),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: <Widget>[
-                _TypeChip(
-                  label: context.localized('All', '全部'),
-                  selected:
-                      viewModel.selectedType == null && !viewModel.pinnedOnly,
-                  onSelected: (_) => viewModel.setTypeFilter(null),
-                ),
-                for (final ResourceType type in ResourceType.values.where(
-                  (ResourceType value) => value.isLibraryResource,
-                )) ...<Widget>[
-                  const SizedBox(width: 7),
-                  _TypeChip(
-                    key: Key('resource-filter-${type.name}'),
-                    label: _typeLabel(context, type),
-                    selected: viewModel.selectedType == type,
-                    onSelected: (_) => viewModel.setTypeFilter(type),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: <Widget>[
+                      _TypeTab(
+                        label: context.localized('All', '全部'),
+                        selected:
+                            viewModel.selectedType == null &&
+                            !viewModel.pinnedOnly,
+                        onTap: () => viewModel.setTypeFilter(null),
+                      ),
+                      for (final ResourceType type in ResourceType.values.where(
+                        (ResourceType value) =>
+                            value.isConfigurableAgentResource,
+                      )) ...<Widget>[
+                        const SizedBox(width: 3),
+                        _TypeTab(
+                          key: Key('resource-filter-${type.name}'),
+                          label: _typeLabel(context, type),
+                          selected: viewModel.selectedType == type,
+                          onTap: () => viewModel.setTypeFilter(type),
+                        ),
+                      ],
+                      const SizedBox(width: 3),
+                      _TypeTab(
+                        label: context.localized('Pinned', '已置顶'),
+                        selected: viewModel.pinnedOnly,
+                        onTap: () =>
+                            viewModel.setPinnedOnly(!viewModel.pinnedOnly),
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        context.localized(
+                          '${viewModel.visibleResources.length} results',
+                          '${viewModel.visibleResources.length} 个结果',
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
-                ],
-                const SizedBox(width: 7),
-                _TypeChip(
-                  label: context.localized('Pinned', '已置顶'),
-                  selected: viewModel.pinnedOnly,
-                  onSelected: viewModel.setPinnedOnly,
                 ),
-                const SizedBox(width: 12),
+              ),
+              const SizedBox(width: 10),
+              if (viewModel.selectionCount > 0) ...<Widget>[
                 Text(
                   context.localized(
-                    '${viewModel.visibleResources.length} results',
-                    '${viewModel.visibleResources.length} 个结果',
+                    '${viewModel.selectionCount} selected',
+                    '已选 ${viewModel.selectionCount} 项',
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: viewModel.selectAllVisibleForTransfer,
-                  child: Text(context.localized('Select visible', '选择当前结果')),
+                const SizedBox(width: 3),
+                IconButton(
+                  key: const Key('resource-delete-selection'),
+                  tooltip: context.localized('Delete selected', '删除所选'),
+                  onPressed: onDeleteSelection,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 17),
                 ),
-                if (viewModel.transferSelectionCount > 0) ...<Widget>[
-                  Text(
-                    context.localized(
-                      '${viewModel.transferSelectionCount} selected',
-                      '已选择 ${viewModel.transferSelectionCount} 项',
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  TextButton(
-                    onPressed: viewModel.clearTransferSelection,
-                    child: Text(context.localized('Clear', '清除')),
-                  ),
-                ],
+                IconButton(
+                  tooltip: context.localized('Clear selection', '清除选择'),
+                  onPressed: viewModel.clearSelection,
+                  icon: const Icon(Icons.close_rounded, size: 16),
+                ),
               ],
-            ),
+              TextButton(
+                key: const Key('resource-select-all'),
+                onPressed: viewModel.toggleAllVisible,
+                child: Text(
+                  viewModel.allVisibleSelected
+                      ? context.localized('Clear all', '取消全选')
+                      : context.localized('Select all', '全选'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -213,26 +250,41 @@ String _typeLabel(BuildContext context, ResourceType type) {
   };
 }
 
-class _TypeChip extends StatelessWidget {
-  const _TypeChip({
+class _TypeTab extends StatelessWidget {
+  const _TypeTab({
     required this.label,
     required this.selected,
-    required this.onSelected,
+    required this.onTap,
     super.key,
   });
 
   final String label;
   final bool selected;
-  final ValueChanged<bool> onSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return FilterChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: onSelected,
-      showCheckmark: false,
-      visualDensity: VisualDensity.compact,
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(9, 6, 9, 7),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? colors.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: selected ? colors.onSurface : colors.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -73,7 +73,7 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
       theme: AppTheme.light(),
       home: Scaffold(
         backgroundColor: Colors.transparent,
-        body: _ClipboardPreviewCard(
+        body: ClipboardPreviewCard(
           record: _record,
           onCopy: _copy,
           onShare: () => widget.shareGateway.share(_record),
@@ -84,12 +84,13 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
   }
 }
 
-class _ClipboardPreviewCard extends StatelessWidget {
-  const _ClipboardPreviewCard({
+class ClipboardPreviewCard extends StatelessWidget {
+  const ClipboardPreviewCard({
     required this.record,
     required this.onCopy,
     required this.onShare,
     required this.onClose,
+    super.key,
   });
 
   final ClipboardRecord record;
@@ -147,10 +148,35 @@ class _ClipboardPreviewCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  key: const Key('clipboard-preview-close'),
                   tooltip: '关闭',
                   onPressed: onClose,
                   icon: const Icon(Icons.close_rounded, size: 16),
+                  style: IconButton.styleFrom(
+                    fixedSize: const Size.square(30),
+                    minimumSize: const Size.square(30),
+                    maximumSize: const Size.square(30),
+                    padding: EdgeInsets.zero,
+                    foregroundColor: PopupStyle.textSecondary,
+                    backgroundColor: PopupStyle.field,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 9),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: <Widget>[
+                _PreviewMeta(label: record.kind.name),
+                for (final String group in record.groupNames)
+                  _PreviewMeta(label: group),
+                if (record.source?.trim().isNotEmpty ?? false)
+                  _PreviewMeta(label: record.source!.trim()),
               ],
             ),
             const SizedBox(height: 12),
@@ -190,6 +216,31 @@ class _ClipboardPreviewCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PreviewMeta extends StatelessWidget {
+  const _PreviewMeta({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(
+      color: PopupStyle.field,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        color: PopupStyle.textSecondary,
+        fontSize: 9,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 }
 
 class _PreviewContent extends StatelessWidget {

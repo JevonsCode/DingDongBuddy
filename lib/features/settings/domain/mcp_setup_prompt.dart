@@ -7,19 +7,27 @@ String defaultMcpSetupPrompt({
 }) {
   final bool chinese = language == AppLanguagePreference.chinese;
   if (chinese) {
-    return '''请帮我把 DingDong 接入当前 Agent：
-1. 将 $commandPath 注册为名为 dingdong 的全局 STDIO MCP Server；不要安装资源库里记录的其他 MCP
-2. 启动后检查 dingdong_bridge 和 dingdong_notify 是否可用
-3. 每次用户任务开始时，先调用 dingdong_bridge，source 填当前 Agent 名称，task 填简短任务摘要，并应用返回的 active.prompts
-4. Skill 或 MCP 引用只在任务确实需要时再按 id 加载全文；不要默认读取剪贴板内容
-5. 整项用户任务完成、阻塞或需要我决策时，只调用一次 dingdong_notify；不要传 sound，让 DingDong 使用设置里选择的声音
-6. 完成配置后说明修改了哪个配置文件，并执行一次连接检查；不要打包或发布 DingDong''';
+    return '''请在当前 Agent 或 IDE 中接入 DingDong MCP，并完成下面的配置与验证：
+1. 找到当前 Agent 或 IDE 实际使用的全局 MCP 配置文件和格式
+2. 新增一个名为 dingdong 的 STDIO MCP Server，command 必须完整使用这个可执行文件路径：$commandPath
+3. 不要添加 args、环境变量或外层 shell；路径中即使有空格，也必须作为一个完整的 command 值
+4. 保留其他所有 MCP 配置和无关设置，不要修改 DingDong 项目文件
+5. 按当前 Agent 的要求重新加载 MCP 配置或重启客户端，确认工具列表里已经出现 dingdong_notify
+6. 连接成功后，立即调用一次 dingdong_notify：
+   - message: DingDong MCP 已接入，之后任务完成时会通知你
+   - source: 当前 Agent 名称
+7. 从现在起，每个新任务开始时先调用 dingdong_bridge；任务完成、被阻塞或需要用户处理时，在最终回复前调用一次 dingdong_notify，不要在处理中重复通知
+8. 最后只说明修改了哪个配置文件、是否看到 dingdong_notify、测试通知是否成功；如失败，保留已有配置并返回原始错误，不要猜测''';
   }
-  return '''Connect DingDong to the current agent:
-1. Register $commandPath as a global STDIO MCP server named dingdong; do not install other MCP references from the Library
-2. Verify that dingdong_bridge and dingdong_notify are available
-3. At the start of every user task, call dingdong_bridge with the current agent name as source and a short task summary, then apply active.prompts
-4. Load full Skill or MCP content by id only when the task needs it; do not read clipboard content by default
-5. Call dingdong_notify once when the whole task is complete, blocked, or needs a decision; omit sound so DingDong uses the selected Settings sound
-6. Report the config file changed and run one connection check; do not package or publish DingDong''';
+  return '''Connect DingDong MCP to the current agent or IDE, then complete this configuration and verification:
+1. Find the global MCP configuration file and schema actually used by the current agent or IDE
+2. Add a global STDIO MCP server named dingdong whose command is this exact executable path: $commandPath
+3. Do not add args, environment variables, or a wrapper shell; keep a path containing spaces as one complete command value
+4. Preserve every unrelated MCP entry and setting, and do not modify the DingDong project files
+5. If required, reload or restart the MCP client, then confirm that dingdong_notify appears in the available tool list
+6. As soon as the connection succeeds, call dingdong_notify once with:
+   - message: DingDong MCP is connected; future task completions will notify you
+   - source: the current agent name
+7. From now on, call dingdong_bridge at the start of each new user task. When a task is complete, blocked, or waiting for user attention, call dingdong_notify once before the final response; do not send repeated notifications while working
+8. Finally, report only the configuration file changed, whether dingdong_notify was available, and whether the test notification succeeded. If setup fails, preserve the existing configuration and report the original error instead of guessing''';
 }

@@ -1,8 +1,9 @@
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
-import 'package:dingdong/features/clipboard/domain/clipboard_context_menu_gateway.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
@@ -58,6 +59,52 @@ void main() {
     expect(find.text('Clipboard 4999'), findsOneWidget);
   });
 
+  testWidgets('return-to-top appears after one viewport and scrolls to start', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(
+        List<ClipboardRecord>.generate(
+          100,
+          (int index) => ClipboardRecord(
+            id: 'item-$index',
+            group: 'Clipboard',
+            title: 'Item $index',
+            content: 'Value $index',
+            tags: const <String>['clipboard', 'text'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(Duration(seconds: index)),
+            updatedAt: now.subtract(Duration(seconds: index)),
+          ),
+        ),
+      ),
+    )..load();
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardScreen(viewModel: model)),
+    );
+
+    expect(find.byKey(const Key('clipboard-scroll-to-top')), findsNothing);
+    await tester.drag(
+      find.byKey(const Key('clipboard-list')),
+      const Offset(0, -900),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('clipboard-scroll-to-top')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-scroll-to-top')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Item 0'), findsOneWidget);
+    expect(find.byKey(const Key('clipboard-scroll-to-top')), findsNothing);
+  });
+
   testWidgets(
     'category filters narrow clipboard history without a database reload',
     (WidgetTester tester) async {
@@ -102,8 +149,14 @@ void main() {
       await tester.tap(find.byKey(const Key('clipboard-category-text')));
       await tester.pump();
 
-      expect(find.text('Run tests'), findsOneWidget);
-      expect(find.text('Flutter docs'), findsNothing);
+      expect(
+        find.widgetWithText(ClipboardListTile, 'Run tests'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(ClipboardListTile, 'Flutter docs'),
+        findsNothing,
+      );
     },
   );
 
@@ -137,9 +190,6 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: ClipboardScreen(viewModel: model)),
     );
-    await tester.tap(find.text('Item 0'));
-    await tester.pump();
-
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pump();
 
@@ -160,19 +210,30 @@ void main() {
       MaterialApp(home: ClipboardScreen(viewModel: model)),
     );
 
+    final Finder transition = find.byKey(
+      const Key('clipboard-filter-transition'),
+    );
+    expect(transition, findsOneWidget);
+    expect(tester.widget<ScaleTransition>(transition).scale.value, 1);
     expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
     expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(tester.widget<ScaleTransition>(transition).scale.value, lessThan(1));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('clipboard-category-text')), findsOneWidget);
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(tester.widget<ScaleTransition>(transition).scale.value, lessThan(1));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
   });
 
@@ -268,13 +329,13 @@ void main() {
     );
 
     expect(find.text('All'), findsWidgets);
-    expect(find.text('项目甲'), findsOneWidget);
+    expect(find.text('项目甲'), findsWidgets);
     expect(find.text('All groups'), findsNothing);
     expect(find.text('Group: 项目甲'), findsNothing);
     expect(tester.widget<Text>(find.text('项目甲')).style?.fontSize, 9);
   });
 
-  testWidgets('draggable filters do not cover their labels with handles', (
+  testWidgets('group filters keep a dedicated drag target', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -306,7 +367,7 @@ void main() {
     await tester.pump();
 
     expect(find.byIcon(Icons.drag_handle), findsNothing);
-    expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
+    expect(find.byType(ReorderableDragStartListener), findsOneWidget);
   });
 
   testWidgets('missing quick paste permission is actionable from clipboard', (
@@ -353,7 +414,7 @@ void main() {
     expect(find.byKey(const Key('clipboard-permission-banner')), findsNothing);
   });
 
-  testWidgets('Arrow Down selects the first row and Space previews it', (
+  testWidgets('the first row starts selected and Space previews it', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -388,7 +449,11 @@ void main() {
       ),
     );
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    expect(model.selectedRecord?.id, first.id);
+    final ClipboardListTile firstTile = tester.widget<ClipboardListTile>(
+      find.widgetWithText(ClipboardListTile, first.title),
+    );
+    expect(firstTile.selected, isTrue);
     await tester.sendKeyEvent(LogicalKeyboardKey.space);
     await tester.pump();
 
@@ -423,9 +488,6 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: ClipboardScreen(viewModel: model)),
     );
-    await tester.tap(find.text('Clipboard item'));
-    await tester.pump();
-
     await tester.tap(find.text('Pin'));
     await tester.pump();
 
@@ -473,9 +535,6 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Clipboard item'));
-    await tester.pump();
-
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pump();
 
@@ -574,11 +633,159 @@ void main() {
     expect(find.text('Add title'), findsOneWidget);
     expect(find.text('Edit text'), findsOneWidget);
     expect(find.text('Save as prompt'), findsOneWidget);
-    expect(find.text('Save as knowledge'), findsOneWidget);
-    expect(find.text('Archive'), findsOneWidget);
+    expect(find.text('Save as knowledge'), findsNothing);
+    expect(find.text('Archive'), findsNothing);
     expect(find.text('Archive to…'), findsOneWidget);
     expect(find.text('Share'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
+  });
+
+  testWidgets(
+    'archive to selects existing and new groups without a large alert',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(760, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ClipboardRecord target = _record();
+      final InMemoryClipboardStore store = InMemoryClipboardStore(
+        <ClipboardRecord>[
+          target,
+          ClipboardRecord(
+            id: 'existing-group',
+            group: '项目甲',
+            title: 'Existing',
+            content: 'Existing',
+            tags: const <String>['clipboard', 'text'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: DateTime.utc(2026, 7, 12),
+            updatedAt: DateTime.utc(2026, 7, 12),
+          ),
+        ],
+      );
+      final ClipboardViewModel model = ClipboardViewModel(store)..load();
+
+      await tester.pumpWidget(
+        MaterialApp(home: ClipboardScreen(viewModel: model)),
+      );
+      await tester.tap(find.text(target.title), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Archive to…'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('clipboard-group-dialog')), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text('项目甲'), findsWidgets);
+      final Dialog dialog = tester.widget<Dialog>(
+        find.byKey(const Key('clipboard-group-dialog')),
+      );
+      final RoundedRectangleBorder shape =
+          dialog.shape! as RoundedRectangleBorder;
+      expect(shape.borderRadius, BorderRadius.circular(7));
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('clipboard-group-dialog')),
+          matching: find.byType(Checkbox),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('clipboard-group-dialog')),
+          matching: find.byIcon(Icons.check_box_outline_blank_rounded),
+        ),
+        findsNothing,
+      );
+
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const Key('clipboard-group-dialog')),
+          matching: find.byKey(const ValueKey<String>('clipboard-group-项目甲')),
+        ),
+      );
+      await tester.enterText(
+        find.byKey(const Key('clipboard-new-group')),
+        '项目乙',
+      );
+      await tester.tap(find.byKey(const Key('clipboard-save-groups')));
+      await tester.pumpAndSettle();
+
+      expect(model.selectedRecord?.groupNames, <String>[
+        'Clipboard',
+        '项目甲',
+        '项目乙',
+      ]);
+    },
+  );
+
+  testWidgets('right-clicking a group deletes only its membership', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(760, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    final InMemoryClipboardStore store = InMemoryClipboardStore(
+      <ClipboardRecord>[
+        ClipboardRecord(
+          id: 'first',
+          group: '项目甲',
+          title: 'First',
+          content: 'First',
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        ClipboardRecord(
+          id: 'second',
+          group: '项目甲',
+          title: 'Second',
+          content: 'Second',
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ],
+    );
+    final ClipboardViewModel model = ClipboardViewModel(store)..load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardScreen(viewModel: model, filtersExpanded: true),
+      ),
+    );
+    final Finder group = find.byKey(
+      const ValueKey<String>('clipboard-group-项目甲'),
+    );
+    await tester.tap(group, buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete group'), findsOneWidget);
+    await tester.tap(find.text('Delete group'));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete “项目甲”?'), findsOneWidget);
+    expect(find.textContaining('2 clipboard items'), findsOneWidget);
+
+    await tester.tap(find.text('Delete group'));
+    await tester.pumpAndSettle();
+
+    expect(group, findsNothing);
+    expect(store.list(limit: 10), hasLength(2));
+    expect(
+      store
+          .list(limit: 10)
+          .every((ClipboardRecord item) => !item.groupNames.contains('项目甲')),
+      isTrue,
+    );
   });
 
   testWidgets('secondary click delegates to the native desktop context menu', (
@@ -679,20 +886,21 @@ final class _MemoryClipboardStore implements ClipboardStore {
   }
 }
 
-final class _FakeContextMenuGateway implements ClipboardContextMenuGateway {
+final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
   _FakeContextMenuGateway(this.result);
 
   final ClipboardContextAction? result;
   int showCount = 0;
 
   @override
-  Future<ClipboardContextAction?> show({
+  Future<String?> show({
     required double x,
     required double y,
     required bool useChinese,
+    required List<DesktopContextMenuItem> items,
   }) async {
     showCount += 1;
-    return result;
+    return result?.name;
   }
 }
 

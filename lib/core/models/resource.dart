@@ -12,6 +12,15 @@ enum ResourceType {
 
   bool get isLibraryResource => this != ResourceType.clipboard;
 
+  /// Resource kinds currently exposed by the lightweight configuration UI.
+  ///
+  /// Knowledge remains parseable for backward compatibility, but is kept out
+  /// of resource management until it has a dedicated product workflow.
+  bool get isConfigurableAgentResource =>
+      this == ResourceType.prompt ||
+      this == ResourceType.skill ||
+      this == ResourceType.mcp;
+
   bool get supportsAgentActivation => isLibraryResource;
 
   static ResourceType parse(Object? value) {
@@ -53,9 +62,11 @@ final class Resource {
     List<String> tags = const <String>[],
     String? source,
     String? updateUrl,
+    String? note,
     this.pinned = false,
     this.enabled = true,
     ResourceActivation? activation,
+    List<String> triggerGroupIds = const <String>[],
     this.sortOrder,
     this.usageCount = 0,
     this.lastUsedAt,
@@ -68,6 +79,13 @@ final class Resource {
        ),
        source = _trimmedOrNull(source),
        updateUrl = _trimmedOrNull(updateUrl),
+       note = _trimmedOrNull(note),
+       triggerGroupIds = List<String>.unmodifiable(
+         triggerGroupIds
+             .map((String id) => id.trim())
+             .where((String id) => id.isNotEmpty)
+             .toSet(),
+       ),
        activation =
            activation ??
            (pinned ? ResourceActivation.always : ResourceActivation.taskMatch);
@@ -85,9 +103,14 @@ final class Resource {
           .toList(growable: false),
       source: json['source'] as String?,
       updateUrl: json['updateURL'] as String?,
+      note: json['note'] as String?,
       pinned: pinned,
       enabled: json['enabled'] as bool? ?? true,
       activation: ResourceActivation.parse(json['activation'], pinned: pinned),
+      triggerGroupIds:
+          (json['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
+              .map((Object? value) => value as String)
+              .toList(growable: false),
       sortOrder: json['sortOrder'] as int?,
       usageCount: json['usageCount'] as int? ?? 0,
       lastUsedAt: json['lastUsedAt'] == null
@@ -106,9 +129,11 @@ final class Resource {
   final List<String> tags;
   final String? source;
   final String? updateUrl;
+  final String? note;
   final bool pinned;
   final bool enabled;
   final ResourceActivation activation;
+  final List<String> triggerGroupIds;
   final int? sortOrder;
   final int usageCount;
   final DateTime? lastUsedAt;
@@ -125,9 +150,11 @@ final class Resource {
       'tags': tags,
       if (source != null) 'source': source,
       if (updateUrl != null) 'updateURL': updateUrl,
+      if (note != null) 'note': note,
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation.name,
+      if (triggerGroupIds.isNotEmpty) 'triggerGroupIds': triggerGroupIds,
       if (sortOrder != null) 'sortOrder': sortOrder,
       'usageCount': usageCount,
       if (lastUsedAt != null)
@@ -148,12 +175,14 @@ final class Resource {
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation.name,
+      'triggerGroupIds': triggerGroupIds,
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
       if (source != null) 'source': source,
+      if (note != null) 'note': note,
     };
   }
 
@@ -167,6 +196,7 @@ final class Resource {
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation.name,
+      'triggerGroupIds': triggerGroupIds,
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
@@ -174,6 +204,7 @@ final class Resource {
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
       if (source != null) 'source': source,
+      if (note != null) 'note': note,
     };
   }
 
@@ -185,9 +216,11 @@ final class Resource {
     List<String>? tags,
     String? source,
     String? updateUrl,
+    String? note,
     bool? pinned,
     bool? enabled,
     ResourceActivation? activation,
+    List<String>? triggerGroupIds,
     int? sortOrder,
     int? usageCount,
     DateTime? lastUsedAt,
@@ -208,9 +241,11 @@ final class Resource {
       tags: tags ?? this.tags,
       source: source ?? this.source,
       updateUrl: updateUrl ?? this.updateUrl,
+      note: note ?? this.note,
       pinned: resolvedPinned,
       enabled: enabled ?? this.enabled,
       activation: resolvedActivation,
+      triggerGroupIds: triggerGroupIds ?? this.triggerGroupIds,
       sortOrder: sortOrder ?? this.sortOrder,
       usageCount: usageCount ?? this.usageCount,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
@@ -231,9 +266,11 @@ final class Resource {
             _listEquals(tags, other.tags) &&
             source == other.source &&
             updateUrl == other.updateUrl &&
+            note == other.note &&
             pinned == other.pinned &&
             enabled == other.enabled &&
             activation == other.activation &&
+            _listEquals(triggerGroupIds, other.triggerGroupIds) &&
             sortOrder == other.sortOrder &&
             usageCount == other.usageCount &&
             lastUsedAt == other.lastUsedAt &&
@@ -251,9 +288,11 @@ final class Resource {
     Object.hashAll(tags),
     source,
     updateUrl,
+    note,
     pinned,
     enabled,
     activation,
+    Object.hashAll(triggerGroupIds),
     sortOrder,
     usageCount,
     lastUsedAt,

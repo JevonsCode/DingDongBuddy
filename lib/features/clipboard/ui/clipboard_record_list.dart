@@ -1,6 +1,6 @@
 part of 'clipboard_screen.dart';
 
-class _ClipboardList extends StatelessWidget {
+class _ClipboardList extends StatefulWidget {
   const _ClipboardList({
     required this.viewModel,
     required this.compact,
@@ -16,55 +16,127 @@ class _ClipboardList extends StatelessWidget {
   final bool showShortcutHints;
   final Future<void> Function(ClipboardRecord record)? onPreview;
   final Future<void> Function()? onDismissPreview;
-  final ClipboardContextMenuGateway? contextMenuGateway;
+  final DesktopContextMenuGateway? contextMenuGateway;
   final ValueChanged<_ClipboardAction> onAction;
 
   @override
+  State<_ClipboardList> createState() => _ClipboardListState();
+}
+
+class _ClipboardListState extends State<_ClipboardList> {
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+    final bool show =
+        _scrollController.position.pixels >
+        _scrollController.position.viewportDimension;
+    if (show != _showScrollToTop && mounted) {
+      setState(() => _showScrollToTop = show);
+    }
+  }
+
+  Future<void> _scrollToTop() async {
+    if (!_scrollController.hasClients) return;
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final List<ClipboardRecord> records = viewModel.visibleRecords;
+    final List<ClipboardRecord> records = widget.viewModel.visibleRecords;
     final bool callout = MediaQuery.sizeOf(context).width < 600;
-    return ListView.builder(
-      key: const Key('clipboard-list'),
-      itemCount: records.length,
-      padding: callout ? const EdgeInsets.only(bottom: 8) : null,
-      itemExtent: callout ? 82 : (compact ? 60 : 72),
-      itemBuilder: (BuildContext context, int index) {
-        final ClipboardRecord record = records[index];
-        return ClipboardListTile(
-          record: record,
-          selected: viewModel.selectedRecord?.id == record.id,
-          onSelected: () {
-            viewModel.select(record);
-            onPreview?.call(record);
-          },
-          onDoubleTap: () {
-            viewModel.select(record);
-            unawaited(() async {
-              await onDismissPreview?.call();
-              await viewModel.restoreSelected();
-            }());
-          },
-          onSecondaryTapUp: (TapUpDetails details) {
-            viewModel.select(record);
-            unawaited(
-              contextMenuGateway == null
-                  ? _showClipboardContextMenu(
-                      context,
-                      details.globalPosition,
-                      onAction,
-                    )
-                  : _showNativeClipboardContextMenu(
-                      context,
-                      details.globalPosition,
-                      contextMenuGateway!,
-                      onAction,
-                    ),
+    return Stack(
+      children: <Widget>[
+        ListView.builder(
+          key: const Key('clipboard-list'),
+          controller: _scrollController,
+          itemCount: records.length,
+          padding: callout ? const EdgeInsets.only(bottom: 8) : null,
+          itemExtent: callout ? 82 : (widget.compact ? 60 : 72),
+          itemBuilder: (BuildContext context, int index) {
+            final ClipboardRecord record = records[index];
+            return ClipboardListTile(
+              record: record,
+              selected: widget.viewModel.selectedRecord?.id == record.id,
+              onSelected: () {
+                widget.viewModel.select(record);
+                widget.onPreview?.call(record);
+              },
+              onDoubleTap: () {
+                widget.viewModel.select(record);
+                unawaited(() async {
+                  await widget.onDismissPreview?.call();
+                  await widget.viewModel.restoreSelected();
+                }());
+              },
+              onSecondaryTapUp: (TapUpDetails details) {
+                widget.viewModel.select(record);
+                unawaited(
+                  widget.contextMenuGateway == null
+                      ? _showClipboardContextMenu(
+                          context,
+                          details.globalPosition,
+                          widget.onAction,
+                        )
+                      : _showNativeClipboardContextMenu(
+                          context,
+                          details.globalPosition,
+                          widget.contextMenuGateway!,
+                          widget.onAction,
+                        ),
+                );
+              },
+              callout: callout,
+              shortcutIndex: widget.showShortcutHints && index < 9
+                  ? index + 1
+                  : null,
             );
           },
-          callout: callout,
-          shortcutIndex: showShortcutHints && index < 9 ? index + 1 : null,
-        );
-      },
+        ),
+        if (_showScrollToTop)
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: IconButton(
+              key: const Key('clipboard-scroll-to-top'),
+              tooltip: context.localized('Back to top', '回到顶部'),
+              onPressed: _scrollToTop,
+              icon: const Icon(Icons.arrow_upward_rounded, size: 16),
+              style: IconButton.styleFrom(
+                fixedSize: const Size.square(30),
+                minimumSize: const Size.square(30),
+                maximumSize: const Size.square(30),
+                padding: EdgeInsets.zero,
+                foregroundColor: PopupStyle.textSecondary,
+                backgroundColor: PopupStyle.background,
+                side: const BorderSide(color: PopupStyle.border),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -72,31 +144,35 @@ class _ClipboardList extends StatelessWidget {
 Future<void> _showNativeClipboardContextMenu(
   BuildContext context,
   Offset position,
-  ClipboardContextMenuGateway gateway,
+  DesktopContextMenuGateway gateway,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
-  final ClipboardContextAction? action = await gateway.show(
-    x: position.dx,
-    y: position.dy,
-    useChinese: Localizations.localeOf(context).languageCode == 'zh',
+  final ClipboardContextAction? action = clipboardActionFromId(
+    await gateway.show(
+      x: position.dx,
+      y: position.dy,
+      useChinese: Localizations.localeOf(context).languageCode == 'zh',
+      items: clipboardContextMenuItems(),
+    ),
   );
   if (action != null) {
-    onAction(_actionFromNative(action));
+    final _ClipboardAction? mapped = _actionFromNative(action);
+    if (mapped != null) {
+      onAction(mapped);
+    }
   }
 }
 
-_ClipboardAction _actionFromNative(ClipboardContextAction action) =>
+_ClipboardAction? _actionFromNative(ClipboardContextAction action) =>
     switch (action) {
       ClipboardContextAction.details => _ClipboardAction.details,
       ClipboardContextAction.copy => _ClipboardAction.copy,
       ClipboardContextAction.addTitle => _ClipboardAction.addTitle,
       ClipboardContextAction.editText => _ClipboardAction.editText,
       ClipboardContextAction.saveAsPrompt => _ClipboardAction.promotePrompt,
-      ClipboardContextAction.saveAsKnowledge =>
-        _ClipboardAction.promoteKnowledge,
-      ClipboardContextAction.archive => _ClipboardAction.archive,
       ClipboardContextAction.archiveTo => _ClipboardAction.archiveTo,
       ClipboardContextAction.share => _ClipboardAction.share,
+      ClipboardContextAction.toggleEnabled => null,
       ClipboardContextAction.delete => _ClipboardAction.delete,
     };
 
@@ -105,14 +181,9 @@ Future<void> _showClipboardContextMenu(
   Offset position,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
-  final RenderBox overlay =
-      Overlay.of(context).context.findRenderObject()! as RenderBox;
   final _ClipboardAction? action = await showMenu<_ClipboardAction>(
     context: context,
-    position: RelativeRect.fromRect(
-      Rect.fromLTWH(position.dx, position.dy, 0, 0),
-      Offset.zero & overlay.size,
-    ),
+    position: desktopContextMenuPosition(context, position),
     popUpAnimationStyle: AnimationStyle.noAnimation,
     items: <PopupMenuEntry<_ClipboardAction>>[
       _menuItem(
@@ -145,14 +216,6 @@ Future<void> _showClipboardContextMenu(
         'Save as prompt',
         '保存为提示词',
       ),
-      _menuItem(
-        context,
-        _ClipboardAction.promoteKnowledge,
-        'knowledge',
-        'Save as knowledge',
-        '保存为知识',
-      ),
-      _menuItem(context, _ClipboardAction.archive, 'archive', 'Archive', '归档'),
       _menuItem(
         context,
         _ClipboardAction.archiveTo,
@@ -204,10 +267,8 @@ enum _ClipboardAction {
   addTitle,
   editText,
   edit,
-  archive,
   archiveTo,
   promotePrompt,
-  promoteKnowledge,
   share,
   delete,
 }

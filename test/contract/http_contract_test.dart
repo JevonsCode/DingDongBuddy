@@ -10,6 +10,8 @@ import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -65,7 +67,7 @@ void main() {
         method: 'POST',
         uri: '/library',
         body:
-            '{"type":"prompt","title":" Bug triage ","content":"Find risky changes","tags":["review"],"source":"Codex","pinned":true}',
+            '{"type":"prompt","title":" Bug triage ","content":"Find risky changes","tags":["review"],"source":"Codex","pinned":true,"triggerGroupIds":["dingdong"]}',
       ),
     );
     final listed = await router.route(
@@ -80,6 +82,9 @@ void main() {
     expect((items.single as Map<String, Object?>)['title'], 'Bug triage');
     expect((items.single as Map<String, Object?>)['group'], 'Prompts');
     expect((items.single as Map<String, Object?>)['activation'], 'always');
+    expect((items.single as Map<String, Object?>)['triggerGroupIds'], <Object?>[
+      'dingdong',
+    ]);
   });
 
   test(
@@ -338,6 +343,74 @@ void main() {
     },
   );
 
+  test('POST /agent/bridge applies reusable project trigger groups', () async {
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'scoped',
+        type: ResourceType.skill,
+        title: 'DingDong skill',
+        content: 'Only use inside DingDong.',
+        pinned: true,
+        triggerGroupIds: const <String>['dingdong'],
+        createdAt: now,
+        updatedAt: now,
+      ),
+      Resource(
+        id: 'global',
+        type: ResourceType.skill,
+        title: 'Global skill',
+        content: 'Available everywhere.',
+        pinned: true,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final AgentRouter router = AgentRouter(
+      resourceStore: resources,
+      triggerGroupStore: InMemoryTriggerGroupStore(<TriggerGroup>[
+        TriggerGroup(
+          id: 'dingdong',
+          name: 'DingDong projects',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.contains,
+              value: 'dingdong',
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+
+    final outside = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"work","workspacePath":"/workspace/other"}',
+      ),
+    );
+    final inside = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"work","workspacePath":"/workspace/dingdong"}',
+      ),
+    );
+
+    List<Object?> skills(Map<String, Object?> json) =>
+        (json['active'] as Map<String, Object?>)['skills'] as List<Object?>;
+    expect(skills(outside.json), hasLength(1));
+    expect(skills(inside.json), hasLength(2));
+    expect(
+      (inside.json['context']
+          as Map<String, Object?>)['matchedTriggerGroupIds'],
+      <Object?>['dingdong'],
+    );
+  });
+
   test(
     'tracked full reads increment usage while ordinary reads do not',
     () async {
@@ -396,7 +469,8 @@ void main() {
         const HttpRequestData(
           method: 'PATCH',
           uri: '/library/resource-1',
-          body: '{"title":"Updated prompt","pinned":true}',
+          body:
+              '{"title":"Updated prompt","pinned":true,"triggerGroupIds":["release-project"]}',
         ),
       );
       final exported = await router.route(
@@ -410,6 +484,10 @@ void main() {
       expect(
         (updated.json['item'] as Map<String, Object?>)['title'],
         'Updated prompt',
+      );
+      expect(
+        (updated.json['item'] as Map<String, Object?>)['triggerGroupIds'],
+        <Object?>['release-project'],
       );
       expect((exported.json['items'] as List<Object?>), hasLength(1));
       expect(deleted.json['status'], 'deleted');
@@ -657,7 +735,13 @@ void main() {
 
       expect(imported.json['importedCount'], 1);
       expect((indexed.json['files'] as List<Object?>), hasLength(1));
-      expect(seeded.json['inserted'], 0);
+      expect(seeded.json['inserted'], 1);
+      expect(
+        (await store.load()).any(
+          (Resource resource) => resource.content == '每次完整回复的最后加一个「🌟」',
+        ),
+        isTrue,
+      );
     },
   );
 

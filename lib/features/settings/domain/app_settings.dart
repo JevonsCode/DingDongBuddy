@@ -64,7 +64,6 @@ final class AppSettings {
     this.language = AppLanguagePreference.system,
     this.themeMode = AppThemePreference.light,
     this.launchAtStartup = false,
-    this.anonymousTelemetry = false,
     this.backgroundOpacity = 0.90,
     this.density = PanelDensityPreference.comfortable,
     this.defaultWorkspace = DefaultWorkspace.today,
@@ -72,7 +71,7 @@ final class AppSettings {
     this.clipboardMaxAgeDays = 90,
     this.selectedSound = 'default',
     this.customSoundPath,
-    this.mcpSetupPromptOverride,
+    this.mcpAccessSeen = false,
     this.apiPort = 2333,
   });
 
@@ -80,7 +79,6 @@ final class AppSettings {
   final AppLanguagePreference language;
   final AppThemePreference themeMode;
   final bool launchAtStartup;
-  final bool anonymousTelemetry;
   final double backgroundOpacity;
   final PanelDensityPreference density;
   final DefaultWorkspace defaultWorkspace;
@@ -88,7 +86,7 @@ final class AppSettings {
   final int clipboardMaxAgeDays;
   final String selectedSound;
   final String? customSoundPath;
-  final String? mcpSetupPromptOverride;
+  final bool mcpAccessSeen;
   final int apiPort;
 
   AppSettings sanitized() {
@@ -97,7 +95,6 @@ final class AppSettings {
       language: language,
       themeMode: themeMode,
       launchAtStartup: launchAtStartup,
-      anonymousTelemetry: anonymousTelemetry,
       backgroundOpacity: backgroundOpacity.clamp(0.82, 0.96),
       density: density,
       defaultWorkspace: defaultWorkspace,
@@ -109,7 +106,7 @@ final class AppSettings {
           ? selectedSound
           : 'default',
       customSoundPath: _trimmedOrNull(customSoundPath),
-      mcpSetupPromptOverride: _trimmedOrNull(mcpSetupPromptOverride),
+      mcpAccessSeen: mcpAccessSeen,
       apiPort: apiPort >= 1024 && apiPort <= 65535 ? apiPort : 2333,
     );
   }
@@ -119,7 +116,6 @@ final class AppSettings {
     AppLanguagePreference? language,
     AppThemePreference? themeMode,
     bool? launchAtStartup,
-    bool? anonymousTelemetry,
     double? backgroundOpacity,
     PanelDensityPreference? density,
     DefaultWorkspace? defaultWorkspace,
@@ -127,7 +123,7 @@ final class AppSettings {
     int? clipboardMaxAgeDays,
     String? selectedSound,
     Object? customSoundPath = _notSet,
-    Object? mcpSetupPromptOverride = _notSet,
+    bool? mcpAccessSeen,
     int? apiPort,
   }) {
     return AppSettings(
@@ -135,7 +131,6 @@ final class AppSettings {
       language: language ?? this.language,
       themeMode: themeMode ?? this.themeMode,
       launchAtStartup: launchAtStartup ?? this.launchAtStartup,
-      anonymousTelemetry: anonymousTelemetry ?? this.anonymousTelemetry,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       density: density ?? this.density,
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,
@@ -145,9 +140,7 @@ final class AppSettings {
       customSoundPath: identical(customSoundPath, _notSet)
           ? this.customSoundPath
           : customSoundPath as String?,
-      mcpSetupPromptOverride: identical(mcpSetupPromptOverride, _notSet)
-          ? this.mcpSetupPromptOverride
-          : mcpSetupPromptOverride as String?,
+      mcpAccessSeen: mcpAccessSeen ?? this.mcpAccessSeen,
       apiPort: apiPort ?? this.apiPort,
     ).sanitized();
   }

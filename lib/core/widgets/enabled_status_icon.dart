@@ -1,5 +1,4 @@
 import 'package:dingdong/core/theme/popup_style.dart';
-import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Shared enabled/paused indicator used across Dynamic and Resource Library.
@@ -10,8 +9,8 @@ class EnabledStatusIcon extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => PopupSymbolIcon(
-    enabled ? 'enabled' : 'paused',
+  Widget build(BuildContext context) => Icon(
+    enabled ? Icons.check_rounded : Icons.pause_rounded,
     size: size,
     color: enabled ? PopupStyle.success : PopupStyle.textTertiary,
   );

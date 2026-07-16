@@ -59,12 +59,10 @@ final class SettingsViewModel extends ChangeNotifier
   bool? get isQuickPastePermissionGranted => _isQuickPastePermissionGranted;
   @override
   bool? get quickPastePermissionGranted => _isQuickPastePermissionGranted;
-  String get mcpSetupPrompt =>
-      _settings.mcpSetupPromptOverride ??
-      defaultMcpSetupPrompt(
-        language: _settings.language,
-        commandPath: mcpCommandPath,
-      );
+  String get mcpSetupPrompt => defaultMcpSetupPrompt(
+    language: _settings.language,
+    commandPath: mcpCommandPath,
+  );
   SystemUsageSnapshot? get systemUsage => _systemUsage;
   bool get requiresRestart => _loaded && _settings.apiPort != _loadedApiPort;
 
@@ -149,12 +147,6 @@ final class SettingsViewModel extends ChangeNotifier
     }
   }
 
-  Future<void> setAnonymousTelemetry(bool value) async {
-    _settings = _settings.copyWith(anonymousTelemetry: value);
-    notifyListeners();
-    await _save();
-  }
-
   Future<void> setBackgroundOpacity(double value) async {
     _settings = _settings.copyWith(backgroundOpacity: value);
     notifyListeners();
@@ -207,14 +199,9 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
-  Future<void> setMcpSetupPrompt(String value) async {
-    _settings = _settings.copyWith(mcpSetupPromptOverride: value);
-    notifyListeners();
-    await _save();
-  }
-
-  Future<void> resetMcpSetupPrompt() async {
-    _settings = _settings.copyWith(mcpSetupPromptOverride: null);
+  Future<void> markMcpAccessSeen() async {
+    if (_settings.mcpAccessSeen) return;
+    _settings = _settings.copyWith(mcpAccessSeen: true);
     notifyListeners();
     await _save();
   }

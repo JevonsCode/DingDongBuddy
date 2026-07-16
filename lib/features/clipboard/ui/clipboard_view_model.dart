@@ -7,8 +7,10 @@ import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -24,13 +26,16 @@ final class ClipboardViewModel extends ChangeNotifier {
     DateTime Function()? now,
     QuickPasteGateway? quickPasteGateway,
     DataRevisionBus? revisions,
+    ClipboardCategoryRuleStore? categoryRuleStore,
   }) : _captureService = captureService,
        _gateway = gateway,
        _resourceStore = resourceStore,
        _idGenerator = idGenerator ?? _generateUuid,
        _now = now ?? _utcNow,
        _quickPasteGateway = quickPasteGateway,
-       _revisions = revisions;
+       _revisions = revisions,
+       _categoryRuleStore =
+           categoryRuleStore ?? InMemoryClipboardCategoryRuleStore();
 
   final ClipboardStore _store;
   final ClipboardCaptureService? _captureService;
@@ -40,14 +45,13 @@ final class ClipboardViewModel extends ChangeNotifier {
   final DateTime Function() _now;
   final QuickPasteGateway? _quickPasteGateway;
   final DataRevisionBus? _revisions;
+  final ClipboardCategoryRuleStore _categoryRuleStore;
   List<ClipboardRecord> _records = const <ClipboardRecord>[];
-  final List<ClipboardCategory> _categoryOrder = <ClipboardCategory>[
-    ...ClipboardCategory.values,
-  ];
+  List<ClipboardCategoryRule> _categoryRules = const <ClipboardCategoryRule>[];
   final List<String> _groupOrder = <String>[];
   String _query = '';
   ClipboardKind? _selectedKind;
-  ClipboardCategory? _selectedCategory;
+  String? _selectedCategoryId;
   String? _selectedGroup;
   ClipboardRecord? _selectedRecord;
 
@@ -55,21 +59,34 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   ClipboardKind? get selectedKind => _selectedKind;
 
-  ClipboardCategory? get selectedCategory => _selectedCategory;
+  String? get selectedCategoryId => _selectedCategoryId;
 
-  List<ClipboardCategory> get availableCategories => _categoryOrder
+  List<ClipboardCategoryRule> get categoryRules =>
+      List<ClipboardCategoryRule>.unmodifiable(_categoryRules);
+
+  List<ClipboardCategoryRule> get availableCategories => _categoryRules
       .where(
-        (ClipboardCategory category) => _records.any(
-          (ClipboardRecord record) => record.category == category,
-        ),
+        (ClipboardCategoryRule rule) =>
+            rule.enabled &&
+            _records.any((ClipboardRecord record) => rule.matches(record)),
       )
       .toList(growable: false);
+
+  ClipboardCategoryRule? categoryFor(ClipboardRecord record) {
+    for (final ClipboardCategoryRule rule in _categoryRules) {
+      if (rule.matches(record)) {
+        return rule;
+      }
+    }
+    return null;
+  }
 
   String? get selectedGroup => _selectedGroup;
 
   List<String> get groups {
     final Set<String> values = _records
-        .map((ClipboardRecord record) => record.group.trim())
+        .expand((ClipboardRecord record) => record.groupNames)
+        .map((String group) => group.trim())
         .where(
           (String group) =>
               group.isNotEmpty && !_legacyAutomaticGroups.contains(group),
@@ -98,16 +115,20 @@ final class ClipboardViewModel extends ChangeNotifier {
         if (_selectedKind != null && record.kind != _selectedKind) {
           return false;
         }
-        if (_selectedCategory != null && record.category != _selectedCategory) {
+        if (_selectedCategoryId != null &&
+            categoryFor(record)?.id != _selectedCategoryId) {
           return false;
         }
-        if (_selectedGroup != null && record.group != _selectedGroup) {
+        if (_selectedGroup != null &&
+            !record.groupNames.contains(_selectedGroup)) {
           return false;
         }
         return needle.isEmpty ||
             record.title.toLowerCase().contains(needle) ||
             record.content.toLowerCase().contains(needle) ||
-            record.group.toLowerCase().contains(needle) ||
+            record.groupNames.any(
+              (String group) => group.toLowerCase().contains(needle),
+            ) ||
             record.tags.any((String tag) => tag.toLowerCase().contains(needle));
       }),
     );
@@ -115,44 +136,76 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void load() {
     _records = _store.list(limit: 5000);
+    _categoryRules = List<ClipboardCategoryRule>.of(_categoryRuleStore.load());
+    if (_selectedCategoryId != null &&
+        !_categoryRules.any(
+          (ClipboardCategoryRule rule) =>
+              rule.enabled && rule.id == _selectedCategoryId,
+        )) {
+      _selectedCategoryId = null;
+    }
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
   void setQuery(String value) {
     _query = value;
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
   void setKind(ClipboardKind? value) {
     _selectedKind = value;
-    _selectedCategory = null;
+    _selectedCategoryId = null;
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
-  void setCategory(ClipboardCategory? value) {
-    _selectedCategory = value;
+  void setCategory(String? value) {
+    _selectedCategoryId = value;
     _selectedKind = null;
-    notifyListeners();
-  }
-
-  void moveCategory(
-    ClipboardCategory category, {
-    required ClipboardCategory before,
-  }) {
-    if (category == before) return;
-    _categoryOrder.remove(category);
-    _categoryOrder.insert(_categoryOrder.indexOf(before), category);
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
   void reorderCategories(int oldIndex, int newIndex) {
-    final List<ClipboardCategory> visible = availableCategories;
-    if (oldIndex < 0 || oldIndex >= visible.length) return;
-    final ClipboardCategory moved = visible.removeAt(oldIndex);
-    visible.insert(newIndex.clamp(0, visible.length), moved);
-    _categoryOrder
-      ..removeWhere(visible.contains)
-      ..insertAll(0, visible);
+    if (oldIndex < 0 || oldIndex >= _categoryRules.length) return;
+    final ClipboardCategoryRule moved = _categoryRules.removeAt(oldIndex);
+    _categoryRules.insert(newIndex.clamp(0, _categoryRules.length), moved);
+    _categoryRuleStore.save(_categoryRules);
+    notifyListeners();
+  }
+
+  void saveCategoryRule(ClipboardCategoryRule rule) {
+    final String? validationError = rule.validationError;
+    if (validationError != null) {
+      throw FormatException(validationError);
+    }
+    final int index = _categoryRules.indexWhere(
+      (ClipboardCategoryRule item) => item.id == rule.id,
+    );
+    if (index < 0) {
+      _categoryRules = <ClipboardCategoryRule>[..._categoryRules, rule];
+    } else {
+      _categoryRules = <ClipboardCategoryRule>[
+        ..._categoryRules.take(index),
+        rule,
+        ..._categoryRules.skip(index + 1),
+      ];
+    }
+    _categoryRuleStore.save(_categoryRules);
+    notifyListeners();
+  }
+
+  void deleteCategoryRule(String id) {
+    _categoryRules = _categoryRules
+        .where((ClipboardCategoryRule rule) => rule.id != id)
+        .toList(growable: false);
+    if (_selectedCategoryId == id) {
+      _selectedCategoryId = null;
+    }
+    _categoryRuleStore.save(_categoryRules);
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
@@ -180,7 +233,52 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void setGroup(String? value) {
     _selectedGroup = value;
+    _ensureSelectionVisible();
     notifyListeners();
+  }
+
+  int groupItemCount(String group) {
+    final String normalized = group.trim().toLowerCase();
+    if (normalized.isEmpty) return 0;
+    return _records
+        .where(
+          (ClipboardRecord record) => record.groupNames.any(
+            (String value) => value.toLowerCase() == normalized,
+          ),
+        )
+        .length;
+  }
+
+  void deleteGroup(String group) {
+    final String normalized = group.trim().toLowerCase();
+    if (normalized.isEmpty) return;
+    final Set<String> affectedIds = _records
+        .where(
+          (ClipboardRecord record) => record.groupNames.any(
+            (String value) => value.toLowerCase() == normalized,
+          ),
+        )
+        .map((ClipboardRecord record) => record.id)
+        .toSet();
+    _groupOrder.removeWhere(
+      (String value) => value.toLowerCase() == normalized,
+    );
+    if (_selectedGroup?.toLowerCase() == normalized) {
+      _selectedGroup = null;
+    }
+    if (affectedIds.isEmpty) {
+      notifyListeners();
+      return;
+    }
+    _updateMany(
+      affectedIds,
+      (ClipboardRecord record) => record.copyWith(
+        groups: record.groupNames
+            .where((String value) => value.toLowerCase() != normalized)
+            .toList(growable: false),
+        updatedAt: _now().toUtc(),
+      ),
+    );
   }
 
   void select(ClipboardRecord record) {
@@ -246,10 +344,13 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (selected == null || title.trim().isEmpty || content.trim().isEmpty) {
       return;
     }
+    final String requestedGroup = group.trim();
     final ClipboardRecord updated = selected.copyWith(
       title: title.trim(),
       content: content,
-      group: group.trim(),
+      groups: requestedGroup == selected.group
+          ? selected.groupNames
+          : <String>[requestedGroup],
       tags: _uniqueTags(<String>[...selected.tags, ...tags]),
       updatedAt: _now().toUtc(),
     );
@@ -263,25 +364,30 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void archiveSelected({String group = ''}) {
+  void addSelectedToGroups(Set<String> groups) {
     final ClipboardRecord? selected = _selectedRecord;
     if (selected == null) {
       return;
     }
-    organizeSelected(
-      title: selected.title,
-      content: selected.content,
-      group: group.trim(),
-      tags: const <String>['archived'],
+    final ClipboardRecord updated = selected.copyWith(
+      groups: _uniqueGroups(<String>[...selected.groupNames, ...groups]),
+      updatedAt: _now().toUtc(),
     );
+    _store.save(updated);
+    _revisions?.changed(DataCollection.clipboard);
+    _records = <ClipboardRecord>[
+      updated,
+      ..._records.where((ClipboardRecord record) => record.id != updated.id),
+    ];
+    _selectedRecord = updated;
+    notifyListeners();
   }
 
-  void archiveMany(Set<String> ids, {String group = ''}) {
+  void addManyToGroups(Set<String> ids, Set<String> groups) {
     _updateMany(
       ids,
       (ClipboardRecord record) => record.copyWith(
-        group: group.trim(),
-        tags: _uniqueTags(<String>[...record.tags, 'archived']),
+        groups: _uniqueGroups(<String>[...record.groupNames, ...groups]),
         updatedAt: _now().toUtc(),
       ),
     );
@@ -303,6 +409,7 @@ final class ClipboardViewModel extends ChangeNotifier {
         .where((ClipboardRecord record) => !ids.contains(record.id))
         .toList(growable: false);
     if (ids.contains(_selectedRecord?.id)) _selectedRecord = null;
+    _ensureSelectionVisible();
     _revisions?.changed(DataCollection.clipboard);
     notifyListeners();
   }
@@ -311,6 +418,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     Set<String> ids,
     ClipboardRecord Function(ClipboardRecord record) update,
   ) {
+    final String? selectedId = _selectedRecord?.id;
     _records = _records
         .map((ClipboardRecord record) {
           if (!ids.contains(record.id)) return record;
@@ -319,6 +427,13 @@ final class ClipboardViewModel extends ChangeNotifier {
           return updated;
         })
         .toList(growable: false);
+    if (selectedId != null) {
+      final int selectedIndex = _records.indexWhere(
+        (ClipboardRecord record) => record.id == selectedId,
+      );
+      _selectedRecord = selectedIndex < 0 ? null : _records[selectedIndex];
+    }
+    _ensureSelectionVisible();
     _revisions?.changed(DataCollection.clipboard);
     notifyListeners();
   }
@@ -334,6 +449,7 @@ final class ClipboardViewModel extends ChangeNotifier {
         .where((ClipboardRecord record) => record.id != selected.id)
         .toList(growable: false);
     _selectedRecord = null;
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
@@ -408,6 +524,22 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
     _revisions?.changed(DataCollection.clipboard);
   }
+
+  void _ensureSelectionVisible() {
+    final List<ClipboardRecord> visible = visibleRecords;
+    if (visible.isEmpty) {
+      _selectedRecord = null;
+      return;
+    }
+    final String? selectedId = _selectedRecord?.id;
+    for (final ClipboardRecord record in visible) {
+      if (record.id == selectedId) {
+        _selectedRecord = record;
+        return;
+      }
+    }
+    _selectedRecord = visible.first;
+  }
 }
 
 const Set<String> _legacyAutomaticGroups = <String>{
@@ -432,6 +564,16 @@ List<String> _uniqueTags(List<String> tags) {
         return normalized.isNotEmpty && seen.add(normalized);
       })
       .map((String tag) => tag.trim())
+      .toList(growable: false);
+}
+
+List<String> _uniqueGroups(Iterable<String> values) {
+  final Set<String> seen = <String>{};
+  return values
+      .map((String value) => value.trim())
+      .where(
+        (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
+      )
       .toList(growable: false);
 }
 

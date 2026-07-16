@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
@@ -17,100 +19,154 @@ class LibraryScreen extends StatelessWidget {
     required this.viewModel,
     this.compact = false,
     this.transferGateway,
+    this.contextMenuGateway,
+    this.onOpenExternalLink,
     super.key,
   });
 
   final LibraryViewModel viewModel;
   final bool compact;
   final LibraryTransferGateway? transferGateway;
+  final DesktopContextMenuGateway? contextMenuGateway;
+  final Future<void> Function(Uri uri)? onOpenExternalLink;
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: viewModel,
       builder: (BuildContext context, Widget? child) {
+        final bool showingDetail =
+            viewModel.selectedResource != null || viewModel.isCreating;
         return Material(
           color: Theme.of(context).colorScheme.surface,
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final bool narrow = constraints.maxWidth < 900;
-              if (narrow &&
-                  (viewModel.selectedResource != null ||
-                      viewModel.isCreating)) {
-                return Column(
+          child: showingDetail
+              ? Column(
                   children: <Widget>[
-                    ListTile(
-                      key: const Key('library-editor-back'),
-                      dense: true,
-                      leading: const Icon(Icons.arrow_back_rounded),
-                      title: Text(
-                        context.localized('Back to resources', '返回资源列表'),
-                      ),
-                      onTap: viewModel.closeEditor,
+                    _LibraryDetailHeader(
+                      resource: viewModel.selectedResource,
+                      creatingType: viewModel.creatingType,
+                      onBack: viewModel.closeEditor,
+                    ),
+                    const Divider(height: 1),
+                    Expanded(child: _buildEditor(context)),
+                  ],
+                )
+              : Column(
+                  children: <Widget>[
+                    ResourceFilterBar(
+                      viewModel: viewModel,
+                      onImport: transferGateway == null
+                          ? null
+                          : () => _import(context),
+                      onImportJson: transferGateway == null
+                          ? null
+                          : () => _importJson(context),
+                      onExport: transferGateway == null
+                          ? null
+                          : () => _export(context),
+                      onDeleteSelection: () => _confirmDeleteSelection(context),
                     ),
                     const Divider(height: 1),
                     Expanded(
-                      child: ResourceEditor(
-                        resource: viewModel.selectedResource,
-                        isCreating: viewModel.isCreating,
-                        onCreate: viewModel.create,
-                        onDelete: () => _confirmDelete(context),
-                        onSave: viewModel.save,
-                        onSyncUpdate: (String updateUrl) =>
-                            _syncUpdate(context, updateUrl),
+                      child: ResourceList(
+                        viewModel: viewModel,
+                        compact: compact,
+                        contextMenuGateway: contextMenuGateway,
+                        onDeleteResource: (Resource resource) =>
+                            _confirmDeleteResource(context, resource),
                       ),
                     ),
                   ],
-                );
-              }
-              return Column(
-                children: <Widget>[
-                  ResourceFilterBar(
-                    viewModel: viewModel,
-                    onImport: transferGateway == null
-                        ? null
-                        : () => _import(context),
-                    onImportJson: transferGateway == null
-                        ? null
-                        : () => _importJson(context),
-                    onExport: transferGateway == null
-                        ? null
-                        : () => _export(context),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: narrow
-                        ? ResourceList(viewModel: viewModel, compact: compact)
-                        : Row(
-                            children: <Widget>[
-                              SizedBox(
-                                width: constraints.maxWidth * 0.46,
-                                child: ResourceList(
-                                  viewModel: viewModel,
-                                  compact: compact,
-                                ),
-                              ),
-                              const VerticalDivider(width: 1),
-                              Expanded(
-                                child: ResourceEditor(
-                                  resource: viewModel.selectedResource,
-                                  isCreating: viewModel.isCreating,
-                                  onCreate: viewModel.create,
-                                  onDelete: () => _confirmDelete(context),
-                                  onSave: viewModel.save,
-                                  onSyncUpdate: (String updateUrl) =>
-                                      _syncUpdate(context, updateUrl),
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
-              );
-            },
-          ),
+                ),
         );
       },
+    );
+  }
+
+  Future<void> _confirmDeleteResource(
+    BuildContext context,
+    Resource resource,
+  ) async {
+    final bool confirmed = await _showDeleteConfirmation(
+      context,
+      title: context.localized('Delete this resource?', '删除此资源？'),
+      message: context.localized(
+        'This removes “${resource.title}” from the local resource library.',
+        '这会从本地资源库中移除“${resource.title}”。',
+      ),
+    );
+    if (confirmed) {
+      await viewModel.deleteResources(<String>{resource.id});
+    }
+  }
+
+  Future<void> _confirmDeleteSelection(BuildContext context) async {
+    final Set<String> ids = viewModel.allResources
+        .where((Resource resource) => viewModel.isSelected(resource.id))
+        .map((Resource resource) => resource.id)
+        .toSet();
+    if (ids.isEmpty) {
+      return;
+    }
+    final bool confirmed = await _showDeleteConfirmation(
+      context,
+      title: context.localized('Delete selected resources?', '删除所选资源？'),
+      message: context.localized(
+        'This removes ${ids.length} resources from the local library.',
+        '这会从本地资源库中移除 ${ids.length} 项资源。',
+      ),
+    );
+    if (confirmed) {
+      await viewModel.deleteResources(ids);
+    }
+  }
+
+  Future<bool> _showDeleteConfirmation(
+    BuildContext context, {
+    required String title,
+    required String message,
+  }) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(context.localized('Cancel', '取消')),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(context.localized('Delete', '删除')),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Widget _buildEditor(BuildContext context) {
+    return ResourceEditor(
+      resource: viewModel.selectedResource,
+      isCreating: viewModel.isCreating,
+      initialType: viewModel.creatingType,
+      triggerGroups: viewModel.triggerGroups,
+      onCreate: viewModel.create,
+      onCreateTriggerGroup: viewModel.createTriggerGroup,
+      onUpdateTriggerGroup: viewModel.updateTriggerGroup,
+      onDeleteTriggerGroup: viewModel.deleteTriggerGroup,
+      onDelete: () => _confirmDelete(context),
+      onSave: viewModel.save,
+      onSyncUpdate: (String updateUrl) => _syncUpdate(context, updateUrl),
+      onResolveSkillSource: viewModel.fetchUpdateContent,
+      onOpenExternalLink: onOpenExternalLink,
+      onImportSkill: transferGateway == null
+          ? null
+          : () => _import(context, fixedType: ResourceType.skill),
     );
   }
 
@@ -147,16 +203,17 @@ class LibraryScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _import(BuildContext context) async {
+  Future<void> _import(BuildContext context, {ResourceType? fixedType}) async {
     final LibraryTransferGateway? gateway = transferGateway;
     if (gateway == null) {
       return;
     }
-    final LibraryImportOptions? options =
-        await showDialog<LibraryImportOptions>(
-          context: context,
-          builder: (BuildContext context) => const LibraryImportDialog(),
-        );
+    final LibraryImportOptions? options = fixedType == null
+        ? await showDialog<LibraryImportOptions>(
+            context: context,
+            builder: (BuildContext context) => const LibraryImportDialog(),
+          )
+        : LibraryImportOptions(type: fixedType);
     if (options == null) {
       return;
     }
@@ -168,8 +225,6 @@ class LibraryScreen extends StatelessWidget {
       final LibraryImportResult result = await viewModel.importDirectory(
         type: options.type,
         path: directory,
-        group: options.group,
-        tags: options.tags.isEmpty ? null : options.tags,
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -301,4 +356,94 @@ class LibraryScreen extends StatelessWidget {
       }
     }
   }
+}
+
+class _LibraryDetailHeader extends StatelessWidget {
+  const _LibraryDetailHeader({
+    required this.resource,
+    required this.creatingType,
+    required this.onBack,
+  });
+
+  final Resource? resource;
+  final ResourceType creatingType;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ResourceType type = resource?.type ?? creatingType;
+    final String title =
+        resource?.title ?? context.localized('New configuration', '新建配置');
+    return SizedBox(
+      height: 48,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: Row(
+          children: <Widget>[
+            IconButton(
+              key: const Key('library-editor-back'),
+              tooltip: context.localized('Back to resources', '返回资源列表'),
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              key: const Key('library-detail-breadcrumb'),
+              child: Row(
+                children: <Widget>[
+                  Text(
+                    context.localized('Resources', '资源'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                  _BreadcrumbDivider(color: colors.onSurfaceVariant),
+                  Text(
+                    _resourceTypeLabel(context, type),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                  _BreadcrumbDivider(color: colors.onSurfaceVariant),
+                  Flexible(
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BreadcrumbDivider extends StatelessWidget {
+  const _BreadcrumbDivider({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 7),
+    child: Icon(Icons.chevron_right_rounded, size: 14, color: color),
+  );
+}
+
+String _resourceTypeLabel(BuildContext context, ResourceType type) {
+  return switch (type) {
+    ResourceType.prompt => context.localized('Prompt', '提示词'),
+    ResourceType.skill => 'Skill',
+    ResourceType.mcp => 'MCP',
+    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
+    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
+  };
 }

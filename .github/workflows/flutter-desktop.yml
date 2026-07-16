@@ -73,8 +73,17 @@ jobs:
           fi
 
   macos:
-    runs-on: macos-15
+    name: macos-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x86_64
+            runner: macos-15-intel
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2.23.0
@@ -87,6 +96,19 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build macos --debug
+      - name: Verify macOS thinning contract
+        run: |
+          chmod +x scripts/thin_macos_app.sh
+          scripts/thin_macos_app.sh \
+            build/macos/Build/Products/Debug/DingDong.app \
+            "${{ matrix.arch }}"
+      - name: Verify macOS application architecture
+        run: |
+          app_binary="build/macos/Build/Products/Debug/DingDong.app/Contents/MacOS/DingDong"
+          description="$(/usr/bin/file -b "$app_binary")"
+          printf '%s\n' "$description"
+          architectures="$(/usr/bin/lipo -archs "$app_binary")"
+          test "$architectures" = "${{ matrix.arch }}"
 
   windows:
     runs-on: windows-latest

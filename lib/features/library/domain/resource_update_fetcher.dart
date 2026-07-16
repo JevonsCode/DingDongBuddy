@@ -64,22 +64,31 @@ final class HttpResourceUpdateFetcher implements ResourceUpdateFetcher {
   }
 }
 
-/// Converts GitHub file pages to their raw equivalent and rejects folders.
+/// Converts GitHub file and Skill folder pages to their raw equivalent.
 Uri normalizeResourceUpdateUri(Uri uri) {
   if (uri.host.toLowerCase() != 'github.com') {
     return uri;
   }
   final List<String> parts = uri.pathSegments;
-  if (parts.length < 5 || parts[2] != 'blob') {
-    throw const FormatException(
-      'Use a GitHub file link, not a repository or folder link',
+  if (parts.length >= 5 && parts[2] == 'blob') {
+    return Uri(
+      scheme: 'https',
+      host: 'raw.githubusercontent.com',
+      pathSegments: <String>[parts[0], parts[1], parts[3], ...parts.skip(4)],
     );
   }
-  return Uri(
-    scheme: 'https',
-    host: 'raw.githubusercontent.com',
-    pathSegments: <String>[parts[0], parts[1], parts[3], ...parts.skip(4)],
-  );
+  if (parts.length >= 5 && parts[2] == 'tree') {
+    final List<String> folder = parts.skip(4).toList(growable: true);
+    if (folder.isEmpty || folder.last.toLowerCase() != 'skill.md') {
+      folder.add('SKILL.md');
+    }
+    return Uri(
+      scheme: 'https',
+      host: 'raw.githubusercontent.com',
+      pathSegments: <String>[parts[0], parts[1], parts[3], ...folder],
+    );
+  }
+  throw const FormatException('Use a GitHub file link or a Skill folder link');
 }
 
 void _validateUri(Uri uri) {

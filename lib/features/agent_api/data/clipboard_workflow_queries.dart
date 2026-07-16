@@ -90,7 +90,7 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
         .where((ClipboardRecord item) {
           final String haystack = <String>[
             item.title,
-            item.group,
+            ...item.groupNames,
             item.content,
             ...item.tags,
           ].join(' ').toLowerCase();

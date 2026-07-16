@@ -38,16 +38,20 @@ void main() {
     ).readAsStringSync();
 
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
+    expect(
+      RegExp(r'MACOSX_DEPLOYMENT_TARGET = 13\.0;').allMatches(macProject),
+      hasLength(3),
+    );
   });
 
-  test('desktop hosts consume application version 0.7.7 from pubspec', () {
+  test('desktop hosts consume application version 0.7.8 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.7+14'));
+    expect(pubspec, contains('version: 0.7.8+15'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -104,6 +108,10 @@ void main() {
 
   test('website keeps release diagnostics behind debug mode', () {
     final String website = File('docs/index.html').readAsStringSync();
+    final String releaseMetadata = File(
+      'docs/dingdong-release.json',
+    ).readAsStringSync();
+    final String websiteStyles = File('docs/styles.css').readAsStringSync();
 
     expect(website, isNot(contains('A familiar macOS installer.')));
     expect(website, isNot(contains('熟悉的 macOS 拖拽安装')));
@@ -111,15 +119,31 @@ void main() {
     expect(website, isNot(contains('两种原生版本先分别测试')));
     expect(website, isNot(contains('Apple Silicon and Intel ·')));
     expect(website, isNot(contains('id="updates"')));
-    expect(
-      website,
-      contains('id="download-stats" aria-live="polite" hidden'),
-    );
+    expect(website, contains('id="download-stats" aria-live="polite" hidden'));
     expect(website, contains('new URLSearchParams(window.location.search)'));
     expect(website, contains('.get("debug") === "1"'));
     expect(website, contains('if (showDownloadStats) {'));
     expect(website, contains('const detectedDownloadPlatform'));
-    expect(website, contains('DingDong-0.7.7-windows-x64.zip'));
+    expect(website, contains('id="macos-arm64-download"'));
+    expect(website, contains('id="macos-x64-download"'));
+    expect(website, contains('id="windows-x64-download"'));
+    expect(website, contains('getHighEntropyValues'));
+    expect(website, contains('"architecture"'));
+    expect(website, contains('download.recommended'));
+    expect(website, contains('download.beta'));
+    expect(website, isNot(contains('Intel Mac OS X')));
+    expect(website, isNot(contains('knowledge')));
+    expect(website, isNot(contains('知识库')));
+    expect(website, contains('activeTab: "library"'));
+    expect(websiteStyles, contains('.demo-resource-row.type-prompt'));
+    expect(websiteStyles, contains('.demo-resource-row.type-skill'));
+    expect(websiteStyles, contains('.demo-resource-row.type-mcp'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.8"'));
+    expect(releaseMetadata, contains('"latestBuild": "15"'));
+    expect(releaseMetadata, contains('"arm64"'));
+    expect(releaseMetadata, contains('"x86_64"'));
+    expect(releaseMetadata, contains('"beta": true'));
+    expect(releaseMetadata, contains('DingDong-0.7.8-windows-x64-beta.zip'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -179,67 +203,99 @@ void main() {
     expect(macHost, contains('App.framework/Resources/flutter_assets'));
   });
 
-  test(
-    'release automation publishes macOS installer and Windows artifacts',
-    () {
-      final String workflow = File(
-        '.github/workflows/release.yml',
-      ).readAsStringSync();
-      final String releaseGate = File(
-        '.github/workflows/release-after-ci.yml',
-      ).readAsStringSync();
-      final String desktopWorkflow = File(
-        '.github/workflows/flutter-desktop.yml',
-      ).readAsStringSync();
+  test('macOS notifications play sound without bouncing the Dock icon', () {
+    final String macHost = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
 
-      expect(workflow, contains('build macos --release'));
-      expect(workflow, contains('scripts/sign_macos_bundle.sh'));
-      expect(workflow, contains('macos-15-intel'));
-      expect(workflow, contains('mcp-macos-arm64'));
-      expect(workflow, contains('mcp-macos-x86_64'));
-      expect(workflow, contains('scripts/create_universal_macos_mcp.sh'));
-      expect(desktopWorkflow, contains('macos-15-intel'));
-      expect(desktopWorkflow, contains('scripts/create_universal_macos_mcp.sh'));
-      expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
-      expect(workflow, contains('scripts/create_macos_dmg.sh'));
-      expect(workflow, contains('dist/*.dmg'));
-      expect(workflow, contains('scripts/notarize_macos_artifact.sh'));
-      final String dmgBuilder = File(
-        'scripts/create_macos_dmg.sh',
-      ).readAsStringSync();
-      final String dmgSettings = File(
-        'scripts/dmg_settings.py',
-      ).readAsStringSync();
-      expect(workflow, contains('dmgbuild==1.6.7'));
-      expect(dmgBuilder, contains('Assets/AgentToolIcon.png'));
-      expect(dmgBuilder, contains('安装与权限说明.txt'));
-      expect(dmgBuilder, contains('dmg-background.svg'));
-      expect(dmgSettings, contains('"Applications": "/Applications"'));
-      expect(dmgBuilder, contains('AppIcon.icns'));
-      expect(dmgBuilder, contains('com.apple.FinderInfo'));
-      expect(dmgSettings, contains('background = background_path'));
-      expect(dmgSettings, contains('hide_extensions = []'));
-      expect(dmgBuilder, contains('codesign --verify --deep --strict'));
-      expect(
-        File('Assets/installer/安装与权限说明.txt').readAsStringSync(),
-        contains('辅助功能'),
-      );
-      expect(workflow, contains("'build', 'windows', '--release'"));
-      expect(workflow, contains('APTABASE_APP_KEY'));
-      expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
-      expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
-      expect(workflow, isNot(contains('swift test')));
-      expect(
-        Directory('Sources').existsSync()
-            ? Directory(
-                'Sources',
-              ).listSync(recursive: true).whereType<File>().toList()
-            : const <File>[],
-        isEmpty,
-      );
-      expect(File('Package.swift').existsSync(), isFalse);
-    },
-  );
+    expect(macHost, contains('self?.playNotificationSound(arguments)'));
+    expect(macHost, isNot(contains('requestUserAttention')));
+  });
+
+  test('release automation publishes macOS installer and Windows artifacts', () {
+    final String workflow = File(
+      '.github/workflows/release.yml',
+    ).readAsStringSync();
+    final String releaseGate = File(
+      '.github/workflows/release-after-ci.yml',
+    ).readAsStringSync();
+    final String desktopWorkflow = File(
+      '.github/workflows/flutter-desktop.yml',
+    ).readAsStringSync();
+
+    expect(workflow, contains('build macos --release'));
+    expect(workflow, contains('scripts/sign_macos_bundle.sh'));
+    expect(workflow, contains('macos-15-intel'));
+    expect(workflow, contains(r'runs-on: ${{ matrix.runner }}'));
+    expect(workflow, contains('asset_arch: arm64'));
+    expect(workflow, contains('asset_arch: x64'));
+    expect(workflow, contains('scripts/thin_macos_app.sh'));
+    expect(workflow, contains('Verify macOS application architecture'));
+    expect(
+      workflow,
+      contains(
+        r'DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.dmg',
+      ),
+    );
+    expect(workflow, contains(r'DingDong-$version-windows-x64-beta.zip'));
+    expect(workflow, contains('mcp-macos-arm64'));
+    expect(workflow, contains('mcp-macos-x86_64'));
+    expect(workflow, contains('scripts/create_universal_macos_mcp.sh'));
+    expect(desktopWorkflow, contains('macos-15-intel'));
+    expect(desktopWorkflow, contains(r'runs-on: ${{ matrix.runner }}'));
+    expect(desktopWorkflow, contains('scripts/thin_macos_app.sh'));
+    expect(desktopWorkflow, contains('Verify macOS application architecture'));
+    expect(desktopWorkflow, contains('scripts/create_universal_macos_mcp.sh'));
+    expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
+    final String appThinner = File(
+      'scripts/thin_macos_app.sh',
+    ).readAsStringSync();
+    expect(appThinner, contains(r'-thin "$target_architecture"'));
+    expect(appThinner, contains('resulting_architectures'));
+    expect(workflow, contains('scripts/create_macos_dmg.sh'));
+    expect(workflow, contains('dist/*.dmg'));
+    expect(workflow, contains('scripts/notarize_macos_artifact.sh'));
+    final String dmgBuilder = File(
+      'scripts/create_macos_dmg.sh',
+    ).readAsStringSync();
+    final String dmgSettings = File(
+      'scripts/dmg_settings.py',
+    ).readAsStringSync();
+    expect(workflow, contains('dmgbuild==1.6.7'));
+    expect(dmgBuilder, contains('Assets/AgentToolIcon.png'));
+    expect(dmgBuilder, contains('安装与权限说明.txt'));
+    expect(dmgBuilder, contains('dmg-background.svg'));
+    expect(dmgSettings, contains('"Applications": "/Applications"'));
+    expect(dmgBuilder, contains('AppIcon.icns'));
+    expect(dmgBuilder, contains('com.apple.FinderInfo'));
+    expect(dmgSettings, contains('background = background_path'));
+    expect(dmgSettings, contains('hide_extensions = []'));
+    expect(dmgBuilder, contains('codesign --verify --deep --strict'));
+    expect(
+      File('Assets/installer/安装与权限说明.txt').readAsStringSync(),
+      contains('辅助功能'),
+    );
+    expect(workflow, contains('flutter build windows --release'));
+    expect(workflow, isNot(contains('APTABASE_APP_KEY')));
+    expect(workflow, contains('--notes-file docs/release-notes.md'));
+    expect(File('docs/release-notes.md').existsSync(), isTrue);
+    expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
+    expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
+    expect(
+      releaseGate,
+      contains('the tag event will start the release workflow'),
+    );
+    expect(workflow, isNot(contains('swift test')));
+    expect(
+      Directory('Sources').existsSync()
+          ? Directory(
+              'Sources',
+            ).listSync(recursive: true).whereType<File>().toList()
+          : const <File>[],
+      isEmpty,
+    );
+    expect(File('Package.swift').existsSync(), isFalse);
+  });
 
   test('local macOS upgrades prefer a generic stable signing identity', () {
     final String signer = File(
@@ -256,23 +312,29 @@ void main() {
     expect(signer, contains('CODE_SIGN_IDENTITY'));
   });
 
-  test('anonymous diagnostics stay optional and content free', () {
-    final String settings = File(
-      'lib/features/settings/domain/app_settings.dart',
-    ).readAsStringSync();
-    final String telemetry = File(
-      'lib/platform/privacy_preserving_telemetry.dart',
-    ).readAsStringSync();
+  test('release builds contain no dormant analytics wiring', () {
+    final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String main = File('lib/main.dart').readAsStringSync();
+    final String releaseMetadata = File(
+      'docs/dingdong-release.json',
+    ).readAsStringSync();
+    final String manualRegression = File(
+      'docs/product/manual-regression.md',
+    ).readAsStringSync();
+    final String workflow = File(
+      '.github/workflows/release.yml',
+    ).readAsStringSync();
 
-    expect(settings, contains('this.anonymousTelemetry = false'));
-    expect(telemetry, contains("String.fromEnvironment('APTABASE_APP_KEY')"));
-    expect(telemetry, contains("track('flutter_error'"));
-    expect(telemetry, contains("track('platform_error'"));
-    expect(telemetry, isNot(contains('details.exception.toString()')));
-    expect(telemetry, isNot(contains('stack.toString()')));
-    expect(main, contains("telemetry.track('agent_notification')"));
-    expect(main, contains("telemetry.track('clipboard_panel_opened')"));
+    expect(
+      File('lib/platform/privacy_preserving_telemetry.dart').existsSync(),
+      isFalse,
+    );
+    expect(pubspec, isNot(contains('aptabase')));
+    expect(main, isNot(contains('Telemetry')));
+    expect(main, isNot(contains('telemetry.track')));
+    expect(workflow, isNot(contains('APTABASE_APP_KEY')));
+    expect(releaseMetadata.toLowerCase(), isNot(contains('aptabase')));
+    expect(manualRegression.toLowerCase(), isNot(contains('aptabase')));
   });
 
   test('GitHub feedback forms require a privacy check', () {
@@ -354,4 +416,35 @@ void main() {
     expect(initialize, greaterThan(handle));
     expect(dispatch, greaterThan(initialize));
   });
+
+  test(
+    'resource manager paints its first frame before the window is shown',
+    () {
+      final String mainSource = File('lib/main.dart').readAsStringSync();
+      final int functionStart = mainSource.indexOf(
+        'Future<void> _runResourceManagerWindow',
+      );
+      expect(functionStart, greaterThanOrEqualTo(0));
+      final String resourceWindowSource = mainSource.substring(functionStart);
+      final int configureWindow = resourceWindowSource.indexOf(
+        'await windowManager.waitUntilReadyToShow(options);',
+      );
+      final int mountFlutter = resourceWindowSource.indexOf('runApp(');
+      final int waitForFirstFrame = resourceWindowSource.indexOf(
+        'await WidgetsBinding.instance.endOfFrame;',
+      );
+      final int showWindow = resourceWindowSource.indexOf(
+        'await windowManager.show();',
+      );
+      final int focusWindow = resourceWindowSource.indexOf(
+        'await windowManager.focus();',
+      );
+
+      expect(configureWindow, greaterThanOrEqualTo(0));
+      expect(mountFlutter, greaterThan(configureWindow));
+      expect(waitForFirstFrame, greaterThan(mountFlutter));
+      expect(showWindow, greaterThan(waitForFirstFrame));
+      expect(focusWindow, greaterThan(showWindow));
+    },
+  );
 }

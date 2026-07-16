@@ -7,12 +7,16 @@ import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
+import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
@@ -27,13 +31,12 @@ import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:dingdong/platform/multi_window_resource_manager_launcher.dart';
 import 'package:dingdong/platform/multi_window_settings_host_bridge.dart';
 import 'package:dingdong/platform/multi_window_settings_launcher.dart';
-import 'package:dingdong/platform/native_clipboard_context_menu_gateway.dart';
 import 'package:dingdong/platform/native_clipboard_share_gateway.dart';
+import 'package:dingdong/platform/native_desktop_context_menu_gateway.dart';
 import 'package:dingdong/platform/native_launch_at_startup.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/native_quick_paste_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
-import 'package:dingdong/platform/privacy_preserving_telemetry.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/services.dart';
@@ -62,8 +65,6 @@ Future<void> main(List<String> arguments) async {
   }
 
   final ShellController shellController = ShellController();
-  final PrivacyPreservingTelemetry telemetry =
-      PrivacyPreservingTelemetry.instance;
   final ActivityController activityController = ActivityController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
       MultiWindowClipboardPreviewLauncher();
@@ -80,7 +81,6 @@ Future<void> main(List<String> arguments) async {
   );
   dependencies = AppDependencies.production(
     onNotification: (request) async {
-      telemetry.track('agent_notification');
       activityController.record(
         source: request.source ?? 'Agent',
         message: request.message,
@@ -116,7 +116,6 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await settingsViewModel.load();
-  await telemetry.setEnabled(settingsViewModel.settings.anonymousTelemetry);
   final DesktopShellService desktopShellService = DesktopShellService(
     gateway: shellGateway,
     controller: shellController,
@@ -124,7 +123,6 @@ Future<void> main(List<String> arguments) async {
     defaultWorkspaceIndex: () =>
         settingsViewModel.settings.defaultWorkspace.index,
     onClipboardReveal: () async {
-      telemetry.track('clipboard_panel_opened');
       await dependencies.clipboardCaptureService.capture();
     },
     onClipboardMonitoringChanged: settingsViewModel.setClipboardMonitoring,
@@ -160,9 +158,6 @@ Future<void> main(List<String> arguments) async {
         return null;
       case 'settings_changed':
         await settingsViewModel.reload();
-        await telemetry.setEnabled(
-          settingsViewModel.settings.anonymousTelemetry,
-        );
         return null;
       case 'settings_sound_preview':
         final Map<Object?, Object?> values = call.arguments! as Map;
@@ -192,9 +187,10 @@ Future<void> main(List<String> arguments) async {
       activityController: activityController,
       agentBaseUri: dependencies.agentHttpServer.baseUri,
       clipboardCaptureService: dependencies.clipboardCaptureService,
+      clipboardCategoryRuleStore: dependencies.clipboardCategoryRuleStore,
       clipboardGateway: dependencies.clipboardGateway,
-      clipboardContextMenuGateway: Platform.isMacOS
-          ? NativeClipboardContextMenuGateway()
+      desktopContextMenuGateway: Platform.isMacOS
+          ? NativeDesktopContextMenuGateway()
           : null,
       clipboardMonitoring: dependencies.clipboardMonitorService,
       clipboardStore: dependencies.clipboardStore,
@@ -203,6 +199,7 @@ Future<void> main(List<String> arguments) async {
       quickPasteGateway: quickPasteGateway,
       quickPastePermissionGateway: quickPasteGateway,
       resourceStore: dependencies.resourceStore,
+      triggerGroupStore: dependencies.triggerGroupStore,
       resourceManagerLauncher: MultiWindowResourceManagerLauncher(),
       settingsWindowLauncher: settingsWindowLauncher,
       settingsViewModel: settingsViewModel,
@@ -376,12 +373,21 @@ Future<void> _runResourceManagerWindow(
   final ResourceStore resourceStore = ResourceRepository(
     ResourceFileService(paths.resourceLibraryFile),
   );
-  final LibraryViewModel viewModel = LibraryViewModel(resourceStore);
+  final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
+    TriggerGroupFileService(paths.triggerGroupsFile),
+  );
+  final LibraryViewModel viewModel = createDesktopLibraryViewModel(
+    resourceStore,
+    triggerGroupStore: triggerGroupStore,
+  );
   await viewModel.load();
   final ClipboardViewModel clipboardViewModel = ClipboardViewModel(
     ClipboardRepository.open(paths.clipboardDatabaseFile.path),
     gateway: DesktopClipboardGateway(),
     resourceStore: resourceStore,
+    categoryRuleStore: FileClipboardCategoryRuleStore(
+      paths.clipboardCategoryRulesFile,
+    ),
   )..load();
   final String? editingResourceId = arguments['editingResourceId'] as String?;
   if (editingResourceId != null) {
@@ -403,16 +409,20 @@ Future<void> _runResourceManagerWindow(
     title: '资源管理',
     titleBarStyle: TitleBarStyle.normal,
   );
-  await windowManager.waitUntilReadyToShow(options, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+  await windowManager.waitUntilReadyToShow(options);
   runApp(
     ResourceManagerApp(
       viewModel: viewModel,
       clipboardViewModel: clipboardViewModel,
       settings: settings,
       windowController: windowController,
+      desktopContextMenuGateway: Platform.isMacOS
+          ? NativeDesktopContextMenuGateway()
+          : null,
+      onOpenExternalLink: UrlLauncherExternalLinkGateway().open,
     ),
   );
+  await WidgetsBinding.instance.endOfFrame;
+  await windowManager.show();
+  await windowManager.focus();
 }

@@ -4,66 +4,56 @@
 
 <h1 align="center">DingDong</h1>
 
-DingDong is a local desktop tool for clipboard history and Agent-assisted work.
-It keeps recent clipboard items searchable, organizes reusable prompts, Skills,
-MCP servers, and knowledge, and alerts you when an Agent finishes or needs your
-input.
+DingDong keeps clipboard history, prompts, Skills, and MCP configurations close
+at hand. When an Agent finishes, gets stuck, or needs a decision, DingDong rings
+so you do not have to keep watching it.
 
-DingDong 是一款围绕剪贴板与 Agent 协作设计的本地桌面工具。它记录并搜索剪贴板
-历史，集中管理提示词、Skill、MCP 和知识库，并在 Agent 完成任务或需要你处理时
-及时提醒，让日常工作衔接得更顺畅。
-
-Resources in the local library have individual switches, stable IDs, usage
-counts, selective sharing, and a local API for connected Agents.
+DingDong 把剪贴板历史、提示词、Skill 和 MCP 收在一个地方。Agent 做完、卡住或
+等你决定时，它会叮咚一声——你不用一直盯着。
 
 ## Philosophy
 
-- **People stay in control.** 让 AI 工具服务于人，帮助人更高效地完成工作；
-  decisions and data remain in the user's hands.
-- **Local and deliberate.** Data stays on your computer. Clipboard history is
-  excluded from library exports, and you choose exactly what to share.
-- **One source of truth.** Maintain reusable AI resources once, enable only what
-  matters, and let every connected agent use the same library.
-- **Quiet until useful.** Agents see summaries first, load full content only
-  when needed, and DingDong gets your attention only when work is ready.
+- **Your data stays yours.** Clipboard history and the resource library stay on
+  your computer unless you choose to export or share something.
+- **Set things up once.** Keep a prompt, Skill, or MCP configuration in DingDong
+  and use the same copy from every connected Agent.
+- **Bring only what helps.** Agents see names and short descriptions first, then
+  open the full resource when it is actually useful.
+- **Come back when it rings.** Keep working elsewhere and let DingDong call you
+  back when an Agent is ready.
 
 ## What DingDong does
 
-- Manages prompts, Skills, MCP references, and knowledge with per-item switches
-- Counts actual Agent use and records when each resource was last used
-- Exposes the whole library—or selected types and IDs—for AI-assisted duplicate
-  and unused-resource analysis
-- Selectively exports and imports portable JSON bundles while stable IDs and
-  content matching prevent repeated imports
-- Connects local agents through a loopback HTTP API and bundled stdio MCP bridge
-- Captures searchable clipboard history with sensitive-content protection
-- Refreshes from the system clipboard whenever the panel is revealed and moves
-  exact matches to the top without creating duplicate history rows
-- Plays a chosen DingDong sound when an agent finishes or needs attention
-- Supports English, Simplified Chinese, light/dark themes, a complete tray menu,
-  keyboard-first search, and global quick paste
+- Find text, links, images, and files you copied earlier
+- Sort clipboard items into reusable groups and your own matching rules
+- Keep prompts, Skills, and MCP configurations in one tidy library
+- Pull a Skill from GitHub, read it locally, and update it when you choose
+- Turn resources on only for matching projects or repositories
+- Share a few selected resources without exporting the whole library
+- Let connected Agents find the right resource and ring DingDong when work ends
+- Search and paste from the keyboard with the global quick-paste panel
+- Use native desktop menus, English or Simplified Chinese, and light or dark mode
 
-## Install on macOS
+## Download
 
-Download the latest `.dmg` from [GitHub Releases](https://github.com/JevonsCode/DingDongBuddy/releases/latest),
-open it, and drag **DingDong** onto the **Applications** shortcut. The ZIP remains
-available for portable or diagnostic use. The branded installer includes
-`安装与权限说明.txt` with first-launch, Accessibility, clipboard-access, and
-login-item guidance. Quick Paste needs Accessibility permission; ordinary
-clipboard history does not need Full Disk Access or Screen Recording.
+- [macOS · Apple Silicon](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
+- [macOS · Intel (beta)](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
+- [Windows x64 (beta)](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
 
-## Feedback and privacy-safe diagnostics
+On macOS, open the `.dmg` and drag **DingDong** onto the **Applications**
+shortcut. ZIP packages remain available for portable or diagnostic use. The
+installer includes `安装与权限说明.txt` with first-launch, Accessibility,
+clipboard-access, and login-item guidance. Quick Paste needs Accessibility
+permission; ordinary clipboard history does not need Full Disk Access or Screen
+Recording.
+
+## Feedback and privacy
 
 Use **Settings → Version → Report a problem** or **Request a feature** to open a
 guided GitHub form. The forms remind contributors to remove clipboard contents,
 secrets, personal or company information, usernames, and local file paths.
 
-Anonymous diagnostics are optional and off by default. When enabled, DingDong
-can send content-free events such as app starts, clipboard-panel opens, Agent
-notifications, and error type names to Aptabase. It never sends clipboard
-content, user-entered text, file paths, URLs, names, company information, error
-messages, or stack traces. Builds without `APTABASE_APP_KEY` do not initialize
-analytics or make analytics requests.
+DingDong does not include analytics or usage-event reporting.
 
 ---
 
@@ -71,7 +61,7 @@ analytics or make analytics requests.
 
 ### Desktop support
 
-- macOS 10.15 or newer
+- macOS 13 or newer (Apple Silicon and Intel)
 - Windows 10 or newer
 - Project toolchain: 3.44.6 desktop SDK / Dart 3.12
 
@@ -158,7 +148,9 @@ sensitive content unless the caller explicitly requests supported content modes.
 ## MCP setup
 
 Open **Agent API** in DingDong and copy the displayed platform-specific MCP path
-or the editable setup prompt. The bridge provides tools including:
+or the ready-to-use setup prompt. Paste it into Codex, Claude Code, or another
+Agent and let it add DingDong to the right MCP configuration, reload, and send a
+test notification. The bridge provides tools including:
 
 - `dingdong_bridge`
 - `dingdong_notify`

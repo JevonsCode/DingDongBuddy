@@ -109,6 +109,48 @@ void main() {
   );
 
   test(
+    'multiple clipboard groups round-trip through the legacy column',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-clipboard-groups-test-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final String path = '${directory.path}/clipboard-history.sqlite';
+      final ClipboardRepository first = ClipboardRepository.open(path);
+      first.save(
+        ClipboardRecord(
+          id: 'multi-group',
+          group: '项目甲',
+          groups: const <String>['项目甲', '项目乙'],
+          title: 'Shared note',
+          content: 'Shared note',
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: DateTime.utc(2026, 7, 12),
+          updatedAt: DateTime.utc(2026, 7, 12),
+        ),
+      );
+      first.close();
+
+      final Database raw = sqlite3.open(path);
+      final String encoded =
+          raw.select('SELECT ZGROUP FROM ZCLIPBOARDRECORD').single['ZGROUP']
+              as String;
+      raw.close();
+      expect(jsonDecode(encoded), <Object?>['项目甲', '项目乙']);
+
+      final ClipboardRepository reopened = ClipboardRepository.open(path);
+      addTearDown(reopened.close);
+      expect(reopened.list(limit: 10).single.groupNames, <String>[
+        '项目甲',
+        '项目乙',
+      ]);
+    },
+  );
+
+  test(
     'retention keeps pinned history and the newest bounded unpinned rows',
     () async {
       final Directory directory = await Directory.systemTemp.createTemp(

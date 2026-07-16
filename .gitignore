@@ -9,6 +9,8 @@
 .build/
 .swiftpm/
 .codebase-memory/
+.private/
+.local/
 dist/
 *.xcuserstate
 xcuserdata/
@@ -19,6 +21,9 @@ xcuserdata/
 *.key
 *.p12
 *.pfx
+*.cer
+*.der
+*.provisionprofile
 *.mobileprovision
 *.keystore
 *.jks

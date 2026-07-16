@@ -2,7 +2,7 @@ import Cocoa
 import FlutterMacOS
 import desktop_multi_window
 
-private final class ClipboardContextMenuTarget: NSObject {
+private final class DesktopContextMenuTarget: NSObject {
   var selectedAction: String?
 
   @objc func selectAction(_ sender: NSMenuItem) {
@@ -78,10 +78,22 @@ class MainFlutterWindow: NSWindow {
         self.sharingPicker = picker
         picker.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
         result(nil)
-      case "showClipboardContextMenu":
-        let arguments = call.arguments as? [String: Any]
-        let useChinese = arguments?["useChinese"] as? Bool ?? false
-        result(self.showClipboardContextMenu(in: view, useChinese: useChinese))
+      case "showContextMenu":
+        guard let arguments = call.arguments as? [String: Any],
+              let entries = arguments["items"] as? [[String: Any]]
+        else {
+          result(FlutterError(
+            code: "invalid_arguments",
+            message: "items must be a context menu entry list.",
+            details: nil
+          ))
+          return
+        }
+        result(self.showContextMenu(
+          in: view,
+          useChinese: arguments["useChinese"] as? Bool ?? false,
+          entries: entries
+        ))
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -89,38 +101,36 @@ class MainFlutterWindow: NSWindow {
     systemActionChannels.append(channel)
   }
 
-  private func showClipboardContextMenu(
+  private func showContextMenu(
     in view: NSView,
-    useChinese: Bool
+    useChinese: Bool,
+    entries: [[String: Any]]
   ) -> String? {
     let menu = NSMenu()
     menu.autoenablesItems = false
-    let target = ClipboardContextMenuTarget()
+    let target = DesktopContextMenuTarget()
 
-    func add(_ action: String, _ english: String, _ chinese: String) {
+    for entry in entries {
+      if entry["separator"] as? Bool == true {
+        menu.addItem(.separator())
+        continue
+      }
+      guard let action = entry["id"] as? String,
+            let english = entry["englishLabel"] as? String,
+            let chinese = entry["chineseLabel"] as? String
+      else {
+        continue
+      }
       let item = NSMenuItem(
         title: useChinese ? chinese : english,
-        action: #selector(ClipboardContextMenuTarget.selectAction(_:)),
+        action: #selector(DesktopContextMenuTarget.selectAction(_:)),
         keyEquivalent: ""
       )
       item.target = target
       item.representedObject = action
-      item.isEnabled = true
+      item.isEnabled = entry["enabled"] as? Bool ?? true
       menu.addItem(item)
     }
-
-    add("details", "Details", "查看详情")
-    add("copy", "Copy", "复制")
-    menu.addItem(.separator())
-    add("addTitle", "Add title", "添加标题")
-    add("editText", "Edit text", "编辑文本")
-    add("saveAsPrompt", "Save as prompt", "保存为提示词")
-    add("saveAsKnowledge", "Save as knowledge", "保存为知识")
-    add("archive", "Archive", "归档")
-    add("archiveTo", "Archive to…", "归档到…")
-    add("share", "Share", "分享")
-    menu.addItem(.separator())
-    add("delete", "Delete", "删除")
 
     let screenPoint = NSEvent.mouseLocation
     let windowPoint = view.window?.convertPoint(fromScreen: screenPoint) ?? .zero

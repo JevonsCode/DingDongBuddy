@@ -4,20 +4,23 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
-import 'package:dingdong/features/clipboard/domain/clipboard_context_menu_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
+import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
@@ -43,8 +46,9 @@ class DingDongApp extends StatefulWidget {
     this.activityController,
     this.agentBaseUri,
     this.clipboardCaptureService,
+    this.clipboardCategoryRuleStore,
     this.clipboardGateway,
-    this.clipboardContextMenuGateway,
+    this.desktopContextMenuGateway,
     this.clipboardMonitoring,
     this.clipboardStore,
     this.clipboardPreviewLauncher,
@@ -52,6 +56,7 @@ class DingDongApp extends StatefulWidget {
     this.quickPasteGateway,
     this.quickPastePermissionGateway,
     this.resourceStore,
+    this.triggerGroupStore,
     this.libraryTransferGateway,
     this.resourceUpdateFetcher,
     this.resourceManagerLauncher,
@@ -76,8 +81,9 @@ class DingDongApp extends StatefulWidget {
   final ActivityController? activityController;
   final Uri? agentBaseUri;
   final ClipboardCaptureService? clipboardCaptureService;
+  final ClipboardCategoryRuleStore? clipboardCategoryRuleStore;
   final ClipboardGateway? clipboardGateway;
-  final ClipboardContextMenuGateway? clipboardContextMenuGateway;
+  final DesktopContextMenuGateway? desktopContextMenuGateway;
   final ClipboardMonitoring? clipboardMonitoring;
   final ClipboardStore? clipboardStore;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
@@ -85,6 +91,7 @@ class DingDongApp extends StatefulWidget {
   final QuickPasteGateway? quickPasteGateway;
   final QuickPastePermissionGateway? quickPastePermissionGateway;
   final ResourceStore? resourceStore;
+  final TriggerGroupStore? triggerGroupStore;
   final LibraryTransferGateway? libraryTransferGateway;
   final ResourceUpdateFetcher? resourceUpdateFetcher;
   final ResourceManagerLauncher? resourceManagerLauncher;
@@ -131,11 +138,12 @@ class _DingDongAppState extends State<DingDongApp> {
       resourceStore: widget.resourceStore,
       quickPasteGateway: widget.quickPasteGateway,
       revisions: _dataRevisions,
+      categoryRuleStore: widget.clipboardCategoryRuleStore,
     );
-    _libraryViewModel = LibraryViewModel(
+    _libraryViewModel = createDesktopLibraryViewModel(
       widget.resourceStore ?? InMemoryResourceStore(),
-      updateFetcher:
-          widget.resourceUpdateFetcher ?? HttpResourceUpdateFetcher(),
+      updateFetcher: widget.resourceUpdateFetcher,
+      triggerGroupStore: widget.triggerGroupStore,
       revisions: _dataRevisions,
     );
     _ownsSettingsViewModel = widget.settingsViewModel == null;
@@ -208,7 +216,7 @@ class _DingDongAppState extends State<DingDongApp> {
             activityController: _activityController,
             clipboardViewModel: _clipboardViewModel,
             clipboardGateway: widget.clipboardGateway,
-            clipboardContextMenuGateway: widget.clipboardContextMenuGateway,
+            desktopContextMenuGateway: widget.desktopContextMenuGateway,
             clipboardPreviewLauncher: widget.clipboardPreviewLauncher,
             clipboardShareGateway: widget.clipboardShareGateway,
             libraryViewModel: _libraryViewModel,

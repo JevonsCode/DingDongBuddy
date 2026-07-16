@@ -18,25 +18,28 @@ abstract interface class McpHttpTransport {
 
 /// Maps stable MCP tool names to DingDong's loopback HTTP contract.
 final class LoopbackMcpToolExecutor implements McpToolExecutor {
-  const LoopbackMcpToolExecutor(
+  LoopbackMcpToolExecutor(
     this._transport, {
     NativeMcpInstaller? installer,
-  }) : _installer = installer;
+    String Function()? currentDirectory,
+    Future<String?> Function(String directory)? repositoryUrlResolver,
+  }) : _installer = installer,
+       _currentDirectory = currentDirectory ?? _defaultCurrentDirectory,
+       _repositoryUrlResolver =
+           repositoryUrlResolver ?? _defaultRepositoryUrlResolver;
 
   final McpHttpTransport _transport;
   final NativeMcpInstaller? _installer;
+  final String Function() _currentDirectory;
+  final Future<String?> Function(String directory) _repositoryUrlResolver;
 
   @override
   Future<Map<String, Object?>> execute(
     String name,
     Map<String, Object?> arguments,
-  ) {
+  ) async {
     return switch (name) {
-      'dingdong_bridge' => _transport.request(
-        method: 'POST',
-        path: '/agent/bridge',
-        body: arguments,
-      ),
+      'dingdong_bridge' => _bridge(arguments),
       'dingdong_search_assets' => _transport.request(
         method: 'GET',
         path: '/library',
@@ -77,6 +80,26 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       ),
       _ => throw ArgumentError.value(name, 'name', 'Unknown DingDong tool'),
     };
+  }
+
+  Future<Map<String, Object?>> _bridge(Map<String, Object?> arguments) async {
+    final Map<String, Object?> body = Map<String, Object?>.of(arguments);
+    final String directory =
+        (body['workspacePath'] as String? ?? '').trim().isEmpty
+        ? _currentDirectory()
+        : (body['workspacePath'] as String).trim();
+    body['workspacePath'] = directory;
+    if ((body['repositoryUrl'] as String? ?? '').trim().isEmpty) {
+      final String? repositoryUrl = await _repositoryUrlResolver(directory);
+      if (repositoryUrl != null && repositoryUrl.trim().isNotEmpty) {
+        body['repositoryUrl'] = repositoryUrl.trim();
+      }
+    }
+    return _transport.request(
+      method: 'POST',
+      path: '/agent/bridge',
+      body: body,
+    );
   }
 
   Future<Map<String, Object?>> _installNativeMcp(
@@ -124,6 +147,25 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       'writeRequired':
           'Pass dryRun=false and confirm=INSTALL to update the native agent config.',
     };
+  }
+}
+
+String _defaultCurrentDirectory() => Directory.current.path;
+
+Future<String?> _defaultRepositoryUrlResolver(String directory) async {
+  try {
+    final ProcessResult result = await Process.run('git', const <String>[
+      'config',
+      '--get',
+      'remote.origin.url',
+    ], workingDirectory: directory).timeout(const Duration(seconds: 1));
+    if (result.exitCode != 0) {
+      return null;
+    }
+    final String value = result.stdout.toString().trim();
+    return value.isEmpty ? null : value;
+  } on Object {
+    return null;
   }
 }
 

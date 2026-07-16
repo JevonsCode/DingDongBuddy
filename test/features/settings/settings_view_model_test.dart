@@ -188,7 +188,7 @@ void main() {
   });
 
   test(
-    'MCP setup prompt uses the platform command and persists overrides',
+    'MCP setup prompt always uses the built-in platform-specific instructions',
     () async {
       final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
       final SettingsViewModel model = SettingsViewModel(
@@ -197,21 +197,72 @@ void main() {
       );
       await model.load();
 
-      expect(model.mcpSetupPrompt, contains('dingdong-mcp.exe'));
-
-      await model.setMcpSetupPrompt('Use my MCP setup');
       expect(
-        backend.values['dingdong.mcpSetupPromptOverride'],
-        'Use my MCP setup',
+        model.mcpSetupPrompt,
+        contains(r'C:\Program Files\DingDong\dingdong-mcp.exe'),
       );
+      expect(
+        model.mcpSetupPrompt,
+        contains('global STDIO MCP server named dingdong'),
+      );
+      expect(
+        model.mcpSetupPrompt,
+        startsWith('Connect DingDong MCP to the current agent or IDE'),
+      );
+      expect(model.mcpSetupPrompt, isNot(contains('Do not explain DingDong')));
+      expect(model.mcpSetupPrompt, contains('Preserve every unrelated'));
+      expect(model.mcpSetupPrompt, contains('reload or restart'));
+      expect(model.mcpSetupPrompt, contains('dingdong_notify'));
+      expect(model.mcpSetupPrompt, contains('DingDong MCP is connected'));
+      expect(model.mcpSetupPrompt, contains('dingdong_bridge'));
+      expect(model.mcpSetupPrompt, contains('before the final response'));
+      expect(model.mcpSetupPrompt, isNot(contains('clipboard content')));
 
-      await model.resetMcpSetupPrompt();
       expect(
         backend.values,
         isNot(contains('dingdong.mcpSetupPromptOverride')),
       );
     },
   );
+
+  test(
+    'Chinese MCP setup prompt asks for an immediate DingDong test',
+    () async {
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(
+          MemoryPreferencesBackend(<String, Object>{'dingdong.language': 'zh'}),
+        ),
+        mcpCommandPath: '/Applications/DingDong.app/Contents/MCP/dingdong_mcp',
+      );
+
+      await model.load();
+
+      expect(
+        model.mcpSetupPrompt,
+        startsWith('请在当前 Agent 或 IDE 中接入 DingDong MCP'),
+      );
+      expect(model.mcpSetupPrompt, isNot(contains('不要介绍 DingDong')));
+      expect(model.mcpSetupPrompt, contains('立即调用一次 dingdong_notify'));
+      expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
+      expect(model.mcpSetupPrompt, contains('在最终回复前调用一次'));
+    },
+  );
+
+  test('MCP access onboarding is marked once and persisted', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    await model.load();
+
+    expect(model.settings.mcpAccessSeen, isFalse);
+
+    await model.markMcpAccessSeen();
+    await model.markMcpAccessSeen();
+
+    expect(model.settings.mcpAccessSeen, isTrue);
+    expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
+  });
 
   test(
     'system usage can be refreshed without coupling settings to IO',

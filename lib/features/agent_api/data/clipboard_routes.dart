@@ -71,7 +71,9 @@ final class ClipboardRoutes {
         .where(
           (ClipboardRecord record) =>
               group == null ||
-              record.group.toLowerCase() == group.toLowerCase(),
+              record.groupNames.any(
+                (String name) => name.toLowerCase() == group.toLowerCase(),
+              ),
         )
         .where(
           (ClipboardRecord record) =>
@@ -140,7 +142,9 @@ final class ClipboardRoutes {
     final Map<String, List<ClipboardRecord>> buckets =
         <String, List<ClipboardRecord>>{};
     for (final ClipboardRecord record in records) {
-      buckets.putIfAbsent(record.group, () => <ClipboardRecord>[]).add(record);
+      for (final String group in record.groupNames) {
+        buckets.putIfAbsent(group, () => <ClipboardRecord>[]).add(record);
+      }
     }
     final List<Map<String, Object?>> groups =
         buckets.entries
@@ -193,9 +197,11 @@ final class ClipboardRoutes {
       final Object? decoded = jsonDecode(body);
       if (decoded is! Map<String, Object?> ||
           !decoded.keys.any(
-            <String>{'title', 'group', 'tags', 'pinned'}.contains,
+            <String>{'title', 'group', 'groups', 'tags', 'pinned'}.contains,
           )) {
-        return _invalidPatch('title, group, tags, or pinned is required');
+        return _invalidPatch(
+          'title, group, groups, tags, or pinned is required',
+        );
       }
       if (decoded.keys.any(<String>{'type', 'content', 'source'}.contains)) {
         return _invalidPatch(
@@ -215,9 +221,15 @@ final class ClipboardRoutes {
                 .map((Object? tag) => tag as String)
                 .toList(growable: false)
           : null;
+      final List<String>? requestedGroups = decoded.containsKey('groups')
+          ? (decoded['groups'] as List<Object?>)
+                .map((Object? group) => group as String)
+                .toList(growable: false)
+          : null;
       final ClipboardRecord updated = existing.copyWith(
         title: title,
         group: decoded['group'] as String?,
+        groups: requestedGroups,
         tags: requestedTags == null
             ? null
             : _uniqueTags(<String>[...existing.tags, ...requestedTags]),
@@ -265,7 +277,7 @@ Map<String, Object?> _overviewObject(List<ClipboardRecord> records) {
     'pinned': records.where((ClipboardRecord record) => record.pinned).length,
     'classificationCounts': classifications,
     'groups': _buckets(
-      records.map((ClipboardRecord record) => record.group),
+      records.expand((ClipboardRecord record) => record.groupNames),
       limit: 8,
     ),
     'topTags': _buckets(
@@ -351,7 +363,9 @@ bool _matches(ClipboardRecord record, String needle) {
   return needle.isEmpty ||
       record.title.toLowerCase().contains(needle) ||
       record.content.toLowerCase().contains(needle) ||
-      record.group.toLowerCase().contains(needle) ||
+      record.groupNames.any(
+        (String group) => group.toLowerCase().contains(needle),
+      ) ||
       record.tags.any((String tag) => tag.toLowerCase().contains(needle));
 }
 
