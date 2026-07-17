@@ -4,6 +4,11 @@
 
 <h1 align="center">DingDong</h1>
 
+<p align="center">
+  <strong>Find what you copied. Hear a DingDong when your Agent is done.</strong><br>
+  <strong>复制过的随时找，Agent 做完就叮咚。</strong>
+</p>
+
 DingDong keeps clipboard history, prompts, Skills, and MCP configurations close
 at hand. When an Agent finishes, gets stuck, or needs a decision, DingDong rings
 so you do not have to keep watching it.
