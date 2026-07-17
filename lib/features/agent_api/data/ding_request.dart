@@ -53,6 +53,7 @@ final class DingRequest {
     this.source,
     this.sound = DingSound.defaultSound,
     this.flashCount = 8,
+    this.fallback = false,
   });
 
   factory DingRequest.parse(String body) {
@@ -68,6 +69,7 @@ final class DingRequest {
       source: _trimmedOrNull(json['source'] as String?),
       sound: DingSound.parse(json['sound']),
       flashCount: requestedFlashCount.clamp(2, 30),
+      fallback: json['fallback'] == true,
     );
   }
 
@@ -75,6 +77,7 @@ final class DingRequest {
   final String? source;
   final DingSound sound;
   final int flashCount;
+  final bool fallback;
 
   DingRequest copyWith({DingSound? sound}) {
     return DingRequest(
@@ -82,6 +85,7 @@ final class DingRequest {
       source: source,
       sound: sound ?? this.sound,
       flashCount: flashCount,
+      fallback: fallback,
     );
   }
 }

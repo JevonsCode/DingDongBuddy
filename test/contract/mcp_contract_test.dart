@@ -5,6 +5,25 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'initialize advertises durable DingDong workflow instructions',
+    () async {
+      final McpServer server = McpServer();
+
+      final String output = (await server.handleLine(
+        '{"jsonrpc":"2.0","id":0,"method":"initialize"}',
+      ))!;
+      final Map<String, Object?> response =
+          jsonDecode(output) as Map<String, Object?>;
+      final Map<String, Object?> result =
+          response['result']! as Map<String, Object?>;
+
+      expect(result['instructions'], contains('dingdong_bridge'));
+      expect(result['instructions'], contains('completion hook'));
+      expect(result['instructions'], contains('dingdong_notify'));
+    },
+  );
+
+  test(
     'tools/list exposes the complete DingDong bridge tool contract',
     () async {
       final McpServer server = McpServer();

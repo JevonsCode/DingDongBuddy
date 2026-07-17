@@ -58,4 +58,9 @@ if ! /usr/bin/grep -q '"result"' "$smoke_output" \
   exit 70
 fi
 
+# Stop hooks expect an exit-zero, output-free command even if DingDong is not
+# currently running. The executable handles delivery failures as a quiet no-op.
+/usr/bin/printf '%s' '{"hook_event_name":"Stop"}' \
+  | "$executable" --notify-stop
+
 echo "Built and tested DingDong MCP for $expected_architecture"

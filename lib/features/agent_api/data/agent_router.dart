@@ -103,6 +103,12 @@ final class AgentRouter {
   final TriggerGroupStore? _triggerGroupStore;
   final String Function() _idGenerator;
   final DateTime Function() _now;
+  DateTime? _lastDingAt;
+  String? _lastDingSource;
+
+  static const Duration _completionHookDeduplicationWindow = Duration(
+    seconds: 5,
+  );
 
   void updateBaseUri(Uri value) {
     _agentCompatibilityRoutes?.updateBaseUri(value);
@@ -151,6 +157,22 @@ final class AgentRouter {
         request.parsedUri.path == '/ding') {
       try {
         final DingRequest dingRequest = DingRequest.parse(request.body);
+        final DateTime now = _now();
+        final DateTime? lastDingAt = _lastDingAt;
+        if (dingRequest.fallback &&
+            lastDingAt != null &&
+            dingRequest.source == _lastDingSource &&
+            now.difference(lastDingAt) < _completionHookDeduplicationWindow) {
+          return HttpResponseData(
+            statusCode: 200,
+            json: <String, Object?>{
+              'status': 'suppressed',
+              'message': dingRequest.message,
+            },
+          );
+        }
+        _lastDingAt = now;
+        _lastDingSource = dingRequest.source;
         _onDing(dingRequest);
         return HttpResponseData(
           statusCode: 200,

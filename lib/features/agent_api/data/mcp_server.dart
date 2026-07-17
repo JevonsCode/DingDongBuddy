@@ -38,6 +38,12 @@ final class McpServer {
               'name': 'dingdong',
               'version': '0.7.8',
             },
+            'instructions':
+                'Call dingdong_bridge at the start of each user task. '
+                'Use dingdong_notify when the task is blocked or waiting for '
+                'the user. A configured completion hook normally handles the '
+                'final task-complete alert; if the client has no completion '
+                'hook, call dingdong_notify once before the final response.',
           },
         });
       }

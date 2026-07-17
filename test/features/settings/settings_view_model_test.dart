@@ -207,15 +207,16 @@ void main() {
       );
       expect(
         model.mcpSetupPrompt,
-        startsWith('Connect DingDong MCP to the current agent or IDE'),
+        startsWith('Connect DingDong to the current agent or IDE'),
       );
       expect(model.mcpSetupPrompt, isNot(contains('Do not explain DingDong')));
       expect(model.mcpSetupPrompt, contains('Preserve every unrelated'));
-      expect(model.mcpSetupPrompt, contains('reload or restart'));
+      expect(model.mcpSetupPrompt, contains('Reload or restart'));
       expect(model.mcpSetupPrompt, contains('dingdong_notify'));
-      expect(model.mcpSetupPrompt, contains('DingDong MCP is connected'));
-      expect(model.mcpSetupPrompt, contains('dingdong_bridge'));
-      expect(model.mcpSetupPrompt, contains('before the final response'));
+      expect(model.mcpSetupPrompt, contains('--notify-stop'));
+      expect(model.mcpSetupPrompt, contains('Stop command hook'));
+      expect(model.mcpSetupPrompt, contains('review and trust'));
+      expect(model.mcpSetupPrompt, contains('task-completion alerts'));
       expect(model.mcpSetupPrompt, isNot(contains('clipboard content')));
 
       expect(
@@ -239,12 +240,14 @@ void main() {
 
       expect(
         model.mcpSetupPrompt,
-        startsWith('请在当前 Agent 或 IDE 中接入 DingDong MCP'),
+        startsWith('请为当前 Agent 或 IDE 完成 DingDong 接入'),
       );
       expect(model.mcpSetupPrompt, isNot(contains('不要介绍 DingDong')));
       expect(model.mcpSetupPrompt, contains('立即调用一次 dingdong_notify'));
       expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
-      expect(model.mcpSetupPrompt, contains('在最终回复前调用一次'));
+      expect(model.mcpSetupPrompt, contains('--notify-stop'));
+      expect(model.mcpSetupPrompt, contains('Stop command Hook'));
+      expect(model.mcpSetupPrompt, contains('审核并信任'));
     },
   );
 

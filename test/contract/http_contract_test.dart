@@ -54,6 +54,57 @@ void main() {
     expect(received?.flashCount, 30);
   });
 
+  test('completion hook suppresses a duplicate Agent notification', () async {
+    int notificationCount = 0;
+    DateTime now = DateTime.utc(2026, 7, 17, 12);
+    final AgentRouter router = AgentRouter(
+      onDing: (DingRequest request) => notificationCount += 1,
+      now: () => now,
+    );
+
+    await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body: '{"message":"Done","source":"Codex"}',
+      ),
+    );
+    now = now.add(const Duration(seconds: 1));
+    final suppressed = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body: '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true}',
+      ),
+    );
+
+    expect(notificationCount, 1);
+    expect(suppressed.json['status'], 'suppressed');
+
+    final otherAgent = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body:
+            '{"message":"Claude Code 已完成本轮任务","source":"Claude Code","fallback":true}',
+      ),
+    );
+    expect(notificationCount, 2);
+    expect(otherAgent.json['status'], 'triggered');
+
+    now = now.add(const Duration(seconds: 5));
+    final triggered = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body: '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true}',
+      ),
+    );
+
+    expect(notificationCount, 3);
+    expect(triggered.json['status'], 'triggered');
+  });
+
   test('POST /library creates a resource that GET /library can query', () async {
     final InMemoryResourceStore store = InMemoryResourceStore();
     final AgentRouter router = AgentRouter(

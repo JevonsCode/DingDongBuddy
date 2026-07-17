@@ -173,6 +173,7 @@ void main() {
     expect(macBuilder, contains('dart-sdk/bin/dart'));
     expect(macBuilder, contains('build cli'));
     expect(macBuilder, contains('--target=bin/dingdong_mcp.dart'));
+    expect(macBuilder, contains('--notify-stop'));
     expect(macBuilder, contains('"method":"tools/list"'));
     expect(universalBuilder, contains('native/arm64'));
     expect(universalBuilder, contains('native/x86_64'));
