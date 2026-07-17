@@ -1,0 +1,50 @@
+scripts/build_macos_mcp.sh
+  s_e1923a1cd1b23c::t_468b072b1de036 61-65
+test/contract/completion_hook_notifier_test.dart
+  s_e1923a1cd1b23c::t_60d017b8db3cb3 24
+  s_e1923a1cd1b23c::t_6c30d1f79ec862 1-23,25-57
+lib/features/agent_api/data/ding_request.dart
+  s_e1923a1cd1b23c::t_60d017b8db3cb3 56,72,80,88
+lib/features/settings/domain/mcp_setup_prompt.dart
+  s_e1923a1cd1b23c::t_27972a0ea24554 3,10,15-22,24,26,31-38,40
+test/contract/mcp_contract_test.dart
+  s_e1923a1cd1b23c::t_6c30d1f79ec862 11,19,25
+  s_e1923a1cd1b23c::t_3fa228df559a9b 7-10,12-18,20-24
+lib/features/agent_api/data/agent_router.dart
+  s_e1923a1cd1b23c::t_60d017b8db3cb3 106,109-111,160-163,166-174
+  s_e1923a1cd1b23c::t_5ea7869716d607 107,164,175
+  s_e1923a1cd1b23c::t_e1a7d72356a7f1 165
+lib/features/agent_api/data/mcp_server.dart
+  s_e1923a1cd1b23c::t_7ed9be46385449 41-46
+bin/dingdong_mcp.dart
+  s_e1923a1cd1b23c::t_7ed9be46385449 6,11-18,26,43-49
+test/features/settings/settings_view_model_test.dart
+  s_e1923a1cd1b23c::t_6c30d1f79ec862 210,216-219,243,248-250
+  s_e1923a1cd1b23c::t_91fef75fe9fb80 214
+lib/features/agent_api/data/completion_hook_notifier.dart
+  s_e1923a1cd1b23c::t_3fa228df559a9b 18
+  s_e1923a1cd1b23c::t_7ed9be46385449 1-17,19-20,22-44
+  s_e1923a1cd1b23c::t_60d017b8db3cb3 21
+test/contract/http_contract_test.dart
+  s_e1923a1cd1b23c::t_5ea7869716d607 84-94,104
+  s_e1923a1cd1b23c::t_60d017b8db3cb3 57-76,78-83,95-99,101-103,105-107
+  s_e1923a1cd1b23c::t_e1a7d72356a7f1 77,100
+test/packaging/desktop_identity_test.dart
+  s_e1923a1cd1b23c::t_468b072b1de036 176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.34-trip",
+  "base_commit_sha": "0c606a7af22eae94d42a00327e255a79c4eaefbb",
+  "prompts": {},
+  "sessions": {
+    "s_e1923a1cd1b23c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f650b-3c08-7212-8088-2a428fe6f148",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
