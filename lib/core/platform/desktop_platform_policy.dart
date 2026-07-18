@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Returns whether [platform] uses Command as its primary shortcut modifier.

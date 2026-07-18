@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dingdong/core/platform/desktop_window_policy.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
-import 'package:dingdong/core/platform/desktop_window_policy.dart';
-import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

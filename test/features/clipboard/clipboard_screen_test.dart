@@ -12,10 +12,26 @@ import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+void testWidgetsOnPlatform(
+  String description,
+  TargetPlatform platform,
+  WidgetTesterCallback callback,
+) {
+  testWidgets(description, (WidgetTester tester) async {
+    debugDefaultTargetPlatformOverride = platform;
+    try {
+      await callback(tester);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+}
 
 void main() {
   testWidgets('5000 clipboard rows build only the visible window', (
@@ -610,35 +626,38 @@ void main() {
     expect(previewCount, 1);
   });
 
-  testWidgets('secondary click exposes the original clipboard actions', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 760);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final ClipboardRecord record = _record();
-    final ClipboardViewModel model = ClipboardViewModel(
-      InMemoryClipboardStore(<ClipboardRecord>[record]),
-    )..load();
+  testWidgetsOnPlatform(
+    'secondary click exposes the original clipboard actions',
+    TargetPlatform.windows,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ClipboardRecord record = _record();
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[record]),
+      )..load();
 
-    await tester.pumpWidget(
-      MaterialApp(home: ClipboardScreen(viewModel: model)),
-    );
-    await tester.tap(find.text(record.title), buttons: kSecondaryButton);
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        MaterialApp(home: ClipboardScreen(viewModel: model)),
+      );
+      await tester.tap(find.text(record.title), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Details'), findsOneWidget);
-    expect(find.text('Copy'), findsOneWidget);
-    expect(find.text('Add title'), findsOneWidget);
-    expect(find.text('Edit text'), findsOneWidget);
-    expect(find.text('Save as prompt'), findsOneWidget);
-    expect(find.text('Save as knowledge'), findsNothing);
-    expect(find.text('Archive'), findsNothing);
-    expect(find.text('Archive to…'), findsOneWidget);
-    expect(find.text('Share'), findsOneWidget);
-    expect(find.text('Delete'), findsOneWidget);
-  });
+      expect(find.byKey(const Key('windows-context-menu')), findsOneWidget);
+      expect(find.text('Details'), findsOneWidget);
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Add title'), findsOneWidget);
+      expect(find.text('Edit text'), findsOneWidget);
+      expect(find.text('Save as prompt'), findsOneWidget);
+      expect(find.text('Save as knowledge'), findsNothing);
+      expect(find.text('Archive'), findsNothing);
+      expect(find.text('Archive to…'), findsOneWidget);
+      expect(find.text('Share'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'archive to selects existing and new groups without a large alert',
