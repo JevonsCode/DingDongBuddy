@@ -20,6 +20,7 @@ import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/native_clipboard_change_source.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
+import 'package:flutter/services.dart';
 
 /// Composition root for production repositories and long-lived services.
 final class AppDependencies {
@@ -75,7 +76,12 @@ final class AppDependencies {
       preferences,
     );
     final BuiltInResourceInstaller builtInResourceInstaller =
-        BuiltInResourceInstaller(resourceStore, preferences);
+        BuiltInResourceInstaller(
+          resourceStore,
+          preferences,
+          skillDocumentLoader: () =>
+              rootBundle.loadString('skills/dingdong-configure/SKILL.md'),
+        );
     final NativeNotificationGateway notificationGateway =
         NativeNotificationGateway();
     final AgentRouter router = AgentRouter(

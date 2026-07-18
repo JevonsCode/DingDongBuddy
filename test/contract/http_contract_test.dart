@@ -463,6 +463,178 @@ void main() {
   });
 
   test(
+    'Agent API creates and updates project trigger groups for scoped resources',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 19);
+      final InMemoryResourceStore resources = InMemoryResourceStore();
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        idGenerator: () => 'checkout-scope',
+        now: () => now,
+      );
+
+      final rejectedUnknownScope = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library',
+          body:
+              '{"type":"prompt","title":"Broken policy","content":"Must not save","triggerGroupIds":["missing-scope"]}',
+        ),
+      );
+
+      final createdGroup = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library/trigger-groups',
+          body:
+              '{"name":"Checkout","rules":[{"field":"projectPath","operator":"contains","value":"/checkout/"},{"field":"repositoryUrl","operator":"equals","value":"https://github.com/acme/checkout.git"}]}',
+        ),
+      );
+      final createdResource = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library',
+          body:
+              '{"type":"prompt","title":"SKU sku-pro policy","content":"Check region and effective date before changing price.","tags":["sku:sku-pro","policy"],"triggerGroupIds":["checkout-scope"],"activation":"always"}',
+        ),
+      );
+      final rejectedUnknownScopePatch = await router.route(
+        const HttpRequestData(
+          method: 'PATCH',
+          uri: '/library/checkout-scope',
+          body: '{"triggerGroupIds":["missing-scope"]}',
+        ),
+      );
+      final listed = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/library/trigger-groups'),
+      );
+      final capabilities = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/agent/capabilities'),
+      );
+
+      expect(rejectedUnknownScope.statusCode, 400);
+      expect(
+        rejectedUnknownScope.json['message'],
+        'Unknown trigger group IDs: missing-scope',
+      );
+      expect(createdGroup.statusCode, 201);
+      expect(createdResource.statusCode, 201);
+      expect(rejectedUnknownScopePatch.statusCode, 400);
+      expect(listed.statusCode, 200);
+      expect(listed.json['groups'], hasLength(1));
+      final group =
+          (listed.json['groups'] as List<Object?>).single
+              as Map<String, Object?>;
+      expect(group['id'], 'checkout-scope');
+      expect(group['name'], 'Checkout');
+      expect(group['rules'], hasLength(2));
+      expect(
+        capabilities.json['features'],
+        contains('triggerGroupConfiguration'),
+      );
+      expect(
+        capabilities.json['endpoints'],
+        contains(
+          predicate<Map<String, Object?>>(
+            (Map<String, Object?> endpoint) =>
+                endpoint['method'] == 'POST' &&
+                endpoint['path'] == '/library/trigger-groups',
+          ),
+        ),
+      );
+
+      final updated = await router.route(
+        const HttpRequestData(
+          method: 'PATCH',
+          uri: '/library/trigger-groups/checkout-scope',
+          body:
+              '{"name":"Checkout production","rules":[{"field":"repositoryUrl","operator":"equals","value":"https://github.com/acme/checkout.git"}]}',
+        ),
+      );
+      expect(updated.statusCode, 200);
+      expect(
+        (updated.json['group'] as Map<String, Object?>)['name'],
+        'Checkout production',
+      );
+
+      final outside = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body:
+              '{"task":"change sku-pro price","workspacePath":"/work/checkout/","repositoryUrl":"https://github.com/acme/other.git","expand":"prompts"}',
+        ),
+      );
+      final inside = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body:
+              '{"task":"change sku-pro price","repositoryUrl":"https://github.com/acme/checkout.git","expand":"prompts"}',
+        ),
+      );
+      List<Object?> prompts(Map<String, Object?> json) =>
+          (json['active'] as Map<String, Object?>)['prompts'] as List<Object?>;
+      expect(prompts(outside.json), isEmpty);
+      expect(prompts(inside.json), hasLength(1));
+    },
+  );
+
+  test('deleting a trigger group detaches it from resources', () async {
+    final DateTime now = DateTime.utc(2026, 7, 19);
+    final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'policy',
+        type: ResourceType.prompt,
+        title: 'Policy',
+        content: 'Policy body',
+        triggerGroupIds: const <String>['checkout', 'shared'],
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore(
+      <TriggerGroup>[
+        TriggerGroup(
+          id: 'checkout',
+          name: 'Checkout',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.contains,
+              value: 'checkout',
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ],
+    );
+    final AgentRouter router = AgentRouter(
+      resourceStore: resources,
+      triggerGroupStore: groups,
+      now: () => now.add(const Duration(minutes: 1)),
+    );
+
+    final response = await router.route(
+      const HttpRequestData(
+        method: 'DELETE',
+        uri: '/library/trigger-groups/checkout',
+      ),
+    );
+
+    expect(response.statusCode, 200);
+    expect(await groups.load(), isEmpty);
+    expect((await resources.load()).single.triggerGroupIds, <String>['shared']);
+    expect(
+      (await resources.load()).single.updatedAt,
+      now.add(const Duration(minutes: 1)),
+    );
+  });
+
+  test(
     'tracked full reads increment usage while ordinary reads do not',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 13);

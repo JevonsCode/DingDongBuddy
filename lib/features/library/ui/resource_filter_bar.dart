@@ -109,29 +109,28 @@ class ResourceFilterBar extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    key: const Key('library-import'),
+                  _TransferActionButton(
+                    actionKey: const Key('library-import'),
                     tooltip: context.localized('Import folder', '导入文件夹'),
                     onPressed: onImport,
-                    icon: const Icon(
-                      Icons.drive_folder_upload_outlined,
-                      size: 19,
-                    ),
+                    icon: Icons.drive_folder_upload_outlined,
                   ),
-                  IconButton(
-                    key: const Key('library-import-json'),
+                  const SizedBox(width: 5),
+                  _TransferActionButton(
+                    actionKey: const Key('library-import-json'),
                     tooltip: context.localized(
                       'Import shared JSON',
                       '导入分享 JSON',
                     ),
                     onPressed: onImportJson,
-                    icon: const Icon(Icons.upload_file_outlined, size: 19),
+                    icon: Icons.upload_file_outlined,
                   ),
-                  IconButton(
-                    key: const Key('library-export'),
+                  const SizedBox(width: 5),
+                  _TransferActionButton(
+                    actionKey: const Key('library-export'),
                     tooltip: context.localized('Export JSON', '导出 JSON'),
                     onPressed: onExport,
-                    icon: const Icon(Icons.download_outlined, size: 19),
+                    icon: Icons.download_outlined,
                   ),
                   const SizedBox(width: 8),
                   FilledButton.icon(
@@ -239,6 +238,45 @@ class ResourceFilterBar extends StatelessWidget {
 }
 
 enum _LibraryAction { create, import, importJson, export }
+
+class _TransferActionButton extends StatelessWidget {
+  const _TransferActionButton({
+    required this.actionKey,
+    required this.tooltip,
+    required this.onPressed,
+    required this.icon,
+  });
+
+  final Key actionKey;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return IconButton(
+      key: actionKey,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        fixedSize: const Size.square(34),
+        minimumSize: const Size.square(34),
+        maximumSize: const Size.square(34),
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: colors.onSurfaceVariant,
+        backgroundColor: colors.surface,
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.78)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+      ),
+      icon: SizedBox.square(
+        dimension: 18,
+        child: Center(child: Icon(icon, size: 18)),
+      ),
+    );
+  }
+}
 
 String _typeLabel(BuildContext context, ResourceType type) {
   return switch (type) {

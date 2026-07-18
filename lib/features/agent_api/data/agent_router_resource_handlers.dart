@@ -41,6 +41,31 @@ extension _AgentRouterResourceHandlers on AgentRouter {
         );
       }
       final bool pinned = json['pinned'] as bool? ?? false;
+      final List<String> triggerGroupIds =
+          (json['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
+              .map((Object? value) => value as String)
+              .toList(growable: false);
+      final TriggerGroupStore? triggerGroups = _triggerGroupStore;
+      if (triggerGroups != null && triggerGroupIds.isNotEmpty) {
+        final Set<String> knownIds = (await triggerGroups.load())
+            .map((TriggerGroup group) => group.id)
+            .toSet();
+        final List<String> unknownIds =
+            triggerGroupIds
+                .where((String id) => !knownIds.contains(id))
+                .toSet()
+                .toList(growable: false)
+              ..sort();
+        if (unknownIds.isNotEmpty) {
+          return HttpResponseData(
+            statusCode: 400,
+            json: <String, Object?>{
+              'status': 'error',
+              'message': 'Unknown trigger group IDs: ${unknownIds.join(', ')}',
+            },
+          );
+        }
+      }
       final DateTime timestamp = _now().toUtc();
       final Resource resource = Resource(
         id: _idGenerator(),
@@ -59,10 +84,7 @@ extension _AgentRouterResourceHandlers on AgentRouter {
           json['activation'],
           pinned: pinned,
         ),
-        triggerGroupIds:
-            (json['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
-                .map((Object? value) => value as String)
-                .toList(growable: false),
+        triggerGroupIds: triggerGroupIds,
         sortOrder: json['sortOrder'] as int?,
         createdAt: timestamp,
         updatedAt: timestamp,

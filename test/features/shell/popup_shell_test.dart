@@ -42,6 +42,33 @@ void main() {
     expect(find.byKey(const Key('popup-tab-3')), findsNothing);
   });
 
+  testWidgets('navigator overlays are clipped to the popup window radius', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(const DingDongApp());
+    await tester.pumpAndSettle();
+
+    final Finder windowClipFinder = find.byKey(
+      const Key('popup-window-clip'),
+    );
+    final ClipRRect windowClip = tester.widget<ClipRRect>(windowClipFinder);
+
+    expect(windowClip.borderRadius, BorderRadius.circular(PopupStyle.radius));
+    expect(windowClip.clipBehavior, Clip.antiAlias);
+    expect(
+      find.descendant(
+        of: windowClipFinder,
+        matching: find.byType(Overlay),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('Escape dismisses the transient popup', (
     WidgetTester tester,
   ) async {

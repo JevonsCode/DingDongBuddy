@@ -2,7 +2,10 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
@@ -254,6 +257,61 @@ Apply the user's saved preferences.''',
       await expectLater(
         find.byKey(const Key('clipboard-group-dialog')),
         matchesGoldenFile('goldens/clipboard_group_dialog.png'),
+      );
+    },
+    tags: <String>['golden'],
+  );
+
+  testWidgets(
+    'clipboard category rules stay compact without overlapping action icons',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(700, 520);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(),
+      )..load();
+      addTearDown(model.dispose);
+
+      await tester.pumpWidget(
+        _testApp(
+          Builder(
+            builder: (BuildContext context) => Center(
+              child: FilledButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) =>
+                      ClipboardCategoryRulesDialog(viewModel: model),
+                ),
+                child: const Text('打开分类'),
+              ),
+            ),
+          ),
+        ),
+      );
+      final BuildContext imageContext = tester.element(find.byType(Scaffold));
+      await tester.runAsync(() async {
+        for (final String symbol in <String>[
+          'delete',
+          'edit',
+          'file',
+          'image',
+          'link',
+          'text',
+        ]) {
+          await precacheImage(
+            AssetImage('Assets/Symbols/$symbol.png'),
+            imageContext,
+          );
+        }
+      });
+      await tester.tap(find.text('打开分类'));
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byKey(const Key('clipboard-category-rules-dialog')),
+        matchesGoldenFile('goldens/clipboard_category_rules_dialog.png'),
       );
     },
     tags: <String>['golden'],

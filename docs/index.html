@@ -6,7 +6,7 @@
     <title>DingDong — Find what you copied. Hear when your Agent is done.</title>
     <meta name="description" content="Find what you copied, keep prompts and Skills in order, and hear a DingDong when an Agent is done, stuck, or waiting for you.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260717-release">
+    <link rel="stylesheet" href="./styles.css?v=20260719-product-demo">
   </head>
   <body>
     <header class="site-header">
@@ -58,19 +58,18 @@
               <img src="./assets/dingdong-icon.png" alt="">
               <div class="demo-title-copy">
                 <strong>DingDong</strong>
-                <span data-i18n="demo.subtitle">Local agent workspace</span>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
-                <span>↻</span>
-                <span>⚙</span>
-                <span>⌃</span>
+                <span><img src="./assets/symbols/refresh.png" alt=""></span>
+                <span><img src="./assets/symbols/settings.png" alt=""></span>
+                <span><img src="./assets/symbols/collapse.png" alt=""></span>
               </div>
             </div>
 
             <div class="demo-tabs" role="tablist" aria-label="DingDong views">
-              <button type="button" role="tab" data-demo-tab="today" aria-selected="false" data-i18n="demo.today">Dynamic</button>
-              <button type="button" role="tab" data-demo-tab="library" aria-selected="true" data-i18n="demo.library">Library</button>
-              <button type="button" role="tab" data-demo-tab="clipboard" aria-selected="false" data-i18n="demo.clipboard">Clipboard</button>
+              <button type="button" role="tab" data-demo-tab="today" aria-selected="false"><img src="./assets/symbols/today.png" alt=""><span data-i18n="demo.today">Dynamic</span></button>
+              <button type="button" role="tab" data-demo-tab="library" aria-selected="true"><img src="./assets/symbols/library.png" alt=""><span data-i18n="demo.library">Library</span></button>
+              <button type="button" role="tab" data-demo-tab="clipboard" aria-selected="false"><img src="./assets/symbols/clipboard.png" alt=""><span data-i18n="demo.clipboard">Clipboard</span></button>
             </div>
 
             <div class="demo-panel" id="demo-panel" role="tabpanel" aria-live="polite"></div>
@@ -505,24 +504,33 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             subtitle: "Reusable Agent configuration, organized locally",
             search: "Search prompts, Skills, and MCP",
             filters: ["All", "Prompts", "Skills", "MCP"],
-            groups: ["All 3", "DingDong project 2", "Design work 1"],
+            groups: [
+              { id: "all", label: "All", count: 3 },
+              { id: "dingdong", label: "DingDong project", count: 2 },
+              { id: "design", label: "Design work", count: 1 }
+            ],
             items: [
-              { type: "prompt", mark: "“", title: "End replies with 🌟", body: "Add one 「🌟」 after every complete reply.", tags: ["Prompt", "Built in"], state: "Enabled" },
-              { type: "skill", mark: "✣", title: "user-taste", body: "Use when UI, product, writing, or code decisions need project preferences.", tags: ["Skill", "Online"], state: "Enabled" },
-              { type: "mcp", mark: "MCP", title: "DingDong MCP", body: "Local STDIO bridge for resources and completion notifications.", tags: ["MCP", "STDIO"], state: "Enabled" }
+              { type: "prompt", group: "dingdong", title: "End replies with 🌟", body: "Add one 「🌟」 after every complete reply.", tags: ["DingDong project", "Built in"] },
+              { type: "skill", group: "design", title: "user-taste", body: "Use when UI, product, writing, or code decisions need project preferences.", tags: ["Skill", "Online"] },
+              { type: "mcp", group: "dingdong", title: "DingDong MCP", body: "Local STDIO bridge for resources and completion notifications.", tags: ["MCP", "STDIO"] }
             ]
           },
           clipboard: {
             search: "Search clipboard",
             monitor: "On",
-            filter: "≡",
+            categories: [
+              { id: "all", label: "All" },
+              { id: "link", label: "Links" },
+              { id: "image", label: "Images" },
+              { id: "text", label: "Text" }
+            ],
             items: [
-              { id: "image", kind: "IMG", title: "DingDong 0.7.9 interface.png", body: "PNG · image · 271 KB", time: "17:04", thumbnail: true },
-              { id: "path", kind: "PATH", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
-              { id: "command", kind: "CMD", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
-              { id: "release", kind: "URL", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
-              { id: "notes", kind: "TEXT", title: "Release notes", body: "Library, clipboard thumbnails, and six Ding sounds.", time: "16:41" },
-              { id: "config", kind: "JSON", title: "MCP config", body: "command: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp", time: "16:32" }
+              { id: "image", kind: "IMG", icon: "image", title: "DingDong 0.7.9 interface.png", body: "PNG · image · 271 KB", time: "17:04" },
+              { id: "path", kind: "PATH", icon: "path", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
+              { id: "command", kind: "CMD", icon: "command", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
+              { id: "release", kind: "URL", icon: "link", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
+              { id: "notes", kind: "TEXT", icon: "text", title: "Release notes", body: "Library, clipboard thumbnails, and six Ding sounds.", time: "16:41" },
+              { id: "config", kind: "JSON", icon: "code", title: "MCP config", body: "command: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp", time: "16:32" }
             ]
           },
           labels: { recentAgents: "Recent agents", enabled: "Enabled", library: "Library", manage: "Manage", monitorOff: "Paused", now: "Now" }
@@ -541,24 +549,33 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             subtitle: "把常用的 Agent 配置收在一起",
             search: "搜索提示词、Skill 和 MCP",
             filters: ["全部", "提示词", "技能", "MCP"],
-            groups: ["全部 3", "DingDong 项目 2", "设计工作 1"],
+            groups: [
+              { id: "all", label: "全部", count: 3 },
+              { id: "dingdong", label: "DingDong 项目", count: 2 },
+              { id: "design", label: "设计工作", count: 1 }
+            ],
             items: [
-              { type: "prompt", mark: "“", title: "回复末尾添加 🌟", body: "每次完整回复的最后加一个「🌟」", tags: ["提示词", "内置"], state: "已启用" },
-              { type: "skill", mark: "✣", title: "user-taste", body: "UI、产品、文案或代码判断需要项目偏好时使用", tags: ["技能", "在线"], state: "已启用" },
-              { type: "mcp", mark: "MCP", title: "DingDong MCP", body: "用于资源接入和任务完成提醒的本地 STDIO 桥接", tags: ["MCP", "STDIO"], state: "已启用" }
+              { type: "prompt", group: "dingdong", title: "回复末尾添加 🌟", body: "每次完整回复的最后加一个「🌟」", tags: ["DingDong 项目", "内置"] },
+              { type: "skill", group: "design", title: "user-taste", body: "UI、产品、文案或代码判断需要项目偏好时使用", tags: ["技能", "在线"] },
+              { type: "mcp", group: "dingdong", title: "DingDong MCP", body: "用于资源接入和任务完成提醒的本地 STDIO 桥接", tags: ["MCP", "STDIO"] }
             ]
           },
           clipboard: {
             search: "搜索剪贴板",
             monitor: "开",
-            filter: "≡",
+            categories: [
+              { id: "all", label: "全部" },
+              { id: "link", label: "链接" },
+              { id: "image", label: "图片" },
+              { id: "text", label: "文本" }
+            ],
             items: [
-              { id: "image", kind: "图片", title: "DingDong 0.7.9 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04", thumbnail: true },
-              { id: "path", kind: "路径", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
-              { id: "command", kind: "命令", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
-              { id: "release", kind: "URL", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
-              { id: "notes", kind: "文本", title: "版本说明", body: "资源库、图片缩略图和六种叮咚声", time: "16:41" },
-              { id: "config", kind: "JSON", title: "MCP 配置", body: "command: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp", time: "16:32" }
+              { id: "image", kind: "图片", icon: "image", title: "DingDong 0.7.9 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
+              { id: "path", kind: "路径", icon: "path", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
+              { id: "command", kind: "命令", icon: "command", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
+              { id: "release", kind: "URL", icon: "link", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
+              { id: "notes", kind: "文本", icon: "text", title: "版本说明", body: "资源库、图片缩略图和六种叮咚声", time: "16:41" },
+              { id: "config", kind: "JSON", icon: "code", title: "MCP 配置", body: "command: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp", time: "16:32" }
             ]
           },
           labels: { recentAgents: "最近 Agent", enabled: "已启用", library: "资源库", manage: "资源管理", monitorOff: "已暂停", now: "现在" }
@@ -602,7 +619,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         language: "en",
         activeTab: "library",
         libraryFilter: "all",
+        libraryGroup: "all",
         clipboardFilter: false,
+        clipboardCategory: "all",
         clipboardMonitoring: true,
         copies: [],
         copySerial: 0,
@@ -615,6 +634,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         if (className) element.className = className;
         if (text !== undefined) element.textContent = text;
         return element;
+      };
+
+      const createDemoSymbol = (name, className = "") => {
+        const symbol = document.createElement("img");
+        symbol.className = className;
+        symbol.src = `./assets/symbols/${name}.png`;
+        symbol.alt = "";
+        return symbol;
       };
 
       const renderTodayDemo = () => {
@@ -632,9 +659,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         status.append(statusTitle, statusMeta);
 
         const metrics = createDemoElement("div", "demo-metrics");
-        content.today.metrics.forEach(([value, label]) => {
+        const metricSymbols = ["library", "clipboard", "mcp"];
+        content.today.metrics.forEach(([value, label], index) => {
           const metric = createDemoElement("article", "demo-metric-card");
-          metric.append(createDemoElement("b", "", value), createDemoElement("span", "", label));
+          metric.append(
+            createDemoSymbol(metricSymbols[index], "demo-metric-symbol"),
+            createDemoElement("b", "", value),
+            createDemoElement("span", "", label)
+          );
           metrics.append(metric);
         });
 
@@ -660,14 +692,22 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         const header = createDemoElement("div", "demo-library-header");
         const title = createDemoElement("div", "");
         title.append(createDemoElement("b", "", content.labels.library), createDemoElement("span", "", content.library.subtitle));
-        const manage = createDemoElement("button", "demo-manage-button", content.labels.manage);
+        const manage = createDemoElement("button", "demo-manage-button");
         manage.type = "button";
+        manage.append(
+          createDemoSymbol("manage", "demo-manage-symbol"),
+          createDemoElement("span", "", content.labels.manage)
+        );
         manage.addEventListener("click", () => {
           demoFeedback.textContent = demoState.language === "zh" ? "资源管理会在 Mac 应用中打开" : "Manage opens in the Mac app.";
         });
         header.append(title, manage);
 
-        const search = createDemoElement("div", "demo-search-surface", content.library.search);
+        const search = createDemoElement("div", "demo-search-surface");
+        search.append(
+          createDemoSymbol("search", "demo-search-symbol"),
+          createDemoElement("span", "", content.library.search)
+        );
         const filters = createDemoElement("div", "demo-library-filters");
         content.library.filters.forEach((label, index) => {
           const values = ["all", "prompt", "skill", "mcp"];
@@ -676,26 +716,56 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           button.dataset.libraryFilter = values[index];
           button.addEventListener("click", () => {
             demoState.libraryFilter = values[index];
+            demoState.libraryGroup = "all";
             renderDemo();
           });
           filters.append(button);
         });
 
         const groups = createDemoElement("div", "demo-library-groups");
-        content.library.groups.forEach((group) => groups.append(createDemoElement("span", "", group)));
+        content.library.groups.forEach((group) => {
+          const button = createDemoElement(
+            "button",
+            demoState.libraryGroup === group.id ? "active" : ""
+          );
+          button.type = "button";
+          button.append(
+            createDemoElement("span", "", group.label),
+            createDemoElement("b", "", group.count)
+          );
+          button.addEventListener("click", () => {
+            demoState.libraryGroup = group.id;
+            demoState.libraryFilter = "all";
+            renderDemo();
+          });
+          groups.append(button);
+        });
 
         const list = createDemoElement("div", "demo-resource-list");
         content.library.items
           .filter((item) => demoState.libraryFilter === "all" || item.type === demoState.libraryFilter)
+          .filter((item) => demoState.libraryGroup === "all" || item.group === demoState.libraryGroup)
           .forEach((item) => {
             const row = createDemoElement("article", `demo-resource-row type-${item.type}`);
-            const mark = createDemoElement("span", "demo-resource-mark", item.mark);
+            const mark = createDemoSymbol(item.type, "demo-resource-symbol");
             const text = createDemoElement("div", "demo-resource-copy");
             text.append(createDemoElement("b", "", item.title), createDemoElement("p", "", item.body));
             const tags = createDemoElement("div", "demo-resource-tags");
             item.tags.forEach((tag) => tags.append(createDemoElement("span", "", tag)));
             text.append(tags);
-            row.append(mark, text, createDemoElement("span", "demo-resource-state", item.state));
+            const actions = createDemoElement("div", "demo-resource-actions");
+            ["enabled", "copy", "edit", "delete"].forEach((action) => {
+              const button = createDemoElement(
+                "button",
+                `demo-resource-action action-${action}`
+              );
+              button.type = "button";
+              button.tabIndex = -1;
+              button.setAttribute("aria-label", action);
+              button.append(createDemoSymbol(action, ""));
+              actions.append(button);
+            });
+            row.append(mark, text, actions);
             list.append(row);
           });
 
@@ -716,9 +786,27 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           demoState.clipboardMonitoring = !demoState.clipboardMonitoring;
           renderDemo();
         });
-        const search = createDemoElement("div", "demo-search-surface", content.clipboard.search);
-        const filter = createDemoElement("button", `demo-filter-button${demoState.clipboardFilter ? " active" : ""}`, content.clipboard.filter);
+        const search = createDemoElement("div", "demo-search-surface");
+        search.append(
+          createDemoSymbol("search", "demo-search-symbol"),
+          createDemoElement("span", "", content.clipboard.search)
+        );
+        const hasClipboardCategory = demoState.clipboardCategory !== "all";
+        const filter = createDemoElement(
+          "button",
+          `demo-filter-button${demoState.clipboardFilter || hasClipboardCategory ? " active" : ""}`
+        );
         filter.type = "button";
+        filter.setAttribute(
+          "aria-label",
+          demoState.language === "zh" ? "展开或收起剪贴板筛选" : "Show or hide clipboard filters"
+        );
+        filter.append(
+          createDemoSymbol(demoState.clipboardFilter ? "collapse" : "filter", "")
+        );
+        if (hasClipboardCategory) {
+          filter.append(createDemoElement("span", "demo-filter-indicator"));
+        }
         filter.setAttribute("aria-pressed", String(demoState.clipboardFilter));
         filter.addEventListener("click", () => {
           demoState.clipboardFilter = !demoState.clipboardFilter;
@@ -726,38 +814,58 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         });
         toolbar.append(monitor, search, filter);
 
+        const categoryFilters = createDemoElement("div", "demo-clipboard-filters");
+        if (demoState.clipboardFilter) {
+          content.clipboard.categories.forEach((category) => {
+            const button = createDemoElement(
+              "button",
+              demoState.clipboardCategory === category.id ? "active" : "",
+              category.label
+            );
+            button.type = "button";
+            button.addEventListener("click", () => {
+              demoState.clipboardCategory = category.id;
+              renderDemo();
+            });
+            categoryFilters.append(button);
+          });
+        }
+
         const baseItems = content.clipboard.items;
         const copiedItems = demoState.copies.map((record) => ({
           id: `copy-${record.serial}`,
           kind: "URL",
+          icon: "link",
           title: demoState.language === "zh" ? "URL: DingDong 项目主页" : "URL: DingDong project",
           body: record.value,
           time: content.labels.now,
           isNew: record.serial === demoState.highlightedSerial
         }));
         let items = [...copiedItems, ...baseItems];
-        if (demoState.clipboardFilter) items = items.filter((item) => ["URL", "CMD", "命令"].includes(item.kind));
+        if (hasClipboardCategory) {
+          items = items.filter((item) => {
+            if (demoState.clipboardCategory === "text") {
+              return ["text", "code", "path", "command"].includes(item.icon);
+            }
+            return item.icon === demoState.clipboardCategory;
+          });
+        }
 
         const list = createDemoElement("div", "demo-clipboard-list");
         items.slice(0, demoState.copies.length ? 7 : 6).forEach((item) => {
           const row = createDemoElement("article", `demo-clipboard-row${item.isNew ? " is-new" : ""}`);
           row.dataset.clipboardItem = item.id;
-          let mark;
-          if (item.thumbnail) {
-            mark = document.createElement("img");
-            mark.className = "demo-clipboard-thumbnail";
-            mark.src = "./assets/dingdong-icon.png";
-            mark.alt = "";
-          } else {
-            mark = createDemoElement("span", "demo-clipboard-kind", item.kind);
-          }
+          const mark = createDemoElement("span", "demo-clipboard-kind");
+          mark.append(createDemoSymbol(item.icon || "text", ""));
           const text = createDemoElement("div", "demo-clipboard-copy");
           text.append(createDemoElement("b", "", item.title), createDemoElement("p", "", item.body));
           row.append(mark, text, createDemoElement("time", "", item.time));
           list.append(row);
         });
 
-        section.append(toolbar, list);
+        section.append(toolbar);
+        if (demoState.clipboardFilter) section.append(categoryFilters);
+        section.append(list);
         return section;
       };
 

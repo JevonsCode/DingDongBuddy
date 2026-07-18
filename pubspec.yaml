@@ -37,4 +37,5 @@ flutter:
     - Assets/
     - Assets/Sounds/
     - Assets/Symbols/
+    - skills/dingdong-configure/
     - windows/runner/resources/app_icon.ico

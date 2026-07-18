@@ -37,6 +37,8 @@ class _CompactClipboardToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ClipboardSettingsController? settings = settingsViewModel;
+    final bool filtersActive =
+        viewModel.selectedCategoryId != null || viewModel.selectedGroup != null;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 14, 16, filtersExpanded ? 12 : 20),
       child: Column(
@@ -93,12 +95,18 @@ class _CompactClipboardToolbar extends StatelessWidget {
                           'Hide categories and groups',
                           '收起分类与分组',
                         )
+                      : filtersActive
+                      ? context.localized(
+                          'Show categories and groups (filters active)',
+                          '展开分类与分组（筛选已启用）',
+                        )
                       : context.localized(
                           'Show categories and groups',
                           '展开分类与分组',
                         ),
                   child: _FilterToggleButton(
                     filtersExpanded: filtersExpanded,
+                    filtersActive: filtersActive,
                     showShortcutHint: showShortcutHint,
                     onPressed: onToggleFilters,
                   ),
@@ -126,11 +134,13 @@ class _CompactClipboardToolbar extends StatelessWidget {
 class _FilterToggleButton extends StatefulWidget {
   const _FilterToggleButton({
     required this.filtersExpanded,
+    required this.filtersActive,
     required this.showShortcutHint,
     required this.onPressed,
   });
 
   final bool filtersExpanded;
+  final bool filtersActive;
   final bool showShortcutHint;
   final VoidCallback onPressed;
 
@@ -165,7 +175,8 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
   @override
   void didUpdateWidget(covariant _FilterToggleButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.filtersExpanded != widget.filtersExpanded) {
+    if (oldWidget.filtersExpanded != widget.filtersExpanded ||
+        oldWidget.filtersActive != widget.filtersActive) {
       _controller.forward(from: 0);
     }
   }
@@ -178,9 +189,13 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
 
   @override
   Widget build(BuildContext context) {
-    final Color foreground = widget.filtersExpanded
+    final bool highlighted = widget.filtersExpanded || widget.filtersActive;
+    final Color foreground = highlighted
         ? PopupStyle.accent
         : PopupStyle.textSecondary;
+    final Color background = highlighted
+        ? PopupStyle.accentSoft
+        : PopupStyle.surface;
     return ScaleTransition(
       key: const Key('clipboard-filter-transition'),
       scale: _scale,
@@ -192,37 +207,60 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
           minimumSize: const Size(35, 36),
           padding: EdgeInsets.zero,
           foregroundColor: foreground,
-          backgroundColor: widget.filtersExpanded
-              ? PopupStyle.accentSoft
-              : PopupStyle.surface,
+          backgroundColor: background,
           side: BorderSide(
-            color: widget.filtersExpanded
+            color: highlighted
                 ? PopupStyle.accent.withValues(alpha: 0.32)
                 : PopupStyle.border,
           ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           animationDuration: const Duration(milliseconds: 160),
         ),
-        child: widget.showShortcutHint
-            ? const Text(
-                'R',
-                key: Key('clipboard-filter-shortcut'),
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
+        child: SizedBox(
+          width: 35,
+          height: 36,
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              if (widget.showShortcutHint)
+                const Text(
+                  'R',
+                  key: Key('clipboard-filter-shortcut'),
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                )
+              else
+                PopupSymbolIcon(
+                  widget.filtersExpanded ? 'collapse' : 'filter',
+                  key: Key(
+                    widget.filtersExpanded
+                        ? 'clipboard-collapse-filters-icon'
+                        : 'clipboard-filter-icon',
+                  ),
+                  size: 17,
+                  color: foreground,
                 ),
-              )
-            : PopupSymbolIcon(
-                widget.filtersExpanded ? 'collapse' : 'filter',
-                key: Key(
-                  widget.filtersExpanded
-                      ? 'clipboard-collapse-filters-icon'
-                      : 'clipboard-filter-icon',
+              if (widget.filtersActive)
+                Positioned(
+                  top: 5,
+                  right: 5,
+                  child: Container(
+                    key: const Key('clipboard-filter-active-indicator'),
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: PopupStyle.accent,
+                      border: Border.all(color: background),
+                    ),
+                  ),
                 ),
-                size: 17,
-                color: foreground,
-              ),
+            ],
+          ),
+        ),
       ),
     );
   }

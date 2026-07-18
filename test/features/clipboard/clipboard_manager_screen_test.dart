@@ -1,6 +1,7 @@
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
@@ -229,6 +230,49 @@ void main() {
 
     await tester.tap(find.byKey(const Key('clipboard-manager-categories')));
     await tester.pumpAndSettle();
+    final Finder dialog = find.byKey(
+      const Key('clipboard-category-rules-dialog'),
+    );
+    expect(tester.getSize(dialog).height, lessThan(430));
+    expect(
+      find.descendant(
+        of: dialog,
+        matching: find.byType(ReorderableDragStartListener),
+      ),
+      findsNWidgets(model.categoryRules.length),
+    );
+    final Finder textDeleteButton = find.byKey(
+      const Key('clipboard-category-delete-text'),
+    );
+    expect(
+      find.descendant(
+        of: textDeleteButton,
+        matching: find.byType(PopupSymbolIcon),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      <String>['links', 'images', 'files', 'text'].every((String id) {
+        final PopupSymbolIcon icon = tester.widget<PopupSymbolIcon>(
+          find.descendant(
+            of: find.byKey(Key('clipboard-category-icon-$id')),
+            matching: find.byType(PopupSymbolIcon),
+          ),
+        );
+        return icon.symbol ==
+            switch (id) {
+              'links' => 'link',
+              'images' => 'image',
+              'files' => 'file',
+              _ => 'text',
+            };
+      }),
+      isTrue,
+    );
+    expect(
+      find.byKey(const Key('clipboard-category-edit-text')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('clipboard-category-add')));
     await tester.pumpAndSettle();
     expect(find.byType(Switch), findsNothing);

@@ -5,23 +5,30 @@ import 'dart:math';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/knowledge_indexer.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 
 /// Handles resource-library reads and mutations that share the public API.
 final class LibraryRoutes {
   LibraryRoutes(
     this._store, {
+    TriggerGroupStore? triggerGroupStore,
     DateTime Function()? now,
     String Function()? idGenerator,
-  }) : _now = now ?? _utcNow,
+  }) : // Named private initializing formals are not callable cross-library.
+       // ignore: prefer_initializing_formals
+       _triggerGroupStore = triggerGroupStore,
+       _now = now ?? _utcNow,
        _importer = LibraryImporter(now: now, idGenerator: idGenerator);
 
   static const int _maximumExportLimit = 100000;
 
   final ResourceStore _store;
+  final TriggerGroupStore? _triggerGroupStore;
   final DateTime Function() _now;
   final LibraryImporter _importer;
   final KnowledgeIndexer _knowledgeIndexer = KnowledgeIndexer();
@@ -318,6 +325,30 @@ final class LibraryRoutes {
         );
       }
 
+      final List<String>? triggerGroupIds =
+          decoded.containsKey('triggerGroupIds')
+          ? (decoded['triggerGroupIds'] as List<Object?>)
+                .map((Object? value) => value as String)
+                .toList(growable: false)
+          : null;
+      final TriggerGroupStore? triggerGroups = _triggerGroupStore;
+      if (triggerGroups != null && triggerGroupIds != null) {
+        final Set<String> knownIds = (await triggerGroups.load())
+            .map((TriggerGroup group) => group.id)
+            .toSet();
+        final List<String> unknownIds =
+            triggerGroupIds
+                .where((String id) => !knownIds.contains(id))
+                .toSet()
+                .toList(growable: false)
+              ..sort();
+        if (unknownIds.isNotEmpty) {
+          return _invalidUpdate(
+            'Unknown trigger group IDs: ${unknownIds.join(', ')}',
+          );
+        }
+      }
+
       final bool pinned = decoded['pinned'] as bool? ?? existing.pinned;
       final Resource updated = existing.copyWith(
         type: type,
@@ -336,11 +367,7 @@ final class LibraryRoutes {
         activation: decoded.containsKey('activation')
             ? ResourceActivation.parse(decoded['activation'], pinned: pinned)
             : null,
-        triggerGroupIds: decoded.containsKey('triggerGroupIds')
-            ? (decoded['triggerGroupIds'] as List<Object?>)
-                  .map((Object? value) => value as String)
-                  .toList(growable: false)
-            : null,
+        triggerGroupIds: triggerGroupIds,
         sortOrder: decoded['sortOrder'] as int?,
         updatedAt: _now().toUtc(),
       );

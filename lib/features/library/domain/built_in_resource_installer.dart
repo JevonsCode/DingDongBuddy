@@ -9,32 +9,51 @@ final class BuiltInResourceInstaller {
     this._store,
     this._preferences, {
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now;
+    Future<String> Function()? skillDocumentLoader,
+  }) : _now = now ?? DateTime.now,
+       // Named private initializing formals are not callable cross-library.
+       // ignore: prefer_initializing_formals
+       _skillDocumentLoader = skillDocumentLoader;
 
   static const String preferenceKey = 'dingdong.library.builtInResourceVersion';
-  static const int currentVersion = 1;
+  static const int currentVersion = 2;
 
   final ResourceStore _store;
   final PreferencesBackend _preferences;
   final DateTime Function() _now;
+  final Future<String> Function()? _skillDocumentLoader;
 
   Future<bool> install() async {
-    final Object? installedVersion = await _preferences.read(preferenceKey);
-    if (installedVersion is int && installedVersion >= currentVersion) {
+    final Object? storedVersion = await _preferences.read(preferenceKey);
+    final int installedVersion = storedVersion is int ? storedVersion : 0;
+    if (installedVersion >= currentVersion) {
       return false;
     }
 
     final List<Resource> resources = await _store.load();
-    final bool alreadyPresent = resources.any(
-      (Resource resource) => resource.id == builtInReplyMarkerPromptId,
-    );
-    if (!alreadyPresent) {
-      await _store.save(<Resource>[
-        ...resources,
-        builtInReplyMarkerPrompt(_now()),
-      ]);
+    final List<Resource> additions = <Resource>[];
+    if (installedVersion < 1 &&
+        !resources.any(
+          (Resource resource) => resource.id == builtInReplyMarkerPromptId,
+        )) {
+      additions.add(builtInReplyMarkerPrompt(_now()));
+    }
+    if (installedVersion < 2 &&
+        !resources.any(
+          (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
+        )) {
+      final Future<String> Function()? loadSkill = _skillDocumentLoader;
+      if (loadSkill == null) {
+        throw StateError(
+          'The bundled DingDong configure Skill is unavailable.',
+        );
+      }
+      additions.add(builtInDingDongConfigureSkill(await loadSkill(), _now()));
+    }
+    if (additions.isNotEmpty) {
+      await _store.save(<Resource>[...resources, ...additions]);
     }
     await _preferences.write(preferenceKey, currentVersion);
-    return !alreadyPresent;
+    return additions.isNotEmpty;
   }
 }

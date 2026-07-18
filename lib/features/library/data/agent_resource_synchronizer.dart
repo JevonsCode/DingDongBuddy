@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:path/path.dart' as path;
@@ -261,6 +262,13 @@ final class AgentResourceSynchronizer {
         path.join(packageRoot.path, _skillName(resource)),
       );
       if (await File(path.join(installed.path, 'SKILL.md')).exists()) {
+        return installed;
+      }
+      if (resource.source == builtInDingDongConfigureSkillSource) {
+        await installed.create(recursive: true);
+        await File(
+          path.join(installed.path, 'SKILL.md'),
+        ).writeAsString(resource.content, flush: true);
         return installed;
       }
       final SkillPackageInstallResult result = await skillPackageInstaller

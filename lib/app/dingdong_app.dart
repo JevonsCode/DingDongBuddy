@@ -5,6 +5,7 @@ import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -212,6 +213,14 @@ class _DingDongAppState extends State<DingDongApp> {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          builder: (BuildContext context, Widget? child) {
+            return ClipRRect(
+              key: const Key('popup-window-clip'),
+              borderRadius: BorderRadius.circular(PopupStyle.radius),
+              clipBehavior: Clip.antiAlias,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: ShellScreen(
             activityController: _activityController,
             clipboardViewModel: _clipboardViewModel,

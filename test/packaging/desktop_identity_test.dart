@@ -181,9 +181,35 @@ void main() {
     expect(website, isNot(contains('knowledge')));
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
+    expect(website, contains('./assets/symbols/refresh.png'));
+    expect(website, contains('./assets/symbols/library.png'));
+    expect(website, contains('createDemoSymbol(item.type'));
+    expect(website, isNot(contains('content: "✦"')));
+    expect(website, isNot(contains('content: "◇"')));
+    expect(website, isNot(contains('content: "▣"')));
     expect(websiteStyles, contains('.demo-resource-row.type-prompt'));
     expect(websiteStyles, contains('.demo-resource-row.type-skill'));
     expect(websiteStyles, contains('.demo-resource-row.type-mcp'));
+    for (final String symbol in <String>[
+      'today',
+      'library',
+      'clipboard',
+      'refresh',
+      'settings',
+      'collapse',
+      'manage',
+      'search',
+      'prompt',
+      'skill',
+      'mcp',
+      'enabled',
+      'copy',
+      'edit',
+      'delete',
+      'filter',
+    ]) {
+      expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
+    }
     expect(releaseMetadata, contains('"latestVersion": "0.7.9"'));
     expect(releaseMetadata, contains('"latestBuild": "16"'));
     expect(releaseMetadata, contains('"arm64"'));

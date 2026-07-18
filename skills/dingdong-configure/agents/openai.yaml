@@ -1,0 +1,5 @@
+interface:
+  display_name: "DingDong Configure"
+  short_description: "Configure DingDong resources and project scopes"
+  brand_color: "#F45D32"
+  default_prompt: "Use $dingdong-configure to configure a project-scoped policy in DingDong."

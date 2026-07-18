@@ -302,6 +302,78 @@ void main() {
     );
   });
 
+  testWidgets(
+    'filter icon keeps an active state for category and group filters',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 7, 19);
+      final ClipboardRecord grouped = ClipboardRecord(
+        id: 'filtered',
+        group: 'Project',
+        title: 'Grouped text',
+        content: 'Grouped value',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[grouped]),
+      )..load();
+      await tester.pumpWidget(
+        MaterialApp(home: ClipboardScreen(viewModel: model)),
+      );
+
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('clipboard-category-text')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byTooltip('Show categories and groups (filters active)'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('clipboard-category-all')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsNothing,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('clipboard-group-Project')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('clipboard group filters use concise names and small type', (
     WidgetTester tester,
   ) async {

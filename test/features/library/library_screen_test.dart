@@ -13,6 +13,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('library transfer actions use matching square button frames', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final LibraryViewModel model = LibraryViewModel(_MemoryStore(<Resource>[]));
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    for (final Key key in const <Key>[
+      Key('library-import'),
+      Key('library-import-json'),
+      Key('library-export'),
+    ]) {
+      final Finder action = find.byKey(key);
+      expect(action, findsOneWidget);
+      expect(tester.getSize(action), const Size.square(34));
+      final IconButton button = tester.widget<IconButton>(action);
+      expect(button.style?.side?.resolve(const <WidgetState>{}), isNotNull);
+    }
+  });
+
   testWidgets('compact library drills into the editor and can return', (
     WidgetTester tester,
   ) async {

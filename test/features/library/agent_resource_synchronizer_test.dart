@@ -3,9 +3,39 @@ import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
+import 'package:dingdong/features/library/domain/built_in_resources.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('bundled online Skill syncs offline from embedded content', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-sync-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final Directory target = Directory('${temp.path}/agent-skills');
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: <Directory>[target],
+      mcpTargets: const <AgentMcpTarget>[],
+      managedStateFile: File('${temp.path}/state.json'),
+      skillPackageInstaller: _OfflineInstaller(),
+    );
+    const String document =
+        '---\nname: dingdong-configure\ndescription: Configure DingDong resources\n---\n\n# Configure';
+    final Resource resource = builtInDingDongConfigureSkill(
+      document,
+      DateTime.utc(2026, 7, 19),
+    );
+
+    await synchronizer.sync(<Resource>[resource]);
+
+    expect(
+      File('${target.path}/dingdong-configure/SKILL.md').readAsStringSync(),
+      document,
+    );
+  });
+
   test(
     'mirrors enabled Skill packages and removes them when disabled',
     () async {
@@ -142,6 +172,13 @@ void main() {
       r'Bearer $EXAMPLE_TOKEN',
     );
   });
+}
+
+final class _OfflineInstaller implements SkillPackageInstaller {
+  @override
+  Future<SkillPackageInstallResult> install(Uri source) {
+    throw StateError('Network installer must not run for a bundled Skill.');
+  }
 }
 
 Map<String, Object?> _onlyServer(File file) {

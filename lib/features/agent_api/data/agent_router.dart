@@ -18,10 +18,12 @@ import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/library_routes.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
+import 'package:dingdong/features/agent_api/data/trigger_group_routes.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 
 part 'agent_router_resource_handlers.dart';
 
@@ -55,7 +57,20 @@ final class AgentRouter {
              ),
        _libraryRoutes = resourceStore == null
            ? null
-           : LibraryRoutes(resourceStore, now: now, idGenerator: idGenerator),
+           : LibraryRoutes(
+               resourceStore,
+               triggerGroupStore: triggerGroupStore,
+               now: now,
+               idGenerator: idGenerator,
+             ),
+       _triggerGroupRoutes = triggerGroupStore == null
+           ? null
+           : TriggerGroupRoutes(
+               store: triggerGroupStore,
+               resourceStore: resourceStore,
+               idGenerator: idGenerator ?? generateUuid,
+               now: now ?? DateTime.now,
+             ),
        _agentCompatibilityRoutes = resourceStore == null
            ? null
            : AgentCompatibilityRoutes(
@@ -95,6 +110,7 @@ final class AgentRouter {
   final ClipboardRoutes? _clipboardRoutes;
   final ClipboardWorkflowRoutes? _clipboardWorkflowRoutes;
   final LibraryRoutes? _libraryRoutes;
+  final TriggerGroupRoutes? _triggerGroupRoutes;
   final AgentCompatibilityRoutes? _agentCompatibilityRoutes;
   final AgentStateRoutes? _agentStateRoutes;
   final ClipboardCollectionRoutes? _clipboardCollectionRoutes;
@@ -207,6 +223,31 @@ final class AgentRouter {
     }
     if (request.method == 'GET' && request.parsedUri.path == '/library') {
       return _listResources(request.parsedUri.queryParameters);
+    }
+    if (request.parsedUri.path == '/library/trigger-groups') {
+      final TriggerGroupRoutes? routes = _triggerGroupRoutes;
+      if (routes == null) {
+        return _resourceUnavailable();
+      }
+      if (request.method == 'GET') {
+        return routes.list();
+      }
+      if (request.method == 'POST') {
+        return routes.create(request.body);
+      }
+    }
+    if ((request.method == 'PATCH' || request.method == 'DELETE') &&
+        request.parsedUri.pathSegments.length == 3 &&
+        request.parsedUri.pathSegments[0] == 'library' &&
+        request.parsedUri.pathSegments[1] == 'trigger-groups') {
+      final TriggerGroupRoutes? routes = _triggerGroupRoutes;
+      if (routes == null) {
+        return _resourceUnavailable();
+      }
+      final String id = request.parsedUri.pathSegments[2];
+      return request.method == 'PATCH'
+          ? routes.update(id, request.body)
+          : routes.delete(id);
     }
     if (request.method == 'GET' &&
         request.parsedUri.path == '/library/groups') {
