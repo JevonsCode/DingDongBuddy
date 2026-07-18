@@ -1,45 +1,27 @@
-# DingDong 0.7.11
+# DingDong 0.7.12
 
-This release makes DingDong easier for both people and Agents to configure,
-while giving Windows a platform-native interaction and notification pass.
+This release tightens visual consistency across the desktop application and its
+website product model.
 
-## Clipboard monitoring clarity
+## Clipboard monitoring
 
-- Adds a restrained hover highlight and click cursor to the Clipboard monitoring
-  switch so the control reads as interactive.
-- Shows state-aware action guidance: turn monitoring on while paused, or pause
-  monitoring while it is running.
+- Keeps the monitoring switch visually stable on hover instead of flashing a
+  button-like background.
+- Retains the click cursor and state-aware tooltip so the control still clearly
+  communicates whether it will start or pause monitoring.
 
-## Agent configuration
+## Resource library
 
-- Adds the built-in **DingDong Configure** Skill so an Agent can discover what
-  DingDong can configure before changing prompts, Skills, MCP servers, project
-  policies, trigger groups, or clipboard organization.
-- Adds public trigger-group create, read, update, and delete routes for reusable
-  repository, directory, and task scopes.
-- Keeps enabled Agent resources synchronized to supported clients and allows the
-  built-in Skill to update from its public GitHub source.
+- Removes the repeated Library heading below the already selected navigation
+  tab, leaving a cleaner content hierarchy.
+- Updates visual regression coverage for the more compact Library layout.
 
-## Desktop design
+## Website product model
 
-- Redesigns clipboard category management with a clearer title hierarchy,
-  semantic category icons, compact edit and delete actions, and a distinct
-  primary create action.
-- Makes active clipboard filtering visible from the collapsed filter control.
-- Standardizes resource transfer controls and refreshes the website product
-  model so its icons and layout better match the real application.
-- Clips macOS modal overlays to the rounded callout window instead of painting
-  square barrier corners.
-
-## Windows platform pass
-
-- Adds Notion-style native-feeling context menus and Control-key shortcut hints.
-- Lets the Windows system frame own popup corners while macOS keeps DingDong's
-  branded rounded callout surface.
-- Selects tray artwork for light or dark taskbars and uses the bundled attention
-  frame for persistent unread flashing.
-- Moves unread counts into the localized tray tooltip so the 16×16 tray icon
-  remains legible.
+- Replaces the mismatched resource status artwork with the same check and pause
+  language used by the desktop application.
+- Lets visitors toggle resource status in the demo and shows the corresponding
+  disabled treatment.
 
 ## Distribution
 
@@ -48,35 +30,22 @@ while giving Windows a platform-native interaction and notification pass.
 
 ---
 
-本版本让用户和 Agent 都更容易配置 DingDong，同时完成了一轮 Windows 原生交互与
-通知体验优化。
+本版本进一步统一桌面应用与网站产品模型的视觉体验。
 
-## 剪贴板监听辨识度
+## 剪贴板监听
 
-- 为剪贴板监听开关增加克制的悬停底色与点击指针，让控件的可操作性更明确。
-- 提示会跟随状态变化：暂停时提示开启监听，运行时提示暂停监听。
+- 监听开关悬停时保持界面稳定，不再闪现按钮式背景。
+- 保留点击指针和随状态变化的提示，用户仍能明确知道操作会开启还是暂停监听。
 
-## Agent 配置
+## 资源库
 
-- 新增内置 **DingDong Configure** Skill。Agent 在修改提示词、Skill、MCP、项目策略、
-  触发分组或剪贴板分类前，可以先读取 DingDong 支持的配置能力。
-- 新增公开的触发分组增删改查接口，可复用仓库、目录和任务范围。
-- 已启用的 Agent 资源会继续同步到受支持客户端；内置 Skill 可从公开 GitHub 地址更新。
+- 移除已选中“资源库”导航下方重复出现的同名标题，让内容层级更简洁。
+- 更新视觉回归覆盖，确保紧凑后的资源库布局稳定。
 
-## 桌面设计
+## 网站产品模型
 
-- 重新设计剪贴板分类管理，统一标题层级、分类语义图标、紧凑编辑与删除操作，并明确
-  “新建分类”的主操作状态。
-- 收起筛选面板后仍能看出当前存在生效中的剪贴板筛选。
-- 统一资源导入导出控件，网站中的产品模型也更贴近真实应用的图标与布局。
-- macOS 弹窗蒙层会沿主窗口圆角裁剪，不再出现四个直角。
-
-## Windows 平台优化
-
-- 新增接近 Notion 密度的右键菜单，并使用 Control 键显示和触发快捷操作。
-- Windows 外轮廓交给系统窗口绘制，macOS 继续保留 DingDong 的圆角浮层样式。
-- 托盘图标会适配浅色或深色任务栏，存在未读内容时使用内置提醒图标持续闪烁。
-- 未读数量移到本地化托盘提示中，避免在 16×16 图标里显示模糊数字。
+- 使用与桌面应用一致的勾选和暂停图标表达资源启停状态。
+- 网站演示中的资源状态可以直接切换，并同步展示停用后的视觉处理。
 
 ## 分发
 

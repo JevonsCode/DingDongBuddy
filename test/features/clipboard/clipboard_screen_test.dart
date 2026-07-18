@@ -1,7 +1,6 @@
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
-import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
@@ -319,55 +318,50 @@ void main() {
     );
   });
 
-  testWidgets('clipboard monitoring switch explains its action on hover', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 760);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final SettingsViewModel settings = SettingsViewModel(
-      SettingsRepository(MemoryPreferencesBackend()),
-    );
-    await settings.load();
-    addTearDown(settings.dispose);
-    final ClipboardViewModel model = ClipboardViewModel(
-      InMemoryClipboardStore(<ClipboardRecord>[_record()]),
-    )..load();
-    addTearDown(model.dispose);
+  testWidgets(
+    'clipboard monitoring switch explains its action without a hover background',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final SettingsViewModel settings = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+      );
+      await settings.load();
+      addTearDown(settings.dispose);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[_record()]),
+      )..load();
+      addTearDown(model.dispose);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ListenableBuilder(
-          listenable: settings,
-          builder: (BuildContext context, Widget? child) =>
-              ClipboardScreen(viewModel: model, settingsViewModel: settings),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListenableBuilder(
+            listenable: settings,
+            builder: (BuildContext context, Widget? child) =>
+                ClipboardScreen(viewModel: model, settingsViewModel: settings),
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byTooltip('Turn on clipboard monitoring'), findsOneWidget);
-    final TestGesture mouse = await tester.createGesture(
-      kind: PointerDeviceKind.mouse,
-    );
-    addTearDown(mouse.removePointer);
-    await mouse.addPointer();
-    await mouse.moveTo(
-      tester.getCenter(find.byKey(const Key('clipboard-monitoring-hover'))),
-    );
-    await tester.pump(const Duration(milliseconds: 160));
+      expect(find.byTooltip('Turn on clipboard monitoring'), findsOneWidget);
+      expect(
+        tester
+            .widget<MouseRegion>(
+              find.byKey(const Key('clipboard-monitoring-toggle')),
+            )
+            .cursor,
+        SystemMouseCursors.click,
+      );
+      expect(find.byKey(const Key('clipboard-monitoring-hover')), findsNothing);
 
-    final AnimatedContainer hover = tester.widget<AnimatedContainer>(
-      find.byKey(const Key('clipboard-monitoring-hover')),
-    );
-    final BoxDecoration decoration = hover.decoration! as BoxDecoration;
-    expect(decoration.color, PopupStyle.accentSoft);
-
-    await tester.tap(find.byKey(const Key('clipboard-monitoring-switch')));
-    await tester.pumpAndSettle();
-    expect(settings.clipboardMonitoring, isTrue);
-    expect(find.byTooltip('Pause clipboard monitoring'), findsOneWidget);
-  });
+      await tester.tap(find.byKey(const Key('clipboard-monitoring-switch')));
+      await tester.pumpAndSettle();
+      expect(settings.clipboardMonitoring, isTrue);
+      expect(find.byTooltip('Pause clipboard monitoring'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'filter icon keeps an active state for category and group filters',

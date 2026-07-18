@@ -132,7 +132,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
   }
 }
 
-class _ClipboardMonitoringToggle extends StatefulWidget {
+class _ClipboardMonitoringToggle extends StatelessWidget {
   const _ClipboardMonitoringToggle({
     required this.value,
     required this.onChanged,
@@ -142,55 +142,19 @@ class _ClipboardMonitoringToggle extends StatefulWidget {
   final ValueChanged<bool>? onChanged;
 
   @override
-  State<_ClipboardMonitoringToggle> createState() =>
-      _ClipboardMonitoringToggleState();
-}
-
-class _ClipboardMonitoringToggleState
-    extends State<_ClipboardMonitoringToggle> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final bool enabled = widget.onChanged != null;
+    final bool enabled = onChanged != null;
     return Tooltip(
-      message: widget.value
+      message: value
           ? context.localized('Pause clipboard monitoring', '暂停剪贴板监听')
           : context.localized('Turn on clipboard monitoring', '开启剪贴板监听'),
       child: MouseRegion(
+        key: const Key('clipboard-monitoring-toggle'),
         cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        onEnter: enabled ? (_) => setState(() => _hovered = true) : null,
-        onExit: enabled ? (_) => setState(() => _hovered = false) : null,
-        child: SizedBox(
-          width: 36,
-          height: 20,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: <Widget>[
-              Positioned(
-                left: -4,
-                top: -5,
-                right: -4,
-                bottom: -5,
-                child: AnimatedContainer(
-                  key: const Key('clipboard-monitoring-hover'),
-                  duration: const Duration(milliseconds: 140),
-                  curve: Curves.easeOutCubic,
-                  decoration: BoxDecoration(
-                    color: _hovered
-                        ? PopupStyle.accentSoft
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              CompactSwitch(
-                key: const Key('clipboard-monitoring-switch'),
-                value: widget.value,
-                onChanged: widget.onChanged,
-              ),
-            ],
-          ),
+        child: CompactSwitch(
+          key: const Key('clipboard-monitoring-switch'),
+          value: value,
+          onChanged: onChanged,
         ),
       ),
     );

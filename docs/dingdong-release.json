@@ -1,36 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.11",
-  "latestBuild": "18",
-  "publishedAt": "2026-07-18T20:48:20Z",
+  "latestVersion": "0.7.12",
+  "latestBuild": "19",
+  "publishedAt": "2026-07-18T22:04:23Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.11/DingDong-0.7.11-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.12/DingDong-0.7.12-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.11/DingDong-0.7.11-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.12/DingDong-0.7.12-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.11/DingDong-0.7.11-windows-x64-beta.zip",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.12/DingDong-0.7.12-windows-x64-beta.zip",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds hover feedback, a click cursor, and state-aware action guidance to the Clipboard monitoring switch.",
-    "Adds a built-in DingDong Configure Skill so Agents can discover and manage prompts, Skills, MCP servers, trigger groups, project policies, and clipboard organization.",
-    "Exposes public trigger-group CRUD routes and keeps enabled resources synchronized into supported native Agent directories.",
-    "Redesigns clipboard category management with clearer hierarchy, semantic icons, compact actions, and correctly clipped macOS modal overlays.",
-    "Adds Windows-native context menus, Control-key shortcut hints, adaptive taskbar-aware tray artwork, and persistent unread attention flashing with localized tooltip counts.",
-    "Lets Windows own the popup frame while macOS retains DingDong's rounded callout surface.",
-    "Refreshes the website product model and standardizes resource transfer and filter controls across desktop surfaces.",
+    "Keeps the Clipboard monitoring switch visually stable on hover while preserving its click cursor and state-aware guidance.",
+    "Removes the repeated Library heading so the selected navigation and content hierarchy stay concise.",
+    "Aligns the website resource enable and pause controls with the desktop application's status icons and disabled treatment.",
+    "Makes resource status controls interactive in the website product model for a more faithful demonstration.",
     "Publishes separate Apple Silicon and Intel macOS packages; Intel macOS and Windows packages remain marked beta."
   ]
 }

@@ -46,14 +46,14 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.7.11 from pubspec', () {
+  test('desktop hosts consume application version 0.7.12 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.11+18'));
+    expect(pubspec, contains('version: 0.7.12+19'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -184,12 +184,22 @@ void main() {
     expect(website, contains('./assets/symbols/refresh.png'));
     expect(website, contains('./assets/symbols/library.png'));
     expect(website, contains('createDemoSymbol(item.type'));
+    expect(website, contains('createDemoStatusIcon(enabled)'));
+    expect(
+      website,
+      isNot(contains('createDemoElement("b", "", content.labels.library)')),
+    );
     expect(website, isNot(contains('content: "✦"')));
     expect(website, isNot(contains('content: "◇"')));
     expect(website, isNot(contains('content: "▣"')));
     expect(websiteStyles, contains('.demo-resource-row.type-prompt'));
     expect(websiteStyles, contains('.demo-resource-row.type-skill'));
     expect(websiteStyles, contains('.demo-resource-row.type-mcp'));
+    expect(websiteStyles, contains('.demo-resource-row.is-disabled'));
+    expect(
+      websiteStyles,
+      contains('.demo-resource-action.action-status.is-enabled'),
+    );
     for (final String symbol in <String>[
       'today',
       'library',
@@ -210,12 +220,12 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.7.11"'));
-    expect(releaseMetadata, contains('"latestBuild": "18"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.12"'));
+    expect(releaseMetadata, contains('"latestBuild": "19"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
-    expect(releaseMetadata, contains('DingDong-0.7.11-windows-x64-beta.zip'));
+    expect(releaseMetadata, contains('DingDong-0.7.12-windows-x64-beta.zip'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {

@@ -10,13 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.11', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.12', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.7.11')), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.7.12')), findsOneWidget);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
     expect(find.text('Agent API'), findsWidgets);
@@ -145,6 +145,8 @@ void main() {
 
     expect(find.byKey(const Key('resource-search')), findsOneWidget);
     expect(find.byKey(const Key('resource-manager-open')), findsOneWidget);
+    expect(find.byKey(const Key('resource-library-context')), findsOneWidget);
+    expect(find.text('Library'), findsOneWidget);
   });
 
   testWidgets('resource card icon actions expose consistent hover labels', (

@@ -40,31 +40,17 @@ class ResourceBrowserScreen extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          context.localized('Library', '资源库'),
-                          style: const TextStyle(
-                            color: PopupStyle.textPrimary,
-                            fontSize: 17,
-                            height: 1.1,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          context.localized(
-                            'Curated content reusable by agents',
-                            '整理后可被 Agent 复用的内容',
-                          ),
-                          style: const TextStyle(
-                            color: PopupStyle.textTertiary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      context.localized(
+                        'Curated content reusable by agents',
+                        '整理后可被 Agent 复用的内容',
+                      ),
+                      key: const Key('resource-library-context'),
+                      style: const TextStyle(
+                        color: PopupStyle.textTertiary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   FilledButton.icon(
