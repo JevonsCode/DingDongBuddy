@@ -1,0 +1,81 @@
+.gitignore
+  s_dd69573e48427b::t_0af9dad4b1b725 42
+test/platform/tray_manager_visual_contract_test.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1,4,34-139,152-193
+lib/features/activity/ui/activity_cards.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 355,357-359,362-363,365,367-368
+lib/core/platform/windows_tray_icon_selector.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-23
+test/core/widgets/desktop_context_menu_test.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-321
+test/features/clipboard/clipboard_screen_test.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 15,21-35,701-712,714-718,720-732
+lib/app/dingdong_app.dart
+  s_dd69573e48427b::t_3b680d4c123646 8,218-221,226
+packages/window_manager/windows/window_manager.cpp
+  s_dd69573e48427b::t_0af9dad4b1b725 165-166,178-186,238-271,997-999,1010-1012
+lib/features/library/ui/resource_list.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 173,175-177,179-181
+lib/platform/plugin_desktop_shell_gateway.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 4-6,10,45,66-71,76-79,187,189,191-192,198-201,203-210,304-310
+lib/features/shell/ui/popup_header.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 4,8,153-155
+lib/features/shell/domain/tray_unread_controller.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 7,21,26-40
+packages/tray_manager/windows/tray_manager_plugin.cpp
+  s_dd69573e48427b::t_0af9dad4b1b725 2,16-17,22,26-28,39-63,81-89,100-106,132-134,177-185,248-252,263,268,278,280-283,292,294,310-312,314,330-335,338-355,357-411,416-497,499-501,531-592,687-692,708-710
+lib/core/platform/desktop_platform_policy.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-31
+test/features/shell/tray_unread_controller_test.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 4-5,8,10,12-25,30-32,35-43,45-74,76-78
+lib/core/platform/desktop_window_policy.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-14
+lib/core/widgets/desktop_context_menu.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-3,6-40,55-281
+design-qa.md
+  s_dd69573e48427b::t_dc5d923ffe1059 2,26,47,63-64
+lib/features/clipboard/ui/clipboard_manager_screen.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 263,265-266,270,274-275,279,286,293,300,307,311,315,318,465,468,470-472,475-477
+packages/tray_manager/windows/tray_visual.h
+  s_dd69573e48427b::t_0af9dad4b1b725 1-11
+packages/tray_manager/lib/src/tray_manager.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 19,76-81,121-122,152-161,249-253
+test/platform/windows_window_manager_regression_test.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-30
+pubspec.yaml
+  s_dd69573e48427b::t_0af9dad4b1b725 42-45
+lib/features/clipboard/ui/clipboard_group_context_menu.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 37,39-41,44-46
+lib/features/clipboard/ui/clipboard_record_list.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 184-233
+lib/features/shell/ui/shell_screen.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 6-7,179-181,183,190,303-305,361-367
+test/features/shell/popup_shell_test.dart
+  s_dd69573e48427b::t_965e8a365068fe 15,21-34,36,57-64,66-67,69-72,74-111,580-585,587,589-591,593-683,723,725,783-826,828-831,833-866,949-956,958-959,961-966,968-970,972-976,978-980,982-988
+packages/tray_manager/windows/CMakeLists.txt
+  s_dd69573e48427b::t_0af9dad4b1b725 11,18,21-28
+packages/tray_manager/windows/tray_visual.cpp
+  s_dd69573e48427b::t_0af9dad4b1b725 1-110
+packages/tray_manager/lib/src/tray_listener.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 15-17
+test/core/platform/windows_tray_icon_selector_test.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 1-42
+lib/features/clipboard/ui/clipboard_list_tile.dart
+  s_dd69573e48427b::t_0af9dad4b1b725 5,119,182,190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.34-trip",
+  "base_commit_sha": "b7b22678bd7d20c3f0828f73b51965199d2bc52b",
+  "prompts": {},
+  "sessions": {
+    "s_dd69573e48427b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7415-6087-7cc3-9f22-7df744148614",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
