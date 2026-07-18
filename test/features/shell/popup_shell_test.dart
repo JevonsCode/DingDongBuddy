@@ -54,6 +54,36 @@ void main() {
     expect(find.byKey(const Key('popup-tab-3')), findsNothing);
   });
 
+  testWidgetsOnPlatform(
+    'Windows popup delegates its outer corners to the system frame',
+    TargetPlatform.windows,
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
+      await tester.pumpAndSettle();
+
+      final Material surface = tester.widget<Material>(
+        find.byKey(const Key('popup-shell')),
+      );
+      expect(surface.shape, isNull);
+      expect(surface.clipBehavior, Clip.none);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'macOS popup keeps the branded rounded surface',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
+      await tester.pumpAndSettle();
+
+      final Material surface = tester.widget<Material>(
+        find.byKey(const Key('popup-shell')),
+      );
+      expect(surface.shape, isA<RoundedRectangleBorder>());
+      expect(surface.clipBehavior, Clip.antiAlias);
+    },
+  );
+
   testWidgets('Escape dismisses the transient popup', (
     WidgetTester tester,
   ) async {

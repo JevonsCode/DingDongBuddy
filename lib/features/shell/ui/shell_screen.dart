@@ -4,6 +4,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
+import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
@@ -299,6 +300,9 @@ class _ShellScreenState extends State<ShellScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool systemOwnsCorners = usesSystemWindowCorners(
+      defaultTargetPlatform,
+    );
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.escape): () {
@@ -354,11 +358,13 @@ class _ShellScreenState extends State<ShellScreen> {
           child: Material(
             key: const Key('popup-shell'),
             color: PopupStyle.background,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(PopupStyle.radius),
-              side: const BorderSide(color: PopupStyle.border),
-            ),
-            clipBehavior: Clip.antiAlias,
+            shape: systemOwnsCorners
+                ? null
+                : RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(PopupStyle.radius),
+                    side: const BorderSide(color: PopupStyle.border),
+                  ),
+            clipBehavior: systemOwnsCorners ? Clip.none : Clip.antiAlias,
             child: Column(
               children: <Widget>[
                 PopupHeader(
