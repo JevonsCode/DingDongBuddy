@@ -66,9 +66,14 @@ of removing the tray entry.
 Flutter combines taskbar brightness and unread state to select one of four ICO
 assets:
 
-- white monochrome mascot on a dark taskbar;
-- dark monochrome mascot on a light taskbar;
-- each base icon with a small warm-yellow unread dot and a contrasting outline.
+- the bundled white `AgentToolMenuBarIcon` on a dark taskbar;
+- a monochrome contrast conversion of that same bundled icon on a light
+  taskbar;
+- the bundled `AgentToolMenuBarHotIcon` for unread state, with the same
+  contrast conversion on a light taskbar.
+
+No new tray artwork is drawn; all Windows variants preserve the existing icon
+geometry exactly.
 
 ### Windows in-app context menus
 
@@ -123,7 +128,7 @@ falls back deterministically and does not interrupt application startup.
   fallback path. Native Windows source/build verification covers refresh
   messages and icon-load failure handling.
 - A Windows Release smoke test verifies the system-owned outer corners, both
-  taskbar contrast variants, the unread marker, and every in-app secondary-click
+  taskbar contrast variants, the bundled unread artwork, and every in-app secondary-click
   entry point.
 - Run the complete static analysis and non-golden test suite. macOS-specific
   tests must remain unchanged and pass.

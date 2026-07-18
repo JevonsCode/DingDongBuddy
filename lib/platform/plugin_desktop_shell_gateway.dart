@@ -73,6 +73,10 @@ final class PluginDesktopShellGateway
     windowManager.addListener(this);
     trayManager.addListener(this);
     await _unreadController.clear();
+    if (Platform.isWindows) {
+      _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
+      await _unreadController.refresh();
+    }
     await trayManager.setToolTip('DingDong');
     await _rebuildContextMenu();
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
@@ -282,6 +286,15 @@ final class PluginDesktopShellGateway
   @override
   void onTrayIconRightMouseDown() {
     unawaited(_showContextMenu());
+  }
+
+  @override
+  void onTaskbarAppearanceChanged(bool taskbarIsLight) {
+    if (_taskbarIsLight == taskbarIsLight) {
+      return;
+    }
+    _taskbarIsLight = taskbarIsLight;
+    unawaited(_unreadController.refresh());
   }
 
   Future<void> _showContextMenu() async {

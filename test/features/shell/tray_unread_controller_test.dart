@@ -7,13 +7,14 @@ void main() {
     () async {
       final List<(bool, String, int)> appearances = <(bool, String, int)>[];
       final TrayUnreadController controller = TrayUnreadController(
-        apply: ({
-          required bool hot,
-          required String title,
-          required int iconSize,
-        }) async {
-          appearances.add((hot, title, iconSize));
-        },
+        apply:
+            ({
+              required bool hot,
+              required String title,
+              required int iconSize,
+            }) async {
+              appearances.add((hot, title, iconSize));
+            },
       );
 
       await controller.markUnread();
@@ -24,6 +25,11 @@ void main() {
         (true, ' 1', 22),
         (true, ' 2', 22),
       ]);
+
+      appearances.clear();
+      await controller.refresh();
+      expect(controller.count, 2);
+      expect(appearances, <(bool, String, int)>[(true, ' 2', 22)]);
 
       await controller.clear();
 

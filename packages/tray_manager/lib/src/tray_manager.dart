@@ -16,6 +16,7 @@ const kEventOnTrayIconMouseUp = 'onTrayIconMouseUp';
 const kEventOnTrayIconRightMouseDown = 'onTrayIconRightMouseDown';
 const kEventOnTrayIconRightMouseUp = 'onTrayIconRightMouseUp';
 const kEventOnTrayMenuItemClick = 'onTrayMenuItemClick';
+const kEventOnTaskbarAppearanceChanged = 'onTaskbarAppearanceChanged';
 
 enum TrayIconPosition { left, right }
 
@@ -70,6 +71,12 @@ class TrayManager {
             if (oldChecked != newChecked) {
               await setContextMenu(_menu!);
             }
+          }
+          break;
+        case kEventOnTaskbarAppearanceChanged:
+          final bool? taskbarIsLight = call.arguments as bool?;
+          if (taskbarIsLight != null) {
+            listener.onTaskbarAppearanceChanged(taskbarIsLight);
           }
           break;
       }
@@ -226,6 +233,12 @@ class TrayManager {
       resultData['width'],
       resultData['height'],
     );
+  }
+
+  /// Whether the sampled Windows taskbar surface is light.
+  Future<bool> getTaskbarSurfaceIsLight() async {
+    return await _channel.invokeMethod<bool>('getTaskbarSurfaceIsLight') ??
+        false;
   }
 }
 
