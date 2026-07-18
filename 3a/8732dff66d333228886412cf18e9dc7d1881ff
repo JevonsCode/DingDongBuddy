@@ -1,0 +1,47 @@
+docs/release-notes.md
+  s_dd69573e48427b::t_4d91cc382a2e10 1,6-12,54-57
+lib/features/clipboard/ui/clipboard_filter_bar.dart
+  s_dd69573e48427b::t_07e99a93da1caa 158-159
+  s_dd69573e48427b::t_68a4399c83c6f8 164-192
+  s_dd69573e48427b::t_b5fb03a1508301 40,53-54,135-157,160-163,193-194
+test/features/clipboard/clipboard_screen_test.dart
+  s_dd69573e48427b::t_b5fb03a1508301 322-342,345-348,350-355,357-367,370-371
+  s_dd69573e48427b::t_c2833842708069 349,368-369
+  s_dd69573e48427b::t_800e38a1acfa2f 4
+  s_dd69573e48427b::t_07e99a93da1caa 343-344,356
+lib/features/settings/domain/release_update.dart
+  s_dd69573e48427b::t_ad9df3a7fffa2b 114-115
+test/packaging/desktop_identity_test.dart
+  s_dd69573e48427b::t_ad9df3a7fffa2b 49,56,213,218
+  s_dd69573e48427b::t_68a4399c83c6f8 214
+docs/index.html
+  s_dd69573e48427b::t_455a29f00843f1 240,245,247,253,255,261,371,373,375,469,471,473,528,573
+docs/dingdong-release.json
+  s_dd69573e48427b::t_4d91cc382a2e10 3-5,11,15,21,27
+lib/features/agent_api/data/mcp_server.dart
+  s_dd69573e48427b::t_ad9df3a7fffa2b 39
+test/app/dingdong_app_test.dart
+  s_dd69573e48427b::t_ad9df3a7fffa2b 13,19
+docs/product/manual-regression.md
+  s_dd69573e48427b::t_ad9df3a7fffa2b 1,25,92-93
+pubspec.yaml
+  s_dd69573e48427b::t_ad9df3a7fffa2b 4
+lib/features/activity/ui/activity_screen.dart
+  s_dd69573e48427b::t_ad9df3a7fffa2b 116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.34-trip",
+  "base_commit_sha": "3a8732dff66d333228886412cf18e9dc7d1881ff",
+  "prompts": {},
+  "sessions": {
+    "s_dd69573e48427b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7415-6087-7cc3-9f22-7df744148614",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
