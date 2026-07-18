@@ -260,70 +260,62 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   Future<_ManagerAction?> _showMaterialItemMenu(
     ClipboardRecord record,
     Offset position,
-  ) => showMenu<_ManagerAction>(
+  ) => showDesktopContextMenu<_ManagerAction>(
     context: context,
-    position: desktopContextMenuPosition(context, position),
-    popUpAnimationStyle: AnimationStyle.noAnimation,
-    items: <PopupMenuEntry<_ManagerAction>>[
+    globalPosition: position,
+    entries: <DesktopMenuEntry<_ManagerAction>>[
       _managerMenuItem(
         context,
         _ManagerAction.details,
-        Icons.info_outline_rounded,
+        'details',
         'Details',
         '查看详情',
       ),
-      _managerMenuItem(
-        context,
-        _ManagerAction.copy,
-        Icons.copy_rounded,
-        'Copy',
-        '复制',
-      ),
-      const PopupMenuDivider(),
+      _managerMenuItem(context, _ManagerAction.copy, 'copy', 'Copy', '复制'),
+      const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
         context,
         _ManagerAction.addTitle,
-        Icons.title_rounded,
+        'add_title',
         'Add title',
         '添加标题',
       ),
       _managerMenuItem(
         context,
         _ManagerAction.editText,
-        Icons.edit_outlined,
+        'edit',
         'Edit text',
         '编辑文本',
       ),
       _managerMenuItem(
         context,
         _ManagerAction.archiveTo,
-        Icons.create_new_folder_outlined,
+        'archive_to',
         'Archive to…',
         '归档到…',
       ),
       _managerMenuItem(
         context,
         _ManagerAction.savePrompt,
-        Icons.format_quote_rounded,
+        'prompt',
         'Save as prompt',
         '保存为提示词',
       ),
       _managerMenuItem(
         context,
         _ManagerAction.toggleEnabled,
-        record.enabled
-            ? Icons.pause_circle_outline_rounded
-            : Icons.play_circle_outline_rounded,
+        record.enabled ? 'paused' : 'enabled',
         record.enabled ? 'Disable' : 'Enable',
         record.enabled ? '停用' : '启用',
       ),
-      const PopupMenuDivider(),
+      const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
         context,
         _ManagerAction.delete,
-        Icons.delete_outline_rounded,
+        'delete',
         'Delete',
         '删除',
+        destructive: true,
       ),
     ],
   );
@@ -470,27 +462,19 @@ _ManagerAction? _managerActionFromNative(ClipboardContextAction? action) =>
       ClipboardContextAction.share || null => null,
     };
 
-PopupMenuItem<_ManagerAction> _managerMenuItem(
+DesktopMenuItem<_ManagerAction> _managerMenuItem(
   BuildContext context,
   _ManagerAction action,
-  IconData icon,
+  String symbol,
   String english,
-  String chinese,
-) => PopupMenuItem<_ManagerAction>(
+  String chinese, {
+  bool destructive = false,
+}) => DesktopMenuItem<_ManagerAction>(
   key: Key('clipboard-manager-action-${action.name}'),
   value: action,
-  child: Row(
-    children: <Widget>[
-      Icon(icon, size: 17),
-      const SizedBox(width: 9),
-      Flexible(
-        child: Text(
-          context.localized(english, chinese),
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    ],
-  ),
+  symbol: symbol,
+  label: context.localized(english, chinese),
+  destructive: destructive,
 );
 
 class _ManagerFilters extends StatelessWidget {

@@ -170,20 +170,15 @@ class ResourceList extends StatelessWidget {
     Resource resource,
   ) async {
     final _ResourceRowAction? action = contextMenuGateway == null
-        ? await showMenu<_ResourceRowAction>(
+        ? await showDesktopContextMenu<_ResourceRowAction>(
             context: context,
-            position: desktopContextMenuPosition(context, position),
-            popUpAnimationStyle: AnimationStyle.noAnimation,
-            items: <PopupMenuEntry<_ResourceRowAction>>[
-              PopupMenuItem<_ResourceRowAction>(
+            globalPosition: position,
+            entries: <DesktopMenuEntry<_ResourceRowAction>>[
+              DesktopMenuItem<_ResourceRowAction>(
                 value: _ResourceRowAction.delete,
-                child: Row(
-                  children: <Widget>[
-                    const Icon(Icons.delete_outline_rounded, size: 17),
-                    const SizedBox(width: 9),
-                    Text(context.localized('Delete', '删除')),
-                  ],
-                ),
+                symbol: 'delete',
+                label: context.localized('Delete', '删除'),
+                destructive: true,
               ),
             ],
           )

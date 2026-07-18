@@ -34,21 +34,16 @@ Future<void> showClipboardGroupContextMenu(
         'delete';
   } else {
     deleteRequested =
-        await showMenu<_ClipboardGroupAction>(
+        await showDesktopContextMenu<_ClipboardGroupAction>(
           context: context,
-          position: desktopContextMenuPosition(context, globalPosition),
-          popUpAnimationStyle: AnimationStyle.noAnimation,
-          items: <PopupMenuEntry<_ClipboardGroupAction>>[
-            PopupMenuItem<_ClipboardGroupAction>(
+          globalPosition: globalPosition,
+          entries: <DesktopMenuEntry<_ClipboardGroupAction>>[
+            DesktopMenuItem<_ClipboardGroupAction>(
               key: const Key('clipboard-group-action-delete'),
               value: _ClipboardGroupAction.delete,
-              child: Row(
-                children: <Widget>[
-                  const Icon(Icons.delete_outline_rounded, size: 17),
-                  const SizedBox(width: 9),
-                  Text(context.localized('Delete group', '删除分组')),
-                ],
-              ),
+              symbol: 'delete',
+              label: context.localized('Delete group', '删除分组'),
+              destructive: true,
             ),
           ],
         ) ==

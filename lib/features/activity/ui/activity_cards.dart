@@ -352,39 +352,20 @@ class _EnabledResourceCard extends StatelessWidget {
 
   Future<void> _showContextMenu(BuildContext context, Offset position) async {
     final _EnabledResourceAction? action = contextMenuGateway == null
-        ? await showMenu<_EnabledResourceAction>(
+        ? await showDesktopContextMenu<_EnabledResourceAction>(
             context: context,
-            position: desktopContextMenuPosition(context, position),
-            popUpAnimationStyle: AnimationStyle.noAnimation,
-            items: <PopupMenuEntry<_EnabledResourceAction>>[
-              PopupMenuItem<_EnabledResourceAction>(
+            globalPosition: position,
+            entries: <DesktopMenuEntry<_EnabledResourceAction>>[
+              DesktopMenuItem<_EnabledResourceAction>(
                 value: _EnabledResourceAction.edit,
                 enabled: onEdit != null,
-                child: Row(
-                  children: <Widget>[
-                    const PopupSymbolIcon(
-                      'edit',
-                      size: 16,
-                      color: PopupStyle.textSecondary,
-                    ),
-                    const SizedBox(width: 9),
-                    Text(context.localized('Edit', '编辑')),
-                  ],
-                ),
+                symbol: 'edit',
+                label: context.localized('Edit', '编辑'),
               ),
-              PopupMenuItem<_EnabledResourceAction>(
+              DesktopMenuItem<_EnabledResourceAction>(
                 value: _EnabledResourceAction.disable,
-                child: Row(
-                  children: <Widget>[
-                    const PopupSymbolIcon(
-                      'paused',
-                      size: 16,
-                      color: PopupStyle.textSecondary,
-                    ),
-                    const SizedBox(width: 9),
-                    Text(context.localized('Disable', '停用')),
-                  ],
-                ),
+                symbol: 'paused',
+                label: context.localized('Disable', '停用'),
               ),
             ],
           )

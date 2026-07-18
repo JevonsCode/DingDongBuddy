@@ -181,75 +181,61 @@ Future<void> _showClipboardContextMenu(
   Offset position,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
-  final _ClipboardAction? action = await showMenu<_ClipboardAction>(
-    context: context,
-    position: desktopContextMenuPosition(context, position),
-    popUpAnimationStyle: AnimationStyle.noAnimation,
-    items: <PopupMenuEntry<_ClipboardAction>>[
-      _menuItem(
-        context,
-        _ClipboardAction.details,
-        'details',
-        'Details',
-        '查看详情',
-      ),
-      _menuItem(context, _ClipboardAction.copy, 'copy', 'Copy', '复制'),
-      const PopupMenuDivider(),
-      _menuItem(
-        context,
-        _ClipboardAction.addTitle,
-        'add_title',
-        'Add title',
-        '添加标题',
-      ),
-      _menuItem(
-        context,
-        _ClipboardAction.editText,
-        'edit',
-        'Edit text',
-        '编辑文本',
-      ),
-      _menuItem(
-        context,
-        _ClipboardAction.promotePrompt,
-        'prompt',
-        'Save as prompt',
-        '保存为提示词',
-      ),
-      _menuItem(
-        context,
-        _ClipboardAction.archiveTo,
-        'archive_to',
-        'Archive to…',
-        '归档到…',
-      ),
-      _menuItem(context, _ClipboardAction.share, 'share', 'Share', '分享'),
-      const PopupMenuDivider(),
-      _menuItem(context, _ClipboardAction.delete, 'delete', 'Delete', '删除'),
-    ],
-  );
+  final _ClipboardAction? action =
+      await showDesktopContextMenu<_ClipboardAction>(
+        context: context,
+        globalPosition: position,
+        entries: <DesktopMenuEntry<_ClipboardAction>>[
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.details,
+            symbol: 'details',
+            label: context.localized('Details', '查看详情'),
+          ),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.copy,
+            symbol: 'copy',
+            label: context.localized('Copy', '复制'),
+          ),
+          const DesktopMenuDivider<_ClipboardAction>(),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.addTitle,
+            symbol: 'add_title',
+            label: context.localized('Add title', '添加标题'),
+          ),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.editText,
+            symbol: 'edit',
+            label: context.localized('Edit text', '编辑文本'),
+          ),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.promotePrompt,
+            symbol: 'prompt',
+            label: context.localized('Save as prompt', '保存为提示词'),
+          ),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.archiveTo,
+            symbol: 'archive_to',
+            label: context.localized('Archive to…', '归档到…'),
+          ),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.share,
+            symbol: 'share',
+            label: context.localized('Share', '分享'),
+          ),
+          const DesktopMenuDivider<_ClipboardAction>(),
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.delete,
+            symbol: 'delete',
+            label: context.localized('Delete', '删除'),
+            destructive: true,
+          ),
+        ],
+      );
   if (action == null) {
     return;
   }
   onAction(action);
 }
-
-PopupMenuItem<_ClipboardAction> _menuItem(
-  BuildContext context,
-  _ClipboardAction action,
-  String symbol,
-  String english,
-  String chinese,
-) => PopupMenuItem<_ClipboardAction>(
-  value: action,
-  child: Row(
-    children: <Widget>[
-      PopupSymbolIcon(symbol, size: 17, color: PopupStyle.textSecondary),
-      const SizedBox(width: 10),
-      Flexible(child: Text(context.localized(english, chinese))),
-    ],
-  ),
-);
 
 String _typeLabel(BuildContext context, ResourceType type) {
   return switch (type) {

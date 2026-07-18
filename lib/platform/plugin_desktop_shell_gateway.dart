@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dingdong/core/platform/desktop_window_policy.dart';
+import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -38,6 +42,7 @@ final class PluginDesktopShellGateway
     apply: _applyUnreadAppearance,
   );
   bool _started = false;
+  bool _taskbarIsLight = false;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
 
   @override
@@ -58,12 +63,20 @@ final class PluginDesktopShellGateway
     await windowManager.setResizable(true);
     await windowManager.setAlwaysOnTop(true);
     await windowManager.setSkipTaskbar(true);
-    await windowManager.setBackgroundColor(Colors.transparent);
+    await windowManager.setBackgroundColor(
+      desktopWindowBackground(
+        defaultTargetPlatform,
+        opaqueColor: PopupStyle.background,
+      ),
+    );
     await windowManager.setPreventClose(true);
     windowManager.addListener(this);
     trayManager.addListener(this);
     await _unreadController.clear();
-    await trayManager.setToolTip('DingDong');
+    if (Platform.isWindows) {
+      _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
+      await _unreadController.refresh();
+    }
     await _rebuildContextMenu();
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'pressed') {
@@ -171,16 +184,30 @@ final class PluginDesktopShellGateway
     required bool hot,
     required String title,
     required int iconSize,
+    required int unreadCount,
   }) async {
+    final bool windows = Platform.isWindows;
     await trayManager.setIcon(
-      Platform.isWindows
-          ? 'windows/runner/resources/app_icon.ico'
+      windows
+          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: false)
           : hot
           ? 'Assets/AgentToolMenuBarHotIcon.png'
           : 'Assets/AgentToolMenuBarIcon.png',
       isTemplate: Platform.isMacOS && !hot,
       iconSize: iconSize,
+      attentionIconPath: windows
+          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: true)
+          : null,
+      unreadCount: windows ? unreadCount : 0,
     );
+    if (windows) {
+      await trayManager.setToolTip(
+        windowsTrayTooltip(
+          unreadCount: unreadCount,
+          useChineseLabels: _useChineseLabels(),
+        ),
+      );
+    }
     if (Platform.isMacOS) {
       await trayManager.setTitle(
         title,
@@ -272,6 +299,15 @@ final class PluginDesktopShellGateway
   @override
   void onTrayIconRightMouseDown() {
     unawaited(_showContextMenu());
+  }
+
+  @override
+  void onTaskbarAppearanceChanged(bool taskbarIsLight) {
+    if (_taskbarIsLight == taskbarIsLight) {
+      return;
+    }
+    _taskbarIsLight = taskbarIsLight;
+    unawaited(_unreadController.refresh());
   }
 
   Future<void> _showContextMenu() async {

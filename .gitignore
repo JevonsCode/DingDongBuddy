@@ -39,5 +39,6 @@ DerivedData/
 .idea/
 docs/superpowers/
 docs/audits/
+.worktrees/
 app.*.symbols
 app.*.map.json

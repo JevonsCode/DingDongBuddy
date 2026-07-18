@@ -162,6 +162,8 @@ class WindowManager {
   bool g_maximized_before_fullscreen;
   LONG g_style_before_fullscreen;
   ITaskbarList3* taskbar_ = nullptr;
+  bool should_uninitialize_com_ = false;
+  bool WindowManager::EnsureTaskbarInitialized();
   double GetDpiForHwnd(HWND hWnd);
   BOOL WindowManager::RegisterAccessBar(HWND hwnd, BOOL fRegister);
   void PASCAL WindowManager::AppBarQuerySetPos(HWND hwnd,
@@ -173,7 +175,15 @@ class WindowManager {
 
 WindowManager::WindowManager() {}
 
-WindowManager::~WindowManager() {}
+WindowManager::~WindowManager() {
+  if (taskbar_ != nullptr) {
+    taskbar_->Release();
+    taskbar_ = nullptr;
+  }
+  if (should_uninitialize_com_) {
+    ::CoUninitialize();
+  }
+}
 
 HWND WindowManager::GetMainWindow() {
   return native_window;
@@ -225,8 +235,40 @@ void WindowManager::SetAsFrameless() {
 }
 
 void WindowManager::WaitUntilReadyToShow() {
-  ::CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER,
-                     IID_PPV_ARGS(&taskbar_));
+  if (!EnsureTaskbarInitialized()) {
+    return;
+  }
+}
+
+bool WindowManager::EnsureTaskbarInitialized() {
+  if (taskbar_ != nullptr) {
+    return true;
+  }
+
+  if (!should_uninitialize_com_) {
+    const HRESULT initialize_result =
+        ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (SUCCEEDED(initialize_result)) {
+      should_uninitialize_com_ = true;
+    } else if (initialize_result != RPC_E_CHANGED_MODE) {
+      return false;
+    }
+  }
+
+  const HRESULT create_result =
+      ::CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER,
+                         IID_PPV_ARGS(&taskbar_));
+  if (FAILED(create_result) || taskbar_ == nullptr) {
+    return false;
+  }
+
+  const HRESULT taskbar_result = taskbar_->HrInit();
+  if (FAILED(taskbar_result)) {
+    taskbar_->Release();
+    taskbar_ = nullptr;
+    return false;
+  }
+  return true;
 }
 
 void WindowManager::Destroy() {
@@ -952,10 +994,9 @@ void WindowManager::SetSkipTaskbar(const flutter::EncodableMap& args) {
 
   HWND hWnd = GetMainWindow();
 
-  LPVOID lp = NULL;
-  CoInitialize(lp);
-
-  taskbar_->HrInit();
+  if (!EnsureTaskbarInitialized()) {
+    return;
+  }
   if (!is_skip_taskbar_)
     taskbar_->AddTab(hWnd);
   else
@@ -966,6 +1007,9 @@ void WindowManager::SetProgressBar(const flutter::EncodableMap& args) {
   double progress =
       std::get<double>(args.at(flutter::EncodableValue("progress")));
 
+  if (!EnsureTaskbarInitialized()) {
+    return;
+  }
   HWND hWnd = GetMainWindow();
   taskbar_->SetProgressState(hWnd, TBPF_INDETERMINATE);
   taskbar_->SetProgressValue(hWnd, static_cast<int32_t>(progress * 100),

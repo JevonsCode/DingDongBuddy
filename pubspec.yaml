@@ -39,3 +39,7 @@ flutter:
     - Assets/Symbols/
     - skills/dingdong-configure/
     - windows/runner/resources/app_icon.ico
+    - windows/runner/resources/tray_icon_on_dark.ico
+    - windows/runner/resources/tray_icon_on_dark_unread.ico
+    - windows/runner/resources/tray_icon_on_light.ico
+    - windows/runner/resources/tray_icon_on_light_unread.ico

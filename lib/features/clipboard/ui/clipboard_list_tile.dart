@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:flutter/gestures.dart';
@@ -115,6 +116,7 @@ class _CalloutClipboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final platform = Theme.of(context).platform;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       child: Material(
@@ -177,7 +179,7 @@ class _CalloutClipboardTile extends StatelessWidget {
                 if (shortcutIndex != null) ...<Widget>[
                   const SizedBox(width: 10),
                   Container(
-                    width: 38,
+                    width: usesMetaAsPrimaryModifier(platform) ? 38 : 44,
                     height: 29,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
@@ -185,7 +187,7 @@ class _CalloutClipboardTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '⌘ $shortcutIndex',
+                      primaryShortcutLabel('$shortcutIndex', platform),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,

@@ -16,6 +16,7 @@ const kEventOnTrayIconMouseUp = 'onTrayIconMouseUp';
 const kEventOnTrayIconRightMouseDown = 'onTrayIconRightMouseDown';
 const kEventOnTrayIconRightMouseUp = 'onTrayIconRightMouseUp';
 const kEventOnTrayMenuItemClick = 'onTrayMenuItemClick';
+const kEventOnTaskbarAppearanceChanged = 'onTaskbarAppearanceChanged';
 
 enum TrayIconPosition { left, right }
 
@@ -72,6 +73,12 @@ class TrayManager {
             }
           }
           break;
+        case kEventOnTaskbarAppearanceChanged:
+          final bool? taskbarIsLight = call.arguments as bool?;
+          if (taskbarIsLight != null) {
+            listener.onTaskbarAppearanceChanged(taskbarIsLight);
+          }
+          break;
       }
     }
   }
@@ -111,6 +118,8 @@ class TrayManager {
     bool isTemplate = false, // macOS only
     TrayIconPosition iconPosition = TrayIconPosition.left, // macOS only
     int iconSize = 18, // macOS only
+    String? attentionIconPath, // Windows only
+    int unreadCount = 0, // Windows only
   }) async {
     final Map<String, dynamic> arguments = {
       'id': shortid.generate(),
@@ -139,6 +148,16 @@ class TrayManager {
         ByteData imageData = await rootBundle.load(iconPath);
         String base64Icon = base64Encode(imageData.buffer.asUint8List());
         arguments['base64Icon'] = base64Icon;
+        break;
+      case TargetPlatform.windows:
+        arguments['unreadCount'] = unreadCount.clamp(0, 999);
+        if (attentionIconPath != null) {
+          arguments['attentionIconPath'] = path.joinAll([
+            path.dirname(Platform.resolvedExecutable),
+            'data/flutter_assets',
+            attentionIconPath,
+          ]);
+        }
         break;
       default:
         break;
@@ -226,6 +245,12 @@ class TrayManager {
       resultData['width'],
       resultData['height'],
     );
+  }
+
+  /// Whether the sampled Windows taskbar surface is light.
+  Future<bool> getTaskbarSurfaceIsLight() async {
+    return await _channel.invokeMethod<bool>('getTaskbarSurfaceIsLight') ??
+        false;
   }
 }
 
