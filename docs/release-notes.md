@@ -1,54 +1,53 @@
-# DingDong 0.7.8
+# DingDong 0.7.9
 
-This release focuses on a clearer Resource Manager, more capable clipboard
-organization, and a more direct MCP onboarding flow.
+This release turns DingDong's Agent connection into two concrete native paths:
+an MCP bridge for reusable resources and a completion hook for dependable task
+notifications.
 
-## Resource Manager
+## Agent connection
 
-- Prompt, Skill, and MCP resources now use dedicated cards and editing flows.
-- Online Skills retain their source URL, parse `name` and `description` from
-  `SKILL.md`, keep upstream content read-only, and provide Open and Update
-  actions.
-- Trigger groups can activate resources by workspace path or repository
-  address.
-- Resource lists support selection, bulk deletion, and native desktop context
-  menus.
+- The copy-only setup prompt now configures MCP and the client's native
+  completion hook separately, then tests both paths.
+- Codex, Claude Code, Cursor, and Gemini CLI use their own supported user-level
+  MCP and hook configuration formats.
+- Completion hooks extract one useful sentence from the final response or local
+  transcript without making another model call.
+- Duplicate completion notifications from the same source are suppressed within
+  a short window.
 
-## Clipboard
+## Skill and MCP resources
 
-- Clipboard groups can be searched, reused, and deleted from native context
-  menus.
-- Custom categories can match content type, regular expressions, source
-  application, and length.
-- Large histories use lazy list construction and expose a return-to-top action.
-- Preview controls, switches, selection marks, and action feedback now use a
-  consistent compact desktop style.
+- Online Skills are installed as complete packages, including `SKILL.md`,
+  `scripts/`, `references/`, `assets/`, and sibling files.
+- Enabled Skills are mirrored atomically into supported clients' native Skill
+  directories with DingDong ownership markers.
+- Enabled MCP resources are written as real client MCP entries while preserving
+  unrelated user configuration.
+- Resource saves are transactional: invalid Skill metadata, MCP transport, or
+  client configuration causes the change to roll back.
+- `dingdong_bridge` routes summary-first candidates using task text, workspace
+  path, repository URL, activation mode, and reusable project rules.
 
-## Agent and MCP
+## Documentation and distribution
 
-- The Agent setup prompt is now read-only and written for direct installation,
-  reload, verification, and `dingdong_notify` testing.
-- First-time users see an MCP entry badge and are guided to MCP Access.
-- Prompt, Skill, and MCP cards expose clearer type-specific metadata.
-
-## Desktop and distribution
-
-- macOS notifications no longer bounce the Dock icon; DingDong sounds and unread
-  state are preserved.
+- English and Chinese READMEs now document automatic setup, manual setup, exact
+  client locations, verification, and the complete runtime architecture.
 - macOS packages are published separately for Apple Silicon and Intel.
 - Intel macOS and Windows packages remain marked **beta**.
-- The minimum supported macOS version is now macOS 13.
 
 ---
 
-本版本重点更新了资源管理、剪贴板整理和 MCP 接入体验。
+本版本把 DingDong 的 Agent 接入拆成两条真实的原生链路：MCP 桥接负责复用资源，
+完成 Hook 负责稳定的任务结束提醒。
 
-- 提示词、Skill、MCP 使用各自适合的卡片和编辑方式。
-- 在线 Skill 支持解析 `SKILL.md`、保留来源、只读查看和手动更新。
-- 触发分组可以根据工作区路径或仓库地址决定资源是否启用。
-- 资源和剪贴板列表支持多选、批量删除与系统原生右键菜单。
-- 剪贴板支持自定义分类、正则规则、来源应用和长度条件。
-- MCP 接入提示词改为可直接交给 Agent 执行的只读内容。
-- macOS 提示不再让 Dock 图标跳动。
-- Apple Silicon 与 Intel 分别提供安装包；Intel 和 Windows 标记为
-  **beta**。
+- 只读接入提示词会分别配置并测试 MCP 与完成 Hook，不再只检查工具是否出现。
+- 支持 Codex、Claude Code、Cursor 和 Gemini CLI 各自的用户级配置格式。
+- 完成提醒会从最终回复或本地会话记录中提取一句有效结果，不额外调用模型。
+- 在线 Skill 会下载整个 Package，包括 `scripts/`、`references/`、`assets/` 等文件。
+- 已启用的 Skill 会原子同步到原生 Skill 目录；已启用的 MCP 会写入真实客户端配置，
+  并保留用户的其他设置。
+- 资源保存带预检和回滚，错误配置不会留下半完成状态。
+- `dingdong_bridge` 会结合任务、工作区、仓库地址和项目规则先返回简要候选，确定
+  需要后再读取完整内容。
+- 中英文 README 增加完整接入说明与详细架构图。
+- Apple Silicon 与 Intel 分别提供安装包；Intel 和 Windows 继续标记为 **beta**。

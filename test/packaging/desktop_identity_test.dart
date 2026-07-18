@@ -46,14 +46,14 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.7.8 from pubspec', () {
+  test('desktop hosts consume application version 0.7.9 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.8+15'));
+    expect(pubspec, contains('version: 0.7.9+16'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -184,12 +184,12 @@ void main() {
     expect(websiteStyles, contains('.demo-resource-row.type-prompt'));
     expect(websiteStyles, contains('.demo-resource-row.type-skill'));
     expect(websiteStyles, contains('.demo-resource-row.type-mcp'));
-    expect(releaseMetadata, contains('"latestVersion": "0.7.8"'));
-    expect(releaseMetadata, contains('"latestBuild": "15"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.9"'));
+    expect(releaseMetadata, contains('"latestBuild": "16"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
-    expect(releaseMetadata, contains('DingDong-0.7.8-windows-x64-beta.zip'));
+    expect(releaseMetadata, contains('DingDong-0.7.9-windows-x64-beta.zip'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {

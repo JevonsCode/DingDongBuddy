@@ -1,37 +1,35 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.8",
-  "latestBuild": "15",
-  "publishedAt": "2026-07-17T00:00:00Z",
+  "latestVersion": "0.7.9",
+  "latestBuild": "16",
+  "publishedAt": "2026-07-18T00:00:00Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.8/DingDong-0.7.8-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.9/DingDong-0.7.9-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.8/DingDong-0.7.8-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.9/DingDong-0.7.9-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.8/DingDong-0.7.8-windows-x64-beta.zip",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.9/DingDong-0.7.9-windows-x64-beta.zip",
         "beta": true
       }
     }
   },
   "notes": [
-    "Redesigns Resource Manager around dedicated Prompt, Skill, and MCP workflows with compact type-specific cards.",
-    "Adds online Skill sync with SKILL.md frontmatter parsing, read-only upstream content, source links, and manual updates.",
-    "Adds searchable trigger groups that can activate resources by workspace path or repository address.",
-    "Adds multi-select resource deletion, native desktop context menus, and clearer save and copy feedback.",
-    "Adds searchable clipboard groups and user-defined categories based on type, regular expressions, source application, and length.",
-    "Keeps large clipboard histories responsive with lazy list construction and provides a return-to-top action.",
-    "Rewrites the MCP access prompt so an Agent can install, reload, verify, and test dingdong_notify directly.",
-    "Stops macOS notifications from bouncing the Dock icon while preserving DingDong sounds and unread state.",
+    "Adds durable native completion hooks for Codex, Claude Code, Cursor, and Gemini CLI, with one useful result sentence in each DingDong notification.",
+    "Makes enabled Skills real complete packages in native Agent Skill directories, including scripts, references, assets, and other package files.",
+    "Synchronizes enabled MCP resources into supported clients while preserving unrelated user configuration and rolling back failed saves.",
+    "Rewrites the copy-only setup prompt to install, reload, and test the MCP bridge and completion hook as two separate paths.",
+    "Adds summary-first task routing through dingdong_bridge with workspace and repository trigger rules.",
+    "Documents automatic and manual Agent setup in English and Chinese, with a detailed architecture diagram.",
     "Publishes separate Apple Silicon and Intel macOS packages; Intel macOS and Windows packages remain marked beta."
   ]
 }

@@ -26,7 +26,7 @@ making you watch the chat.
   `references/`, and `assets/`, and updates it only when you ask
 - Syncs enabled Skills and MCP servers into Codex, Claude Code, Cursor, and
   Gemini CLI while preserving unrelated configuration
-- Applies resource groups only to matching workspace paths or repository URLs
+- Uses workspace paths and repository URLs to narrow each task's bridge suggestions
 - Lets Agents discover a small summary first and load full content only when it
   is useful
 - Rings on the Agent's native completion event and shows the first useful
@@ -65,88 +65,117 @@ follows the resource's enabled state.
 
 ```mermaid
 flowchart TB
-  subgraph Clients["Supported local Agent clients"]
+  User["User"]
+
+  subgraph UI["DingDong desktop"]
+    SetupUI["MCP access<br/>copy-only setup prompt"]
+    ResourceUI["Resource Manager<br/>Prompt · Skill · MCP"]
+    ActivityUI["Activity and notifications"]
+  end
+
+  subgraph Clients["Supported local Agents"]
     Codex["Codex"]
     Claude["Claude Code"]
     Cursor["Cursor"]
     Gemini["Gemini CLI"]
   end
 
-  subgraph Native["Native user-level Agent configuration"]
-    McpConfig["MCP configuration<br/>config.toml / JSON"]
-    HookConfig["Completion hook<br/>Stop / afterAgentResponse / AfterAgent"]
+  User --> SetupUI
+  SetupUI -->|"give setup prompt to Agent"| Clients
+
+  subgraph NativeConfig["Native user-level Agent configuration"]
+    McpConfig["MCP configuration<br/>Codex TOML · Claude/Cursor/Gemini JSON"]
+    HookConfig["Completion hook<br/>Stop · afterAgentResponse · AfterAgent"]
     SkillFolders["Native Skill folders<br/>complete package directories"]
   end
 
-  Codex --> McpConfig
-  Claude --> McpConfig
-  Cursor --> McpConfig
-  Gemini --> McpConfig
-  Codex --> HookConfig
-  Claude --> HookConfig
-  Cursor --> HookConfig
-  Gemini --> HookConfig
+  Clients -->|"setup writes and reloads"| McpConfig
+  Clients -->|"setup writes and trusts"| HookConfig
   SkillFolders --> Codex
   SkillFolders --> Claude
   SkillFolders --> Cursor
   SkillFolders --> Gemini
 
-  subgraph Bundle["Bundled DingDong MCP executable"]
-    Stdio["JSON-RPC STDIO mode<br/>dingdong_mcp"]
-    StopMode["Completion mode<br/>--notify-stop --source"]
-    Summary["Local final-reply extractor<br/>one useful sentence"]
+  subgraph Executable["Bundled dingdong_mcp executable"]
+    Stdio["STDIO JSON-RPC mode"]
+    ToolServer["MCP tool server"]
+    ToolExecutor["MCP → loopback HTTP adapter"]
+    StopMode["--notify-stop --source"]
+    Summary["Final-response extractor<br/>hook payload or local transcript"]
   end
 
-  McpConfig --> Stdio
-  HookConfig --> StopMode
+  McpConfig -->|"Agent launches process"| Stdio
+  Stdio --> ToolServer --> ToolExecutor
+  HookConfig -->|"runs after final response"| StopMode
   StopMode --> Summary
 
-  subgraph Desktop["DingDong desktop process"]
-    PortFile["Active loopback port file"]
-    Router["Loopback router<br/>127.0.0.1 · dynamic port"]
-    AgentBridge["Agent bridge<br/>task + workspace routing"]
-    LibraryApi["Resource API<br/>summary → full content"]
-    ClipboardApi["Clipboard API<br/>private by default"]
-    DingApi["Notification API<br/>POST /ding"]
-    Synchronizer["Agent resource synchronizer<br/>preflight + managed writes"]
-    DesktopUI["Desktop UI<br/>Activity · Library · Clipboard"]
-    Notifier["Sound + unread activity<br/>no Dock bounce"]
+  subgraph Loopback["DingDong local service"]
+    PortFile["api-port file<br/>active dynamic port"]
+    HTTP["127.0.0.1 HTTP server"]
+    Router["Agent router"]
+    Bridge["POST /agent/bridge"]
+    Library["GET /library<br/>summary or full content"]
+    Ding["POST /ding"]
+    Deduplicate["5-second same-source deduplication"]
+    Notification["System notification · sound<br/>activity record · no Dock bounce"]
   end
 
-  Router -->|publishes active port| PortFile
-  Stdio -->|reads active port| PortFile
-  Stdio -->|HTTP over loopback| Router
-  Summary --> DingApi
-  Router --> AgentBridge
-  Router --> LibraryApi
-  Router --> ClipboardApi
-  Router --> DingApi
-  DingApi --> Notifier
-  Router --> DesktopUI
+  HTTP -->|"publishes active port"| PortFile
+  ToolExecutor -->|"reads port"| PortFile
+  ToolExecutor -->|"loopback HTTP"| HTTP
+  HTTP --> Router
+  Router --> Bridge
+  Router --> Library
+  Router --> Ding
+  Summary --> Ding
+  Ding --> Deduplicate --> Notification --> ActivityUI
+
+  subgraph Routing["Per-task resource routing"]
+    Context["Task text<br/>workspace path<br/>Git remote.origin.url"]
+    Scope["Project rules<br/>path/repository equals or contains"]
+    Activation["Enabled + pinned<br/>always · taskMatch · manual"]
+    SummaryFirst["At most 12 candidates<br/>name and description first"]
+    FullLoad["Full content on demand<br/>get_asset · load_skill"]
+  end
+
+  Clients -->|"MCP instructions request dingdong_bridge"| ToolServer
+  Bridge --> Context --> Scope --> Activation --> SummaryFirst --> Clients
+  Clients -->|"load after choosing a resource"| ToolServer
+  Library --> FullLoad --> Clients
 
   subgraph Storage["Local durable storage"]
-    ResourceStore["Resource metadata and content"]
-    SkillStore["Managed Skill package directories"]
-    ClipboardStore["Clipboard database + image files"]
-    SettingsStore["Preferences, trigger rules, sync state"]
+    ResourceStore["resource-library.json<br/>Prompt · Skill · MCP"]
+    TriggerStore["trigger-groups.json"]
+    PackageStore["Skill Packages<br/>SKILL.md · scripts · references · assets"]
+    SyncState["agent-sync-state.json"]
   end
 
-  AgentBridge --> ResourceStore
-  LibraryApi --> ResourceStore
-  LibraryApi --> SkillStore
-  ClipboardApi --> ClipboardStore
-  DesktopUI --> ResourceStore
-  DesktopUI --> ClipboardStore
-  DesktopUI --> SettingsStore
-  ResourceStore --> Synchronizer
-  SkillStore --> Synchronizer
-  SettingsStore --> Synchronizer
-  Synchronizer -.->|writes enabled MCP entries| McpConfig
-  Synchronizer -.->|mirrors enabled Skill packages| SkillFolders
+  ResourceStore --> Activation
+  TriggerStore --> Scope
+  PackageStore --> Library
+
+  subgraph Sync["Native resource synchronization"]
+    Transaction["Transactional ResourceStore<br/>rollback on failure"]
+    Preflight["Preflight<br/>Skill metadata · MCP transport · config format"]
+    SkillInstaller["Online Skill installer<br/>Git sparse clone or GitHub API"]
+    SkillMirror["Atomic complete-directory mirror<br/>.dingdong-managed marker"]
+    MCPWriter["Managed MCP writer<br/>preserves unrelated user config"]
+  end
+
+  ResourceUI --> Transaction --> ResourceStore
+  Transaction --> Preflight
+  SkillInstaller --> PackageStore
+  Preflight --> SkillMirror
+  Preflight --> MCPWriter
+  PackageStore --> SkillMirror --> SkillFolders
+  MCPWriter --> McpConfig
+  MCPWriter --> SyncState
 ```
 
-The three main runtime paths are:
+The four main paths are:
 
+- **Setup:** copy the generated prompt → the Agent writes its native MCP and
+  completion-hook configuration → reload and test both paths separately.
 - **Task start:** Agent → `dingdong_bridge` → bounded names and descriptions →
   full resource only when needed.
 - **Resource enable:** library enabled state → preflight → native Skill folder
