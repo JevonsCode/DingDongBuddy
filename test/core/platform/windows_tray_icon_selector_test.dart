@@ -20,4 +20,23 @@ void main() {
       'windows/runner/resources/tray_icon_on_light_unread.ico',
     );
   });
+
+  test('formats the Windows unread count for the hover tooltip', () {
+    expect(
+      windowsTrayTooltip(unreadCount: 0, useChineseLabels: true),
+      'DingDong',
+    );
+    expect(
+      windowsTrayTooltip(unreadCount: 3, useChineseLabels: true),
+      'DingDong · 3 条未读内容',
+    );
+    expect(
+      windowsTrayTooltip(unreadCount: 3, useChineseLabels: false),
+      'DingDong · 3 unread',
+    );
+    expect(
+      windowsTrayTooltip(unreadCount: 1001, useChineseLabels: true),
+      'DingDong · 999 条未读内容',
+    );
+  });
 }

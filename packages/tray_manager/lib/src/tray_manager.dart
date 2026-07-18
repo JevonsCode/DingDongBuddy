@@ -118,6 +118,8 @@ class TrayManager {
     bool isTemplate = false, // macOS only
     TrayIconPosition iconPosition = TrayIconPosition.left, // macOS only
     int iconSize = 18, // macOS only
+    String? attentionIconPath, // Windows only
+    int unreadCount = 0, // Windows only
   }) async {
     final Map<String, dynamic> arguments = {
       'id': shortid.generate(),
@@ -146,6 +148,16 @@ class TrayManager {
         ByteData imageData = await rootBundle.load(iconPath);
         String base64Icon = base64Encode(imageData.buffer.asUint8List());
         arguments['base64Icon'] = base64Icon;
+        break;
+      case TargetPlatform.windows:
+        arguments['unreadCount'] = unreadCount.clamp(0, 999);
+        if (attentionIconPath != null) {
+          arguments['attentionIconPath'] = path.joinAll([
+            path.dirname(Platform.resolvedExecutable),
+            'data/flutter_assets',
+            attentionIconPath,
+          ]);
+        }
         break;
       default:
         break;

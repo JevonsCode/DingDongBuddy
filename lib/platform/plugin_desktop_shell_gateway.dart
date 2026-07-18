@@ -77,7 +77,6 @@ final class PluginDesktopShellGateway
       _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
       await _unreadController.refresh();
     }
-    await trayManager.setToolTip('DingDong');
     await _rebuildContextMenu();
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'pressed') {
@@ -185,16 +184,30 @@ final class PluginDesktopShellGateway
     required bool hot,
     required String title,
     required int iconSize,
+    required int unreadCount,
   }) async {
+    final bool windows = Platform.isWindows;
     await trayManager.setIcon(
-      Platform.isWindows
-          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: hot)
+      windows
+          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: false)
           : hot
           ? 'Assets/AgentToolMenuBarHotIcon.png'
           : 'Assets/AgentToolMenuBarIcon.png',
       isTemplate: Platform.isMacOS && !hot,
       iconSize: iconSize,
+      attentionIconPath: windows
+          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: true)
+          : null,
+      unreadCount: windows ? unreadCount : 0,
     );
+    if (windows) {
+      await trayManager.setToolTip(
+        windowsTrayTooltip(
+          unreadCount: unreadCount,
+          useChineseLabels: _useChineseLabels(),
+        ),
+      );
+    }
     if (Platform.isMacOS) {
       await trayManager.setTitle(
         title,

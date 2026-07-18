@@ -1,4 +1,5 @@
 #include "include/tray_manager/tray_manager_plugin.h"
+#include "tray_visual.h"
 
 // This must be included before many other Windows headers.
 #include <stdio.h>
@@ -21,6 +22,9 @@
 #include <vector>
 
 #define WM_MYMESSAGE (WM_USER + 1)
+
+constexpr UINT_PTR kAttentionFlashTimerId = 0xD1D0;
+constexpr UINT kAttentionFlashIntervalMs = 550;
 
 namespace {
 
@@ -76,6 +80,13 @@ class TrayManagerPlugin : public flutter::Plugin {
   flutter::PluginRegistrarWindows* registrar;
   NOTIFYICONDATA nid = {};
   NOTIFYICONIDENTIFIER niif = {};
+  HICON source_icon = nullptr;
+  HICON attention_source_icon = nullptr;
+  HICON rendered_icon = nullptr;
+  HICON attention_rendered_icon = nullptr;
+  int unread_count = 0;
+  bool attention_frame = false;
+  bool attention_timer_active = false;
   // do create pop-up menu only once.
   HMENU hMenu = CreatePopupMenu();
   bool tray_icon_setted = false;
@@ -86,6 +97,11 @@ class TrayManagerPlugin : public flutter::Plugin {
 
   void TrayManagerPlugin::_CreateMenu(HMENU menu, flutter::EncodableMap args);
   void TrayManagerPlugin::_ApplyIcon();
+  void TrayManagerPlugin::ApplyIconFrame(bool attention);
+  void TrayManagerPlugin::StartAttentionFlash();
+  void TrayManagerPlugin::AdvanceAttentionFlash();
+  void TrayManagerPlugin::CancelAttentionFlash();
+  void TrayManagerPlugin::DestroyIconResources();
   bool TrayManagerPlugin::TaskbarSurfaceIsLight();
   void TrayManagerPlugin::NotifyTaskbarAppearanceChanged();
 
@@ -158,6 +174,15 @@ TrayManagerPlugin::TrayManagerPlugin(flutter::PluginRegistrarWindows* registrar)
 }
 
 TrayManagerPlugin::~TrayManagerPlugin() {
+  if (tray_icon_setted) {
+    Shell_NotifyIcon(NIM_DELETE, &nid);
+    tray_icon_setted = false;
+  }
+  DestroyIconResources();
+  if (hMenu != nullptr) {
+    DestroyMenu(hMenu);
+    hMenu = nullptr;
+  }
   registrar->UnregisterTopLevelWindowProcDelegate(window_proc_id);
 }
 
@@ -220,11 +245,11 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
     if (tray_icon_setted) {
       Shell_NotifyIcon(NIM_DELETE, &nid);
     }
-    if (nid.hIcon != nullptr) {
-      DestroyIcon(nid.hIcon);
-      nid.hIcon = nullptr;
-    }
     tray_icon_setted = false;
+    DestroyIconResources();
+  } else if (message == WM_TIMER &&
+             wParam == kAttentionFlashTimerId) {
+    AdvanceAttentionFlash();
   } else if (message == WM_COMMAND) {
     flutter::EncodableMap eventData = flutter::EncodableMap();
     eventData[flutter::EncodableValue("id")] =
@@ -249,9 +274,8 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
     };
   } else if (message == windows_taskbar_created_message_id) {
     if (windows_taskbar_created_message_id != 0 && tray_icon_setted) {
-      // restore the icon with the existing resource.
       tray_icon_setted = false;
-      _ApplyIcon();
+      ApplyIconFrame(unread_count > 0 && attention_frame);
     }
     NotifyTaskbarAppearanceChanged();
   } else if (message == WM_SETTINGCHANGE || message == WM_THEMECHANGED ||
@@ -264,9 +288,8 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
       case PBT_APMRESUMESUSPEND:
         // System is resuming from sleep/hibernation
         if (tray_icon_setted) {
-          // Restore the tray icon after system wakes up
           tray_icon_setted = false;
-          _ApplyIcon();
+          ApplyIconFrame(unread_count > 0 && attention_frame);
         }
         NotifyTaskbarAppearanceChanged();
         break;
@@ -287,11 +310,8 @@ void TrayManagerPlugin::Destroy(
   if (tray_icon_setted) {
     Shell_NotifyIcon(NIM_DELETE, &nid);
   }
-  if (nid.hIcon != nullptr) {
-    DestroyIcon(nid.hIcon);
-    nid.hIcon = nullptr;
-  }
   tray_icon_setted = false;
+  DestroyIconResources();
 
   result->Success(flutter::EncodableValue(true));
 }
@@ -307,25 +327,172 @@ void TrayManagerPlugin::SetIcon(
 
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
-  HICON replacement_icon = static_cast<HICON>(
-      LoadImage(nullptr, (LPCWSTR)(converter.from_bytes(iconPath).c_str()),
-                IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
-                GetSystemMetrics(SM_CYSMICON), LR_LOADFROMFILE));
+  HICON replacement_icon = static_cast<HICON>(LoadImage(
+      nullptr, converter.from_bytes(iconPath).c_str(), IMAGE_ICON, 64, 64,
+      LR_LOADFROMFILE));
   if (replacement_icon == nullptr) {
     result->Error("icon_load_failed", "Unable to load the tray icon file.");
     return;
   }
 
-  HICON previous_icon = nid.hIcon;
-  nid.hIcon = replacement_icon;
+  auto* attention_path_value =
+      std::get_if<std::string>(ValueOrNull(args, "attentionIconPath"));
+  HICON replacement_attention_icon = attention_path_value == nullptr
+                                         ? CopyIcon(replacement_icon)
+                                         : static_cast<HICON>(LoadImage(
+                                               nullptr,
+                                               converter
+                                                   .from_bytes(
+                                                       *attention_path_value)
+                                                   .c_str(),
+                                               IMAGE_ICON, 64, 64,
+                                               LR_LOADFROMFILE));
+  if (replacement_attention_icon == nullptr) {
+    DestroyIcon(replacement_icon);
+    result->Error("attention_icon_load_failed",
+                  "Unable to load the attention tray icon file.");
+    return;
+  }
 
-  _ApplyIcon();
+  auto* count_value = std::get_if<int>(ValueOrNull(args, "unreadCount"));
+  const int next_count =
+      count_value == nullptr ? 0 : std::clamp(*count_value, 0, 999);
 
-  if (previous_icon != nullptr) {
-    DestroyIcon(previous_icon);
+  const int icon_width = GetSystemMetrics(SM_CXSMICON);
+  const int icon_height = GetSystemMetrics(SM_CYSMICON);
+  HICON replacement_rendered_icon = tray_manager::CreateTrayIcon(
+      replacement_icon, icon_width, icon_height);
+  HICON replacement_attention_rendered_icon = tray_manager::CreateTrayIcon(
+      replacement_attention_icon, icon_width, icon_height);
+  if (replacement_rendered_icon == nullptr ||
+      replacement_attention_rendered_icon == nullptr) {
+    if (replacement_rendered_icon != nullptr) {
+      DestroyIcon(replacement_rendered_icon);
+    }
+    if (replacement_attention_rendered_icon != nullptr) {
+      DestroyIcon(replacement_attention_rendered_icon);
+    }
+    DestroyIcon(replacement_attention_icon);
+    DestroyIcon(replacement_icon);
+    result->Error("icon_render_failed", "Unable to render the tray icons.");
+    return;
+  }
+
+  HICON previous_source = source_icon;
+  HICON previous_attention_source = attention_source_icon;
+  HICON previous_rendered = rendered_icon;
+  HICON previous_attention_rendered = attention_rendered_icon;
+  source_icon = replacement_icon;
+  attention_source_icon = replacement_attention_icon;
+  rendered_icon = replacement_rendered_icon;
+  attention_rendered_icon = replacement_attention_rendered_icon;
+  unread_count = next_count;
+
+  if (unread_count > 0) {
+    StartAttentionFlash();
+  } else {
+    CancelAttentionFlash();
+    if (!tray_icon_setted) {
+      ApplyIconFrame(false);
+    }
+  }
+
+  if (previous_source != nullptr) {
+    DestroyIcon(previous_source);
+  }
+  if (previous_attention_source != nullptr) {
+    DestroyIcon(previous_attention_source);
+  }
+  if (previous_rendered != nullptr) {
+    DestroyIcon(previous_rendered);
+  }
+  if (previous_attention_rendered != nullptr) {
+    DestroyIcon(previous_attention_rendered);
   }
 
   result->Success(flutter::EncodableValue(true));
+}
+
+void TrayManagerPlugin::ApplyIconFrame(bool attention) {
+  HICON next_icon = attention ? attention_rendered_icon : rendered_icon;
+  if (next_icon == nullptr) {
+    return;
+  }
+  attention_frame = attention;
+  nid.hIcon = next_icon;
+  _ApplyIcon();
+}
+
+void TrayManagerPlugin::CancelAttentionFlash() {
+  HWND window = GetMainWindow();
+  if (window != nullptr && attention_timer_active) {
+    KillTimer(window, kAttentionFlashTimerId);
+  }
+  attention_timer_active = false;
+  attention_frame = false;
+  if (rendered_icon != nullptr) {
+    nid.hIcon = rendered_icon;
+    if (tray_icon_setted) {
+      _ApplyIcon();
+    }
+  }
+}
+
+void TrayManagerPlugin::StartAttentionFlash() {
+  if (unread_count <= 0 || rendered_icon == nullptr ||
+      attention_rendered_icon == nullptr) {
+    CancelAttentionFlash();
+    return;
+  }
+
+  if (attention_timer_active) {
+    ApplyIconFrame(attention_frame);
+    return;
+  }
+
+  HWND window = GetMainWindow();
+  if (window == nullptr) {
+    ApplyIconFrame(false);
+    return;
+  }
+
+  ApplyIconFrame(true);
+  if (SetTimer(window, kAttentionFlashTimerId,
+               kAttentionFlashIntervalMs, nullptr) == 0) {
+    attention_frame = false;
+    ApplyIconFrame(false);
+    return;
+  }
+  attention_timer_active = true;
+}
+
+void TrayManagerPlugin::AdvanceAttentionFlash() {
+  if (!attention_timer_active || unread_count <= 0) {
+    CancelAttentionFlash();
+    return;
+  }
+  ApplyIconFrame(!attention_frame);
+}
+
+void TrayManagerPlugin::DestroyIconResources() {
+  CancelAttentionFlash();
+  if (attention_rendered_icon != nullptr) {
+    DestroyIcon(attention_rendered_icon);
+  }
+  if (rendered_icon != nullptr) {
+    DestroyIcon(rendered_icon);
+  }
+  if (attention_source_icon != nullptr) {
+    DestroyIcon(attention_source_icon);
+  }
+  if (source_icon != nullptr) {
+    DestroyIcon(source_icon);
+  }
+  attention_rendered_icon = nullptr;
+  rendered_icon = nullptr;
+  attention_source_icon = nullptr;
+  source_icon = nullptr;
+  nid.hIcon = nullptr;
 }
 
 void TrayManagerPlugin::_ApplyIcon() {
