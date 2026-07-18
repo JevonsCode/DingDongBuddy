@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
@@ -14,14 +12,28 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void main() {
-  final String todayShortcut = Platform.isMacOS ? '⌘ Q' : 'Ctrl Q';
+void testWidgetsOnPlatform(
+  String description,
+  TargetPlatform platform,
+  WidgetTesterCallback callback,
+) {
+  testWidgets(description, (WidgetTester tester) async {
+    debugDefaultTargetPlatformOverride = platform;
+    try {
+      await callback(tester);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+}
 
+void main() {
   testWidgets('quick-launch surface is a compact three-tab popup', (
     WidgetTester tester,
   ) async {
@@ -509,22 +521,58 @@ description: Use when product decisions should follow saved preferences.
     expect(hideCount, 1);
   });
 
-  testWidgets('shortcut hints appear only while Command is held', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const DingDongApp());
-    await tester.pumpAndSettle();
+  testWidgetsOnPlatform(
+    'shortcut hints appear only while Command is held',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
+      await tester.pumpAndSettle();
 
-    expect(find.text(todayShortcut), findsNothing);
+      expect(find.text('⌘ Q'), findsNothing);
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    expect(find.text(todayShortcut), findsOneWidget);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.text('⌘ Q'), findsOneWidget);
 
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    expect(find.text(todayShortcut), findsNothing);
-  });
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.text('⌘ Q'), findsNothing);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'Control reveals shortcut hints on Windows',
+    TargetPlatform.windows,
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('Ctrl Q'), findsOneWidget);
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('Ctrl Q'), findsNothing);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'Command remains the primary hint modifier on macOS',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.text('⌘ Q'), findsOneWidget);
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.text('⌘ Q'), findsNothing);
+    },
+  );
 
   testWidgets('Command-Q switches the callout to Today instead of quitting', (
     WidgetTester tester,
@@ -564,8 +612,9 @@ description: Use when product decisions should follow saved preferences.
     expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
   });
 
-  testWidgets(
+  testWidgetsOnPlatform(
     'Command-2 restores the second clipboard row from the focused callout shell',
+    TargetPlatform.macOS,
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(390, 760);
@@ -623,30 +672,90 @@ description: Use when product decisions should follow saved preferences.
     },
   );
 
-  testWidgets('filter button shows R only while Command is held', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 760);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final ShellController controller = ShellController(initialIndex: 2);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(DingDongApp(shellController: controller));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
-    expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
+  testWidgetsOnPlatform(
+    'Control-2 restores the second clipboard row on Windows',
+    TargetPlatform.windows,
+    (WidgetTester tester) async {
+      final ShellController controller = ShellController(initialIndex: 2);
+      final _RecordingClipboardGateway clipboard = _RecordingClipboardGateway();
+      final _RecordingQuickPasteGateway quickPaste =
+          _RecordingQuickPasteGateway();
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 15);
+      await tester.pumpWidget(
+        DingDongApp(
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[
+            ClipboardRecord(
+              id: 'control-shortcut-first',
+              group: 'Clipboard',
+              title: 'First control shortcut item',
+              content: 'first control value',
+              tags: const <String>['clipboard', 'text'],
+              pinned: false,
+              enabled: true,
+              activation: 'taskMatch',
+              createdAt: now,
+              updatedAt: now,
+            ),
+            ClipboardRecord(
+              id: 'control-shortcut-second',
+              group: 'Clipboard',
+              title: 'Second control shortcut item',
+              content: 'second control value',
+              tags: const <String>['clipboard', 'text'],
+              pinned: false,
+              enabled: true,
+              activation: 'taskMatch',
+              createdAt: now.subtract(const Duration(seconds: 1)),
+              updatedAt: now.subtract(const Duration(seconds: 1)),
+            ),
+          ]),
+          clipboardGateway: clipboard,
+          quickPasteGateway: quickPaste,
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    expect(find.byKey(const Key('clipboard-filter-icon')), findsNothing);
-    expect(find.byKey(const Key('clipboard-filter-shortcut')), findsOneWidget);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
 
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
-    expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
-  });
+      expect(clipboard.writtenText, 'second control value');
+      expect(quickPaste.pasteCount, 1);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'filter button shows R only while Command is held',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(DingDongApp(shellController: controller));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
+      expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.byKey(const Key('clipboard-filter-icon')), findsNothing);
+      expect(
+        find.byKey(const Key('clipboard-filter-shortcut')),
+        findsOneWidget,
+      );
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
+      expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
+    },
+  );
 
   testWidgets('Arrow Down and Space preview from the focused callout shell', (
     WidgetTester tester,
@@ -729,44 +838,46 @@ description: Use when product decisions should follow saved preferences.
     expect(preview.hideCount, 1);
   });
 
-  testWidgets('tab content is centered until Command reveals the shortcut', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 760);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
+  testWidgetsOnPlatform(
+    'tab content is centered until Command reveals the shortcut',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
 
-    await tester.pumpWidget(const DingDongApp());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(const DingDongApp());
+      await tester.pumpAndSettle();
 
-    final Finder tab = find.byKey(const Key('popup-tab-0'));
-    final Finder content = find.byKey(const Key('popup-tab-content-0'));
-    expect(
-      (tester.getCenter(tab).dx - tester.getCenter(content).dx).abs(),
-      lessThan(1),
-    );
+      final Finder tab = find.byKey(const Key('popup-tab-0'));
+      final Finder content = find.byKey(const Key('popup-tab-content-0'));
+      expect(
+        (tester.getCenter(tab).dx - tester.getCenter(content).dx).abs(),
+        lessThan(1),
+      );
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 180));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 180));
 
-    expect(find.text(todayShortcut), findsOneWidget);
-    expect(
-      tester.getCenter(content).dx,
-      lessThan(tester.getCenter(tab).dx - 10),
-    );
+      expect(find.text('⌘ Q'), findsOneWidget);
+      expect(
+        tester.getCenter(content).dx,
+        lessThan(tester.getCenter(tab).dx - 10),
+      );
 
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 180));
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 180));
 
-    expect(find.text(todayShortcut), findsNothing);
-    expect(
-      (tester.getCenter(tab).dx - tester.getCenter(content).dx).abs(),
-      lessThan(1),
-    );
-  });
+      expect(find.text('⌘ Q'), findsNothing);
+      expect(
+        (tester.getCenter(tab).dx - tester.getCenter(content).dx).abs(),
+        lessThan(1),
+      );
+    },
+  );
 
   testWidgets(
     'refresh uses the original tab loading feedback and button size',

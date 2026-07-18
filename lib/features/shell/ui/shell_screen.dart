@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
@@ -174,20 +175,18 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    final bool isMetaKey =
-        event.logicalKey == LogicalKeyboardKey.metaLeft ||
-        event.logicalKey == LogicalKeyboardKey.metaRight;
-    final bool show = isMetaKey
+    final TargetPlatform platform = defaultTargetPlatform;
+    final bool isModifierKey = isPrimaryModifierKey(event.logicalKey, platform);
+    final bool show = isModifierKey
         ? event is! KeyUpEvent
-        : HardwareKeyboard.instance.isMetaPressed;
+        : isPrimaryModifierPressed(HardwareKeyboard.instance, platform);
     if (show != _showShortcutHints) {
       setState(() => _showShortcutHints = show);
     }
     if (event is KeyDownEvent && widget.controller.selectedIndex == 2) {
       final int? shortcutIndex = _clipboardShortcutIndex(event.logicalKey);
       if (shortcutIndex != null &&
-          (HardwareKeyboard.instance.isMetaPressed ||
-              HardwareKeyboard.instance.isControlPressed)) {
+          isPrimaryModifierPressed(HardwareKeyboard.instance, platform)) {
         unawaited(_useClipboardRecordAt(shortcutIndex));
         return KeyEventResult.handled;
       }

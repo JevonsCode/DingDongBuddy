@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/shell/ui/popup_mascot.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Branded header and three-workspace switcher for the callout interface.
@@ -149,7 +150,9 @@ class PopupHeader extends StatelessWidget {
   }
 }
 
-String _shortcut(String key) => Platform.isMacOS ? '⌘ $key' : 'Ctrl $key';
+String _shortcut(String key) {
+  return primaryShortcutLabel(key, defaultTargetPlatform);
+}
 
 class _HeaderButton extends StatelessWidget {
   const _HeaderButton({
