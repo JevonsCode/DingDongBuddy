@@ -3,9 +3,9 @@ import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-const double _windowsMenuMinWidth = 220;
+const double _windowsMenuMinWidth = 252;
 const double _windowsMenuMaxWidth = 280;
-const double _windowsMenuItemHeight = 34;
+const double _windowsMenuItemHeight = 32;
 
 /// A platform-aware entry used by application-owned context menus.
 sealed class DesktopMenuEntry<T> {
@@ -89,9 +89,9 @@ Future<T?> showDesktopContextMenu<T>({
     context: context,
     position: desktopContextMenuPosition(context, globalPosition),
     items: popupEntries,
-    elevation: windows ? 8 : null,
+    elevation: windows ? 2 : null,
     shadowColor: windows
-        ? Colors.black.withValues(alpha: dark ? 0.42 : 0.2)
+        ? Colors.black.withValues(alpha: dark ? 0.24 : 0.1)
         : null,
     surfaceTintColor: windows ? Colors.transparent : null,
     shape: windows
@@ -176,9 +176,9 @@ final class _WindowsPopupMenuItemState<T>
   Widget build(BuildContext context) {
     final bool dark = Theme.of(context).brightness == Brightness.dark;
     final DesktopMenuItem<T> item = widget.item;
-    final Color foreground = item.destructive
-        ? (dark ? const Color(0xFFFF7B72) : const Color(0xFFEB5757))
-        : (dark ? const Color(0xFFE7E7E5) : const Color(0xFF37352F));
+    final Color foreground = dark
+        ? const Color(0xFFE7E7E5)
+        : const Color(0xFF37352F);
     final Color muted = dark
         ? const Color(0xFF9B9B98)
         : const Color(0xFF9B9A97);
@@ -198,7 +198,6 @@ final class _WindowsPopupMenuItemState<T>
           key: item.key,
           onTap: item.enabled ? _select : null,
           canRequestFocus: item.enabled,
-          autofocus: widget.marksMenuRoot && item.enabled,
           borderRadius: BorderRadius.circular(6),
           hoverColor: hover,
           focusColor: hover,

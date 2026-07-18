@@ -574,16 +574,42 @@ description: Use when product decisions should follow saved preferences.
     'Control reveals shortcut hints on Windows',
     TargetPlatform.windows,
     (WidgetTester tester) async {
-      await tester.pumpWidget(const DingDongApp());
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'windows-shortcut-label',
+        group: 'Clipboard',
+        title: 'Windows shortcut label',
+        content: 'Ctrl plus a number',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 7, 18),
+        updatedAt: DateTime.utc(2026, 7, 18),
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          shellController: controller,
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[record]),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
       expect(find.text('Ctrl Q'), findsOneWidget);
+      expect(find.text('Ctrl 1'), findsOneWidget);
+      expect(find.text('⌘ 1'), findsNothing);
 
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
       expect(find.text('Ctrl Q'), findsNothing);
+      expect(find.text('Ctrl 1'), findsNothing);
     },
   );
 
@@ -591,16 +617,42 @@ description: Use when product decisions should follow saved preferences.
     'Command remains the primary hint modifier on macOS',
     TargetPlatform.macOS,
     (WidgetTester tester) async {
-      await tester.pumpWidget(const DingDongApp());
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'macos-shortcut-label',
+        group: 'Clipboard',
+        title: 'macOS shortcut label',
+        content: 'Command plus a number',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 7, 18),
+        updatedAt: DateTime.utc(2026, 7, 18),
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          shellController: controller,
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[record]),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
       await tester.pump();
       expect(find.text('⌘ Q'), findsOneWidget);
+      expect(find.text('⌘ 1'), findsOneWidget);
+      expect(find.text('Ctrl 1'), findsNothing);
 
       await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
       await tester.pump();
       expect(find.text('⌘ Q'), findsNothing);
+      expect(find.text('⌘ 1'), findsNothing);
     },
   );
 

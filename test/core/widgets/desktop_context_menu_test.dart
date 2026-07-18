@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -62,20 +64,21 @@ void main() {
 
       final Finder menuRoot = find.byKey(const Key('windows-context-menu'));
       expect(menuRoot, findsOneWidget);
-      expect(tester.getSize(menuRoot), const Size(224, 34));
+      expect(tester.getSize(menuRoot), const Size(252, 32));
       final Finder menuMaterial = find.ancestor(
         of: menuRoot,
         matching: find.byType(Material),
       );
       final Material material = tester.widget<Material>(menuMaterial.first);
       expect(material.color, const Color(0xFFFCFCFB));
+      expect(material.elevation, 2);
       final RoundedRectangleBorder shape =
           material.shape! as RoundedRectangleBorder;
       expect(shape.borderRadius, BorderRadius.circular(10));
       expect(find.text('Ctrl+E'), findsOneWidget);
       expect(
         tester.widget<Text>(find.text('Delete')).style?.color,
-        const Color(0xFFEB5757),
+        const Color(0xFF37352F),
       );
 
       await tester.tap(find.byKey(const Key('menu-delete')));
@@ -121,7 +124,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
 
-      expect(await result, 'second');
+      expect(await result, 'first');
     });
   });
 
@@ -161,6 +164,127 @@ void main() {
       expect(await result, 'edit');
     });
   });
+
+  testWidgets('Windows menu visual reference matches the Notion-like spec', (
+    WidgetTester tester,
+  ) async {
+    await withTargetPlatform(TargetPlatform.windows, () async {
+      final FontLoader windowsFont = FontLoader('Segoe UI')
+        ..addFont(
+          Future<ByteData>.value(
+            ByteData.sublistView(
+              File(r'C:\Windows\Fonts\segoeui.ttf').readAsBytesSync(),
+            ),
+          ),
+        );
+      await windowsFont.load();
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(271, 483);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      late BuildContext menuContext;
+      await tester.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(fontFamily: 'Segoe UI'),
+          home: Builder(
+            builder: (BuildContext context) {
+              menuContext = context;
+              return const Scaffold(
+                backgroundColor: Color(0xFFF7F7F5),
+                body: SizedBox.expand(),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        for (final String symbol in <String>[
+          'enabled',
+          'archive',
+          'link',
+          'copy',
+          'edit',
+          'archive_to',
+          'delete',
+          'details',
+          'share',
+        ]) {
+          await precacheImage(
+            AssetImage('Assets/Symbols/$symbol.png'),
+            menuContext,
+          );
+        }
+      });
+
+      final Future<String?> result = showDesktopContextMenu<String>(
+        context: menuContext,
+        globalPosition: const Offset(7, 5),
+        entries: const <DesktopMenuEntry<String>>[
+          DesktopMenuItem<String>(
+            value: 'favorite',
+            label: 'Add to Favorites',
+            symbol: 'enabled',
+          ),
+          DesktopMenuItem<String>(
+            value: 'recents',
+            label: 'Remove from Recents',
+            symbol: 'archive',
+          ),
+          DesktopMenuDivider<String>(),
+          DesktopMenuItem<String>(
+            value: 'copy',
+            label: 'Copy link',
+            symbol: 'link',
+          ),
+          DesktopMenuItem<String>(
+            value: 'duplicate',
+            label: 'Duplicate',
+            symbol: 'copy',
+            shortcut: 'Ctrl+D',
+          ),
+          DesktopMenuItem<String>(
+            value: 'rename',
+            label: 'Rename',
+            symbol: 'edit',
+            shortcut: 'Ctrl+Shift+R',
+          ),
+          DesktopMenuItem<String>(
+            value: 'move',
+            label: 'Move to',
+            symbol: 'archive_to',
+          ),
+          DesktopMenuItem<String>(
+            value: 'trash',
+            label: 'Move to Trash',
+            symbol: 'delete',
+            destructive: true,
+          ),
+          DesktopMenuDivider<String>(),
+          DesktopMenuItem<String>(
+            value: 'details',
+            label: 'View details',
+            symbol: 'details',
+          ),
+          DesktopMenuItem<String>(
+            value: 'share',
+            label: 'Share',
+            symbol: 'share',
+          ),
+        ],
+      );
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byType(Overlay).first,
+        matchesGoldenFile('goldens/windows_context_menu_reference.png'),
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(await result, isNull);
+    });
+  }, skip: !Platform.isWindows);
 
   testWidgets('non-Windows fallback keeps the Material menu', (
     WidgetTester tester,
