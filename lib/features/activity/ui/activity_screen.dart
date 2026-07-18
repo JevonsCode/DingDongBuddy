@@ -113,7 +113,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(key: Key('app-version-0.7.10')),
+                        const SizedBox(key: Key('app-version-0.7.11')),
                       ],
                     ),
                   ),

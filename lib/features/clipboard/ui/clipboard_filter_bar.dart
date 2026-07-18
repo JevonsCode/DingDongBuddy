@@ -37,6 +37,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ClipboardSettingsController? settings = settingsViewModel;
+    final bool clipboardMonitoring = settings?.clipboardMonitoring ?? true;
     final bool filtersActive =
         viewModel.selectedCategoryId != null || viewModel.selectedGroup != null;
     return Padding(
@@ -49,8 +50,8 @@ class _CompactClipboardToolbar extends StatelessWidget {
             decoration: PopupStyle.card(radius: 10),
             child: Row(
               children: <Widget>[
-                CompactSwitch(
-                  value: settings?.clipboardMonitoring ?? true,
+                _ClipboardMonitoringToggle(
+                  value: clipboardMonitoring,
                   onChanged: settings?.setClipboardMonitoring,
                 ),
                 const SizedBox(width: 4),
@@ -126,6 +127,71 @@ class _CompactClipboardToolbar extends StatelessWidget {
             ],
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _ClipboardMonitoringToggle extends StatefulWidget {
+  const _ClipboardMonitoringToggle({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  State<_ClipboardMonitoringToggle> createState() =>
+      _ClipboardMonitoringToggleState();
+}
+
+class _ClipboardMonitoringToggleState
+    extends State<_ClipboardMonitoringToggle> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool enabled = widget.onChanged != null;
+    return Tooltip(
+      message: widget.value
+          ? context.localized('Pause clipboard monitoring', '暂停剪贴板监听')
+          : context.localized('Turn on clipboard monitoring', '开启剪贴板监听'),
+      child: MouseRegion(
+        cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: enabled ? (_) => setState(() => _hovered = true) : null,
+        onExit: enabled ? (_) => setState(() => _hovered = false) : null,
+        child: SizedBox(
+          width: 36,
+          height: 20,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: <Widget>[
+              Positioned(
+                left: -4,
+                top: -5,
+                right: -4,
+                bottom: -5,
+                child: AnimatedContainer(
+                  key: const Key('clipboard-monitoring-hover'),
+                  duration: const Duration(milliseconds: 140),
+                  curve: Curves.easeOutCubic,
+                  decoration: BoxDecoration(
+                    color: _hovered
+                        ? PopupStyle.accentSoft
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              CompactSwitch(
+                key: const Key('clipboard-monitoring-switch'),
+                value: widget.value,
+                onChanged: widget.onChanged,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

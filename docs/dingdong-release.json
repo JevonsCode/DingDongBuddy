@@ -1,29 +1,30 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.10",
-  "latestBuild": "17",
-  "publishedAt": "2026-07-18T20:36:02Z",
+  "latestVersion": "0.7.11",
+  "latestBuild": "18",
+  "publishedAt": "2026-07-18T20:48:20Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.10/DingDong-0.7.10-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.11/DingDong-0.7.11-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.10/DingDong-0.7.10-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.11/DingDong-0.7.11-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.10/DingDong-0.7.10-windows-x64-beta.zip",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.11/DingDong-0.7.11-windows-x64-beta.zip",
         "beta": true
       }
     }
   },
   "notes": [
+    "Adds hover feedback, a click cursor, and state-aware action guidance to the Clipboard monitoring switch.",
     "Adds a built-in DingDong Configure Skill so Agents can discover and manage prompts, Skills, MCP servers, trigger groups, project policies, and clipboard organization.",
     "Exposes public trigger-group CRUD routes and keeps enabled resources synchronized into supported native Agent directories.",
     "Redesigns clipboard category management with clearer hierarchy, semantic icons, compact actions, and correctly clipped macOS modal overlays.",

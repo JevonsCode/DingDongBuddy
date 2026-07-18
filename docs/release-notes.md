@@ -1,7 +1,14 @@
-# DingDong 0.7.10
+# DingDong 0.7.11
 
 This release makes DingDong easier for both people and Agents to configure,
 while giving Windows a platform-native interaction and notification pass.
+
+## Clipboard monitoring clarity
+
+- Adds a restrained hover highlight and click cursor to the Clipboard monitoring
+  switch so the control reads as interactive.
+- Shows state-aware action guidance: turn monitoring on while paused, or pause
+  monitoring while it is running.
 
 ## Agent configuration
 
@@ -43,6 +50,11 @@ while giving Windows a platform-native interaction and notification pass.
 
 本版本让用户和 Agent 都更容易配置 DingDong，同时完成了一轮 Windows 原生交互与
 通知体验优化。
+
+## 剪贴板监听辨识度
+
+- 为剪贴板监听开关增加克制的悬停底色与点击指针，让控件的可操作性更明确。
+- 提示会跟随状态变化：暂停时提示开启监听，运行时提示暂停监听。
 
 ## Agent 配置
 
