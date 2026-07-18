@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
+import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
@@ -41,6 +42,7 @@ final class PluginDesktopShellGateway
     apply: _applyUnreadAppearance,
   );
   bool _started = false;
+  bool _taskbarIsLight = false;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
 
   @override
@@ -182,7 +184,7 @@ final class PluginDesktopShellGateway
   }) async {
     await trayManager.setIcon(
       Platform.isWindows
-          ? 'windows/runner/resources/app_icon.ico'
+          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: hot)
           : hot
           ? 'Assets/AgentToolMenuBarHotIcon.png'
           : 'Assets/AgentToolMenuBarIcon.png',
