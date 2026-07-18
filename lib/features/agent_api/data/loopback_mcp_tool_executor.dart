@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
-import 'package:dingdong/features/agent_api/data/native_mcp_installer.dart';
 
 /// HTTP boundary used by the stdio MCP adapter.
 abstract interface class McpHttpTransport {
@@ -20,16 +19,13 @@ abstract interface class McpHttpTransport {
 final class LoopbackMcpToolExecutor implements McpToolExecutor {
   LoopbackMcpToolExecutor(
     this._transport, {
-    NativeMcpInstaller? installer,
     String Function()? currentDirectory,
     Future<String?> Function(String directory)? repositoryUrlResolver,
-  }) : _installer = installer,
-       _currentDirectory = currentDirectory ?? _defaultCurrentDirectory,
+  }) : _currentDirectory = currentDirectory ?? _defaultCurrentDirectory,
        _repositoryUrlResolver =
            repositoryUrlResolver ?? _defaultRepositoryUrlResolver;
 
   final McpHttpTransport _transport;
-  final NativeMcpInstaller? _installer;
   final String Function() _currentDirectory;
   final Future<String?> Function(String directory) _repositoryUrlResolver;
 
@@ -72,7 +68,6 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
           if (arguments['limit'] != null) 'limit': '${arguments['limit']}',
         },
       ),
-      'dingdong_install_native_mcp' => _installNativeMcp(arguments),
       'dingdong_notify' => _transport.request(
         method: 'POST',
         path: '/ding',
@@ -100,53 +95,6 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       path: '/agent/bridge',
       body: body,
     );
-  }
-
-  Future<Map<String, Object?>> _installNativeMcp(
-    Map<String, Object?> arguments,
-  ) async {
-    final NativeMcpInstaller? installer = _installer;
-    final String id = (arguments['id'] as String? ?? '').trim();
-    final String target = arguments['target'] as String? ?? 'codex';
-    if (installer == null) {
-      throw StateError('Native MCP installation is unavailable.');
-    }
-    if (id.isEmpty) {
-      throw ArgumentError('dingdong_install_native_mcp requires id.');
-    }
-    final Map<String, Object?> detail = await _transport.request(
-      method: 'GET',
-      path: '/library/$id',
-      query: const <String, String>{
-        'mode': 'full',
-        'expectedType': 'mcp',
-        'trackUsage': 'true',
-      },
-    );
-    final Map<String, Object?> item =
-        detail['item'] as Map<String, Object?>? ?? <String, Object?>{};
-    final String title = item['title'] as String? ?? 'dingdong-mcp';
-    final String content = item['content'] as String? ?? '';
-    final String serverName =
-        (arguments['serverName'] as String?)?.trim().replaceAll(' ', '-') ??
-        _slug(title);
-    final bool write =
-        arguments['dryRun'] == false && arguments['confirm'] == 'INSTALL';
-    final NativeMcpInstallResult result = await installer.install(
-      serverName: serverName.isEmpty ? _slug(title) : serverName,
-      commandSpec: McpCommandSpec.parse(content),
-      target: target,
-      write: write,
-    );
-    return <String, Object?>{
-      'status': write ? 'installed' : 'dry_run',
-      'target': target,
-      'serverName': serverName,
-      'configPath': result.configPath,
-      'entry': result.entry,
-      'writeRequired':
-          'Pass dryRun=false and confirm=INSTALL to update the native agent config.',
-    };
   }
 }
 
@@ -177,15 +125,6 @@ Map<String, String> _stringQuery(
     for (final String key in keys)
       if (arguments[key] != null) key: '${arguments[key]}',
   };
-}
-
-String _slug(String value) {
-  final String slug = value
-      .toLowerCase()
-      .replaceAll(RegExp(r'[^a-z0-9_-]+'), '-')
-      .replaceAll(RegExp('-+'), '-')
-      .replaceAll(RegExp(r'^-|-$'), '');
-  return slug.isEmpty ? 'dingdong-mcp' : slug;
 }
 
 /// Real loopback transport that discovers the running app's active port file.

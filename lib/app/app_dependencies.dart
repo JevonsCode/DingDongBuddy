@@ -9,6 +9,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.d
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
+import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
@@ -59,8 +60,12 @@ final class AppDependencies {
           source: NativeClipboardChangeSource(),
           captureService: clipboardCaptureService,
         );
-    final ResourceStore resourceStore = ResourceRepository(
+    final ResourceStore baseResourceStore = ResourceRepository(
       ResourceFileService(paths.resourceLibraryFile),
+    );
+    final ResourceStore resourceStore = SynchronizedResourceStore(
+      baseResourceStore,
+      AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory),
     );
     final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
       TriggerGroupFileService(paths.triggerGroupsFile),
@@ -134,6 +139,12 @@ final class AppDependencies {
   Future<void> start() async {
     await paths.applicationSupportDirectory.create(recursive: true);
     await builtInResourceInstaller.install();
+    try {
+      await resourceStore.save(await resourceStore.load());
+    } on Object {
+      // An invalid external Agent config must not prevent DingDong from opening.
+      // The next user-initiated resource save will surface the sync error.
+    }
     initialSettings = await settingsRepository.load();
     await agentHttpServer.start(port: initialSettings.apiPort);
     await paths.activePortFile.writeAsString(

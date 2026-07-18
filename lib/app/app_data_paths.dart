@@ -54,4 +54,8 @@ final class AppDataPaths {
   Directory get clipboardImagesDirectory => Directory(
     '${applicationSupportDirectory.path}${_separator}Clipboard Images',
   );
+
+  Directory get skillPackagesDirectory => Directory(
+    '${applicationSupportDirectory.path}${_separator}Skill Packages',
+  );
 }

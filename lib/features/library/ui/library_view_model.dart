@@ -8,6 +8,7 @@ import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter/foundation.dart';
 
@@ -19,6 +20,7 @@ final class LibraryViewModel extends ChangeNotifier {
     DateTime Function()? now,
     LibraryImporter? importer,
     this.updateFetcher,
+    this.skillPackageInstaller,
     TriggerGroupStore? triggerGroupStore,
     DataRevisionBus? revisions,
   }) : _idGenerator = idGenerator ?? _generateUuid,
@@ -36,6 +38,7 @@ final class LibraryViewModel extends ChangeNotifier {
   final DateTime Function() _now;
   final LibraryImporter _importer;
   final ResourceUpdateFetcher? updateFetcher;
+  final SkillPackageInstaller? skillPackageInstaller;
   final TriggerGroupStore _triggerGroupStore;
   StreamSubscription<DataCollection>? _revisionSubscription;
   List<Resource> _resources = const <Resource>[];
@@ -242,6 +245,7 @@ final class LibraryViewModel extends ChangeNotifier {
     String? group,
     List<String>? tags,
     String? updateUrl,
+    String? packagePath,
     String? note,
     bool? pinned,
     bool? enabled,
@@ -257,6 +261,7 @@ final class LibraryViewModel extends ChangeNotifier {
       content: content,
       tags: tags ?? const <String>[],
       updateUrl: updateUrl,
+      packagePath: packagePath,
       note: note,
       pinned: pinned ?? false,
       enabled: enabled ?? true,
@@ -394,6 +399,17 @@ final class LibraryViewModel extends ChangeNotifier {
       throw StateError('Resource update is unavailable.');
     }
     return fetcher.fetch(Uri.parse(link));
+  }
+
+  Future<SkillPackageInstallResult> installSkillPackage(
+    String updateUrl,
+  ) async {
+    final SkillPackageInstaller? installer = skillPackageInstaller;
+    final String link = updateUrl.trim();
+    if (installer == null || link.isEmpty) {
+      throw StateError('Skill package installation is unavailable.');
+    }
+    return installer.install(Uri.parse(link));
   }
 
   Future<LibraryImportResult> importDirectory({

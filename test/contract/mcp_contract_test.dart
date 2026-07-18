@@ -45,7 +45,6 @@ void main() {
           'dingdong_get_asset',
           'dingdong_load_skill',
           'dingdong_recommend_mcp',
-          'dingdong_install_native_mcp',
           'dingdong_notify',
         ],
       );

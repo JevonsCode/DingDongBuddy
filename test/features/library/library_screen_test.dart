@@ -4,7 +4,7 @@ import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
-import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
@@ -381,11 +381,11 @@ description: "Remember user preferences"
 Apply the user's saved preferences.
 ''';
     final _MemoryStore store = _MemoryStore(<Resource>[]);
-    final _UpdateFetcher fetcher = _UpdateFetcher(fetched);
+    final _SkillInstaller installer = _SkillInstaller(fetched);
     Uri? opened;
     final LibraryViewModel model = LibraryViewModel(
       store,
-      updateFetcher: fetcher,
+      skillPackageInstaller: installer,
       idGenerator: () => 'online-skill',
       now: () => DateTime.utc(2026, 7, 16),
     );
@@ -418,10 +418,11 @@ Apply the user's saved preferences.
     await tester.tap(find.byKey(const Key('resource-save')));
     await tester.pumpAndSettle();
 
-    expect(fetcher.requested, Uri.parse(sourceUrl));
-    expect(fetcher.requestCount, 1);
+    expect(installer.requested, Uri.parse(sourceUrl));
+    expect(installer.requestCount, 1);
     expect(store.resources.single.updateUrl, sourceUrl);
     expect(store.resources.single.content, fetched);
+    expect(store.resources.single.packagePath, '/tmp/user-taste');
     expect(store.resources.single.title, 'user-taste');
     expect(find.text('Remember user preferences'), findsOneWidget);
     final TextField installedName = tester.widget<TextField>(
@@ -447,14 +448,14 @@ Apply the user's saved preferences.
     await tester.pump();
     expect(opened, Uri.parse(sourceUrl));
 
-    fetcher.content = fetched.replaceFirst(
+    installer.content = fetched.replaceFirst(
       "Apply the user's saved preferences.",
       'Apply the latest saved preferences.',
     );
     await tester.tap(find.byKey(const Key('resource-skill-update')));
     await tester.pumpAndSettle();
 
-    expect(fetcher.requestCount, 2);
+    expect(installer.requestCount, 2);
     expect(
       store.resources.single.content,
       contains('Apply the latest saved preferences.'),
@@ -861,17 +862,20 @@ final class _MemoryStore implements ResourceStore {
   }
 }
 
-final class _UpdateFetcher implements ResourceUpdateFetcher {
-  _UpdateFetcher(this.content);
+final class _SkillInstaller implements SkillPackageInstaller {
+  _SkillInstaller(this.content);
 
   String content;
   Uri? requested;
   int requestCount = 0;
 
   @override
-  Future<String> fetch(Uri uri) async {
-    requested = uri;
+  Future<SkillPackageInstallResult> install(Uri source) async {
+    requested = source;
     requestCount += 1;
-    return content;
+    return SkillPackageInstallResult(
+      skillDocument: content,
+      directoryPath: '/tmp/user-taste',
+    );
   }
 }

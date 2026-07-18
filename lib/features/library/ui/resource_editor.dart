@@ -6,6 +6,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ class ResourceEditor extends StatefulWidget {
     String? group,
     List<String>? tags,
     String? updateUrl,
+    String? packagePath,
     String? note,
     bool? pinned,
     bool? enabled,
@@ -54,7 +56,8 @@ class ResourceEditor extends StatefulWidget {
   final Future<void> Function(TriggerGroup group)? onUpdateTriggerGroup;
   final Future<void> Function(String id)? onDeleteTriggerGroup;
   final Future<void> Function(String updateUrl)? onSyncUpdate;
-  final Future<String> Function(String updateUrl)? onResolveSkillSource;
+  final Future<SkillPackageInstallResult> Function(String updateUrl)?
+  onResolveSkillSource;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
   final Future<void> Function()? onImportSkill;
 
@@ -486,6 +489,10 @@ class _ResourceEditorState extends State<ResourceEditor> {
           _skillSourceMode == SkillSourceMode.online;
       final bool installingOnlineSkill = onlineSkill && resource == null;
       SkillConfiguration? onlineConfiguration;
+      String? packagePath = resource?.packagePath;
+      if (_draftType == ResourceType.skill && !onlineSkill) {
+        packagePath = '';
+      }
       String content = onlineSkill
           ? resource?.content ?? ''
           : _serializedContent();
@@ -495,12 +502,14 @@ class _ResourceEditorState extends State<ResourceEditor> {
                 ? ''
                 : _updateUrlController.text.trim());
       if (installingOnlineSkill) {
-        final Future<String> Function(String updateUrl)? resolve =
-            widget.onResolveSkillSource;
+        final Future<SkillPackageInstallResult> Function(String updateUrl)?
+        resolve = widget.onResolveSkillSource;
         if (resolve == null || updateUrl.isEmpty) {
           throw const FormatException('Enter a Skill folder or SKILL.md URL.');
         }
-        content = await resolve(updateUrl);
+        final SkillPackageInstallResult installed = await resolve(updateUrl);
+        content = installed.skillDocument;
+        packagePath = installed.directoryPath;
         onlineConfiguration = _validateOnlineSkill(content);
       }
       final String title = onlineConfiguration?.name ?? _titleController.text;
@@ -510,6 +519,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
           title: title,
           content: content,
           updateUrl: updateUrl,
+          packagePath: packagePath,
           note: onlineSkill ? _noteController.text : null,
           pinned: _pinned,
           enabled: _enabled,
@@ -522,6 +532,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
             title: title,
             content: content,
             updateUrl: updateUrl,
+            packagePath: packagePath,
             note: onlineSkill ? _noteController.text : resource.note,
             pinned: _pinned,
             enabled: _enabled,
@@ -581,8 +592,8 @@ class _ResourceEditorState extends State<ResourceEditor> {
 
   Future<void> _updateOnlineSkill() async {
     final Resource? resource = widget.resource;
-    final Future<String> Function(String updateUrl)? resolve =
-        widget.onResolveSkillSource;
+    final Future<SkillPackageInstallResult> Function(String updateUrl)?
+    resolve = widget.onResolveSkillSource;
     final String updateUrl = _updateUrlController.text.trim();
     if (resource == null || resolve == null || updateUrl.isEmpty) {
       setState(() {
@@ -599,13 +610,15 @@ class _ResourceEditorState extends State<ResourceEditor> {
       _saveError = null;
     });
     try {
-      final String content = await resolve(updateUrl);
+      final SkillPackageInstallResult installed = await resolve(updateUrl);
+      final String content = installed.skillDocument;
       final SkillConfiguration skill = _validateOnlineSkill(content);
       await widget.onSave(
         resource.copyWith(
           title: skill.name,
           content: content,
           updateUrl: updateUrl,
+          packagePath: installed.directoryPath,
           updatedAt: DateTime.now().toUtc(),
         ),
       );
@@ -642,6 +655,13 @@ class _ResourceEditorState extends State<ResourceEditor> {
 
   String _friendlySaveError(Object error) {
     if (error is StateError) {
+      final String detail = error.message.toString();
+      if (!detail.contains('unavailable')) {
+        return context.localized(
+          'Could not sync this resource to an installed Agent. $detail',
+          '无法把这个资源同步到已安装的 Agent。$detail',
+        );
+      }
       return context.localized(
         'Online sync is not ready in this window. Reopen Resource Manager and try again.',
         '当前窗口尚未启用在线同步，请重新打开资源管理后重试。',
@@ -660,17 +680,24 @@ class _ResourceEditorState extends State<ResourceEditor> {
       );
     }
     if (error is FormatException) {
-      if (_draftType == ResourceType.skill &&
-          _skillSourceMode == SkillSourceMode.local) {
+      if (_draftType == ResourceType.skill) {
+        if (_skillSourceMode == SkillSourceMode.local) {
+          return context.localized(
+            'SKILL.md needs valid name and description fields in its YAML frontmatter.',
+            'SKILL.md 的 YAML frontmatter 需要有效的 name 和 description。',
+          );
+        }
         return context.localized(
-          'SKILL.md needs a non-empty description in its YAML frontmatter.',
-          'SKILL.md 的 YAML frontmatter 里需要填写非空 description。',
+          'Paste a GitHub Skill repository, folder, or direct SKILL.md link.',
+          '请粘贴 GitHub Skill 仓库、文件夹或 SKILL.md 直链。',
         );
       }
-      return context.localized(
-        'Paste a GitHub Skill folder or a direct SKILL.md link.',
-        '链接格式不正确，请粘贴 GitHub Skill 文件夹或 SKILL.md 直链。',
-      );
+      if (_draftType == ResourceType.mcp) {
+        return context.localized(
+          'Use a valid STDIO or Streamable HTTP MCP configuration.',
+          '请填写有效的 STDIO 或 Streamable HTTP MCP 配置。',
+        );
+      }
     }
     return context.localized(
       'Could not save this configuration. Check the content and try again.',
@@ -1099,11 +1126,11 @@ class _SkillEditor extends StatelessWidget {
                   child: Text(
                     context.localized(
                       installedOnline
-                          ? 'The installed copy is read-only. Review the source before each manual update.'
-                          : 'Review and understand the Skill source before installing it. Installation downloads a local read-only copy and keeps the source link for manual updates.',
+                          ? 'The installed package is read-only. Review the source before updating.'
+                          : 'Review the Skill before installing. DingDong saves the full folder, including scripts and references; updates stay manual.',
                       installedOnline
-                          ? '已安装内容为只读。每次手动更新前，请先查看并确认来源内容。'
-                          : '安装前请先查看并理解这个 Skill 的内容。安装后会保存只读副本和来源链接，后续由你手动更新。',
+                          ? '已安装的 Skill 包为只读。更新前请先查看来源。'
+                          : '安装前先确认内容。DingDong 会保存包括脚本和参考资料在内的完整目录，更新由你手动触发。',
                     ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
@@ -1170,8 +1197,8 @@ class _SkillEditor extends StatelessWidget {
                 Expanded(
                   child: _FieldLabel(
                     text: context.localized(
-                      'Installed SKILL.md',
-                      '已安装的 SKILL.md',
+                      'Installed Skill package · SKILL.md',
+                      '已安装的 Skill 包 · SKILL.md',
                     ),
                   ),
                 ),
@@ -1682,7 +1709,10 @@ class _ResourceOptions extends StatelessWidget {
               Expanded(
                 child: _InlineToggle(
                   key: const Key('resource-enabled'),
-                  label: context.localized('Enabled', '启用'),
+                  label: context.localized(
+                    'Available to installed Agents',
+                    '对已安装的 Agent 可用',
+                  ),
                   value: enabled,
                   onChanged: onEnabledChanged,
                 ),
@@ -2016,8 +2046,8 @@ String _typeDescription(BuildContext context, ResourceType type) {
       '可复用的自然语言指令，并明确设置生效方式。',
     ),
     ResourceType.skill => context.localized(
-      'A portable SKILL.md workflow with triggers and instructions.',
-      '包含触发描述与执行步骤的可移植 SKILL.md 工作流。',
+      'A complete Agent Skill package with instructions and supporting files.',
+      '包含说明、脚本和参考资料的完整 Agent Skill 包。',
     ),
     ResourceType.mcp => context.localized(
       'A local STDIO or remote HTTP tool connection.',

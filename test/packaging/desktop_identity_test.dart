@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/settings/domain/mcp_setup_prompt.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -107,6 +109,47 @@ void main() {
     expect(readme, isNot(contains('today/')));
     expect(manual, isNot(contains('open Today')));
     expect(checksum, isNot('2c6031875648498a461842f54b999f632e6d4f0e'));
+  });
+
+  test('English and Chinese READMEs match the in-app Agent setup flow', () {
+    final String english = File('README.md').readAsStringSync();
+    final String chinese = File('README.zh.md').readAsStringSync();
+    const String commandPath =
+        '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
+    final String englishPrompt = defaultMcpSetupPrompt(
+      language: AppLanguagePreference.english,
+      commandPath: commandPath,
+    );
+    final String chinesePrompt = defaultMcpSetupPrompt(
+      language: AppLanguagePreference.chinese,
+      commandPath: commandPath,
+    );
+
+    expect(english, contains('href="README.zh.md"'));
+    expect(chinese, contains('href="README.md"'));
+    for (final String readme in <String>[english, chinese]) {
+      expect(readme, contains('```mermaid'));
+      expect(readme, contains('dingdong_bridge'));
+      expect(readme, contains('--notify-stop --source'));
+      expect(readme, contains('~/.codex/config.toml'));
+      expect(readme, contains('~/.claude/settings.json'));
+      expect(readme, contains('~/.cursor/hooks.json'));
+      expect(readme, contains('~/.gemini/settings.json'));
+      expect(readme, contains('afterAgentResponse'));
+      expect(readme, contains('AfterAgent'));
+      expect(readme, contains('dingdong_notify'));
+    }
+    for (final String prompt in <String>[englishPrompt, chinesePrompt]) {
+      expect(prompt, contains(commandPath));
+      expect(prompt, contains('--notify-stop --source'));
+      expect(prompt, contains('~/.codex/config.toml'));
+      expect(prompt, contains('~/.claude/settings.json'));
+      expect(prompt, contains('~/.cursor/hooks.json'));
+      expect(prompt, contains('~/.gemini/settings.json'));
+      expect(prompt, contains('afterAgentResponse'));
+      expect(prompt, contains('AfterAgent'));
+      expect(prompt, contains('dingdong_notify'));
+    }
   });
 
   test('website keeps release diagnostics behind debug mode', () {
@@ -244,25 +287,13 @@ void main() {
     expect(workflow, contains(r'DingDong-$version-windows-x64-beta.zip'));
     expect(workflow, contains('mcp-macos-arm64'));
     expect(workflow, contains('mcp-macos-x86_64'));
-    expect(
-      workflow,
-      contains("if: matrix.arch == 'x86_64'"),
-    );
-    expect(
-      workflow,
-      contains('flutter test --exclude-tags golden'),
-    );
+    expect(workflow, contains("if: matrix.arch == 'x86_64'"));
+    expect(workflow, contains('flutter test --exclude-tags golden'));
     expect(workflow, contains('scripts/create_universal_macos_mcp.sh'));
     expect(desktopWorkflow, contains('macos-15-intel'));
     expect(desktopWorkflow, contains(r'runs-on: ${{ matrix.runner }}'));
-    expect(
-      desktopWorkflow,
-      contains("if: matrix.arch == 'x86_64'"),
-    );
-    expect(
-      desktopWorkflow,
-      contains('flutter test --exclude-tags golden'),
-    );
+    expect(desktopWorkflow, contains("if: matrix.arch == 'x86_64'"));
+    expect(desktopWorkflow, contains('flutter test --exclude-tags golden'));
     expect(desktopWorkflow, contains('scripts/thin_macos_app.sh'));
     expect(desktopWorkflow, contains('Verify macOS application architecture'));
     expect(desktopWorkflow, contains('scripts/create_universal_macos_mcp.sh'));

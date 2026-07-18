@@ -162,7 +162,7 @@ class LibraryScreen extends StatelessWidget {
       onDelete: () => _confirmDelete(context),
       onSave: viewModel.save,
       onSyncUpdate: (String updateUrl) => _syncUpdate(context, updateUrl),
-      onResolveSkillSource: viewModel.fetchUpdateContent,
+      onResolveSkillSource: viewModel.installSkillPackage,
       onOpenExternalLink: onOpenExternalLink,
       onImportSkill: transferGateway == null
           ? null

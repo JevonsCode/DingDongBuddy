@@ -135,6 +135,7 @@ Map<String, Object?> _portableJson(Resource resource) {
   // intentionally not transferred to another computer.
   json.remove('source');
   json.remove('updateURL');
+  json.remove('packagePath');
   return json;
 }
 

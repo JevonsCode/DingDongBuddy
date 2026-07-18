@@ -40,8 +40,10 @@ and macOS golden images; the items below exercise real operating-system state.
   limited by workspace path or repository-address rules.
 - Search and type/pinned filters preserve the active editor selection.
 - Folder import reports imported and skipped files; JSON export can be saved and reopened.
-- A direct HTTPS update link replaces content after a successful fetch.
-- A GitHub `blob` file link fetches its raw file; repository and folder links are rejected.
+- GitHub repository, folder, `blob` `SKILL.md`, and raw `SKILL.md` links install
+  the complete Skill directory rather than only its entry file.
+- Updating an online Skill replaces the complete local package only after the
+  new package passes metadata and path validation.
 - Failed or empty updates preserve the prior resource content and show an error.
 - The list remains responsive with 10,000 resources.
 
@@ -56,7 +58,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - `dingdong_bridge` remains summary-first and does not include clipboard content by default.
 - `dingdong_notify` uses the sound selected in Settings when no sound is supplied.
 - Agent sessions, memories, bundles, and handoffs remain available after restarting DingDong.
-- Native MCP installation preview does not write configuration; explicit install preserves unrelated entries.
+- Enabling or disabling an MCP updates supported Agent user configurations and preserves unrelated entries.
+- An online Skill installs its complete directory, including scripts, references, and assets.
 
 ## Settings and notifications
 
@@ -65,6 +68,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - Clipboard retention accepts 20–5,000 items and 1–730 days.
 - Built-in, random, system, muted, and custom notification sounds behave as labeled.
 - Notifications play the selected sound without requesting Dock icon attention.
+- Completion hooks show the first useful sentence from the Agent's final reply;
+  missing or unreadable hook context falls back to a generic completion message.
 - Choosing a custom sound uses the OS file picker; clearing it returns to the default.
 - Version checking shows current/latest values, notes, failure state, website, and release links.
 - Report a problem and Request a feature open the matching structured GitHub forms.

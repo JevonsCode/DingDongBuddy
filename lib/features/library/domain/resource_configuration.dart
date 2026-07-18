@@ -309,7 +309,7 @@ final class McpConfiguration {
         }
       }
       final String command = _string(settings['command']);
-      final String url = _string(settings['url']);
+      final String url = _string(settings['url'] ?? settings['httpUrl']);
       final String type = _string(settings['type']).toLowerCase();
       if (url.isNotEmpty || type.contains('http') || type == 'sse') {
         return McpConfiguration(

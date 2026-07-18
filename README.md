@@ -1,3 +1,7 @@
+<p align="right">
+  <strong>English</strong> · <a href="README.zh.md">简体中文</a>
+</p>
+
 <p align="center">
   <img src="docs/assets/dingdong-icon.png" width="128" alt="DingDong logo">
 </p>
@@ -5,39 +9,29 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <strong>Find what you copied. Hear a DingDong when your Agent is done.</strong><br>
-  <strong>复制过的随时找，Agent 做完就叮咚。</strong>
+  <strong>Clipboard history and Agent tools in one place. A DingDong when the work is ready.</strong>
 </p>
 
-DingDong keeps clipboard history, prompts, Skills, and MCP configurations close
-at hand. When an Agent finishes, gets stuck, or needs a decision, DingDong rings
-so you do not have to keep watching it.
+DingDong keeps the things you reuse—clipboard history, prompts, Skills, and MCP
+servers—close to your local coding Agents. When an Agent finishes, gets stuck,
+or needs a decision, DingDong calls you back with a short outcome instead of
+making you watch the chat.
 
-DingDong 把剪贴板历史、提示词、Skill 和 MCP 收在一个地方。Agent 做完、卡住或
-等你决定时，它会叮咚一声——你不用一直盯着。
+## What it does
 
-## Philosophy
-
-- **Your data stays yours.** Clipboard history and the resource library stay on
-  your computer unless you choose to export or share something.
-- **Set things up once.** Keep a prompt, Skill, or MCP configuration in DingDong
-  and use the same copy from every connected Agent.
-- **Bring only what helps.** Agents see names and short descriptions first, then
-  open the full resource when it is actually useful.
-- **Come back when it rings.** Keep working elsewhere and let DingDong call you
-  back when an Agent is ready.
-
-## What DingDong does
-
-- Find text, links, images, and files you copied earlier
-- Sort clipboard items into reusable groups and your own matching rules
-- Keep prompts, Skills, and MCP configurations in one tidy library
-- Pull a Skill from GitHub, read it locally, and update it when you choose
-- Turn resources on only for matching projects or repositories
-- Share a few selected resources without exporting the whole library
-- Let connected Agents find the right resource and ring DingDong when work ends
-- Search and paste from the keyboard with the global quick-paste panel
-- Use native desktop menus, English or Simplified Chinese, and light or dark mode
+- Finds text, links, images, files, and commands you copied earlier
+- Organizes clipboard history with groups and user-defined matching rules
+- Keeps prompts, complete Skill packages, and MCP configurations in one library
+- Installs a complete online Skill directory, including `scripts/`,
+  `references/`, and `assets/`, and updates it only when you ask
+- Syncs enabled Skills and MCP servers into Codex, Claude Code, Cursor, and
+  Gemini CLI while preserving unrelated configuration
+- Applies resource groups only to matching workspace paths or repository URLs
+- Lets Agents discover a small summary first and load full content only when it
+  is useful
+- Rings on the Agent's native completion event and shows the first useful
+  sentence from the final reply when the client provides it
+- Keeps clipboard and resource data on your computer by default
 
 ## Download
 
@@ -45,34 +39,353 @@ DingDong 把剪贴板历史、提示词、Skill 和 MCP 收在一个地方。Age
 - [macOS · Intel (beta)](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
 - [Windows x64 (beta)](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
 
-On macOS, open the `.dmg` and drag **DingDong** onto the **Applications**
-shortcut. ZIP packages remain available for portable or diagnostic use. The
-installer includes `安装与权限说明.txt` with first-launch, Accessibility,
-clipboard-access, and login-item guidance. Quick Paste needs Accessibility
-permission; ordinary clipboard history does not need Full Disk Access or Screen
-Recording.
+On macOS, open the `.dmg` and drag **DingDong** onto **Applications**. Quick
+Paste needs Accessibility permission; ordinary clipboard history does not need
+Full Disk Access or Screen Recording.
 
-## Feedback and privacy
+## How the Agent connection works
 
-Use **Settings → Version → Report a problem** or **Request a feature** to open a
-guided GitHub form. The forms remind contributors to remove clipboard contents,
-secrets, personal or company information, usernames, and local file paths.
+DingDong uses two native connections instead of asking the model to remember a
+sentence at the end of every task:
 
-DingDong does not include analytics or usage-event reporting.
+1. **MCP bridge** — gives the Agent `dingdong_bridge`, resource lookup, and
+   `dingdong_notify` tools.
+2. **Completion hook** — runs deterministically after the client's final
+   response and sends one local notification. The bundled executable extracts a
+   short outcome from the hook payload or transcript; no second model call is
+   made.
 
----
+These are separate from the resources a user enables inside DingDong. Enabled
+Skills are copied as complete native Skill directories. Enabled MCP resources
+are written as real client MCP entries. Project rules currently narrow the
+resources returned by `dingdong_bridge`; native Skill and MCP synchronization
+follows the resource's enabled state.
+
+### Architecture
+
+```mermaid
+flowchart TB
+  subgraph Clients["Supported local Agent clients"]
+    Codex["Codex"]
+    Claude["Claude Code"]
+    Cursor["Cursor"]
+    Gemini["Gemini CLI"]
+  end
+
+  subgraph Native["Native user-level Agent configuration"]
+    McpConfig["MCP configuration<br/>config.toml / JSON"]
+    HookConfig["Completion hook<br/>Stop / afterAgentResponse / AfterAgent"]
+    SkillFolders["Native Skill folders<br/>complete package directories"]
+  end
+
+  Codex --> McpConfig
+  Claude --> McpConfig
+  Cursor --> McpConfig
+  Gemini --> McpConfig
+  Codex --> HookConfig
+  Claude --> HookConfig
+  Cursor --> HookConfig
+  Gemini --> HookConfig
+  SkillFolders --> Codex
+  SkillFolders --> Claude
+  SkillFolders --> Cursor
+  SkillFolders --> Gemini
+
+  subgraph Bundle["Bundled DingDong MCP executable"]
+    Stdio["JSON-RPC STDIO mode<br/>dingdong_mcp"]
+    StopMode["Completion mode<br/>--notify-stop --source"]
+    Summary["Local final-reply extractor<br/>one useful sentence"]
+  end
+
+  McpConfig --> Stdio
+  HookConfig --> StopMode
+  StopMode --> Summary
+
+  subgraph Desktop["DingDong desktop process"]
+    PortFile["Active loopback port file"]
+    Router["Loopback router<br/>127.0.0.1 · dynamic port"]
+    AgentBridge["Agent bridge<br/>task + workspace routing"]
+    LibraryApi["Resource API<br/>summary → full content"]
+    ClipboardApi["Clipboard API<br/>private by default"]
+    DingApi["Notification API<br/>POST /ding"]
+    Synchronizer["Agent resource synchronizer<br/>preflight + managed writes"]
+    DesktopUI["Desktop UI<br/>Activity · Library · Clipboard"]
+    Notifier["Sound + unread activity<br/>no Dock bounce"]
+  end
+
+  Router -->|publishes active port| PortFile
+  Stdio -->|reads active port| PortFile
+  Stdio -->|HTTP over loopback| Router
+  Summary --> DingApi
+  Router --> AgentBridge
+  Router --> LibraryApi
+  Router --> ClipboardApi
+  Router --> DingApi
+  DingApi --> Notifier
+  Router --> DesktopUI
+
+  subgraph Storage["Local durable storage"]
+    ResourceStore["Resource metadata and content"]
+    SkillStore["Managed Skill package directories"]
+    ClipboardStore["Clipboard database + image files"]
+    SettingsStore["Preferences, trigger rules, sync state"]
+  end
+
+  AgentBridge --> ResourceStore
+  LibraryApi --> ResourceStore
+  LibraryApi --> SkillStore
+  ClipboardApi --> ClipboardStore
+  DesktopUI --> ResourceStore
+  DesktopUI --> ClipboardStore
+  DesktopUI --> SettingsStore
+  ResourceStore --> Synchronizer
+  SkillStore --> Synchronizer
+  SettingsStore --> Synchronizer
+  Synchronizer -.->|writes enabled MCP entries| McpConfig
+  Synchronizer -.->|mirrors enabled Skill packages| SkillFolders
+```
+
+The three main runtime paths are:
+
+- **Task start:** Agent → `dingdong_bridge` → bounded names and descriptions →
+  full resource only when needed.
+- **Resource enable:** library enabled state → preflight → native Skill folder
+  or MCP configuration, with DingDong-managed ownership markers. Project rules
+  are applied separately when `dingdong_bridge` routes a task.
+- **Task finish:** native completion hook → `--notify-stop` → local summary →
+  `/ding` → sound and activity item.
+
+## Connect an Agent
+
+Keep DingDong running while using the bridge. This integration is local: a
+cloud Agent cannot execute a path from your computer or reach its loopback API.
+
+Open **DingDong → Agent API → MCP access** and copy the displayed executable
+path. The usual macOS path is:
+
+```text
+/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
+```
+
+On Windows, the bridge is inside the installed application at
+`mcp\bundle\bin\dingdong_mcp.exe`. Copy the exact path shown in DingDong rather
+than guessing the install directory.
+
+### Automatic setup (recommended)
+
+In **MCP access**, click **Copy**, paste the generated prompt into the local
+Agent you want to connect, and let that Agent edit its own user configuration.
+The prompt performs and reports two separate tests: one direct completion-hook
+test and one `dingdong_notify` MCP test.
+
+The generated prompt is platform-specific and is the canonical version. This
+template shows the same flow; replace `<DINGDONG_MCP_PATH>` with the path copied
+from the app:
+
+```text
+Connect DingDong on this computer to the current agent or IDE.
+1. Verify that <DINGDONG_MCP_PATH> exists and is executable. Stop if this is a remote or cloud session.
+2. Preserve all unrelated user settings and add a global STDIO MCP server named dingdong. Its command must be the complete <DINGDONG_MCP_PATH>; do not add MCP args, env, or a wrapper shell.
+3. Add one durable native completion hook, without duplicates, that runs:
+   "<DINGDONG_MCP_PATH>" --notify-stop --source "Current client name"
+   Use Codex Stop in ~/.codex/config.toml, Claude Code Stop in ~/.claude/settings.json, Cursor afterAgentResponse in ~/.cursor/hooks.json, or Gemini CLI AfterAgent in ~/.gemini/settings.json.
+4. Reload the client. For Codex, restart the MCP server and review and trust the hook in /hooks.
+5. Pipe {"summary":"DingDong task-completion hook is connected"} to the hook command and confirm the notification arrives.
+6. Confirm dingdong_notify exists, then call it once with message "DingDong MCP is connected" and the current client name as source.
+7. Report only the changed user configuration files and whether both tests succeeded. Preserve existing configuration and return the original error on failure.
+```
+
+### Manual setup
+
+The snippets below are fragments. Merge them into existing files; never replace
+the entire file. In JSON, escape Windows backslashes as `\\`.
+
+#### 1. Add the DingDong MCP server
+
+**Codex — `~/.codex/config.toml`**
+
+```toml
+[mcp_servers.dingdong]
+command = "/absolute/path/to/dingdong_mcp"
+```
+
+**Claude Code — user scope**
+
+```bash
+claude mcp add --transport stdio --scope user dingdong -- "/absolute/path/to/dingdong_mcp"
+claude mcp list
+```
+
+Claude Code stores the user-scoped server in `~/.claude.json`.
+
+**Cursor — `~/.cursor/mcp.json`**
+
+```json
+{
+  "mcpServers": {
+    "dingdong": {
+      "command": "/absolute/path/to/dingdong_mcp"
+    }
+  }
+}
+```
+
+**Gemini CLI — `~/.gemini/settings.json`**
+
+```json
+{
+  "mcpServers": {
+    "dingdong": {
+      "command": "/absolute/path/to/dingdong_mcp"
+    }
+  }
+}
+```
+
+#### 2. Add the native completion hook
+
+Use the same executable with `--notify-stop`; unlike the MCP server, the hook
+does have arguments.
+
+**Codex — merge into `~/.codex/config.toml`**
+
+```toml
+[features]
+hooks = true
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = '"/absolute/path/to/dingdong_mcp" --notify-stop --source "Codex"'
+timeout = 10
+```
+
+After reloading Codex, open `/hooks` and trust the new definition. A later path
+or command change creates a new hash and must be trusted again.
+
+**Claude Code — append to `hooks.Stop` in `~/.claude/settings.json`**
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"/absolute/path/to/dingdong_mcp\" --notify-stop --source \"Claude Code\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Use `/hooks` to inspect the loaded definition.
+
+**Cursor — append to `~/.cursor/hooks.json`**
+
+```json
+{
+  "version": 1,
+  "hooks": {
+    "afterAgentResponse": [
+      {
+        "command": "\"/absolute/path/to/dingdong_mcp\" --notify-stop --source \"Cursor\""
+      }
+    ]
+  }
+}
+```
+
+Reload the Cursor window after changing the file. Use a local Agent session;
+the hook still needs access to the locally running DingDong application.
+
+**Gemini CLI — append to `hooks.AfterAgent` in `~/.gemini/settings.json`**
+
+```json
+{
+  "hooks": {
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "name": "dingdong-completion",
+            "type": "command",
+            "command": "\"/absolute/path/to/dingdong_mcp\" --notify-stop --source \"Gemini CLI\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Use `/hooks panel` to inspect the hook.
+
+#### 3. Verify both paths
+
+First test the hook directly on macOS or Linux:
+
+```bash
+printf '%s' '{"summary":"DingDong completion hook is connected"}' \
+  | "/absolute/path/to/dingdong_mcp" --notify-stop --source "Codex"
+```
+
+PowerShell:
+
+```powershell
+'{"summary":"DingDong completion hook is connected"}' |
+  & "C:\absolute\path\to\dingdong_mcp.exe" --notify-stop --source "Codex"
+```
+
+The command returns `{}` and DingDong should ring. Then reload the MCP server,
+confirm `dingdong_notify` appears, and call it once. A visible MCP tool does not
+prove that the completion hook is installed, so both tests matter.
+
+### Client mapping
+
+| Client | MCP location | Completion hook | Summary source |
+| --- | --- | --- | --- |
+| Codex | `~/.codex/config.toml` | `Stop` | final answer in the local transcript |
+| Claude Code | `~/.claude.json` | `Stop` in `~/.claude/settings.json` | `last_assistant_message` |
+| Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` in `~/.cursor/hooks.json` | response `text` |
+| Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` in the same file | `prompt_response` |
+
+Upstream references: [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp?surface=cli),
+[Codex hooks](https://learn.chatgpt.com/docs/hooks),
+[Claude Code MCP](https://code.claude.com/docs/en/mcp),
+[Claude Code hooks](https://code.claude.com/docs/en/hooks),
+[Cursor MCP](https://cursor.com/docs/context/model-context-protocol),
+[Cursor hooks](https://cursor.com/docs/hooks),
+[Gemini CLI MCP](https://geminicli.com/docs/tools/mcp-server/), and
+[Gemini CLI hooks](https://geminicli.com/docs/hooks/reference/).
+
+## Privacy and local data
+
+- macOS: `~/Library/Application Support/DingDong`
+- Windows: `%APPDATA%\DingDong`
+
+The HTTP server binds only to `127.0.0.1`. Port `2333` is preferred; if it is
+occupied, DingDong stores the actual bound port in its application data so the
+bundled bridge can reconnect. Clipboard endpoints omit full and sensitive
+content unless a caller explicitly requests a supported content mode.
+
+DingDong does not include analytics or usage-event reporting. Before sharing a
+bug report, remove clipboard contents, secrets, personal or company data,
+usernames, and local paths.
 
 ## Development
 
 ### Desktop support
 
-- macOS 13 or newer (Apple Silicon and Intel)
+- macOS 13 or newer, Apple Silicon and Intel
 - Windows 10 or newer
-- Project toolchain: 3.44.6 desktop SDK / Dart 3.12
-
-The application preserves the data location and preference keys used by the
-previous native macOS release. Windows uses the current user's `%APPDATA%`
-directory.
+- Project toolchain: Flutter 3.44.6 / Dart 3.12
 
 ### Build and test
 
@@ -83,125 +396,62 @@ flutter test
 flutter run -d macos
 ```
 
-On Windows, replace the last command with:
-
-```powershell
-flutter run -d windows
-```
-
-Desktop builds compile the MCP bridge automatically with `dart build cli` and
-place its complete bundle inside the application distribution.
+On Windows, use `flutter run -d windows`. Release builds compile the complete
+MCP bridge bundle into the application distribution:
 
 ```bash
 flutter build macos --release
 flutter build windows --release
 ```
 
-For repeatable local macOS upgrades, create the stable `DingDong Local Development`
-signing identity
-once, then seal each Release bundle before installing it:
+For repeatable local macOS upgrades, create the stable development signing
+identity once, then seal each release bundle before installing it:
 
 ```bash
 scripts/setup_macos_codesigning.sh
 scripts/sign_macos_bundle.sh build/macos/Build/Products/Release/DingDong.app
 ```
 
-The identity remains in the login keychain, so macOS can match subsequent
-`com.dingdongbuddy.app` builds to the same accessibility permission. Official
-distribution can override it with `CODE_SIGN_IDENTITY` set to an Apple
-Developer ID Application certificate.
-
-The Windows build command must be run on Windows. CI verifies both platforms;
-golden image tests run on macOS and are excluded on Windows.
-
-## Project structure
+### Project structure
 
 ```text
 lib/
   app/                 composition, data paths, localization, theme
   core/                shared models and platform contracts
   features/
-    agent_api/         HTTP, MCP, durable coordination, Agent API UI
+    agent_api/         loopback API, MCP bridge, hooks, Agent routing
     clipboard/         capture, classification, history, quick paste
-    library/           resources, import/export, updates, long-list UI
-    settings/          preferences, release/usage status, desktop settings
+    library/           resources, Skill packages, sync, import/export
+    settings/          preferences, release and desktop settings
     shell/             navigation, tray and global desktop commands
-    activity/          Dynamic workspace and Agent completion activity
-  platform/            macOS/Windows platform adapters
-macos/                  macOS application host
-windows/                Windows application host
-test/                   unit, contract, widget, performance and golden tests
-bin/dingdong_mcp.dart   bundled stdio MCP entry point
+    activity/          Agent activity and completion outcomes
+  platform/            macOS and Windows adapters
+bin/dingdong_mcp.dart  bundled STDIO and completion-hook entry point
+macos/                 macOS application host
+windows/               Windows application host
+test/                  unit, contract, widget, performance and golden tests
 ```
 
-UI files are split by feature and responsibility. Long lists use lazy builders;
-repositories and platform APIs are injected behind interfaces so behavior can be
-tested without a desktop host.
-
-## Local data
-
-- macOS: `~/Library/Application Support/DingDong`
-- Windows: `%APPDATA%\DingDong`
-
-The HTTP server binds only to `127.0.0.1`. The selected port defaults to `2333`;
-if it is occupied, DingDong writes the actual bound port to the application data
-directory so the bundled MCP bridge can reconnect.
-
-Clipboard content is private by default. Agent history endpoints omit full and
-sensitive content unless the caller explicitly requests supported content modes.
-
-## MCP setup
-
-Open **Agent API** in DingDong and copy the displayed platform-specific MCP path
-or the ready-to-use setup prompt. Paste it into Codex, Claude Code, or another
-Agent and let it add DingDong to the right MCP configuration, reload, and send a
-test notification. The bridge provides tools including:
-
-- `dingdong_bridge`
-- `dingdong_notify`
-- resource search/detail tools
-- native MCP reference preview/install tools
-
-The executable communicates with DingDong through the loopback API. It does not
-start a second resource database or a second clipboard monitor.
-
-## Main API routes
+### Main loopback routes
 
 - `GET /health`
 - `POST /ding`
 - `GET|POST /library`
-- `GET /library/export` (all resources by default; filter with `type`, `ids`, or
-  `q`; includes unused IDs and exact duplicate groups)
-- `POST /library/import` (folder scan or schema-v2 selective JSON bundle)
+- `GET /library/export`
+- `POST /library/import`
 - `GET /clipboard/history`
 - `POST /clipboard/capture`
 - `POST /clipboard/restore/{id}`
 - `GET|POST /agent/bridge`
 - `GET /agent/manifest`
-- Agent presence, session, memory, bundle, and handoff routes
-
-Use the endpoint reference in the Agent API workspace for the current loopback
-origin and privacy notes.
 
 ## Release
 
 Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`. It tests and builds
-the macOS and Windows applications, creates a drag-to-Applications macOS DMG plus
-portable ZIPs, and publishes the GitHub release. When Apple distribution secrets
-are configured, the same workflow uses Developer ID signing, notarization, and
-stapling; otherwise it falls back to an ad-hoc signed community build.
-
-Official distribution uses these repository secrets:
-`MACOS_CERTIFICATE_BASE64`, `MACOS_CERTIFICATE_PASSWORD`,
-`MACOS_KEYCHAIN_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, and
-`APPLE_APP_PASSWORD`.
-
-When the website is opened with `?debug=1`, it reads GitHub's public Releases
-API and totals each version's asset `download_count`. GitHub exposes counts for
-uploaded release assets; the automatically generated source-code archives are
-not part of this metric. The normal website neither displays nor requests these
-diagnostics. See the
-[GitHub Releases API](https://docs.github.com/en/rest/releases/releases).
+macOS Apple Silicon, macOS Intel, and Windows x64 packages, then publishes a
+GitHub release. Apple distribution secrets enable Developer ID signing,
+notarization, and stapling; otherwise CI produces an ad-hoc signed community
+build.
 
 ## License
 

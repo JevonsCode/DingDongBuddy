@@ -11,6 +11,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.d
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
@@ -370,8 +371,9 @@ Future<void> _runResourceManagerWindow(
   Map<String, Object?> arguments,
 ) async {
   final AppDataPaths paths = AppDataPaths.current();
-  final ResourceStore resourceStore = ResourceRepository(
-    ResourceFileService(paths.resourceLibraryFile),
+  final ResourceStore resourceStore = SynchronizedResourceStore(
+    ResourceRepository(ResourceFileService(paths.resourceLibraryFile)),
+    AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory),
   );
   final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
     TriggerGroupFileService(paths.triggerGroupsFile),

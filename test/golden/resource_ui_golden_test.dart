@@ -267,6 +267,7 @@ Future<void> _noopCreate({
   String? group,
   List<String>? tags,
   String? updateUrl,
+  String? packagePath,
   String? note,
   bool? pinned,
   bool? enabled,

@@ -1,0 +1,170 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test(
+    'mirrors enabled Skill packages and removes them when disabled',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sync-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory package = Directory('${temp.path}/package')..createSync();
+      File('${package.path}/SKILL.md').writeAsStringSync(
+        '---\nname: reviewer\ndescription: Review code\n---\n',
+      );
+      Directory('${package.path}/references').createSync();
+      File('${package.path}/references/policy.md').writeAsStringSync('policy');
+      final Directory target = Directory('${temp.path}/agent-skills');
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: <Directory>[target],
+        mcpTargets: const <AgentMcpTarget>[],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final Resource resource = _resource(
+        type: ResourceType.skill,
+        content: File('${package.path}/SKILL.md').readAsStringSync(),
+        packagePath: package.path,
+      );
+
+      await synchronizer.sync(<Resource>[resource]);
+      expect(
+        File('${target.path}/reviewer/references/policy.md').existsSync(),
+        isTrue,
+      );
+
+      await synchronizer.sync(<Resource>[resource.copyWith(enabled: false)]);
+      expect(Directory('${target.path}/reviewer').existsSync(), isFalse);
+    },
+  );
+
+  test(
+    'preserves unrelated JSON MCP config and removes managed entries',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sync-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final File config = File('${temp.path}/mcp.json')
+        ..writeAsStringSync(
+          '{"theme":"dark","mcpServers":{"personal":{"command":"mine"}}}',
+        );
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(config, AgentMcpConfigKind.cursorJson),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final Resource resource = _resource(
+        type: ResourceType.mcp,
+        content: '{"type":"stdio","command":"npx","args":["server"]}',
+      );
+
+      await synchronizer.sync(<Resource>[resource]);
+      Map<String, Object?> json =
+          jsonDecode(config.readAsStringSync()) as Map<String, Object?>;
+      expect(json['theme'], 'dark');
+      expect(
+        (json['mcpServers'] as Map<String, Object?>)['personal'],
+        isNotNull,
+      );
+      expect((json['mcpServers'] as Map<String, Object?>).keys, hasLength(2));
+
+      await synchronizer.sync(<Resource>[resource.copyWith(enabled: false)]);
+      json = jsonDecode(config.readAsStringSync()) as Map<String, Object?>;
+      expect((json['mcpServers'] as Map<String, Object?>).keys, <String>[
+        'personal',
+      ]);
+    },
+  );
+
+  test('writes each Agent native HTTP MCP shape', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-sync-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File codex = File('${temp.path}/codex.toml')
+      ..writeAsStringSync('model = "gpt-5"\n');
+    final File claude = File('${temp.path}/claude.json');
+    final File cursor = File('${temp.path}/cursor.json');
+    final File gemini = File('${temp.path}/gemini.json');
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: const <Directory>[],
+      mcpTargets: <AgentMcpTarget>[
+        AgentMcpTarget(codex, AgentMcpConfigKind.codexToml),
+        AgentMcpTarget(claude, AgentMcpConfigKind.claudeJson),
+        AgentMcpTarget(cursor, AgentMcpConfigKind.cursorJson),
+        AgentMcpTarget(gemini, AgentMcpConfigKind.geminiJson),
+      ],
+      managedStateFile: File('${temp.path}/state.json'),
+    );
+    final Resource resource = _resource(
+      type: ResourceType.mcp,
+      content:
+          '{"type":"streamable-http","url":"https://example.com/mcp",'
+          '"bearerTokenEnvVar":"EXAMPLE_TOKEN"}',
+    );
+
+    await synchronizer.sync(<Resource>[resource]);
+
+    expect(
+      codex.readAsStringSync(),
+      contains('bearer_token_env_var = "EXAMPLE_TOKEN"'),
+    );
+    expect(codex.readAsStringSync(), contains('model = "gpt-5"'));
+    final Map<String, Object?> claudeServer = _onlyServer(claude);
+    expect(claudeServer['type'], 'http');
+    expect(claudeServer['url'], 'https://example.com/mcp');
+    expect(claudeServer['alwaysLoad'], isTrue);
+    expect(
+      (claudeServer['headers'] as Map<String, Object?>)['Authorization'],
+      r'Bearer ${EXAMPLE_TOKEN}',
+    );
+    final Map<String, Object?> cursorServer = _onlyServer(cursor);
+    expect(cursorServer['url'], 'https://example.com/mcp');
+    expect(
+      (cursorServer['headers'] as Map<String, Object?>)['Authorization'],
+      r'Bearer ${env:EXAMPLE_TOKEN}',
+    );
+    final Map<String, Object?> geminiServer = _onlyServer(gemini);
+    expect(geminiServer['httpUrl'], 'https://example.com/mcp');
+    expect(geminiServer.containsKey('url'), isFalse);
+    expect(
+      (geminiServer['headers'] as Map<String, Object?>)['Authorization'],
+      r'Bearer $EXAMPLE_TOKEN',
+    );
+  });
+}
+
+Map<String, Object?> _onlyServer(File file) {
+  final Map<String, Object?> root =
+      jsonDecode(file.readAsStringSync()) as Map<String, Object?>;
+  final Map<String, Object?> servers =
+      root['mcpServers'] as Map<String, Object?>;
+  return servers.values.single as Map<String, Object?>;
+}
+
+Resource _resource({
+  required ResourceType type,
+  required String content,
+  String? packagePath,
+}) {
+  final DateTime now = DateTime.utc(2026, 7, 17);
+  return Resource(
+    id: 'ABCDEF12-0000',
+    type: type,
+    title: 'reviewer',
+    content: content,
+    packagePath: packagePath,
+    createdAt: now,
+    updatedAt: now,
+  );
+}

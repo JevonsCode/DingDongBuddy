@@ -201,22 +201,32 @@ void main() {
         model.mcpSetupPrompt,
         contains(r'C:\Program Files\DingDong\dingdong-mcp.exe'),
       );
+      expect(model.mcpSetupPrompt, contains('STDIO MCP server named dingdong'));
       expect(
         model.mcpSetupPrompt,
-        contains('global STDIO MCP server named dingdong'),
-      );
-      expect(
-        model.mcpSetupPrompt,
-        startsWith('Connect DingDong to the current agent or IDE'),
+        startsWith('Connect DingDong on this computer'),
       );
       expect(model.mcpSetupPrompt, isNot(contains('Do not explain DingDong')));
-      expect(model.mcpSetupPrompt, contains('Preserve every unrelated'));
-      expect(model.mcpSetupPrompt, contains('Reload or restart'));
+      expect(model.mcpSetupPrompt, contains('Preserve every existing entry'));
+      expect(model.mcpSetupPrompt, contains('reload the client'));
       expect(model.mcpSetupPrompt, contains('dingdong_notify'));
-      expect(model.mcpSetupPrompt, contains('--notify-stop'));
-      expect(model.mcpSetupPrompt, contains('Stop command hook'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('--notify-stop --source "Current client name"'),
+      );
+      expect(model.mcpSetupPrompt, contains('~/.codex/config.toml'));
+      expect(model.mcpSetupPrompt, contains('~/.claude/settings.json'));
+      expect(model.mcpSetupPrompt, contains('~/.cursor/hooks.json'));
+      expect(model.mcpSetupPrompt, contains('~/.gemini/settings.json'));
+      expect(model.mcpSetupPrompt, contains('afterAgentResponse command hook'));
+      expect(model.mcpSetupPrompt, contains('AfterAgent command hook'));
       expect(model.mcpSetupPrompt, contains('review and trust'));
-      expect(model.mcpSetupPrompt, contains('task-completion alerts'));
+      expect(model.mcpSetupPrompt, contains('Test both paths'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('DingDong task-completion hook is connected'),
+      );
+      expect(model.mcpSetupPrompt, contains('remote or cloud agent'));
       expect(model.mcpSetupPrompt, isNot(contains('clipboard content')));
 
       expect(
@@ -240,14 +250,21 @@ void main() {
 
       expect(
         model.mcpSetupPrompt,
-        startsWith('请为当前 Agent 或 IDE 完成 DingDong 接入'),
+        startsWith('请把这台电脑上的 DingDong 接入当前 Agent 或 IDE'),
       );
       expect(model.mcpSetupPrompt, isNot(contains('不要介绍 DingDong')));
-      expect(model.mcpSetupPrompt, contains('立即调用一次 dingdong_notify'));
+      expect(model.mcpSetupPrompt, contains('立即调用一次'));
       expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
-      expect(model.mcpSetupPrompt, contains('--notify-stop'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('--notify-stop --source "当前客户端名称"'),
+      );
       expect(model.mcpSetupPrompt, contains('Stop command Hook'));
+      expect(model.mcpSetupPrompt, contains('afterAgentResponse command Hook'));
+      expect(model.mcpSetupPrompt, contains('AfterAgent command Hook'));
       expect(model.mcpSetupPrompt, contains('审核并信任'));
+      expect(model.mcpSetupPrompt, contains('分别验证两条链路'));
+      expect(model.mcpSetupPrompt, contains('远程或云端 Agent'));
     },
   );
 

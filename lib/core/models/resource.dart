@@ -62,6 +62,7 @@ final class Resource {
     List<String> tags = const <String>[],
     String? source,
     String? updateUrl,
+    String? packagePath,
     String? note,
     this.pinned = false,
     this.enabled = true,
@@ -79,6 +80,7 @@ final class Resource {
        ),
        source = _trimmedOrNull(source),
        updateUrl = _trimmedOrNull(updateUrl),
+       packagePath = _trimmedOrNull(packagePath),
        note = _trimmedOrNull(note),
        triggerGroupIds = List<String>.unmodifiable(
          triggerGroupIds
@@ -103,6 +105,7 @@ final class Resource {
           .toList(growable: false),
       source: json['source'] as String?,
       updateUrl: json['updateURL'] as String?,
+      packagePath: json['packagePath'] as String?,
       note: json['note'] as String?,
       pinned: pinned,
       enabled: json['enabled'] as bool? ?? true,
@@ -129,6 +132,9 @@ final class Resource {
   final List<String> tags;
   final String? source;
   final String? updateUrl;
+
+  /// Local root of a complete Agent Skill package (SKILL.md + siblings).
+  final String? packagePath;
   final String? note;
   final bool pinned;
   final bool enabled;
@@ -150,6 +156,7 @@ final class Resource {
       'tags': tags,
       if (source != null) 'source': source,
       if (updateUrl != null) 'updateURL': updateUrl,
+      if (packagePath != null) 'packagePath': packagePath,
       if (note != null) 'note': note,
       'pinned': pinned,
       'enabled': enabled,
@@ -216,6 +223,7 @@ final class Resource {
     List<String>? tags,
     String? source,
     String? updateUrl,
+    String? packagePath,
     String? note,
     bool? pinned,
     bool? enabled,
@@ -241,6 +249,7 @@ final class Resource {
       tags: tags ?? this.tags,
       source: source ?? this.source,
       updateUrl: updateUrl ?? this.updateUrl,
+      packagePath: packagePath ?? this.packagePath,
       note: note ?? this.note,
       pinned: resolvedPinned,
       enabled: enabled ?? this.enabled,
@@ -266,6 +275,7 @@ final class Resource {
             _listEquals(tags, other.tags) &&
             source == other.source &&
             updateUrl == other.updateUrl &&
+            packagePath == other.packagePath &&
             note == other.note &&
             pinned == other.pinned &&
             enabled == other.enabled &&
@@ -288,6 +298,7 @@ final class Resource {
     Object.hashAll(tags),
     source,
     updateUrl,
+    packagePath,
     note,
     pinned,
     enabled,

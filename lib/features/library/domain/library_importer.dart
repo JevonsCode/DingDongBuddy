@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:path/path.dart' as path;
 
 /// User-selected directory import options.
@@ -169,7 +170,15 @@ final class LibraryImporter {
     if (marker == null) {
       return null;
     }
-    return _resource(request, entity, content: await marker.readAsString());
+    final String content = await marker.readAsString();
+    final SkillConfiguration skill = SkillConfiguration.parseOnline(content);
+    return _resource(
+      request,
+      entity,
+      title: skill.name,
+      content: content,
+      packagePath: entity.path,
+    );
   }
 
   Future<Resource?> _mcp(
@@ -232,14 +241,17 @@ final class LibraryImporter {
     LibraryImportRequest request,
     FileSystemEntity entity, {
     required String content,
+    String? title,
+    String? packagePath,
   }) {
     final DateTime timestamp = _now().toUtc();
     return Resource(
       id: _idGenerator(),
       type: request.type,
       group: request.group,
-      title: path.basenameWithoutExtension(entity.path),
+      title: title ?? path.basenameWithoutExtension(entity.path),
       content: content,
+      packagePath: packagePath,
       tags: request.tags ?? <String>['imported', request.type.name],
       source: request.source,
       createdAt: timestamp,

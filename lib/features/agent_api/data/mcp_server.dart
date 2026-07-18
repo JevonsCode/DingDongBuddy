@@ -168,24 +168,10 @@ final class McpServer {
       required: <String>['task'],
     ),
     _tool(
-      name: 'dingdong_install_native_mcp',
-      title: 'Install Native MCP',
-      description:
-          'Install a DingDong MCP reference into Codex or Claude native MCP config.',
-      properties: <String, Object?>{
-        'id': _stringProperty(),
-        'target': _enumProperty(<String>['codex', 'claude']),
-        'serverName': _stringProperty(),
-        'dryRun': _booleanProperty(),
-        'confirm': _stringProperty(),
-      },
-      required: <String>['id', 'target'],
-    ),
-    _tool(
       name: 'dingdong_notify',
       title: 'Notify DingDong',
       description:
-          'Notify DingDong once when the whole user-visible task is complete, blocked, or waiting for attention.',
+          'Notify DingDong once when the whole user-visible task is complete, blocked, or waiting for attention. Use one short outcome sentence for message.',
       properties: <String, Object?>{
         'message': _stringProperty(),
         'source': _stringProperty(),

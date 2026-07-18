@@ -52,7 +52,15 @@ void main() {
   test('skill import recognizes directories containing SKILL.md', () async {
     final Directory skill = Directory('${root.path}/release-skill');
     await skill.create();
-    await File('${skill.path}/SKILL.md').writeAsString('# Release');
+    await File('${skill.path}/SKILL.md').writeAsString('''---
+name: release-skill
+description: Prepare a release safely.
+---
+
+# Release
+''');
+    await Directory('${skill.path}/scripts').create();
+    await File('${skill.path}/scripts/check.sh').writeAsString('echo ok');
 
     final result = await LibraryImporter(idGenerator: () => 'skill-1').scan(
       LibraryImportRequest(type: ResourceType.skill, path: root.path),
@@ -60,7 +68,8 @@ void main() {
     );
 
     expect(result.imported.single.type, ResourceType.skill);
-    expect(result.imported.single.content, '# Release');
+    expect(result.imported.single.content, contains('# Release'));
+    expect(result.imported.single.packagePath, skill.path);
   });
 
   test('skill import accepts a selected skill folder directly', () async {
@@ -83,5 +92,6 @@ description: Prepare a release safely.
     expect(result.skippedCount, 0);
     expect(result.imported.single.title, 'release-skill');
     expect(result.imported.single.content, contains('name: release-skill'));
+    expect(result.imported.single.packagePath, skill.path);
   });
 }

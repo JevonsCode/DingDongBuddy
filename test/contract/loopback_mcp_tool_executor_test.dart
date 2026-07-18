@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
-import 'package:dingdong/features/agent_api/data/native_mcp_installer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -62,47 +59,14 @@ void main() {
       'https://github.com/example/dingdong.git',
     );
   });
-
-  test('native MCP installation defaults to a no-write preview', () async {
-    final Directory directory = Directory.systemTemp.createTempSync(
-      'dingdong-loopback-installer-',
-    );
-    addTearDown(() => directory.deleteSync(recursive: true));
-    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport(
-      response: <String, Object?>{
-        'status': 'ok',
-        'item': <String, Object?>{
-          'id': 'mcp-1',
-          'type': 'mcp',
-          'title': 'Release MCP',
-          'content': '{"command":"npx","args":["release-mcp"]}',
-        },
-      },
-    );
-    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
-      transport,
-      installer: NativeMcpInstaller(
-        codexConfigFile: File('${directory.path}/config.toml'),
-        claudeConfigFile: File('${directory.path}/claude.json'),
-      ),
-    );
-
-    final result = await executor.execute(
-      'dingdong_install_native_mcp',
-      <String, Object?>{'id': 'mcp-1', 'target': 'codex'},
-    );
-
-    expect(result['status'], 'dry_run');
-    expect(File('${directory.path}/config.toml').existsSync(), isFalse);
-  });
 }
 
 final class _RecordingMcpHttpTransport implements McpHttpTransport {
-  _RecordingMcpHttpTransport({
-    this.response = const <String, Object?>{'status': 'ok'},
-  });
+  _RecordingMcpHttpTransport();
 
-  final Map<String, Object?> response;
+  static const Map<String, Object?> response = <String, Object?>{
+    'status': 'ok',
+  };
   String? method;
   String? path;
   Map<String, String>? query;
