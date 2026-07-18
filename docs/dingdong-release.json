@@ -1,35 +1,35 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.9",
-  "latestBuild": "16",
-  "publishedAt": "2026-07-18T00:00:00Z",
+  "latestVersion": "0.7.10",
+  "latestBuild": "17",
+  "publishedAt": "2026-07-18T20:36:02Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.9/DingDong-0.7.9-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.10/DingDong-0.7.10-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.9/DingDong-0.7.9-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.10/DingDong-0.7.10-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.9/DingDong-0.7.9-windows-x64-beta.zip",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.10/DingDong-0.7.10-windows-x64-beta.zip",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds durable native completion hooks for Codex, Claude Code, Cursor, and Gemini CLI, with one useful result sentence in each DingDong notification.",
-    "Makes enabled Skills real complete packages in native Agent Skill directories, including scripts, references, assets, and other package files.",
-    "Synchronizes enabled MCP resources into supported clients while preserving unrelated user configuration and rolling back failed saves.",
-    "Rewrites the copy-only setup prompt to install, reload, and test the MCP bridge and completion hook as two separate paths.",
-    "Adds summary-first task routing through dingdong_bridge with workspace and repository trigger rules.",
-    "Documents automatic and manual Agent setup in English and Chinese, with a detailed architecture diagram.",
+    "Adds a built-in DingDong Configure Skill so Agents can discover and manage prompts, Skills, MCP servers, trigger groups, project policies, and clipboard organization.",
+    "Exposes public trigger-group CRUD routes and keeps enabled resources synchronized into supported native Agent directories.",
+    "Redesigns clipboard category management with clearer hierarchy, semantic icons, compact actions, and correctly clipped macOS modal overlays.",
+    "Adds Windows-native context menus, Control-key shortcut hints, adaptive taskbar-aware tray artwork, and persistent unread attention flashing with localized tooltip counts.",
+    "Lets Windows own the popup frame while macOS retains DingDong's rounded callout surface.",
+    "Refreshes the website product model and standardizes resource transfer and filter controls across desktop surfaces.",
     "Publishes separate Apple Silicon and Intel macOS packages; Intel macOS and Windows packages remain marked beta."
   ]
 }

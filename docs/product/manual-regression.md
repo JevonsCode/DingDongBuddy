@@ -1,4 +1,4 @@
-# DingDong 0.7.9 Manual Regression Checklist
+# DingDong 0.7.10 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -88,8 +88,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - The final MCP bundle contains native `arm64` and `x86_64` sub-bundles and one stable executable launcher path.
 - The launcher selects and runs the native MCP successfully on both an Apple Silicon Mac and an Intel Mac.
 - The Windows MCP executable passes `tools/list` on a Windows x64 machine.
-- The macOS app metadata is version `0.7.9` build `16` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.9.16` and product name `DingDong`.
+- The macOS app metadata is version `0.7.10` build `17` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.10.17` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.
