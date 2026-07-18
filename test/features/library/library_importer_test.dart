@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   late Directory root;
@@ -20,8 +21,12 @@ void main() {
   test(
     'prompt import reads supported text files and skips duplicates',
     () async {
-      await File('${root.path}/review.md').writeAsString('Review carefully');
-      await File('${root.path}/ignore.png').writeAsBytes(<int>[1, 2, 3]);
+      await File(
+        path.join(root.path, 'review.md'),
+      ).writeAsString('Review carefully');
+      await File(
+        path.join(root.path, 'ignore.png'),
+      ).writeAsBytes(<int>[1, 2, 3]);
       final DateTime now = DateTime.utc(2026, 7, 12);
 
       final result =
@@ -50,17 +55,18 @@ void main() {
   );
 
   test('skill import recognizes directories containing SKILL.md', () async {
-    final Directory skill = Directory('${root.path}/release-skill');
+    final Directory skill = Directory(path.join(root.path, 'release-skill'));
     await skill.create();
-    await File('${skill.path}/SKILL.md').writeAsString('''---
+    await File(path.join(skill.path, 'SKILL.md')).writeAsString('''---
 name: release-skill
 description: Prepare a release safely.
 ---
 
 # Release
 ''');
-    await Directory('${skill.path}/scripts').create();
-    await File('${skill.path}/scripts/check.sh').writeAsString('echo ok');
+    final Directory scripts = Directory(path.join(skill.path, 'scripts'));
+    await scripts.create();
+    await File(path.join(scripts.path, 'check.sh')).writeAsString('echo ok');
 
     final result = await LibraryImporter(idGenerator: () => 'skill-1').scan(
       LibraryImportRequest(type: ResourceType.skill, path: root.path),
@@ -73,9 +79,9 @@ description: Prepare a release safely.
   });
 
   test('skill import accepts a selected skill folder directly', () async {
-    final Directory skill = Directory('${root.path}/release-skill');
+    final Directory skill = Directory(path.join(root.path, 'release-skill'));
     await skill.create();
-    await File('${skill.path}/SKILL.md').writeAsString('''---
+    await File(path.join(skill.path, 'SKILL.md')).writeAsString('''---
 name: release-skill
 description: Prepare a release safely.
 ---
