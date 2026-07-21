@@ -54,6 +54,12 @@ void main() {
     ).readAsStringSync();
 
     expect(pubspec, contains('version: 0.7.21+21'));
+    expect(
+      File(
+        'lib/features/settings/domain/release_update.dart',
+      ).readAsStringSync(),
+      contains("const String currentAppBuild = '21';"),
+    );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
