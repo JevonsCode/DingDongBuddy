@@ -23,6 +23,7 @@ void main() {
       'source': 'Codex',
       'flashCount': 4,
       'fallback': true,
+      'conversationId': 'session-1',
     });
   });
 
@@ -59,6 +60,24 @@ void main() {
 
     expect(transport.body?['message'], '已经修复构建流程。');
     expect(transport.body?['source'], 'Cursor');
+  });
+
+  test('Kiro Stop hook forwards resumable session context', () async {
+    final _RecordingTransport transport = _RecordingTransport();
+
+    await CompletionHookNotifier(transport).notify(
+      jsonEncode(<String, Object?>{
+        'hook_event_name': 'stop',
+        'session_id': 'kiro-session-1',
+        'cwd': '/workspace/kiro',
+        'assistant_response': '已经完成 Kiro 接入。\n测试通过。',
+      }),
+      sourceOverride: 'Kiro',
+    );
+
+    expect(transport.body?['message'], '已经完成 Kiro 接入。');
+    expect(transport.body?['conversationId'], 'kiro-session-1');
+    expect(transport.body?['workspacePath'], '/workspace/kiro');
   });
 
   test('hook uses a direct final message as a one-line summary', () async {

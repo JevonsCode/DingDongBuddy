@@ -9,13 +9,24 @@ const String resourceManagerWindowKind = 'resource-manager';
 final class MultiWindowResourceManagerLauncher
     implements ResourceManagerLauncher {
   @override
-  Future<void> show({String? editingResourceId}) async {
+  Future<void> show({
+    String? editingResourceId,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+  }) async {
+    final ResourceManagerDestination resolvedDestination =
+        editingResourceId == null
+        ? destination
+        : ResourceManagerDestination.resources;
     final List<WindowController> windows = await WindowController.getAll();
     for (final WindowController controller in windows) {
       final Map<String, Object?> arguments = _decode(controller.arguments);
       if (arguments['kind'] == resourceManagerWindowKind) {
         await controller.show();
-        await controller.invokeMethod<void>('window_focus');
+        await controller.invokeMethod<void>(
+          'window_focus',
+          resolvedDestination.name,
+        );
         if (editingResourceId != null) {
           await controller.invokeMethod<void>('edit_resource', <String, String>{
             'id': editingResourceId,
@@ -27,6 +38,7 @@ final class MultiWindowResourceManagerLauncher
 
     final Map<String, Object?> arguments = <String, Object?>{
       'kind': resourceManagerWindowKind,
+      'destination': resolvedDestination.name,
     };
     if (editingResourceId != null) {
       arguments['editingResourceId'] = editingResourceId;

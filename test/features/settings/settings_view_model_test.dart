@@ -248,6 +248,8 @@ void main() {
       expect(model.mcpSetupPrompt, contains('~/.claude/settings.json'));
       expect(model.mcpSetupPrompt, contains('~/.cursor/hooks.json'));
       expect(model.mcpSetupPrompt, contains('~/.gemini/settings.json'));
+      expect(model.mcpSetupPrompt, contains('~/.kiro/settings/mcp.json'));
+      expect(model.mcpSetupPrompt, contains('Kiro CLI v3'));
       expect(model.mcpSetupPrompt, contains('afterAgentResponse command hook'));
       expect(model.mcpSetupPrompt, contains('AfterAgent command hook'));
       expect(model.mcpSetupPrompt, contains('review and trust'));
@@ -295,6 +297,7 @@ void main() {
       expect(model.mcpSetupPrompt, contains('Stop command Hook'));
       expect(model.mcpSetupPrompt, contains('afterAgentResponse command Hook'));
       expect(model.mcpSetupPrompt, contains('AfterAgent command Hook'));
+      expect(model.mcpSetupPrompt, contains('Kiro'));
       expect(model.mcpSetupPrompt, contains('审核并信任'));
       expect(model.mcpSetupPrompt, contains('分别验证两条链路'));
       expect(model.mcpSetupPrompt, contains('远程或云端 Agent'));

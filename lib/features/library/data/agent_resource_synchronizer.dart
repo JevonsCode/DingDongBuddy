@@ -8,7 +8,13 @@ import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:path/path.dart' as path;
 
-enum AgentMcpConfigKind { codexToml, claudeJson, cursorJson, geminiJson }
+enum AgentMcpConfigKind {
+  codexToml,
+  claudeJson,
+  cursorJson,
+  geminiJson,
+  kiroJson,
+}
 
 final class AgentPromptTarget {
   const AgentPromptTarget(this.file);
@@ -44,9 +50,12 @@ final class AgentResourceSynchronizer {
   factory AgentResourceSynchronizer.currentUser(
     Directory packageRoot, {
     SkillPackageInstaller? skillPackageInstaller,
+    String? homeDirectory,
   }) {
     final String home =
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
+        homeDirectory ??
+        Platform.environment['HOME'] ??
+        Platform.environment['USERPROFILE']!;
     final String separator = Platform.pathSeparator;
     bool present(String name) => Directory('$home$separator$name').existsSync();
     final List<Directory> skills = <Directory>[
@@ -58,12 +67,14 @@ final class AgentResourceSynchronizer {
         Directory('$home$separator.cursor${separator}skills'),
       if (present('.gemini'))
         Directory('$home$separator.gemini${separator}skills'),
+      if (present('.kiro')) Directory('$home$separator.kiro${separator}skills'),
     ];
     final List<String> projectSkills = <String>[
       if (present('.codex')) path.join('.agents', 'skills'),
       if (present('.claude')) path.join('.claude', 'skills'),
       if (present('.cursor')) path.join('.cursor', 'skills'),
       if (present('.gemini')) path.join('.gemini', 'skills'),
+      if (present('.kiro')) path.join('.kiro', 'skills'),
     ];
     final List<AgentPromptTarget> prompts = <AgentPromptTarget>[
       if (present('.codex'))
@@ -89,6 +100,11 @@ final class AgentResourceSynchronizer {
         AgentMcpTarget(
           File('$home$separator.gemini${separator}settings.json'),
           AgentMcpConfigKind.geminiJson,
+        ),
+      if (present('.kiro'))
+        AgentMcpTarget(
+          File('$home$separator.kiro${separator}settings${separator}mcp.json'),
+          AgentMcpConfigKind.kiroJson,
         ),
     ];
     return AgentResourceSynchronizer(
@@ -177,7 +193,8 @@ final class AgentResourceSynchronizer {
         AgentMcpConfigKind.codexToml => _syncCodex(target.file, mcps),
         AgentMcpConfigKind.claudeJson ||
         AgentMcpConfigKind.cursorJson ||
-        AgentMcpConfigKind.geminiJson => _syncJson(
+        AgentMcpConfigKind.geminiJson ||
+        AgentMcpConfigKind.kiroJson => _syncJson(
           target.file,
           target.kind,
           mcps,
@@ -647,6 +664,7 @@ Map<String, Object?> _jsonMcp(
       AgentMcpConfigKind.claudeJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.cursorJson => 'Bearer \${env:$variable}',
       AgentMcpConfigKind.geminiJson => 'Bearer \$$variable',
+      AgentMcpConfigKind.kiroJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.codexToml => throw StateError(
         'Codex MCP configuration is not JSON.',
       ),

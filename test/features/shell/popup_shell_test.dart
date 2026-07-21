@@ -1180,11 +1180,17 @@ final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
   final VoidCallback? onShow;
   int openCount = 0;
   String? lastEditingResourceId;
+  ResourceManagerDestination? lastDestination;
 
   @override
-  Future<void> show({String? editingResourceId}) async {
+  Future<void> show({
+    String? editingResourceId,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+  }) async {
     openCount += 1;
     lastEditingResourceId = editingResourceId;
+    lastDestination = destination;
     onShow?.call();
   }
 }

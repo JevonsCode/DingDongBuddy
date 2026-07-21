@@ -1,48 +1,50 @@
-# DingDong 0.7.21
+# DingDong 0.7.22
 
-This release lets Agents install and configure project-scoped Skills through
-DingDong, and polishes clipboard navigation and resource editing.
+This release makes Recent Agents actionable: the compact Dynamic view keeps the
+latest six items, the full history is one click away, and supported Agent items
+can reopen their source conversation.
 
-## Agent-managed Skills
+## Recent Agent navigation
 
-- Adds DingDong MCP tools for installing or updating a Skill, upserting a
-  reusable trigger group, and binding the Skill to an exact project scope.
-- Synchronizes a scoped Skill only into the selected project's native Codex,
-  Claude Code, Cursor, Gemini, and OpenCode skill directories instead of making
-  it global.
-- Rejects ambiguous Skill matches and unsafe or non-existent project paths.
-- Updates the built-in DingDong Configure Skill and Agent installation guide so
-  an Agent can complete the entire setup from a GitHub link.
-- Clarifies that matching Prompts are injected automatically, Skills are loaded
-  by task matching, and MCP tools are invoked only when required.
+- Shows at most six Recent Agent items in Dynamic and adds a compact `More`
+  action only when additional history exists.
+- Opens Resource Manager directly at Recent Agents from `More`.
+- Makes resumable items clickable in both Dynamic and Resource Manager.
+- Reopens exact Codex threads and Claude Code, Gemini, and Kiro CLI sessions.
+- Opens exact Cursor background-agent conversations; local Cursor sessions fall
+  back to reopening their recorded workspace.
+- Uses an allow-listed native launcher and structured arguments so notification
+  content cannot execute arbitrary commands.
 
-## Desktop refinements
+## Kiro support
 
-- Keeps clipboard number shortcuts aligned with the currently visible record
-  range after scrolling.
-- Refines the Resource Manager editor breadcrumb and back control.
-- Retains signed one-click update support for macOS and per-user updates for
-  Windows; Intel macOS and Windows packages remain beta.
+- Adds Kiro to the default Agent integrations.
+- Synchronizes MCP configuration to `~/.kiro/settings/mcp.json` and Skills to
+  Kiro's global and project Skill directories.
+- Extends the setup instructions with a Kiro Stop hook that records the session
+  id and workspace required for resume.
+
+Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本支持 Agent 直接通过 DingDong 安装 Skill，并为它配置严格的项目触发范围，
-同时优化剪贴板快捷键和资源编辑体验。
+本版本让“最近 Agent”真正可操作：Dynamic 首页默认只保留最近六项，完整历史可以
+一键进入，受支持的 Agent 记录还能直接回到来源会话。
 
-## Agent 管理 Skill
+## 最近 Agent 跳转
 
-- 新增 DingDong MCP 工具，可安装或更新 Skill、创建或更新复用触发组，并将 Skill
-  绑定到精确的项目范围。
-- 有项目范围的 Skill 只会同步到对应项目里的 Codex、Claude Code、Cursor、Gemini
-  和 OpenCode 原生 Skill 目录，不会变成全局 Skill。
-- 对重名 Skill、歧义匹配、不安全路径和不存在的项目路径进行拒绝处理。
-- 更新内置 DingDong Configure Skill 与 Agent 安装指南，Agent 拿到 GitHub 链接后
-  可以完成安装与项目范围配置。
-- 明确 Prompt 会在命中时自动完整注入，Skill 按任务匹配加载，MCP 工具仅在需要时调用。
+- Dynamic 最多展示六条最近 Agent；仅在还有更多记录时显示紧凑的“更多”入口。
+- 点击“更多”后，资源管理器会直接打开“最近 Agent”。
+- Dynamic 和资源管理器中的可恢复记录都可以点击。
+- 支持精确打开 Codex 对话，以及恢复 Claude Code、Gemini、Kiro CLI 会话。
+- Cursor 后台 Agent 可精确打开对应会话；本地 Cursor 会话无法精确定位时，会回退到
+  打开记录的工作区。
+- 使用白名单原生启动器和结构化参数，通知内容不能被当作任意命令执行。
 
-## 桌面体验优化
+## Kiro 支持
 
-- 滚动剪贴板列表后，数字快捷键会跟随当前可见记录范围。
-- 优化资源管理编辑页的面包屑和返回按钮。
-- 保留 macOS 签名一键更新与 Windows 按用户更新能力；Intel macOS 和 Windows
-  安装包继续标记为 beta。
+- 将 Kiro 加入默认 Agent 集成。
+- 支持同步 MCP 配置到 `~/.kiro/settings/mcp.json`，并同步全局与项目 Skill。
+- 安装说明新增 Kiro Stop Hook，用于记录恢复会话需要的 session id 和工作区。
+
+Intel macOS 和 Windows 安装包继续标记为 beta。

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:flutter/foundation.dart';
 
 const int defaultAgentActivityMaxItems = 200;
@@ -107,7 +108,11 @@ final class ActivityController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void record({required String source, required String message}) {
+  void record({
+    required String source,
+    required String message,
+    AgentConversationTarget? conversationTarget,
+  }) {
     final DateTime completedAt = _now().toUtc();
     final AgentActivity activity = AgentActivity(
       id: _idGenerator(),
@@ -115,6 +120,7 @@ final class ActivityController extends ChangeNotifier {
       message: message.trim().isEmpty ? 'Task complete' : message.trim(),
       completedAt: completedAt,
       unseen: true,
+      conversationTarget: conversationTarget,
     );
     _activities = <AgentActivity>[activity, ..._activities.take(_maxItems - 1)];
     _completionTimes = <DateTime>[completedAt, ..._completionTimes];
@@ -122,6 +128,27 @@ final class ActivityController extends ChangeNotifier {
     _loaded = true;
     _persist();
     _scheduleRecentCountRefresh();
+    notifyListeners();
+  }
+
+  /// Enriches the newest matching item when a native completion hook arrives
+  /// after an MCP notification that was already shown and de-duplicated.
+  void attachConversationTarget({
+    required String source,
+    required AgentConversationTarget target,
+  }) {
+    final String normalizedSource = source.trim().toLowerCase();
+    final int index = _activities.indexWhere(
+      (AgentActivity item) =>
+          item.source.trim().toLowerCase() == normalizedSource,
+    );
+    if (index < 0) {
+      return;
+    }
+    final List<AgentActivity> updated = List<AgentActivity>.of(_activities);
+    updated[index] = updated[index].withConversationTarget(target);
+    _activities = updated;
+    _persist();
     notifyListeners();
   }
 

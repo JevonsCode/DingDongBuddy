@@ -89,6 +89,14 @@ void main() {
         (bindProperties['triggerGroupIds'] as Map<String, Object?>)['type'],
         'array',
       );
+      final Map<String, Object?> notifyProperties =
+          (toolNamed('dingdong_notify')['inputSchema']
+                  as Map<String, Object?>)['properties']
+              as Map<String, Object?>;
+      expect(
+        notifyProperties.keys,
+        containsAll(<String>['conversationId', 'workspacePath']),
+      );
     },
   );
 

@@ -32,6 +32,7 @@ part 'agent_router_resource_handlers.dart';
 final class AgentRouter {
   AgentRouter({
     void Function(DingRequest request)? onDing,
+    void Function(DingRequest request)? onSuppressedDing,
     ClipboardCaptureService? clipboardCaptureService,
     ClipboardGateway? clipboardGateway,
     ClipboardStore? clipboardStore,
@@ -43,6 +44,7 @@ final class AgentRouter {
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
   }) : _onDing = onDing ?? _ignoreDing,
+       _onSuppressedDing = onSuppressedDing ?? _ignoreDing,
        _clipboardCaptureService = clipboardCaptureService,
        _clipboardGateway = clipboardGateway,
        _clipboardRoutes = clipboardStore == null
@@ -108,6 +110,7 @@ final class AgentRouter {
        _now = now ?? DateTime.now;
 
   final void Function(DingRequest request) _onDing;
+  final void Function(DingRequest request) _onSuppressedDing;
   final ClipboardCaptureService? _clipboardCaptureService;
   final ClipboardGateway? _clipboardGateway;
   final ClipboardRoutes? _clipboardRoutes;
@@ -182,6 +185,7 @@ final class AgentRouter {
             lastDingAt != null &&
             dingRequest.source == _lastDingSource &&
             now.difference(lastDingAt) < _completionHookDeduplicationWindow) {
+          _onSuppressedDing(dingRequest);
           return HttpResponseData(
             statusCode: 200,
             json: <String, Object?>{

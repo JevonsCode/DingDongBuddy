@@ -45,6 +45,7 @@ final class AppDependencies {
   factory AppDependencies.production({
     void Function(int index)? onShowUi,
     Future<void> Function(DingRequest request)? onNotification,
+    Future<void> Function(DingRequest request)? onSuppressedNotification,
     PreferencesBackend? preferencesBackend,
   }) {
     final AppDataPaths paths = AppDataPaths.current();
@@ -109,6 +110,8 @@ final class AppDependencies {
         );
         await onNotification?.call(resolvedRequest);
       }()),
+      onSuppressedDing: (request) =>
+          unawaited(onSuppressedNotification?.call(request)),
       clipboardCaptureService: clipboardCaptureService,
       clipboardGateway: clipboardGateway,
       clipboardStore: clipboardStore,

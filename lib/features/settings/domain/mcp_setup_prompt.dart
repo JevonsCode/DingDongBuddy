@@ -20,6 +20,7 @@ String defaultMcpSetupPrompt({
    - Claude Code：~/.claude/settings.json 的 Stop command Hook
    - Cursor：~/.cursor/hooks.json 的 afterAgentResponse command Hook
    - Gemini CLI：~/.gemini/settings.json 的 AfterAgent command Hook
+   - Kiro：MCP 使用 ~/.kiro/settings/mcp.json；Kiro CLI v3 优先使用 ~/.kiro/hooks 下的全局 Stop command Hook，旧版 CLI 使用当前可编辑自定义 Agent 的 hooks.stop；IDE 使用原生 Agent Stop shell-command Hook。若当前版本只支持项目级 Hook，未经用户明确同意不要修改项目文件，并说明限制
    如果不是以上客户端，先查清它是否有原生的本地任务结束 Hook；没有就只接入 MCP，并明确说明不支持自动结束提醒，不能编造配置。
 4. 保留已有 Hook 和无关设置。重复接入时更新已有的 DingDong 项，不要重复添加同一个 MCP Server 或 Hook，也不要修改任何项目内文件。
 5. 校验修改后的 TOML 或 JSON 能被当前客户端解析，再按客户端要求重新加载：
@@ -27,6 +28,7 @@ String defaultMcpSetupPrompt({
    - Claude Code：用 claude mcp list 和 /hooks 检查
    - Cursor：重新加载窗口并检查 Hooks 配置
    - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
+   - Kiro：执行 /mcp 检查 MCP，并用 /hooks 检查当前会话实际加载的 Stop Hook
 6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
    - Prompt：所有命中的 Prompt 都是必须自动应用的指令，并以完整正文提供；Codex 的全局、始终生效 Prompt 会直接进入 DingDong 托管的 AGENTS.md 区块
    - Skill：由 Agent 根据 description 判断是否匹配，只有匹配当前任务时才加载或使用完整 Skill；未限定范围的 Skill 全局同步，严格项目 Skill 只同步到项目内原生 Skill 目录；Skill 摘要不是指令
@@ -50,6 +52,7 @@ String defaultMcpSetupPrompt({
    - Claude Code: a Stop command hook in ~/.claude/settings.json
    - Cursor: an afterAgentResponse command hook in ~/.cursor/hooks.json
    - Gemini CLI: an AfterAgent command hook in ~/.gemini/settings.json
+   - Kiro: use ~/.kiro/settings/mcp.json for MCP; prefer a global Stop command hook under ~/.kiro/hooks with Kiro CLI v3, or hooks.stop in the active editable custom Agent on older CLI versions; in the IDE use its native Agent Stop shell-command hook. If this version only supports a project hook, do not modify project files without explicit user permission and report the limitation
    For another client, first verify whether it provides a native local task-completion hook. If it does not, configure MCP only and report that automatic completion alerts are unsupported instead of inventing a setting.
 4. Preserve all existing hooks and unrelated settings. When reconnecting, update the existing DingDong entries instead of duplicating the MCP server or hook. Do not modify project files.
 5. Validate the resulting TOML or JSON, then reload the client as required:
@@ -57,6 +60,7 @@ String defaultMcpSetupPrompt({
    - Claude Code: inspect claude mcp list and /hooks
    - Cursor: reload the window and inspect the Hooks configuration
    - Gemini CLI: run /mcp reload and inspect /hooks panel
+   - Kiro: inspect MCP with /mcp and verify the Stop hook actually loaded for the current session with /hooks
 6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
    - Prompt: every active Prompt is a required instruction, delivered in full and applied automatically; a global always-on Codex Prompt is placed directly in DingDong's managed AGENTS.md block
    - Skill: the Agent matches its description first and loads or uses the complete Skill only when it fits the current task; unscoped Skills are synchronized globally, while strict project Skills are synchronized only into native Skill directories inside that project; a Skill summary is not an instruction

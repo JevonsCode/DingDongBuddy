@@ -131,10 +131,12 @@ perform this setup in the current local Agent or IDE:
    | Claude Code | user-scope MCP in `~/.claude.json` | `Stop` command Hook in `~/.claude/settings.json` |
    | Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` command Hook in `~/.cursor/hooks.json` |
    | Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` command Hook in the same file |
+   | Kiro | `~/.kiro/settings/mcp.json` | Kiro CLI v3 global `Stop` Hook under `~/.kiro/hooks/`, older CLI `hooks.stop` in the active editable custom Agent, or IDE Agent Stop shell-command Hook |
 
    For another client, verify its native local task-completion Hook first. If it
    has none, configure MCP only and report that automatic completion alerts are
-   unsupported. Do not invent a setting.
+   unsupported. Do not invent a setting. For Kiro versions that expose only a
+   project-level Hook, do not modify the project without explicit permission.
 3. Validate every changed TOML or JSON file, then reload the client. For Codex,
    restart `dingdong` under **Settings → MCP servers**, then review and trust the
    Hook in `/hooks`. A changed executable path creates a new Hook trust identity.

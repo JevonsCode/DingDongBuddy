@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -24,6 +25,11 @@ void main() {
             message: 'Finished the task',
             completedAt: completedAt,
             unseen: true,
+            conversationTarget: const AgentConversationTarget(
+              client: AgentClient.codex,
+              conversationId: 'thread-1',
+              workspacePath: '/workspace/dingdong',
+            ),
           ),
         ],
         completionTimes: <DateTime>[
@@ -36,6 +42,10 @@ void main() {
     final AgentActivityHistory restored = store.load();
     expect(restored.activities.single.message, 'Finished the task');
     expect(restored.activities.single.unseen, isTrue);
+    expect(
+      restored.activities.single.conversationTarget?.conversationId,
+      'thread-1',
+    );
     expect(restored.completionTimes, hasLength(2));
   });
 

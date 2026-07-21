@@ -7,6 +7,7 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -39,6 +40,7 @@ import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/features/shell/ui/shell_screen.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';
+import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +50,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 class DingDongApp extends StatefulWidget {
   const DingDongApp({
     this.activityController,
+    this.agentConversationLauncher,
     this.agentBaseUri,
     this.clipboardCaptureService,
     this.clipboardCategoryRuleStore,
@@ -85,6 +88,7 @@ class DingDongApp extends StatefulWidget {
   });
 
   final ActivityController? activityController;
+  final AgentConversationLauncher? agentConversationLauncher;
   final Uri? agentBaseUri;
   final ClipboardCaptureService? clipboardCaptureService;
   final ClipboardCategoryRuleStore? clipboardCategoryRuleStore;
@@ -235,6 +239,9 @@ class _DingDongAppState extends State<DingDongApp> {
           },
           home: ShellScreen(
             activityController: _activityController,
+            agentConversationLauncher:
+                widget.agentConversationLauncher ??
+                NativeAgentConversationLauncher(),
             clipboardViewModel: _clipboardViewModel,
             clipboardGateway: widget.clipboardGateway,
             desktopContextMenuGateway: widget.desktopContextMenuGateway,

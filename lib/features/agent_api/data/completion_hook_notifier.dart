@@ -17,6 +17,21 @@ final class CompletionHookNotifier {
     final Map<String, Object?> input = _decodeInput(hookInput);
     final String source = _source(input, sourceOverride: sourceOverride);
     final String? summary = await _completionSummary(input);
+    final String? conversationId = _firstText(input, const <String>[
+      'session_id',
+      'sessionId',
+      'conversation_id',
+      'conversationId',
+      'thread_id',
+      'threadId',
+    ]);
+    final String? workspacePath =
+        _firstText(input, const <String>[
+          'cwd',
+          'workspace_path',
+          'workspacePath',
+        ]) ??
+        _firstWorkspaceRoot(input['workspace_roots']);
     return _transport.request(
       method: 'POST',
       path: '/ding',
@@ -25,6 +40,8 @@ final class CompletionHookNotifier {
         'source': source,
         'flashCount': 4,
         'fallback': true,
+        'conversationId': ?conversationId,
+        'workspacePath': ?workspacePath,
       },
     );
   }
@@ -61,6 +78,7 @@ Future<String?> _completionSummary(Map<String, Object?> input) async {
     'lastAssistantMessage',
     'assistant_message',
     'prompt_response',
+    'assistant_response',
     'text',
   ]) {
     final String? summary = _oneLineSummary(input[key]);
@@ -80,6 +98,28 @@ Future<String?> _completionSummary(Map<String, Object?> input) async {
   } on Object {
     return null;
   }
+}
+
+String? _firstText(Map<String, Object?> input, List<String> keys) {
+  for (final String key in keys) {
+    final Object? value = input[key];
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+String? _firstWorkspaceRoot(Object? value) {
+  if (value is! List<Object?>) {
+    return null;
+  }
+  for (final Object? root in value) {
+    if (root is String && root.trim().isNotEmpty) {
+      return root.trim();
+    }
+  }
+  return null;
 }
 
 Future<String?> _lastAssistantMessage(File transcript) async {

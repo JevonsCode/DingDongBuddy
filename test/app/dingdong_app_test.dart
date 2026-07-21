@@ -2,10 +2,12 @@ import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
@@ -15,14 +17,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.21', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.22', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.7.21')), findsOneWidget);
-    expect(find.text('v0.7.21'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.7.22')), findsOneWidget);
+    expect(find.text('v0.7.22'), findsOneWidget);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
     expect(find.text('Agent API'), findsWidgets);
@@ -141,6 +143,84 @@ void main() {
       activityController.dispose();
     },
   );
+
+  testWidgets('clicking a resumable Agent item opens its conversation', (
+    WidgetTester tester,
+  ) async {
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'resumable-agent',
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Conversation ready',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-1',
+      ),
+    );
+    final _FakeAgentConversationLauncher launcher =
+        _FakeAgentConversationLauncher();
+
+    await tester.pumpWidget(
+      DingDongApp(
+        activityController: activityController,
+        agentConversationLauncher: launcher,
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byTooltip('Open Agent conversation'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('activity-resumable-agent')));
+    await tester.pump();
+
+    expect(launcher.opened?.conversationId, 'thread-1');
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+  });
+
+  testWidgets('recent Agent preview shows six items and opens the full list', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 1400);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    int nextId = 0;
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'overflow-${nextId++}',
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    );
+    for (int index = 0; index < 7; index += 1) {
+      activityController.record(
+        source: 'Codex',
+        message: 'Recent activity $index',
+      );
+    }
+    final _FakeResourceManagerLauncher launcher =
+        _FakeResourceManagerLauncher();
+
+    await tester.pumpWidget(
+      DingDongApp(
+        activityController: activityController,
+        resourceManagerLauncher: launcher,
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('activity-overflow-0')), findsNothing);
+    for (int index = 1; index < 7; index += 1) {
+      expect(find.byKey(Key('activity-overflow-$index')), findsOneWidget);
+    }
+    expect(find.byKey(const Key('recent-agent-more')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('recent-agent-more')));
+    await tester.pump();
+
+    expect(launcher.lastDestination, ResourceManagerDestination.recentAgents);
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+  });
 
   testWidgets('desktop navigation opens the resource library workspace', (
     WidgetTester tester,
@@ -347,6 +427,32 @@ void main() {
 
     expect(find.byKey(const Key('agent-api-copy-health')), findsOneWidget);
   });
+}
+
+final class _FakeAgentConversationLauncher
+    implements AgentConversationLauncher {
+  AgentConversationTarget? opened;
+
+  @override
+  bool canOpen(AgentConversationTarget target) => target.hasDestination;
+
+  @override
+  Future<void> open(AgentConversationTarget target) async {
+    opened = target;
+  }
+}
+
+final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
+  ResourceManagerDestination? lastDestination;
+
+  @override
+  Future<void> show({
+    String? editingResourceId,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+  }) async {
+    lastDestination = destination;
+  }
 }
 
 final class _FakeSettingsWindowLauncher implements SettingsWindowLauncher {

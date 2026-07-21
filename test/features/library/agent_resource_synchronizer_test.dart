@@ -8,6 +8,31 @@ import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('current user discovery includes Kiro native locations', () {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-kiro-discovery-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    Directory('${temp.path}/.kiro').createSync();
+
+    final AgentResourceSynchronizer synchronizer =
+        AgentResourceSynchronizer.currentUser(
+          Directory('${temp.path}/packages'),
+          homeDirectory: temp.path,
+        );
+
+    expect(
+      synchronizer.skillRoots.map((Directory root) => root.path),
+      contains('${temp.path}/.kiro/skills'),
+    );
+    expect(synchronizer.projectSkillRoots, contains('.kiro/skills'));
+    expect(
+      synchronizer.mcpTargets.single.file.path,
+      '${temp.path}/.kiro/settings/mcp.json',
+    );
+    expect(synchronizer.mcpTargets.single.kind, AgentMcpConfigKind.kiroJson);
+  });
+
   test('bundled online Skill syncs offline from embedded content', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-sync-',
@@ -280,6 +305,7 @@ void main() {
     final File claude = File('${temp.path}/claude.json');
     final File cursor = File('${temp.path}/cursor.json');
     final File gemini = File('${temp.path}/gemini.json');
+    final File kiro = File('${temp.path}/kiro.json');
     final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
       packageRoot: Directory('${temp.path}/packages'),
       skillRoots: const <Directory>[],
@@ -288,6 +314,7 @@ void main() {
         AgentMcpTarget(claude, AgentMcpConfigKind.claudeJson),
         AgentMcpTarget(cursor, AgentMcpConfigKind.cursorJson),
         AgentMcpTarget(gemini, AgentMcpConfigKind.geminiJson),
+        AgentMcpTarget(kiro, AgentMcpConfigKind.kiroJson),
       ],
       managedStateFile: File('${temp.path}/state.json'),
     );
@@ -325,6 +352,12 @@ void main() {
     expect(
       (geminiServer['headers'] as Map<String, Object?>)['Authorization'],
       r'Bearer $EXAMPLE_TOKEN',
+    );
+    final Map<String, Object?> kiroServer = _onlyServer(kiro);
+    expect(kiroServer['url'], 'https://example.com/mcp');
+    expect(
+      (kiroServer['headers'] as Map<String, Object?>)['Authorization'],
+      r'Bearer ${EXAMPLE_TOKEN}',
     );
   });
 }

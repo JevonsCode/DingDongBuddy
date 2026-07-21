@@ -46,19 +46,19 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.7.21 from pubspec', () {
+  test('desktop hosts consume application version 0.7.22 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.21+21'));
+    expect(pubspec, contains('version: 0.7.22+22'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync(),
-      contains("const String currentAppBuild = '21';"),
+      contains("const String currentAppBuild = '22';"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
@@ -279,14 +279,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.7.21"'));
-    expect(releaseMetadata, contains('"latestBuild": "21"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.22"'));
+    expect(releaseMetadata, contains('"latestBuild": "22"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.7.21-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.7.22-windows-x64-beta-Setup.exe'),
     );
   });
 

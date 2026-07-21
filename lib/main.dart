@@ -18,6 +18,7 @@ import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
@@ -96,8 +97,18 @@ Future<void> main(List<String> arguments) async {
       activityController.record(
         source: request.source ?? 'Agent',
         message: request.message,
+        conversationTarget: request.conversationTarget,
       );
       await shellGateway.markUnread();
+    },
+    onSuppressedNotification: (request) async {
+      final target = request.conversationTarget;
+      if (target != null) {
+        activityController.attachConversationTarget(
+          source: request.source ?? 'Agent',
+          target: target,
+        );
+      }
     },
     onShowUi: (int index) {
       if (index == 4) {
@@ -433,6 +444,8 @@ Future<void> _runResourceManagerWindow(
     ),
   )..load();
   final String? editingResourceId = arguments['editingResourceId'] as String?;
+  final ResourceManagerDestination initialDestination =
+      ResourceManagerDestination.parse(arguments['destination']);
   if (editingResourceId != null) {
     for (final resource in viewModel.allResources) {
       if (resource.id == editingResourceId) {
@@ -468,6 +481,7 @@ Future<void> _runResourceManagerWindow(
       activityController: activityController,
       settings: settings,
       windowController: windowController,
+      initialDestination: initialDestination,
       desktopContextMenuGateway: Platform.isMacOS
           ? NativeDesktopContextMenuGateway()
           : null,

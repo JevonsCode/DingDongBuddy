@@ -19,7 +19,7 @@ making you watch the chat.
 
 ## Install with an Agent
 
-If you are using a local Codex, Claude Code, Cursor, or Gemini CLI session, paste
+If you are using a local Codex, Claude Code, Cursor, Gemini CLI, or Kiro session, paste
 the request below. The Agent will install the correct official release, start
 DingDong, connect its MCP bridge and native completion Hook, and test both paths.
 
@@ -42,8 +42,8 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 - Syncs enabled global always-on Prompts into a managed block in Codex
   `~/.codex/AGENTS.md` while preserving existing user instructions
 - Syncs enabled unscoped Skills globally, strict project Skills only inside the
-  selected project, and MCP servers into Codex, Claude Code, Cursor, and Gemini
-  CLI while preserving unrelated configuration
+  selected project, and MCP servers into Codex, Claude Code, Cursor, Gemini
+  CLI, and Kiro while preserving unrelated configuration
 - Uses workspace paths and repository URLs to narrow each task's bridge suggestions
 - Returns full Prompts by default while keeping Skills and MCP servers
   summary-first until they are needed
@@ -56,7 +56,7 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.7.21`, using the same version constant as the release UI. Clicking it
+  `v0.7.22`, using the same version constant as the release UI. Clicking it
   opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
   muted stays silent. Neither the wordmark nor version shows a hover tooltip or
@@ -153,13 +153,14 @@ operation without asking the user to open Resource Manager:
 
 The three writes are idempotent. Strict binding accepts only exact project-path
 rules and rejects `contains`, repository, relative, root, missing, and unknown scopes. DingDong mirrors
-the package into `.agents/skills`, `.claude/skills`, `.cursor/skills`, or
-`.gemini/skills` below the configured project when the corresponding client is
+the package into `.agents/skills`, `.claude/skills`, `.cursor/skills`,
+`.gemini/skills`, or `.kiro/skills` below the configured project when the corresponding client is
 installed. These locations follow the clients' native project Skill discovery
 rules: [Codex](https://learn.chatgpt.com/docs/build-skills),
 [Claude Code](https://code.claude.com/docs/en/skills),
-[Cursor](https://cursor.com/docs/skills), and
-[Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/).
+[Cursor](https://cursor.com/docs/skills),
+[Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/), and
+[Kiro](https://kiro.dev/docs/skills/).
 
 A new MCP-installed Skill remains disabled until binding succeeds, so it is not
 briefly exposed through DingDong's global sync. Strict scope can remove only
@@ -184,13 +185,14 @@ flowchart TB
     Claude["Claude Code"]
     Cursor["Cursor"]
     Gemini["Gemini CLI"]
+    Kiro["Kiro"]
   end
 
   User --> SetupUI
   SetupUI -->|"give setup prompt to Agent"| Clients
 
   subgraph NativeConfig["Native user-level Agent configuration"]
-    McpConfig["MCP configuration<br/>Codex TOML · Claude/Cursor/Gemini JSON"]
+    McpConfig["MCP configuration<br/>Codex TOML · Claude/Cursor/Gemini/Kiro JSON"]
     HookConfig["Completion hook<br/>Stop · afterAgentResponse · AfterAgent"]
     PromptFile["Codex global Prompt<br/>managed ~/.codex/AGENTS.md block"]
     SkillFolders["Native Skill folders<br/>complete package directories"]
@@ -203,6 +205,7 @@ flowchart TB
   SkillFolders --> Claude
   SkillFolders --> Cursor
   SkillFolders --> Gemini
+  SkillFolders --> Kiro
 
   subgraph Executable["Bundled dingdong_mcp executable"]
     Stdio["STDIO JSON-RPC mode"]
@@ -328,7 +331,7 @@ Connect DingDong on this computer to the current agent or IDE.
 2. Preserve all unrelated user settings and add a global STDIO MCP server named dingdong. Its command must be the complete <DINGDONG_MCP_PATH>; do not add MCP args, env, or a wrapper shell.
 3. Add one durable native completion hook, without duplicates, that runs:
    "<DINGDONG_MCP_PATH>" --notify-stop --source "Current client name"
-   Use Codex Stop in ~/.codex/config.toml, Claude Code Stop in ~/.claude/settings.json, Cursor afterAgentResponse in ~/.cursor/hooks.json, or Gemini CLI AfterAgent in ~/.gemini/settings.json.
+   Use Codex Stop in ~/.codex/config.toml, Claude Code Stop in ~/.claude/settings.json, Cursor afterAgentResponse in ~/.cursor/hooks.json, Gemini CLI AfterAgent in ~/.gemini/settings.json, or a Kiro Stop hook.
 4. Reload the client. For Codex, restart the MCP server and review and trust the hook in /hooks.
 5. Keep resource semantics distinct: apply every active Prompt automatically and in full; match a Skill description before loading it; call MCP tools only when the task needs them. Skill and MCP summaries are not Prompt instructions. For an explicit project Skill request, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill.
 6. Pipe {"summary":"DingDong task-completion hook is connected"} to the hook command and confirm the notification arrives.
@@ -372,6 +375,18 @@ Claude Code stores the user-scoped server in `~/.claude.json`.
 ```
 
 **Gemini CLI — `~/.gemini/settings.json`**
+
+```json
+{
+  "mcpServers": {
+    "dingdong": {
+      "command": "/absolute/path/to/dingdong_mcp"
+    }
+  }
+}
+```
+
+**Kiro — `~/.kiro/settings/mcp.json`**
 
 ```json
 {
@@ -468,6 +483,26 @@ the hook still needs access to the locally running DingDong application.
 
 Use `/hooks panel` to inspect the hook.
 
+**Kiro CLI — `hooks.stop` in the active editable Agent**
+
+```json
+{
+  "hooks": {
+    "stop": [
+      {
+        "command": "\"/absolute/path/to/dingdong_mcp\" --notify-stop --source \"Kiro\""
+      }
+    ]
+  }
+}
+```
+
+Kiro CLI v3 can instead use a global hook under `~/.kiro/hooks/`. Built-in
+Agents cannot be edited, so use Kiro's hook manager for a global hook or an
+editable custom Agent and confirm it with `/hooks`. In Kiro IDE, create an
+Agent Stop shell-command hook from the Agent Hooks panel; do not add a
+workspace hook without the user's permission.
+
 #### 3. Verify both paths
 
 First test the hook directly on macOS or Linux:
@@ -496,6 +531,7 @@ prove that the completion hook is installed, so both tests matter.
 | Claude Code | `~/.claude.json` | `Stop` in `~/.claude/settings.json` | `last_assistant_message` |
 | Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` in `~/.cursor/hooks.json` | response `text` |
 | Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` in the same file | `prompt_response` |
+| Kiro | `~/.kiro/settings/mcp.json` | CLI `stop` / IDE Agent Stop | `assistant_response` |
 
 Upstream references: [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp?surface=cli),
 [Codex hooks](https://learn.chatgpt.com/docs/hooks),
@@ -503,8 +539,10 @@ Upstream references: [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp?surfa
 [Claude Code hooks](https://code.claude.com/docs/en/hooks),
 [Cursor MCP](https://cursor.com/docs/context/model-context-protocol),
 [Cursor hooks](https://cursor.com/docs/hooks),
-[Gemini CLI MCP](https://geminicli.com/docs/tools/mcp-server/), and
-[Gemini CLI hooks](https://geminicli.com/docs/hooks/reference/).
+[Gemini CLI MCP](https://geminicli.com/docs/tools/mcp-server/),
+[Gemini CLI hooks](https://geminicli.com/docs/hooks/reference/),
+[Kiro MCP](https://kiro.dev/docs/mcp/configuration/), and
+[Kiro CLI hooks](https://kiro.dev/docs/cli/hooks/).
 
 ## Privacy and local data
 

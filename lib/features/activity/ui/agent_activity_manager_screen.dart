@@ -1,13 +1,21 @@
+import 'dart:async';
+
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:flutter/material.dart';
 
-/// Read-only, full-detail Agent completion history for the manager window.
+/// Full-detail Agent completion history for the manager window.
 class AgentActivityManagerScreen extends StatelessWidget {
-  const AgentActivityManagerScreen({required this.controller, super.key});
+  const AgentActivityManagerScreen({
+    required this.controller,
+    required this.conversationLauncher,
+    super.key,
+  });
 
   final ActivityController controller;
+  final AgentConversationLauncher conversationLauncher;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +45,14 @@ class AgentActivityManagerScreen extends StatelessWidget {
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(width: 9),
-                              _ReadOnlyBadge(count: activities.length),
+                              _ActivityCountBadge(count: activities.length),
                             ],
                           ),
                           const SizedBox(height: 5),
                           Text(
                             context.localized(
-                              'Local completion details, newest first. This view is read-only.',
-                              '本机完成详情，按时间倒序排列；此处仅供查看。',
+                              'Newest first. Click a resumable item to return to its conversation.',
+                              '按时间倒序排列；点击可恢复的记录可返回对应对话。',
                             ),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: colors.onSurfaceVariant),
@@ -68,15 +76,18 @@ class AgentActivityManagerScreen extends StatelessWidget {
                               ?.copyWith(color: colors.onSurfaceVariant),
                         ),
                       )
-                    : SelectionArea(
-                        child: ListView.separated(
-                          key: const Key('agent-activity-manager-list'),
-                          padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
-                          itemCount: activities.length,
-                          separatorBuilder: (_, _) => const Divider(height: 1),
-                          itemBuilder: (BuildContext context, int index) =>
-                              _ActivityHistoryRow(activity: activities[index]),
-                        ),
+                    : ListView.separated(
+                        key: const Key('agent-activity-manager-list'),
+                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
+                        itemCount: activities.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (BuildContext context, int index) =>
+                            _ActivityHistoryRow(
+                              activity: activities[index],
+                              conversationLauncher: conversationLauncher,
+                              onOpen: (AgentConversationTarget target) =>
+                                  unawaited(_openConversation(context, target)),
+                            ),
                       ),
               ),
             ],
@@ -85,10 +96,33 @@ class AgentActivityManagerScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _openConversation(
+    BuildContext context,
+    AgentConversationTarget target,
+  ) async {
+    try {
+      await conversationLauncher.open(target);
+    } on Object {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.localized(
+              'Could not open this Agent conversation.',
+              '无法打开这个 Agent 对话。',
+            ),
+          ),
+        ),
+      );
+    }
+  }
 }
 
-class _ReadOnlyBadge extends StatelessWidget {
-  const _ReadOnlyBadge({required this.count});
+class _ActivityCountBadge extends StatelessWidget {
+  const _ActivityCountBadge({required this.count});
 
   final int count;
 
@@ -96,7 +130,7 @@ class _ReadOnlyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
-      key: const Key('agent-activity-read-only-badge'),
+      key: const Key('agent-activity-count-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: colors.surfaceContainerLow,
@@ -104,7 +138,7 @@ class _ReadOnlyBadge extends StatelessWidget {
         border: Border.all(color: colors.outlineVariant),
       ),
       child: Text(
-        context.localized('$count · Read only', '$count 条 · 只读'),
+        context.localized('$count items', '$count 条'),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: colors.onSurfaceVariant,
           fontWeight: FontWeight.w600,
@@ -115,9 +149,15 @@ class _ReadOnlyBadge extends StatelessWidget {
 }
 
 class _ActivityHistoryRow extends StatelessWidget {
-  const _ActivityHistoryRow({required this.activity});
+  const _ActivityHistoryRow({
+    required this.activity,
+    required this.conversationLauncher,
+    required this.onOpen,
+  });
 
   final AgentActivity activity;
+  final AgentConversationLauncher conversationLauncher;
+  final ValueChanged<AgentConversationTarget> onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -127,62 +167,89 @@ class _ActivityHistoryRow extends StatelessWidget {
       context,
     ).formatShortDate(localTime);
     final String time = TimeOfDay.fromDateTime(localTime).format(context);
-    return Padding(
+    final AgentConversationTarget? target = activity.conversationTarget;
+    final bool canOpen = target != null && conversationLauncher.canOpen(target);
+    return Material(
       key: Key('agent-activity-row-${activity.id}'),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 30,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(7),
-            ),
-            child: Icon(
-              Icons.smart_toy_outlined,
-              size: 16,
-              color: colors.primary,
-            ),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: canOpen ? () => onOpen(target) : null,
+        mouseCursor: canOpen
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 13),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(
+                  Icons.smart_toy_outlined,
+                  size: 16,
+                  color: colors.primary,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        activity.source,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            activity.source,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '$date  $time',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                        if (canOpen) ...<Widget>[
+                          const SizedBox(width: 9),
+                          Tooltip(
+                            message: context.localized(
+                              'Open Agent conversation',
+                              '打开 Agent 对话',
+                            ),
+                            child: Icon(
+                              Icons.open_in_new_rounded,
+                              key: const Key(
+                                'agent-activity-manager-open-conversation',
+                              ),
+                              size: 16,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(height: 5),
                     Text(
-                      '$date  $time',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      activity.message,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  activity.message,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

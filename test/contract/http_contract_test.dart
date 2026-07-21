@@ -42,7 +42,7 @@ void main() {
         method: 'POST',
         uri: '/ding',
         body:
-            '{"message":" Deploy complete ","source":" Codex ","sound":"system","flashCount":99}',
+            '{"message":" Deploy complete ","source":" Codex ","sound":"system","flashCount":99,"conversationId":"thread-1","workspacePath":"/workspace/dingdong"}',
       ),
     );
 
@@ -54,13 +54,17 @@ void main() {
     expect(received?.source, 'Codex');
     expect(received?.sound, DingSound.system);
     expect(received?.flashCount, 30);
+    expect(received?.conversationTarget?.conversationId, 'thread-1');
+    expect(received?.conversationTarget?.workspacePath, '/workspace/dingdong');
   });
 
   test('completion hook suppresses a duplicate Agent notification', () async {
     int notificationCount = 0;
+    DingRequest? suppressedRequest;
     DateTime now = DateTime.utc(2026, 7, 17, 12);
     final AgentRouter router = AgentRouter(
       onDing: (DingRequest request) => notificationCount += 1,
+      onSuppressedDing: (DingRequest request) => suppressedRequest = request,
       now: () => now,
     );
 
@@ -76,12 +80,14 @@ void main() {
       const HttpRequestData(
         method: 'POST',
         uri: '/ding',
-        body: '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true}',
+        body:
+            '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true,"conversationId":"thread-1","workspacePath":"/workspace/dingdong"}',
       ),
     );
 
     expect(notificationCount, 1);
     expect(suppressed.json['status'], 'suppressed');
+    expect(suppressedRequest?.conversationTarget?.conversationId, 'thread-1');
 
     final otherAgent = await router.route(
       const HttpRequestData(

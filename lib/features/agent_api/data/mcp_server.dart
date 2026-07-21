@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.7.21',
+              'version': '0.7.22',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
@@ -221,6 +221,8 @@ final class McpServer {
         'message': _stringProperty(),
         'source': _stringProperty(),
         'flashCount': _integerProperty(maximum: 20),
+        'conversationId': _stringProperty(),
+        'workspacePath': _stringProperty(),
       },
       required: <String>['message'],
     ),

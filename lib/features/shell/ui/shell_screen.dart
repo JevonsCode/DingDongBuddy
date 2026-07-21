@@ -6,6 +6,7 @@ import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
 import 'package:dingdong/features/agent_api/ui/agent_api_screen.dart';
@@ -33,6 +34,7 @@ import 'package:flutter/services.dart';
 class ShellScreen extends StatefulWidget {
   const ShellScreen({
     required this.activityController,
+    required this.agentConversationLauncher,
     required this.clipboardViewModel,
     required this.libraryViewModel,
     required this.settingsViewModel,
@@ -55,6 +57,7 @@ class ShellScreen extends StatefulWidget {
   });
 
   final ActivityController activityController;
+  final AgentConversationLauncher agentConversationLauncher;
   final ClipboardViewModel clipboardViewModel;
   final LibraryViewModel libraryViewModel;
   final SettingsViewModel settingsViewModel;
@@ -425,11 +428,13 @@ class _ShellScreenState extends State<ShellScreen> {
     return switch (widget.controller.selectedIndex) {
       0 => ActivityScreen(
         activityController: widget.activityController,
+        agentConversationLauncher: widget.agentConversationLauncher,
         clipboardViewModel: widget.clipboardViewModel,
         libraryViewModel: widget.libraryViewModel,
         settingsViewModel: widget.settingsViewModel,
         onOpenWorkspace: widget.controller.open,
         onOpenAgentApi: () => unawaited(_openAgentApi()),
+        onHideWindow: widget.onHideWindow,
         resourceManagerLauncher: _resourceManagerLauncher(),
         contextMenuGateway: widget.desktopContextMenuGateway,
         now: widget.now,
@@ -508,8 +513,15 @@ final class _CalloutHidingResourceManagerLauncher
   final Future<void> Function()? onHideWindow;
 
   @override
-  Future<void> show({String? editingResourceId}) async {
+  Future<void> show({
+    String? editingResourceId,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+  }) async {
     await onHideWindow?.call();
-    await launcher.show(editingResourceId: editingResourceId);
+    await launcher.show(
+      editingResourceId: editingResourceId,
+      destination: destination,
+    );
   }
 }

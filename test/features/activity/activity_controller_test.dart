@@ -1,4 +1,5 @@
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,6 +23,30 @@ void main() {
     controller.markAllSeen();
     expect(controller.unseenCount, 0);
     expect(controller.activities.single.unseen, isFalse);
+  });
+
+  test('suppressed completion hook enriches the latest matching item', () {
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'activity-1',
+      now: () => DateTime.utc(2026, 7, 12, 10),
+    );
+    controller.record(source: 'Codex', message: 'Build complete');
+
+    controller.attachConversationTarget(
+      source: 'Codex',
+      target: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-1',
+        workspacePath: '/workspace/dingdong',
+      ),
+    );
+
+    expect(controller.activities, hasLength(1));
+    expect(
+      controller.activities.single.conversationTarget?.conversationId,
+      'thread-1',
+    );
+    expect(controller.recentCount, 1);
   });
 
   test('detail retention defaults to 200 without capping the recent count', () {

@@ -1,4 +1,4 @@
-# DingDong 0.7.21 Manual Regression Checklist
+# DingDong 0.7.22 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -62,6 +62,17 @@ and macOS golden images; the items below exercise real operating-system state.
 - Enabling or disabling an MCP updates supported Agent user configurations and preserves unrelated entries.
 - An online Skill installs its complete directory, including scripts, references, and assets.
 
+## Recent Agents
+
+- Dynamic shows at most six recent Agent items.
+- When more than six items exist, the `More` button opens Resource Manager directly at Recent Agents.
+- A resumable Recent Agent item opens its exact conversation from both Dynamic and Resource Manager.
+- Codex thread links, Claude Code, Gemini, and Kiro resume commands reopen the expected session.
+- Cursor background-agent links open the exact conversation; local Cursor sessions fall back to the recorded workspace.
+- An item without a safe resume target has no open affordance and does not launch a process.
+- A failed launch keeps DingDong responsive and shows a visible error.
+- The Kiro Stop hook records the session id and workspace needed to resume a conversation.
+
 ## Settings and notifications
 
 - Language changes immediately update navigation and feature labels.
@@ -89,8 +100,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - The final MCP bundle contains native `arm64` and `x86_64` sub-bundles and one stable executable launcher path.
 - The launcher selects and runs the native MCP successfully on both an Apple Silicon Mac and an Intel Mac.
 - The Windows MCP executable passes `tools/list` on a Windows x64 machine.
-- The macOS app metadata is version `0.7.21` build `21` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.21.21` and product name `DingDong`.
+- The macOS app metadata is version `0.7.22` build `22` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.22.22` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

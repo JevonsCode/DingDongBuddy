@@ -4,14 +4,17 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
+import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
@@ -24,6 +27,8 @@ class ResourceManagerApp extends StatefulWidget {
     required this.activityController,
     required this.settings,
     required this.windowController,
+    this.initialDestination = ResourceManagerDestination.resources,
+    this.agentConversationLauncher,
     this.desktopContextMenuGateway,
     this.onOpenExternalLink,
     super.key,
@@ -34,6 +39,8 @@ class ResourceManagerApp extends StatefulWidget {
   final ActivityController activityController;
   final AppSettings settings;
   final WindowController windowController;
+  final ResourceManagerDestination initialDestination;
+  final AgentConversationLauncher? agentConversationLauncher;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
 
@@ -43,10 +50,14 @@ class ResourceManagerApp extends StatefulWidget {
 
 class _ResourceManagerAppState extends State<ResourceManagerApp> {
   int _selectedIndex = 0;
+  late final AgentConversationLauncher _agentConversationLauncher;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialDestination.index;
+    _agentConversationLauncher =
+        widget.agentConversationLauncher ?? NativeAgentConversationLauncher();
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         switch (call.method) {
@@ -54,6 +65,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             await widget.viewModel.load();
             widget.clipboardViewModel.load();
             widget.activityController.reload();
+            _selectDestination(
+              ResourceManagerDestination.parse(call.arguments),
+            );
             await windowManager.focus();
           case 'edit_resource':
             final Object? arguments = call.arguments;
@@ -68,6 +82,12 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
         }
       }),
     );
+  }
+
+  void _selectDestination(ResourceManagerDestination destination) {
+    if (_selectedIndex != destination.index && mounted) {
+      setState(() => _selectedIndex = destination.index);
+    }
   }
 
   void _selectResource(String id) {
@@ -130,6 +150,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
                   ),
                   _ => AgentActivityManagerScreen(
                     controller: widget.activityController,
+                    conversationLauncher: _agentConversationLauncher,
                   ),
                 },
               ),

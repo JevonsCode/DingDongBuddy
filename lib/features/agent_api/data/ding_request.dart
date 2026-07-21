@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+
 /// Sound values retained for compatibility with existing API clients.
 enum DingSound {
   defaultSound('default'),
@@ -54,6 +56,7 @@ final class DingRequest {
     this.sound = DingSound.defaultSound,
     this.flashCount = 8,
     this.fallback = false,
+    this.conversationTarget,
   });
 
   factory DingRequest.parse(String body) {
@@ -64,12 +67,14 @@ final class DingRequest {
     final String message =
         _trimmedOrNull(json['message'] as String?) ?? 'Task complete';
     final int requestedFlashCount = json['flashCount'] as int? ?? 8;
+    final String? source = _trimmedOrNull(json['source'] as String?);
     return DingRequest(
       message: message,
-      source: _trimmedOrNull(json['source'] as String?),
+      source: source,
       sound: DingSound.parse(json['sound']),
       flashCount: requestedFlashCount.clamp(2, 30),
       fallback: json['fallback'] == true,
+      conversationTarget: _conversationTarget(json, source),
     );
   }
 
@@ -78,6 +83,7 @@ final class DingRequest {
   final DingSound sound;
   final int flashCount;
   final bool fallback;
+  final AgentConversationTarget? conversationTarget;
 
   DingRequest copyWith({DingSound? sound}) {
     return DingRequest(
@@ -86,8 +92,49 @@ final class DingRequest {
       sound: sound ?? this.sound,
       flashCount: flashCount,
       fallback: fallback,
+      conversationTarget: conversationTarget,
     );
   }
+}
+
+AgentConversationTarget? _conversationTarget(
+  Map<String, Object?> json,
+  String? source,
+) {
+  final Map<String, Object?> nested = json['conversationTarget'] is Map
+      ? Map<String, Object?>.from(json['conversationTarget']! as Map)
+      : const <String, Object?>{};
+  final AgentClient client =
+      AgentClient.parse(nested['client']) == AgentClient.unknown
+      ? AgentClient.fromSource(source ?? '')
+      : AgentClient.parse(nested['client']);
+  final String? conversationId = _firstTrimmed(<Object?>[
+    nested['conversationId'],
+    json['conversationId'],
+    json['sessionId'],
+    json['threadId'],
+  ]);
+  final String? workspacePath = _firstTrimmed(<Object?>[
+    nested['workspacePath'],
+    json['workspacePath'],
+    json['cwd'],
+  ]);
+  final AgentConversationTarget target = AgentConversationTarget(
+    client: client,
+    conversationId: conversationId,
+    workspacePath: workspacePath,
+  );
+  return target.hasDestination ? target : null;
+}
+
+String? _firstTrimmed(List<Object?> values) {
+  for (final Object? value in values) {
+    final String? trimmed = value is String ? _trimmedOrNull(value) : null;
+    if (trimmed != null) {
+      return trimmed;
+    }
+  }
+  return null;
 }
 
 String? _trimmedOrNull(String? value) {

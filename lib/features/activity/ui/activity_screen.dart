@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
@@ -6,6 +8,7 @@ import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/enabled_status_icon.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
@@ -20,11 +23,13 @@ part 'activity_cards.dart';
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({
     required this.activityController,
+    required this.agentConversationLauncher,
     required this.clipboardViewModel,
     required this.libraryViewModel,
     required this.settingsViewModel,
     required this.onOpenWorkspace,
     required this.onOpenAgentApi,
+    this.onHideWindow,
     this.contextMenuGateway,
     this.resourceManagerLauncher,
     this.now,
@@ -32,11 +37,13 @@ class ActivityScreen extends StatefulWidget {
   });
 
   final ActivityController activityController;
+  final AgentConversationLauncher agentConversationLauncher;
   final ClipboardViewModel clipboardViewModel;
   final LibraryViewModel libraryViewModel;
   final SettingsViewModel settingsViewModel;
   final ValueChanged<int> onOpenWorkspace;
   final VoidCallback onOpenAgentApi;
+  final Future<void> Function()? onHideWindow;
   final DesktopContextMenuGateway? contextMenuGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
   final DateTime Function()? now;
@@ -185,6 +192,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   count: widget.activityController.recentCount,
                   hours: widget.activityController.countWindowHours,
                 ),
+                if (widget.activityController.activities.length > 6 &&
+                    widget.resourceManagerLauncher != null) ...<Widget>[
+                  const Spacer(),
+                  _RecentAgentMoreButton(
+                    onTap: () => unawaited(
+                      widget.resourceManagerLauncher!.show(
+                        destination: ResourceManagerDestination.recentAgents,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 8),
@@ -198,12 +216,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
               )
             else
               ...widget.activityController.activities
-                  .take(4)
+                  .take(6)
                   .map(
                     (AgentActivity activity) => Padding(
                       padding: const EdgeInsets.only(bottom: 7),
                       child: _AgentActivityCard(
                         activity: activity,
+                        onTap: _conversationTap(context, activity),
                         animate:
                             activity.unseen &&
                             widget.activityController.revealRevision > 0,
@@ -266,5 +285,37 @@ class _ActivityScreenState extends State<ActivityScreen> {
         widget.activityController.markAllSeen();
       }
     });
+  }
+
+  VoidCallback? _conversationTap(BuildContext context, AgentActivity activity) {
+    final AgentConversationTarget? target = activity.conversationTarget;
+    if (target == null || !widget.agentConversationLauncher.canOpen(target)) {
+      return null;
+    }
+    return () => unawaited(_openConversation(context, target));
+  }
+
+  Future<void> _openConversation(
+    BuildContext context,
+    AgentConversationTarget target,
+  ) async {
+    try {
+      await widget.agentConversationLauncher.open(target);
+      await widget.onHideWindow?.call();
+    } on Object {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.localized(
+              'Could not open this Agent conversation.',
+              '无法打开这个 Agent 对话。',
+            ),
+          ),
+        ),
+      );
+    }
   }
 }

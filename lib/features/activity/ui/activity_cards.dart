@@ -41,11 +41,60 @@ class _RecentAgentCount extends StatelessWidget {
   }
 }
 
+class _RecentAgentMoreButton extends StatelessWidget {
+  const _RecentAgentMoreButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: context.localized('View all recent agents', '查看全部最近 Agent'),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const Key('recent-agent-more'),
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          hoverColor: PopupStyle.accentSoft,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(7, 4, 4, 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  context.localized('More', '更多'),
+                  style: const TextStyle(
+                    color: PopupStyle.accent,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 13,
+                  color: PopupStyle.accent,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AgentActivityCard extends StatefulWidget {
-  const _AgentActivityCard({required this.activity, required this.animate});
+  const _AgentActivityCard({
+    required this.activity,
+    required this.animate,
+    this.onTap,
+  });
 
   final AgentActivity activity;
   final bool animate;
+  final VoidCallback? onTap;
 
   @override
   State<_AgentActivityCard> createState() => _AgentActivityCardState();
@@ -92,80 +141,107 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
         final double pulse = Curves.easeInOut.transform(_controller.value);
         return Transform.scale(
           scale: 1 + pulse * 0.012,
-          child: Container(
-            key: Key('activity-${widget.activity.id}'),
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-            decoration: BoxDecoration(
-              color: Color.lerp(
-                PopupStyle.surface,
-                PopupStyle.accentSoft,
-                pulse * 0.72,
-              ),
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(
-                color: Color.lerp(
-                  PopupStyle.border,
-                  PopupStyle.accent,
-                  pulse * 0.42,
-                )!,
-              ),
-              boxShadow: pulse == 0
-                  ? const <BoxShadow>[]
-                  : <BoxShadow>[
-                      BoxShadow(
-                        color: PopupStyle.accent.withValues(
-                          alpha: 0.14 * pulse,
+          child: MouseRegion(
+            cursor: widget.onTap == null
+                ? SystemMouseCursors.basic
+                : SystemMouseCursors.click,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onTap,
+              child: Container(
+                key: Key('activity-${widget.activity.id}'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: Color.lerp(
+                    PopupStyle.surface,
+                    PopupStyle.accentSoft,
+                    pulse * 0.72,
+                  ),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(
+                    color: Color.lerp(
+                      PopupStyle.border,
+                      PopupStyle.accent,
+                      pulse * 0.42,
+                    )!,
+                  ),
+                  boxShadow: pulse == 0
+                      ? const <BoxShadow>[]
+                      : <BoxShadow>[
+                          BoxShadow(
+                            color: PopupStyle.accent.withValues(
+                              alpha: 0.14 * pulse,
+                            ),
+                            blurRadius: 12 * pulse,
+                          ),
+                        ],
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const PopupSymbolIcon(
+                      'today',
+                      size: 18,
+                      color: PopupStyle.accent,
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            widget.activity.source,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: PopupStyle.textPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            widget.activity.message,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: PopupStyle.textSecondary,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      TimeOfDay.fromDateTime(
+                        widget.activity.completedAt.toLocal(),
+                      ).format(context),
+                      style: const TextStyle(
+                        color: PopupStyle.textTertiary,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (widget.onTap != null) ...<Widget>[
+                      const SizedBox(width: 7),
+                      Tooltip(
+                        message: context.localized(
+                          'Open Agent conversation',
+                          '打开 Agent 对话',
                         ),
-                        blurRadius: 12 * pulse,
+                        child: const Icon(
+                          Icons.open_in_new_rounded,
+                          key: Key('activity-open-conversation'),
+                          size: 13,
+                          color: PopupStyle.textTertiary,
+                        ),
                       ),
                     ],
-            ),
-            child: Row(
-              children: <Widget>[
-                const PopupSymbolIcon(
-                  'today',
-                  size: 18,
-                  color: PopupStyle.accent,
+                  ],
                 ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        widget.activity.source,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: PopupStyle.textPrimary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        widget.activity.message,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: PopupStyle.textSecondary,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  TimeOfDay.fromDateTime(
-                    widget.activity.completedAt.toLocal(),
-                  ).format(context),
-                  style: const TextStyle(
-                    color: PopupStyle.textTertiary,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );

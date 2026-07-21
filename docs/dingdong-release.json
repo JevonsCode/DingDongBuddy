@@ -1,33 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.21",
-  "latestBuild": "21",
-  "publishedAt": "2026-07-21T16:14:17Z",
+  "latestVersion": "0.7.22",
+  "latestBuild": "22",
+  "publishedAt": "2026-07-21T17:54:39Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.21/DingDong-0.7.21-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.22/DingDong-0.7.22-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.21/DingDong-0.7.21-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.22/DingDong-0.7.22-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.21/DingDong-0.7.21-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.22/DingDong-0.7.22-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Lets Agents install or update a Skill, create its trigger group, and bind its exact project scope through DingDong MCP.",
-    "Synchronizes project-scoped Skills only into that project's native Agent skill directories.",
-    "Documents GitHub-link installation and the Prompt, Skill, and MCP activation differences for Agents.",
-    "Keeps clipboard number shortcuts aligned with the currently visible record range.",
-    "Retains signed one-click updates for macOS and per-user updates for Windows; Intel macOS and Windows remain beta."
+    "Shows six Recent Agent items in Dynamic and adds More when the complete history is longer.",
+    "Opens the Recent Agents manager directly and lets resumable rows reopen their source conversation.",
+    "Supports exact Codex, Claude Code, Gemini, Kiro, and Cursor background-agent destinations with a safe allow-listed launcher.",
+    "Adds Kiro as a default Agent for MCP, Skill, and Stop-hook configuration.",
+    "Keeps local Cursor sessions useful by reopening their recorded workspace when an exact conversation link is unavailable."
   ]
 }
