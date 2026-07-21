@@ -1,4 +1,4 @@
-# DingDong 0.7.23
+# DingDong 0.7.24
 
 This release makes Recent Agents actionable: the compact Dynamic view keeps the
 latest six items, the full history is one click away, and supported Agent items

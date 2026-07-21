@@ -26,7 +26,10 @@ void main() {
       synchronizer.skillRoots.map((Directory root) => root.path),
       contains(path.join(temp.path, '.kiro', 'skills')),
     );
-    expect(synchronizer.projectSkillRoots, contains('.kiro/skills'));
+    expect(
+      synchronizer.projectSkillRoots,
+      contains(path.join('.kiro', 'skills')),
+    );
     expect(
       synchronizer.mcpTargets.single.file.path,
       path.join(temp.path, '.kiro', 'settings', 'mcp.json'),

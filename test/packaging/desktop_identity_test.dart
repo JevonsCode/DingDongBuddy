@@ -46,14 +46,14 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.7.23 from pubspec', () {
+  test('desktop hosts consume application version 0.7.24 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.23+23'));
+    expect(pubspec, contains('version: 0.7.24+24'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
@@ -279,14 +279,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.7.23"'));
-    expect(releaseMetadata, contains('"latestBuild": "23"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.24"'));
+    expect(releaseMetadata, contains('"latestBuild": "24"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.7.23-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.7.24-windows-x64-beta-Setup.exe'),
     );
   });
 
