@@ -4,6 +4,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/settings_screen.dart';
@@ -17,6 +18,7 @@ class SettingsWindowApp extends StatefulWidget {
   const SettingsWindowApp({
     required this.viewModel,
     required this.windowController,
+    this.initialDestination = SettingsWindowDestination.top,
     this.onSettingsChanged,
     this.soundFileGateway,
     this.soundPreviewGateway,
@@ -26,6 +28,7 @@ class SettingsWindowApp extends StatefulWidget {
 
   final SettingsViewModel viewModel;
   final WindowController windowController;
+  final SettingsWindowDestination initialDestination;
   final Future<void> Function()? onSettingsChanged;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
@@ -36,14 +39,22 @@ class SettingsWindowApp extends StatefulWidget {
 }
 
 class _SettingsWindowAppState extends State<SettingsWindowApp> {
+  late final SettingsNavigationController _navigationController;
+
   @override
   void initState() {
     super.initState();
+    _navigationController = SettingsNavigationController(
+      initialDestination: widget.initialDestination,
+    );
     unawaited(widget.viewModel.load());
     widget.viewModel.addListener(_handleSettingsChanged);
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         if (call.method == 'window_focus') {
+          _navigationController.navigateTo(
+            SettingsWindowDestination.fromValue(call.arguments),
+          );
           await widget.viewModel.checkForUpdates();
           await windowManager.focus();
         }
@@ -55,6 +66,7 @@ class _SettingsWindowAppState extends State<SettingsWindowApp> {
   void dispose() {
     widget.viewModel.removeListener(_handleSettingsChanged);
     unawaited(widget.windowController.setWindowMethodHandler(null));
+    _navigationController.dispose();
     widget.viewModel.dispose();
     super.dispose();
   }
@@ -95,6 +107,7 @@ class _SettingsWindowAppState extends State<SettingsWindowApp> {
           ],
           home: SettingsScreen(
             viewModel: widget.viewModel,
+            navigationController: _navigationController,
             soundFileGateway: widget.soundFileGateway,
             soundPreviewGateway: widget.soundPreviewGateway,
             onRestartApplication: widget.onRestartApplication,

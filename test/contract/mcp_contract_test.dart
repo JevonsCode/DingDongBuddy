@@ -18,6 +18,13 @@ void main() {
           response['result']! as Map<String, Object?>;
 
       expect(result['instructions'], contains('dingdong_bridge'));
+      expect(result['instructions'], contains('expand="prompts"'));
+      expect(result['instructions'], contains('required instruction'));
+      expect(result['instructions'], contains('Skill entries are candidates'));
+      expect(
+        result['instructions'],
+        contains('MCP entries are tool references'),
+      );
       expect(result['instructions'], contains('completion hook'));
       expect(result['instructions'], contains('dingdong_notify'));
     },
@@ -56,6 +63,10 @@ void main() {
       expect(
         properties.keys,
         containsAll(<String>['workspacePath', 'repositoryUrl']),
+      );
+      expect(
+        bridge['description'],
+        contains('Skill and MCP entries are summary-only candidates'),
       );
     },
   );

@@ -7,6 +7,9 @@ abstract final class PopupWindowPolicy {
   static const Size maximumSize = Size(390, 940);
   static const double edgeInset = 20;
   static const double trayGap = 12;
+  static const Duration unreadAcknowledgementDelay = Duration(
+    milliseconds: 500,
+  );
 
   static Size sizeForVisibleDisplay(Rect visibleDisplay) {
     final double availableHeight = visibleDisplay.height - edgeInset * 2;

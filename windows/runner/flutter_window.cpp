@@ -7,6 +7,7 @@
 
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
+#include "application_updater.h"
 
 namespace {
 
@@ -228,6 +229,52 @@ bool FlutterWindow::OnCreate() {
         }
         result->NotImplemented();
       });
+  application_updater_ = std::make_shared<ApplicationUpdater>(GetHandle());
+  updater_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), "dingdong/updater",
+          &flutter::StandardMethodCodec::GetInstance());
+  updater_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        if (call.method_name() == "isSupported") {
+          result->Success(
+              flutter::EncodableValue(application_updater_->IsSupported()));
+          return;
+        }
+        if (call.method_name() == "state") {
+          const ApplicationUpdateSnapshot snapshot =
+              application_updater_->Snapshot();
+          flutter::EncodableMap values;
+          values[flutter::EncodableValue("phase")] =
+              flutter::EncodableValue(snapshot.phase);
+          if (snapshot.progress.has_value()) {
+            values[flutter::EncodableValue("progress")] =
+                flutter::EncodableValue(snapshot.progress.value());
+          }
+          if (!snapshot.target_version.empty()) {
+            values[flutter::EncodableValue("targetVersion")] =
+                flutter::EncodableValue(snapshot.target_version);
+          }
+          if (!snapshot.message.empty()) {
+            values[flutter::EncodableValue("message")] =
+                flutter::EncodableValue(snapshot.message);
+          }
+          result->Success(flutter::EncodableValue(values));
+          return;
+        }
+        if (call.method_name() == "installLatest") {
+          std::string error;
+          if (application_updater_->InstallLatest(&error)) {
+            result->Success();
+          } else {
+            result->Error("update_unavailable", error);
+          }
+          return;
+        }
+        result->NotImplemented();
+      });
   hotkey_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           flutter_controller_->engine()->messenger(), "dingdong/global_hotkey",
@@ -383,6 +430,8 @@ void FlutterWindow::OnDestroy() {
     hotkey_channel_.reset();
     notification_channel_.reset();
     launch_at_startup_channel_.reset();
+    updater_channel_.reset();
+    application_updater_.reset();
     clipboard_monitor_channel_.reset();
     flutter_controller_ = nullptr;
   }
@@ -394,6 +443,13 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (message == kDingDongExitForUpdateMessage) {
+    // Do not let window_manager turn this close into "hide to tray". Velopack
+    // is already waiting for this process to terminate before swapping files.
+    ::DestroyWindow(hwnd);
+    return 0;
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

@@ -1,22 +1,28 @@
 import 'package:dingdong/app/dingdong_app.dart';
+import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.12', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.7.20', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.7.12')), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.7.20')), findsOneWidget);
+    expect(find.text('v0.7.20'), findsOneWidget);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
     expect(find.text('Agent API'), findsWidgets);
@@ -124,10 +130,15 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('activity-completed-agent')), findsOneWidget);
+      expect(find.byKey(const Key('recent-agent-count')), findsOneWidget);
+      expect(find.text('24 h · 1'), findsOneWidget);
       expect(activityController.unseenCount, 1);
 
       await tester.pump(const Duration(milliseconds: 1600));
       expect(activityController.unseenCount, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      activityController.dispose();
     },
   );
 
@@ -193,6 +204,68 @@ void main() {
     expect(find.byKey(const Key('clipboard-search')), findsOneWidget);
     expect(find.byKey(const Key('clipboard-list')), findsOneWidget);
   });
+
+  testWidgets(
+    'deleting the final clipboard item is not undone when the workspace reopens',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 7, 21, 12);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'only-item',
+        group: 'Clipboard',
+        title: 'Only clipboard item',
+        content: 'keep deletion durable',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final InMemoryClipboardStore store = InMemoryClipboardStore(
+        <ClipboardRecord>[record],
+      );
+      final _StaticClipboardGateway gateway = _StaticClipboardGateway(
+        const ClipboardSnapshot(text: 'keep deletion durable'),
+      );
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        DingDongApp(
+          clipboardStore: store,
+          clipboardCaptureService: ClipboardCaptureService(
+            gateway: gateway,
+            store: store,
+          ),
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(record.title), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(store.list(limit: 10), isEmpty);
+      expect(find.text(record.title), findsNothing);
+
+      controller.open(0);
+      await tester.pump();
+      controller.open(2);
+      await tester.pumpAndSettle();
+
+      expect(store.list(limit: 10), isEmpty);
+      expect(find.text(record.title), findsNothing);
+      expect(gateway.readCount, 0);
+    },
+  );
 
   testWidgets('settings toolbar action opens the dedicated settings panel', (
     WidgetTester tester,
@@ -278,9 +351,32 @@ void main() {
 
 final class _FakeSettingsWindowLauncher implements SettingsWindowLauncher {
   int openCount = 0;
+  SettingsWindowDestination? lastDestination;
 
   @override
-  Future<void> show() async {
+  Future<void> show({
+    SettingsWindowDestination destination = SettingsWindowDestination.top,
+  }) async {
     openCount += 1;
+    lastDestination = destination;
   }
+}
+
+final class _StaticClipboardGateway implements ClipboardGateway {
+  _StaticClipboardGateway(this.snapshot);
+
+  final ClipboardSnapshot snapshot;
+  int readCount = 0;
+
+  @override
+  Future<ClipboardSnapshot> read() async {
+    readCount += 1;
+    return snapshot;
+  }
+
+  @override
+  Future<void> writeFiles(List<String> paths) async {}
+
+  @override
+  Future<void> writeText(String text) async {}
 }

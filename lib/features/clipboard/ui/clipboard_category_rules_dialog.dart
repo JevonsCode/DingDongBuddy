@@ -1,6 +1,7 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -35,128 +36,124 @@ class _ClipboardCategoryRulesDialogState
           320.0,
           maximumHeight,
         );
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 24,
-          ),
-          backgroundColor: colors.surface,
-          surfaceTintColor: Colors.transparent,
-          elevation: 8,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: colors.outlineVariant),
-          ),
-          child: SizedBox(
-            key: const Key('clipboard-category-rules-dialog'),
-            width: 580,
-            height: _editing == null ? listHeight : maximumHeight,
-            child: Column(
-              children: <Widget>[
-                SizedBox(
-                  height: 64,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 10, 8),
-                    child: Row(
-                      children: <Widget>[
-                        if (_editing != null) ...<Widget>[
+        return DesktopDialogTheme(
+          child: Dialog(
+            insetPadding: DesktopDialogStyle.insetPadding,
+            backgroundColor: colors.surfaceContainerLowest,
+            surfaceTintColor: Colors.transparent,
+            elevation: 3,
+            clipBehavior: Clip.antiAlias,
+            shape: DesktopDialogStyle.shape(colors),
+            child: SizedBox(
+              key: const Key('clipboard-category-rules-dialog'),
+              width: 580,
+              height: _editing == null ? listHeight : maximumHeight,
+              child: Column(
+                children: <Widget>[
+                  SizedBox(
+                    height: 64,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 8, 10, 8),
+                      child: Row(
+                        children: <Widget>[
+                          if (_editing != null) ...<Widget>[
+                            IconButton(
+                              key: const Key('clipboard-category-back'),
+                              tooltip: context.localized(
+                                'Back to categories',
+                                '返回分类列表',
+                              ),
+                              onPressed: () => setState(() => _editing = null),
+                              icon: const Icon(
+                                Icons.arrow_back_rounded,
+                                size: 16,
+                              ),
+                              style: _headerActionStyle(),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  _editing == null
+                                      ? context.localized(
+                                          'Clipboard categories',
+                                          '剪贴板分类',
+                                        )
+                                      : context.localized(
+                                          'Category rule',
+                                          '分类规则',
+                                        ),
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.2,
+                                      ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _editing == null
+                                      ? context.localized(
+                                          'Rules run from top to bottom; the first match wins.',
+                                          '规则从上到下匹配，首个命中分类生效。',
+                                        )
+                                      : context.localized(
+                                          'Define what content belongs in this category.',
+                                          '设置进入这个分类的内容条件。',
+                                        ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: colors.onSurfaceVariant,
+                                        fontSize: 11,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
                           IconButton(
-                            key: const Key('clipboard-category-back'),
-                            tooltip: context.localized(
-                              'Back to categories',
-                              '返回分类列表',
-                            ),
-                            onPressed: () => setState(() => _editing = null),
-                            icon: const Icon(
-                              Icons.arrow_back_rounded,
-                              size: 16,
-                            ),
+                            tooltip: context.localized('Close', '关闭'),
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close_rounded, size: 16),
                             style: _headerActionStyle(),
                           ),
-                          const SizedBox(width: 6),
                         ],
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                _editing == null
-                                    ? context.localized(
-                                        'Clipboard categories',
-                                        '剪贴板分类',
-                                      )
-                                    : context.localized(
-                                        'Category rule',
-                                        '分类规则',
-                                      ),
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: -0.2,
-                                    ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _editing == null
-                                    ? context.localized(
-                                        'Rules run from top to bottom; the first match wins.',
-                                        '规则从上到下匹配，首个命中分类生效。',
-                                      )
-                                    : context.localized(
-                                        'Define what content belongs in this category.',
-                                        '设置进入这个分类的内容条件。',
-                                      ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: colors.onSurfaceVariant,
-                                      fontSize: 11,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: context.localized('Close', '关闭'),
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close_rounded, size: 16),
-                          style: _headerActionStyle(),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                const Divider(),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-                    child: _editing == null
-                        ? _RuleList(
-                            viewModel: widget.viewModel,
-                            onEdit: (ClipboardCategoryRule rule) =>
-                                setState(() => _editing = rule),
-                            onCreate: () => setState(
-                              () => _editing = ClipboardCategoryRule(
-                                id: 'category-${DateTime.now().microsecondsSinceEpoch}',
-                                name: '',
+                  const Divider(),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+                      child: _editing == null
+                          ? _RuleList(
+                              viewModel: widget.viewModel,
+                              onEdit: (ClipboardCategoryRule rule) =>
+                                  setState(() => _editing = rule),
+                              onCreate: () => setState(
+                                () => _editing = ClipboardCategoryRule(
+                                  id: 'category-${DateTime.now().microsecondsSinceEpoch}',
+                                  name: '',
+                                ),
                               ),
+                            )
+                          : _RuleEditor(
+                              key: ValueKey<String>(_editing!.id),
+                              rule: _editing!,
+                              onSave: (ClipboardCategoryRule rule) {
+                                widget.viewModel.saveCategoryRule(rule);
+                                setState(() => _editing = null);
+                              },
                             ),
-                          )
-                        : _RuleEditor(
-                            key: ValueKey<String>(_editing!.id),
-                            rule: _editing!,
-                            onSave: (ClipboardCategoryRule rule) {
-                              widget.viewModel.saveCategoryRule(rule);
-                              setState(() => _editing = null);
-                            },
-                          ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

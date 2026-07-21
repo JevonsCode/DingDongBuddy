@@ -16,6 +16,8 @@ class AppDelegate: FlutterAppDelegate {
   private var hotKeyHandlerRef: EventHandlerRef?
   private var previousApplication: NSRunningApplication?
   private var activeNotificationSound: NSSound?
+  private var updaterChannel: FlutterMethodChannel?
+  private var applicationUpdater: DingDongUpdater?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
     if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
@@ -43,6 +45,37 @@ class AppDelegate: FlutterAppDelegate {
         }
       }
       clipboardMonitorChannel = channel
+
+      let applicationUpdater = DingDongUpdater()
+      self.applicationUpdater = applicationUpdater
+      let updaterChannel = FlutterMethodChannel(
+        name: "dingdong/updater",
+        binaryMessenger: controller.engine.binaryMessenger
+      )
+      updaterChannel.setMethodCallHandler { call, result in
+        switch call.method {
+        case "isSupported":
+          result(applicationUpdater.isSupported)
+        case "state":
+          result(applicationUpdater.state())
+        case "installLatest":
+          do {
+            try applicationUpdater.installLatest()
+            result(nil)
+          } catch {
+            result(
+              FlutterError(
+                code: "update_unavailable",
+                message: error.localizedDescription,
+                details: nil
+              )
+            )
+          }
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      }
+      self.updaterChannel = updaterChannel
 
       let hotKeyChannel = FlutterMethodChannel(
         name: "dingdong/global_hotkey",

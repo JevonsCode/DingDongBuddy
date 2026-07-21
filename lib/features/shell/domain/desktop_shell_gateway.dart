@@ -19,9 +19,9 @@ abstract interface class DesktopShellGateway {
 
   Future<void> start();
 
-  Future<void> showAndFocus();
+  Future<void> showAndFocus({bool acknowledgeUnread = false});
 
-  Future<void> toggleAndFocus();
+  Future<void> toggleAndFocus({bool acknowledgeUnread = false});
 
   Future<void> quit();
 

@@ -109,30 +109,32 @@ class ResourceFilterBar extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  _TransferActionButton(
-                    actionKey: const Key('library-import'),
-                    tooltip: context.localized('Import folder', '导入文件夹'),
-                    onPressed: onImport,
-                    icon: Icons.drive_folder_upload_outlined,
+                  _TransferActionGroup(
+                    children: <Widget>[
+                      _TransferActionButton(
+                        actionKey: const Key('library-import'),
+                        tooltip: context.localized('Import folder', '导入文件夹'),
+                        onPressed: onImport,
+                        icon: Icons.folder_open_outlined,
+                      ),
+                      _TransferActionButton(
+                        actionKey: const Key('library-import-json'),
+                        tooltip: context.localized(
+                          'Import shared JSON',
+                          '导入分享 JSON',
+                        ),
+                        onPressed: onImportJson,
+                        icon: Icons.move_to_inbox_outlined,
+                      ),
+                      _TransferActionButton(
+                        actionKey: const Key('library-export'),
+                        tooltip: context.localized('Export JSON', '导出 JSON'),
+                        onPressed: onExport,
+                        icon: Icons.outbox_outlined,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 5),
-                  _TransferActionButton(
-                    actionKey: const Key('library-import-json'),
-                    tooltip: context.localized(
-                      'Import shared JSON',
-                      '导入分享 JSON',
-                    ),
-                    onPressed: onImportJson,
-                    icon: Icons.upload_file_outlined,
-                  ),
-                  const SizedBox(width: 5),
-                  _TransferActionButton(
-                    actionKey: const Key('library-export'),
-                    tooltip: context.localized('Export JSON', '导出 JSON'),
-                    onPressed: onExport,
-                    icon: Icons.download_outlined,
-                  ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   FilledButton.icon(
                     onPressed: viewModel.startCreating,
                     icon: const Icon(Icons.add_rounded, size: 18),
@@ -239,6 +241,43 @@ class ResourceFilterBar extends StatelessWidget {
 
 enum _LibraryAction { create, import, importJson, export }
 
+class _TransferActionGroup extends StatelessWidget {
+  const _TransferActionGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('library-transfer-actions'),
+      height: 34,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLowest,
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.76),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          for (int index = 0; index < children.length; index++) ...<Widget>[
+            if (index > 0)
+              Container(
+                width: 1,
+                height: 18,
+                color: colors.outlineVariant.withValues(alpha: 0.72),
+              ),
+            children[index],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _TransferActionButton extends StatelessWidget {
   const _TransferActionButton({
     required this.actionKey,
@@ -266,9 +305,11 @@ class _TransferActionButton extends StatelessWidget {
         padding: EdgeInsets.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         foregroundColor: colors.onSurfaceVariant,
-        backgroundColor: colors.surface,
-        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.78)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+        disabledForegroundColor: colors.onSurfaceVariant.withValues(
+          alpha: 0.38,
+        ),
+        backgroundColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(),
       ),
       icon: SizedBox.square(
         dimension: 18,

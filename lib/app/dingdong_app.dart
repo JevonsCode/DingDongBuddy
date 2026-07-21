@@ -9,6 +9,7 @@ import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
@@ -31,6 +32,7 @@ import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
+import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
@@ -49,6 +51,7 @@ class DingDongApp extends StatefulWidget {
     this.agentBaseUri,
     this.clipboardCaptureService,
     this.clipboardCategoryRuleStore,
+    this.clipboardGroupOrderStore,
     this.clipboardGateway,
     this.desktopContextMenuGateway,
     this.clipboardMonitoring,
@@ -68,6 +71,7 @@ class DingDongApp extends StatefulWidget {
     this.launchAtStartup,
     this.onWindowOpacityChanged,
     this.soundFileGateway,
+    this.soundPreviewGateway,
     this.releaseMetadataSource,
     this.externalLinkGateway,
     this.mcpCommandPath = 'dingdong-mcp',
@@ -84,6 +88,7 @@ class DingDongApp extends StatefulWidget {
   final Uri? agentBaseUri;
   final ClipboardCaptureService? clipboardCaptureService;
   final ClipboardCategoryRuleStore? clipboardCategoryRuleStore;
+  final ClipboardGroupOrderStore? clipboardGroupOrderStore;
   final ClipboardGateway? clipboardGateway;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final ClipboardMonitoring? clipboardMonitoring;
@@ -103,6 +108,7 @@ class DingDongApp extends StatefulWidget {
   final LaunchAtStartup? launchAtStartup;
   final Future<void> Function(double value)? onWindowOpacityChanged;
   final SoundFileGateway? soundFileGateway;
+  final SoundPreviewGateway? soundPreviewGateway;
   final ReleaseMetadataSource? releaseMetadataSource;
   final ExternalLinkGateway? externalLinkGateway;
   final String mcpCommandPath;
@@ -141,6 +147,7 @@ class _DingDongAppState extends State<DingDongApp> {
       quickPasteGateway: widget.quickPasteGateway,
       revisions: _dataRevisions,
       categoryRuleStore: widget.clipboardCategoryRuleStore,
+      groupOrderStore: widget.clipboardGroupOrderStore,
     );
     _libraryViewModel = createDesktopLibraryViewModel(
       widget.resourceStore ?? InMemoryResourceStore(),
@@ -244,6 +251,7 @@ class _DingDongAppState extends State<DingDongApp> {
             settingsWindowLauncher: widget.settingsWindowLauncher,
             soundFileGateway:
                 widget.soundFileGateway ?? FileSelectorSoundGateway(),
+            soundPreviewGateway: widget.soundPreviewGateway,
             onStartDragging: widget.onStartDragging,
             onHideWindow: widget.onHideWindow,
             shortcutHints: widget.shortcutHints,

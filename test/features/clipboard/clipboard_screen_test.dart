@@ -503,6 +503,62 @@ void main() {
     expect(find.byType(ReorderableDragStartListener), findsOneWidget);
   });
 
+  testWidgets('group drag proxy keeps the chip silhouette without a card', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ClipboardRecord grouped = ClipboardRecord(
+      id: 'drag-proxy',
+      group: 'iDev ID',
+      title: 'iDev ID',
+      content: 'iDev ID',
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: DateTime.utc(2026, 7, 21),
+      updatedAt: DateTime.utc(2026, 7, 21),
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[grouped]),
+    )..load();
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardScreen(viewModel: model)),
+    );
+    await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+    await tester.pump();
+
+    final ReorderableListView list = tester.widget<ReorderableListView>(
+      find.byType(ReorderableListView),
+    );
+    expect(list.proxyDecorator, isNotNull);
+
+    final Widget proxy = list.proxyDecorator!(
+      const SizedBox(key: Key('dragged-group-chip')),
+      0,
+      const AlwaysStoppedAnimation<double>(1),
+    );
+    await tester.pumpWidget(MaterialApp(home: proxy));
+
+    final Transform transform = tester.widget<Transform>(
+      find.byKey(const Key('clipboard-group-drag-proxy')),
+    );
+    expect(transform.transform.getMaxScaleOnAxis(), closeTo(1.015, 0.001));
+    expect(find.byType(Card), findsNothing);
+    final Material proxyMaterial = tester.widget<Material>(
+      find
+          .ancestor(
+            of: find.byKey(const Key('dragged-group-chip')),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
+    expect(proxyMaterial.type, MaterialType.transparency);
+  });
+
   testWidgets('missing quick paste permission is actionable from clipboard', (
     WidgetTester tester,
   ) async {
@@ -819,7 +875,7 @@ void main() {
       );
       final RoundedRectangleBorder shape =
           dialog.shape! as RoundedRectangleBorder;
-      expect(shape.borderRadius, BorderRadius.circular(7));
+      expect(shape.borderRadius, BorderRadius.circular(14));
       expect(
         find.descendant(
           of: find.byKey(const Key('clipboard-group-dialog')),

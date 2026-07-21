@@ -3,6 +3,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
@@ -172,7 +173,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   Future<void> _deleteSelected() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Delete selected items?', '删除所选条目？')),
         actions: <Widget>[
           TextButton(
@@ -180,6 +181,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
             child: Text(context.localized('Cancel', '取消')),
           ),
           FilledButton(
+            style: DesktopDialogStyle.destructiveButtonStyle(context),
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.localized('Delete', '删除')),
           ),
@@ -323,7 +325,8 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   Future<void> _showDetails(ClipboardRecord record) async {
     await showDialog<void>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
+        maxWidth: 600,
         title: Text(record.title),
         content: SizedBox(
           width: 560,
@@ -379,7 +382,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
     );
     final String? value = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(
           titleOnly
               ? context.localized('Add title', '添加标题')
@@ -418,7 +421,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   Future<bool> _confirmSingleDelete() async {
     return await showDialog<bool>(
           context: context,
-          builder: (BuildContext context) => AlertDialog(
+          builder: (BuildContext context) => DesktopAlertDialog(
             title: Text(
               context.localized('Delete this clipboard item?', '删除此剪贴板条目？'),
             ),
@@ -428,6 +431,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                 child: Text(context.localized('Cancel', '取消')),
               ),
               FilledButton(
+                style: DesktopDialogStyle.destructiveButtonStyle(context),
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(context.localized('Delete', '删除')),
               ),

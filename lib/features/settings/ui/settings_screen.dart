@@ -4,6 +4,7 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/quick_paste_permission_section.dart';
@@ -20,6 +21,7 @@ part 'settings_sections.dart';
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     required this.viewModel,
+    this.navigationController,
     this.soundFileGateway,
     this.soundPreviewGateway,
     this.onRestartApplication,
@@ -27,6 +29,7 @@ class SettingsScreen extends StatefulWidget {
   });
 
   final SettingsViewModel viewModel;
+  final SettingsNavigationController? navigationController;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
   final Future<void> Function()? onRestartApplication;
@@ -36,12 +39,105 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final GlobalKey _releaseSectionKey = GlobalKey();
+  final ScrollController _scrollController = ScrollController();
+  late SettingsNavigationController _navigationController;
+  late bool _ownsNavigationController;
+  bool _navigationPending = true;
+  bool _navigationScheduled = false;
+
   @override
   void initState() {
     super.initState();
+    _setNavigationController(widget.navigationController);
+    widget.viewModel.addListener(_handleViewModelChanged);
     unawaited(widget.viewModel.load());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(widget.viewModel.checkForUpdates());
+      _scheduleNavigation();
+    });
+  }
+
+  @override
+  void didUpdateWidget(SettingsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.navigationController != widget.navigationController) {
+      _navigationController.removeListener(_requestNavigation);
+      if (_ownsNavigationController) {
+        _navigationController.dispose();
+      }
+      _setNavigationController(widget.navigationController);
+      _requestNavigation();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.viewModel.removeListener(_handleViewModelChanged);
+    _navigationController.removeListener(_requestNavigation);
+    if (_ownsNavigationController) {
+      _navigationController.dispose();
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _setNavigationController(SettingsNavigationController? controller) {
+    _ownsNavigationController = controller == null;
+    _navigationController = controller ?? SettingsNavigationController();
+    _navigationController.addListener(_requestNavigation);
+  }
+
+  void _handleViewModelChanged() {
+    if (_navigationPending && widget.viewModel.isLoaded) {
+      _scheduleNavigation();
+    }
+  }
+
+  void _requestNavigation() {
+    _navigationPending = true;
+    _scheduleNavigation();
+  }
+
+  void _scheduleNavigation() {
+    if (_navigationScheduled || !mounted) {
+      return;
+    }
+    _navigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigationScheduled = false;
+      if (!mounted || !widget.viewModel.isLoaded) {
+        return;
+      }
+      switch (_navigationController.destination) {
+        case SettingsWindowDestination.top:
+          if (!_scrollController.hasClients) {
+            return;
+          }
+          _navigationPending = false;
+          unawaited(
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+            ),
+          );
+        case SettingsWindowDestination.version:
+          final BuildContext? releaseContext =
+              _releaseSectionKey.currentContext;
+          if (releaseContext == null) {
+            return;
+          }
+          _navigationPending = false;
+          unawaited(
+            Scrollable.ensureVisible(
+              releaseContext,
+              alignment: 0.08,
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+            ),
+          );
+      }
     });
   }
 
@@ -58,6 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           }
           final AppSettings settings = widget.viewModel.settings;
           return CustomScrollView(
+            controller: _scrollController,
             slivers: <Widget>[
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(36, 32, 36, 48),
@@ -351,6 +448,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ],
                           ),
+                          _SettingsSection(
+                            title: context.localized(
+                              'Recent agents',
+                              '最近 Agent',
+                            ),
+                            description: context.localized(
+                              'Completion details stay on this device. Counting metadata contains timestamps only.',
+                              '完成详情仅保存在本机；用于统计的元数据只包含完成时间。',
+                            ),
+                            children: <Widget>[
+                              CompactSwitchListTile(
+                                key: const Key(
+                                  'settings-agent-activity-remember',
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  context.localized(
+                                    'Remember after restart',
+                                    '重启后保留记录',
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  context.localized(
+                                    'When disabled, the next launch starts with an empty Agent history.',
+                                    '关闭后，下次启动将从空的 Agent 历史开始。',
+                                  ),
+                                ),
+                                value: settings.rememberAgentActivity,
+                                onChanged:
+                                    widget.viewModel.setRememberAgentActivity,
+                              ),
+                              _SettingRow(
+                                label: context.localized(
+                                  'Maximum detailed items',
+                                  '详细记录上限',
+                                ),
+                                child: _NumberField(
+                                  key: const Key(
+                                    'settings-agent-activity-items',
+                                  ),
+                                  initialValue: settings.agentActivityMaxItems,
+                                  onSubmitted: (int value) =>
+                                      widget.viewModel.setAgentActivityPolicy(
+                                        maxItems: value,
+                                        countHours:
+                                            settings.agentActivityCountHours,
+                                      ),
+                                ),
+                              ),
+                              _SettingRow(
+                                label: context.localized(
+                                  'Count window (hours)',
+                                  '计数时间范围（小时）',
+                                ),
+                                child: _NumberField(
+                                  key: const Key(
+                                    'settings-agent-activity-hours',
+                                  ),
+                                  initialValue:
+                                      settings.agentActivityCountHours,
+                                  onSubmitted: (int value) =>
+                                      widget.viewModel.setAgentActivityPolicy(
+                                        maxItems:
+                                            settings.agentActivityMaxItems,
+                                        countHours: value,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
                           _NotificationSoundSettingsSection(
                             viewModel: widget.viewModel,
                             settings: settings,
@@ -403,7 +570,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ],
                           ),
-                          ReleaseSettingsSection(viewModel: widget.viewModel),
+                          ReleaseSettingsSection(
+                            key: _releaseSectionKey,
+                            viewModel: widget.viewModel,
+                          ),
                         ],
                       ),
                     ),
@@ -415,5 +585,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       ),
     );
+  }
+}
+
+final class SettingsNavigationController extends ChangeNotifier {
+  SettingsNavigationController({
+    SettingsWindowDestination initialDestination =
+        SettingsWindowDestination.top,
+  }) : _destination = initialDestination;
+
+  SettingsWindowDestination _destination;
+
+  SettingsWindowDestination get destination => _destination;
+
+  void navigateTo(SettingsWindowDestination destination) {
+    _destination = destination;
+    notifyListeners();
   }
 }

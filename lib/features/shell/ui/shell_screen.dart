@@ -20,6 +20,7 @@ import 'package:dingdong/features/library/ui/resource_browser_screen.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
+import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/ui/popup_footer.dart';
 import 'package:dingdong/features/shell/ui/popup_header.dart';
@@ -45,6 +46,7 @@ class ShellScreen extends StatefulWidget {
     this.resourceManagerLauncher,
     this.settingsWindowLauncher,
     this.soundFileGateway,
+    this.soundPreviewGateway,
     this.onStartDragging,
     this.onHideWindow,
     this.shortcutHints,
@@ -66,6 +68,7 @@ class ShellScreen extends StatefulWidget {
   final ResourceManagerLauncher? resourceManagerLauncher;
   final SettingsWindowLauncher? settingsWindowLauncher;
   final SoundFileGateway? soundFileGateway;
+  final SoundPreviewGateway? soundPreviewGateway;
   final Future<void> Function()? onStartDragging;
   final Future<void> Function()? onHideWindow;
   final ValueListenable<bool>? shortcutHints;
@@ -127,7 +130,7 @@ class _ShellScreenState extends State<ShellScreen> {
   void _handleNavigationChanged() {
     final int selectedIndex = widget.controller.selectedIndex;
     if (selectedIndex == 2 && _lastSelectedIndex != 2) {
-      unawaited(widget.clipboardViewModel.captureNow());
+      widget.clipboardViewModel.load();
     }
     _lastSelectedIndex = selectedIndex;
     final ClipboardPreviewLauncher? launcher = widget.clipboardPreviewLauncher;
@@ -263,13 +266,27 @@ class _ShellScreenState extends State<ShellScreen> {
     await widget.clipboardPreviewLauncher?.hide();
   }
 
-  Future<void> _openSettings() async {
+  Future<void> _openSettings({
+    SettingsWindowDestination destination = SettingsWindowDestination.top,
+  }) async {
     final SettingsWindowLauncher? launcher = widget.settingsWindowLauncher;
     if (launcher == null) {
       return;
     }
     await widget.onHideWindow?.call();
-    await launcher.show();
+    await launcher.show(destination: destination);
+  }
+
+  Future<void> _previewConfiguredSound() async {
+    final SoundPreviewGateway? gateway = widget.soundPreviewGateway;
+    final AppSettings settings = widget.settingsViewModel.settings;
+    if (gateway == null || settings.selectedSound == 'muted') {
+      return;
+    }
+    await gateway.preview(
+      sound: settings.selectedSound,
+      customSoundPath: settings.customSoundPath,
+    );
   }
 
   Future<void> _openAgentApi() async {
@@ -373,8 +390,16 @@ class _ShellScreenState extends State<ShellScreen> {
                   showShortcutHints: _showShortcutHints,
                   onSelected: widget.controller.open,
                   onRefresh: () => unawaited(_refreshContent()),
+                  onBrand: () => unawaited(_previewConfiguredSound()),
                   onSettings: () {
                     unawaited(_openSettings());
+                  },
+                  onVersion: () {
+                    unawaited(
+                      _openSettings(
+                        destination: SettingsWindowDestination.version,
+                      ),
+                    );
                   },
                   onStartDragging: widget.onStartDragging,
                   onHide: widget.onHideWindow,

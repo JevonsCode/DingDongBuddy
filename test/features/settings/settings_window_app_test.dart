@@ -4,6 +4,8 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
+import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
+import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +63,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(source.fetchCount, 2);
+
+    await _sendWindowMethod(
+      messenger,
+      channel: 'mixin.one/window_controller/$windowId',
+      method: 'window_focus',
+      arguments: SettingsWindowDestination.version.name,
+    );
+    await tester.pumpAndSettle();
+
+    expect(source.fetchCount, 3);
+    final Rect releaseBounds = tester.getRect(
+      find.byType(ReleaseSettingsSection),
+    );
+    expect(releaseBounds.top, lessThan(tester.view.physicalSize.height));
+    expect(releaseBounds.bottom, greaterThan(0));
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
@@ -70,6 +87,7 @@ Future<void> _sendWindowMethod(
   TestDefaultBinaryMessenger messenger, {
   required String channel,
   required String method,
+  Object? arguments,
 }) async {
   final Completer<void> handled = Completer<void>();
   await messenger.handlePlatformMessage(
@@ -78,7 +96,7 @@ Future<void> _sendWindowMethod(
       MethodCall('methodCall', <String, Object?>{
         'channel': channel,
         'method': method,
-        'arguments': null,
+        'arguments': arguments,
       }),
     ),
     (_) => handled.complete(),

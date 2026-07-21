@@ -7,6 +7,7 @@ import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
+import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,12 +21,14 @@ final class PluginDesktopShellGateway
     implements DesktopShellGateway {
   PluginDesktopShellGateway({
     this.onHideAuxiliaryWindows,
+    this.unreadStore,
     bool Function()? clipboardMonitoringState,
     bool Function()? useChineseLabels,
   }) : _clipboardMonitoringState = clipboardMonitoringState ?? (() => false),
        _useChineseLabels = useChineseLabels ?? (() => false);
 
   final Future<void> Function()? onHideAuxiliaryWindows;
+  final TrayUnreadStore? unreadStore;
   final bool Function() _clipboardMonitoringState;
   final bool Function() _useChineseLabels;
   static const MethodChannel _hotKeyChannel = MethodChannel(
@@ -40,7 +43,9 @@ final class PluginDesktopShellGateway
   final PopupPlacementSession _placementSession = PopupPlacementSession();
   late final TrayUnreadController _unreadController = TrayUnreadController(
     apply: _applyUnreadAppearance,
+    store: unreadStore,
   );
+  Timer? _unreadAcknowledgementTimer;
   bool _started = false;
   bool _taskbarIsLight = false;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
@@ -72,7 +77,7 @@ final class PluginDesktopShellGateway
     await windowManager.setPreventClose(true);
     windowManager.addListener(this);
     trayManager.addListener(this);
-    await _unreadController.clear();
+    await _unreadController.restore();
     if (Platform.isWindows) {
       _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
       await _unreadController.refresh();
@@ -103,14 +108,16 @@ final class PluginDesktopShellGateway
   }
 
   @override
-  Future<void> showAndFocus() async {
-    await _unreadController.clear();
+  Future<void> showAndFocus({bool acknowledgeUnread = false}) async {
     if (_placementSession.shouldUseDefaultPosition) {
       await _positionPopup();
     }
     await windowManager.show();
     await windowManager.restore();
     await windowManager.focus();
+    if (acknowledgeUnread) {
+      _scheduleUnreadAcknowledgement();
+    }
   }
 
   Future<void> setOpacity(double value) {
@@ -217,6 +224,7 @@ final class PluginDesktopShellGateway
   }
 
   Future<void> hide() async {
+    _unreadAcknowledgementTimer?.cancel();
     await onHideAuxiliaryWindows?.call();
     await windowManager.hide();
   }
@@ -261,12 +269,12 @@ final class PluginDesktopShellGateway
   }
 
   @override
-  Future<void> toggleAndFocus() async {
+  Future<void> toggleAndFocus({bool acknowledgeUnread = false}) async {
     if (await windowManager.isVisible()) {
       await hide();
       return;
     }
-    await showAndFocus();
+    await showAndFocus(acknowledgeUnread: acknowledgeUnread);
   }
 
   @override
@@ -281,6 +289,7 @@ final class PluginDesktopShellGateway
     if (!_started) {
       return;
     }
+    _unreadAcknowledgementTimer?.cancel();
     await _hotKeyChannel.invokeMethod<void>('unregister');
     _hotKeyChannel.setMethodCallHandler(null);
     _modifierChannel.setMethodCallHandler(null);
@@ -313,6 +322,24 @@ final class PluginDesktopShellGateway
   Future<void> _showContextMenu() async {
     await _rebuildContextMenu();
     await trayManager.popUpContextMenu();
+  }
+
+  void _scheduleUnreadAcknowledgement() {
+    _unreadAcknowledgementTimer?.cancel();
+    if (_unreadController.count == 0) {
+      return;
+    }
+    final TrayUnreadSnapshot snapshot = _unreadController.snapshot();
+    _unreadAcknowledgementTimer = Timer(
+      PopupWindowPolicy.unreadAcknowledgementDelay,
+      () => unawaited(_acknowledgeUnreadIfVisible(snapshot)),
+    );
+  }
+
+  Future<void> _acknowledgeUnreadIfVisible(TrayUnreadSnapshot snapshot) async {
+    if (await windowManager.isVisible()) {
+      await _unreadController.acknowledge(snapshot);
+    }
   }
 
   @override

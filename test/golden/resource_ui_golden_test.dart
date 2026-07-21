@@ -8,7 +8,9 @@ import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
+import 'package:dingdong/features/library/ui/resource_filter_bar.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,44 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'resource transfer actions share one restrained visual group',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(760, 220);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final LibraryViewModel model = LibraryViewModel(InMemoryResourceStore());
+      await model.load();
+      addTearDown(model.dispose);
+
+      await tester.pumpWidget(
+        _testApp(
+          RepaintBoundary(
+            key: const Key('library-transfer-toolbar-golden'),
+            child: SizedBox(
+              width: 760,
+              height: 220,
+              child: ResourceFilterBar(
+                viewModel: model,
+                onImport: () {},
+                onImportJson: () {},
+                onExport: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byKey(const Key('library-transfer-toolbar-golden')),
+        matchesGoldenFile('goldens/library_transfer_toolbar.png'),
+      );
+    },
+    tags: <String>['golden'],
+  );
+
   testWidgets(
     'resource cards present Skill and MCP metadata distinctly',
     (WidgetTester tester) async {

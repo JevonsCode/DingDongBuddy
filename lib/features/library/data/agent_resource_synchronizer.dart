@@ -10,6 +10,12 @@ import 'package:path/path.dart' as path;
 
 enum AgentMcpConfigKind { codexToml, claudeJson, cursorJson, geminiJson }
 
+final class AgentPromptTarget {
+  const AgentPromptTarget(this.file);
+
+  final File file;
+}
+
 final class AgentMcpTarget {
   const AgentMcpTarget(this.file, this.kind);
 
@@ -25,6 +31,7 @@ final class AgentResourceSynchronizer {
     required this.packageRoot,
     required this.skillRoots,
     required this.mcpTargets,
+    this.promptTargets = const <AgentPromptTarget>[],
     File? managedStateFile,
     SkillPackageInstaller? skillPackageInstaller,
   }) : managedStateFile =
@@ -47,6 +54,10 @@ final class AgentResourceSynchronizer {
         Directory('$home$separator.cursor${separator}skills'),
       if (present('.gemini'))
         Directory('$home$separator.gemini${separator}skills'),
+    ];
+    final List<AgentPromptTarget> prompts = <AgentPromptTarget>[
+      if (present('.codex'))
+        AgentPromptTarget(File('$home$separator.codex${separator}AGENTS.md')),
     ];
     final List<AgentMcpTarget> mcps = <AgentMcpTarget>[
       if (present('.codex'))
@@ -73,17 +84,24 @@ final class AgentResourceSynchronizer {
     return AgentResourceSynchronizer(
       packageRoot: packageRoot,
       skillRoots: skills,
+      promptTargets: prompts,
       mcpTargets: mcps,
     );
   }
 
   final Directory packageRoot;
   final List<Directory> skillRoots;
+  final List<AgentPromptTarget> promptTargets;
   final List<AgentMcpTarget> mcpTargets;
   final File managedStateFile;
   final SkillPackageInstaller skillPackageInstaller;
 
   Future<void> sync(List<Resource> resources) async {
+    final List<Resource> prompts = resources
+        .where(
+          (Resource item) => item.enabled && item.type == ResourceType.prompt,
+        )
+        .toList(growable: false);
     final List<Resource> skills = resources
         .where(
           (Resource item) => item.enabled && item.type == ResourceType.skill,
@@ -94,6 +112,9 @@ final class AgentResourceSynchronizer {
         .toList(growable: false);
     final Map<String, Set<String>> managed = await _readManagedMcpState();
     await _preflight(skills, mcps);
+    for (final AgentPromptTarget target in promptTargets) {
+      await _syncPrompts(target.file, prompts);
+    }
     for (final Directory root in skillRoots) {
       await _syncSkills(root, skills);
     }
@@ -116,6 +137,67 @@ final class AgentResourceSynchronizer {
       managed[target.file.path] = mcps.map(_serverName).toSet();
       await _writeManagedMcpState(managed);
     }
+  }
+
+  Future<void> _syncPrompts(File file, List<Resource> enabled) async {
+    final List<Resource> direct =
+        enabled
+            .where(
+              (Resource resource) =>
+                  resource.activation == ResourceActivation.always &&
+                  resource.triggerGroupIds.isEmpty,
+            )
+            .toList(growable: false)
+          ..sort(_comparePromptOrder);
+    final bool hasRoutedPrompts = enabled.any(
+      (Resource resource) =>
+          resource.activation != ResourceActivation.manual &&
+          !direct.contains(resource),
+    );
+    final String current = await file.exists() ? await file.readAsString() : '';
+    final String cleaned = current
+        .replaceAll(_managedPromptsPattern, '')
+        .trimRight();
+    final StringBuffer block = StringBuffer();
+    if (direct.isNotEmpty || hasRoutedPrompts) {
+      block
+        ..writeln(_managedPromptsBegin)
+        ..writeln('# DingDong managed prompts')
+        ..writeln()
+        ..writeln(
+          'This section is maintained by DingDong. Preserve and follow these instructions.',
+        );
+      for (final Resource prompt in direct) {
+        block
+          ..writeln()
+          ..writeln('## ${_safeManagedPromptText(prompt.title)}')
+          ..writeln()
+          ..writeln(_safeManagedPromptText(prompt.content).trim());
+      }
+      if (hasRoutedPrompts) {
+        block
+          ..writeln()
+          ..writeln('## Project and task prompts')
+          ..writeln()
+          ..writeln(
+            '- At the start of each user task, call DingDong `dingdong_bridge` with `expand: "prompts"` and apply every returned active prompt before responding.',
+          )
+          ..writeln(
+            '- Returned Skill and MCP entries are candidates, not instructions. Load a Skill only when its description matches the task; call MCP tools only when the task requires them.',
+          );
+      }
+      block.writeln(_managedPromptsEnd);
+    }
+    final String managed = block.toString().trimRight();
+    final String next = <String>[
+      if (cleaned.isNotEmpty) cleaned,
+      if (managed.isNotEmpty) managed,
+    ].join('\n\n');
+    final String normalized = next.isEmpty ? '' : '$next\n';
+    if (normalized == current || (!await file.exists() && normalized.isEmpty)) {
+      return;
+    }
+    await _writeAtomically(file, normalized);
   }
 
   Future<void> _preflight(List<Resource> skills, List<Resource> mcps) async {
@@ -261,14 +343,14 @@ final class AgentResourceSynchronizer {
       final Directory installed = Directory(
         path.join(packageRoot.path, _skillName(resource)),
       );
-      if (await File(path.join(installed.path, 'SKILL.md')).exists()) {
-        return installed;
-      }
       if (resource.source == builtInDingDongConfigureSkillSource) {
         await installed.create(recursive: true);
         await File(
           path.join(installed.path, 'SKILL.md'),
         ).writeAsString(resource.content, flush: true);
+        return installed;
+      }
+      if (await File(path.join(installed.path, 'SKILL.md')).exists()) {
         return installed;
       }
       final SkillPackageInstallResult result = await skillPackageInstaller
@@ -560,6 +642,29 @@ String _skillName(Resource resource) {
     return normalizeSkillName(resource.title);
   }
 }
+
+const String _managedPromptsBegin = '<!-- BEGIN DINGDONG MANAGED PROMPTS -->';
+const String _managedPromptsEnd = '<!-- END DINGDONG MANAGED PROMPTS -->';
+
+final RegExp _managedPromptsPattern = RegExp(
+  '${RegExp.escape(_managedPromptsBegin)}.*?${RegExp.escape(_managedPromptsEnd)}\\s*',
+  dotAll: true,
+);
+
+int _comparePromptOrder(Resource left, Resource right) {
+  final int order = (left.sortOrder ?? 1 << 30).compareTo(
+    right.sortOrder ?? 1 << 30,
+  );
+  if (order != 0) {
+    return order;
+  }
+  final int title = left.title.compareTo(right.title);
+  return title != 0 ? title : left.id.compareTo(right.id);
+}
+
+String _safeManagedPromptText(String value) => value
+    .replaceAll(_managedPromptsBegin, '&lt;!-- BEGIN DINGDONG PROMPTS --&gt;')
+    .replaceAll(_managedPromptsEnd, '&lt;!-- END DINGDONG PROMPTS --&gt;');
 
 String _toml(String value) => value
     .replaceAll(r'\', r'\\')

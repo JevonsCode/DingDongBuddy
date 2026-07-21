@@ -6,7 +6,8 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 
-/// Builds a bounded, summary-first context response for agent request startup.
+/// Delivers required Prompt instructions in full while keeping Skill and MCP
+/// discovery summary-first until the Agent deliberately uses them.
 final class AgentBridge {
   AgentBridge(
     this._store, {
@@ -26,7 +27,7 @@ final class AgentBridge {
           : jsonDecode(body) as Map<String, Object?>;
       final String task = (request['task'] as String? ?? '').trim();
       final String source = (request['source'] as String? ?? 'Agent').trim();
-      final String expand = request['expand'] as String? ?? 'none';
+      final String expand = request['expand'] as String? ?? 'prompts';
       final int limit = (request['limit'] as int? ?? 12).clamp(1, 60);
       final TriggerContext context = TriggerContext(
         projectPath: _firstString(request, const <String>[
@@ -63,12 +64,7 @@ final class AgentBridge {
       final List<Resource> selected = resources
           .where((Resource resource) => resource.enabled)
           .where(matchesScope)
-          .where(
-            (Resource resource) =>
-                resource.pinned ||
-                resource.activation == ResourceActivation.always ||
-                _matches(resource, terms),
-          )
+          .where((Resource resource) => _isActive(resource, terms))
           .take(limit)
           .toList(growable: false);
       final Set<String> selectedIds = selected
@@ -130,9 +126,16 @@ final class AgentBridge {
             'mcps': items(ResourceType.mcp),
             'knowledge': items(ResourceType.knowledge),
           },
+          'delivery': const <String, Object?>{
+            'prompts': 'full-required-instructions',
+            'skills': 'summary-load-on-match',
+            'mcps': 'summary-call-on-demand',
+          },
           'privacy': const <String, Object?>{
             'clipboardIncluded': false,
             'summaryFirst': true,
+            'summaryFirstTypes': <String>['skill', 'mcp', 'knowledge'],
+            'fullTypes': <String>['prompt'],
           },
         },
       );
@@ -169,4 +172,12 @@ bool _matches(Resource resource, Set<String> terms) {
     resource.content,
   ].join(' ').toLowerCase();
   return terms.any(haystack.contains);
+}
+
+bool _isActive(Resource resource, Set<String> terms) {
+  return switch (resource.activation) {
+    ResourceActivation.always => true,
+    ResourceActivation.taskMatch => _matches(resource, terms),
+    ResourceActivation.manual => false,
+  };
 }

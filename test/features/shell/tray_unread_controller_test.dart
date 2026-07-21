@@ -1,4 +1,5 @@
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
+import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 typedef _Appearance = ({bool hot, String title, int iconSize, int unreadCount});
@@ -78,4 +79,67 @@ void main() {
       expect(lastTitle, ' 99+');
     },
   );
+
+  test(
+    'restores durable state and acknowledges only events visible in a snapshot',
+    () async {
+      final _MemoryTrayUnreadStore store = _MemoryTrayUnreadStore(
+        const TrayUnreadState(latestEventId: 5, acknowledgedEventId: 2),
+      );
+      final List<int> appearances = <int>[];
+      final TrayUnreadController controller = TrayUnreadController(
+        store: store,
+        apply:
+            ({
+              required bool hot,
+              required String title,
+              required int iconSize,
+              required int unreadCount,
+            }) async {
+              appearances.add(unreadCount);
+            },
+      );
+
+      await controller.restore();
+      expect(controller.count, 3);
+      expect(appearances, <int>[3]);
+      final TrayUnreadSnapshot visible = controller.snapshot();
+
+      final Future<void> newNotification = controller.markUnread();
+      final Future<void> acknowledgement = controller.acknowledge(visible);
+      await Future.wait(<Future<void>>[newNotification, acknowledgement]);
+
+      expect(controller.count, 1);
+      expect(appearances, <int>[3, 4, 1]);
+      expect(store.state.latestEventId, 6);
+      expect(store.state.acknowledgedEventId, 5);
+
+      final TrayUnreadController restored = TrayUnreadController(
+        store: store,
+        apply:
+            ({
+              required bool hot,
+              required String title,
+              required int iconSize,
+              required int unreadCount,
+            }) async {},
+      );
+      await restored.restore();
+      expect(restored.count, 1);
+    },
+  );
+}
+
+final class _MemoryTrayUnreadStore implements TrayUnreadStore {
+  _MemoryTrayUnreadStore(this.state);
+
+  TrayUnreadState state;
+
+  @override
+  Future<TrayUnreadState> load() async => state;
+
+  @override
+  Future<void> save(TrayUnreadState state) async {
+    this.state = state;
+  }
 }

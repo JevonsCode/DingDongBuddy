@@ -378,6 +378,7 @@ class _ClipboardGroupFilters extends StatelessWidget {
         itemCount: viewModel.groups.length,
         onReorderItem: viewModel.reorderGroups,
         buildDefaultDragHandles: false,
+        proxyDecorator: _clipboardGroupDragProxy,
         itemBuilder: (BuildContext context, int index) {
           final String group = viewModel.groups[index];
           return Padding(
@@ -420,4 +421,24 @@ class _ClipboardGroupFilters extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _clipboardGroupDragProxy(
+  Widget child,
+  int index,
+  Animation<double> animation,
+) {
+  final Animation<double> transition = CurvedAnimation(
+    parent: animation,
+    curve: Curves.easeOutCubic,
+  );
+  return AnimatedBuilder(
+    animation: transition,
+    child: Material(type: MaterialType.transparency, child: child),
+    builder: (BuildContext context, Widget? child) => Transform.scale(
+      key: const Key('clipboard-group-drag-proxy'),
+      scale: 1 + (transition.value * 0.015),
+      child: Opacity(opacity: 1 - (transition.value * 0.02), child: child),
+    ),
+  );
 }

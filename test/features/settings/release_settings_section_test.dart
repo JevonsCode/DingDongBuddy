@@ -1,5 +1,6 @@
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -50,6 +51,54 @@ void main() {
     expect(find.text("You're up to date"), findsOneWidget);
     expect(find.textContaining('Withdrawn analytics'), findsNothing);
   });
+
+  testWidgets('available native update installs from one emphasized action', (
+    WidgetTester tester,
+  ) async {
+    final _ApplicationUpdater updater = _ApplicationUpdater();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      releaseMetadataSource: const _ReleaseSource(),
+      applicationUpdater: updater,
+    );
+    await model.load();
+
+    await tester.pumpWidget(
+      MaterialApp(home: ReleaseSettingsSection(viewModel: model)),
+    );
+    await tester.tap(find.byKey(const Key('settings-check-updates')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('settings-install-update')), findsOneWidget);
+    expect(find.text('Update to 0.8.0'), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('settings-install-update')));
+    await tester.pumpAndSettle();
+
+    expect(updater.installCount, 1);
+    expect(find.text("You're up to date"), findsOneWidget);
+    model.dispose();
+  });
+}
+
+final class _ApplicationUpdater implements ApplicationUpdater {
+  int installCount = 0;
+  ApplicationUpdateStatus status = const ApplicationUpdateStatus();
+
+  @override
+  Future<void> installLatest() async {
+    installCount += 1;
+    status = const ApplicationUpdateStatus(
+      phase: ApplicationUpdatePhase.current,
+    );
+  }
+
+  @override
+  Future<bool> isSupported() async => true;
+
+  @override
+  Future<ApplicationUpdateStatus> readStatus() async => status;
 }
 
 final class _ReleaseSource implements ReleaseMetadataSource {

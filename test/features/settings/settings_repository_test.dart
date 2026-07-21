@@ -20,6 +20,9 @@ void main() {
           'dingdong.mcpSetupPromptOverride': '  custom setup  ',
           'dingdong.onboarding.mcpAccessSeen': true,
           'dingdong.api.port': 70000,
+          'dingdong.agentActivity.remember': false,
+          'dingdong.agentActivity.maxItems': 9000,
+          'dingdong.agentActivity.countHours': 0,
         });
 
     final settings = await SettingsRepository(backend).load();
@@ -36,6 +39,9 @@ void main() {
     expect(settings.customSoundPath, '/tmp/chime.wav');
     expect(settings.mcpAccessSeen, isTrue);
     expect(settings.apiPort, 2333);
+    expect(settings.rememberAgentActivity, isFalse);
+    expect(settings.agentActivityMaxItems, 5000);
+    expect(settings.agentActivityCountHours, 1);
   });
 
   test('saves settings with the native app preference contract', () async {
@@ -50,6 +56,9 @@ void main() {
       defaultWorkspace: DefaultWorkspace.library,
       clipboardMaxItems: 600,
       clipboardMaxAgeDays: 30,
+      rememberAgentActivity: false,
+      agentActivityMaxItems: 320,
+      agentActivityCountHours: 48,
       selectedSound: 'muted',
       customSoundPath: '/tmp/quiet.wav',
       mcpAccessSeen: true,
@@ -67,6 +76,9 @@ void main() {
     expect(backend.values['dingdong.panel.defaultTab'], 'library');
     expect(backend.values['dingdong.clipboard.maxItems'], 600);
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 30);
+    expect(backend.values['dingdong.agentActivity.remember'], isFalse);
+    expect(backend.values['dingdong.agentActivity.maxItems'], 320);
+    expect(backend.values['dingdong.agentActivity.countHours'], 48);
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
     expect(backend.values, isNot(contains('dingdong.mcpSetupPromptOverride')));

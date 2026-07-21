@@ -52,7 +52,7 @@ class _ResourceCards extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext context, Resource resource) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Delete this resource?', '删除这个资源？')),
         content: Text(resource.title),
         actions: <Widget>[
@@ -61,6 +61,7 @@ class _ResourceCards extends StatelessWidget {
             child: Text(context.localized('Cancel', '取消')),
           ),
           FilledButton(
+            style: DesktopDialogStyle.destructiveButtonStyle(context),
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.localized('Delete', '删除')),
           ),

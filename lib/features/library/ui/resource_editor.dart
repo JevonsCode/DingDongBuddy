@@ -2042,16 +2042,16 @@ IconData _typeIcon(ResourceType type) {
 String _typeDescription(BuildContext context, ResourceType type) {
   return switch (type) {
     ResourceType.prompt => context.localized(
-      'Reusable instructions with an explicit activation rule.',
-      '可复用的自然语言指令，并明确设置生效方式。',
+      'Required instructions that are applied automatically whenever active.',
+      '命中后必须自动应用的完整指令。',
     ),
     ResourceType.skill => context.localized(
-      'A complete Agent Skill package with instructions and supporting files.',
-      '包含说明、脚本和参考资料的完整 Agent Skill 包。',
+      'Matched by description, then loaded as a complete Skill package only when needed.',
+      '先按 description 匹配，需要时才加载完整 Skill 包。',
     ),
     ResourceType.mcp => context.localized(
-      'A local STDIO or remote HTTP tool connection.',
-      '连接本地 STDIO 或远程 HTTP 工具服务。',
+      'A tool connection whose MCP tools are called only when the task requires them.',
+      '提供 MCP 工具连接，仅在任务需要时调用。',
     ),
     ResourceType.knowledge => context.localized(
       'Legacy data retained for compatibility.',

@@ -3,6 +3,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('tray unread acknowledgement waits half a second', () {
+    expect(
+      PopupWindowPolicy.unreadAcknowledgementDelay,
+      const Duration(milliseconds: 500),
+    );
+  });
+
   test('popup keeps the native compact dimensions', () {
     expect(PopupWindowPolicy.initialSize, const Size(390, 760));
     expect(PopupWindowPolicy.minimumSize, const Size(390, 540));

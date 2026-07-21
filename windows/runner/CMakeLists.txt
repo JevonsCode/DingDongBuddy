@@ -1,12 +1,25 @@
 cmake_minimum_required(VERSION 3.14)
 project(runner LANGUAGES CXX)
 
+include(FetchContent)
+set(DINGDONG_VELOPACK_VERSION "1.2.0")
+FetchContent_Declare(
+  dingdong_velopack
+  URL "https://github.com/velopack/velopack/releases/download/${DINGDONG_VELOPACK_VERSION}/velopack_libc_${DINGDONG_VELOPACK_VERSION}.zip"
+  URL_HASH "SHA256=547262ed7a1ab1ff62f580aa53851ede2f1a451ac61b8974eb7bc01117488835"
+)
+FetchContent_GetProperties(dingdong_velopack)
+if(NOT dingdong_velopack_POPULATED)
+  FetchContent_Populate(dingdong_velopack)
+endif()
+
 # Define the application target. To change its name, change BINARY_NAME in the
 # top-level CMakeLists.txt, not the value here, or `flutter run` will no longer
 # work.
 #
 # Any new source files that you add to the application should be added here.
 add_executable(${BINARY_NAME} WIN32
+  "application_updater.cpp"
   "flutter_window.cpp"
   "main.cpp"
   "utils.cpp"
@@ -35,7 +48,23 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_link_libraries(${BINARY_NAME} PRIVATE "winmm.lib")
-target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+target_include_directories(${BINARY_NAME} PRIVATE
+  "${CMAKE_SOURCE_DIR}"
+  "${dingdong_velopack_SOURCE_DIR}/include"
+)
+set(DINGDONG_VELOPACK_DLL
+  "${dingdong_velopack_SOURCE_DIR}/lib/velopack_libc_win_x64_msvc.dll")
+set(DINGDONG_VELOPACK_IMPORT_LIBRARY
+  "${dingdong_velopack_SOURCE_DIR}/lib/velopack_libc_win_x64_msvc.dll.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE
+  "${DINGDONG_VELOPACK_IMPORT_LIBRARY}")
+add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+  COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+    "${DINGDONG_VELOPACK_DLL}"
+    "$<TARGET_FILE_DIR:${BINARY_NAME}>/velopack_libc.dll"
+  COMMENT "Bundling Velopack updater runtime"
+  VERBATIM
+)
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

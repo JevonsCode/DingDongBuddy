@@ -4,6 +4,7 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/shell/ui/popup_mascot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,9 @@ class PopupHeader extends StatelessWidget {
     required this.showShortcutHints,
     required this.onSelected,
     required this.onRefresh,
+    required this.onBrand,
     required this.onSettings,
+    required this.onVersion,
     this.onStartDragging,
     this.onHide,
     super.key,
@@ -27,7 +30,9 @@ class PopupHeader extends StatelessWidget {
   final bool showShortcutHints;
   final ValueChanged<int> onSelected;
   final VoidCallback onRefresh;
+  final VoidCallback onBrand;
   final VoidCallback onSettings;
+  final VoidCallback onVersion;
   final Future<void> Function()? onStartDragging;
   final Future<void> Function()? onHide;
 
@@ -57,15 +62,36 @@ class PopupHeader extends StatelessWidget {
                         children: <Widget>[
                           const PopupMascot(),
                           const SizedBox(width: 10),
-                          const Expanded(
-                            child: Text(
-                              'DingDong',
-                              style: TextStyle(
-                                color: PopupStyle.textPrimary,
-                                fontSize: 17,
-                                height: 1,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          Expanded(
+                            child: Row(
+                              children: <Widget>[
+                                Flexible(
+                                  child: Semantics(
+                                    button: true,
+                                    child: GestureDetector(
+                                      key: const Key('popup-brand-sound'),
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: onBrand,
+                                      child: const Text(
+                                        'DingDong',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: PopupStyle.textPrimary,
+                                          fontSize: 17,
+                                          height: 1,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: _VersionButton(onPressed: onVersion),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -145,6 +171,37 @@ class PopupHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _VersionButton extends StatelessWidget {
+  const _VersionButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        key: const Key('popup-app-version'),
+        onTap: onPressed,
+        behavior: HitTestBehavior.opaque,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+          child: Text(
+            'v$currentAppVersion',
+            key: Key('app-version-$currentAppVersion'),
+            style: TextStyle(
+              color: PopupStyle.textSecondary,
+              fontSize: 9,
+              height: 1,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ),
     );
   }

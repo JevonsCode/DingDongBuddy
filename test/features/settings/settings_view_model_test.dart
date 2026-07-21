@@ -1,6 +1,7 @@
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/launch_at_startup.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
@@ -169,6 +170,26 @@ void main() {
     ]);
   });
 
+  test('one-click updater starts and exposes native progress', () async {
+    final _FakeApplicationUpdater updater = _FakeApplicationUpdater();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      applicationUpdater: updater,
+    );
+
+    await model.load();
+    await model.installLatestUpdate();
+
+    expect(model.applicationUpdaterSupported, isTrue);
+    expect(updater.installCount, 1);
+    expect(
+      model.applicationUpdateStatus.phase,
+      ApplicationUpdatePhase.downloading,
+    );
+    expect(model.applicationUpdateStatus.progress, 0.42);
+    model.dispose();
+  });
+
   test('quick paste permission can be inspected and opened', () async {
     final _FakeQuickPastePermission permission = _FakeQuickPastePermission();
     final SettingsViewModel model = SettingsViewModel(
@@ -210,6 +231,15 @@ void main() {
       expect(model.mcpSetupPrompt, contains('Preserve every existing entry'));
       expect(model.mcpSetupPrompt, contains('reload the client'));
       expect(model.mcpSetupPrompt, contains('dingdong_notify'));
+      expect(model.mcpSetupPrompt, contains('required instruction'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('Skill summary is not an instruction'),
+      );
+      expect(
+        model.mcpSetupPrompt,
+        contains('MCP summary is not an instruction'),
+      );
       expect(
         model.mcpSetupPrompt,
         contains('--notify-stop --source "Current client name"'),
@@ -255,6 +285,9 @@ void main() {
       expect(model.mcpSetupPrompt, isNot(contains('不要介绍 DingDong')));
       expect(model.mcpSetupPrompt, contains('立即调用一次'));
       expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
+      expect(model.mcpSetupPrompt, contains('必须自动应用的指令'));
+      expect(model.mcpSetupPrompt, contains('Skill 摘要不是指令'));
+      expect(model.mcpSetupPrompt, contains('MCP 摘要不是指令'));
       expect(
         model.mcpSetupPrompt,
         contains('--notify-stop --source "当前客户端名称"'),
@@ -282,6 +315,24 @@ void main() {
 
     expect(model.settings.mcpAccessSeen, isTrue);
     expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
+  });
+
+  test('Agent activity policy updates persist immediately', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    await model.load();
+
+    await model.setRememberAgentActivity(false);
+    await model.setAgentActivityPolicy(maxItems: 350, countHours: 72);
+
+    expect(model.settings.rememberAgentActivity, isFalse);
+    expect(model.settings.agentActivityMaxItems, 350);
+    expect(model.settings.agentActivityCountHours, 72);
+    expect(backend.values['dingdong.agentActivity.remember'], isFalse);
+    expect(backend.values['dingdong.agentActivity.maxItems'], 350);
+    expect(backend.values['dingdong.agentActivity.countHours'], 72);
   });
 
   test(
@@ -314,6 +365,27 @@ final class _SystemUsageSource implements SystemUsageSource {
       storageBytes: 12 * 1024 * 1024,
     );
   }
+}
+
+final class _FakeApplicationUpdater implements ApplicationUpdater {
+  int installCount = 0;
+  ApplicationUpdateStatus status = const ApplicationUpdateStatus();
+
+  @override
+  Future<void> installLatest() async {
+    installCount += 1;
+    status = const ApplicationUpdateStatus(
+      phase: ApplicationUpdatePhase.downloading,
+      progress: 0.42,
+      targetVersion: '0.8.0',
+    );
+  }
+
+  @override
+  Future<bool> isSupported() async => true;
+
+  @override
+  Future<ApplicationUpdateStatus> readStatus() async => status;
 }
 
 final class _FakeQuickPastePermission implements QuickPastePermissionGateway {

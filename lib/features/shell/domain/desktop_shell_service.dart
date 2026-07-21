@@ -11,7 +11,6 @@ final class DesktopShellService {
     required this.controller,
     required this.activityController,
     required this.defaultWorkspaceIndex,
-    this.onClipboardReveal,
     this.onClipboardMonitoringChanged,
     this.onClearClipboardHistory,
     this.onShowSettings,
@@ -21,7 +20,6 @@ final class DesktopShellService {
   final ShellController controller;
   final ActivityController activityController;
   final int Function() defaultWorkspaceIndex;
-  final Future<void> Function()? onClipboardReveal;
   final Future<void> Function(bool enabled)? onClipboardMonitoringChanged;
   final Future<void> Function()? onClearClipboardHistory;
   final Future<void> Function()? onShowSettings;
@@ -48,20 +46,20 @@ final class DesktopShellService {
           final int workspace = defaultWorkspaceIndex();
           controller.open(workspace);
           if (workspace == 2) {
-            await _refreshClipboard();
+            _refreshClipboard();
           }
         }
-        await gateway.toggleAndFocus();
+        await gateway.toggleAndFocus(acknowledgeUnread: true);
       case DesktopShellCommand.showToday:
         controller.open(0);
         await gateway.showAndFocus();
       case DesktopShellCommand.showClipboard:
         controller.open(2);
-        await _refreshClipboard();
+        _refreshClipboard();
         await gateway.showAndFocus();
       case DesktopShellCommand.toggleClipboard:
         controller.open(2);
-        await _refreshClipboard();
+        _refreshClipboard();
         await gateway.toggleAndFocus();
       case DesktopShellCommand.toggleClipboardFilters:
         controller.requestClipboardFilterToggle();
@@ -82,8 +80,7 @@ final class DesktopShellService {
     }
   }
 
-  Future<void> _refreshClipboard() async {
-    await onClipboardReveal?.call();
+  void _refreshClipboard() {
     controller.requestClipboardRefresh();
   }
 }

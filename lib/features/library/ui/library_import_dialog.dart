@@ -1,4 +1,5 @@
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +23,8 @@ final class _LibraryImportDialogState extends State<LibraryImportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return DesktopAlertDialog(
+      maxWidth: 520,
       title: const Text('Import a resource folder'),
       content: SizedBox(
         width: 460,

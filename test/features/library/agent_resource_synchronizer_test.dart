@@ -14,6 +14,10 @@ void main() {
     );
     addTearDown(() => temp.deleteSync(recursive: true));
     final Directory target = Directory('${temp.path}/agent-skills');
+    final Directory cached = Directory(
+      '${temp.path}/packages/dingdong-configure',
+    )..createSync(recursive: true);
+    File('${cached.path}/SKILL.md').writeAsStringSync('stale instructions');
     final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
       packageRoot: Directory('${temp.path}/packages'),
       skillRoots: <Directory>[target],
@@ -34,6 +38,7 @@ void main() {
       File('${target.path}/dingdong-configure/SKILL.md').readAsStringSync(),
       document,
     );
+    expect(File('${cached.path}/SKILL.md').readAsStringSync(), document);
   });
 
   test(
@@ -70,6 +75,78 @@ void main() {
 
       await synchronizer.sync(<Resource>[resource.copyWith(enabled: false)]);
       expect(Directory('${target.path}/reviewer').existsSync(), isFalse);
+    },
+  );
+
+  test(
+    'manages global always-on prompts without replacing user instructions',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sync-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final File agents = File('${temp.path}/AGENTS.md')
+        ..writeAsStringSync('- Keep the existing user instruction.\n');
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        promptTargets: <AgentPromptTarget>[AgentPromptTarget(agents)],
+        mcpTargets: const <AgentMcpTarget>[],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final Resource global = _resource(
+        type: ResourceType.prompt,
+        content: 'Add one star to every complete response.',
+        activation: ResourceActivation.always,
+      );
+      final Resource routed = _resource(
+        id: 'ROUTED-0000',
+        type: ResourceType.prompt,
+        content: 'Only apply inside one project.',
+        activation: ResourceActivation.always,
+        triggerGroupIds: const <String>['project'],
+      );
+      final Resource manual = _resource(
+        id: 'MANUAL-0000',
+        type: ResourceType.prompt,
+        content: 'Only load when explicitly requested.',
+        activation: ResourceActivation.manual,
+      );
+
+      await synchronizer.sync(<Resource>[global, routed, manual]);
+
+      String contents = agents.readAsStringSync();
+      expect(contents, startsWith('- Keep the existing user instruction.'));
+      expect(contents, contains('Add one star to every complete response.'));
+      expect(contents, contains('dingdong_bridge'));
+      expect(contents, contains('Skill and MCP entries are candidates'));
+      expect(contents, contains('call MCP tools only when'));
+      expect(contents, isNot(contains('Only apply inside one project.')));
+      expect(contents, isNot(contains('Only load when explicitly requested.')));
+      expect(
+        RegExp('BEGIN DINGDONG MANAGED PROMPTS').allMatches(contents),
+        hasLength(1),
+      );
+
+      await synchronizer.sync(<Resource>[
+        global.copyWith(content: 'Use the updated global instruction.'),
+        routed.copyWith(enabled: false),
+        manual,
+      ]);
+      contents = agents.readAsStringSync();
+      expect(contents, contains('Use the updated global instruction.'));
+      expect(contents, isNot(contains('Add one star')));
+      expect(contents, isNot(contains('dingdong_bridge')));
+
+      await synchronizer.sync(<Resource>[
+        global.copyWith(enabled: false),
+        routed.copyWith(enabled: false),
+        manual,
+      ]);
+      expect(
+        agents.readAsStringSync(),
+        '- Keep the existing user instruction.\n',
+      );
     },
   );
 
@@ -190,17 +267,24 @@ Map<String, Object?> _onlyServer(File file) {
 }
 
 Resource _resource({
+  String id = 'ABCDEF12-0000',
   required ResourceType type,
   required String content,
   String? packagePath,
+  bool enabled = true,
+  ResourceActivation? activation,
+  List<String> triggerGroupIds = const <String>[],
 }) {
   final DateTime now = DateTime.utc(2026, 7, 17);
   return Resource(
-    id: 'ABCDEF12-0000',
+    id: id,
     type: type,
     title: 'reviewer',
     content: content,
     packagePath: packagePath,
+    enabled: enabled,
+    activation: activation,
+    triggerGroupIds: triggerGroupIds,
     createdAt: now,
     updatedAt: now,
   );

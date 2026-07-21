@@ -42,7 +42,7 @@ extension _ClipboardActions on _ClipboardScreenState {
       case _ClipboardAction.delete:
         final bool? confirmed = await showDialog<bool>(
           context: context,
-          builder: (BuildContext context) => AlertDialog(
+          builder: (BuildContext context) => DesktopAlertDialog(
             title: Text(
               context.localized('Delete this clipboard item?', '删除此剪贴板条目？'),
             ),
@@ -58,6 +58,7 @@ extension _ClipboardActions on _ClipboardScreenState {
                 child: Text(context.localized('Cancel', '取消')),
               ),
               FilledButton(
+                style: DesktopDialogStyle.destructiveButtonStyle(context),
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(context.localized('Delete', '删除')),
               ),
@@ -76,7 +77,7 @@ extension _ClipboardActions on _ClipboardScreenState {
     );
     final String? title = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Add title', '添加标题')),
         content: TextField(controller: controller, autofocus: true),
         actions: <Widget>[
@@ -108,7 +109,7 @@ extension _ClipboardActions on _ClipboardScreenState {
     );
     final String? content = await showDialog<String>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Edit text', '编辑文本')),
         content: TextField(
           controller: controller,

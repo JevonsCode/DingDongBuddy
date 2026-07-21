@@ -28,5 +28,11 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/JevonsCode/DingDongBuddy/releases/latest/download/appcast-macos.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>__DINGDONG_SPARKLE_PUBLIC_KEY_REQUIRED__</string>
 </dict>
 </plist>

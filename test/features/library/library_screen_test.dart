@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('library transfer actions use matching square button frames', (
+  testWidgets('library transfer actions form one consistent segmented group', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -24,6 +24,10 @@ void main() {
     await model.load();
     await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
 
+    final Finder group = find.byKey(const Key('library-transfer-actions'));
+    expect(group, findsOneWidget);
+    expect(tester.getSize(group), const Size(106, 34));
+
     for (final Key key in const <Key>[
       Key('library-import'),
       Key('library-import-json'),
@@ -31,10 +35,12 @@ void main() {
     ]) {
       final Finder action = find.byKey(key);
       expect(action, findsOneWidget);
-      expect(tester.getSize(action), const Size.square(34));
-      final IconButton button = tester.widget<IconButton>(action);
-      expect(button.style?.side?.resolve(const <WidgetState>{}), isNotNull);
+      expect(tester.getSize(action), const Size(34, 32));
     }
+
+    expect(find.byIcon(Icons.folder_open_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.move_to_inbox_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.outbox_outlined), findsOneWidget);
   });
 
   testWidgets('compact library drills into the editor and can return', (

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
@@ -128,7 +129,7 @@ class LibraryScreen extends StatelessWidget {
   }) async {
     return await showDialog<bool>(
           context: context,
-          builder: (BuildContext context) => AlertDialog(
+          builder: (BuildContext context) => DesktopAlertDialog(
             title: Text(title),
             content: Text(message),
             actions: <Widget>[
@@ -137,9 +138,7 @@ class LibraryScreen extends StatelessWidget {
                 child: Text(context.localized('Cancel', '取消')),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
+                style: DesktopDialogStyle.destructiveButtonStyle(context),
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(context.localized('Delete', '删除')),
               ),
@@ -174,7 +173,7 @@ class LibraryScreen extends StatelessWidget {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return DesktopAlertDialog(
           title: Text(context.localized('Delete this resource?', '删除此资源？')),
           content: Text(
             context.localized(
@@ -188,9 +187,7 @@ class LibraryScreen extends StatelessWidget {
               child: Text(context.localized('Cancel', '取消')),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
+              style: DesktopDialogStyle.destructiveButtonStyle(context),
               onPressed: () => Navigator.pop(context, true),
               child: Text(context.localized('Delete', '删除')),
             ),

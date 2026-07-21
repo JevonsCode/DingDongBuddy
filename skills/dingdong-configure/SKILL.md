@@ -9,9 +9,19 @@ description: Use when a user asks an Agent to configure DingDong resources, proj
 
 Configure DingDong through its loopback Agent API. Translate the user's intent into reusable resources and project-aware trigger groups, then verify the result through the same bridge Agents use at task start.
 
-Read [references/agent-api.md](references/agent-api.md) for endpoint schemas and executable examples.
-
 Canonical source: <https://github.com/JevonsCode/DingDongBuddy/tree/main/skills/dingdong-configure>
+
+## Runtime Semantics
+
+Keep the three resource types distinct:
+
+| Type | How it reaches the Agent | What the Agent does |
+|---|---|---|
+| Prompt | A global always-on Codex Prompt is injected into DingDong's managed `AGENTS.md` block. Routed Prompts are returned in full by `dingdong_bridge`. | Apply every active Prompt automatically as a required instruction. |
+| Skill | Enabled Skills are mirrored as native Skill packages. The bridge returns only candidate metadata until full content is requested. | Match the Skill description first; load or use it only when the task fits. A Skill summary is not an instruction. |
+| MCP | Enabled MCP servers are written into the client's native MCP configuration. The bridge returns only candidate metadata. | Call a configured MCP tool only when the task needs it. MCP availability is not an instruction and does not require a call every turn. |
+
+Activation and trigger groups filter bridge routing. In the current app, enabled native Skills and MCP servers remain globally available to the client; the Agent still decides whether to load a Skill or call an MCP tool.
 
 ## Workflow
 
@@ -44,4 +54,4 @@ Canonical source: <https://github.com/JevonsCode/DingDongBuddy/tree/main/skills/
 - Ask before destructive deletion. Deleting a trigger group detaches it from every resource.
 - Keep clipboard content hidden unless the user explicitly requests it; sensitive content requires separate explicit consent.
 - Treat `contains` as case-insensitive substring matching, not a path-segment boundary check.
-- Project scopes affect bridge routing. Enabled native Skills and MCP servers are synchronized globally by the current app implementation.
+- Never treat Skill or MCP candidate summaries as Prompt instructions.

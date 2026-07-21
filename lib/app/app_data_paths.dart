@@ -48,6 +48,14 @@ final class AppDataPaths {
     '${applicationSupportDirectory.path}${_separator}clipboard-category-rules.json',
   );
 
+  File get clipboardGroupOrderFile => File(
+    '${applicationSupportDirectory.path}${_separator}clipboard-group-order.json',
+  );
+
+  File get agentActivityFile => File(
+    '${applicationSupportDirectory.path}${_separator}agent-activity.json',
+  );
+
   File get activePortFile =>
       File('${applicationSupportDirectory.path}${_separator}api-port');
 

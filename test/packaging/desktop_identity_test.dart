@@ -46,14 +46,14 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.7.12 from pubspec', () {
+  test('desktop hosts consume application version 0.7.20 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.12+19'));
+    expect(pubspec, contains('version: 0.7.20+20'));
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
   });
@@ -149,7 +149,14 @@ void main() {
       expect(prompt, contains('afterAgentResponse'));
       expect(prompt, contains('AfterAgent'));
       expect(prompt, contains('dingdong_notify'));
+      expect(prompt, contains('AGENTS.md'));
+      expect(prompt, contains('Skill'));
+      expect(prompt, contains('MCP'));
     }
+    expect(english, contains('Prompt, Skill, and MCP invocation semantics'));
+    expect(chinese, contains('Prompt、Skill 和 MCP 的调用逻辑'));
+    expect(englishPrompt, contains('Skill summary is not an instruction'));
+    expect(chinesePrompt, contains('Skill 摘要不是指令'));
   });
 
   test('website keeps release diagnostics behind debug mode', () {
@@ -220,12 +227,15 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.7.12"'));
-    expect(releaseMetadata, contains('"latestBuild": "19"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.20"'));
+    expect(releaseMetadata, contains('"latestBuild": "20"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
-    expect(releaseMetadata, contains('DingDong-0.7.12-windows-x64-beta.zip'));
+    expect(
+      releaseMetadata,
+      contains('DingDong-0.7.20-windows-x64-beta-Setup.exe'),
+    );
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -320,7 +330,12 @@ void main() {
         r'DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.dmg',
       ),
     );
-    expect(workflow, contains(r'DingDong-$version-windows-x64-beta.zip'));
+    expect(workflow, contains('dotnet tool install --tool-path .tools vpk'));
+    expect(workflow, contains('--noPortable'));
+    expect(
+      workflow,
+      contains(r'DingDong-${version}-windows-x64-beta-Setup.exe'),
+    );
     expect(workflow, contains('mcp-macos-arm64'));
     expect(workflow, contains('mcp-macos-x86_64'));
     expect(workflow, contains("if: matrix.arch == 'x86_64'"));
@@ -383,6 +398,57 @@ void main() {
       isEmpty,
     );
     expect(File('Package.swift').existsSync(), isFalse);
+  });
+
+  test('desktop releases provide signed one-click native updates', () {
+    final String workflow = File(
+      '.github/workflows/release.yml',
+    ).readAsStringSync();
+    final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
+    final String macProject = File(
+      'macos/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final String macUpdater = File(
+      'macos/Runner/DingDongUpdater.swift',
+    ).readAsStringSync();
+    final String windowsMain = File(
+      'windows/runner/main.cpp',
+    ).readAsStringSync();
+    final String windowsUpdater = File(
+      'windows/runner/application_updater.cpp',
+    ).readAsStringSync();
+    final String windowsCmake = File(
+      'windows/runner/CMakeLists.txt',
+    ).readAsStringSync();
+
+    expect(macInfo, contains('SUFeedURL'));
+    expect(macInfo, contains('SUPublicEDKey'));
+    expect(macProject, contains('version = 2.9.4;'));
+    expect(macUpdater, contains('SPUUpdater'));
+    expect(macUpdater, contains('showReadyToInstallAndRelaunch'));
+    expect(workflow, contains('SPARKLE_PUBLIC_ED_KEY'));
+    expect(workflow, contains('SPARKLE_PRIVATE_ED_KEY'));
+    expect(workflow, contains('scripts/generate_sparkle_appcast.sh'));
+    expect(workflow, contains(r'appcast-macos-${{ matrix.asset_arch }}.xml'));
+    expect(File('scripts/setup_sparkle_keys.sh').existsSync(), isTrue);
+    final String keySetup = File(
+      'scripts/setup_sparkle_keys.sh',
+    ).readAsStringSync();
+    expect(
+      keySetup.indexOf(
+        r'"$temporary_root/bin/generate_keys" --account com.dingdongbuddy.app',
+      ),
+      lessThan(keySetup.indexOf(r'-x "$private_key_path"')),
+    );
+
+    expect(windowsMain, contains('VelopackApp::Build().Run()'));
+    expect(windowsUpdater, contains('GithubSource'));
+    expect(windowsUpdater, contains('DownloadUpdates'));
+    expect(windowsUpdater, contains('WaitExitThenApplyUpdates'));
+    expect(windowsUpdater, contains('kDingDongExitForUpdateMessage'));
+    expect(windowsCmake, contains('DINGDONG_VELOPACK_VERSION "1.2.0"'));
+    expect(windowsCmake, contains('velopack_libc.dll'));
+    expect(workflow, contains('--channel "win"'));
   });
 
   test('local macOS upgrades prefer a generic stable signing identity', () {

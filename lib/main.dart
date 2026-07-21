@@ -6,8 +6,10 @@ import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -22,6 +24,7 @@ import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_service.dart';
@@ -32,12 +35,14 @@ import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:dingdong/platform/multi_window_resource_manager_launcher.dart';
 import 'package:dingdong/platform/multi_window_settings_host_bridge.dart';
 import 'package:dingdong/platform/multi_window_settings_launcher.dart';
+import 'package:dingdong/platform/native_application_updater.dart';
 import 'package:dingdong/platform/native_clipboard_share_gateway.dart';
 import 'package:dingdong/platform/native_desktop_context_menu_gateway.dart';
 import 'package:dingdong/platform/native_launch_at_startup.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/native_quick_paste_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
+import 'package:dingdong/platform/preferences_tray_unread_store.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/services.dart';
@@ -66,21 +71,27 @@ Future<void> main(List<String> arguments) async {
   }
 
   final ShellController shellController = ShellController();
-  final ActivityController activityController = ActivityController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
       MultiWindowClipboardPreviewLauncher();
   final MultiWindowSettingsLauncher settingsWindowLauncher =
       MultiWindowSettingsLauncher(parentWindowId: windowController.windowId);
+  final SharedPreferencesBackend preferencesBackend =
+      SharedPreferencesBackend();
+  final ActivityController activityController = ActivityController(
+    store: FileAgentActivityStore(AppDataPaths.current().agentActivityFile),
+  );
   late final AppDependencies dependencies;
   late final SettingsViewModel settingsViewModel;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
     onHideAuxiliaryWindows: clipboardPreviewLauncher.hide,
+    unreadStore: PreferencesTrayUnreadStore(preferencesBackend),
     clipboardMonitoringState: () =>
         dependencies.clipboardMonitorService.isRunning,
     useChineseLabels: () =>
         _usesChineseLabels(settingsViewModel.settings.language),
   );
   dependencies = AppDependencies.production(
+    preferencesBackend: preferencesBackend,
     onNotification: (request) async {
       activityController.record(
         source: request.source ?? 'Agent',
@@ -97,12 +108,22 @@ Future<void> main(List<String> arguments) async {
       unawaited(shellGateway.showAndFocus());
     },
   );
+  final AppSettings startupSettings = await dependencies.settingsRepository
+      .load();
+  activityController.configure(
+    rememberAcrossRestarts: startupSettings.rememberAgentActivity,
+    maxItems: startupSettings.agentActivityMaxItems,
+    countWindowHours: startupSettings.agentActivityCountHours,
+  );
+  activityController.load(resetPreviousSession: true);
   await dependencies.start();
   shellController.open(dependencies.initialSettings.defaultWorkspace.index);
   final NativeQuickPasteGateway quickPasteGateway = NativeQuickPasteGateway();
   final NativeLaunchAtStartup launchAtStartup = NativeLaunchAtStartup();
   final NativeNotificationGateway notificationGateway =
       NativeNotificationGateway();
+  const NativeApplicationUpdater applicationUpdater =
+      NativeApplicationUpdater();
   settingsViewModel = SettingsViewModel(
     dependencies.settingsRepository,
     clipboardMonitoring: dependencies.clipboardMonitorService,
@@ -110,6 +131,7 @@ Future<void> main(List<String> arguments) async {
     onWindowOpacityChanged: shellGateway.setOpacity,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
+    applicationUpdater: applicationUpdater,
     quickPastePermissionGateway: quickPasteGateway,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(
@@ -123,9 +145,6 @@ Future<void> main(List<String> arguments) async {
     activityController: activityController,
     defaultWorkspaceIndex: () =>
         settingsViewModel.settings.defaultWorkspace.index,
-    onClipboardReveal: () async {
-      await dependencies.clipboardCaptureService.capture();
-    },
     onClipboardMonitoringChanged: settingsViewModel.setClipboardMonitoring,
     onClearClipboardHistory: () => _clearClipboardHistory(dependencies),
     onShowSettings: () async {
@@ -159,6 +178,12 @@ Future<void> main(List<String> arguments) async {
         return null;
       case 'settings_changed':
         await settingsViewModel.reload();
+        activityController.configure(
+          rememberAcrossRestarts:
+              settingsViewModel.settings.rememberAgentActivity,
+          maxItems: settingsViewModel.settings.agentActivityMaxItems,
+          countWindowHours: settingsViewModel.settings.agentActivityCountHours,
+        );
         return null;
       case 'settings_sound_preview':
         final Map<Object?, Object?> values = call.arguments! as Map;
@@ -176,6 +201,13 @@ Future<void> main(List<String> arguments) async {
           ),
         );
         return null;
+      case 'settings_update_supported':
+        return applicationUpdater.isSupported();
+      case 'settings_update_state':
+        return (await applicationUpdater.readStatus()).toJson();
+      case 'settings_update_install':
+        await applicationUpdater.installLatest();
+        return null;
       default:
         break;
     }
@@ -189,6 +221,7 @@ Future<void> main(List<String> arguments) async {
       agentBaseUri: dependencies.agentHttpServer.baseUri,
       clipboardCaptureService: dependencies.clipboardCaptureService,
       clipboardCategoryRuleStore: dependencies.clipboardCategoryRuleStore,
+      clipboardGroupOrderStore: dependencies.clipboardGroupOrderStore,
       clipboardGateway: dependencies.clipboardGateway,
       desktopContextMenuGateway: Platform.isMacOS
           ? NativeDesktopContextMenuGateway()
@@ -204,6 +237,7 @@ Future<void> main(List<String> arguments) async {
       resourceManagerLauncher: MultiWindowResourceManagerLauncher(),
       settingsWindowLauncher: settingsWindowLauncher,
       settingsViewModel: settingsViewModel,
+      soundPreviewGateway: notificationGateway,
       onStartDragging: shellGateway.startDragging,
       onHideWindow: shellGateway.hide,
       shortcutHints: shellGateway.shortcutHints,
@@ -249,6 +283,7 @@ Future<void> _runSettingsWindow(
     onWindowOpacityChanged: hostBridge.setOpacity,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
+    applicationUpdater: hostBridge,
     quickPastePermissionGateway: hostBridge,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(paths.applicationSupportDirectory),
@@ -271,6 +306,9 @@ Future<void> _runSettingsWindow(
     SettingsWindowApp(
       viewModel: viewModel,
       windowController: windowController,
+      initialDestination: SettingsWindowDestination.fromValue(
+        arguments['destination'],
+      ),
       onSettingsChanged: hostBridge.notifyChanged,
       soundFileGateway: FileSelectorSoundGateway(),
       soundPreviewGateway: hostBridge,
@@ -390,6 +428,9 @@ Future<void> _runResourceManagerWindow(
     categoryRuleStore: FileClipboardCategoryRuleStore(
       paths.clipboardCategoryRulesFile,
     ),
+    groupOrderStore: FileClipboardGroupOrderStore(
+      paths.clipboardGroupOrderFile,
+    ),
   )..load();
   final String? editingResourceId = arguments['editingResourceId'] as String?;
   if (editingResourceId != null) {
@@ -401,6 +442,14 @@ Future<void> _runResourceManagerWindow(
     }
   }
   final settings = await SettingsRepository(SharedPreferencesBackend()).load();
+  final ActivityController activityController =
+      ActivityController(store: FileAgentActivityStore(paths.agentActivityFile))
+        ..configure(
+          rememberAcrossRestarts: settings.rememberAgentActivity,
+          maxItems: settings.agentActivityMaxItems,
+          countWindowHours: settings.agentActivityCountHours,
+        )
+        ..load();
 
   await windowManager.ensureInitialized();
   const WindowOptions options = WindowOptions(
@@ -416,6 +465,7 @@ Future<void> _runResourceManagerWindow(
     ResourceManagerApp(
       viewModel: viewModel,
       clipboardViewModel: clipboardViewModel,
+      activityController: activityController,
       settings: settings,
       windowController: windowController,
       desktopContextMenuGateway: Platform.isMacOS

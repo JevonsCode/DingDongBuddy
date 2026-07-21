@@ -113,7 +113,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(key: Key('app-version-0.7.12')),
                       ],
                     ),
                   ),
@@ -171,13 +170,22 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              context.localized('Recent agents', '最近 Agent'),
-              style: const TextStyle(
-                color: PopupStyle.textSecondary,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
+            Row(
+              children: <Widget>[
+                Text(
+                  context.localized('Recent agents', '最近 Agent'),
+                  style: const TextStyle(
+                    color: PopupStyle.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 7),
+                _RecentAgentCount(
+                  count: widget.activityController.recentCount,
+                  hours: widget.activityController.countWindowHours,
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             if (widget.activityController.activities.isEmpty)

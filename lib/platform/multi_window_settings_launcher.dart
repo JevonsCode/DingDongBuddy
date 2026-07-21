@@ -12,12 +12,14 @@ final class MultiWindowSettingsLauncher implements SettingsWindowLauncher {
   final String parentWindowId;
 
   @override
-  Future<void> show() async {
+  Future<void> show({
+    SettingsWindowDestination destination = SettingsWindowDestination.top,
+  }) async {
     for (final WindowController controller in await WindowController.getAll()) {
       final Map<String, Object?> arguments = _decode(controller.arguments);
       if (arguments['kind'] == settingsWindowKind) {
         await controller.show();
-        await controller.invokeMethod<void>('window_focus');
+        await controller.invokeMethod<void>('window_focus', destination.name);
         return;
       }
     }
@@ -28,6 +30,7 @@ final class MultiWindowSettingsLauncher implements SettingsWindowLauncher {
         arguments: jsonEncode(<String, Object?>{
           'kind': settingsWindowKind,
           'parentWindowId': parentWindowId,
+          'destination': destination.name,
         }),
       ),
     );

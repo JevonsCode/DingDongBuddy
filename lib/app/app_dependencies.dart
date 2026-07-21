@@ -6,6 +6,7 @@ import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
@@ -15,6 +16,7 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resource_installer.dart';
+import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/native_clipboard_change_source.dart';
@@ -29,6 +31,7 @@ final class AppDependencies {
     required this.clipboardGateway,
     required this.clipboardCaptureService,
     required this.clipboardCategoryRuleStore,
+    required this.clipboardGroupOrderStore,
     required this.clipboardMonitorService,
     required this.paths,
     required this.resourceStore,
@@ -41,6 +44,7 @@ final class AppDependencies {
   factory AppDependencies.production({
     void Function(int index)? onShowUi,
     Future<void> Function(DingRequest request)? onNotification,
+    PreferencesBackend? preferencesBackend,
   }) {
     final AppDataPaths paths = AppDataPaths.current();
     paths.applicationSupportDirectory.createSync(recursive: true);
@@ -50,6 +54,8 @@ final class AppDependencies {
     final ClipboardGateway clipboardGateway = DesktopClipboardGateway();
     final ClipboardCategoryRuleStore clipboardCategoryRuleStore =
         FileClipboardCategoryRuleStore(paths.clipboardCategoryRulesFile);
+    final ClipboardGroupOrderStore clipboardGroupOrderStore =
+        FileClipboardGroupOrderStore(paths.clipboardGroupOrderFile);
     final ClipboardCaptureService clipboardCaptureService =
         ClipboardCaptureService(
           gateway: clipboardGateway,
@@ -71,7 +77,8 @@ final class AppDependencies {
     final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
       TriggerGroupFileService(paths.triggerGroupsFile),
     );
-    final SharedPreferencesBackend preferences = SharedPreferencesBackend();
+    final PreferencesBackend preferences =
+        preferencesBackend ?? SharedPreferencesBackend();
     final SettingsRepository settingsRepository = SettingsRepository(
       preferences,
     );
@@ -119,6 +126,7 @@ final class AppDependencies {
       clipboardGateway: clipboardGateway,
       clipboardCaptureService: clipboardCaptureService,
       clipboardCategoryRuleStore: clipboardCategoryRuleStore,
+      clipboardGroupOrderStore: clipboardGroupOrderStore,
       clipboardMonitorService: clipboardMonitorService,
       paths: paths,
       resourceStore: resourceStore,
@@ -133,6 +141,7 @@ final class AppDependencies {
   final ClipboardGateway clipboardGateway;
   final ClipboardCaptureService clipboardCaptureService;
   final ClipboardCategoryRuleStore clipboardCategoryRuleStore;
+  final ClipboardGroupOrderStore clipboardGroupOrderStore;
   final ClipboardMonitorService clipboardMonitorService;
   final ClipboardRepository clipboardStore;
   final ResourceStore resourceStore;

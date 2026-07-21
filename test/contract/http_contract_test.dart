@@ -357,6 +357,16 @@ void main() {
           createdAt: now,
           updatedAt: now,
         ),
+        Resource(
+          id: 'mcp',
+          type: ResourceType.mcp,
+          title: 'Flutter MCP',
+          content: '{"type":"stdio","command":"flutter-mcp"}',
+          tags: const <String>['flutter'],
+          pinned: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
       ]);
       final AgentRouter router = AgentRouter(
         resourceStore: store,
@@ -367,13 +377,13 @@ void main() {
         const HttpRequestData(
           method: 'POST',
           uri: '/agent/bridge',
-          body:
-              '{"task":"Ship Flutter release","source":"Codex","expand":"prompts"}',
+          body: '{"task":"Ship Flutter release","source":"Codex"}',
         ),
       );
       final active = response.json['active'] as Map<String, Object?>;
       final prompts = active['prompts'] as List<Object?>;
       final skills = active['skills'] as List<Object?>;
+      final mcps = active['mcps'] as List<Object?>;
 
       expect(
         (prompts.single as Map<String, Object?>)['content'],
@@ -383,9 +393,15 @@ void main() {
         (skills.single as Map<String, Object?>),
         isNot(contains('content')),
       );
+      expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
+      expect(response.json['delivery'], <String, Object?>{
+        'prompts': 'full-required-instructions',
+        'skills': 'summary-load-on-match',
+        'mcps': 'summary-call-on-demand',
+      });
       expect(
         (await store.load()).map((Resource item) => item.usageCount),
-        <int>[1, 1],
+        <int>[1, 1, 1],
       );
       expect(
         (await store.load()).first.lastUsedAt,
@@ -393,6 +409,34 @@ void main() {
       );
     },
   );
+
+  test('POST /agent/bridge never auto-activates manual resources', () async {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'manual-prompt',
+          type: ResourceType.prompt,
+          title: 'Release checklist',
+          content: 'Only load this checklist manually.',
+          activation: ResourceActivation.manual,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+
+    final response = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"Use the release checklist"}',
+      ),
+    );
+    final active = response.json['active'] as Map<String, Object?>;
+
+    expect(active['prompts'], isEmpty);
+  });
 
   test('POST /agent/bridge applies reusable project trigger groups', () async {
     final DateTime now = DateTime.utc(2026, 7, 16);

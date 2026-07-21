@@ -1,5 +1,6 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:flutter/material.dart';
 
 /// Editable clipboard fields returned by the organization dialog.
@@ -55,7 +56,8 @@ final class _ClipboardOrganizeDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return DesktopAlertDialog(
+      maxWidth: 600,
       title: Text(context.localized('Organize clipboard item', '整理剪贴板条目')),
       content: SizedBox(
         width: 560,

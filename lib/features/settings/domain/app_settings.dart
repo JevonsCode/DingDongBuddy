@@ -69,6 +69,9 @@ final class AppSettings {
     this.defaultWorkspace = DefaultWorkspace.today,
     this.clipboardMaxItems = 1000,
     this.clipboardMaxAgeDays = 90,
+    this.rememberAgentActivity = true,
+    this.agentActivityMaxItems = 200,
+    this.agentActivityCountHours = 24,
     this.selectedSound = 'default',
     this.customSoundPath,
     this.mcpAccessSeen = false,
@@ -84,6 +87,9 @@ final class AppSettings {
   final DefaultWorkspace defaultWorkspace;
   final int clipboardMaxItems;
   final int clipboardMaxAgeDays;
+  final bool rememberAgentActivity;
+  final int agentActivityMaxItems;
+  final int agentActivityCountHours;
   final String selectedSound;
   final String? customSoundPath;
   final bool mcpAccessSeen;
@@ -100,6 +106,9 @@ final class AppSettings {
       defaultWorkspace: defaultWorkspace,
       clipboardMaxItems: clipboardMaxItems.clamp(20, 5000),
       clipboardMaxAgeDays: clipboardMaxAgeDays.clamp(1, 730),
+      rememberAgentActivity: rememberAgentActivity,
+      agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
+      agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
       selectedSound: selectedSound == 'dingWood'
           ? 'default'
           : _preferenceSoundValues.contains(selectedSound)
@@ -121,6 +130,9 @@ final class AppSettings {
     DefaultWorkspace? defaultWorkspace,
     int? clipboardMaxItems,
     int? clipboardMaxAgeDays,
+    bool? rememberAgentActivity,
+    int? agentActivityMaxItems,
+    int? agentActivityCountHours,
     String? selectedSound,
     Object? customSoundPath = _notSet,
     bool? mcpAccessSeen,
@@ -136,6 +148,12 @@ final class AppSettings {
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,
       clipboardMaxItems: clipboardMaxItems ?? this.clipboardMaxItems,
       clipboardMaxAgeDays: clipboardMaxAgeDays ?? this.clipboardMaxAgeDays,
+      rememberAgentActivity:
+          rememberAgentActivity ?? this.rememberAgentActivity,
+      agentActivityMaxItems:
+          agentActivityMaxItems ?? this.agentActivityMaxItems,
+      agentActivityCountHours:
+          agentActivityCountHours ?? this.agentActivityCountHours,
       selectedSound: selectedSound ?? this.selectedSound,
       customSoundPath: identical(customSoundPath, _notSet)
           ? this.customSoundPath

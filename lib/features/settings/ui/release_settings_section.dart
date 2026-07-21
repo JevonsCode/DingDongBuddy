@@ -1,4 +1,5 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ class ReleaseSettingsSection extends StatelessWidget {
       animation: viewModel,
       builder: (BuildContext context, Widget? child) {
         final ReleaseStatus status = viewModel.releaseStatus;
+        final ApplicationUpdateStatus installStatus =
+            viewModel.applicationUpdateStatus;
         return Padding(
           padding: const EdgeInsets.only(bottom: 32),
           child: Column(
@@ -59,15 +62,45 @@ class ReleaseSettingsSection extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 8),
+              if (installStatus.isBusy) ...<Widget>[
+                LinearProgressIndicator(
+                  value:
+                      installStatus.phase ==
+                              ApplicationUpdatePhase.downloading ||
+                          installStatus.phase ==
+                              ApplicationUpdatePhase.extracting
+                      ? installStatus.progress
+                      : null,
+                ),
+                const SizedBox(height: 10),
+              ],
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: <Widget>[
-                  Text(_statusText(context, status)),
+                  Text(_statusText(context, status, installStatus)),
+                  if (status.isUpdateAvailable == true &&
+                      viewModel.applicationUpdaterSupported)
+                    _ReleaseActionButton(
+                      buttonKey: const Key('settings-install-update'),
+                      onPressed: installStatus.isBusy
+                          ? null
+                          : viewModel.installLatestUpdate,
+                      emphasized: true,
+                      icon: installStatus.isBusy
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.download_rounded, size: 18),
+                      label: Text(
+                        _updateButtonText(context, status, installStatus),
+                      ),
+                    ),
                   _ReleaseActionButton(
                     buttonKey: const Key('settings-check-updates'),
-                    onPressed: status.isChecking
+                    onPressed: status.isChecking || installStatus.isBusy
                         ? null
                         : viewModel.checkForUpdates,
                     icon: status.isChecking
@@ -104,6 +137,16 @@ class ReleaseSettingsSection extends StatelessWidget {
                   ),
                 ],
               ),
+              if (installStatus.phase == ApplicationUpdatePhase.failed &&
+                  installStatus.message != null) ...<Widget>[
+                const SizedBox(height: 8),
+                Text(
+                  installStatus.message!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -118,29 +161,71 @@ class _ReleaseActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     this.buttonKey,
+    this.emphasized = false,
   });
 
   final Key? buttonKey;
   final VoidCallback? onPressed;
   final Widget icon;
   final Widget label;
+  final bool emphasized;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      key: buttonKey,
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 40),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+    final ButtonStyle style = ButtonStyle(
+      minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 40)),
+      padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+        EdgeInsets.symmetric(horizontal: 16),
       ),
-      icon: icon,
-      label: label,
     );
+    return emphasized
+        ? FilledButton.icon(
+            key: buttonKey,
+            onPressed: onPressed,
+            style: style,
+            icon: icon,
+            label: label,
+          )
+        : OutlinedButton.icon(
+            key: buttonKey,
+            onPressed: onPressed,
+            style: style,
+            icon: icon,
+            label: label,
+          );
   }
 }
 
-String _statusText(BuildContext context, ReleaseStatus status) {
+String _statusText(
+  BuildContext context,
+  ReleaseStatus status,
+  ApplicationUpdateStatus installStatus,
+) {
+  switch (installStatus.phase) {
+    case ApplicationUpdatePhase.checking:
+      return context.localized('Preparing update…', '正在准备更新…');
+    case ApplicationUpdatePhase.downloading:
+      final int? percent = installStatus.progress == null
+          ? null
+          : (installStatus.progress! * 100).round();
+      return percent == null
+          ? context.localized('Downloading update…', '正在下载更新…')
+          : context.localized(
+              'Downloading update… $percent%',
+              '正在下载更新… $percent%',
+            );
+    case ApplicationUpdatePhase.extracting:
+      return context.localized('Verifying update…', '正在校验更新…');
+    case ApplicationUpdatePhase.installing:
+      return context.localized('Installing and restarting…', '正在安装并重启…');
+    case ApplicationUpdatePhase.failed:
+      return context.localized('Update failed', '更新失败');
+    case ApplicationUpdatePhase.current:
+      return context.localized("You're up to date", '已是最新版本');
+    case ApplicationUpdatePhase.idle:
+    case ApplicationUpdatePhase.unsupported:
+      break;
+  }
   if (status.isChecking) {
     return context.localized('Checking for updates…', '正在检查更新…');
   }
@@ -152,6 +237,18 @@ String _statusText(BuildContext context, ReleaseStatus status) {
     false => context.localized("You're up to date", '已是最新版本'),
     null => context.localized('No update metadata yet', '尚未获取更新信息'),
   };
+}
+
+String _updateButtonText(
+  BuildContext context,
+  ReleaseStatus status,
+  ApplicationUpdateStatus installStatus,
+) {
+  if (installStatus.isBusy) {
+    return context.localized('Updating…', '正在更新…');
+  }
+  final String version = status.latestVersion ?? '';
+  return context.localized('Update to $version', '更新到 $version');
 }
 
 class _VersionRow extends StatelessWidget {

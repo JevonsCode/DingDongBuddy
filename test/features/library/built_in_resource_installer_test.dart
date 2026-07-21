@@ -93,6 +93,52 @@ void main() {
       expect(resources.single.id, builtInDingDongConfigureSkillId);
     },
   );
+
+  test(
+    'version three refreshes the existing built-in Skill document',
+    () async {
+      final DateTime originalTime = DateTime.utc(2026, 7, 1);
+      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+        builtInDingDongConfigureSkill(
+          'old bundled instructions',
+          originalTime,
+        ).copyWith(enabled: false),
+      ]);
+      final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+        ..values[BuiltInResourceInstaller.preferenceKey] = 2;
+      final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+        store,
+        preferences,
+        now: () => DateTime.utc(2026, 7, 21),
+        skillDocumentLoader: _loadConfigureSkill,
+      );
+
+      expect(await installer.install(), isTrue);
+
+      final Resource skill = (await store.load()).single;
+      expect(skill.content, await _loadConfigureSkill());
+      expect(skill.enabled, isFalse);
+      expect(skill.updatedAt, DateTime.utc(2026, 7, 21));
+      expect(
+        preferences.values[BuiltInResourceInstaller.preferenceKey],
+        BuiltInResourceInstaller.currentVersion,
+      );
+    },
+  );
+
+  test('version three does not recreate a deleted built-in Skill', () async {
+    final InMemoryResourceStore store = InMemoryResourceStore();
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 2;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isFalse);
+    expect(await store.load(), isEmpty);
+  });
 }
 
 Future<String> _loadConfigureSkill() =>

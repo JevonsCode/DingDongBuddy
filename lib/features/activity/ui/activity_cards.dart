@@ -1,5 +1,46 @@
 part of 'activity_screen.dart';
 
+class _RecentAgentCount extends StatelessWidget {
+  const _RecentAgentCount({required this.count, required this.hours});
+
+  final int count;
+  final int hours;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      key: const Key('recent-agent-count'),
+      decoration: BoxDecoration(
+        color: PopupStyle.surface,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: PopupStyle.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(
+              Icons.schedule_rounded,
+              size: 9,
+              color: PopupStyle.textTertiary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              context.localized('$hours h · $count', '$hours 小时 · $count'),
+              style: const TextStyle(
+                color: PopupStyle.textSecondary,
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AgentActivityCard extends StatefulWidget {
   const _AgentActivityCard({required this.activity, required this.animate});
 

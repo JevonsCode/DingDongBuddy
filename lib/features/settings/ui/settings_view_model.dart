@@ -1,8 +1,11 @@
 // ignore_for_file: prefer_initializing_formals
 
+import 'dart:async';
+
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/launch_at_startup.dart';
 import 'package:dingdong/features/settings/domain/mcp_setup_prompt.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
@@ -20,6 +23,7 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function(double value)? onWindowOpacityChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
+    ApplicationUpdater? applicationUpdater,
     DateTime Function()? now,
     QuickPastePermissionGateway? quickPastePermissionGateway,
     this.mcpCommandPath = 'dingdong-mcp',
@@ -29,6 +33,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onWindowOpacityChanged = onWindowOpacityChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
+       _applicationUpdater = applicationUpdater,
        _quickPastePermissionGateway = quickPastePermissionGateway,
        _now = now ?? DateTime.now;
 
@@ -38,6 +43,7 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function(double value)? _onWindowOpacityChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
+  final ApplicationUpdater? _applicationUpdater;
   final DateTime Function() _now;
   final QuickPastePermissionGateway? _quickPastePermissionGateway;
   final String mcpCommandPath;
@@ -46,6 +52,11 @@ final class SettingsViewModel extends ChangeNotifier
   bool _loaded = false;
   String? _errorMessage;
   ReleaseStatus _releaseStatus = const ReleaseStatus();
+  ApplicationUpdateStatus _applicationUpdateStatus =
+      const ApplicationUpdateStatus();
+  bool _applicationUpdaterSupported = false;
+  bool _isPollingApplicationUpdater = false;
+  Timer? _applicationUpdatePollTimer;
   bool? _isQuickPastePermissionGranted;
   SystemUsageSnapshot? _systemUsage;
   int _loadedApiPort = 2333;
@@ -56,6 +67,9 @@ final class SettingsViewModel extends ChangeNotifier
   bool get isLoaded => _loaded;
   String? get errorMessage => _errorMessage;
   ReleaseStatus get releaseStatus => _releaseStatus;
+  ApplicationUpdateStatus get applicationUpdateStatus =>
+      _applicationUpdateStatus;
+  bool get applicationUpdaterSupported => _applicationUpdaterSupported;
   bool? get isQuickPastePermissionGranted => _isQuickPastePermissionGranted;
   @override
   bool? get quickPastePermissionGranted => _isQuickPastePermissionGranted;
@@ -98,6 +112,7 @@ final class SettingsViewModel extends ChangeNotifier
       _isQuickPastePermissionGranted = await _quickPastePermissionGateway
           ?.isGranted();
       await _loadSystemUsage();
+      await _loadApplicationUpdater();
       _loaded = true;
       _errorMessage = null;
     } on Object {
@@ -193,6 +208,24 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setRememberAgentActivity(bool value) async {
+    _settings = _settings.copyWith(rememberAgentActivity: value);
+    notifyListeners();
+    await _save();
+  }
+
+  Future<void> setAgentActivityPolicy({
+    required int maxItems,
+    required int countHours,
+  }) async {
+    _settings = _settings.copyWith(
+      agentActivityMaxItems: maxItems,
+      agentActivityCountHours: countHours,
+    );
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setApiPort(int value) async {
     _settings = _settings.copyWith(apiPort: value);
     notifyListeners();
@@ -219,6 +252,30 @@ final class SettingsViewModel extends ChangeNotifier
       _releaseStatus = _releaseStatus.failed(error.toString(), _now());
     }
     notifyListeners();
+  }
+
+  /// Starts the native one-click flow. The native helper downloads, verifies,
+  /// replaces the old application, removes obsolete files, and relaunches.
+  Future<void> installLatestUpdate() async {
+    final ApplicationUpdater? updater = _applicationUpdater;
+    if (updater == null ||
+        !_applicationUpdaterSupported ||
+        _applicationUpdateStatus.isBusy) {
+      return;
+    }
+    try {
+      await updater.installLatest();
+      await _refreshApplicationUpdater();
+      if (_applicationUpdateStatus.isBusy) {
+        _startApplicationUpdatePolling();
+      }
+    } on Object catch (error) {
+      _applicationUpdateStatus = ApplicationUpdateStatus(
+        phase: ApplicationUpdatePhase.failed,
+        message: error.toString(),
+      );
+      notifyListeners();
+    }
   }
 
   Future<void> openWebsite() async {
@@ -266,8 +323,77 @@ final class SettingsViewModel extends ChangeNotifier
     }
   }
 
+  Future<void> _loadApplicationUpdater() async {
+    final ApplicationUpdater? updater = _applicationUpdater;
+    if (updater == null) {
+      _applicationUpdaterSupported = false;
+      _applicationUpdateStatus = const ApplicationUpdateStatus(
+        phase: ApplicationUpdatePhase.unsupported,
+      );
+      return;
+    }
+    try {
+      _applicationUpdaterSupported = await updater.isSupported();
+      _applicationUpdateStatus = _applicationUpdaterSupported
+          ? await updater.readStatus()
+          : const ApplicationUpdateStatus(
+              phase: ApplicationUpdatePhase.unsupported,
+            );
+      if (_applicationUpdateStatus.isBusy) {
+        _startApplicationUpdatePolling();
+      }
+    } on Object {
+      _applicationUpdaterSupported = false;
+      _applicationUpdateStatus = const ApplicationUpdateStatus(
+        phase: ApplicationUpdatePhase.unsupported,
+      );
+    }
+  }
+
+  void _startApplicationUpdatePolling() {
+    _applicationUpdatePollTimer?.cancel();
+    _applicationUpdatePollTimer = Timer.periodic(
+      const Duration(milliseconds: 250),
+      (_) => unawaited(_refreshApplicationUpdater()),
+    );
+  }
+
+  Future<void> _refreshApplicationUpdater() async {
+    final ApplicationUpdater? updater = _applicationUpdater;
+    if (updater == null || _isPollingApplicationUpdater) {
+      return;
+    }
+    _isPollingApplicationUpdater = true;
+    try {
+      final ApplicationUpdateStatus status = await updater.readStatus();
+      if (status != _applicationUpdateStatus) {
+        _applicationUpdateStatus = status;
+        notifyListeners();
+      }
+      if (!status.isBusy && status.phase != ApplicationUpdatePhase.idle) {
+        _applicationUpdatePollTimer?.cancel();
+      }
+    } on Object catch (error) {
+      _applicationUpdateStatus = ApplicationUpdateStatus(
+        phase: ApplicationUpdatePhase.failed,
+        message: error.toString(),
+      );
+      _applicationUpdatePollTimer?.cancel();
+      notifyListeners();
+    } finally {
+      _isPollingApplicationUpdater = false;
+    }
+  }
+
   Future<void> shutdown() async {
+    _applicationUpdatePollTimer?.cancel();
     await _clipboardMonitoring?.stop();
+  }
+
+  @override
+  void dispose() {
+    _applicationUpdatePollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _save() async {

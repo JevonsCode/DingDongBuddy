@@ -1,13 +1,48 @@
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
+import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
+import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_screen.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('version destination scrolls directly to release settings', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(620, 560);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final SettingsNavigationController navigation =
+        SettingsNavigationController(
+          initialDestination: SettingsWindowDestination.version,
+        );
+    addTearDown(navigation.dispose);
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsScreen(
+          viewModel: model,
+          navigationController: navigation,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Rect releaseBounds = tester.getRect(
+      find.byType(ReleaseSettingsSection),
+    );
+    expect(releaseBounds.top, lessThan(560));
+    expect(releaseBounds.bottom, greaterThan(0));
+  });
+
   testWidgets('opening settings immediately checks the latest release', (
     WidgetTester tester,
   ) async {
@@ -80,6 +115,18 @@ void main() {
       );
       expect(find.byKey(const Key('settings-retention-items')), findsOneWidget);
       expect(find.byKey(const Key('settings-retention-days')), findsOneWidget);
+      expect(
+        find.byKey(const Key('settings-agent-activity-remember')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-agent-activity-items')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-agent-activity-hours')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('settings-api-port')), findsOneWidget);
       expect(find.byKey(const Key('settings-sound')), findsOneWidget);
       expect(find.byKey(const Key('settings-refresh-usage')), findsOneWidget);

@@ -55,32 +55,24 @@ void main() {
     await service.stop();
   });
 
-  test(
-    'showing Clipboard performs a fallback capture before refresh',
-    () async {
-      final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
-      final ShellController controller = ShellController();
-      int captureCount = 0;
-      final DesktopShellService service = DesktopShellService(
-        gateway: gateway,
-        controller: controller,
-        activityController: ActivityController(),
-        defaultWorkspaceIndex: () => 0,
-        onClipboardReveal: () async {
-          captureCount += 1;
-        },
-      );
-      await service.start();
+  test('showing Clipboard refreshes history without recapturing it', () async {
+    final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
+    final ShellController controller = ShellController();
+    final DesktopShellService service = DesktopShellService(
+      gateway: gateway,
+      controller: controller,
+      activityController: ActivityController(),
+      defaultWorkspaceIndex: () => 0,
+    );
+    await service.start();
 
-      gateway.emit(DesktopShellCommand.showClipboard);
-      await Future<void>.delayed(Duration.zero);
+    gateway.emit(DesktopShellCommand.showClipboard);
+    await Future<void>.delayed(Duration.zero);
 
-      expect(captureCount, 1);
-      expect(controller.clipboardRefreshRevision, 1);
-      expect(gateway.showCount, 1);
-      await service.stop();
-    },
-  );
+    expect(controller.clipboardRefreshRevision, 1);
+    expect(gateway.showCount, 1);
+    await service.stop();
+  });
 
   test('native filter shortcut reaches the clipboard callout state', () async {
     final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
@@ -160,6 +152,7 @@ void main() {
     expect(controller.selectedIndex, 0);
     expect(activityController.revealRevision, 1);
     expect(gateway.toggleCount, 1);
+    expect(gateway.lastToggleAcknowledgesUnread, isTrue);
     await service.stop();
   });
 
@@ -191,6 +184,7 @@ final class _FakeDesktopShellGateway implements DesktopShellGateway {
       StreamController<DesktopShellCommand>.broadcast(sync: true);
   int showCount = 0;
   int toggleCount = 0;
+  bool lastToggleAcknowledgesUnread = false;
 
   @override
   Stream<DesktopShellCommand> get commands => _commands.stream;
@@ -201,13 +195,14 @@ final class _FakeDesktopShellGateway implements DesktopShellGateway {
   Future<void> quit() async {}
 
   @override
-  Future<void> showAndFocus() async {
+  Future<void> showAndFocus({bool acknowledgeUnread = false}) async {
     showCount += 1;
   }
 
   @override
-  Future<void> toggleAndFocus() async {
+  Future<void> toggleAndFocus({bool acknowledgeUnread = false}) async {
     toggleCount += 1;
+    lastToggleAcknowledgesUnread = acknowledgeUnread;
   }
 
   @override

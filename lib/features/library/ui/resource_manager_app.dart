@@ -4,6 +4,8 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
@@ -19,6 +21,7 @@ class ResourceManagerApp extends StatefulWidget {
   const ResourceManagerApp({
     required this.viewModel,
     required this.clipboardViewModel,
+    required this.activityController,
     required this.settings,
     required this.windowController,
     this.desktopContextMenuGateway,
@@ -28,6 +31,7 @@ class ResourceManagerApp extends StatefulWidget {
 
   final LibraryViewModel viewModel;
   final ClipboardViewModel clipboardViewModel;
+  final ActivityController activityController;
   final AppSettings settings;
   final WindowController windowController;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
@@ -49,6 +53,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
           case 'window_focus':
             await widget.viewModel.load();
             widget.clipboardViewModel.load();
+            widget.activityController.reload();
             await windowManager.focus();
           case 'edit_resource':
             final Object? arguments = call.arguments;
@@ -112,17 +117,21 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
               ),
               const VerticalDivider(width: 1),
               Expanded(
-                child: _selectedIndex == 0
-                    ? LibraryScreen(
-                        viewModel: widget.viewModel,
-                        transferGateway: FileSelectorLibraryTransferGateway(),
-                        contextMenuGateway: widget.desktopContextMenuGateway,
-                        onOpenExternalLink: widget.onOpenExternalLink,
-                      )
-                    : ClipboardManagerScreen(
-                        viewModel: widget.clipboardViewModel,
-                        contextMenuGateway: widget.desktopContextMenuGateway,
-                      ),
+                child: switch (_selectedIndex) {
+                  0 => LibraryScreen(
+                    viewModel: widget.viewModel,
+                    transferGateway: FileSelectorLibraryTransferGateway(),
+                    contextMenuGateway: widget.desktopContextMenuGateway,
+                    onOpenExternalLink: widget.onOpenExternalLink,
+                  ),
+                  1 => ClipboardManagerScreen(
+                    viewModel: widget.clipboardViewModel,
+                    contextMenuGateway: widget.desktopContextMenuGateway,
+                  ),
+                  _ => AgentActivityManagerScreen(
+                    controller: widget.activityController,
+                  ),
+                },
               ),
             ],
           ),
@@ -206,6 +215,14 @@ class _WorkspaceSidebar extends StatelessWidget {
                 label: _localized(context, 'Clipboard', '剪贴板'),
                 selected: selectedIndex == 1,
                 onTap: () => onSelected(1),
+              ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-agent-activity'),
+                icon: Icons.smart_toy_outlined,
+                label: _localized(context, 'Recent agents', '最近 Agent'),
+                selected: selectedIndex == 2,
+                onTap: () => onSelected(2),
               ),
               const Spacer(),
               Padding(

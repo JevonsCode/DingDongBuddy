@@ -1,4 +1,5 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
@@ -73,207 +74,213 @@ final class _TriggerGroupPickerDialogState
             (TriggerGroup left, TriggerGroup right) =>
                 left.name.toLowerCase().compareTo(right.name.toLowerCase()),
           );
-    return Dialog(
-      key: const Key('trigger-group-picker'),
-      elevation: 3,
-      backgroundColor: colors.surface,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-      child: SizedBox(
-        width: 520,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                context.localized('Trigger groups', '选择触发组'),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                context.localized(
-                  'Resources are available only when at least one selected group matches the current project.',
-                  '只有当前项目命中至少一个所选触发组时，资源才会生效。',
+    return DesktopDialogTheme(
+      child: Dialog(
+        key: const Key('trigger-group-picker'),
+        elevation: 3,
+        backgroundColor: colors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        insetPadding: DesktopDialogStyle.insetPadding,
+        clipBehavior: Clip.antiAlias,
+        shape: DesktopDialogStyle.shape(colors),
+        child: SizedBox(
+          width: 520,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  context.localized('Trigger groups', '选择触发组'),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-              ),
-              if (_groups.length > 5) ...<Widget>[
-                const SizedBox(height: 14),
-                TextField(
-                  key: const Key('trigger-group-search'),
-                  controller: _searchController,
-                  autofocus: true,
-                  onChanged: (String value) => setState(() => _query = value),
-                  decoration: InputDecoration(
-                    hintText: context.localized(
-                      'Search names or rules',
-                      '搜索名称或规则',
-                    ),
-                    prefixIcon: const Icon(Icons.search_rounded, size: 17),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 36),
+                const SizedBox(height: 5),
+                Text(
+                  context.localized(
+                    'Resources are available only when at least one selected group matches the current project.',
+                    '只有当前项目命中至少一个所选触发组时，资源才会生效。',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
-              ],
-              const SizedBox(height: 12),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 280),
-                child: visible.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 30),
-                        child: Text(
-                          _groups.isEmpty
-                              ? context.localized(
-                                  'No trigger groups yet',
-                                  '还没有触发组',
-                                )
-                              : context.localized(
-                                  'No matching trigger groups',
-                                  '没有匹配的触发组',
-                                ),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colors.onSurfaceVariant),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: visible.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final TriggerGroup group = visible[index];
-                          final bool selected = _selectedIds.contains(group.id);
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: index == visible.length - 1 ? 0 : 4,
-                            ),
-                            child: Material(
-                              key: ValueKey<String>(
-                                'trigger-group-row-${group.id}',
-                              ),
-                              color: selected
-                                  ? colors.primary.withValues(alpha: 0.08)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(5),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(5),
-                                onTap: () => setState(() {
-                                  selected
-                                      ? _selectedIds.remove(group.id)
-                                      : _selectedIds.add(group.id);
-                                }),
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    10,
-                                    8,
-                                    5,
-                                    8,
-                                  ),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Icon(
-                                        Icons.filter_alt_outlined,
-                                        size: 16,
-                                        color: selected
-                                            ? colors.primary
-                                            : colors.onSurfaceVariant,
-                                      ),
-                                      const SizedBox(width: 9),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Text(
-                                              group.name,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight: selected
-                                                        ? FontWeight.w600
-                                                        : FontWeight.w500,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              _ruleSummary(context, group),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color:
-                                                        colors.onSurfaceVariant,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      IconButton(
-                                        key: ValueKey<String>(
-                                          'edit-trigger-group-${group.id}',
-                                        ),
-                                        tooltip: context.localized(
-                                          'Edit rules',
-                                          '编辑规则',
-                                        ),
-                                        onPressed: () => _edit(group),
-                                        icon: const Icon(
-                                          Icons.edit_outlined,
-                                          size: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 2),
-                                      SelectionMark(
-                                        selected: selected,
-                                        size: 17,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                if (_groups.length > 5) ...<Widget>[
+                  const SizedBox(height: 14),
+                  TextField(
+                    key: const Key('trigger-group-search'),
+                    controller: _searchController,
+                    autofocus: true,
+                    onChanged: (String value) => setState(() => _query = value),
+                    decoration: InputDecoration(
+                      hintText: context.localized(
+                        'Search names or rules',
+                        '搜索名称或规则',
                       ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                runSpacing: 4,
-                children: <Widget>[
-                  TextButton.icon(
-                    key: const Key('create-trigger-group'),
-                    onPressed: _create,
-                    icon: const Icon(Icons.add_rounded, size: 17),
-                    label: Text(
-                      context.localized('New trigger group', '新建触发组'),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 17),
+                      prefixIconConstraints: const BoxConstraints(minWidth: 36),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(context.localized('Cancel', '取消')),
-                  ),
-                  FilledButton(
-                    key: const Key('apply-trigger-groups'),
-                    onPressed: () => Navigator.pop(
-                      context,
-                      Set<String>.unmodifiable(_selectedIds),
-                    ),
-                    child: Text(context.localized('Apply', '应用')),
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 280),
+                  child: visible.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          child: Text(
+                            _groups.isEmpty
+                                ? context.localized(
+                                    'No trigger groups yet',
+                                    '还没有触发组',
+                                  )
+                                : context.localized(
+                                    'No matching trigger groups',
+                                    '没有匹配的触发组',
+                                  ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: visible.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final TriggerGroup group = visible[index];
+                            final bool selected = _selectedIds.contains(
+                              group.id,
+                            );
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index == visible.length - 1 ? 0 : 4,
+                              ),
+                              child: Material(
+                                key: ValueKey<String>(
+                                  'trigger-group-row-${group.id}',
+                                ),
+                                color: selected
+                                    ? colors.primary.withValues(alpha: 0.08)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(5),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(5),
+                                  onTap: () => setState(() {
+                                    selected
+                                        ? _selectedIds.remove(group.id)
+                                        : _selectedIds.add(group.id);
+                                  }),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10,
+                                      8,
+                                      5,
+                                      8,
+                                    ),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Icon(
+                                          Icons.filter_alt_outlined,
+                                          size: 16,
+                                          color: selected
+                                              ? colors.primary
+                                              : colors.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: 9),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: <Widget>[
+                                              Text(
+                                                group.name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight: selected
+                                                          ? FontWeight.w600
+                                                          : FontWeight.w500,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                _ruleSummary(context, group),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: colors
+                                                          .onSurfaceVariant,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          key: ValueKey<String>(
+                                            'edit-trigger-group-${group.id}',
+                                          ),
+                                          tooltip: context.localized(
+                                            'Edit rules',
+                                            '编辑规则',
+                                          ),
+                                          onPressed: () => _edit(group),
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            size: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 2),
+                                        SelectionMark(
+                                          selected: selected,
+                                          size: 17,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: <Widget>[
+                    TextButton.icon(
+                      key: const Key('create-trigger-group'),
+                      onPressed: _create,
+                      icon: const Icon(Icons.add_rounded, size: 17),
+                      label: Text(
+                        context.localized('New trigger group', '新建触发组'),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(context.localized('Cancel', '取消')),
+                    ),
+                    FilledButton(
+                      key: const Key('apply-trigger-groups'),
+                      onPressed: () => Navigator.pop(
+                        context,
+                        Set<String>.unmodifiable(_selectedIds),
+                      ),
+                      child: Text(context.localized('Apply', '应用')),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -348,7 +355,7 @@ final class _TriggerGroupPickerDialogState
   Future<bool> _confirmDelete(TriggerGroup group) async {
     return await showDialog<bool>(
           context: context,
-          builder: (BuildContext context) => AlertDialog(
+          builder: (BuildContext context) => DesktopAlertDialog(
             title: Text(
               context.localized(
                 'Delete “${group.name}”?',
@@ -368,9 +375,7 @@ final class _TriggerGroupPickerDialogState
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
+                style: DesktopDialogStyle.destructiveButtonStyle(context),
                 child: Text(context.localized('Delete', '删除')),
               ),
             ],
@@ -438,122 +443,132 @@ final class _TriggerGroupEditorDialogState
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    return Dialog(
-      key: const Key('trigger-group-editor'),
-      elevation: 3,
-      backgroundColor: colors.surface,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-      child: SizedBox(
-        width: 650,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Text(
-                widget.group == null
-                    ? context.localized('New trigger group', '新建触发组')
-                    : context.localized('Edit trigger group', '编辑触发组'),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              _DialogLabel(text: context.localized('Group name', '触发组名称')),
-              const SizedBox(height: 7),
-              TextField(
-                key: const Key('trigger-group-name'),
-                controller: _nameController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: context.localized(
-                    'e.g. DingDong projects',
-                    '例如：DingDong 项目',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: _DialogLabel(
-                      text: context.localized(
-                        'Match any of these rules',
-                        '满足任一规则时触发',
-                      ),
-                    ),
-                  ),
-                  TextButton.icon(
-                    key: const Key('add-trigger-rule'),
-                    onPressed: _addRule,
-                    icon: const Icon(Icons.add_rounded, size: 16),
-                    label: Text(context.localized('Add rule', '添加规则')),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 7),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      for (final (int index, _EditableTriggerRule rule)
-                          in _rules.indexed)
-                        Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index == _rules.length - 1 ? 0 : 7,
-                          ),
-                          child: _TriggerRuleRow(
-                            key: ValueKey<_EditableTriggerRule>(rule),
-                            rule: rule,
-                            canDelete: _rules.length > 1,
-                            onChanged: () => setState(() => _error = null),
-                            onDelete: () => _removeRule(rule),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              if (_error != null) ...<Widget>[
-                const SizedBox(height: 10),
+    return DesktopDialogTheme(
+      child: Dialog(
+        key: const Key('trigger-group-editor'),
+        elevation: 3,
+        backgroundColor: colors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        insetPadding: DesktopDialogStyle.insetPadding,
+        clipBehavior: Clip.antiAlias,
+        shape: DesktopDialogStyle.shape(colors),
+        child: SizedBox(
+          width: 650,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
                 Text(
-                  _error!,
-                  key: const Key('trigger-group-error'),
+                  widget.group == null
+                      ? context.localized('New trigger group', '新建触发组')
+                      : context.localized('Edit trigger group', '编辑触发组'),
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: colors.error),
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ],
-              const SizedBox(height: 18),
-              Row(
-                children: <Widget>[
-                  if (widget.group != null)
-                    TextButton.icon(
-                      key: const Key('delete-trigger-group'),
-                      onPressed: () => Navigator.pop(
-                        context,
-                        const TriggerGroupEditResult(delete: true),
-                      ),
-                      icon: const Icon(Icons.delete_outline_rounded, size: 17),
-                      label: Text(context.localized('Delete', '删除')),
+                const SizedBox(height: 16),
+                _DialogLabel(text: context.localized('Group name', '触发组名称')),
+                const SizedBox(height: 7),
+                TextField(
+                  key: const Key('trigger-group-name'),
+                  controller: _nameController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: context.localized(
+                      'e.g. DingDong projects',
+                      '例如：DingDong 项目',
                     ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(context.localized('Cancel', '取消')),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    key: const Key('save-trigger-group'),
-                    onPressed: _save,
-                    child: Text(context.localized('Save group', '保存触发组')),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _DialogLabel(
+                        text: context.localized(
+                          'Match any of these rules',
+                          '满足任一规则时触发',
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      key: const Key('add-trigger-rule'),
+                      onPressed: _addRule,
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: Text(context.localized('Add rule', '添加规则')),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 7),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: <Widget>[
+                        for (final (int index, _EditableTriggerRule rule)
+                            in _rules.indexed)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              bottom: index == _rules.length - 1 ? 0 : 7,
+                            ),
+                            child: _TriggerRuleRow(
+                              key: ValueKey<_EditableTriggerRule>(rule),
+                              rule: rule,
+                              canDelete: _rules.length > 1,
+                              onChanged: () => setState(() => _error = null),
+                              onDelete: () => _removeRule(rule),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (_error != null) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Text(
+                    _error!,
+                    key: const Key('trigger-group-error'),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: colors.error),
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 18),
+                Row(
+                  children: <Widget>[
+                    if (widget.group != null)
+                      TextButton.icon(
+                        key: const Key('delete-trigger-group'),
+                        onPressed: () => Navigator.pop(
+                          context,
+                          const TriggerGroupEditResult(delete: true),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: colors.error,
+                        ),
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 17,
+                        ),
+                        label: Text(context.localized('Delete', '删除')),
+                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(context.localized('Cancel', '取消')),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      key: const Key('save-trigger-group'),
+                      onPressed: _save,
+                      child: Text(context.localized('Save group', '保存触发组')),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

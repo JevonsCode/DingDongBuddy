@@ -1,6 +1,7 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +16,6 @@ Future<void> showClipboardGroupContextMenu(
   required ClipboardViewModel viewModel,
   DesktopContextMenuGateway? gateway,
 }) async {
-  final ColorScheme colors = Theme.of(context).colorScheme;
   final bool deleteRequested;
   if (gateway != null) {
     deleteRequested =
@@ -58,7 +58,7 @@ Future<void> showClipboardGroupContextMenu(
   }
   final bool? confirmed = await showDialog<bool>(
     context: context,
-    builder: (BuildContext dialogContext) => AlertDialog(
+    builder: (BuildContext dialogContext) => DesktopAlertDialog(
       title: Text(context.localized('Delete “$group”?', '删除“$group”？')),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360),
@@ -76,10 +76,7 @@ Future<void> showClipboardGroupContextMenu(
         ),
         FilledButton(
           key: const Key('clipboard-delete-group-confirm'),
-          style: FilledButton.styleFrom(
-            backgroundColor: colors.error,
-            foregroundColor: colors.onError,
-          ),
+          style: DesktopDialogStyle.destructiveButtonStyle(context),
           onPressed: () => Navigator.pop(dialogContext, true),
           child: Text(context.localized('Delete group', '删除分组')),
         ),

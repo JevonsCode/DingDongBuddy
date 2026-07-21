@@ -24,14 +24,54 @@ making you watch the chat.
 - Keeps prompts, complete Skill packages, and MCP configurations in one library
 - Installs a complete online Skill directory, including `scripts/`,
   `references/`, and `assets/`, and updates it only when you ask
+- Syncs enabled global always-on Prompts into a managed block in Codex
+  `~/.codex/AGENTS.md` while preserving existing user instructions
 - Syncs enabled Skills and MCP servers into Codex, Claude Code, Cursor, and
   Gemini CLI while preserving unrelated configuration
 - Uses workspace paths and repository URLs to narrow each task's bridge suggestions
-- Lets Agents discover a small summary first and load full content only when it
-  is useful
+- Returns full Prompts by default while keeping Skills and MCP servers
+  summary-first until they are needed
 - Rings on the Agent's native completion event and shows the first useful
   sentence from the final reply when the client provides it
+- Persists the tray unread count so unseen completion alerts survive app restarts
+- Keeps a configurable, local, read-only history of Agent completion details
 - Keeps clipboard and resource data on your computer by default
+
+## Current interface behavior
+
+- The header shows the current app version beside **DingDong**, for example
+  `v0.7.20`, using the same version constant as the release UI. Clicking it
+  opens Settings directly at the version and update section.
+- Clicking the **DingDong** wordmark previews the currently configured sound;
+  muted stays silent. Neither the wordmark nor version shows a hover tooltip or
+  hover surface.
+- The Clipboard metric on Today is the most recently loaded set of all clipboard
+  records. Search, kind, category, and group filters do not change it, and the
+  view loads at most the latest 5,000 records.
+- With monitoring enabled, the native clipboard sequence is checked about every
+  250ms and changes are written to local SQLite. The metric is not yet a strict
+  real-time subscription; it reloads at UI startup, manual refresh, Clipboard
+  workspace entry, or explicit capture.
+- Entering Clipboard now reloads local history without recapturing the current
+  system clipboard, so deleting the final item stays deleted after navigation.
+  New copies still arrive through monitoring or the explicit capture action.
+- Dragged clipboard group order is saved separately from record membership and
+  restored when the clipboard or resource-manager window is reopened.
+- **Recent agents** shows a compact rolling count beside its heading. The
+  default window is 24 hours. Completion details default to the latest 200
+  items, survive restart by default, and are available as a read-only list in
+  Resource Manager. Remembering, detail capacity, and count-window hours are
+  configurable in Settings.
+- Tray unread state is acknowledged only after the tray is clicked and the panel
+  stays visible for about 0.5 seconds. New alerts arriving during acknowledgement
+  remain unread, and unread state is restored after an app restart.
+- Confirmation, input, and management dialogs share a compact desktop treatment:
+  14px corners, a hairline border, low elevation, restrained title hierarchy,
+  non-pill buttons, and a consistent danger color for destructive actions.
+- When Settings finds a newer release, **Update to …** performs the complete
+  update in one action: download, signature verification, transactional
+  replacement, obsolete-file cleanup, and relaunch. macOS uses Sparkle 2;
+  Windows uses a per-user Velopack installation and does not need elevation.
 
 ## Download
 
@@ -42,6 +82,12 @@ making you watch the chat.
 On macOS, open the `.dmg` and drag **DingDong** onto **Applications**. Quick
 Paste needs Accessibility permission; ordinary clipboard history does not need
 Full Disk Access or Screen Recording.
+
+The first release with built-in updates is a one-time migration boundary.
+Existing macOS/ZIP installations must install that release manually once.
+Windows users should run the Velopack `Setup.exe` once; subsequent releases can
+be installed from Settings with one click. Portable Windows builds do not offer
+self-update.
 
 ## How the Agent connection works
 
@@ -55,11 +101,25 @@ sentence at the end of every task:
    short outcome from the hook payload or transcript; no second model call is
    made.
 
-These are separate from the resources a user enables inside DingDong. Enabled
-Skills are copied as complete native Skill directories. Enabled MCP resources
-are written as real client MCP entries. Project rules currently narrow the
-resources returned by `dingdong_bridge`; native Skill and MCP synchronization
-follows the resource's enabled state.
+These are separate from the resources a user enables inside DingDong. A global,
+always-on Codex Prompt is written into DingDong's managed block in
+`~/.codex/AGENTS.md`. Project-scoped and task-matched Prompts are routed by
+`dingdong_bridge`, while Manual Prompts never activate automatically. Enabled
+Skills are copied as complete native Skill directories, and enabled MCP
+resources become real client MCP entries. The bridge includes full Prompt
+content by default while keeping Skills and MCP servers summary-first.
+
+### Prompt, Skill, and MCP invocation semantics
+
+| Type | How it reaches the Agent | Required Agent behavior |
+|---|---|---|
+| Prompt | A global always-on Codex Prompt is written directly into DingDong's managed `AGENTS.md`; project or task Prompts arrive in full from the bridge | Every active Prompt is a required instruction and is applied automatically; it is not an optional tool call |
+| Skill | Enabled Skills are synchronized as native Skill packages; the bridge returns candidate summaries only | Match the description first and load or use the complete Skill only when the task fits; a summary is not an instruction |
+| MCP | Enabled MCP servers are written into native client configuration; the bridge returns candidate summaries only | Configuration means tools are available; call the relevant tool only when the task needs it, never automatically on every turn |
+
+Activation and trigger groups filter bridge candidates. The current release still
+synchronizes enabled native Skills and MCP servers globally, so client visibility
+and per-task loading or tool invocation are separate concerns.
 
 ### Architecture
 
@@ -86,11 +146,13 @@ flowchart TB
   subgraph NativeConfig["Native user-level Agent configuration"]
     McpConfig["MCP configuration<br/>Codex TOML · Claude/Cursor/Gemini JSON"]
     HookConfig["Completion hook<br/>Stop · afterAgentResponse · AfterAgent"]
+    PromptFile["Codex global Prompt<br/>managed ~/.codex/AGENTS.md block"]
     SkillFolders["Native Skill folders<br/>complete package directories"]
   end
 
   Clients -->|"setup writes and reloads"| McpConfig
   Clients -->|"setup writes and trusts"| HookConfig
+  PromptFile --> Codex
   SkillFolders --> Codex
   SkillFolders --> Claude
   SkillFolders --> Cursor
@@ -133,8 +195,8 @@ flowchart TB
   subgraph Routing["Per-task resource routing"]
     Context["Task text<br/>workspace path<br/>Git remote.origin.url"]
     Scope["Project rules<br/>path/repository equals or contains"]
-    Activation["Enabled + pinned<br/>always · taskMatch · manual"]
-    SummaryFirst["At most 12 candidates<br/>name and description first"]
+    Activation["Enabled + activation<br/>always · taskMatch · manual never auto"]
+    SummaryFirst["At most 12 candidates<br/>Prompt content · Skill/MCP summary"]
     FullLoad["Full content on demand<br/>get_asset · load_skill"]
   end
 
@@ -159,12 +221,14 @@ flowchart TB
     Preflight["Preflight<br/>Skill metadata · MCP transport · config format"]
     SkillInstaller["Online Skill installer<br/>Git sparse clone or GitHub API"]
     SkillMirror["Atomic complete-directory mirror<br/>.dingdong-managed marker"]
+    PromptWriter["Managed Codex Prompt writer<br/>preserves user instructions"]
     MCPWriter["Managed MCP writer<br/>preserves unrelated user config"]
   end
 
   ResourceUI --> Transaction --> ResourceStore
   Transaction --> Preflight
   SkillInstaller --> PackageStore
+  Transaction --> PromptWriter --> PromptFile
   Preflight --> SkillMirror
   Preflight --> MCPWriter
   PackageStore --> SkillMirror --> SkillFolders
@@ -176,11 +240,12 @@ The four main paths are:
 
 - **Setup:** copy the generated prompt → the Agent writes its native MCP and
   completion-hook configuration → reload and test both paths separately.
-- **Task start:** Agent → `dingdong_bridge` → bounded names and descriptions →
-  full resource only when needed.
-- **Resource enable:** library enabled state → preflight → native Skill folder
-  or MCP configuration, with DingDong-managed ownership markers. Project rules
-  are applied separately when `dingdong_bridge` routes a task.
+- **Task start:** Agent → `dingdong_bridge` → full Prompt content plus Skill/MCP
+  summaries → full Skill loading or MCP calls only when needed.
+- **Resource enable:** library enabled state → managed Codex global Prompt block,
+  native Skill folder, or MCP configuration, with DingDong ownership markers
+  preserving unrelated user files. Project rules are applied separately when
+  `dingdong_bridge` routes a task.
 - **Task finish:** native completion hook → `--notify-stop` → local summary →
   `/ding` → sound and activity item.
 
@@ -219,9 +284,10 @@ Connect DingDong on this computer to the current agent or IDE.
    "<DINGDONG_MCP_PATH>" --notify-stop --source "Current client name"
    Use Codex Stop in ~/.codex/config.toml, Claude Code Stop in ~/.claude/settings.json, Cursor afterAgentResponse in ~/.cursor/hooks.json, or Gemini CLI AfterAgent in ~/.gemini/settings.json.
 4. Reload the client. For Codex, restart the MCP server and review and trust the hook in /hooks.
-5. Pipe {"summary":"DingDong task-completion hook is connected"} to the hook command and confirm the notification arrives.
-6. Confirm dingdong_notify exists, then call it once with message "DingDong MCP is connected" and the current client name as source.
-7. Report only the changed user configuration files and whether both tests succeeded. Preserve existing configuration and return the original error on failure.
+5. Keep resource semantics distinct: apply every active Prompt automatically and in full; match a Skill description before loading it; call MCP tools only when the task needs them. Skill and MCP summaries are not Prompt instructions.
+6. Pipe {"summary":"DingDong task-completion hook is connected"} to the hook command and confirm the notification arrives.
+7. Confirm dingdong_notify exists, then call it once with message "DingDong MCP is connected" and the current client name as source.
+8. Report only the changed user configuration files and whether both tests succeeded. Preserve existing configuration and return the original error on failure.
 ```
 
 ### Manual setup
@@ -404,6 +470,10 @@ occupied, DingDong stores the actual bound port in its application data so the
 bundled bridge can reconnect. Clipboard endpoints omit full and sensitive
 content unless a caller explicitly requests a supported content mode.
 
+Agent completion details are stored in `agent-activity.json` in the same local
+application-data directory. The rolling-count metadata stores completion times
+only; it does not duplicate response text.
+
 DingDong does not include analytics or usage-event reporting. Before sharing a
 bug report, remove clipboard contents, secrets, personal or company data,
 usernames, and local paths.
@@ -478,9 +548,25 @@ test/                  unit, contract, widget, performance and golden tests
 
 Pushing a `v*.*.*` tag runs `.github/workflows/release.yml`. It tests and builds
 macOS Apple Silicon, macOS Intel, and Windows x64 packages, then publishes a
-GitHub release. Apple distribution secrets enable Developer ID signing,
-notarization, and stapling; otherwise CI produces an ad-hoc signed community
-build.
+GitHub release. The workflow also publishes architecture-specific Sparkle
+appcasts and Velopack's `releases.win.json`, full package, and per-user Setup.
+
+Sparkle update signing is free and independent of an Apple Developer account.
+Generate its Ed25519 keypair once, keeping the export outside the repository:
+
+```bash
+scripts/setup_sparkle_keys.sh /secure/private/dingdong-sparkle-key
+```
+
+Store the printed public key as the `SPARKLE_PUBLIC_ED_KEY` GitHub Actions secret
+and the exported file contents as `SPARKLE_PRIVATE_ED_KEY`. Release CI refuses
+to publish a macOS build without both, so an unsigned update cannot silently
+enter the feed. Apple distribution secrets remain optional: they enable
+Developer ID signing, notarization, and stapling; without them CI produces an
+ad-hoc signed community build. In that community build, Sparkle's EdDSA
+signature still authenticates the update archive, but macOS Gatekeeper behavior
+and permission inheritance cannot be guaranteed like they can with a stable
+Developer ID identity.
 
 ## License
 

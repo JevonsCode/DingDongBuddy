@@ -10,6 +10,8 @@
 
 #include "win32_window.h"
 
+class ApplicationUpdater;
+
 // A window that does nothing but host a Flutter view.
 class FlutterWindow : public Win32Window {
  public:
@@ -38,6 +40,9 @@ class FlutterWindow : public Win32Window {
       notification_channel_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       launch_at_startup_channel_;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      updater_channel_;
+  std::shared_ptr<ApplicationUpdater> application_updater_;
   bool hotkey_registered_ = false;
   HWND previous_foreground_window_ = nullptr;
 };

@@ -2,6 +2,7 @@ import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -305,6 +306,44 @@ void main() {
 
     expect(model.availableCategories.first.id, 'text');
     expect(model.groups, <String>['项目乙', '项目甲']);
+  });
+
+  test('user group order survives rebuilding and reopening the view model', () {
+    final DateTime now = DateTime.utc(2026, 7, 21);
+    ClipboardRecord groupedRecord(String id, String group) => ClipboardRecord(
+      id: id,
+      group: group,
+      title: group,
+      content: group,
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final InMemoryClipboardStore records =
+        InMemoryClipboardStore(<ClipboardRecord>[
+          groupedRecord('page-id', 'PageID'),
+          groupedRecord('query', 'Query'),
+          groupedRecord('idev', 'iDev ID'),
+        ]);
+    final InMemoryClipboardGroupOrderStore orderStore =
+        InMemoryClipboardGroupOrderStore();
+    final ClipboardViewModel first = ClipboardViewModel(
+      records,
+      groupOrderStore: orderStore,
+    )..load();
+
+    first.reorderGroups(2, 0);
+    expect(first.groups, <String>['Query', 'iDev ID', 'PageID']);
+
+    final ClipboardViewModel reopened = ClipboardViewModel(
+      records,
+      groupOrderStore: orderStore,
+    )..load();
+
+    expect(reopened.groups, <String>['Query', 'iDev ID', 'PageID']);
   });
 
   test('promoting content publishes a library revision', () async {

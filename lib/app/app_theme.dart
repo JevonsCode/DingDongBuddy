@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:flutter/material.dart';
 
 /// Restrained desktop theme with compact controls and platform-neutral colors.
@@ -150,10 +151,7 @@ final class AppTheme {
         checkColor: WidgetStatePropertyAll<Color>(colors.onPrimary),
       ),
       cardTheme: const CardThemeData(elevation: 0, margin: EdgeInsets.zero),
-      dialogTheme: DialogThemeData(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-      ),
+      dialogTheme: DesktopDialogStyle.theme(colors, text),
     );
   }
 
@@ -189,10 +187,17 @@ final class AppTheme {
         isDense: true,
         border: inputBorder,
         enabledBorder: inputBorder,
+        focusedBorder: inputBorder.copyWith(
+          borderSide: BorderSide(color: colors.primary, width: 1.25),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 11,
         ),
+      ),
+      dialogTheme: DesktopDialogStyle.theme(
+        colors,
+        ThemeData(brightness: brightness).textTheme,
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colors.surfaceContainerLowest,

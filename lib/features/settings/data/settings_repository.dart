@@ -24,6 +24,9 @@ final class SettingsRepository {
       _backend.read(_customSoundPathKey),
       _backend.read(_apiPortKey),
       _backend.read(_mcpAccessSeenKey),
+      _backend.read(_rememberAgentActivityKey),
+      _backend.read(_agentActivityMaxItemsKey),
+      _backend.read(_agentActivityCountHoursKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -41,6 +44,9 @@ final class SettingsRepository {
       customSoundPath: values[10] as String?,
       apiPort: values[11] is int ? values[11]! as int : 2333,
       mcpAccessSeen: values[12] is bool ? values[12]! as bool : false,
+      rememberAgentActivity: values[13] is bool ? values[13]! as bool : true,
+      agentActivityMaxItems: values[14] is int ? values[14]! as int : 200,
+      agentActivityCountHours: values[15] is int ? values[15]! as int : 24,
     ).sanitized();
   }
 
@@ -66,6 +72,12 @@ final class SettingsRepository {
       _backend.remove(_legacyMcpSetupPromptOverrideKey),
       _backend.write(_apiPortKey, settings.apiPort),
       _backend.write(_mcpAccessSeenKey, settings.mcpAccessSeen),
+      _backend.write(_rememberAgentActivityKey, settings.rememberAgentActivity),
+      _backend.write(_agentActivityMaxItemsKey, settings.agentActivityMaxItems),
+      _backend.write(
+        _agentActivityCountHoursKey,
+        settings.agentActivityCountHours,
+      ),
     ]);
   }
 }
@@ -86,3 +98,6 @@ const String _legacyMcpSetupPromptOverrideKey =
     'dingdong.mcpSetupPromptOverride';
 const String _apiPortKey = 'dingdong.api.port';
 const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';
+const String _rememberAgentActivityKey = 'dingdong.agentActivity.remember';
+const String _agentActivityMaxItemsKey = 'dingdong.agentActivity.maxItems';
+const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';

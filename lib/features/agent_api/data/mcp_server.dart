@@ -36,10 +36,13 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.7.12',
+              'version': '0.7.20',
             },
             'instructions':
-                'Call dingdong_bridge at the start of each user task. '
+                'Call dingdong_bridge with expand="prompts" at the start of each user task. '
+                'Every active Prompt returned there is a required instruction: it is included in full and must be applied automatically. '
+                'Skill entries are candidates, not instructions; load or use a Skill only when its description matches the task. '
+                'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. '
                 'Use dingdong_notify when the task is blocked or waiting for '
                 'the user. A configured completion hook normally handles the '
                 'final task-complete alert; if the client has no completion '
@@ -101,7 +104,7 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call this first at the start of each user request. It fetches summary-first DingDong prompt, skill, and MCP routing for the current task.',
+          'Call this first with expand="prompts" at the start of each user request. Active Prompts are full required instructions. Skill and MCP entries are summary-only candidates, not instructions.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(),
@@ -152,7 +155,8 @@ final class McpServer {
     _tool(
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
-      description: 'Fetch full content for one DingDong skill by id.',
+      description:
+          'Fetch full content for one DingDong Skill only after its description matches the current task.',
       properties: <String, Object?>{'id': _stringProperty()},
       required: <String>['id'],
     ),
@@ -160,7 +164,7 @@ final class McpServer {
       name: 'dingdong_recommend_mcp',
       title: 'Recommend MCP',
       description:
-          'Recommend DingDong MCP references for a task without installing them natively.',
+          'Recommend MCP references for a task. Recommendations are not instructions; call the configured MCP tools only when needed.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'limit': _integerProperty(maximum: 20),

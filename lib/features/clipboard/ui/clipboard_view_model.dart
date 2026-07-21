@@ -8,6 +8,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
@@ -27,6 +28,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     QuickPasteGateway? quickPasteGateway,
     DataRevisionBus? revisions,
     ClipboardCategoryRuleStore? categoryRuleStore,
+    ClipboardGroupOrderStore? groupOrderStore,
   }) : _captureService = captureService,
        _gateway = gateway,
        _resourceStore = resourceStore,
@@ -35,7 +37,8 @@ final class ClipboardViewModel extends ChangeNotifier {
        _quickPasteGateway = quickPasteGateway,
        _revisions = revisions,
        _categoryRuleStore =
-           categoryRuleStore ?? InMemoryClipboardCategoryRuleStore();
+           categoryRuleStore ?? InMemoryClipboardCategoryRuleStore(),
+       _groupOrderStore = groupOrderStore ?? InMemoryClipboardGroupOrderStore();
 
   final ClipboardStore _store;
   final ClipboardCaptureService? _captureService;
@@ -46,6 +49,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   final QuickPasteGateway? _quickPasteGateway;
   final DataRevisionBus? _revisions;
   final ClipboardCategoryRuleStore _categoryRuleStore;
+  final ClipboardGroupOrderStore _groupOrderStore;
   List<ClipboardRecord> _records = const <ClipboardRecord>[];
   List<ClipboardCategoryRule> _categoryRules = const <ClipboardCategoryRule>[];
   final List<String> _groupOrder = <String>[];
@@ -137,6 +141,9 @@ final class ClipboardViewModel extends ChangeNotifier {
   void load() {
     _records = _store.list(limit: 5000);
     _categoryRules = List<ClipboardCategoryRule>.of(_categoryRuleStore.load());
+    _groupOrder
+      ..clear()
+      ..addAll(_groupOrderStore.load());
     if (_selectedCategoryId != null &&
         !_categoryRules.any(
           (ClipboardCategoryRule rule) =>
@@ -217,6 +224,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       ..addAll(current);
     _groupOrder.remove(group);
     _groupOrder.insert(_groupOrder.indexOf(before), group);
+    _groupOrderStore.save(_groupOrder);
     notifyListeners();
   }
 
@@ -228,6 +236,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     _groupOrder
       ..clear()
       ..addAll(visible);
+    _groupOrderStore.save(_groupOrder);
     notifyListeners();
   }
 
@@ -263,6 +272,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     _groupOrder.removeWhere(
       (String value) => value.toLowerCase() == normalized,
     );
+    _groupOrderStore.save(_groupOrder);
     if (_selectedGroup?.toLowerCase() == normalized) {
       _selectedGroup = null;
     }

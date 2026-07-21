@@ -27,10 +27,14 @@ String defaultMcpSetupPrompt({
    - Claude Code：用 claude mcp list 和 /hooks 检查
    - Cursor：重新加载窗口并检查 Hooks 配置
    - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
-6. 分别验证两条链路，不能只验证 MCP：
+6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
+   - Prompt：所有命中的 Prompt 都是必须自动应用的指令，并以完整正文提供；Codex 的全局、始终生效 Prompt 会直接进入 DingDong 托管的 AGENTS.md 区块
+   - Skill：由 Agent 根据 description 判断是否匹配，只有匹配当前任务时才加载或使用完整 Skill；Skill 摘要不是指令
+   - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用
+7. 分别验证两条链路，不能只验证 MCP：
    - 结束 Hook：用当前 shell 把 {"summary":"DingDong 任务结束提醒已接入"} 作为 JSON 标准输入传给第 3 步的 Hook 命令，确认 DingDong 收到这条提醒
    - MCP：确认工具列表里出现 dingdong_notify，然后立即调用一次，message 为“DingDong MCP 已接入”，source 为当前客户端名称
-7. 最后只报告：改了哪些用户级配置文件、MCP 是否可用、结束 Hook 是否已配置（Codex 还要说明是否已信任）、两项测试是否成功。任何一步失败时都保留原有配置并返回原始错误，不要猜测。''';
+8. 最后只报告：改了哪些用户级配置文件、MCP 是否可用、结束 Hook 是否已配置（Codex 还要说明是否已信任）、两项测试是否成功。任何一步失败时都保留原有配置并返回原始错误，不要猜测。''';
   }
   return '''Connect DingDong on this computer to the current agent or IDE and enable durable task-completion alerts:
 1. Confirm that this session is running locally on the computer where DingDong is installed, and verify that this executable exists and can run. A remote or cloud agent cannot use this local path:
@@ -52,8 +56,12 @@ String defaultMcpSetupPrompt({
    - Claude Code: inspect claude mcp list and /hooks
    - Cursor: reload the window and inspect the Hooks configuration
    - Gemini CLI: run /mcp reload and inspect /hooks panel
-6. Test both paths; testing MCP alone is not enough:
+6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
+   - Prompt: every active Prompt is a required instruction, delivered in full and applied automatically; a global always-on Codex Prompt is placed directly in DingDong's managed AGENTS.md block
+   - Skill: the Agent matches its description first and loads or uses the complete Skill only when it fits the current task; a Skill summary is not an instruction
+   - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn
+7. Test both paths; testing MCP alone is not enough:
    - Completion hook: using the current shell, pipe {"summary":"DingDong task-completion hook is connected"} as JSON stdin to the hook command from step 3 and confirm that DingDong receives it
    - MCP: confirm dingdong_notify appears in the tool list, then call it once with message "DingDong MCP is connected" and source set to the current client name
-7. Finally report only the user-level configuration files changed, whether MCP is available, whether the completion hook is configured (and trusted for Codex), and whether both tests succeeded. If any step fails, preserve the existing configuration and return the original error instead of guessing.''';
+8. Finally report only the user-level configuration files changed, whether MCP is available, whether the completion hook is configured (and trusted for Codex), and whether both tests succeeded. If any step fails, preserve the existing configuration and return the original error instead of guessing.''';
 }

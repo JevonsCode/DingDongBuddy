@@ -3,7 +3,8 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 
-/// Installs each bundled resource once while respecting later user deletion.
+/// Installs bundled resources and migrates existing managed content while
+/// respecting later user deletion.
 final class BuiltInResourceInstaller {
   BuiltInResourceInstaller(
     this._store,
@@ -16,7 +17,7 @@ final class BuiltInResourceInstaller {
        _skillDocumentLoader = skillDocumentLoader;
 
   static const String preferenceKey = 'dingdong.library.builtInResourceVersion';
-  static const int currentVersion = 2;
+  static const int currentVersion = 3;
 
   final ResourceStore _store;
   final PreferencesBackend _preferences;
@@ -31,29 +32,53 @@ final class BuiltInResourceInstaller {
     }
 
     final List<Resource> resources = await _store.load();
-    final List<Resource> additions = <Resource>[];
-    if (installedVersion < 1 &&
-        !resources.any(
-          (Resource resource) => resource.id == builtInReplyMarkerPromptId,
-        )) {
-      additions.add(builtInReplyMarkerPrompt(_now()));
-    }
-    if (installedVersion < 2 &&
-        !resources.any(
-          (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
-        )) {
+    final List<Resource> next = List<Resource>.of(resources);
+    bool changed = false;
+    String? bundledSkillDocument;
+    Future<String> loadBundledSkill() async {
       final Future<String> Function()? loadSkill = _skillDocumentLoader;
       if (loadSkill == null) {
         throw StateError(
           'The bundled DingDong configure Skill is unavailable.',
         );
       }
-      additions.add(builtInDingDongConfigureSkill(await loadSkill(), _now()));
+      return bundledSkillDocument ??= await loadSkill();
     }
-    if (additions.isNotEmpty) {
-      await _store.save(<Resource>[...resources, ...additions]);
+
+    if (installedVersion < 1 &&
+        !next.any(
+          (Resource resource) => resource.id == builtInReplyMarkerPromptId,
+        )) {
+      next.add(builtInReplyMarkerPrompt(_now()));
+      changed = true;
+    }
+    if (installedVersion < 2 &&
+        !next.any(
+          (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
+        )) {
+      next.add(builtInDingDongConfigureSkill(await loadBundledSkill(), _now()));
+      changed = true;
+    }
+    if (installedVersion < 3) {
+      final int index = next.indexWhere(
+        (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
+      );
+      if (index >= 0) {
+        final String document = await loadBundledSkill();
+        final Resource current = next[index];
+        if (current.content != document) {
+          next[index] = current.copyWith(
+            content: document,
+            updatedAt: _now().toUtc(),
+          );
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      await _store.save(next);
     }
     await _preferences.write(preferenceKey, currentVersion);
-    return additions.isNotEmpty;
+    return changed;
   }
 }

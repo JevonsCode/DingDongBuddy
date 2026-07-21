@@ -31,6 +31,14 @@ A resource accepts `type`, `title`, `content`, `group`, `tags`, `source`, `updat
 
 Online Skills use a GitHub repository, folder, or direct `SKILL.md` link in `updateURL`; `content` must still be a valid `SKILL.md` document. MCP `content` is a JSON string such as `{"type":"stdio","command":"npx","args":["server"]}` or `{"type":"streamable-http","url":"https://example.com/mcp","bearerTokenEnvVar":"TOKEN"}`.
 
+## Runtime delivery
+
+- **Prompt:** `dingdong_bridge` includes every active Prompt in full and marks it as required instruction content. Codex global always-on Prompts without a trigger group are also injected directly into DingDong's managed `~/.codex/AGENTS.md` block.
+- **Skill:** the bridge returns summary metadata. Match its description first, then fetch the complete Skill with `dingdong_load_skill` or use the synchronized native Skill package. Do not execute a Skill summary as an instruction.
+- **MCP:** the bridge returns summary metadata and the enabled server is synchronized to native client configuration. Call its tools only when needed; do not interpret an MCP summary as an instruction or mandatory call.
+
+Trigger groups and activation rules filter bridge candidates. Enabled native Skills and MCP servers are currently synchronized globally, so native availability and per-task use are separate concepts.
+
 ## Trigger groups
 
 Create the trigger group first:

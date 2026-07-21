@@ -10,7 +10,10 @@ import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.da
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
+import 'package:dingdong/features/settings/data/preferences_backend.dart';
+import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
+import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -186,6 +189,63 @@ void main() {
       tester.widget<Transform>(transform).transform.storage,
       equals(Matrix4.identity().storage),
     );
+  });
+
+  testWidgets('brand plays the configured sound without hover decoration', (
+    WidgetTester tester,
+  ) async {
+    final SettingsRepository repository = SettingsRepository(
+      MemoryPreferencesBackend(),
+    );
+    await repository.save(
+      const AppSettings(
+        selectedSound: 'custom',
+        customSoundPath: '/tmp/dingdong-custom.wav',
+      ),
+    );
+    final _RecordingSoundPreview preview = _RecordingSoundPreview();
+    await tester.pumpWidget(
+      DingDongApp(settingsRepository: repository, soundPreviewGateway: preview),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder brand = find.byKey(const Key('popup-brand-sound'));
+    final Finder version = find.byKey(const Key('popup-app-version'));
+    expect(
+      find.descendant(of: brand, matching: find.byType(Tooltip)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: version, matching: find.byType(Tooltip)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: brand, matching: find.byType(InkWell)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: version, matching: find.byType(InkWell)),
+      findsNothing,
+    );
+
+    await tester.tap(brand);
+    await tester.pump();
+
+    expect(preview.callCount, 1);
+    expect(preview.sound, 'custom');
+    expect(preview.customSoundPath, '/tmp/dingdong-custom.wav');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await repository.save(const AppSettings(selectedSound: 'muted'));
+    await tester.pumpWidget(
+      DingDongApp(settingsRepository: repository, soundPreviewGateway: preview),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('popup-brand-sound')));
+    await tester.pump();
+
+    expect(preview.callCount, 1);
   });
 
   testWidgets('resource management opens a separate desktop window', (
@@ -524,9 +584,33 @@ description: Use when product decisions should follow saved preferences.
     await tester.pump();
 
     expect(launcher.openCount, 1);
+    expect(launcher.lastDestination, SettingsWindowDestination.top);
     expect(events, <String>['hide', 'settings']);
     expect(controller.selectedIndex, 2);
     expect(find.byKey(const Key('settings-screen')), findsNothing);
+  });
+
+  testWidgets('version opens settings at the release section', (
+    WidgetTester tester,
+  ) async {
+    final List<String> events = <String>[];
+    final _FakeSettingsWindowLauncher launcher = _FakeSettingsWindowLauncher(
+      onShow: () => events.add('settings'),
+    );
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsWindowLauncher: launcher,
+        onHideWindow: () async => events.add('hide'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('popup-app-version')));
+    await tester.pump();
+
+    expect(launcher.openCount, 1);
+    expect(launcher.lastDestination, SettingsWindowDestination.version);
+    expect(events, <String>['hide', 'settings']);
   });
 
   testWidgets('Escape closes clipboard details before hiding the callout', (
@@ -1051,11 +1135,28 @@ final class _FakeSettingsWindowLauncher implements SettingsWindowLauncher {
 
   final VoidCallback? onShow;
   int openCount = 0;
+  SettingsWindowDestination? lastDestination;
 
   @override
-  Future<void> show() async {
+  Future<void> show({
+    SettingsWindowDestination destination = SettingsWindowDestination.top,
+  }) async {
     openCount += 1;
+    lastDestination = destination;
     onShow?.call();
+  }
+}
+
+final class _RecordingSoundPreview implements SoundPreviewGateway {
+  int callCount = 0;
+  String? sound;
+  String? customSoundPath;
+
+  @override
+  Future<void> preview({required String sound, String? customSoundPath}) async {
+    callCount += 1;
+    this.sound = sound;
+    this.customSoundPath = customSoundPath;
   }
 }
 
