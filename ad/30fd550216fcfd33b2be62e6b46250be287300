@@ -1,0 +1,28 @@
+INSTALL_WITH_AGENT.md
+  s_59e28dea430158::t_2821f5104514f3 1-93,98-167
+  s_59e28dea430158::t_dd3e58da958475 94-97
+README.md
+  s_59e28dea430158::t_2821f5104514f3 20-34
+test/packaging/desktop_identity_test.dart
+  s_59e28dea430158::t_b082d5495a6c5d 170-173
+  s_59e28dea430158::t_a0bcb02ece529b 199
+  s_59e28dea430158::t_2821f5104514f3 162-169,174-198,200-201
+README.zh.md
+  s_59e28dea430158::t_2821f5104514f3 19-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "ad30fd550216fcfd33b2be62e6b46250be287300",
+  "prompts": {},
+  "sessions": {
+    "s_59e28dea430158": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8368-54f3-7a20-a19a-ca31568022de",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
