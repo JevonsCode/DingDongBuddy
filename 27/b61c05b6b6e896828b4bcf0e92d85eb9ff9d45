@@ -1,0 +1,22 @@
+lib/features/settings/domain/release_update.dart
+  s_59e28dea430158::t_c7ced86fb01e7f 115
+test/packaging/desktop_identity_test.dart
+  s_59e28dea430158::t_c7ced86fb01e7f 57,61-62
+  s_59e28dea430158::t_411857aa3899c1 58-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "27b61c05b6b6e896828b4bcf0e92d85eb9ff9d45",
+  "prompts": {},
+  "sessions": {
+    "s_59e28dea430158": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8368-54f3-7a20-a19a-ca31568022de",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
