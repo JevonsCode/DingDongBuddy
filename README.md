@@ -17,6 +17,21 @@ servers—close to your local coding Agents. When an Agent finishes, gets stuck,
 or needs a decision, DingDong calls you back with a short outcome instead of
 making you watch the chat.
 
+## Install with an Agent
+
+If you are using a local Codex, Claude Code, Cursor, or Gemini CLI session, paste
+the request below. The Agent will install the correct official release, start
+DingDong, connect its MCP bridge and native completion Hook, and test both paths.
+
+```text
+Install DingDong on this computer from https://github.com/JevonsCode/DingDongBuddy. First read and execute https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/INSTALL_WITH_AGENT.md. Complete the app installation, MCP setup, completion Hook setup, and both connection tests; preserve all existing user data and unrelated Agent settings. Do not merely summarize the guide.
+```
+
+The repository keeps the full, version-independent procedure in
+[INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). A local Agent that receives only
+this repository URL should use that guide when the user has explicitly asked it
+to install DingDong. The guide never asks the Agent to clone or build the source.
+
 ## What it does
 
 - Finds text, links, images, files, and commands you copied earlier

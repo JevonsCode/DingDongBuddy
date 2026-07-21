@@ -159,6 +159,46 @@ void main() {
     expect(chinesePrompt, contains('Skill 摘要不是指令'));
   });
 
+  test('repository exposes a canonical executable Agent install guide', () {
+    final String english = File('README.md').readAsStringSync();
+    final String chinese = File('README.zh.md').readAsStringSync();
+    final String guide = File('INSTALL_WITH_AGENT.md').readAsStringSync();
+    const String rawGuide =
+        'https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/INSTALL_WITH_AGENT.md';
+
+    for (final String readme in <String>[english, chinese]) {
+      expect(
+        readme,
+        contains('[INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)'),
+      );
+      expect(readme, contains(rawGuide));
+      expect(readme, contains('https://github.com/JevonsCode/DingDongBuddy'));
+    }
+    expect(
+      guide,
+      contains(
+        'https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/docs/dingdong-release.json',
+      ),
+    );
+    expect(guide, contains('DingDong-<version>-macos-arm64.dmg'));
+    expect(guide, contains('DingDong-<version>-macos-x64-beta.dmg'));
+    expect(guide, contains('DingDong-<version>-windows-x64-beta-Setup.exe'));
+    expect(guide, contains('com.dingdongbuddy.app'));
+    expect(guide, contains('api-port'));
+    expect(guide, contains('/health'));
+    expect(guide, contains('~/.codex/config.toml'));
+    expect(guide, contains('~/.claude/settings.json'));
+    expect(guide, contains('~/.cursor/hooks.json'));
+    expect(guide, contains('~/.gemini/settings.json'));
+    expect(guide, contains('--notify-stop --source'));
+    expect(guide, contains('afterAgentResponse'));
+    expect(guide, contains('AfterAgent'));
+    expect(guide, contains('dingdong_notify'));
+    expect(guide, contains('every active Prompt'));
+    expect(guide, contains('a Skill summary is not an instruction'));
+    expect(guide, contains('do not merely'));
+  });
+
   test('website keeps release diagnostics behind debug mode', () {
     final String website = File('docs/index.html').readAsStringSync();
     final String releaseMetadata = File(
