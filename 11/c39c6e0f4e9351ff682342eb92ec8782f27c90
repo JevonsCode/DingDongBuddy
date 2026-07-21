@@ -1,0 +1,19 @@
+test/features/library/skill_package_installer_test.dart
+  s_59e28dea430158::t_cd0f0afea55303 7,65-67,83,88,99,101-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "11c39c6e0f4e9351ff682342eb92ec8782f27c90",
+  "prompts": {},
+  "sessions": {
+    "s_59e28dea430158": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8368-54f3-7a20-a19a-ca31568022de",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
