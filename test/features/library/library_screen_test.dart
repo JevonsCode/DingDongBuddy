@@ -79,6 +79,66 @@ void main() {
     expect(find.byKey(const Key('resource-editor')), findsNothing);
   });
 
+  testWidgets('detail header uses a compact two-level breadcrumb', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final LibraryViewModel model = LibraryViewModel(_MemoryStore(<Resource>[]));
+    await model.load();
+    model.startCreating();
+
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    final Finder breadcrumb = find.byKey(
+      const Key('library-detail-breadcrumb'),
+    );
+    final Finder divider = find.descendant(
+      of: breadcrumb,
+      matching: find.byIcon(Icons.chevron_right_rounded),
+    );
+    expect(
+      find.descendant(of: breadcrumb, matching: find.text('Resources')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: breadcrumb, matching: find.text('New configuration')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: breadcrumb, matching: find.text('Prompt')),
+      findsNothing,
+    );
+    expect(divider, findsOneWidget);
+
+    final Text root = tester.widget<Text>(
+      find.byKey(const Key('library-breadcrumb-root')),
+    );
+    final Text current = tester.widget<Text>(
+      find.byKey(const Key('library-breadcrumb-current')),
+    );
+    expect(current.style?.fontSize, root.style?.fontSize);
+    expect(current.style?.height, root.style?.height);
+    expect(current.style?.fontWeight, FontWeight.w600);
+    expect(
+      tester.getCenter(find.byKey(const Key('library-breadcrumb-root'))).dy,
+      tester.getCenter(find.byKey(const Key('library-breadcrumb-current'))).dy,
+    );
+
+    expect(
+      tester.getSize(find.byKey(const Key('library-editor-back'))),
+      const Size.square(32),
+    );
+    expect(tester.widget<Icon>(find.byIcon(Icons.arrow_back_rounded)).size, 18);
+    expect(tester.widget<Icon>(divider).size, 18);
+    expect(
+      tester.getCenter(find.byKey(const Key('library-editor-back'))).dy,
+      tester.getCenter(divider).dy,
+    );
+  });
+
   testWidgets('searching and selecting a resource opens the details editor', (
     WidgetTester tester,
   ) async {

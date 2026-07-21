@@ -37,12 +37,13 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 - Finds text, links, images, files, and commands you copied earlier
 - Organizes clipboard history with groups and user-defined matching rules
 - Keeps prompts, complete Skill packages, and MCP configurations in one library
-- Installs a complete online Skill directory, including `scripts/`,
+- Installs a complete GitHub or local Skill directory, including `scripts/`,
   `references/`, and `assets/`, and updates it only when you ask
 - Syncs enabled global always-on Prompts into a managed block in Codex
   `~/.codex/AGENTS.md` while preserving existing user instructions
-- Syncs enabled Skills and MCP servers into Codex, Claude Code, Cursor, and
-  Gemini CLI while preserving unrelated configuration
+- Syncs enabled unscoped Skills globally, strict project Skills only inside the
+  selected project, and MCP servers into Codex, Claude Code, Cursor, and Gemini
+  CLI while preserving unrelated configuration
 - Uses workspace paths and repository URLs to narrow each task's bridge suggestions
 - Returns full Prompts by default while keeping Skills and MCP servers
   summary-first until they are needed
@@ -55,7 +56,7 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.7.20`, using the same version constant as the release UI. Clicking it
+  `v0.7.21`, using the same version constant as the release UI. Clicking it
   opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
   muted stays silent. Neither the wordmark nor version shows a hover tooltip or
@@ -109,8 +110,8 @@ self-update.
 DingDong uses two native connections instead of asking the model to remember a
 sentence at the end of every task:
 
-1. **MCP bridge** — gives the Agent `dingdong_bridge`, resource lookup, and
-   `dingdong_notify` tools.
+1. **MCP bridge** — gives the Agent `dingdong_bridge`, resource lookup,
+   configuration tools such as `dingdong_install_skill`, and `dingdong_notify`.
 2. **Completion hook** — runs deterministically after the client's final
    response and sends one local notification. The bundled executable extracts a
    short outcome from the hook payload or transcript; no second model call is
@@ -120,7 +121,8 @@ These are separate from the resources a user enables inside DingDong. A global,
 always-on Codex Prompt is written into DingDong's managed block in
 `~/.codex/AGENTS.md`. Project-scoped and task-matched Prompts are routed by
 `dingdong_bridge`, while Manual Prompts never activate automatically. Enabled
-Skills are copied as complete native Skill directories, and enabled MCP
+Unscoped Skills are copied to global native Skill directories; strict
+project-scoped Skills are copied only below their selected projects. Enabled MCP
 resources become real client MCP entries. The bridge includes full Prompt
 content by default while keeping Skills and MCP servers summary-first.
 
@@ -129,12 +131,41 @@ content by default while keeping Skills and MCP servers summary-first.
 | Type | How it reaches the Agent | Required Agent behavior |
 |---|---|---|
 | Prompt | A global always-on Codex Prompt is written directly into DingDong's managed `AGENTS.md`; project or task Prompts arrive in full from the bridge | Every active Prompt is a required instruction and is applied automatically; it is not an optional tool call |
-| Skill | Enabled Skills are synchronized as native Skill packages; the bridge returns candidate summaries only | Match the description first and load or use the complete Skill only when the task fits; a summary is not an instruction |
+| Skill | Unscoped Skills are synchronized globally; strict project Skills are synchronized only inside the selected project; the bridge returns candidate summaries only | Match the description first and load or use the complete Skill only when the task fits; a summary is not an instruction |
 | MCP | Enabled MCP servers are written into native client configuration; the bridge returns candidate summaries only | Configuration means tools are available; call the relevant tool only when the task needs it, never automatically on every turn |
 
-Activation and trigger groups filter bridge candidates. The current release still
-synchronizes enabled native Skills and MCP servers globally, so client visibility
-and per-task loading or tool invocation are separate concerns.
+Activation and trigger groups filter bridge candidates. MCP servers remain
+client-global. Strict project Skills also enforce the native filesystem boundary,
+so they do not appear in the client's global Skill directory.
+
+### Configure a Skill for one project
+
+After the user explicitly asks for the change, an Agent can perform the whole
+operation without asking the user to open Resource Manager:
+
+1. `dingdong_install_skill` installs or updates a complete package from GitHub
+   or an absolute local Skill path.
+2. `dingdong_upsert_trigger_group` creates or reuses a group with an exact,
+   existing absolute project path.
+3. `dingdong_bind_resource_scope` binds the returned IDs with
+   `strictProjectSkill: true`.
+4. `dingdong_bridge` verifies one matching and one unrelated workspace.
+
+The three writes are idempotent. Strict binding accepts only exact project-path
+rules and rejects `contains`, repository, relative, root, missing, and unknown scopes. DingDong mirrors
+the package into `.agents/skills`, `.claude/skills`, `.cursor/skills`, or
+`.gemini/skills` below the configured project when the corresponding client is
+installed. These locations follow the clients' native project Skill discovery
+rules: [Codex](https://learn.chatgpt.com/docs/build-skills),
+[Claude Code](https://code.claude.com/docs/en/skills),
+[Cursor](https://cursor.com/docs/skills), and
+[Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/).
+
+A new MCP-installed Skill remains disabled until binding succeeds, so it is not
+briefly exposed through DingDong's global sync. Strict scope can remove only
+DingDong-managed global copies; if the original local source is itself a
+user-owned global Skill, move/remove that original explicitly or install from a
+neutral directory/GitHub source before treating the isolation as complete.
 
 ### Architecture
 
@@ -258,9 +289,9 @@ The four main paths are:
 - **Task start:** Agent → `dingdong_bridge` → full Prompt content plus Skill/MCP
   summaries → full Skill loading or MCP calls only when needed.
 - **Resource enable:** library enabled state → managed Codex global Prompt block,
-  native Skill folder, or MCP configuration, with DingDong ownership markers
-  preserving unrelated user files. Project rules are applied separately when
-  `dingdong_bridge` routes a task.
+  global or project-native Skill folder, or MCP configuration, with DingDong
+  ownership markers preserving unrelated user files. Strict Skill scope affects
+  both native placement and `dingdong_bridge` routing.
 - **Task finish:** native completion hook → `--notify-stop` → local summary →
   `/ding` → sound and activity item.
 
@@ -299,7 +330,7 @@ Connect DingDong on this computer to the current agent or IDE.
    "<DINGDONG_MCP_PATH>" --notify-stop --source "Current client name"
    Use Codex Stop in ~/.codex/config.toml, Claude Code Stop in ~/.claude/settings.json, Cursor afterAgentResponse in ~/.cursor/hooks.json, or Gemini CLI AfterAgent in ~/.gemini/settings.json.
 4. Reload the client. For Codex, restart the MCP server and review and trust the hook in /hooks.
-5. Keep resource semantics distinct: apply every active Prompt automatically and in full; match a Skill description before loading it; call MCP tools only when the task needs them. Skill and MCP summaries are not Prompt instructions.
+5. Keep resource semantics distinct: apply every active Prompt automatically and in full; match a Skill description before loading it; call MCP tools only when the task needs them. Skill and MCP summaries are not Prompt instructions. For an explicit project Skill request, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill.
 6. Pipe {"summary":"DingDong task-completion hook is connected"} to the hook command and confirm the notification arrives.
 7. Confirm dingdong_notify exists, then call it once with message "DingDong MCP is connected" and the current client name as source.
 8. Report only the changed user configuration files and whether both tests succeeded. Preserve existing configuration and return the original error on failure.

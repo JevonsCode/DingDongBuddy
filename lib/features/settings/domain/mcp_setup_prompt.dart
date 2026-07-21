@@ -29,8 +29,9 @@ String defaultMcpSetupPrompt({
    - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
 6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
    - Prompt：所有命中的 Prompt 都是必须自动应用的指令，并以完整正文提供；Codex 的全局、始终生效 Prompt 会直接进入 DingDong 托管的 AGENTS.md 区块
-   - Skill：由 Agent 根据 description 判断是否匹配，只有匹配当前任务时才加载或使用完整 Skill；Skill 摘要不是指令
+   - Skill：由 Agent 根据 description 判断是否匹配，只有匹配当前任务时才加载或使用完整 Skill；未限定范围的 Skill 全局同步，严格项目 Skill 只同步到项目内原生 Skill 目录；Skill 摘要不是指令
    - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用
+   - 用户明确要求“通过 DingDong 给某项目安装 Skill”时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group 和 dingdong_bind_resource_scope，并启用 strictProjectSkill；不要用全局 Skill 加路由提示冒充项目隔离
 7. 分别验证两条链路，不能只验证 MCP：
    - 结束 Hook：用当前 shell 把 {"summary":"DingDong 任务结束提醒已接入"} 作为 JSON 标准输入传给第 3 步的 Hook 命令，确认 DingDong 收到这条提醒
    - MCP：确认工具列表里出现 dingdong_notify，然后立即调用一次，message 为“DingDong MCP 已接入”，source 为当前客户端名称
@@ -58,8 +59,9 @@ String defaultMcpSetupPrompt({
    - Gemini CLI: run /mcp reload and inspect /hooks panel
 6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
    - Prompt: every active Prompt is a required instruction, delivered in full and applied automatically; a global always-on Codex Prompt is placed directly in DingDong's managed AGENTS.md block
-   - Skill: the Agent matches its description first and loads or uses the complete Skill only when it fits the current task; a Skill summary is not an instruction
+   - Skill: the Agent matches its description first and loads or uses the complete Skill only when it fits the current task; unscoped Skills are synchronized globally, while strict project Skills are synchronized only into native Skill directories inside that project; a Skill summary is not an instruction
    - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn
+   - When the user explicitly asks to install a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill enabled; never imitate project isolation with a global Skill plus a routing hint
 7. Test both paths; testing MCP alone is not enough:
    - Completion hook: using the current shell, pipe {"summary":"DingDong task-completion hook is connected"} as JSON stdin to the hook command from step 3 and confirm that DingDong receives it
    - MCP: confirm dingdong_notify appears in the tool list, then call it once with message "DingDong MCP is connected" and source set to the current client name

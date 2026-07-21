@@ -18,26 +18,43 @@ Set `BASE=http://127.0.0.1:<port>`, then call `GET $BASE/health` and `GET $BASE/
 |---|---|
 | `GET /library?q=...&type=prompt` | Search resources |
 | `POST /library` | Create a resource |
+| `POST /library/skills/install` | Idempotently install a complete GitHub or local Skill package |
 | `GET /library/{id}?mode=full` | Read one resource |
 | `PATCH /library/{id}` | Patch a resource |
 | `DELETE /library/{id}` | Delete after confirmation |
 | `GET /library/trigger-groups` | List scopes |
 | `POST /library/trigger-groups` | Create a scope |
+| `POST /library/trigger-groups/upsert` | Idempotently create or replace an exact scope by name |
 | `PATCH /library/trigger-groups/{id}` | Patch a scope |
 | `DELETE /library/trigger-groups/{id}` | Delete and detach a scope |
+| `POST /library/{id}/scope` | Replace scope IDs and optionally enforce project-native Skill isolation |
 | `POST /agent/bridge` | Verify task and project routing |
 
 A resource accepts `type`, `title`, `content`, `group`, `tags`, `source`, `updateURL`, `pinned`, `enabled`, `activation`, `triggerGroupIds`, and `sortOrder`. User-facing configurable types are `prompt`, `skill`, and `mcp`. Activations are `always`, `taskMatch`, and `manual`.
 
-Online Skills use a GitHub repository, folder, or direct `SKILL.md` link in `updateURL`; `content` must still be a valid `SKILL.md` document. MCP `content` is a JSON string such as `{"type":"stdio","command":"npx","args":["server"]}` or `{"type":"streamable-http","url":"https://example.com/mcp","bearerTokenEnvVar":"TOKEN"}`.
+Online Skills use a GitHub repository, folder, or direct `SKILL.md` link in `updateURL`; `content` must still be a valid `SKILL.md` document. The dedicated install endpoint also accepts an absolute local Skill directory or `SKILL.md` path and copies the complete package into DingDong-managed storage. MCP `content` is a JSON string such as `{"type":"stdio","command":"npx","args":["server"]}` or `{"type":"streamable-http","url":"https://example.com/mcp","bearerTokenEnvVar":"TOKEN"}`.
+
+## Direct MCP configuration tools
+
+Prefer these tools over manually composing loopback HTTP:
+
+| Tool | Required input | Result |
+|---|---|---|
+| `dingdong_install_skill` | `source` | Creates or updates one complete Skill and returns its resource ID; a new resource stays disabled until scope binding succeeds |
+| `dingdong_upsert_trigger_group` | `name`, plus `projectPath` and/or `repositoryUrl` | Creates or updates one exact trigger group and returns its ID |
+| `dingdong_bind_resource_scope` | `resourceId`, `triggerGroupIds` | Replaces the binding; Skills default to `strictProjectSkill: true` |
+
+For a strict project Skill, every bound rule must be an existing exact absolute `projectPath` using the `equals` operator. Do not mix in repository or `contains` rules because trigger-group rules are OR-ed. DingDong copies that Skill only into the selected project's native Skill directories and removes its DingDong-managed global copies.
+
+Strict scope cannot remove a separate user-owned copy that already lives in a client's user-global native Skill directory. Inspect a local source before promising isolation; if it is such a copy, ask the user to move/remove it or install from a neutral directory/GitHub source. Never delete that source without explicit permission.
 
 ## Runtime delivery
 
 - **Prompt:** `dingdong_bridge` includes every active Prompt in full and marks it as required instruction content. Codex global always-on Prompts without a trigger group are also injected directly into DingDong's managed `~/.codex/AGENTS.md` block.
-- **Skill:** the bridge returns summary metadata. Match its description first, then fetch the complete Skill with `dingdong_load_skill` or use the synchronized native Skill package. Do not execute a Skill summary as an instruction.
+- **Skill:** the bridge returns summary metadata. Match its description first, then fetch the complete Skill with `dingdong_load_skill` or use the synchronized native Skill package. Unscoped Skills are global; strict project Skills are project-native only. Do not execute a Skill summary as an instruction.
 - **MCP:** the bridge returns summary metadata and the enabled server is synchronized to native client configuration. Call its tools only when needed; do not interpret an MCP summary as an instruction or mandatory call.
 
-Trigger groups and activation rules filter bridge candidates. Enabled native Skills and MCP servers are currently synchronized globally, so native availability and per-task use are separate concepts.
+Trigger groups and activation rules filter bridge candidates. MCP servers and unscoped Skills remain globally available. Strict project Skills are synchronized only below each exact project root, so their native availability follows the configured project boundary.
 
 ## Trigger groups
 

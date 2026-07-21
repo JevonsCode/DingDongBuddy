@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -10,18 +11,26 @@ import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/knowledge_indexer.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
+import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:path/path.dart' as path;
 
 /// Handles resource-library reads and mutations that share the public API.
 final class LibraryRoutes {
   LibraryRoutes(
     this._store, {
     TriggerGroupStore? triggerGroupStore,
+    SkillPackageInstaller? skillPackageInstaller,
     DateTime Function()? now,
     String Function()? idGenerator,
   }) : // Named private initializing formals are not callable cross-library.
        // ignore: prefer_initializing_formals
        _triggerGroupStore = triggerGroupStore,
+       // Named private initializing formals are not callable cross-library.
+       // ignore: prefer_initializing_formals
+       _skillPackageInstaller = skillPackageInstaller,
+       _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? _utcNow,
        _importer = LibraryImporter(now: now, idGenerator: idGenerator);
 
@@ -29,9 +38,238 @@ final class LibraryRoutes {
 
   final ResourceStore _store;
   final TriggerGroupStore? _triggerGroupStore;
+  final SkillPackageInstaller? _skillPackageInstaller;
+  final String Function() _idGenerator;
   final DateTime Function() _now;
   final LibraryImporter _importer;
   final KnowledgeIndexer _knowledgeIndexer = KnowledgeIndexer();
+
+  Future<HttpResponseData> installSkill(String body) async {
+    final SkillPackageInstaller? installer = _skillPackageInstaller;
+    if (installer == null) {
+      return const HttpResponseData(
+        statusCode: 503,
+        json: <String, Object?>{
+          'status': 'error',
+          'message': 'Skill installation is not available',
+        },
+      );
+    }
+    try {
+      final Map<String, Object?> payload =
+          jsonDecode(body) as Map<String, Object?>;
+      final String source = (payload['source'] as String? ?? '').trim();
+      final Uri? parsedSource = Uri.tryParse(source);
+      final Uri? sourceUri = parsedSource == null
+          ? null
+          : parsedSource.scheme.isEmpty && path.isAbsolute(source)
+          ? Uri.file(path.normalize(source))
+          : parsedSource;
+      if (sourceUri == null ||
+          (sourceUri.scheme != 'https' && sourceUri.scheme != 'file')) {
+        return _invalidUpdate(
+          'source must be an HTTPS GitHub Skill URL or absolute local Skill path',
+        );
+      }
+      final String normalizedSource = sourceUri.toString();
+      final SkillPackageInstallResult installed = await installer.install(
+        sourceUri,
+      );
+      final SkillConfiguration skill = SkillConfiguration.parseOnline(
+        installed.skillDocument,
+      );
+      final List<Resource> resources = await _store.load();
+      final List<Resource> sourceMatches = resources
+          .where(
+            (Resource resource) =>
+                resource.type == ResourceType.skill &&
+                resource.updateUrl == normalizedSource,
+          )
+          .toList(growable: false);
+      final List<Resource> nameMatches = resources
+          .where(
+            (Resource resource) =>
+                resource.type == ResourceType.skill &&
+                _onlineSkillName(resource) == skill.name,
+          )
+          .toList(growable: false);
+      if (sourceMatches.length > 1 || nameMatches.length > 1) {
+        return const HttpResponseData(
+          statusCode: 409,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Multiple matching Skill resources already exist',
+          },
+        );
+      }
+      final Resource? sameName = nameMatches.firstOrNull;
+      final Resource? existing = sourceMatches.firstOrNull ?? sameName;
+      final DateTime timestamp = _now().toUtc();
+      final String title = (payload['title'] as String? ?? '').trim();
+      final String group = (payload['group'] as String? ?? '').trim();
+      final List<String>? tags = payload['tags'] == null
+          ? null
+          : (payload['tags'] as List<Object?>)
+                .map((Object? value) => value as String)
+                .toList(growable: false);
+      final Resource resource;
+      final int? existingIndex = existing == null
+          ? null
+          : resources.indexWhere((Resource item) => item.id == existing.id);
+      if (existing == null) {
+        resource = Resource(
+          id: _idGenerator(),
+          type: ResourceType.skill,
+          group: group.isEmpty ? null : group,
+          title: title.isEmpty ? skill.name : title,
+          content: installed.skillDocument,
+          tags: tags ?? const <String>[],
+          source: 'DingDong MCP',
+          updateUrl: normalizedSource,
+          packagePath: installed.directoryPath,
+          enabled: false,
+          activation: ResourceActivation.taskMatch,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        );
+        await _store.save(<Resource>[...resources, resource]);
+      } else {
+        resource = existing.copyWith(
+          group: group.isEmpty ? existing.group : group,
+          title: title.isEmpty ? existing.title : title,
+          content: installed.skillDocument,
+          tags: tags,
+          updateUrl: normalizedSource,
+          packagePath: installed.directoryPath,
+          enabled: existing.enabled,
+          updatedAt: timestamp,
+        );
+        resources[existingIndex!] = resource;
+        await _store.save(resources);
+      }
+      return HttpResponseData(
+        statusCode: existing == null ? 201 : 200,
+        json: <String, Object?>{
+          'status': existing == null ? 'created' : 'updated',
+          'item': resource.toApiJson(),
+        },
+      );
+    } on Object catch (error) {
+      return HttpResponseData(
+        statusCode: 400,
+        json: <String, Object?>{'status': 'error', 'message': error.toString()},
+      );
+    }
+  }
+
+  Future<HttpResponseData> bindScope(String id, String body) async {
+    try {
+      final Map<String, Object?> payload =
+          jsonDecode(body) as Map<String, Object?>;
+      final List<String> triggerGroupIds =
+          (payload['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
+              .map((Object? value) => (value as String).trim())
+              .where((String value) => value.isNotEmpty)
+              .toSet()
+              .toList(growable: false);
+      final List<Resource> resources = await _store.load();
+      final int resourceIndex = resources.indexWhere(
+        (Resource resource) => resource.id == id,
+      );
+      if (resourceIndex < 0) {
+        return _resourceNotFound();
+      }
+      final TriggerGroupStore? triggerGroupStore = _triggerGroupStore;
+      if (triggerGroupStore == null) {
+        return _invalidUpdate('Trigger groups are not available');
+      }
+      final List<TriggerGroup> groups = await triggerGroupStore.load();
+      final Map<String, TriggerGroup> groupsById = <String, TriggerGroup>{
+        for (final TriggerGroup group in groups) group.id: group,
+      };
+      final List<String> unknownIds = triggerGroupIds
+          .where((String groupId) => !groupsById.containsKey(groupId))
+          .toList(growable: false);
+      if (unknownIds.isNotEmpty) {
+        return _invalidUpdate(
+          'Unknown trigger group IDs: ${unknownIds.join(', ')}',
+        );
+      }
+      final Resource existing = resources[resourceIndex];
+      final bool strictProjectSkill =
+          (payload['strictProjectSkill'] as bool?) ??
+          (existing.type == ResourceType.skill);
+      List<String> skillProjectPaths = existing.skillProjectPaths;
+      if (existing.type == ResourceType.skill) {
+        if (!strictProjectSkill || triggerGroupIds.isEmpty) {
+          skillProjectPaths = const <String>[];
+        } else {
+          final List<TriggerRule> selectedRules = triggerGroupIds
+              .expand((String groupId) => groupsById[groupId]!.rules)
+              .toList(growable: false);
+          if (selectedRules.any(
+            (TriggerRule rule) =>
+                rule.field != TriggerRuleField.projectPath ||
+                rule.operator != TriggerRuleOperator.equals,
+          )) {
+            return _invalidUpdate(
+              'Strict project Skill scope accepts only exact absolute projectPath rules',
+            );
+          }
+          final List<String> requestedPaths = selectedRules
+              .map((TriggerRule rule) => rule.value)
+              .toSet()
+              .toList(growable: false);
+          if (requestedPaths.isEmpty) {
+            return _invalidUpdate(
+              'Strict project Skill scope requires an exact absolute projectPath rule',
+            );
+          }
+          final List<String> resolvedPaths = <String>[];
+          for (final String requestedPath in requestedPaths) {
+            final String normalized = path.normalize(requestedPath);
+            final Directory directory = Directory(normalized);
+            if (!path.isAbsolute(normalized) ||
+                path.equals(normalized, path.dirname(normalized)) ||
+                !await directory.exists()) {
+              return _invalidUpdate(
+                'Strict project Skill scope requires an exact absolute projectPath that exists: $requestedPath',
+              );
+            }
+            resolvedPaths.add(await directory.resolveSymbolicLinks());
+          }
+          skillProjectPaths = resolvedPaths.toSet().toList(growable: false)
+            ..sort();
+        }
+      }
+      final Resource updated = existing.copyWith(
+        triggerGroupIds: triggerGroupIds,
+        skillProjectPaths: skillProjectPaths,
+        enabled: existing.type == ResourceType.skill
+            ? triggerGroupIds.isNotEmpty
+            : existing.enabled,
+        activation:
+            existing.type == ResourceType.skill && triggerGroupIds.isNotEmpty
+            ? ResourceActivation.always
+            : existing.activation,
+        updatedAt: _now().toUtc(),
+      );
+      resources[resourceIndex] = updated;
+      await _store.save(resources);
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'updated',
+          'item': updated.toApiJson(),
+        },
+      );
+    } on Object catch (error) {
+      return HttpResponseData(
+        statusCode: 400,
+        json: <String, Object?>{'status': 'error', 'message': error.toString()},
+      );
+    }
+  }
 
   Future<HttpResponseData> importResources(String body) async {
     try {
@@ -479,6 +717,14 @@ bool _matches(Resource resource, String needle) {
       resource.content.toLowerCase().contains(needle) ||
       resource.group.toLowerCase().contains(needle) ||
       resource.tags.any((String tag) => tag.toLowerCase().contains(needle));
+}
+
+String _onlineSkillName(Resource resource) {
+  try {
+    return SkillConfiguration.parseOnline(resource.content).name;
+  } on Object {
+    return '';
+  }
 }
 
 HttpResponseData _invalidUpdate(String message) {

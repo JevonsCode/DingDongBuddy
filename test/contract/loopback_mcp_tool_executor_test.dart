@@ -59,6 +59,55 @@ void main() {
       'https://github.com/example/dingdong.git',
     );
   });
+
+  test('Skill installation maps to the dedicated write route', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_install_skill', <String, Object?>{
+      'source': 'https://github.com/acme/skills/tree/main/reviewer',
+      'title': 'Reviewer',
+    });
+
+    expect(transport.method, 'POST');
+    expect(transport.path, '/library/skills/install');
+    expect(
+      transport.body?['source'],
+      'https://github.com/acme/skills/tree/main/reviewer',
+    );
+  });
+
+  test('trigger-group upsert maps to the idempotent write route', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_upsert_trigger_group', <String, Object?>{
+      'name': 'Checkout',
+      'projectPath': '/work/checkout',
+      'repositoryUrl': 'https://github.com/acme/checkout.git',
+    });
+
+    expect(transport.method, 'POST');
+    expect(transport.path, '/library/trigger-groups/upsert');
+    expect(transport.body?['projectPath'], '/work/checkout');
+  });
+
+  test('resource scope binding keeps the resource id in the route', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_bind_resource_scope', <String, Object?>{
+      'resourceId': 'skill-1',
+      'triggerGroupIds': <String>['checkout'],
+      'strictProjectSkill': true,
+    });
+
+    expect(transport.method, 'POST');
+    expect(transport.path, '/library/skill-1/scope');
+    expect(transport.body?.containsKey('resourceId'), isFalse);
+    expect(transport.body?['triggerGroupIds'], <String>['checkout']);
+    expect(transport.body?['strictProjectSkill'], isTrue);
+  });
 }
 
 final class _RecordingMcpHttpTransport implements McpHttpTransport {

@@ -139,6 +139,46 @@ void main() {
     expect(await installer.install(), isFalse);
     expect(await store.load(), isEmpty);
   });
+
+  test('bundled Skill documents direct strict project installation', () async {
+    final String document = await _loadConfigureSkill();
+
+    expect(document, contains('dingdong_install_skill'));
+    expect(document, contains('dingdong_upsert_trigger_group'));
+    expect(document, contains('dingdong_bind_resource_scope'));
+    expect(document, contains('strictProjectSkill'));
+    expect(document, contains('exact absolute project path'));
+    expect(document, contains('project-native Skill directories'));
+  });
+
+  test('version four refreshes the existing built-in Skill document', () async {
+    final DateTime originalTime = DateTime.utc(2026, 7, 1);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      builtInDingDongConfigureSkill(
+        'old bundled instructions',
+        originalTime,
+      ).copyWith(enabled: false),
+    ]);
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 3;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      now: () => DateTime.utc(2026, 7, 21),
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isTrue);
+
+    final Resource skill = (await store.load()).single;
+    expect(skill.content, await _loadConfigureSkill());
+    expect(skill.enabled, isFalse);
+    expect(skill.updatedAt, DateTime.utc(2026, 7, 21));
+    expect(
+      preferences.values[BuiltInResourceInstaller.preferenceKey],
+      BuiltInResourceInstaller.currentVersion,
+    );
+  });
 }
 
 Future<String> _loadConfigureSkill() =>

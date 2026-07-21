@@ -16,6 +16,7 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resource_installer.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
@@ -70,9 +71,14 @@ final class AppDependencies {
     final ResourceStore baseResourceStore = ResourceRepository(
       ResourceFileService(paths.resourceLibraryFile),
     );
+    final SkillPackageInstaller skillPackageInstaller =
+        GitHubSkillPackageInstaller(paths.skillPackagesDirectory);
     final ResourceStore resourceStore = SynchronizedResourceStore(
       baseResourceStore,
-      AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory),
+      AgentResourceSynchronizer.currentUser(
+        paths.skillPackagesDirectory,
+        skillPackageInstaller: skillPackageInstaller,
+      ),
     );
     final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
       TriggerGroupFileService(paths.triggerGroupsFile),
@@ -108,6 +114,7 @@ final class AppDependencies {
       clipboardStore: clipboardStore,
       resourceStore: resourceStore,
       triggerGroupStore: triggerGroupStore,
+      skillPackageInstaller: skillPackageInstaller,
       onClipboardMonitoring: (bool enabled) => unawaited(() async {
         if (enabled) {
           await clipboardMonitorService.start();

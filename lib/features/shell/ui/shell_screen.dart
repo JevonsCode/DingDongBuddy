@@ -83,6 +83,7 @@ class _ShellScreenState extends State<ShellScreen> {
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
   bool _focusMcpOnOpen = false;
+  int _clipboardShortcutStartIndex = 0;
   late int _lastClipboardFilterToggleRevision;
   late int _lastClipboardRefreshRevision;
   late int _lastSelectedIndex;
@@ -153,6 +154,7 @@ class _ShellScreenState extends State<ShellScreen> {
       }
       if (widget.controller.selectedIndex != 2) {
         _clipboardFiltersExpanded = false;
+        _clipboardShortcutStartIndex = 0;
       }
     });
   }
@@ -249,7 +251,9 @@ class _ShellScreenState extends State<ShellScreen> {
 
   Future<void> _useClipboardRecordAt(int index) async {
     await _hideClipboardPreview();
-    await widget.clipboardViewModel.restoreVisibleAt(index);
+    await widget.clipboardViewModel.restoreVisibleAt(
+      _clipboardShortcutStartIndex + index,
+    );
   }
 
   Future<void> _showClipboardPreview(ClipboardRecord record) async {
@@ -449,6 +453,9 @@ class _ShellScreenState extends State<ShellScreen> {
           setState(
             () => _clipboardFiltersExpanded = !_clipboardFiltersExpanded,
           );
+        },
+        onShortcutStartIndexChanged: (int index) {
+          _clipboardShortcutStartIndex = index;
         },
         searchFocusRevision: widget.controller.clipboardSearchFocusRevision,
       ),

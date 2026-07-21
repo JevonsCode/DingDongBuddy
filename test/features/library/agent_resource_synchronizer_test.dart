@@ -79,6 +79,84 @@ void main() {
   );
 
   test(
+    'project-scoped Skills avoid global roots and clean stale project copies',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sync-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory package = Directory('${temp.path}/package')..createSync();
+      File('${package.path}/SKILL.md').writeAsStringSync(
+        '---\nname: reviewer\ndescription: Review code\n---\n',
+      );
+      final Directory globalRoot = Directory('${temp.path}/global-skills');
+      final Directory project = Directory('${temp.path}/checkout')
+        ..createSync();
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: <Directory>[globalRoot],
+        projectSkillRoots: const <String>['.agents/skills'],
+        mcpTargets: const <AgentMcpTarget>[],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final Resource scoped = _resource(
+        type: ResourceType.skill,
+        content: File('${package.path}/SKILL.md').readAsStringSync(),
+        packagePath: package.path,
+        skillProjectPaths: <String>[project.path],
+      );
+
+      await synchronizer.sync(<Resource>[scoped]);
+
+      expect(Directory('${globalRoot.path}/reviewer').existsSync(), isFalse);
+      expect(
+        File('${project.path}/.agents/skills/reviewer/SKILL.md').existsSync(),
+        isTrue,
+      );
+
+      await synchronizer.sync(<Resource>[scoped.copyWith(enabled: false)]);
+
+      expect(
+        Directory('${project.path}/.agents/skills/reviewer').existsSync(),
+        isFalse,
+      );
+    },
+  );
+
+  test('stale scope cleanup does not recreate a deleted project', () async {
+    final Directory root = await Directory.systemTemp.createTemp(
+      'dingdong-project-skill-deleted-',
+    );
+    addTearDown(() async {
+      if (await root.exists()) {
+        await root.delete(recursive: true);
+      }
+    });
+    final Directory project = Directory('${root.path}/project')..createSync();
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${root.path}/packages'),
+      skillRoots: <Directory>[Directory('${root.path}/global')],
+      projectSkillRoots: const <String>['.agents/skills'],
+      mcpTargets: const <AgentMcpTarget>[],
+      managedStateFile: File('${root.path}/managed.json'),
+      skillPackageInstaller: _OfflineInstaller(),
+    );
+    final Resource resource = _resource(
+      id: 'reviewer',
+      type: ResourceType.skill,
+      content:
+          '---\nname: reviewer\ndescription: Review changes\n---\n\n# Review',
+      skillProjectPaths: <String>[project.path],
+    );
+    await synchronizer.sync(<Resource>[resource]);
+    await project.delete(recursive: true);
+
+    await synchronizer.sync(<Resource>[resource.copyWith(enabled: false)]);
+
+    expect(await project.exists(), isFalse);
+  });
+
+  test(
     'manages global always-on prompts without replacing user instructions',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
@@ -274,6 +352,7 @@ Resource _resource({
   bool enabled = true,
   ResourceActivation? activation,
   List<String> triggerGroupIds = const <String>[],
+  List<String> skillProjectPaths = const <String>[],
 }) {
   final DateTime now = DateTime.utc(2026, 7, 17);
   return Resource(
@@ -285,6 +364,7 @@ Resource _resource({
     enabled: enabled,
     activation: activation,
     triggerGroupIds: triggerGroupIds,
+    skillProjectPaths: skillProjectPaths,
     createdAt: now,
     updatedAt: now,
   );

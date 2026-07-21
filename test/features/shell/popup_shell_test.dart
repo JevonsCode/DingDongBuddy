@@ -865,6 +865,65 @@ description: Use when product decisions should follow saved preferences.
   );
 
   testWidgetsOnPlatform(
+    'Command shortcuts restart at the first exposed clipboard row',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      final _RecordingClipboardGateway clipboard = _RecordingClipboardGateway();
+      final _RecordingQuickPasteGateway quickPaste =
+          _RecordingQuickPasteGateway();
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 21);
+      final List<ClipboardRecord> records = List<ClipboardRecord>.generate(
+        20,
+        (int index) => ClipboardRecord(
+          id: 'exposed-shortcut-$index',
+          group: 'Clipboard',
+          title: 'Exposed shortcut $index',
+          content: 'exposed value $index',
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: now.subtract(Duration(seconds: index)),
+          updatedAt: now.subtract(Duration(seconds: index)),
+        ),
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          clipboardStore: InMemoryClipboardStore(records),
+          clipboardGateway: clipboard,
+          quickPasteGateway: quickPaste,
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder scrollable = find.descendant(
+        of: find.byKey(const Key('clipboard-list')),
+        matching: find.byType(Scrollable),
+      );
+      tester.state<ScrollableState>(scrollable).position.jumpTo(82 * 10);
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(find.text('⌘ 1'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+
+      expect(clipboard.writtenText, 'exposed value 11');
+      expect(quickPaste.pasteCount, 1);
+    },
+  );
+
+  testWidgetsOnPlatform(
     'Control-2 restores the second clipboard row on Windows',
     TargetPlatform.windows,
     (WidgetTester tester) async {

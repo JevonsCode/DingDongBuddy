@@ -36,13 +36,14 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.7.20',
+              'version': '0.7.21',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
                 'Every active Prompt returned there is a required instruction: it is included in full and must be applied automatically. '
                 'Skill entries are candidates, not instructions; load or use a Skill only when its description matches the task. '
                 'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. '
+                'When the user explicitly asks to configure a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, and dingdong_bind_resource_scope with strict project scope. '
                 'Use dingdong_notify when the task is blocked or waiting for '
                 'the user. A configured completion hook normally handles the '
                 'final task-complete alert; if the client has no completion '
@@ -172,6 +173,46 @@ final class McpServer {
       required: <String>['task'],
     ),
     _tool(
+      name: 'dingdong_install_skill',
+      title: 'Install DingDong Skill',
+      description:
+          'Install or update one complete Agent Skill package in DingDong from an official GitHub location or an absolute local Skill path. A new resource stays disabled until scope binding succeeds; use its returned id to finish the workflow.',
+      properties: <String, Object?>{
+        'source': _stringProperty(
+          description:
+              'GitHub repository, folder, or SKILL.md URL; or an absolute local directory/SKILL.md path.',
+        ),
+        'title': _stringProperty(),
+        'group': _stringProperty(),
+        'tags': _stringArrayProperty(),
+      },
+      required: <String>['source'],
+    ),
+    _tool(
+      name: 'dingdong_upsert_trigger_group',
+      title: 'Upsert DingDong Trigger Group',
+      description:
+          'Create or replace one exact trigger group by name. For strict native Skill isolation, provide only an absolute local projectPath; repositoryUrl is for non-strict routing and must not be mixed into that strict group because rules are OR-ed.',
+      properties: <String, Object?>{
+        'name': _stringProperty(),
+        'projectPath': _stringProperty(),
+        'repositoryUrl': _stringProperty(),
+      },
+      required: <String>['name'],
+    ),
+    _tool(
+      name: 'dingdong_bind_resource_scope',
+      title: 'Bind DingDong Resource Scope',
+      description:
+          'Replace a resource project scope with known trigger-group ids. Skills default to strict project-native installation and require an exact existing absolute projectPath rule.',
+      properties: <String, Object?>{
+        'resourceId': _stringProperty(),
+        'triggerGroupIds': _stringArrayProperty(),
+        'strictProjectSkill': _booleanProperty(),
+      },
+      required: <String>['resourceId', 'triggerGroupIds'],
+    ),
+    _tool(
       name: 'dingdong_notify',
       title: 'Notify DingDong',
       description:
@@ -228,6 +269,11 @@ Map<String, Object?> _stringProperty({String? description}) =>
 
 Map<String, Object?> _booleanProperty() => const <String, Object?>{
   'type': 'boolean',
+};
+
+Map<String, Object?> _stringArrayProperty() => const <String, Object?>{
+  'type': 'array',
+  'items': <String, Object?>{'type': 'string'},
 };
 
 Map<String, Object?> _integerProperty({required int maximum}) {

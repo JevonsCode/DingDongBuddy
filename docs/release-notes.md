@@ -1,67 +1,48 @@
-# DingDong 0.7.20
+# DingDong 0.7.21
 
-This release makes Agent resources deterministic, keeps completion state across
-restarts, refreshes the desktop management experience, and introduces signed
-one-click updates.
+This release lets Agents install and configure project-scoped Skills through
+DingDong, and polishes clipboard navigation and resource editing.
 
-## Agent resources and completion activity
+## Agent-managed Skills
 
-- Applies every matching Prompt automatically and in full, while Skills remain
-  description-matched packages and MCP servers remain tools that are called
-  only when a task needs them.
-- Synchronizes enabled global Prompts into DingDong-managed Codex instructions
-  without overwriting unrelated user rules.
-- Persists unread completion notifications across restarts and acknowledges
-  them only after the popup has remained visible for 0.5 seconds.
-- Stores up to 200 completion details by default, shows a rolling 24-hour count,
-  and lets users configure retention, count window, and restart persistence.
-- Adds a read-only Recent Agent list to Resource Manager.
+- Adds DingDong MCP tools for installing or updating a Skill, upserting a
+  reusable trigger group, and binding the Skill to an exact project scope.
+- Synchronizes a scoped Skill only into the selected project's native Codex,
+  Claude Code, Cursor, Gemini, and OpenCode skill directories instead of making
+  it global.
+- Rejects ambiguous Skill matches and unsafe or non-existent project paths.
+- Updates the built-in DingDong Configure Skill and Agent installation guide so
+  an Agent can complete the entire setup from a GitHub link.
+- Clarifies that matching Prompts are injected automatically, Skills are loaded
+  by task matching, and MCP tools are invoked only when required.
 
-## Clipboard and resource management
+## Desktop refinements
 
-- Keeps user-arranged clipboard group order across windows and restarts, and
-  fixes deletion of the final clipboard item.
-- Replaces legacy confirmation and input dialogs with the shared compact desktop
-  treatment.
-- Unifies resource import and export actions into one restrained segmented
-  toolbar with consistent linear icons.
-- Shows the application version beside DingDong; clicking it opens the update
-  section, while clicking DingDong previews the configured notification sound.
-
-## One-click updates
-
-- Adds Sparkle 2 on macOS and Velopack on Windows for download, verification,
-  transactional replacement, old-file cleanup, and automatic relaunch.
-- Publishes signed architecture-specific Sparkle feeds, Apple Silicon and Intel
-  macOS packages, and a per-user Windows x64 Setup/update feed.
-- Apple Developer signing remains optional; Intel macOS and Windows stay beta.
+- Keeps clipboard number shortcuts aligned with the currently visible record
+  range after scrolling.
+- Refines the Resource Manager editor breadcrumb and back control.
+- Retains signed one-click update support for macOS and per-user updates for
+  Windows; Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本让 Agent 资源的生效逻辑更加确定，支持跨重启保留完成状态，统一桌面管理体验，
-并加入带签名校验的一键更新。
+本版本支持 Agent 直接通过 DingDong 安装 Skill，并为它配置严格的项目触发范围，
+同时优化剪贴板快捷键和资源编辑体验。
 
-## Agent 资源与完成动态
+## Agent 管理 Skill
 
-- 所有命中的 Prompt 都会完整、自动应用；Skill 仍先按 description 匹配再加载，
-  MCP 仍只在任务确实需要时调用。
-- 已启用的全局 Prompt 会写入 DingDong 托管的 Codex 指令区块，不覆盖用户原有规则。
-- 未读完成提醒可跨重启保留，并且只有弹窗实际显示满 0.5 秒后才会确认已读。
-- 默认保留最近 200 条完成详情并显示近 24 小时滚动计数；用户可以设置保留上限、
-  计数时间窗口和是否跨重启记忆。
-- 资源管理新增只读的“最近 Agent”列表。
+- 新增 DingDong MCP 工具，可安装或更新 Skill、创建或更新复用触发组，并将 Skill
+  绑定到精确的项目范围。
+- 有项目范围的 Skill 只会同步到对应项目里的 Codex、Claude Code、Cursor、Gemini
+  和 OpenCode 原生 Skill 目录，不会变成全局 Skill。
+- 对重名 Skill、歧义匹配、不安全路径和不存在的项目路径进行拒绝处理。
+- 更新内置 DingDong Configure Skill 与 Agent 安装指南，Agent 拿到 GitHub 链接后
+  可以完成安装与项目范围配置。
+- 明确 Prompt 会在命中时自动完整注入，Skill 按任务匹配加载，MCP 工具仅在需要时调用。
 
-## 剪贴板与资源管理
+## 桌面体验优化
 
-- 剪贴板分组顺序可跨窗口和重启保存，并修复最后一条剪贴板记录无法删除的问题。
-- 确认和输入弹窗统一为新的紧凑桌面样式。
-- 资源导入、分享 JSON 导入和导出合并为一组克制的分段工具栏，并使用统一线性图标。
-- DingDong 旁显示应用版本；点击版本号直达更新设置，点击 DingDong 可试听当前提示音。
-
-## 一键更新
-
-- macOS 接入 Sparkle 2，Windows 接入 Velopack，一次点击完成下载、校验、事务式替换、
-  旧文件清理和自动重启。
-- 发布带签名的分架构 Sparkle 更新源、Apple Silicon 与 Intel macOS 安装包，以及
-  Windows x64 按用户安装的 Setup 和更新源。
-- Apple Developer 签名仍为可选项；Intel macOS 与 Windows 继续标记为 beta。
+- 滚动剪贴板列表后，数字快捷键会跟随当前可见记录范围。
+- 优化资源管理编辑页的面包屑和返回按钮。
+- 保留 macOS 签名一键更新与 Windows 按用户更新能力；Intel macOS 和 Windows
+  安装包继续标记为 beta。

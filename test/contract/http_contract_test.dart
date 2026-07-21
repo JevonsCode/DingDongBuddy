@@ -9,8 +9,10 @@ import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
+import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -626,6 +628,269 @@ void main() {
     },
   );
 
+  test('Agent API installs an online Skill idempotently', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-http-skill-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final Directory package = Directory('${temp.path}/reviewer')..createSync();
+    const String document =
+        '---\nname: reviewer\ndescription: Review checkout changes\n---\n\n# Review';
+    File('${package.path}/SKILL.md').writeAsStringSync(document);
+    File('${package.path}/reference.md').writeAsStringSync('policy');
+    final InMemoryResourceStore resources = InMemoryResourceStore();
+    final AgentRouter router = AgentRouter(
+      resourceStore: resources,
+      skillPackageInstaller: _StaticSkillInstaller(package, document),
+      idGenerator: () => 'reviewer-resource',
+      now: () => DateTime.utc(2026, 7, 21),
+    );
+    const String body =
+        '{"source":"https://github.com/acme/skills/tree/main/reviewer","title":"Checkout reviewer"}';
+
+    final created = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/skills/install',
+        body: body,
+      ),
+    );
+    final updated = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/skills/install',
+        body: body,
+      ),
+    );
+
+    expect(created.statusCode, 201);
+    expect(created.json['status'], 'created');
+    expect(updated.statusCode, 200);
+    expect(updated.json['status'], 'updated');
+    expect(await resources.load(), hasLength(1));
+    final Resource resource = (await resources.load()).single;
+    expect(resource.type, ResourceType.skill);
+    expect(resource.content, document);
+    expect(resource.enabled, isFalse);
+    expect(
+      resource.updateUrl,
+      'https://github.com/acme/skills/tree/main/reviewer',
+    );
+    expect(resource.packagePath, package.path);
+  });
+
+  test('Agent API upserts one exact project trigger group', () async {
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+    final AgentRouter router = AgentRouter(
+      triggerGroupStore: groups,
+      idGenerator: () => 'checkout-scope',
+      now: () => DateTime.utc(2026, 7, 21),
+    );
+
+    final created = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/trigger-groups/upsert',
+        body:
+            '{"name":"Checkout","projectPath":"/work/checkout","repositoryUrl":"https://github.com/acme/checkout.git"}',
+      ),
+    );
+    final updated = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/trigger-groups/upsert',
+        body: '{"name":" checkout ","projectPath":"/work/checkout-v2"}',
+      ),
+    );
+
+    expect(created.statusCode, 201);
+    expect(updated.statusCode, 200);
+    expect(await groups.load(), hasLength(1));
+    final TriggerGroup group = (await groups.load()).single;
+    expect(group.id, 'checkout-scope');
+    expect(group.rules, hasLength(1));
+    expect(group.rules.single.field, TriggerRuleField.projectPath);
+    expect(group.rules.single.operator, TriggerRuleOperator.equals);
+    expect(group.rules.single.value, '/work/checkout-v2');
+  });
+
+  test('strict Skill scope binds only exact existing project paths', () async {
+    final Directory project = Directory.systemTemp.createTempSync(
+      'dingdong-scope-',
+    );
+    addTearDown(() => project.deleteSync(recursive: true));
+    final DateTime now = DateTime.utc(2026, 7, 21);
+    final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'reviewer',
+        type: ResourceType.skill,
+        title: 'Reviewer',
+        content:
+            '---\nname: reviewer\ndescription: Review checkout changes\n---\n',
+        enabled: false,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore(
+      <TriggerGroup>[
+        TriggerGroup(
+          id: 'checkout',
+          name: 'Checkout',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.equals,
+              value: project.path,
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+        TriggerGroup(
+          id: 'broad',
+          name: 'Broad checkout',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.contains,
+              value: 'checkout',
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ],
+    );
+    final AgentRouter router = AgentRouter(
+      resourceStore: resources,
+      triggerGroupStore: groups,
+      now: () => now.add(const Duration(minutes: 1)),
+    );
+
+    final rejected = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/reviewer/scope',
+        body: '{"triggerGroupIds":["broad"],"strictProjectSkill":true}',
+      ),
+    );
+    final bound = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/reviewer/scope',
+        body: '{"triggerGroupIds":["checkout"],"strictProjectSkill":true}',
+      ),
+    );
+
+    expect(rejected.statusCode, 400);
+    expect(rejected.json['message'], contains('exact absolute projectPath'));
+    expect(bound.statusCode, 200);
+    expect((await resources.load()).single.triggerGroupIds, <String>[
+      'checkout',
+    ]);
+    final String resolvedProjectPath = await project.resolveSymbolicLinks();
+    expect((await resources.load()).single.skillProjectPaths, <String>[
+      resolvedProjectPath,
+    ]);
+    expect((await resources.load()).single.enabled, isTrue);
+    expect(
+      (bound.json['item'] as Map<String, Object?>)['skillProjectPaths'],
+      <String>[resolvedProjectPath],
+    );
+  });
+
+  test(
+    'MCP write workflow never exposes a new scoped Skill globally',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-scoped-workflow-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory package = Directory('${temp.path}/source/reviewer')
+        ..createSync(recursive: true);
+      final Directory project = Directory('${temp.path}/project')..createSync();
+      final Directory globalSkills = Directory('${temp.path}/global-skills');
+      const String document =
+          '---\nname: reviewer\ndescription: Review checkout changes\n---\n';
+      File('${package.path}/SKILL.md').writeAsStringSync(document);
+      File('${package.path}/scripts/check.dart')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('void main() {}');
+      final InMemoryResourceStore baseResources = InMemoryResourceStore();
+      final ResourceStore resources = SynchronizedResourceStore(
+        baseResources,
+        AgentResourceSynchronizer(
+          packageRoot: Directory('${temp.path}/managed-packages'),
+          skillRoots: <Directory>[globalSkills],
+          projectSkillRoots: <String>['.agents/skills'],
+          mcpTargets: const <AgentMcpTarget>[],
+          managedStateFile: File('${temp.path}/sync-state.json'),
+          skillPackageInstaller: _StaticSkillInstaller(package, document),
+        ),
+      );
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+      var nextId = 0;
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        skillPackageInstaller: _StaticSkillInstaller(package, document),
+        idGenerator: () => 'generated-${++nextId}',
+        now: () => DateTime.utc(2026, 7, 21),
+      );
+
+      final installed = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library/skills/install',
+          body:
+              '{"source":"https://github.com/acme/skills/tree/main/reviewer"}',
+        ),
+      );
+      expect(installed.statusCode, 201);
+      expect(Directory('${globalSkills.path}/reviewer').existsSync(), isFalse);
+
+      final scoped = await router.route(
+        HttpRequestData(
+          method: 'POST',
+          uri: '/library/trigger-groups/upsert',
+          body: jsonEncode(<String, Object?>{
+            'name': 'Checkout',
+            'projectPath': project.path,
+          }),
+        ),
+      );
+      final String resourceId =
+          (installed.json['item'] as Map<String, Object?>)['id']! as String;
+      final String groupId =
+          (scoped.json['group'] as Map<String, Object?>)['id']! as String;
+      final bound = await router.route(
+        HttpRequestData(
+          method: 'POST',
+          uri: '/library/$resourceId/scope',
+          body: jsonEncode(<String, Object?>{
+            'triggerGroupIds': <String>[groupId],
+            'strictProjectSkill': true,
+          }),
+        ),
+      );
+
+      expect(bound.statusCode, 200);
+      expect(Directory('${globalSkills.path}/reviewer').existsSync(), isFalse);
+      final String resolvedProject = await project.resolveSymbolicLinks();
+      expect(
+        File('$resolvedProject/.agents/skills/reviewer/SKILL.md').existsSync(),
+        isTrue,
+      );
+      expect(
+        File(
+          '$resolvedProject/.agents/skills/reviewer/scripts/check.dart',
+        ).existsSync(),
+        isTrue,
+      );
+    },
+  );
+
   test('deleting a trigger group detaches it from resources', () async {
     final DateTime now = DateTime.utc(2026, 7, 19);
     final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
@@ -635,6 +900,17 @@ void main() {
         title: 'Policy',
         content: 'Policy body',
         triggerGroupIds: const <String>['checkout', 'shared'],
+        createdAt: now,
+        updatedAt: now,
+      ),
+      Resource(
+        id: 'reviewer',
+        type: ResourceType.skill,
+        title: 'Reviewer',
+        content:
+            '---\nname: reviewer\ndescription: Review checkout changes\n---\n',
+        triggerGroupIds: const <String>['checkout'],
+        skillProjectPaths: const <String>['/work/checkout'],
         createdAt: now,
         updatedAt: now,
       ),
@@ -671,9 +947,20 @@ void main() {
 
     expect(response.statusCode, 200);
     expect(await groups.load(), isEmpty);
-    expect((await resources.load()).single.triggerGroupIds, <String>['shared']);
+    final List<Resource> detached = await resources.load();
     expect(
-      (await resources.load()).single.updatedAt,
+      detached
+          .singleWhere((Resource item) => item.id == 'policy')
+          .triggerGroupIds,
+      <String>['shared'],
+    );
+    final Resource skill = detached.singleWhere(
+      (Resource item) => item.id == 'reviewer',
+    );
+    expect(skill.triggerGroupIds, isEmpty);
+    expect(skill.skillProjectPaths, isEmpty);
+    expect(
+      detached.singleWhere((Resource item) => item.id == 'policy').updatedAt,
       now.add(const Duration(minutes: 1)),
     );
   });
@@ -1210,5 +1497,20 @@ final class _StaticClipboardGateway implements ClipboardGateway {
   @override
   Future<void> writeFiles(List<String> paths) async {
     writtenFiles = paths;
+  }
+}
+
+final class _StaticSkillInstaller implements SkillPackageInstaller {
+  const _StaticSkillInstaller(this.directory, this.document);
+
+  final Directory directory;
+  final String document;
+
+  @override
+  Future<SkillPackageInstallResult> install(Uri source) async {
+    return SkillPackageInstallResult(
+      skillDocument: document,
+      directoryPath: directory.path,
+    );
   }
 }

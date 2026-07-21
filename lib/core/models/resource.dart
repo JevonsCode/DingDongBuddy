@@ -68,6 +68,7 @@ final class Resource {
     this.enabled = true,
     ResourceActivation? activation,
     List<String> triggerGroupIds = const <String>[],
+    List<String> skillProjectPaths = const <String>[],
     this.sortOrder,
     this.usageCount = 0,
     this.lastUsedAt,
@@ -86,6 +87,12 @@ final class Resource {
          triggerGroupIds
              .map((String id) => id.trim())
              .where((String id) => id.isNotEmpty)
+             .toSet(),
+       ),
+       skillProjectPaths = List<String>.unmodifiable(
+         skillProjectPaths
+             .map((String projectPath) => projectPath.trim())
+             .where((String projectPath) => projectPath.isNotEmpty)
              .toSet(),
        ),
        activation =
@@ -114,6 +121,10 @@ final class Resource {
           (json['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
               .map((Object? value) => value as String)
               .toList(growable: false),
+      skillProjectPaths:
+          (json['skillProjectPaths'] as List<Object?>? ?? const <Object?>[])
+              .map((Object? value) => value as String)
+              .toList(growable: false),
       sortOrder: json['sortOrder'] as int?,
       usageCount: json['usageCount'] as int? ?? 0,
       lastUsedAt: json['lastUsedAt'] == null
@@ -140,6 +151,11 @@ final class Resource {
   final bool enabled;
   final ResourceActivation activation;
   final List<String> triggerGroupIds;
+
+  /// Absolute local project roots where this Skill is mirrored natively.
+  ///
+  /// An empty list retains the legacy user-global Skill synchronization.
+  final List<String> skillProjectPaths;
   final int? sortOrder;
   final int usageCount;
   final DateTime? lastUsedAt;
@@ -162,6 +178,7 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       if (triggerGroupIds.isNotEmpty) 'triggerGroupIds': triggerGroupIds,
+      if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
       if (sortOrder != null) 'sortOrder': sortOrder,
       'usageCount': usageCount,
       if (lastUsedAt != null)
@@ -183,6 +200,7 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       'triggerGroupIds': triggerGroupIds,
+      if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
@@ -204,6 +222,7 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       'triggerGroupIds': triggerGroupIds,
+      if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
@@ -229,6 +248,7 @@ final class Resource {
     bool? enabled,
     ResourceActivation? activation,
     List<String>? triggerGroupIds,
+    List<String>? skillProjectPaths,
     int? sortOrder,
     int? usageCount,
     DateTime? lastUsedAt,
@@ -255,6 +275,7 @@ final class Resource {
       enabled: enabled ?? this.enabled,
       activation: resolvedActivation,
       triggerGroupIds: triggerGroupIds ?? this.triggerGroupIds,
+      skillProjectPaths: skillProjectPaths ?? this.skillProjectPaths,
       sortOrder: sortOrder ?? this.sortOrder,
       usageCount: usageCount ?? this.usageCount,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
@@ -281,6 +302,7 @@ final class Resource {
             enabled == other.enabled &&
             activation == other.activation &&
             _listEquals(triggerGroupIds, other.triggerGroupIds) &&
+            _listEquals(skillProjectPaths, other.skillProjectPaths) &&
             sortOrder == other.sortOrder &&
             usageCount == other.usageCount &&
             lastUsedAt == other.lastUsedAt &&
@@ -304,6 +326,7 @@ final class Resource {
     enabled,
     activation,
     Object.hashAll(triggerGroupIds),
+    Object.hashAll(skillProjectPaths),
     sortOrder,
     usageCount,
     lastUsedAt,

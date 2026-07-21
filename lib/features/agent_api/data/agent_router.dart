@@ -23,6 +23,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 
 part 'agent_router_resource_handlers.dart';
@@ -36,6 +37,7 @@ final class AgentRouter {
     ClipboardStore? clipboardStore,
     ResourceStore? resourceStore,
     TriggerGroupStore? triggerGroupStore,
+    SkillPackageInstaller? skillPackageInstaller,
     String Function()? idGenerator,
     DateTime Function()? now,
     void Function(bool value)? onClipboardMonitoring,
@@ -60,6 +62,7 @@ final class AgentRouter {
            : LibraryRoutes(
                resourceStore,
                triggerGroupStore: triggerGroupStore,
+               skillPackageInstaller: skillPackageInstaller,
                now: now,
                idGenerator: idGenerator,
              ),
@@ -210,6 +213,13 @@ final class AgentRouter {
     if (request.method == 'POST' && request.parsedUri.path == '/library') {
       return _createResource(request.body);
     }
+    if (request.method == 'POST' &&
+        request.parsedUri.path == '/library/skills/install') {
+      final LibraryRoutes? routes = _libraryRoutes;
+      return routes == null
+          ? _resourceUnavailable()
+          : routes.installSkill(request.body);
+    }
     if (request.method == 'POST' && request.parsedUri.path == '/agent/bridge') {
       final ResourceStore? store = _resourceStore;
       if (store == null) {
@@ -235,6 +245,22 @@ final class AgentRouter {
       if (request.method == 'POST') {
         return routes.create(request.body);
       }
+    }
+    if (request.method == 'POST' &&
+        request.parsedUri.path == '/library/trigger-groups/upsert') {
+      final TriggerGroupRoutes? routes = _triggerGroupRoutes;
+      return routes == null
+          ? _resourceUnavailable()
+          : routes.upsert(request.body);
+    }
+    if (request.method == 'POST' &&
+        request.parsedUri.pathSegments.length == 3 &&
+        request.parsedUri.pathSegments[0] == 'library' &&
+        request.parsedUri.pathSegments[2] == 'scope') {
+      final LibraryRoutes? routes = _libraryRoutes;
+      return routes == null
+          ? _resourceUnavailable()
+          : routes.bindScope(request.parsedUri.pathSegments[1], request.body);
     }
     if ((request.method == 'PATCH' || request.method == 'DELETE') &&
         request.parsedUri.pathSegments.length == 3 &&

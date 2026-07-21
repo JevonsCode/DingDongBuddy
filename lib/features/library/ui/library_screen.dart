@@ -45,7 +45,6 @@ class LibraryScreen extends StatelessWidget {
                   children: <Widget>[
                     _LibraryDetailHeader(
                       resource: viewModel.selectedResource,
-                      creatingType: viewModel.creatingType,
                       onBack: viewModel.closeEditor,
                     ),
                     const Divider(height: 1),
@@ -356,22 +355,21 @@ class LibraryScreen extends StatelessWidget {
 }
 
 class _LibraryDetailHeader extends StatelessWidget {
-  const _LibraryDetailHeader({
-    required this.resource,
-    required this.creatingType,
-    required this.onBack,
-  });
+  const _LibraryDetailHeader({required this.resource, required this.onBack});
 
   final Resource? resource;
-  final ResourceType creatingType;
   final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     final ColorScheme colors = Theme.of(context).colorScheme;
-    final ResourceType type = resource?.type ?? creatingType;
     final String title =
         resource?.title ?? context.localized('New configuration', '新建配置');
+    final TextStyle breadcrumbStyle = theme.textTheme.bodyMedium!.copyWith(
+      height: 1,
+      color: colors.onSurfaceVariant,
+    );
     return SizedBox(
       height: 48,
       child: Padding(
@@ -382,33 +380,40 @@ class _LibraryDetailHeader extends StatelessWidget {
               key: const Key('library-editor-back'),
               tooltip: context.localized('Back to resources', '返回资源列表'),
               onPressed: onBack,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              style: IconButton.styleFrom(
+                fixedSize: const Size.square(32),
+                minimumSize: const Size.square(32),
+                maximumSize: const Size.square(32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: colors.onSurfaceVariant,
+                backgroundColor: colors.surfaceContainerLow,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 8),
             Expanded(
               key: const Key('library-detail-breadcrumb'),
               child: Row(
                 children: <Widget>[
                   Text(
                     context.localized('Resources', '资源'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                  _BreadcrumbDivider(color: colors.onSurfaceVariant),
-                  Text(
-                    _resourceTypeLabel(context, type),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                    key: const Key('library-breadcrumb-root'),
+                    style: breadcrumbStyle,
                   ),
                   _BreadcrumbDivider(color: colors.onSurfaceVariant),
                   Flexible(
                     child: Text(
                       title,
+                      key: const Key('library-breadcrumb-current'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: breadcrumbStyle.copyWith(
+                        color: colors.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -430,17 +435,7 @@ class _BreadcrumbDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 7),
-    child: Icon(Icons.chevron_right_rounded, size: 14, color: color),
+    padding: const EdgeInsets.symmetric(horizontal: 6),
+    child: Icon(Icons.chevron_right_rounded, size: 18, color: color),
   );
-}
-
-String _resourceTypeLabel(BuildContext context, ResourceType type) {
-  return switch (type) {
-    ResourceType.prompt => context.localized('Prompt', '提示词'),
-    ResourceType.skill => 'Skill',
-    ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
-    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
-  };
 }

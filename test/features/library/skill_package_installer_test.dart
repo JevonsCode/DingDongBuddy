@@ -65,4 +65,39 @@ void main() {
       'print("ok")',
     );
   });
+
+  test(
+    'imports a complete local Skill directory into managed storage',
+    () async {
+      final Directory root = Directory.systemTemp.createTempSync(
+        'dingdong-skill-package-',
+      );
+      final Directory source = Directory.systemTemp.createTempSync(
+        'dingdong-local-skill-',
+      );
+      addTearDown(() => root.deleteSync(recursive: true));
+      addTearDown(() => source.deleteSync(recursive: true));
+      File('${source.path}/SKILL.md')
+        ..createSync(recursive: true)
+        ..writeAsStringSync(
+          '---\nname: reviewer\ndescription: Review changes\n---\n\n# Review',
+        );
+      File('${source.path}/scripts/check.py')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('print("ok")');
+      final GitHubSkillPackageInstaller installer = GitHubSkillPackageInstaller(
+        root,
+      );
+
+      final SkillPackageInstallResult result = await installer.install(
+        source.uri,
+      );
+
+      expect(result.directoryPath, '${root.path}/reviewer');
+      expect(
+        File('${result.directoryPath}/scripts/check.py').readAsStringSync(),
+        'print("ok")',
+      );
+    },
+  );
 }

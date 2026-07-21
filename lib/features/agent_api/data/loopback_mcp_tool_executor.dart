@@ -68,6 +68,17 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
           if (arguments['limit'] != null) 'limit': '${arguments['limit']}',
         },
       ),
+      'dingdong_install_skill' => _transport.request(
+        method: 'POST',
+        path: '/library/skills/install',
+        body: arguments,
+      ),
+      'dingdong_upsert_trigger_group' => _transport.request(
+        method: 'POST',
+        path: '/library/trigger-groups/upsert',
+        body: arguments,
+      ),
+      'dingdong_bind_resource_scope' => _bindResourceScope(arguments),
       'dingdong_notify' => _transport.request(
         method: 'POST',
         path: '/ding',
@@ -75,6 +86,19 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       ),
       _ => throw ArgumentError.value(name, 'name', 'Unknown DingDong tool'),
     };
+  }
+
+  Future<Map<String, Object?>> _bindResourceScope(
+    Map<String, Object?> arguments,
+  ) {
+    final String resourceId = (arguments['resourceId'] as String? ?? '').trim();
+    final Map<String, Object?> body = Map<String, Object?>.of(arguments)
+      ..remove('resourceId');
+    return _transport.request(
+      method: 'POST',
+      path: '/library/$resourceId/scope',
+      body: body,
+    );
   }
 
   Future<Map<String, Object?>> _bridge(Map<String, Object?> arguments) async {

@@ -142,9 +142,16 @@ perform this setup in the current local Agent or IDE:
    - Prompt: every active Prompt is delivered in full and applied automatically
      as a required instruction.
    - Skill: match its description first and load the complete Skill only when the
-     task fits; a Skill summary is not an instruction.
+     task fits. Unscoped Skills are global, while strict project Skills are
+     synchronized only into native Skill directories below that project; a Skill summary is not an instruction.
    - MCP: configuration only makes tools available; call an MCP tool when the
      task needs it, not automatically on every turn.
+5. Confirm the configuration tools `dingdong_install_skill`,
+   `dingdong_upsert_trigger_group`, and `dingdong_bind_resource_scope` are
+   present. When the user explicitly asks to install a Skill through DingDong
+   for one project, use them in that order with an exact existing absolute
+   project path and `strictProjectSkill: true`. Do not imitate project isolation
+   with a globally synchronized Skill plus a routing hint.
 
 ## 5. Test both connections and report
 

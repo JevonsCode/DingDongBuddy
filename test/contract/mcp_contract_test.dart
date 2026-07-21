@@ -25,6 +25,8 @@ void main() {
         result['instructions'],
         contains('MCP entries are tool references'),
       );
+      expect(result['instructions'], contains('dingdong_install_skill'));
+      expect(result['instructions'], contains('strict project scope'));
       expect(result['instructions'], contains('completion hook'));
       expect(result['instructions'], contains('dingdong_notify'));
     },
@@ -52,6 +54,9 @@ void main() {
           'dingdong_get_asset',
           'dingdong_load_skill',
           'dingdong_recommend_mcp',
+          'dingdong_install_skill',
+          'dingdong_upsert_trigger_group',
+          'dingdong_bind_resource_scope',
           'dingdong_notify',
         ],
       );
@@ -67,6 +72,22 @@ void main() {
       expect(
         bridge['description'],
         contains('Skill and MCP entries are summary-only candidates'),
+      );
+
+      Map<String, Object?> toolNamed(String name) => tools
+          .cast<Map<String, Object?>>()
+          .singleWhere((Map<String, Object?> tool) => tool['name'] == name);
+      final Map<String, Object?> installSchema =
+          toolNamed('dingdong_install_skill')['inputSchema']
+              as Map<String, Object?>;
+      expect(installSchema['required'], <String>['source']);
+      final Map<String, Object?> bindProperties =
+          (toolNamed('dingdong_bind_resource_scope')['inputSchema']
+                  as Map<String, Object?>)['properties']
+              as Map<String, Object?>;
+      expect(
+        (bindProperties['triggerGroupIds'] as Map<String, Object?>)['type'],
+        'array',
       );
     },
   );

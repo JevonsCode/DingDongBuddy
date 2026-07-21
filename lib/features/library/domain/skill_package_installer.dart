@@ -36,6 +36,9 @@ final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
 
   @override
   Future<SkillPackageInstallResult> install(Uri source) async {
+    if (source.scheme == 'file') {
+      return _installLocal(source);
+    }
     final _GitHubSkillSource parsed = _GitHubSkillSource.parse(source);
     await root.create(recursive: true);
     final Directory staging = await root.createTemp('.install-');
@@ -52,6 +55,71 @@ final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
       if (!await skillFile.exists()) {
         throw const FormatException(
           'The selected GitHub directory does not contain SKILL.md.',
+        );
+      }
+      final String document = await skillFile.readAsString();
+      final SkillConfiguration skill = SkillConfiguration.parseOnline(document);
+      final Directory destination = Directory(path.join(root.path, skill.name));
+      final Directory backup = Directory('${destination.path}.bak');
+      if (await backup.exists()) {
+        await backup.delete(recursive: true);
+      }
+      if (await destination.exists()) {
+        await destination.rename(backup.path);
+      }
+      try {
+        await staging.rename(destination.path);
+        if (await backup.exists()) {
+          await backup.delete(recursive: true);
+        }
+      } on Object {
+        if (!await destination.exists() && await backup.exists()) {
+          await backup.rename(destination.path);
+        }
+        rethrow;
+      }
+      return SkillPackageInstallResult(
+        skillDocument: document,
+        directoryPath: destination.path,
+      );
+    } on Object {
+      if (await staging.exists()) {
+        await staging.delete(recursive: true);
+      }
+      rethrow;
+    }
+  }
+
+  Future<SkillPackageInstallResult> _installLocal(Uri source) async {
+    final String sourcePath = source.toFilePath();
+    final FileSystemEntityType sourceType = await FileSystemEntity.type(
+      sourcePath,
+      followLinks: false,
+    );
+    final Directory sourceDirectory;
+    if (sourceType == FileSystemEntityType.directory) {
+      sourceDirectory = Directory(sourcePath);
+    } else if (sourceType == FileSystemEntityType.file &&
+        path.basename(sourcePath).toLowerCase() == 'skill.md') {
+      sourceDirectory = File(sourcePath).parent;
+    } else {
+      throw const FormatException(
+        'Local Skill source must be a directory or SKILL.md file.',
+      );
+    }
+    await root.create(recursive: true);
+    final Directory staging = await root.createTemp('.install-');
+    try {
+      await _copyPackageDirectory(
+        sourceDirectory,
+        staging,
+        excludeGitMetadata: true,
+        budget: _DownloadBudget(),
+      );
+      final File skillFile = File(path.join(staging.path, 'SKILL.md'));
+      if (!await skillFile.exists()) {
+        throw const FormatException(
+          'The selected local directory does not contain SKILL.md.',
         );
       }
       final String document = await skillFile.readAsString();
@@ -374,7 +442,7 @@ Future<void> _copyPackageDirectory(
   await destination.create(recursive: true);
   await for (final FileSystemEntity entity in source.list(followLinks: false)) {
     final String name = path.basename(entity.path);
-    if (excludeGitMetadata && name == '.git') {
+    if ((excludeGitMetadata && name == '.git') || name == '.dingdong-managed') {
       continue;
     }
     final String target = path.join(destination.path, name);

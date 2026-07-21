@@ -141,7 +141,7 @@ final class AgentCompatibilityRoutes {
         'knowledgeIndexing': 'On-demand and bounded.',
       },
       'features': _features,
-      'endpointCount': 17,
+      'endpointCount': _endpoints.length,
       'endpoints': _endpoints,
     },
   );
@@ -453,6 +453,8 @@ const List<String> _features = <String>[
   'agentWorkbench',
   'agentInstructionPack',
   'agentContextPack',
+  'mcpWriteConfiguration',
+  'strictProjectSkillScope',
 ];
 
 const List<Map<String, String>> _endpoints = <Map<String, String>>[
@@ -464,10 +466,13 @@ const List<Map<String, String>> _endpoints = <Map<String, String>>[
   <String, String>{'method': 'GET', 'path': '/agent/context'},
   <String, String>{'method': 'GET', 'path': '/library'},
   <String, String>{'method': 'POST', 'path': '/library'},
+  <String, String>{'method': 'POST', 'path': '/library/skills/install'},
   <String, String>{'method': 'GET', 'path': '/library/trigger-groups'},
   <String, String>{'method': 'POST', 'path': '/library/trigger-groups'},
+  <String, String>{'method': 'POST', 'path': '/library/trigger-groups/upsert'},
   <String, String>{'method': 'PATCH', 'path': '/library/trigger-groups/{id}'},
   <String, String>{'method': 'DELETE', 'path': '/library/trigger-groups/{id}'},
+  <String, String>{'method': 'POST', 'path': '/library/{id}/scope'},
   <String, String>{'method': 'GET', 'path': '/clipboard/history'},
   <String, String>{'method': 'GET', 'path': '/clipboard/insights'},
   <String, String>{'method': 'GET', 'path': '/clipboard/digest'},

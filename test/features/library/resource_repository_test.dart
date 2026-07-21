@@ -25,8 +25,11 @@ void main() {
       expect(resource.enabled, isTrue);
       expect(resource.activation, ResourceActivation.always);
 
-      await repository.save(resources);
-      expect((await repository.load()).single, resource);
+      final Resource scoped = resource.copyWith(
+        skillProjectPaths: <String>[directory.path],
+      );
+      await repository.save(<Resource>[scoped]);
+      expect((await repository.load()).single, scoped);
     },
   );
 }

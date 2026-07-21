@@ -5,6 +5,7 @@ class _ClipboardList extends StatefulWidget {
     required this.viewModel,
     required this.compact,
     required this.showShortcutHints,
+    required this.onShortcutStartIndexChanged,
     required this.onPreview,
     required this.onDismissPreview,
     required this.contextMenuGateway,
@@ -14,6 +15,7 @@ class _ClipboardList extends StatefulWidget {
   final ClipboardViewModel viewModel;
   final bool compact;
   final bool showShortcutHints;
+  final ValueChanged<int> onShortcutStartIndexChanged;
   final Future<void> Function(ClipboardRecord record)? onPreview;
   final Future<void> Function()? onDismissPreview;
   final DesktopContextMenuGateway? contextMenuGateway;
@@ -26,11 +28,27 @@ class _ClipboardList extends StatefulWidget {
 class _ClipboardListState extends State<_ClipboardList> {
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToTop = false;
+  int _shortcutStartIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onShortcutStartIndexChanged(_shortcutStartIndex);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _ClipboardList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _updateShortcutStartIndex();
+      }
+    });
   }
 
   @override
@@ -43,12 +61,27 @@ class _ClipboardListState extends State<_ClipboardList> {
 
   void _handleScroll() {
     if (!_scrollController.hasClients) return;
+    _updateShortcutStartIndex();
     final bool show =
         _scrollController.position.pixels >
         _scrollController.position.viewportDimension;
     if (show != _showScrollToTop && mounted) {
       setState(() => _showScrollToTop = show);
     }
+  }
+
+  void _updateShortcutStartIndex() {
+    if (!_scrollController.hasClients) return;
+    final List<ClipboardRecord> records = widget.viewModel.visibleRecords;
+    final double itemExtent = _itemExtent(context);
+    final int lastIndex = records.isEmpty ? 0 : records.length - 1;
+    final int next = (_scrollController.offset / itemExtent).floor().clamp(
+      0,
+      lastIndex,
+    );
+    if (next == _shortcutStartIndex) return;
+    setState(() => _shortcutStartIndex = next);
+    widget.onShortcutStartIndexChanged(next);
   }
 
   Future<void> _scrollToTop() async {
@@ -64,6 +97,7 @@ class _ClipboardListState extends State<_ClipboardList> {
   Widget build(BuildContext context) {
     final List<ClipboardRecord> records = widget.viewModel.visibleRecords;
     final bool callout = MediaQuery.sizeOf(context).width < 600;
+    final double itemExtent = _itemExtent(context);
     return Stack(
       children: <Widget>[
         ListView.builder(
@@ -71,9 +105,10 @@ class _ClipboardListState extends State<_ClipboardList> {
           controller: _scrollController,
           itemCount: records.length,
           padding: callout ? const EdgeInsets.only(bottom: 8) : null,
-          itemExtent: callout ? 82 : (widget.compact ? 60 : 72),
+          itemExtent: itemExtent,
           itemBuilder: (BuildContext context, int index) {
             final ClipboardRecord record = records[index];
+            final int shortcutIndex = index - _shortcutStartIndex + 1;
             return ClipboardListTile(
               record: record,
               selected: widget.viewModel.selectedRecord?.id == record.id,
@@ -106,8 +141,11 @@ class _ClipboardListState extends State<_ClipboardList> {
                 );
               },
               callout: callout,
-              shortcutIndex: widget.showShortcutHints && index < 9
-                  ? index + 1
+              shortcutIndex:
+                  widget.showShortcutHints &&
+                      shortcutIndex >= 1 &&
+                      shortcutIndex <= 9
+                  ? shortcutIndex
                   : null,
             );
           },
@@ -138,6 +176,11 @@ class _ClipboardListState extends State<_ClipboardList> {
           ),
       ],
     );
+  }
+
+  double _itemExtent(BuildContext context) {
+    final bool callout = MediaQuery.sizeOf(context).width < 600;
+    return callout ? 82 : (widget.compact ? 60 : 72);
   }
 }
 

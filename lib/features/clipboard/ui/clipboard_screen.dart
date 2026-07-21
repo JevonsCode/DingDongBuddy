@@ -40,6 +40,7 @@ class ClipboardScreen extends StatefulWidget {
     this.contextMenuGateway,
     this.filtersExpanded,
     this.onToggleFilters,
+    this.onShortcutStartIndexChanged,
     this.searchFocusRevision = 0,
     super.key,
   });
@@ -54,6 +55,7 @@ class ClipboardScreen extends StatefulWidget {
   final DesktopContextMenuGateway? contextMenuGateway;
   final bool? filtersExpanded;
   final VoidCallback? onToggleFilters;
+  final ValueChanged<int>? onShortcutStartIndexChanged;
   final int searchFocusRevision;
 
   @override
@@ -63,6 +65,7 @@ class ClipboardScreen extends StatefulWidget {
 class _ClipboardScreenState extends State<ClipboardScreen>
     with WidgetsBindingObserver {
   bool _showFilters = false;
+  int _shortcutStartIndex = 0;
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'clipboard-search');
 
   @override
@@ -129,6 +132,11 @@ class _ClipboardScreenState extends State<ClipboardScreen>
 
   void _focusSearch() => _searchFocusNode.requestFocus();
 
+  void _handleShortcutStartIndexChanged(int index) {
+    _shortcutStartIndex = index;
+    widget.onShortcutStartIndexChanged?.call(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -181,7 +189,11 @@ class _ClipboardScreenState extends State<ClipboardScreen>
               final int? shortcutIndex = _numberShortcutIndex(event.logicalKey);
               if (shortcutIndex != null &&
                   (keyboard.isMetaPressed || keyboard.isControlPressed)) {
-                unawaited(viewModel.restoreVisibleAt(shortcutIndex));
+                unawaited(
+                  viewModel.restoreVisibleAt(
+                    _shortcutStartIndex + shortcutIndex,
+                  ),
+                );
                 return KeyEventResult.handled;
               }
               return KeyEventResult.ignored;
@@ -260,6 +272,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                               viewModel: viewModel,
                               compact: compact,
                               showShortcutHints: showShortcutHints,
+                              onShortcutStartIndexChanged:
+                                  _handleShortcutStartIndexChanged,
                               onPreview: onPreview,
                               onDismissPreview: onDismissPreview,
                               contextMenuGateway: contextMenuGateway,

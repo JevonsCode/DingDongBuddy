@@ -1,33 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.20",
-  "latestBuild": "20",
-  "publishedAt": "2026-07-21T14:01:09Z",
+  "latestVersion": "0.7.21",
+  "latestBuild": "21",
+  "publishedAt": "2026-07-21T16:14:17Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.20/DingDong-0.7.20-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.21/DingDong-0.7.21-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.20/DingDong-0.7.20-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.21/DingDong-0.7.21-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.20/DingDong-0.7.20-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.21/DingDong-0.7.21-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Applies matching Prompts automatically and in full while keeping Skills and MCP servers explicitly on demand.",
-    "Persists unread completion state and configurable Recent Agent history across application restarts.",
-    "Keeps clipboard group order, fixes deletion of the final item, and refreshes dialogs and resource transfer controls.",
-    "Adds signed one-click updates through Sparkle 2 on macOS and Velopack on Windows.",
-    "Publishes separate Apple Silicon and Intel macOS packages; Intel macOS and Windows packages remain beta."
+    "Lets Agents install or update a Skill, create its trigger group, and bind its exact project scope through DingDong MCP.",
+    "Synchronizes project-scoped Skills only into that project's native Agent skill directories.",
+    "Documents GitHub-link installation and the Prompt, Skill, and MCP activation differences for Agents.",
+    "Keeps clipboard number shortcuts aligned with the currently visible record range.",
+    "Retains signed one-click updates for macOS and per-user updates for Windows; Intel macOS and Windows remain beta."
   ]
 }

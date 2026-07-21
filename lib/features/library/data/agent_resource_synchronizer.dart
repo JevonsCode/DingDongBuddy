@@ -30,6 +30,7 @@ final class AgentResourceSynchronizer {
   AgentResourceSynchronizer({
     required this.packageRoot,
     required this.skillRoots,
+    this.projectSkillRoots = const <String>[],
     required this.mcpTargets,
     this.promptTargets = const <AgentPromptTarget>[],
     File? managedStateFile,
@@ -40,7 +41,10 @@ final class AgentResourceSynchronizer {
        skillPackageInstaller =
            skillPackageInstaller ?? GitHubSkillPackageInstaller(packageRoot);
 
-  factory AgentResourceSynchronizer.currentUser(Directory packageRoot) {
+  factory AgentResourceSynchronizer.currentUser(
+    Directory packageRoot, {
+    SkillPackageInstaller? skillPackageInstaller,
+  }) {
     final String home =
         Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
     final String separator = Platform.pathSeparator;
@@ -54,6 +58,12 @@ final class AgentResourceSynchronizer {
         Directory('$home$separator.cursor${separator}skills'),
       if (present('.gemini'))
         Directory('$home$separator.gemini${separator}skills'),
+    ];
+    final List<String> projectSkills = <String>[
+      if (present('.codex')) path.join('.agents', 'skills'),
+      if (present('.claude')) path.join('.claude', 'skills'),
+      if (present('.cursor')) path.join('.cursor', 'skills'),
+      if (present('.gemini')) path.join('.gemini', 'skills'),
     ];
     final List<AgentPromptTarget> prompts = <AgentPromptTarget>[
       if (present('.codex'))
@@ -84,13 +94,16 @@ final class AgentResourceSynchronizer {
     return AgentResourceSynchronizer(
       packageRoot: packageRoot,
       skillRoots: skills,
+      projectSkillRoots: projectSkills,
       promptTargets: prompts,
       mcpTargets: mcps,
+      skillPackageInstaller: skillPackageInstaller,
     );
   }
 
   final Directory packageRoot;
   final List<Directory> skillRoots;
+  final List<String> projectSkillRoots;
   final List<AgentPromptTarget> promptTargets;
   final List<AgentMcpTarget> mcpTargets;
   final File managedStateFile;
@@ -111,12 +124,49 @@ final class AgentResourceSynchronizer {
         .where((Resource item) => item.enabled && item.type == ResourceType.mcp)
         .toList(growable: false);
     final Map<String, Set<String>> managed = await _readManagedMcpState();
+    final Set<String> previousProjectSkillRoots =
+        managed.remove(_managedProjectSkillRootsStateKey) ?? <String>{};
     await _preflight(skills, mcps);
     for (final AgentPromptTarget target in promptTargets) {
       await _syncPrompts(target.file, prompts);
     }
+    final List<Resource> globalSkills = skills
+        .where((Resource resource) => resource.skillProjectPaths.isEmpty)
+        .toList(growable: false);
     for (final Directory root in skillRoots) {
-      await _syncSkills(root, skills);
+      await _syncSkills(root, globalSkills);
+    }
+    final Map<String, List<Resource>> projectSkillsByRoot =
+        <String, List<Resource>>{};
+    for (final Resource resource in skills.where(
+      (Resource item) => item.skillProjectPaths.isNotEmpty,
+    )) {
+      for (final String projectPath in resource.skillProjectPaths) {
+        _validateProjectSkillPath(projectPath);
+        for (final String relativeRoot in projectSkillRoots) {
+          final String root = path.normalize(
+            path.join(projectPath, relativeRoot),
+          );
+          projectSkillsByRoot
+              .putIfAbsent(root, () => <Resource>[])
+              .add(resource);
+        }
+      }
+    }
+    final Set<String> currentProjectSkillRoots = projectSkillsByRoot.keys
+        .toSet();
+    final List<String> rootsToSync = <String>{
+      ...previousProjectSkillRoots,
+      ...currentProjectSkillRoots,
+    }.toList()..sort();
+    for (final String root in rootsToSync) {
+      await _syncSkills(
+        Directory(root),
+        projectSkillsByRoot[root] ?? const <Resource>[],
+      );
+    }
+    if (currentProjectSkillRoots.isNotEmpty) {
+      managed[_managedProjectSkillRootsStateKey] = currentProjectSkillRoots;
     }
     for (final AgentMcpTarget target in mcpTargets) {
       final Set<String> previousNames = managed[target.file.path] ?? <String>{};
@@ -135,8 +185,8 @@ final class AgentResourceSynchronizer {
         ),
       };
       managed[target.file.path] = mcps.map(_serverName).toSet();
-      await _writeManagedMcpState(managed);
     }
+    await _writeManagedMcpState(managed);
   }
 
   Future<void> _syncPrompts(File file, List<Resource> enabled) async {
@@ -208,7 +258,10 @@ final class AgentResourceSynchronizer {
           !await File(path.join(packagePath, 'SKILL.md')).exists()) {
         throw StateError('Skill package is missing: ${resource.title}');
       }
-      for (final Directory root in skillRoots) {
+      for (final Directory root
+          in resource.skillProjectPaths.isEmpty
+              ? skillRoots
+              : const <Directory>[]) {
         final String name = _skillName(resource);
         final Directory destination = Directory(path.join(root.path, name));
         if (await destination.exists() &&
@@ -251,8 +304,24 @@ final class AgentResourceSynchronizer {
     }
   }
 
+  void _validateProjectSkillPath(String projectPath) {
+    final String normalized = path.normalize(projectPath);
+    if (!path.isAbsolute(normalized) ||
+        path.equals(normalized, path.dirname(normalized)) ||
+        !Directory(normalized).existsSync()) {
+      throw FormatException(
+        'Project-scoped Skill path must be an existing absolute project directory: $projectPath',
+      );
+    }
+  }
+
   Future<void> _syncSkills(Directory targetRoot, List<Resource> enabled) async {
-    await targetRoot.create(recursive: true);
+    if (!await targetRoot.exists()) {
+      if (enabled.isEmpty) {
+        return;
+      }
+      await targetRoot.create(recursive: true);
+    }
     final Set<String> activeIds = enabled
         .map((Resource item) => item.id)
         .toSet();
@@ -645,6 +714,7 @@ String _skillName(Resource resource) {
 
 const String _managedPromptsBegin = '<!-- BEGIN DINGDONG MANAGED PROMPTS -->';
 const String _managedPromptsEnd = '<!-- END DINGDONG MANAGED PROMPTS -->';
+const String _managedProjectSkillRootsStateKey = r'$dingdongProjectSkillRoots';
 
 final RegExp _managedPromptsPattern = RegExp(
   '${RegExp.escape(_managedPromptsBegin)}.*?${RegExp.escape(_managedPromptsEnd)}\\s*',
