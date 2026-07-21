@@ -1,0 +1,371 @@
+test/features/activity/activity_controller_test.dart
+  s_59e28dea430158::t_698c147d8c09b1 1,27,29,32,35,39-40,42-105
+windows/runner/application_updater.h
+  s_59e28dea430158::t_4738a9fe74e8d4 1-10,16-46
+  s_59e28dea430158::t_235dd54eac2a1c 11-15
+lib/features/library/ui/library_import_dialog.dart
+  s_59e28dea430158::t_217c9f0142c74f 2,26-27
+lib/app/app_theme.dart
+  s_59e28dea430158::t_b75efa92c5a975 198-201
+  s_59e28dea430158::t_bed00648298d65 3,154,190-192
+test/packaging/desktop_identity_test.dart
+  s_59e28dea430158::t_0b40b5268a69f6 333-334,403-425,427-431,433,443-451
+  s_59e28dea430158::t_6d0d065d98b139 426
+  s_59e28dea430158::t_766247ce1109db 335-336,338,434-442
+  s_59e28dea430158::t_f04145ae423db8 152-154,156-159
+  s_59e28dea430158::t_3033cda57d5690 337
+  s_59e28dea430158::t_c7db72e4ca2d93 432
+  s_59e28dea430158::t_ce72dd470c0610 49,56,230-231
+  s_59e28dea430158::t_04cd17ae813e0e 235-238
+test/features/shell/tray_unread_controller_test.dart
+  s_59e28dea430158::t_1b2d03ee379aaa 2,82-144
+lib/features/settings/domain/application_updater.dart
+  s_59e28dea430158::t_10a0599ec0abd9 69-80
+  s_59e28dea430158::t_564b542f1f3e92 44
+  s_59e28dea430158::t_9cd4343ee52977 1-43,45-68,81-88
+lib/features/settings/domain/mcp_setup_prompt.dart
+  s_59e28dea430158::t_9f08ffe197f46c 30-34,37,59-63,66
+.github/workflows/release.yml
+  s_59e28dea430158::t_4722cf658e49aa 91-92,150-158,196-207,221,262
+  s_59e28dea430158::t_417b796df01c89 243-246,251-261,263,274
+  s_59e28dea430158::t_04cd17ae813e0e 264-270
+lib/features/settings/ui/settings_window_app.dart
+  s_59e28dea430158::t_fc9740d71630d2 21,31,42-43,47-49,55-57,69,110
+  s_59e28dea430158::t_a2909c9a4de7f5 7
+lib/features/library/domain/built_in_resource_installer.dart
+  s_59e28dea430158::t_857026d94cc393 59
+  s_59e28dea430158::t_4e908b6ff561d1 6-7,20,35-47,49,52-53,56,60-75,78-79,82
+scripts/setup_sparkle_keys.sh
+  s_59e28dea430158::t_235dd54eac2a1c 1-33,35-45
+  s_59e28dea430158::t_d24f84f2a208d0 34
+test/features/clipboard/clipboard_group_order_store_test.dart
+  s_59e28dea430158::t_82a9251f97bcfd 1-13,17-41
+  s_59e28dea430158::t_84e8cee67ba39d 14-16
+lib/features/clipboard/ui/clipboard_filter_bar.dart
+  s_59e28dea430158::t_ef4c37558e33dd 381,425-443
+lib/features/activity/data/agent_activity_store.dart
+  s_59e28dea430158::t_e5f8b49d95dc85 1-114,116-134
+  s_59e28dea430158::t_82a9390788d167 115
+lib/features/settings/domain/app_settings.dart
+  s_59e28dea430158::t_a70b86553c817c 72-74,90-92,109-111,133-135,151-156
+lib/features/activity/ui/agent_activity_manager_screen.dart
+  s_59e28dea430158::t_82a9390788d167 35,78
+  s_59e28dea430158::t_a1866fa4dd4a2c 1-34,36-77,79-189
+windows/runner/flutter_window.cpp
+  s_59e28dea430158::t_4738a9fe74e8d4 10,232-277,433-434
+  s_59e28dea430158::t_235dd54eac2a1c 446-452
+docs/dingdong-release.json
+  s_59e28dea430158::t_04cd17ae813e0e 5,21,27-31
+  s_59e28dea430158::t_ce72dd470c0610 3-4,11,15
+lib/features/settings/domain/release_update.dart
+  s_59e28dea430158::t_ce72dd470c0610 114
+pubspec.yaml
+  s_59e28dea430158::t_ce72dd470c0610 4
+lib/platform/plugin_desktop_shell_gateway.dart
+  s_59e28dea430158::t_98670f3acb441b 10,48,80,111,118-120,227,272,277,292,327-333,335-338,340-342
+  s_59e28dea430158::t_4cd488474d7e09 339
+  s_59e28dea430158::t_c93714f11bb5cc 334
+  s_59e28dea430158::t_0c76650cf6cfe8 24,31,46
+test/contract/mcp_contract_test.dart
+  s_59e28dea430158::t_2e7317ad9815fe 22-23,67-69
+  s_59e28dea430158::t_857026d94cc393 24-27
+  s_59e28dea430158::t_7d8bfdb9d5993f 21
+lib/features/shell/domain/desktop_shell_gateway.dart
+  s_59e28dea430158::t_98670f3acb441b 22,24
+test/features/settings/application_updater_test.dart
+  s_59e28dea430158::t_12a12cd5b2cd70 6-12
+  s_59e28dea430158::t_cb62178ef2f53c 1-5,13-34
+lib/features/activity/ui/activity_cards.dart
+  s_59e28dea430158::t_5655cca77432e8 3-43
+docs/index.html
+  s_59e28dea430158::t_ce72dd470c0610 240,245,247,253,371,373,469,471,528,573
+  s_59e28dea430158::t_04cd17ae813e0e 255,261,375,473
+lib/platform/preferences_tray_unread_store.dart
+  s_59e28dea430158::t_e72a785bbed641 1-25,30-49
+  s_59e28dea430158::t_4cd488474d7e09 26-29
+test/features/activity/agent_activity_store_test.dart
+  s_59e28dea430158::t_698c147d8c09b1 1-55
+test/features/shell/popup_window_policy_test.dart
+  s_59e28dea430158::t_c93714f11bb5cc 6-12
+lib/features/shell/domain/tray_unread_controller.dart
+  s_59e28dea430158::t_4cd488474d7e09 33,89
+  s_59e28dea430158::t_718749fdd5fdc6 1-4,14
+  s_59e28dea430158::t_0c76650cf6cfe8 16,19,31,79
+  s_59e28dea430158::t_e72a785bbed641 20-24,26,28-30,32,34-35,38-43,46-62,64,67-69,74,77-78,80-88,90-97
+macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+  s_59e28dea430158::t_dbfd12503b1bce 1-14
+windows/runner/flutter_window.h
+  s_59e28dea430158::t_4738a9fe74e8d4 13-14,43-45
+lib/features/activity/ui/activity_controller.dart
+  s_59e28dea430158::t_9c18d992ab398b 20,25
+  s_59e28dea430158::t_82a9390788d167 46-48,119,170-172
+  s_59e28dea430158::t_e30f37c686a25a 1,4,8-12,14-19,21-24,27,31,33-37,45,49-53,55-108,111,116,120-124,143,146-169,173-221,224-227
+lib/platform/multi_window_settings_host_bridge.dart
+  s_59e28dea430158::t_ffadd914b5521b 3,14-15,75-82,85-94
+  s_59e28dea430158::t_564b542f1f3e92 83-84
+windows/runner/main.cpp
+  s_59e28dea430158::t_4738a9fe74e8d4 7,11-14
+windows/runner/application_updater.cpp
+  s_59e28dea430158::t_4738a9fe74e8d4 1-19,29-41,44-83,85-97,103-107
+  s_59e28dea430158::t_235dd54eac2a1c 20-28,84
+  s_59e28dea430158::t_9803118f4c3baf 42-43,98-102
+lib/features/clipboard/ui/clipboard_actions.dart
+  s_59e28dea430158::t_217c9f0142c74f 45,61,80,112
+lib/app/app_dependencies.dart
+  s_59e28dea430158::t_d4182edd07bb3d 19,47,80-81
+  s_59e28dea430158::t_145d45ed4f2aed 9,34,57-58,129,144
+lib/features/library/ui/resource_editor.dart
+  s_59e28dea430158::t_defb5e077548b2 2045-2046,2049-2050,2053-2054
+lib/features/clipboard/ui/clipboard_manager_screen.dart
+  s_59e28dea430158::t_217c9f0142c74f 6,176,184,328-329,385,424,434
+README.zh.md
+  s_59e28dea430158::t_ce72dd470c0610 40
+  s_59e28dea430158::t_1340169b7e15bb 59-61,72-75,520-535
+  s_59e28dea430158::t_e5440e32d52abe 48-49,57-58
+  s_59e28dea430158::t_0a8f0545e7d821 41
+  s_59e28dea430158::t_23ec4edadbb1b7 91-100
+  s_59e28dea430158::t_b7c78028b2f972 26-27,31,34,38-39,44-47,56,62,85-89,127,133,176-177,202,209,221-225
+  s_59e28dea430158::t_17f01f3ebd8068 35,52-55
+  s_59e28dea430158::t_e858dd7a83c450 261-264
+  s_59e28dea430158::t_6e10ccf90d724b 50-51
+  s_59e28dea430158::t_7b1a5598923fb5 445-447
+  s_59e28dea430158::t_ea94820807faa9 42-43
+lib/platform/native_application_updater.dart
+  s_59e28dea430158::t_9cd4343ee52977 3-26,29-45
+  s_59e28dea430158::t_dd70a7576ba085 1-2
+  s_59e28dea430158::t_564b542f1f3e92 27-28
+test/features/library/agent_resource_synchronizer_test.dart
+  s_59e28dea430158::t_f40670c0ebbab2 17-20,41
+  s_59e28dea430158::t_2613c548224559 82-121,124-152,270,274-276,280,285-287
+  s_59e28dea430158::t_2e7317ad9815fe 122-123
+test/features/library/built_in_resource_installer_test.dart
+  s_59e28dea430158::t_857026d94cc393 97-114,116,118-127
+  s_59e28dea430158::t_2e7317ad9815fe 96,115,117,128-141
+lib/features/library/ui/resource_browser_screen.dart
+  s_59e28dea430158::t_217c9f0142c74f 7
+macos/Runner.xcodeproj/project.pbxproj
+  s_59e28dea430158::t_ece33bb95d6ff2 386,749-759,765-768
+  s_59e28dea430158::t_e5125b02214f41 27-28,72,101,174,231,279
+lib/features/clipboard/ui/clipboard_view_model.dart
+  s_59e28dea430158::t_84e8cee67ba39d 41
+  s_59e28dea430158::t_1e21465aaf3353 11,31,40,52,144-146,227,239,275
+test/golden/resource_ui_golden_test.dart
+  s_59e28dea430158::t_52b85564e413fd 11,13,21-27,29-58
+  s_59e28dea430158::t_c1290ac1245482 28
+test/features/settings/release_settings_section_test.dart
+  s_59e28dea430158::t_a220bf648dc540 3,54-101
+test/app/dingdong_app_test.dart
+  s_59e28dea430158::t_712ed36db95a60 13
+  s_59e28dea430158::t_b75efa92c5a975 249
+  s_59e28dea430158::t_ce72dd470c0610 18,24-25
+  s_59e28dea430158::t_9941727a8580f6 354,357-359,361
+  s_59e28dea430158::t_ff7d979250aebf 133-134
+  s_59e28dea430158::t_a01c3abf9e7a1b 139-141
+  s_59e28dea430158::t_03de7ad42e3e02 2,4,6-7,208-248,250-269,362-374,376-381
+macos/Runner/AppDelegate.swift
+  s_59e28dea430158::t_1a69d13712253d 19-20,49-78
+lib/features/activity/domain/agent_activity.dart
+  s_59e28dea430158::t_e5f8b49d95dc85 11-19,34-41
+  s_59e28dea430158::t_5c194aeb1b394d 20
+lib/app/app_data_paths.dart
+  s_59e28dea430158::t_145d45ed4f2aed 51-54
+  s_59e28dea430158::t_e5f8b49d95dc85 55-58
+lib/features/clipboard/ui/clipboard_organize_dialog.dart
+  s_59e28dea430158::t_217c9f0142c74f 3,59-60
+lib/features/clipboard/ui/clipboard_category_rules_dialog.dart
+  s_59e28dea430158::t_1fb0508b83bf4f 4
+  s_59e28dea430158::t_3623d258a31b80 48-71,73-116,118-122,126,129-142,144-151,153,155-156
+  s_59e28dea430158::t_14367fe182a6b7 39-47
+test/features/settings/settings_repository_test.dart
+  s_59e28dea430158::t_ff7d979250aebf 23-25,42-44,59-61,79-81
+docs/product/manual-regression.md
+  s_59e28dea430158::t_04cd17ae813e0e 98
+  s_59e28dea430158::t_ce72dd470c0610 1,92-93
+test/platform/preferences_tray_unread_store_test.dart
+  s_59e28dea430158::t_1b2d03ee379aaa 1-36
+lib/features/agent_api/data/mcp_server.dart
+  s_59e28dea430158::t_4c4dcad3f874f5 42-45,107,158-159,167
+  s_59e28dea430158::t_ce72dd470c0610 39
+lib/features/settings/domain/settings_window_launcher.dart
+  s_59e28dea430158::t_cea7e72b23679e 1-12,15-17
+macos/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved
+  s_59e28dea430158::t_dbfd12503b1bce 1-14
+docs/release-notes.md
+  s_59e28dea430158::t_ce72dd470c0610 1
+  s_59e28dea430158::t_04cd17ae813e0e 3-37,41-42,44,46-52,54,56-59,61,63,65-67
+  s_59e28dea430158::t_1340169b7e15bb 64
+lib/features/clipboard/ui/clipboard_group_dialog.dart
+  s_59e28dea430158::t_1fb0508b83bf4f 2
+  s_59e28dea430158::t_14367fe182a6b7 58-67
+  s_59e28dea430158::t_3623d258a31b80 68-79,81,83-87,91-97,100-126,128-151,153-186,188-193,197-208,210-222,224-238,240-241
+test/app/app_data_paths_test.dart
+  s_59e28dea430158::t_ff7d979250aebf 42-48
+  s_59e28dea430158::t_84e8cee67ba39d 5-41,49
+test/features/clipboard/clipboard_view_model_test.dart
+  s_59e28dea430158::t_976772997360d9 313-324
+  s_59e28dea430158::t_82a9251f97bcfd 5,311-312,331-346
+  s_59e28dea430158::t_84e8cee67ba39d 325-330
+test/features/settings/settings_view_model_test.dart
+  s_59e28dea430158::t_2e7317ad9815fe 234,288-290
+  s_59e28dea430158::t_cb62178ef2f53c 4,173-192,370-388
+  s_59e28dea430158::t_88b9ae97cef627 320-337
+  s_59e28dea430158::t_857026d94cc393 235-242
+lib/features/settings/data/settings_repository.dart
+  s_59e28dea430158::t_a70b86553c817c 27-29,47-49,77-80,101-102
+  s_59e28dea430158::t_82a9390788d167 75-76,103
+README.md
+  s_59e28dea430158::t_b7c78028b2f972 27-28,32-33,36,40-42,48-54,65,67,75,104-110,149,155,198-199,224,231,243-248
+  s_59e28dea430158::t_6e10ccf90d724b 58-59
+  s_59e28dea430158::t_e5440e32d52abe 55-57,68-70
+  s_59e28dea430158::t_ce72dd470c0610 43
+  s_59e28dea430158::t_e858dd7a83c450 287-290
+  s_59e28dea430158::t_0a8f0545e7d821 44
+  s_59e28dea430158::t_1340169b7e15bb 71-74,86-91,551-569
+  s_59e28dea430158::t_17f01f3ebd8068 37,60-64,66,473-475
+  s_59e28dea430158::t_ea94820807faa9 45-47
+  s_59e28dea430158::t_23ec4edadbb1b7 112-122
+test/features/library/resource_manager_app_test.dart
+  s_59e28dea430158::t_a01c3abf9e7a1b 93
+  s_59e28dea430158::t_82a9390788d167 80-83
+  s_59e28dea430158::t_ff7d979250aebf 2,34-37,43,65-68,76-79,84-85
+test/features/shell/desktop_shell_service_test.dart
+  s_59e28dea430158::t_03de7ad42e3e02 58
+  s_59e28dea430158::t_b75efa92c5a975 59-67,69-70,72-75
+  s_59e28dea430158::t_98670f3acb441b 155,187,198,203,205
+lib/features/library/ui/resource_browser_cards.dart
+  s_59e28dea430158::t_217c9f0142c74f 55,64
+test/features/library/library_screen_test.dart
+  s_59e28dea430158::t_6c6ed4cd28ffd9 38
+  s_59e28dea430158::t_afa94a935a717c 16,27-28,30,40-43
+  s_59e28dea430158::t_e31d5b9406afc3 29
+lib/features/shell/domain/tray_unread_store.dart
+  s_59e28dea430158::t_e72a785bbed641 1-7,9-18
+  s_59e28dea430158::t_4cd488474d7e09 8
+lib/platform/multi_window_settings_launcher.dart
+  s_59e28dea430158::t_cea7e72b23679e 15-17,22,33
+lib/features/settings/ui/release_settings_section.dart
+  s_59e28dea430158::t_4f35c72e05e800 2,19-20,65-76,82-100,103,140-149,164,171,175-178,181-195,199-219,221-228,242-251
+  s_59e28dea430158::t_564b542f1f3e92 220
+macos/Runner/Info.plist
+  s_59e28dea430158::t_1a69d13712253d 31-36
+test/contract/http_contract_test.dart
+  s_59e28dea430158::t_2e7317ad9815fe 360-369,386,397-401,404
+  s_59e28dea430158::t_857026d94cc393 396
+  s_59e28dea430158::t_7d8bfdb9d5993f 380,413-439
+lib/features/library/ui/trigger_group_dialog.dart
+  s_59e28dea430158::t_14367fe182a6b7 77-86,446-455
+  s_59e28dea430158::t_217c9f0142c74f 2,358,378
+  s_59e28dea430158::t_3623d258a31b80 87-98,100-107,110-158,160-166,168-189,191-224,226-238,240-243,245-246,250-265,268-270,272-283,456-482,485-493,496-525,527-535,538-546,548-555,557-560,562-571
+lib/features/clipboard/ui/clipboard_group_context_menu.dart
+  s_59e28dea430158::t_217c9f0142c74f 4,61,79
+lib/features/shell/ui/shell_screen.dart
+  s_59e28dea430158::t_f705c719391114 23,49,71,280-289,393
+  s_59e28dea430158::t_03de7ad42e3e02 133
+  s_59e28dea430158::t_d77850a547c515 269-271,277,397-402
+skills/dingdong-configure/SKILL.md
+  s_59e28dea430158::t_6f8bcd458ebb5e 14-25,57
+lib/features/agent_api/data/agent_bridge.dart
+  s_59e28dea430158::t_4c4dcad3f874f5 9-10,129-133,137-138
+  s_59e28dea430158::t_c918f31fe8ff19 30,67,176-182
+test/features/settings/settings_screen_test.dart
+  s_59e28dea430158::t_ff7d979250aebf 118-129
+  s_59e28dea430158::t_9941727a8580f6 4,6,13-45
+skills/dingdong-configure/references/agent-api.md
+  s_59e28dea430158::t_6f8bcd458ebb5e 34-41
+macos/Runner/DingDongUpdater.swift
+  s_59e28dea430158::t_1a69d13712253d 1-181
+windows/runner/CMakeLists.txt
+  s_59e28dea430158::t_0eb78551ad4905 4-15,22,51-67
+lib/features/clipboard/data/clipboard_group_order_store.dart
+  s_59e28dea430158::t_84e8cee67ba39d 29-31
+  s_59e28dea430158::t_1e21465aaf3353 1-28,32-75
+lib/features/settings/ui/settings_view_model.dart
+  s_59e28dea430158::t_10a0599ec0abd9 369
+  s_59e28dea430158::t_a70b86553c817c 211-228
+  s_59e28dea430158::t_cb62178ef2f53c 269-271
+  s_59e28dea430158::t_520e21d244bada 3-4,8,26,36,46,55-59,70-72,115,257-268,272-280,326-368,370-387,389,393-396
+lib/features/shell/ui/popup_header.dart
+  s_59e28dea430158::t_178189fafda27b 92,189-190
+  s_59e28dea430158::t_2dd7ee8ccf59b9 7,66-67,87-88,90,93-94
+  s_59e28dea430158::t_3f94bdfc5dd829 20,33,68-85,180,186-188,191-201
+  s_59e28dea430158::t_c15006a2e6cc28 86
+  s_59e28dea430158::t_d77850a547c515 22,35,65,89,91,179,181-185,202-204
+lib/features/clipboard/ui/clipboard_screen.dart
+  s_59e28dea430158::t_217c9f0142c74f 10
+lib/features/library/ui/library_screen.dart
+  s_59e28dea430158::t_217c9f0142c74f 6,132,141,176,190
+scripts/generate_sparkle_appcast.sh
+  s_59e28dea430158::t_235dd54eac2a1c 1-54,56-59
+  s_59e28dea430158::t_62a0a77b19da92 55
+test/features/settings/settings_window_app_test.dart
+  s_59e28dea430158::t_0a8f0545e7d821 7-8,66-80,90,99
+lib/features/activity/ui/activity_screen.dart
+  s_59e28dea430158::t_5655cca77432e8 173-188
+lib/features/library/ui/resource_filter_bar.dart
+  s_59e28dea430158::t_afa94a935a717c 112-115,117-135,137,244-280,308-312
+  s_59e28dea430158::t_d3b250ead5d900 116
+lib/features/library/ui/resource_manager_app.dart
+  s_59e28dea430158::t_a1866fa4dd4a2c 7-8,24,34,56,120-121,127,131-134,219-225
+  s_59e28dea430158::t_82a9390788d167 122-126,128-130
+lib/app/dingdong_app.dart
+  s_59e28dea430158::t_145d45ed4f2aed 12,54,91,150
+  s_59e28dea430158::t_f705c719391114 35,74,111,254
+lib/core/widgets/desktop_dialog.dart
+  s_59e28dea430158::t_bed00648298d65 1-43,80-107,114-115,142,158-160
+  s_59e28dea430158::t_954ca41e5c5bef 44-79,116-141,143-157
+  s_59e28dea430158::t_94265745654f02 108-113
+test/core/widgets/desktop_dialog_test.dart
+  s_59e28dea430158::t_71235bab19564f 21,51
+  s_59e28dea430158::t_94265745654f02 1-20,22-50,52-61
+test/features/clipboard/clipboard_screen_test.dart
+  s_59e28dea430158::t_ef4c37558e33dd 506-527,531-551,558-561
+  s_59e28dea430158::t_52a9c241e6ac25 528-530,552-557
+  s_59e28dea430158::t_1fb0508b83bf4f 878
+lib/features/library/data/agent_resource_synchronizer.dart
+  s_59e28dea430158::t_f40670c0ebbab2 353
+  s_59e28dea430158::t_16a6156e436dd1 647-668
+  s_59e28dea430158::t_4956c8c7b85af0 60,143-151,646
+  s_59e28dea430158::t_18b7abf75cab6e 13-18,34,58-59,87,94,100-104,115-117,142,152-183,187-200
+  s_59e28dea430158::t_4c4dcad3f874f5 184-186
+lib/main.dart
+  s_59e28dea430158::t_f705c719391114 240
+  s_59e28dea430158::t_145d45ed4f2aed 12,224,431-432
+  s_59e28dea430158::t_d4182edd07bb3d 45,78-79,87,94
+  s_59e28dea430158::t_a2909c9a4de7f5 27
+  s_59e28dea430158::t_ffadd914b5521b 38,125-126,134,204-210,286
+  s_59e28dea430158::t_82a9390788d167 185,445-452
+  s_59e28dea430158::t_936150eed2cc48 9,80-82,111-118,181-184,186,468
+  s_59e28dea430158::t_fc9740d71630d2 309-311
+lib/features/shell/domain/desktop_shell_service.dart
+  s_59e28dea430158::t_03de7ad42e3e02 49,58,62,83
+  s_59e28dea430158::t_98670f3acb441b 52
+lib/features/settings/ui/settings_screen.dart
+  s_59e28dea430158::t_1d4627213d78ff 451-491,494-510,513-520
+  s_59e28dea430158::t_a2909c9a4de7f5 7
+  s_59e28dea430158::t_fc9740d71630d2 24,32,42-48,52-53,57-140,157,573-576,590-603
+  s_59e28dea430158::t_82a9390788d167 492-493,511-512
+test/features/shell/popup_shell_test.dart
+  s_59e28dea430158::t_0b6db6cdfd9b49 13-14,16,194-207,209-233,235-236,249-250,1150,1152-1156,1158-1159
+  s_59e28dea430158::t_178189fafda27b 208,242
+  s_59e28dea430158::t_ea94820807faa9 234,237-241,243-248,1151,1157
+  s_59e28dea430158::t_0a8f0545e7d821 587
+  s_59e28dea430158::t_9941727a8580f6 593-615,1138,1141-1143,1145
+lib/features/shell/domain/popup_window_policy.dart
+  s_59e28dea430158::t_c93714f11bb5cc 10-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "96e51279dd3c066de5b96abe2e6f96c097d1c2d8",
+  "prompts": {},
+  "sessions": {
+    "s_59e28dea430158": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8368-54f3-7a20-a19a-ca31568022de",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
