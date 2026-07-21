@@ -1,24 +1,24 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.22",
-  "latestBuild": "22",
-  "publishedAt": "2026-07-21T17:54:39Z",
+  "latestVersion": "0.7.23",
+  "latestBuild": "23",
+  "publishedAt": "2026-07-21T18:15:23Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.22/DingDong-0.7.22-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.23/DingDong-0.7.23-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.22/DingDong-0.7.22-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.23/DingDong-0.7.23-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.22/DingDong-0.7.22-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.23/DingDong-0.7.23-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
@@ -28,6 +28,7 @@
     "Opens the Recent Agents manager directly and lets resumable rows reopen their source conversation.",
     "Supports exact Codex, Claude Code, Gemini, Kiro, and Cursor background-agent destinations with a safe allow-listed launcher.",
     "Adds Kiro as a default Agent for MCP, Skill, and Stop-hook configuration.",
-    "Keeps local Cursor sessions useful by reopening their recorded workspace when an exact conversation link is unavailable."
+    "Keeps local Cursor sessions useful by reopening their recorded workspace when an exact conversation link is unavailable.",
+    "Keeps release smoke tests isolated from real Agent history and validates Kiro paths portably on Windows."
   ]
 }

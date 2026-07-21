@@ -47,7 +47,8 @@ case "$description" in
 esac
 
 smoke_output="$(mktemp "${TMPDIR:-/tmp}/dingdong-mcp-smoke.XXXXXX")"
-trap 'rm -f "$smoke_output"' EXIT HUP INT TERM
+smoke_home="$(mktemp -d "${TMPDIR:-/tmp}/dingdong-mcp-smoke-home.XXXXXX")"
+trap 'rm -f "$smoke_output"; rmdir "$smoke_home" 2>/dev/null || true' EXIT HUP INT TERM
 /usr/bin/printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' \
   | "$executable" >"$smoke_output"
@@ -59,8 +60,9 @@ if ! /usr/bin/grep -q '"result"' "$smoke_output" \
 fi
 
 # Stop hooks expect an exit-zero, output-free command even if DingDong is not
-# currently running. The executable handles delivery failures as a quiet no-op.
+# currently running. Use an isolated home so this build-time smoke test cannot
+# connect to a running DingDong instance or pollute the user's Agent history.
 /usr/bin/printf '%s' '{"hook_event_name":"Stop"}' \
-  | "$executable" --notify-stop
+  | HOME="$smoke_home" "$executable" --notify-stop
 
 echo "Built and tested DingDong MCP for $expected_architecture"

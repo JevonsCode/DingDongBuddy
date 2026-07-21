@@ -56,7 +56,7 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.7.22`, using the same version constant as the release UI. Clicking it
+  `v0.7.23`, using the same version constant as the release UI. Clicking it
   opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
   muted stays silent. Neither the wordmark nor version shows a hover tooltip or

@@ -1,4 +1,4 @@
-# DingDong 0.7.22
+# DingDong 0.7.23
 
 This release makes Recent Agents actionable: the compact Dynamic view keeps the
 latest six items, the full history is one click away, and supported Agent items
@@ -24,6 +24,13 @@ can reopen their source conversation.
 - Extends the setup instructions with a Kiro Stop hook that records the session
   id and workspace required for resume.
 
+## Release reliability
+
+- Isolates the packaged MCP Stop-hook smoke test from the user's live DingDong
+  data so local builds do not create non-resumable Recent Agent entries.
+- Uses platform-native path construction in Kiro discovery tests so the Windows
+  release pipeline validates the same locations without separator mismatches.
+
 Intel macOS and Windows packages remain beta.
 
 ---
@@ -46,5 +53,11 @@ Intel macOS and Windows packages remain beta.
 - 将 Kiro 加入默认 Agent 集成。
 - 支持同步 MCP 配置到 `~/.kiro/settings/mcp.json`，并同步全局与项目 Skill。
 - 安装说明新增 Kiro Stop Hook，用于记录恢复会话需要的 session id 和工作区。
+
+## 发布可靠性
+
+- 隔离内置 MCP 的 Stop Hook 冒烟测试与用户真实 DingDong 数据，避免本地构建生成
+  无法恢复的“最近 Agent”记录。
+- Kiro 发现测试改用平台原生路径拼接，Windows 发布流水线不会再因路径分隔符误报。
 
 Intel macOS 和 Windows 安装包继续标记为 beta。

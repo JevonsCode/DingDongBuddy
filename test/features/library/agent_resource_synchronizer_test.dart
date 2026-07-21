@@ -6,6 +6,7 @@ import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart'
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   test('current user discovery includes Kiro native locations', () {
@@ -23,12 +24,12 @@ void main() {
 
     expect(
       synchronizer.skillRoots.map((Directory root) => root.path),
-      contains('${temp.path}/.kiro/skills'),
+      contains(path.join(temp.path, '.kiro', 'skills')),
     );
     expect(synchronizer.projectSkillRoots, contains('.kiro/skills'));
     expect(
       synchronizer.mcpTargets.single.file.path,
-      '${temp.path}/.kiro/settings/mcp.json',
+      path.join(temp.path, '.kiro', 'settings', 'mcp.json'),
     );
     expect(synchronizer.mcpTargets.single.kind, AgentMcpConfigKind.kiroJson);
   });
