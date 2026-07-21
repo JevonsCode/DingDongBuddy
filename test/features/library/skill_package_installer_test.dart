@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   test('installs the complete GitHub Skill directory', () async {
@@ -61,7 +62,9 @@ void main() {
 
     expect(result.skillDocument, contains('name: reviewer'));
     expect(
-      File('${result.directoryPath}/scripts/check.py').readAsStringSync(),
+      File(
+        path.join(result.directoryPath, 'scripts', 'check.py'),
+      ).readAsStringSync(),
       'print("ok")',
     );
   });
@@ -77,12 +80,12 @@ void main() {
       );
       addTearDown(() => root.deleteSync(recursive: true));
       addTearDown(() => source.deleteSync(recursive: true));
-      File('${source.path}/SKILL.md')
+      File(path.join(source.path, 'SKILL.md'))
         ..createSync(recursive: true)
         ..writeAsStringSync(
           '---\nname: reviewer\ndescription: Review changes\n---\n\n# Review',
         );
-      File('${source.path}/scripts/check.py')
+      File(path.join(source.path, 'scripts', 'check.py'))
         ..createSync(recursive: true)
         ..writeAsStringSync('print("ok")');
       final GitHubSkillPackageInstaller installer = GitHubSkillPackageInstaller(
@@ -93,9 +96,11 @@ void main() {
         source.uri,
       );
 
-      expect(result.directoryPath, '${root.path}/reviewer');
+      expect(result.directoryPath, path.join(root.path, 'reviewer'));
       expect(
-        File('${result.directoryPath}/scripts/check.py').readAsStringSync(),
+        File(
+          path.join(result.directoryPath, 'scripts', 'check.py'),
+        ).readAsStringSync(),
         'print("ok")',
       );
     },
