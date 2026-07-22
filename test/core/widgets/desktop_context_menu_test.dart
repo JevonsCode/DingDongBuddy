@@ -426,7 +426,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(await result, isNull);
     });
-  }, skip: !Platform.isWindows);
+  }, skip: !Platform.isWindows, tags: 'golden');
 
   testWidgets('non-Windows fallback keeps the Material menu', (
     WidgetTester tester,
