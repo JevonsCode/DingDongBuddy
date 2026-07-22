@@ -1,0 +1,20 @@
+test/features/library/agent_resource_synchronizer_test.dart
+  s_69f0fb7241b9c3::t_84d78c994c033c 357
+  s_69f0fb7241b9c3::t_65fe4f3e0b734a 271-274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "52ff4e56f3a4b0d2820207a2d44815a29efb0b07",
+  "prompts": {},
+  "sessions": {
+    "s_69f0fb7241b9c3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87af-5556-7a62-a2f7-de29194cb814",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
