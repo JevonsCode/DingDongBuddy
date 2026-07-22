@@ -107,6 +107,60 @@ void main() {
     await dialogResult;
   });
 
+  testWidgets('controller removes the menu below a later dialog', (
+    WidgetTester tester,
+  ) async {
+    final DesktopContextMenuController controller =
+        DesktopContextMenuController();
+    late BuildContext menuContext;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DesktopContextMenuScope(
+          controller: controller,
+          child: Builder(
+            builder: (BuildContext context) {
+              menuContext = context;
+              return const Scaffold(body: SizedBox.expand());
+            },
+          ),
+        ),
+      ),
+    );
+
+    final Future<String?> menuResult = showDesktopContextMenu<String>(
+      context: menuContext,
+      globalPosition: const Offset(40, 40),
+      entries: const <DesktopMenuEntry<String>>[
+        DesktopMenuItem<String>(
+          value: 'edit',
+          label: 'Edit',
+          symbol: 'edit',
+        ),
+      ],
+    );
+    await tester.pumpAndSettle();
+
+    final Future<void> dialogResult = showDialog<void>(
+      context: menuContext,
+      builder: (BuildContext context) => const AlertDialog(
+        key: Key('dialog-above-menu'),
+        content: Text('Keep this dialog open'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Future<void> dismissal = controller.dismissActiveMenu();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('dialog-above-menu')), findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
+
+    Navigator.of(menuContext).pop();
+    await tester.pumpAndSettle();
+    await dialogResult;
+    await dismissal;
+    expect(await menuResult, isNull);
+  });
+
   testWidgets('Windows menu uses compact Notion-like styling', (
     WidgetTester tester,
   ) async {

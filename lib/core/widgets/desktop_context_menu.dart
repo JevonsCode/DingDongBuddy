@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:flutter/foundation.dart';
@@ -142,10 +144,23 @@ Future<T?> showDesktopContextMenu<T>({
   final bool reduceMotion =
       MediaQuery.maybeOf(context)?.disableAnimations ?? false;
   final NavigatorState navigator = Navigator.of(context);
+  final Completer<Route<dynamic>?> menuRoute = Completer<Route<dynamic>?>();
+  final List<PopupMenuEntry<T>> trackedEntries = popupEntries
+      .map(
+        (PopupMenuEntry<T> entry) => _RouteTrackingPopupMenuEntry<T>(
+          entry: entry,
+          onRouteAvailable: (Route<dynamic> route) {
+            if (!menuRoute.isCompleted) {
+              menuRoute.complete(route);
+            }
+          },
+        ),
+      )
+      .toList(growable: false);
   final Future<T?> result = showMenu<T>(
     context: context,
     position: desktopContextMenuPosition(context, globalPosition),
-    items: popupEntries,
+    items: trackedEntries,
     elevation: windows ? 2 : null,
     shadowColor: windows
         ? Colors.black.withValues(alpha: dark ? 0.24 : 0.1)
@@ -180,6 +195,20 @@ Future<T?> showDesktopContextMenu<T>({
         : AnimationStyle.noAnimation,
     requestFocus: true,
   );
+  unawaited(
+    result.then<void>(
+      (_) {
+        if (!menuRoute.isCompleted) {
+          menuRoute.complete(null);
+        }
+      },
+      onError: (Object _, StackTrace _) {
+        if (!menuRoute.isCompleted) {
+          menuRoute.complete(null);
+        }
+      },
+    ),
+  );
   final DesktopContextMenuController? controller =
       DesktopContextMenuScope.maybeOf(context);
   Object? session;
@@ -190,8 +219,9 @@ Future<T?> showDesktopContextMenu<T>({
         return;
       }
       dismissalRequested = true;
-      if (navigator.mounted && navigator.canPop()) {
-        navigator.pop<T>();
+      final Route<dynamic>? activeMenuRoute = await menuRoute.future;
+      if (navigator.mounted && activeMenuRoute?.isActive == true) {
+        navigator.removeRoute(activeMenuRoute!);
       }
       await result;
     });
@@ -202,6 +232,38 @@ Future<T?> showDesktopContextMenu<T>({
     if (controller != null && session != null) {
       controller._unregister(session);
     }
+  }
+}
+
+final class _RouteTrackingPopupMenuEntry<T> extends PopupMenuEntry<T> {
+  const _RouteTrackingPopupMenuEntry({
+    required this.entry,
+    required this.onRouteAvailable,
+  });
+
+  final PopupMenuEntry<T> entry;
+  final ValueChanged<Route<dynamic>> onRouteAvailable;
+
+  @override
+  double get height => entry.height;
+
+  @override
+  bool represents(T? value) => entry.represents(value);
+
+  @override
+  State<_RouteTrackingPopupMenuEntry<T>> createState() =>
+      _RouteTrackingPopupMenuEntryState<T>();
+}
+
+final class _RouteTrackingPopupMenuEntryState<T>
+    extends State<_RouteTrackingPopupMenuEntry<T>> {
+  @override
+  Widget build(BuildContext context) {
+    final ModalRoute<dynamic>? route = ModalRoute.of(context);
+    if (route != null) {
+      widget.onRouteAvailable(route);
+    }
+    return widget.entry;
   }
 }
 
