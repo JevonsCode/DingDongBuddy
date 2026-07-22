@@ -2,6 +2,7 @@ import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -17,6 +18,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('DingDong exposes its desktop context menu controller', (
+    WidgetTester tester,
+  ) async {
+    final DesktopContextMenuController controller =
+        DesktopContextMenuController();
+
+    await tester.pumpWidget(
+      DingDongApp(desktopContextMenuController: controller),
+    );
+
+    final DesktopContextMenuScope scope = tester.widget(
+      find.byType(DesktopContextMenuScope),
+    );
+    expect(scope.controller, same(controller));
+  });
+
   testWidgets('DingDong starts with the Dynamic workspace at version 0.7.25', (
     WidgetTester tester,
   ) async {

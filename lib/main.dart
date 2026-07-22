@@ -6,6 +6,7 @@ import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
@@ -76,6 +77,8 @@ Future<void> main(List<String> arguments) async {
   final ShellController shellController = ShellController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
       MultiWindowClipboardPreviewLauncher();
+  final DesktopContextMenuController desktopContextMenuController =
+      DesktopContextMenuController();
   final MultiWindowSettingsLauncher settingsWindowLauncher =
       MultiWindowSettingsLauncher(parentWindowId: windowController.windowId);
   final SharedPreferencesBackend preferencesBackend =
@@ -86,7 +89,10 @@ Future<void> main(List<String> arguments) async {
   late final AppDependencies dependencies;
   late final SettingsViewModel settingsViewModel;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
-    onHideAuxiliaryWindows: clipboardPreviewLauncher.hide,
+    onHideAuxiliaryWindows: () async {
+      await desktopContextMenuController.dismissActiveMenu();
+      await clipboardPreviewLauncher.hide();
+    },
     unreadStore: PreferencesTrayUnreadStore(preferencesBackend),
     clipboardMonitoringState: () =>
         dependencies.clipboardMonitorService.isRunning,
@@ -252,6 +258,7 @@ Future<void> main(List<String> arguments) async {
       desktopContextMenuGateway: Platform.isMacOS
           ? NativeDesktopContextMenuGateway()
           : null,
+      desktopContextMenuController: desktopContextMenuController,
       clipboardMonitoring: dependencies.clipboardMonitorService,
       clipboardStore: dependencies.clipboardStore,
       clipboardPreviewLauncher: clipboardPreviewLauncher,

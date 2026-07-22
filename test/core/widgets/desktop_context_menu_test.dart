@@ -19,6 +19,94 @@ Future<void> withTargetPlatform(
 }
 
 void main() {
+  testWidgets('controller dismisses the active desktop context menu', (
+    WidgetTester tester,
+  ) async {
+    final DesktopContextMenuController controller =
+        DesktopContextMenuController();
+    late BuildContext menuContext;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DesktopContextMenuScope(
+          controller: controller,
+          child: Builder(
+            builder: (BuildContext context) {
+              menuContext = context;
+              return const Scaffold(body: SizedBox.expand());
+            },
+          ),
+        ),
+      ),
+    );
+
+    final Future<String?> result = showDesktopContextMenu<String>(
+      context: menuContext,
+      globalPosition: const Offset(40, 40),
+      entries: const <DesktopMenuEntry<String>>[
+        DesktopMenuItem<String>(value: 'edit', label: 'Edit', symbol: 'edit'),
+      ],
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Edit'), findsOneWidget);
+
+    final Future<void> dismissal = controller.dismissActiveMenu();
+    await tester.pumpAndSettle();
+    await dismissal;
+
+    expect(await result, isNull);
+    expect(find.text('Edit'), findsNothing);
+  });
+
+  testWidgets('controller does not dismiss routes opened after the menu', (
+    WidgetTester tester,
+  ) async {
+    final DesktopContextMenuController controller =
+        DesktopContextMenuController();
+    late BuildContext menuContext;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DesktopContextMenuScope(
+          controller: controller,
+          child: Builder(
+            builder: (BuildContext context) {
+              menuContext = context;
+              return const Scaffold(body: SizedBox.expand());
+            },
+          ),
+        ),
+      ),
+    );
+
+    final Future<String?> menuResult = showDesktopContextMenu<String>(
+      context: menuContext,
+      globalPosition: const Offset(40, 40),
+      entries: const <DesktopMenuEntry<String>>[
+        DesktopMenuItem<String>(value: 'edit', label: 'Edit', symbol: 'edit'),
+      ],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(await menuResult, 'edit');
+
+    final Future<void> dialogResult = showDialog<void>(
+      context: menuContext,
+      builder: (BuildContext context) => const AlertDialog(
+        key: Key('unrelated-dialog'),
+        content: Text('Keep this dialog open'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await controller.dismissActiveMenu();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('unrelated-dialog')), findsOneWidget);
+
+    Navigator.of(menuContext).pop();
+    await tester.pumpAndSettle();
+    await dialogResult;
+  });
+
   testWidgets('Windows menu uses compact Notion-like styling', (
     WidgetTester tester,
   ) async {
