@@ -1,0 +1,19 @@
+test/core/widgets/desktop_context_menu_test.dart
+  s_9ed601806220d6::t_c98435061b4875 429
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "3b5973f78275404f5e078f9761b9d3f3d3dba9fe",
+  "prompts": {},
+  "sessions": {
+    "s_9ed601806220d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8875-7cea-70f0-b267-8795550c0a1c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
