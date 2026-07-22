@@ -1,0 +1,19 @@
+lib/features/library/data/agent_skill_catalog.dart
+  s_69f0fb7241b9c3::t_4572a626dc0379 87,89,100-102,114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "8acc828ca43d593d8126886fb77f8dd334c4292b",
+  "prompts": {},
+  "sessions": {
+    "s_69f0fb7241b9c3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87af-5556-7a62-a2f7-de29194cb814",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
