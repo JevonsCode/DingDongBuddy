@@ -233,6 +233,31 @@ void main() {
     expect(model.creatingType, ResourceType.mcp);
   });
 
+  test('failed resource saves restore the visible enabled state', () async {
+    final DateTime now = DateTime.utc(2026, 7, 22);
+    final Resource resource = Resource(
+      id: 'skill',
+      type: ResourceType.skill,
+      title: 'Reviewer',
+      content: 'Skill content',
+      enabled: false,
+      createdAt: now,
+      updatedAt: now,
+    );
+    final LibraryViewModel model = LibraryViewModel(
+      _FailingResourceStore(<Resource>[resource]),
+    );
+    await model.load();
+
+    await expectLater(
+      model.save(resource.copyWith(enabled: true)),
+      throwsStateError,
+    );
+
+    expect(model.visibleResources.single.enabled, isFalse);
+    expect(model.selectedResource, isNull);
+  });
+
   test(
     'trigger groups persist and deleting one clears resource membership',
     () async {
@@ -301,5 +326,19 @@ final class _FakeResourceStore implements ResourceStore {
   @override
   Future<void> save(List<Resource> resources) async {
     savedResources = List<Resource>.of(resources);
+  }
+}
+
+final class _FailingResourceStore implements ResourceStore {
+  _FailingResourceStore(this.resources);
+
+  final List<Resource> resources;
+
+  @override
+  Future<List<Resource>> load() async => List<Resource>.of(resources);
+
+  @override
+  Future<void> save(List<Resource> resources) {
+    throw StateError('sync failed');
   }
 }

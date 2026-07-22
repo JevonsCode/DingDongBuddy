@@ -1,63 +1,72 @@
-# DingDong 0.7.24
+# DingDong 0.7.25
 
-This release makes Recent Agents actionable: the compact Dynamic view keeps the
-latest six items, the full history is one click away, and supported Agent items
-can reopen their source conversation.
+This release turns DingDong into a safer system-wide resource hub for coding
+Agents. Prompts, Skills, and MCP servers stay centrally managed while native
+copies are distributed to Codex, Claude Code, Cursor, Gemini CLI, and Kiro.
 
-## Recent Agent navigation
+## Central Agent resource management
 
-- Shows at most six Recent Agent items in Dynamic and adds a compact `More`
-  action only when additional history exists.
-- Opens Resource Manager directly at Recent Agents from `More`.
-- Makes resumable items clickable in both Dynamic and Resource Manager.
-- Reopens exact Codex threads and Claude Code, Gemini, and Kiro CLI sessions.
-- Opens exact Cursor background-agent conversations; local Cursor sessions fall
-  back to reopening their recorded workspace.
-- Uses an allow-listed native launcher and structured arguments so notification
-  content cannot execute arbitrary commands.
+- Synchronizes global always-on Prompts into DingDong-managed blocks in both
+  Codex `AGENTS.md` and Claude Code `CLAUDE.md`, preserving user instructions.
+- Centralizes supported client paths and capabilities in one Agent adapter
+  registry, making future Agent integrations easier to add consistently.
+- Treats the DingDong library and Package Store as the logical source for each
+  Skill while native Agent directories remain deployment mirrors.
+- Refreshes every active managed Skill mirror after editing or renaming and
+  removes stale managed directory names from previous synchronizations.
 
-## Kiro support
+## Problems and conflict protection
 
-- Adds Kiro to the default Agent integrations.
-- Synchronizes MCP configuration to `~/.kiro/settings/mcp.json` and Skills to
-  Kiro's global and project Skill directories.
-- Extends the setup instructions with a Kiro Stop hook that records the session
-  id and workspace required for resume.
+- Adds a persistent, first-level Issues workspace in Resource Manager with a
+  manual detection action and links back to affected resources.
+- Replaces the old simulated refresh control with a red issue indicator that
+  opens the full Issues workspace when attention is needed.
+- Detects user-owned Skill name conflicts, duplicate DingDong destinations,
+  missing or invalid Skill packages, invalid project paths, malformed MCP
+  resources, and invalid Agent MCP files before writing.
+- Rolls back failed resource saves and preserves existing Agent files when a
+  blocking synchronization problem is found.
+- Reports same-name Skills from enabled Claude Code plugins as non-blocking
+  warnings because plugin and native Skill namespaces can coexist.
 
-## Release reliability
+## Update visibility
 
-- Isolates the packaged MCP Stop-hook smoke test from the user's live DingDong
-  data so local builds do not create non-resumable Recent Agent entries.
-- Uses platform-native path construction in Kiro discovery tests so the Windows
-  release pipeline validates the same locations without separator mismatches.
+- Checks release metadata without blocking startup and shows a small orange-red
+  dot beside the header version when a newer DingDong release is available.
+- Keeps the existing version click target, which opens Settings directly at the
+  version and update section.
 
 Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本让“最近 Agent”真正可操作：Dynamic 首页默认只保留最近六项，完整历史可以
-一键进入，受支持的 Agent 记录还能直接回到来源会话。
+本版本把 DingDong 完善为更安全的全局 Agent 资源管理中心。Prompt、Skill 和 MCP
+Server 在一个地方集中维护，再分发到 Codex、Claude Code、Cursor、Gemini CLI 与
+Kiro 的原生位置。
 
-## 最近 Agent 跳转
+## 集中管理 Agent 资源
 
-- Dynamic 最多展示六条最近 Agent；仅在还有更多记录时显示紧凑的“更多”入口。
-- 点击“更多”后，资源管理器会直接打开“最近 Agent”。
-- Dynamic 和资源管理器中的可恢复记录都可以点击。
-- 支持精确打开 Codex 对话，以及恢复 Claude Code、Gemini、Kiro CLI 会话。
-- Cursor 后台 Agent 可精确打开对应会话；本地 Cursor 会话无法精确定位时，会回退到
-  打开记录的工作区。
-- 使用白名单原生启动器和结构化参数，通知内容不能被当作任意命令执行。
+- 将全局、始终生效的 Prompt 同步到 Codex `AGENTS.md` 与 Claude Code
+  `CLAUDE.md` 的 DingDong 托管区块，同时保留用户原有规则。
+- 把各 Agent 的路径和能力集中到统一适配器表，后续新增 Agent 时可以一致扩展。
+- 以 DingDong 资源库和内部 Package Store 作为 Skill 的逻辑来源，各 Agent 原生
+  Skill 目录只保存部署镜像。
+- 编辑或重命名 Skill 后刷新所有已启用的托管镜像，并清理以前同步留下的旧目录名。
 
-## Kiro 支持
+## 问题中心与冲突保护
 
-- 将 Kiro 加入默认 Agent 集成。
-- 支持同步 MCP 配置到 `~/.kiro/settings/mcp.json`，并同步全局与项目 Skill。
-- 安装说明新增 Kiro Stop Hook，用于记录恢复会话需要的 session id 和工作区。
+- 在资源管理中新增常驻的“问题”一级入口，支持手动检测，并可跳转到受影响资源。
+- 用红色问题提示替代原先的模拟刷新按钮；需要处理时点击即可打开完整问题页面。
+- 写入前检测用户自有 Skill 同名、DingDong 资源目标重复、Skill Package 缺失或
+  无效、项目路径无效、MCP 资源无效以及 Agent MCP 配置文件损坏等问题。
+- 遇到阻断问题时回滚本次资源保存，保留已有 Agent 文件不变。
+- 已启用的 Claude Code 插件提供同名 Skill 时显示非阻断警告，因为插件与原生
+  Skill 的命名空间可以共存。
 
-## 发布可靠性
+## 新版本提示
 
-- 隔离内置 MCP 的 Stop Hook 冒烟测试与用户真实 DingDong 数据，避免本地构建生成
-  无法恢复的“最近 Agent”记录。
-- Kiro 发现测试改用平台原生路径拼接，Windows 发布流水线不会再因路径分隔符误报。
+- 启动时非阻塞检查发布信息；检测到更高版本后，在页头版本号右侧显示一个橘红色
+  小圆点。
+- 保留原有版本号点击行为，点击后直接打开设置中的版本与更新区域。
 
 Intel macOS 和 Windows 安装包继续标记为 beta。

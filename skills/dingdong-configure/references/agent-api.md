@@ -50,7 +50,7 @@ Strict scope cannot remove a separate user-owned copy that already lives in a cl
 
 ## Runtime delivery
 
-- **Prompt:** `dingdong_bridge` includes every active Prompt in full and marks it as required instruction content. Codex global always-on Prompts without a trigger group are also injected directly into DingDong's managed `~/.codex/AGENTS.md` block.
+- **Prompt:** `dingdong_bridge` includes every active Prompt in full and marks it as required instruction content. Global always-on Prompts without a trigger group are also injected directly into DingDong's managed `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md` blocks. Claude Code receives only these static global Prompts through its native file; routed Prompts still require bridge delivery.
 - **Skill:** the bridge returns summary metadata. Match its description first, then fetch the complete Skill with `dingdong_load_skill` or use the synchronized native Skill package. Unscoped Skills are global; strict project Skills are project-native only. Do not execute a Skill summary as an instruction.
 - **MCP:** the bridge returns summary metadata and the enabled server is synchronized to native client configuration. Call its tools only when needed; do not interpret an MCP summary as an instruction or mandatory call.
 

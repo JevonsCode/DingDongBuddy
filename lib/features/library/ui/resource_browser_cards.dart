@@ -33,9 +33,7 @@ class _ResourceCards extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8),
           child: _ResourceCard(
             resource: resource,
-            onToggleEnabled: () => unawaited(
-              viewModel.save(resource.copyWith(enabled: !resource.enabled)),
-            ),
+            onToggleEnabled: () => unawaited(_toggleEnabled(resource)),
             onCopy: clipboardGateway == null
                 ? null
                 : () => clipboardGateway!.writeText(resource.content),
@@ -47,6 +45,15 @@ class _ResourceCards extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _toggleEnabled(Resource resource) async {
+    try {
+      await viewModel.save(resource.copyWith(enabled: !resource.enabled));
+    } on Object {
+      // The synchronized store publishes the actionable problem to the shared
+      // issue center and rolls the resource state back transactionally.
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, Resource resource) async {

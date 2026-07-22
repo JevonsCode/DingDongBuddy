@@ -1,34 +1,34 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.24",
-  "latestBuild": "24",
-  "publishedAt": "2026-07-21T18:24:08Z",
+  "latestVersion": "0.7.25",
+  "latestBuild": "25",
+  "publishedAt": "2026-07-22T05:45:42Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.24/DingDong-0.7.24-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.25/DingDong-0.7.25-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.24/DingDong-0.7.24-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.25/DingDong-0.7.25-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.24/DingDong-0.7.24-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.25/DingDong-0.7.25-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Shows six Recent Agent items in Dynamic and adds More when the complete history is longer.",
-    "Opens the Recent Agents manager directly and lets resumable rows reopen their source conversation.",
-    "Supports exact Codex, Claude Code, Gemini, Kiro, and Cursor background-agent destinations with a safe allow-listed launcher.",
-    "Adds Kiro as a default Agent for MCP, Skill, and Stop-hook configuration.",
-    "Keeps local Cursor sessions useful by reopening their recorded workspace when an exact conversation link is unavailable.",
-    "Keeps release smoke tests isolated from real Agent history and validates Kiro paths portably on Windows."
+    "Treats DingDong as the central source for Prompts, Skills, and MCP resources distributed to supported coding Agents.",
+    "Synchronizes global always-on Prompts to both Codex AGENTS.md and Claude Code CLAUDE.md managed blocks.",
+    "Adds a persistent Issues workspace for Skill conflicts, invalid Agent configuration, and other resource synchronization problems.",
+    "Protects user-owned Skills with preflight checks, transactional rollback, and managed-copy cleanup after Skill renames.",
+    "Warns when enabled Claude Code plugins expose a Skill with the same name and centralizes client paths in an Agent adapter registry.",
+    "Shows an orange-red dot beside the app version when a newer DingDong release is available."
   ]
 }

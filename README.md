@@ -12,10 +12,12 @@
   <strong>Clipboard history and Agent tools in one place. A DingDong when the work is ready.</strong>
 </p>
 
-DingDong keeps the things you reuse—clipboard history, prompts, Skills, and MCP
-servers—close to your local coding Agents. When an Agent finishes, gets stuck,
-or needs a decision, DingDong calls you back with a short outcome instead of
-making you watch the chat.
+DingDong is a system-wide content hub for your local coding Agents. Collect
+reusable clipboard content in one place, manage prompts, Skills, and MCP servers
+centrally, and distribute them to Codex, Claude Code, and other Agents. DingDong
+also gathers their completion, blocker, and decision alerts and turns them into
+the familiar DingDong chime, so you can step away and return only when you are
+needed.
 
 ## Install with an Agent
 
@@ -39,8 +41,8 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 - Keeps prompts, complete Skill packages, and MCP configurations in one library
 - Installs a complete GitHub or local Skill directory, including `scripts/`,
   `references/`, and `assets/`, and updates it only when you ask
-- Syncs enabled global always-on Prompts into a managed block in Codex
-  `~/.codex/AGENTS.md` while preserving existing user instructions
+- Syncs enabled global always-on Prompts into managed blocks in Codex
+  `~/.codex/AGENTS.md` and Claude Code `~/.claude/CLAUDE.md` while preserving existing user instructions
 - Syncs enabled unscoped Skills globally, strict project Skills only inside the
   selected project, and MCP servers into Codex, Claude Code, Cursor, Gemini
   CLI, and Kiro while preserving unrelated configuration
@@ -56,8 +58,9 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.7.24`, using the same version constant as the release UI. Clicking it
-  opens Settings directly at the version and update section.
+  `v0.7.25`, using the same version constant as the release UI. A small
+  orange-red dot appears beside it when a newer version is available. Clicking
+  the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
   muted stays silent. Neither the wordmark nor version shows a hover tooltip or
   hover surface.
@@ -118,8 +121,8 @@ sentence at the end of every task:
    made.
 
 These are separate from the resources a user enables inside DingDong. A global,
-always-on Codex Prompt is written into DingDong's managed block in
-`~/.codex/AGENTS.md`. Project-scoped and task-matched Prompts are routed by
+always-on Prompt is written into DingDong-managed blocks in Codex
+`~/.codex/AGENTS.md` and Claude Code `~/.claude/CLAUDE.md`. Project-scoped and task-matched Prompts are routed by
 `dingdong_bridge`, while Manual Prompts never activate automatically. Enabled
 Unscoped Skills are copied to global native Skill directories; strict
 project-scoped Skills are copied only below their selected projects. Enabled MCP
@@ -130,7 +133,7 @@ content by default while keeping Skills and MCP servers summary-first.
 
 | Type | How it reaches the Agent | Required Agent behavior |
 |---|---|---|
-| Prompt | A global always-on Codex Prompt is written directly into DingDong's managed `AGENTS.md`; project or task Prompts arrive in full from the bridge | Every active Prompt is a required instruction and is applied automatically; it is not an optional tool call |
+| Prompt | A global always-on Prompt is written directly into DingDong-managed Codex `AGENTS.md` and Claude Code `CLAUDE.md` blocks; project or task Prompts arrive in full from the bridge | Every active Prompt is a required instruction and is applied automatically; it is not an optional tool call |
 | Skill | Unscoped Skills are synchronized globally; strict project Skills are synchronized only inside the selected project; the bridge returns candidate summaries only | Match the description first and load or use the complete Skill only when the task fits; a summary is not an instruction |
 | MCP | Enabled MCP servers are written into native client configuration; the bridge returns candidate summaries only | Configuration means tools are available; call the relevant tool only when the task needs it, never automatically on every turn |
 
@@ -168,6 +171,26 @@ DingDong-managed global copies; if the original local source is itself a
 user-owned global Skill, move/remove that original explicitly or install from a
 neutral directory/GitHub source before treating the isolation as complete.
 
+The DingDong library and internal Package Store are the logical single source
+for each Skill. Native Agent Skill directories contain atomic deployment mirrors,
+not independently maintained copies. DingDong does not use symlinks because
+discovery and link-following behavior varies across clients, packaging, and
+permission environments. It updates or removes only mirrors carrying the
+`.dingdong-managed` marker. Saving an edited or renamed Skill refreshes every
+active Agent mirror and removes the previous managed directory name.
+
+Every write is preflighted. If a user-owned Skill already occupies the same name,
+or two enabled DingDong Skills resolve to one destination, the save is rolled
+back and existing files remain untouched. A red issue icon replaces the former
+refresh control and opens the persistent Issues workspace in Resource Manager.
+That first-level destination is always available for reviewing the client,
+resource, and target path, opening the affected resource, or running a manual
+check. Enabled Claude Code plugins are also inspected: an exact Skill-name match
+is shown as a non-blocking warning because the plugin namespace can coexist with
+the native Skill. The old simulated refresh behavior has been removed. Client
+paths and capabilities live in one Agent adapter registry, so a future client is
+added through an adapter rather than scattered sync branches.
+
 ### Architecture
 
 ```mermaid
@@ -194,13 +217,14 @@ flowchart TB
   subgraph NativeConfig["Native user-level Agent configuration"]
     McpConfig["MCP configuration<br/>Codex TOML · Claude/Cursor/Gemini/Kiro JSON"]
     HookConfig["Completion hook<br/>Stop · afterAgentResponse · AfterAgent"]
-    PromptFile["Codex global Prompt<br/>managed ~/.codex/AGENTS.md block"]
+    PromptFile["Global Prompt files<br/>Codex AGENTS.md · Claude CLAUDE.md"]
     SkillFolders["Native Skill folders<br/>complete package directories"]
   end
 
   Clients -->|"setup writes and reloads"| McpConfig
   Clients -->|"setup writes and trusts"| HookConfig
   PromptFile --> Codex
+  PromptFile --> Claude
   SkillFolders --> Codex
   SkillFolders --> Claude
   SkillFolders --> Cursor
@@ -270,7 +294,7 @@ flowchart TB
     Preflight["Preflight<br/>Skill metadata · MCP transport · config format"]
     SkillInstaller["Online Skill installer<br/>Git sparse clone or GitHub API"]
     SkillMirror["Atomic complete-directory mirror<br/>.dingdong-managed marker"]
-    PromptWriter["Managed Codex Prompt writer<br/>preserves user instructions"]
+    PromptWriter["Managed native Prompt writer<br/>preserves user instructions"]
     MCPWriter["Managed MCP writer<br/>preserves unrelated user config"]
   end
 
@@ -291,7 +315,7 @@ The four main paths are:
   completion-hook configuration → reload and test both paths separately.
 - **Task start:** Agent → `dingdong_bridge` → full Prompt content plus Skill/MCP
   summaries → full Skill loading or MCP calls only when needed.
-- **Resource enable:** library enabled state → managed Codex global Prompt block,
+- **Resource enable:** library enabled state → managed Codex or Claude Code global Prompt block,
   global or project-native Skill folder, or MCP configuration, with DingDong
   ownership markers preserving unrelated user files. Strict Skill scope affects
   both native placement and `dingdong_bridge` routing.

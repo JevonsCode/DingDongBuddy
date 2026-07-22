@@ -9,6 +9,9 @@ import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/issue_center/domain/app_issue.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_screen.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
@@ -25,11 +28,13 @@ class ResourceManagerApp extends StatefulWidget {
     required this.viewModel,
     required this.clipboardViewModel,
     required this.activityController,
+    required this.issueCenterController,
     required this.settings,
     required this.windowController,
     this.initialDestination = ResourceManagerDestination.resources,
     this.agentConversationLauncher,
     this.desktopContextMenuGateway,
+    this.onLoadHostIssues,
     this.onOpenExternalLink,
     super.key,
   });
@@ -37,11 +42,13 @@ class ResourceManagerApp extends StatefulWidget {
   final LibraryViewModel viewModel;
   final ClipboardViewModel clipboardViewModel;
   final ActivityController activityController;
+  final IssueCenterController issueCenterController;
   final AppSettings settings;
   final WindowController windowController;
   final ResourceManagerDestination initialDestination;
   final AgentConversationLauncher? agentConversationLauncher;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
+  final Future<List<AppIssue>> Function()? onLoadHostIssues;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
 
   @override
@@ -58,6 +65,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
     _selectedIndex = widget.initialDestination.index;
     _agentConversationLauncher =
         widget.agentConversationLauncher ?? NativeAgentConversationLauncher();
+    unawaited(_loadHostIssues());
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         switch (call.method) {
@@ -65,9 +73,12 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             await widget.viewModel.load();
             widget.clipboardViewModel.load();
             widget.activityController.reload();
-            _selectDestination(
-              ResourceManagerDestination.parse(call.arguments),
-            );
+            final ResourceManagerDestination destination =
+                ResourceManagerDestination.parse(call.arguments);
+            if (destination == ResourceManagerDestination.issues) {
+              await _loadHostIssues();
+            }
+            _selectDestination(destination);
             await windowManager.focus();
           case 'edit_resource':
             final Object? arguments = call.arguments;
@@ -85,8 +96,26 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
   }
 
   void _selectDestination(ResourceManagerDestination destination) {
+    if (destination == ResourceManagerDestination.issues) {
+      unawaited(_loadHostIssues());
+    }
     if (_selectedIndex != destination.index && mounted) {
       setState(() => _selectedIndex = destination.index);
+    }
+  }
+
+  Future<void> _loadHostIssues() async {
+    final Future<List<AppIssue>> Function()? load = widget.onLoadHostIssues;
+    if (load == null) {
+      return;
+    }
+    try {
+      widget.issueCenterController.replaceSource(
+        agentResourceSyncIssueSource,
+        await load(),
+      );
+    } on Object {
+      // The resource window remains usable if its parent is closing.
     }
   }
 
@@ -99,6 +128,15 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
         }
         return;
       }
+    }
+  }
+
+  void _openIssueResource(String id) {
+    _selectResource(id);
+    if (_selectedIndex != ResourceManagerDestination.resources.index) {
+      setState(
+        () => _selectedIndex = ResourceManagerDestination.resources.index,
+      );
     }
   }
 
@@ -128,33 +166,46 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
       ],
       home: Builder(
         builder: (BuildContext context) => Scaffold(
-          body: Row(
-            children: <Widget>[
-              _WorkspaceSidebar(
-                selectedIndex: _selectedIndex,
-                onSelected: (int value) =>
-                    setState(() => _selectedIndex = value),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                child: switch (_selectedIndex) {
-                  0 => LibraryScreen(
-                    viewModel: widget.viewModel,
-                    transferGateway: FileSelectorLibraryTransferGateway(),
-                    contextMenuGateway: widget.desktopContextMenuGateway,
-                    onOpenExternalLink: widget.onOpenExternalLink,
+          key: const Key('resource-manager-shell'),
+          body: AnimatedBuilder(
+            animation: widget.issueCenterController,
+            builder: (BuildContext context, _) => Row(
+              children: <Widget>[
+                _WorkspaceSidebar(
+                  selectedIndex: _selectedIndex,
+                  issueCount: widget.issueCenterController.count,
+                  onSelected: (int value) => _selectDestination(
+                    ResourceManagerDestination.values[value],
                   ),
-                  1 => ClipboardManagerScreen(
-                    viewModel: widget.clipboardViewModel,
-                    contextMenuGateway: widget.desktopContextMenuGateway,
-                  ),
-                  _ => AgentActivityManagerScreen(
-                    controller: widget.activityController,
-                    conversationLauncher: _agentConversationLauncher,
-                  ),
-                },
-              ),
-            ],
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: switch (ResourceManagerDestination
+                      .values[_selectedIndex]) {
+                    ResourceManagerDestination.resources => LibraryScreen(
+                      viewModel: widget.viewModel,
+                      transferGateway: FileSelectorLibraryTransferGateway(),
+                      contextMenuGateway: widget.desktopContextMenuGateway,
+                      onOpenExternalLink: widget.onOpenExternalLink,
+                    ),
+                    ResourceManagerDestination.clipboard =>
+                      ClipboardManagerScreen(
+                        viewModel: widget.clipboardViewModel,
+                        contextMenuGateway: widget.desktopContextMenuGateway,
+                      ),
+                    ResourceManagerDestination.recentAgents =>
+                      AgentActivityManagerScreen(
+                        controller: widget.activityController,
+                        conversationLauncher: _agentConversationLauncher,
+                      ),
+                    ResourceManagerDestination.issues => IssueCenterScreen(
+                      controller: widget.issueCenterController,
+                      onOpenResource: _openIssueResource,
+                    ),
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -168,10 +219,12 @@ String _localized(BuildContext context, String english, String chinese) =>
 class _WorkspaceSidebar extends StatelessWidget {
   const _WorkspaceSidebar({
     required this.selectedIndex,
+    required this.issueCount,
     required this.onSelected,
   });
 
   final int selectedIndex;
+  final int issueCount;
   final ValueChanged<int> onSelected;
 
   @override
@@ -245,6 +298,15 @@ class _WorkspaceSidebar extends StatelessWidget {
                 selected: selectedIndex == 2,
                 onTap: () => onSelected(2),
               ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-issues'),
+                icon: Icons.error_outline_rounded,
+                label: _localized(context, 'Issues', '问题'),
+                selected: selectedIndex == 3,
+                badgeCount: issueCount,
+                onTap: () => onSelected(3),
+              ),
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -269,6 +331,7 @@ class _SidebarItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badgeCount = 0,
     super.key,
   });
 
@@ -276,6 +339,7 @@ class _SidebarItem extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -300,12 +364,37 @@ class _SidebarItem extends StatelessWidget {
                   color: selected ? colors.primary : colors.onSurfaceVariant,
                 ),
                 const SizedBox(width: 9),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    ),
                   ),
                 ),
+                if (badgeCount > 0)
+                  Container(
+                    key: const Key('resource-manager-issue-count'),
+                    constraints: const BoxConstraints(minWidth: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBE9E7),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Text(
+                      badgeCount > 99 ? '99+' : '$badgeCount',
+                      style: const TextStyle(
+                        color: Color(0xFFB93A32),
+                        fontSize: 9,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

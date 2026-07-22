@@ -13,6 +13,8 @@ import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dar
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/issue_center/domain/app_issue.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -150,6 +152,7 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await settingsViewModel.load();
+  unawaited(settingsViewModel.checkForUpdates());
   final DesktopShellService desktopShellService = DesktopShellService(
     gateway: shellGateway,
     controller: shellController,
@@ -164,7 +167,7 @@ Future<void> main(List<String> arguments) async {
     },
   );
   await desktopShellService.start();
-  Future<Object?> handleSettingsWindowCall(MethodCall call) async {
+  Future<Object?> handleChildWindowCall(MethodCall call) async {
     switch (call.method) {
       case 'settings_launch_is_enabled':
         return await launchAtStartup.isEnabled();
@@ -219,13 +222,25 @@ Future<void> main(List<String> arguments) async {
       case 'settings_update_install':
         await applicationUpdater.installLatest();
         return null;
+      case agentResourceIssuesChangedMethod:
+        final List<Object?> values =
+            (call.arguments as List<Object?>?) ?? const <Object?>[];
+        dependencies.issueCenterController.replaceSource(
+          agentResourceSyncIssueSource,
+          values.whereType<Map<Object?, Object?>>().map(AppIssue.fromJson),
+        );
+        return null;
+      case agentResourceIssuesRequestedMethod:
+        return dependencies.issueCenterController.issues
+            .map((AppIssue issue) => issue.toJson())
+            .toList(growable: false);
       default:
         break;
     }
     return null;
   }
 
-  await windowController.setWindowMethodHandler(handleSettingsWindowCall);
+  await windowController.setWindowMethodHandler(handleChildWindowCall);
   runApp(
     DingDongApp(
       activityController: activityController,
@@ -244,8 +259,11 @@ Future<void> main(List<String> arguments) async {
       quickPasteGateway: quickPasteGateway,
       quickPastePermissionGateway: quickPasteGateway,
       resourceStore: dependencies.resourceStore,
+      issueCenterController: dependencies.issueCenterController,
       triggerGroupStore: dependencies.triggerGroupStore,
-      resourceManagerLauncher: MultiWindowResourceManagerLauncher(),
+      resourceManagerLauncher: MultiWindowResourceManagerLauncher(
+        parentWindowId: windowController.windowId,
+      ),
       settingsWindowLauncher: settingsWindowLauncher,
       settingsViewModel: settingsViewModel,
       soundPreviewGateway: notificationGateway,
@@ -420,9 +438,57 @@ Future<void> _runResourceManagerWindow(
   Map<String, Object?> arguments,
 ) async {
   final AppDataPaths paths = AppDataPaths.current();
+  final IssueCenterController issueCenterController = IssueCenterController();
+  final String? parentWindowId = arguments['parentWindowId'] as String?;
+  WindowController? parent;
+  Future<List<AppIssue>> loadHostIssues() async {
+    final WindowController? host = parent;
+    if (host == null) {
+      return const <AppIssue>[];
+    }
+    final Object? response = await host.invokeMethod<Object?>(
+      agentResourceIssuesRequestedMethod,
+    );
+    if (response is! List) {
+      return const <AppIssue>[];
+    }
+    return response
+        .whereType<Map<Object?, Object?>>()
+        .map(AppIssue.fromJson)
+        .toList(growable: false);
+  }
+
+  if (parentWindowId != null) {
+    parent = WindowController.fromWindowId(parentWindowId);
+    issueCenterController.replaceSource(
+      agentResourceSyncIssueSource,
+      await loadHostIssues(),
+    );
+    issueCenterController.addListener(() {
+      unawaited(
+        parent!
+            .invokeMethod<void>(
+              agentResourceIssuesChangedMethod,
+              issueCenterController.issues
+                  .map((AppIssue issue) => issue.toJson())
+                  .toList(growable: false),
+            )
+            .catchError((Object _) {}),
+      );
+    });
+  }
+  final ResourceRepository baseResourceStore = ResourceRepository(
+    ResourceFileService(paths.resourceLibraryFile),
+  );
+  final AgentResourceSynchronizer resourceSynchronizer =
+      AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory);
+  issueCenterController.setInspector(
+    () async => resourceSynchronizer.inspect(await baseResourceStore.load()),
+  );
   final ResourceStore resourceStore = SynchronizedResourceStore(
-    ResourceRepository(ResourceFileService(paths.resourceLibraryFile)),
-    AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory),
+    baseResourceStore,
+    resourceSynchronizer,
+    issueCenter: issueCenterController,
   );
   final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
     TriggerGroupFileService(paths.triggerGroupsFile),
@@ -479,9 +545,11 @@ Future<void> _runResourceManagerWindow(
       viewModel: viewModel,
       clipboardViewModel: clipboardViewModel,
       activityController: activityController,
+      issueCenterController: issueCenterController,
       settings: settings,
       windowController: windowController,
       initialDestination: initialDestination,
+      onLoadHostIssues: parent == null ? null : loadHostIssues,
       desktopContextMenuGateway: Platform.isMacOS
           ? NativeDesktopContextMenuGateway()
           : null,

@@ -14,6 +14,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.da
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
@@ -37,6 +38,7 @@ class ShellScreen extends StatefulWidget {
     required this.agentConversationLauncher,
     required this.clipboardViewModel,
     required this.libraryViewModel,
+    required this.issueCenterController,
     required this.settingsViewModel,
     required this.controller,
     this.agentBaseUri,
@@ -60,6 +62,7 @@ class ShellScreen extends StatefulWidget {
   final AgentConversationLauncher agentConversationLauncher;
   final ClipboardViewModel clipboardViewModel;
   final LibraryViewModel libraryViewModel;
+  final IssueCenterController issueCenterController;
   final SettingsViewModel settingsViewModel;
   final ShellController controller;
   final Uri? agentBaseUri;
@@ -90,7 +93,6 @@ class _ShellScreenState extends State<ShellScreen> {
   late int _lastClipboardFilterToggleRevision;
   late int _lastClipboardRefreshRevision;
   late int _lastSelectedIndex;
-  int? _loadingIndex;
 
   @override
   void initState() {
@@ -169,17 +171,10 @@ class _ShellScreenState extends State<ShellScreen> {
     }
   }
 
-  Future<void> _refreshContent() async {
-    if (_loadingIndex != null) {
-      return;
-    }
-    final int workspace = widget.controller.selectedIndex.clamp(0, 2);
-    setState(() => _loadingIndex = workspace);
-    widget.clipboardViewModel.load();
-    await widget.libraryViewModel.load();
-    await Future<void>.delayed(const Duration(milliseconds: 720));
-    if (mounted) {
-      setState(() => _loadingIndex = null);
+  void _openIssueCenter() {
+    final ResourceManagerLauncher? launcher = widget.resourceManagerLauncher;
+    if (launcher != null) {
+      unawaited(launcher.show(destination: ResourceManagerDestination.issues));
     }
   }
 
@@ -391,25 +386,37 @@ class _ShellScreenState extends State<ShellScreen> {
             clipBehavior: systemOwnsCorners ? Clip.none : Clip.antiAlias,
             child: Column(
               children: <Widget>[
-                PopupHeader(
-                  selectedIndex: widget.controller.selectedIndex,
-                  loadingIndex: _loadingIndex,
-                  showShortcutHints: _showShortcutHints,
-                  onSelected: widget.controller.open,
-                  onRefresh: () => unawaited(_refreshContent()),
-                  onBrand: () => unawaited(_previewConfiguredSound()),
-                  onSettings: () {
-                    unawaited(_openSettings());
-                  },
-                  onVersion: () {
-                    unawaited(
-                      _openSettings(
-                        destination: SettingsWindowDestination.version,
-                      ),
-                    );
-                  },
-                  onStartDragging: widget.onStartDragging,
-                  onHide: widget.onHideWindow,
+                AnimatedBuilder(
+                  animation: Listenable.merge(<Listenable>[
+                    widget.issueCenterController,
+                    widget.settingsViewModel,
+                  ]),
+                  builder: (BuildContext context, _) => PopupHeader(
+                    selectedIndex: widget.controller.selectedIndex,
+                    issueCount: widget.issueCenterController.count,
+                    updateAvailable:
+                        widget
+                            .settingsViewModel
+                            .releaseStatus
+                            .isUpdateAvailable ==
+                        true,
+                    showShortcutHints: _showShortcutHints,
+                    onSelected: widget.controller.open,
+                    onIssues: _openIssueCenter,
+                    onBrand: () => unawaited(_previewConfiguredSound()),
+                    onSettings: () {
+                      unawaited(_openSettings());
+                    },
+                    onVersion: () {
+                      unawaited(
+                        _openSettings(
+                          destination: SettingsWindowDestination.version,
+                        ),
+                      );
+                    },
+                    onStartDragging: widget.onStartDragging,
+                    onHide: widget.onHideWindow,
+                  ),
                 ),
                 Expanded(child: _selectedWorkspace()),
                 PopupFooter(apiPort: widget.settingsViewModel.settings.apiPort),

@@ -1,7 +1,8 @@
 enum ResourceManagerDestination {
   resources,
   clipboard,
-  recentAgents;
+  recentAgents,
+  issues;
 
   static ResourceManagerDestination parse(Object? value) {
     return values.firstWhere(

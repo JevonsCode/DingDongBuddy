@@ -13,10 +13,11 @@ import 'package:flutter/material.dart';
 class PopupHeader extends StatelessWidget {
   const PopupHeader({
     required this.selectedIndex,
-    required this.loadingIndex,
+    required this.issueCount,
+    required this.updateAvailable,
     required this.showShortcutHints,
     required this.onSelected,
-    required this.onRefresh,
+    required this.onIssues,
     required this.onBrand,
     required this.onSettings,
     required this.onVersion,
@@ -26,10 +27,11 @@ class PopupHeader extends StatelessWidget {
   });
 
   final int selectedIndex;
-  final int? loadingIndex;
+  final int issueCount;
+  final bool updateAvailable;
   final bool showShortcutHints;
   final ValueChanged<int> onSelected;
-  final VoidCallback onRefresh;
+  final VoidCallback onIssues;
   final VoidCallback onBrand;
   final VoidCallback onSettings;
   final VoidCallback onVersion;
@@ -89,7 +91,10 @@ class PopupHeader extends StatelessWidget {
                                 const SizedBox(width: 3),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
-                                  child: _VersionButton(onPressed: onVersion),
+                                  child: _VersionButton(
+                                    updateAvailable: updateAvailable,
+                                    onPressed: onVersion,
+                                  ),
                                 ),
                               ],
                             ),
@@ -98,11 +103,11 @@ class PopupHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _HeaderButton(
-                    key: const Key('popup-refresh'),
-                    tooltip: context.localized('Refresh', '刷新'),
-                    symbol: 'refresh',
-                    onPressed: onRefresh,
+                  SizedBox.square(
+                    dimension: 32,
+                    child: issueCount > 0
+                        ? _IssueButton(count: issueCount, onPressed: onIssues)
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   _HeaderButton(
@@ -130,10 +135,8 @@ class PopupHeader extends StatelessWidget {
                 children: <Widget>[
                   _WorkspaceTab(
                     key: const Key('popup-tab-0'),
-                    index: 0,
                     contentKey: const Key('popup-tab-content-0'),
                     selected: selectedIndex == 0,
-                    loading: loadingIndex == 0,
                     symbol: 'today',
                     label: context.localized('Dynamic', '动态'),
                     shortcut: _shortcut('Q'),
@@ -143,10 +146,8 @@ class PopupHeader extends StatelessWidget {
                   const SizedBox(width: 6),
                   _WorkspaceTab(
                     key: const Key('popup-tab-1'),
-                    index: 1,
                     contentKey: const Key('popup-tab-content-1'),
                     selected: selectedIndex == 1,
-                    loading: loadingIndex == 1,
                     symbol: 'library',
                     label: context.localized('Library', '资源库'),
                     shortcut: _shortcut('W'),
@@ -156,10 +157,8 @@ class PopupHeader extends StatelessWidget {
                   const SizedBox(width: 6),
                   _WorkspaceTab(
                     key: const Key('popup-tab-2'),
-                    index: 2,
                     contentKey: const Key('popup-tab-content-2'),
                     selected: selectedIndex == 2,
-                    loading: loadingIndex == 2,
                     symbol: 'clipboard',
                     label: context.localized('Clipboard', '剪贴板'),
                     shortcut: _shortcut('E'),
@@ -177,8 +176,12 @@ class PopupHeader extends StatelessWidget {
 }
 
 class _VersionButton extends StatelessWidget {
-  const _VersionButton({required this.onPressed});
+  const _VersionButton({
+    required this.updateAvailable,
+    required this.onPressed,
+  });
 
+  final bool updateAvailable;
   final VoidCallback onPressed;
 
   @override
@@ -189,17 +192,34 @@ class _VersionButton extends StatelessWidget {
         key: const Key('popup-app-version'),
         onTap: onPressed,
         behavior: HitTestBehavior.opaque,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-          child: Text(
-            'v$currentAppVersion',
-            key: Key('app-version-$currentAppVersion'),
-            style: TextStyle(
-              color: PopupStyle.textSecondary,
-              fontSize: 9,
-              height: 1,
-              fontWeight: FontWeight.w600,
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Text(
+                'v$currentAppVersion',
+                key: Key('app-version-$currentAppVersion'),
+                style: TextStyle(
+                  color: PopupStyle.textSecondary,
+                  fontSize: 9,
+                  height: 1,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (updateAvailable) ...<Widget>[
+                const SizedBox(width: 3),
+                Container(
+                  key: const Key('popup-version-update-dot'),
+                  width: 5,
+                  height: 5,
+                  decoration: const BoxDecoration(
+                    color: PopupStyle.mcp,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -247,11 +267,73 @@ class _HeaderButton extends StatelessWidget {
   }
 }
 
+class _IssueButton extends StatelessWidget {
+  const _IssueButton({required this.count, required this.onPressed});
+
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      key: const Key('popup-issues'),
+      tooltip: context.localized(
+        '$count issues need attention',
+        '$count 个问题需要处理',
+      ),
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+      style: IconButton.styleFrom(
+        fixedSize: const Size.square(32),
+        minimumSize: const Size.square(32),
+        maximumSize: const Size.square(32),
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+        backgroundColor: const Color(0xFFFFF3F1),
+        foregroundColor: const Color(0xFFB93A32),
+        side: const BorderSide(color: Color(0xFFF1C8C3)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          const Icon(Icons.error_outline_rounded, size: 17),
+          if (count > 1)
+            Positioned(
+              top: -7,
+              right: -9,
+              child: Container(
+                key: const Key('popup-issue-count'),
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB93A32),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: PopupStyle.surface, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  count > 99 ? '99+' : '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    height: 1,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _WorkspaceTab extends StatelessWidget {
   const _WorkspaceTab({
-    required this.index,
     required this.selected,
-    required this.loading,
     required this.contentKey,
     required this.symbol,
     required this.label,
@@ -261,9 +343,7 @@ class _WorkspaceTab extends StatelessWidget {
     super.key,
   });
 
-  final int index;
   final bool selected;
-  final bool loading;
   final Key contentKey;
   final String symbol;
   final String label;
@@ -314,23 +394,13 @@ class _WorkspaceTab extends StatelessWidget {
                       SizedBox.square(
                         dimension: 17,
                         child: Center(
-                          child: loading
-                              ? SizedBox.square(
-                                  key: Key('popup-tab-loading-$index'),
-                                  dimension: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.7,
-                                    strokeCap: StrokeCap.round,
-                                    color: PopupStyle.accent,
-                                  ),
-                                )
-                              : PopupSymbolIcon(
-                                  symbol,
-                                  size: 17,
-                                  color: selected
-                                      ? PopupStyle.accent
-                                      : PopupStyle.textSecondary,
-                                ),
+                          child: PopupSymbolIcon(
+                            symbol,
+                            size: 17,
+                            color: selected
+                                ? PopupStyle.accent
+                                : PopupStyle.textSecondary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 7),

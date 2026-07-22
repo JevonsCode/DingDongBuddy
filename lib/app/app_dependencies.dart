@@ -10,6 +10,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dar
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -38,6 +39,7 @@ final class AppDependencies {
     required this.resourceStore,
     required this.triggerGroupStore,
     required this.builtInResourceInstaller,
+    required this.issueCenterController,
     required this.settingsRepository,
     required this.agentHttpServer,
   });
@@ -74,12 +76,19 @@ final class AppDependencies {
     );
     final SkillPackageInstaller skillPackageInstaller =
         GitHubSkillPackageInstaller(paths.skillPackagesDirectory);
+    final IssueCenterController issueCenterController = IssueCenterController();
+    final AgentResourceSynchronizer resourceSynchronizer =
+        AgentResourceSynchronizer.currentUser(
+          paths.skillPackagesDirectory,
+          skillPackageInstaller: skillPackageInstaller,
+        );
+    issueCenterController.setInspector(
+      () async => resourceSynchronizer.inspect(await baseResourceStore.load()),
+    );
     final ResourceStore resourceStore = SynchronizedResourceStore(
       baseResourceStore,
-      AgentResourceSynchronizer.currentUser(
-        paths.skillPackagesDirectory,
-        skillPackageInstaller: skillPackageInstaller,
-      ),
+      resourceSynchronizer,
+      issueCenter: issueCenterController,
     );
     final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
       TriggerGroupFileService(paths.triggerGroupsFile),
@@ -142,6 +151,7 @@ final class AppDependencies {
       resourceStore: resourceStore,
       triggerGroupStore: triggerGroupStore,
       builtInResourceInstaller: builtInResourceInstaller,
+      issueCenterController: issueCenterController,
       settingsRepository: settingsRepository,
       agentHttpServer: AgentHttpServer(router),
     );
@@ -157,18 +167,27 @@ final class AppDependencies {
   final ResourceStore resourceStore;
   final TriggerGroupStore triggerGroupStore;
   final BuiltInResourceInstaller builtInResourceInstaller;
+  final IssueCenterController issueCenterController;
   final SettingsRepository settingsRepository;
   final AgentHttpServer agentHttpServer;
   AppSettings initialSettings = const AppSettings();
 
   Future<void> start() async {
     await paths.applicationSupportDirectory.create(recursive: true);
-    await builtInResourceInstaller.install();
+    bool builtInInstallFailed = false;
     try {
-      await resourceStore.save(await resourceStore.load());
+      await builtInResourceInstaller.install();
     } on Object {
-      // An invalid external Agent config must not prevent DingDong from opening.
-      // The next user-initiated resource save will surface the sync error.
+      builtInInstallFailed = true;
+      // The synchronized store has already published a structured problem.
+      // An external Agent conflict must not prevent DingDong from opening.
+    }
+    if (!builtInInstallFailed) {
+      try {
+        await resourceStore.save(await resourceStore.load());
+      } on Object {
+        // The synchronized store publishes the problem to the issue center.
+      }
     }
     initialSettings = await settingsRepository.load();
     await agentHttpServer.start(port: initialSettings.apiPort);

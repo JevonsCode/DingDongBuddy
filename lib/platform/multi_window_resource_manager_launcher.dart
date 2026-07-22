@@ -8,6 +8,10 @@ const String resourceManagerWindowKind = 'resource-manager';
 /// Cross-platform launcher for DingDong's dedicated resource manager window.
 final class MultiWindowResourceManagerLauncher
     implements ResourceManagerLauncher {
+  const MultiWindowResourceManagerLauncher({required this.parentWindowId});
+
+  final String parentWindowId;
+
   @override
   Future<void> show({
     String? editingResourceId,
@@ -38,6 +42,7 @@ final class MultiWindowResourceManagerLauncher
 
     final Map<String, Object?> arguments = <String, Object?>{
       'kind': resourceManagerWindowKind,
+      'parentWindowId': parentWindowId,
       'destination': resolvedDestination.name,
     };
     if (editingResourceId != null) {

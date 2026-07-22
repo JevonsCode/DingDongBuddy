@@ -91,8 +91,8 @@ resolved release version and filename match the manifest before opening it.
 ## 3. Verify first launch
 
 DingDong installs its built-in always-on Prompt and `dingdong-configure` Skill
-on first launch. It syncs the Prompt into the managed block of a detected Codex
-`~/.codex/AGENTS.md` and mirrors the Skill into detected supported clients'
+on first launch. It syncs the Prompt into managed blocks in detected Codex
+`~/.codex/AGENTS.md` and Claude Code `~/.claude/CLAUDE.md` files, and mirrors the Skill into detected supported clients'
 native Skill directories. Do not copy those files manually and do not edit
 DingDong's `resource-library.json`.
 

@@ -17,7 +17,7 @@ Keep the three resource types distinct:
 
 | Type | How it reaches the Agent | What the Agent does |
 |---|---|---|
-| Prompt | A global always-on Codex Prompt is injected into DingDong's managed `AGENTS.md` block. Routed Prompts are returned in full by `dingdong_bridge`. | Apply every active Prompt automatically as a required instruction. |
+| Prompt | A global always-on Prompt is injected into DingDong's managed Codex `AGENTS.md` and Claude Code `CLAUDE.md` blocks. Routed Prompts are returned in full by `dingdong_bridge`. | Apply every active Prompt automatically as a required instruction. |
 | Skill | Enabled unscoped Skills are mirrored globally. Strict project-scoped Skills are mirrored only into that project's native Skill directories. The bridge returns only candidate metadata until full content is requested. | Match the Skill description first; load or use it only when the task fits. A Skill summary is not an instruction. |
 | MCP | Enabled MCP servers are written into the client's native MCP configuration. The bridge returns only candidate metadata. | Call a configured MCP tool only when the task needs it. MCP availability is not an instruction and does not require a call every turn. |
 

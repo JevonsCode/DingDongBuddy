@@ -1,4 +1,4 @@
-# DingDong 0.7.24 Manual Regression Checklist
+# DingDong 0.7.25 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -46,6 +46,16 @@ and macOS golden images; the items below exercise real operating-system state.
 - Updating an online Skill replaces the complete local package only after the
   new package passes metadata and path validation.
 - Failed or empty updates preserve the prior resource content and show an error.
+- Global always-on Prompts appear inside DingDong-managed blocks in both Codex
+  `AGENTS.md` and Claude Code `CLAUDE.md` without changing user-owned sections.
+- Editing or renaming a Skill refreshes every active managed Agent mirror and
+  removes the old managed directory name.
+- A user-owned Skill at the same destination blocks the save, preserves the
+  existing directory, and appears in Resource Manager's first-level Issues page.
+- The Issues page stays available when empty, has one manual detection action,
+  and can open the affected resource when one is recorded.
+- An enabled Claude Code plugin with the same Skill name produces a warning
+  rather than blocking synchronization.
 - The list remains responsive with 10,000 resources.
 
 ## Agent API and MCP
@@ -84,6 +94,8 @@ and macOS golden images; the items below exercise real operating-system state.
   missing or unreadable hook context falls back to a generic completion message.
 - Choosing a custom sound uses the OS file picker; clearing it returns to the default.
 - Version checking shows current/latest values, notes, failure state, website, and release links.
+- A newer release adds a small orange-red dot beside the popup version; current,
+  unknown, checking, and failed states do not show the dot.
 - Report a problem and Request a feature open the matching structured GitHub forms.
 - Settings do not expose analytics controls, and release builds contain no analytics SDK or analytics build key.
 - Memory and local storage usage can be refreshed without blocking navigation.
@@ -100,8 +112,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - The final MCP bundle contains native `arm64` and `x86_64` sub-bundles and one stable executable launcher path.
 - The launcher selects and runs the native MCP successfully on both an Apple Silicon Mac and an Intel Mac.
 - The Windows MCP executable passes `tools/list` on a Windows x64 machine.
-- The macOS app metadata is version `0.7.24` build `24` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.24.24` and product name `DingDong`.
+- The macOS app metadata is version `0.7.25` build `25` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.25.25` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

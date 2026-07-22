@@ -8,12 +8,16 @@ import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
+import 'package:dingdong/features/issue_center/domain/app_issue.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
+import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -613,6 +617,54 @@ description: Use when product decisions should follow saved preferences.
     expect(events, <String>['hide', 'settings']);
   });
 
+  testWidgets(
+    'version shows a restrained dot only when an update is available',
+    (WidgetTester tester) async {
+      final SettingsViewModel settings = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '0.8.0'),
+      );
+      addTearDown(settings.dispose);
+      await settings.load();
+
+      await tester.pumpWidget(DingDongApp(settingsViewModel: settings));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('popup-version-update-dot')), findsNothing);
+
+      await settings.checkForUpdates();
+      await tester.pump();
+
+      final Finder updateDot = find.byKey(
+        const Key('popup-version-update-dot'),
+      );
+      expect(updateDot, findsOneWidget);
+      expect(tester.getSize(updateDot), const Size.square(5));
+      final BoxDecoration decoration =
+          tester.widget<Container>(updateDot).decoration! as BoxDecoration;
+      expect(decoration.color, PopupStyle.mcp);
+      expect(decoration.shape, BoxShape.circle);
+    },
+  );
+
+  testWidgets('version hides the update dot when the app is current', (
+    WidgetTester tester,
+  ) async {
+    final SettingsViewModel settings = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      releaseMetadataSource: const _ReleaseSource(
+        latestVersion: currentAppVersion,
+      ),
+    );
+    addTearDown(settings.dispose);
+    await settings.load();
+    await settings.checkForUpdates();
+
+    await tester.pumpWidget(DingDongApp(settingsViewModel: settings));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('popup-version-update-dot')), findsNothing);
+  });
+
   testWidgets('Escape closes clipboard details before hiding the callout', (
     WidgetTester tester,
   ) async {
@@ -1130,30 +1182,71 @@ description: Use when product decisions should follow saved preferences.
     },
   );
 
-  testWidgets(
-    'refresh uses the original tab loading feedback and button size',
-    (WidgetTester tester) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(390, 760);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      addTearDown(tester.view.resetPhysicalSize);
+  testWidgets('header replaces refresh with the issue center', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final IssueCenterController issues = IssueCenterController();
+    addTearDown(issues.dispose);
+    final _FakeResourceManagerLauncher resourceManager =
+        _FakeResourceManagerLauncher();
 
-      await tester.pumpWidget(const DingDongApp());
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      DingDongApp(
+        issueCenterController: issues,
+        resourceManagerLauncher: resourceManager,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      final Finder refresh = find.byKey(const Key('popup-refresh'));
-      expect(tester.getSize(refresh), const Size.square(32));
+    expect(find.byKey(const Key('popup-refresh')), findsNothing);
+    expect(find.byKey(const Key('popup-issues')), findsNothing);
 
-      await tester.tap(refresh);
-      await tester.pump();
+    issues.replaceSource('test', const <AppIssue>[
+      AppIssue(
+        id: 'skill-conflict',
+        source: 'test',
+        kind: AppIssueKind.skillNameConflict,
+        severity: AppIssueSeverity.error,
+        title: 'Skill name conflict',
+        detail: 'Existing Skill preserved.',
+        resourceId: 'resource-1',
+        resourceTitle: 'code-review',
+        clientName: 'Codex',
+        targetPath: '/Users/test/.agents/skills/code-review',
+      ),
+      AppIssue(
+        id: 'mcp-invalid',
+        source: 'test',
+        kind: AppIssueKind.invalidAgentConfig,
+        severity: AppIssueSeverity.error,
+        title: 'Agent MCP file is invalid',
+        detail: 'Invalid JSON.',
+        clientName: 'Cursor',
+        targetPath: '/Users/test/.cursor/mcp.json',
+      ),
+    ]);
+    await tester.pump();
 
-      expect(find.byKey(const Key('popup-tab-loading-0')), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 719));
-      expect(find.byKey(const Key('popup-tab-loading-0')), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 2));
-      expect(find.byKey(const Key('popup-tab-loading-0')), findsNothing);
-    },
-  );
+    final Finder issueButton = find.byKey(const Key('popup-issues'));
+    expect(issueButton, findsOneWidget);
+    expect(tester.getSize(issueButton), const Size.square(32));
+    expect(find.byKey(const Key('popup-issue-count')), findsOneWidget);
+
+    await tester.tap(issueButton);
+    await tester.pumpAndSettle();
+
+    expect(resourceManager.openCount, 1);
+    expect(resourceManager.lastDestination, ResourceManagerDestination.issues);
+    expect(find.byKey(const Key('issue-center-screen')), findsNothing);
+
+    issues.replaceSource('test', const <AppIssue>[]);
+    await tester.pump();
+    expect(find.byKey(const Key('popup-issues')), findsNothing);
+  });
 }
 
 final class _QueuedContextMenuGateway implements DesktopContextMenuGateway {
@@ -1210,6 +1303,20 @@ final class _FakeSettingsWindowLauncher implements SettingsWindowLauncher {
     lastDestination = destination;
     onShow?.call();
   }
+}
+
+final class _ReleaseSource implements ReleaseMetadataSource {
+  const _ReleaseSource({required this.latestVersion});
+
+  final String latestVersion;
+
+  @override
+  Future<ReleaseMetadata> fetch() async => ReleaseMetadata(
+    app: 'DingDong',
+    latestVersion: latestVersion,
+    website: Uri.parse('https://example.com'),
+    releasePage: Uri.parse('https://example.com/releases/latest'),
+  );
 }
 
 final class _RecordingSoundPreview implements SoundPreviewGateway {

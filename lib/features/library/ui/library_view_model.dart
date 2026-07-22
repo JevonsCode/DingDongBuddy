@@ -305,13 +305,22 @@ final class LibraryViewModel extends ChangeNotifier {
   }
 
   Future<void> save(Resource resource) async {
+    final List<Resource> previousResources = _resources;
+    final Resource? previousSelected = _selectedResource;
     _resources = <Resource>[
       ..._resources.where((Resource item) => item.id != resource.id),
       resource,
     ];
-    await _repository.save(_resources);
-    _selectedResource = resource;
-    notifyListeners();
+    try {
+      await _repository.save(_resources);
+      _selectedResource = resource;
+      notifyListeners();
+    } on Object {
+      _resources = previousResources;
+      _selectedResource = previousSelected;
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<TriggerGroup> createTriggerGroup({

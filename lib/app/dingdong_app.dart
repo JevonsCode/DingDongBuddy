@@ -18,6 +18,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.da
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
@@ -66,6 +67,7 @@ class DingDongApp extends StatefulWidget {
     this.resourceStore,
     this.triggerGroupStore,
     this.libraryTransferGateway,
+    this.issueCenterController,
     this.resourceUpdateFetcher,
     this.resourceManagerLauncher,
     this.settingsWindowLauncher,
@@ -104,6 +106,7 @@ class DingDongApp extends StatefulWidget {
   final ResourceStore? resourceStore;
   final TriggerGroupStore? triggerGroupStore;
   final LibraryTransferGateway? libraryTransferGateway;
+  final IssueCenterController? issueCenterController;
   final ResourceUpdateFetcher? resourceUpdateFetcher;
   final ResourceManagerLauncher? resourceManagerLauncher;
   final SettingsWindowLauncher? settingsWindowLauncher;
@@ -132,15 +135,20 @@ class _DingDongAppState extends State<DingDongApp> {
   late final DataRevisionBus _dataRevisions;
   late final ActivityController _activityController;
   late final LibraryViewModel _libraryViewModel;
+  late final IssueCenterController _issueCenterController;
   late final SettingsViewModel _settingsViewModel;
   late final ShellController _shellController;
   late final bool _ownsSettingsViewModel;
   late final bool _ownsActivityController;
+  late final bool _ownsIssueCenterController;
 
   @override
   void initState() {
     super.initState();
     _ownsActivityController = widget.activityController == null;
+    _ownsIssueCenterController = widget.issueCenterController == null;
+    _issueCenterController =
+        widget.issueCenterController ?? IssueCenterController();
     _activityController = widget.activityController ?? ActivityController();
     _dataRevisions = DataRevisionBus();
     _clipboardViewModel = ClipboardViewModel(
@@ -187,6 +195,9 @@ class _DingDongAppState extends State<DingDongApp> {
     unawaited(_dataRevisions.dispose());
     if (_ownsActivityController) {
       _activityController.dispose();
+    }
+    if (_ownsIssueCenterController) {
+      _issueCenterController.dispose();
     }
     if (_ownsSettingsViewModel) {
       unawaited(_settingsViewModel.shutdown());
@@ -248,6 +259,7 @@ class _DingDongAppState extends State<DingDongApp> {
             clipboardPreviewLauncher: widget.clipboardPreviewLauncher,
             clipboardShareGateway: widget.clipboardShareGateway,
             libraryViewModel: _libraryViewModel,
+            issueCenterController: _issueCenterController,
             settingsViewModel: _settingsViewModel,
             controller: _shellController,
             agentBaseUri: widget.agentBaseUri,
