@@ -688,8 +688,14 @@ class _ResourceEditorState extends State<ResourceEditor> {
           );
         }
         return context.localized(
-          'Paste a GitHub Skill repository, folder, or direct SKILL.md link.',
-          '请粘贴 GitHub Skill 仓库、文件夹或 SKILL.md 直链。',
+          'Paste a GitHub Skill repository, folder, or direct SKILL.md link.\n'
+              'Examples:\n'
+              'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste\n'
+              'https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling',
+          '请粘贴 GitHub Skill 仓库、文件夹或 SKILL.md 直链。\n'
+              '正确示例：\n'
+              'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste\n'
+              'https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling',
         );
       }
       if (_draftType == ResourceType.mcp) {

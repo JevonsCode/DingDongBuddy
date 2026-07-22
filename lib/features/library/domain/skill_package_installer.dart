@@ -361,10 +361,9 @@ final class _GitHubSkillSource {
         }
         revision = parts[3];
         directory = parts.skip(4).toList(growable: true);
-        if (kind == 'blob') {
-          if (directory.isEmpty || directory.last.toLowerCase() != 'skill.md') {
-            throw const FormatException('GitHub file must be SKILL.md.');
-          }
+        if (kind == 'blob' &&
+            directory.isNotEmpty &&
+            directory.last.toLowerCase() == 'skill.md') {
           directory.removeLast();
         }
       }

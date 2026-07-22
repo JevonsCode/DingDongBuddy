@@ -599,6 +599,48 @@ Apply the user's saved preferences.
     expect(find.textContaining('Bad state'), findsNothing);
   });
 
+  testWidgets('invalid online skill shows two valid source examples', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final LibraryViewModel model = LibraryViewModel(
+      _MemoryStore(<Resource>[]),
+      skillPackageInstaller: const _FailingSkillInstaller(),
+    );
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    await tester.tap(find.text('New resource'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('resource-type-skill')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('resource-skill-source-online')));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('resource-skill-update-url')),
+      'not-a-github-skill',
+    );
+    await tester.tap(find.byKey(const Key('resource-save')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('resource-save-error')), findsOneWidget);
+    expect(
+      find.textContaining(
+        'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining(
+        'https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('MCP creation separates STDIO HTTP and raw configuration', (
     WidgetTester tester,
   ) async {
@@ -967,5 +1009,14 @@ final class _SkillInstaller implements SkillPackageInstaller {
       skillDocument: content,
       directoryPath: '/tmp/user-taste',
     );
+  }
+}
+
+final class _FailingSkillInstaller implements SkillPackageInstaller {
+  const _FailingSkillInstaller();
+
+  @override
+  Future<SkillPackageInstallResult> install(Uri source) async {
+    throw const FormatException('Invalid GitHub Skill source.');
   }
 }

@@ -55,6 +55,28 @@ to install DingDong. The guide never asks the Agent to clone or build the source
 - Keeps a configurable, local, read-only history of Agent completion details
 - Keeps clipboard and resource data on your computer by default
 
+### Agent compatibility and verification
+
+“Implemented” means DingDong has a client adapter and configuration path in the
+repository. “Verified” means a real installed client has completed the MCP,
+completion-hook, and applicable resource-sync paths end to end. These are kept
+separate so source support is not presented as a guarantee for every client
+release or operating system.
+
+| Agent | MCP configuration | Completion notification | Managed native resources | Current verification |
+| --- | --- | --- | --- | --- |
+| Codex | `~/.codex/config.toml` | `Stop` | Prompt and Skill | **Verified end to end on macOS** |
+| Claude Code | `~/.claude.json` | `Stop` | Prompt and Skill | **Verified end to end on macOS** |
+| Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` | Skill | Implemented; real-client end-to-end verification wanted |
+| Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` | Skill | Implemented; real-client end-to-end verification wanted |
+| Kiro | `~/.kiro/settings/mcp.json` | CLI `stop` / IDE Agent Stop | Skill | Implemented; real-client end-to-end verification wanted |
+
+Project- and task-matched Prompts are delivered through `dingdong_bridge` for
+every connected client; the “Managed native resources” column lists files that
+DingDong deploys directly into the client's native resource directories. To
+move a row to **Verified**, include the operating system and client version and
+confirm the MCP bridge, completion Hook, and applicable resource sync in the PR.
+
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example

@@ -18,6 +18,8 @@ public class TrayIcon: NSView {
     public init() {
         super.init(frame: NSRect.zero)
         statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? "DingDong"
+        statusItem?.autosaveName = "\(bundleIdentifier).primary-status-item"
         statusItem?.button?.addSubview(self)
     }
     

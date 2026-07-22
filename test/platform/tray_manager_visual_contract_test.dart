@@ -150,6 +150,16 @@ void main() {
     expect(gateway, contains('DesktopShellCommand.quit'));
   });
 
+  test('macOS tray persists the user-arranged status item position', () {
+    final String source = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
+    ).readAsStringSync();
+
+    expect(source, contains('statusItem?.autosaveName ='));
+    expect(source, contains('Bundle.main.bundleIdentifier'));
+    expect(source, contains('.primary-status-item'));
+  });
+
   test('Windows tray bridge samples the real taskbar and refreshes safely', () {
     final String source = File(
       'packages/tray_manager/windows/tray_manager_plugin.cpp',

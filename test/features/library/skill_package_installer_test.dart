@@ -69,6 +69,50 @@ void main() {
     );
   });
 
+  test('accepts a GitHub blob URL that resolves to a Skill directory', () async {
+    final Directory root = Directory.systemTemp.createTempSync(
+      'dingdong-skill-package-',
+    );
+    addTearDown(() => root.deleteSync(recursive: true));
+    final Uri source = Uri.parse(
+      'https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling',
+    );
+    final Uri api = Uri.parse(
+      'https://api.github.com/repos/mattpocock/skills/contents/skills/productivity/grilling?ref=main',
+    );
+    final Map<Uri, List<int>> responses = <Uri, List<int>>{
+      api: utf8.encode(
+        jsonEncode(<Object?>[
+          <String, Object?>{
+            'name': 'SKILL.md',
+            'type': 'file',
+            'download_url':
+                'https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md',
+          },
+        ]),
+      ),
+      Uri.parse(
+        'https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grilling/SKILL.md',
+      ): utf8.encode(
+        '---\nname: grilling\ndescription: Stress-test decisions\n---\n\n# Grilling',
+      ),
+    };
+    final List<Uri> requested = <Uri>[];
+    final GitHubSkillPackageInstaller installer = GitHubSkillPackageInstaller(
+      root,
+      loader: (Uri uri) async {
+        requested.add(uri);
+        return Uint8List.fromList(responses[uri]!);
+      },
+      preferGit: false,
+    );
+
+    final SkillPackageInstallResult result = await installer.install(source);
+
+    expect(result.skillDocument, contains('name: grilling'));
+    expect(requested.first, api);
+  });
+
   test(
     'imports a complete local Skill directory into managed storage',
     () async {

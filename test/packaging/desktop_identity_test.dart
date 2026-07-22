@@ -94,6 +94,27 @@ void main() {
     );
   });
 
+  test('macOS application launch and reopen can reveal the hidden panel', () {
+    final String appDelegate = File(
+      'macos/Runner/AppDelegate.swift',
+    ).readAsStringSync();
+    final String gateway = File(
+      'lib/platform/plugin_desktop_shell_gateway.dart',
+    ).readAsStringSync();
+
+    expect(appDelegate, contains('applicationShouldHandleReopen'));
+    expect(appDelegate, contains('requestApplicationOpen()'));
+    expect(appDelegate, contains('pendingApplicationOpen'));
+    expect(appDelegate, contains('flushPendingApplicationOpen'));
+    expect(appDelegate, contains('"openApplication"'));
+    expect(gateway, contains("call.method == 'openApplication'"));
+    expect(gateway, contains('DesktopShellCommand.openApplication'));
+    expect(
+      gateway.indexOf('await windowManager.hide();'),
+      lessThan(gateway.indexOf("invokeMethod<void>('register')")),
+    );
+  });
+
   test('migration cleanup removes stale branding and website content', () {
     final String website = File('docs/index.html').readAsStringSync();
     final String readme = File('README.md').readAsStringSync();
@@ -167,6 +188,38 @@ void main() {
     expect(chinese, contains('Prompt、Skill 和 MCP 的调用逻辑'));
     expect(englishPrompt, contains('Skill summary is not an instruction'));
     expect(chinesePrompt, contains('Skill 摘要不是指令'));
+  });
+
+  test('READMEs distinguish implemented Agents from verified clients', () {
+    final String english = File('README.md').readAsStringSync();
+    final String chinese = File('README.zh.md').readAsStringSync();
+
+    expect(english, contains('Agent compatibility and verification'));
+    expect(chinese, contains('Agent 兼容性与实测状态'));
+    for (final String agent in <String>['Codex', 'Claude Code']) {
+      expect(
+        english,
+        contains('| $agent |'),
+        reason: '$agent must be listed in the English matrix',
+      );
+      expect(
+        chinese,
+        contains('| $agent |'),
+        reason: '$agent must be listed in the Chinese matrix',
+      );
+    }
+    expect(
+      RegExp(r'\*\*Verified end to end on macOS\*\*').allMatches(english),
+      hasLength(2),
+    );
+    expect(RegExp(r'\*\*已在 macOS 端到端验证\*\*').allMatches(chinese), hasLength(2));
+    expect(
+      RegExp(
+        r'Implemented; real-client end-to-end verification wanted',
+      ).allMatches(english),
+      hasLength(3),
+    );
+    expect(RegExp(r'已实现；待真实客户端端到端验证').allMatches(chinese), hasLength(3));
   });
 
   test('repository exposes a canonical executable Agent install guide', () {

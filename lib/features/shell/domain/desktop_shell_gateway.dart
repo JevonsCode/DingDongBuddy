@@ -1,5 +1,6 @@
 /// Actions emitted by tray items and the global clipboard shortcut.
 enum DesktopShellCommand {
+  openApplication,
   openTray,
   showToday,
   showClipboard,

@@ -9,7 +9,12 @@ and macOS golden images; the items below exercise real operating-system state.
 - A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
 - A saved non-default opacity can be restored before the desktop shell starts without a native window crash.
 - DingDong opens the saved default workspace and restores theme, density, and opacity.
+- Opening DingDong from Applications, Launchpad, or Spotlight reveals and focuses
+  the panel both on a cold launch and when the app is already running; login
+  startup remains silent.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
+- After Command-dragging the macOS status item, its position is restored across
+  application restarts.
 - Right-click tray actions open Clipboard, toggle monitoring, clear history, open Settings, and quit the complete process.
 - Launch at startup reads and updates the current-user OS setting.
 - The selected API port is written to the application data `api-port` file.

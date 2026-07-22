@@ -38,17 +38,11 @@ final class DesktopShellService {
 
   Future<void> _handleCommand(DesktopShellCommand command) async {
     switch (command) {
+      case DesktopShellCommand.openApplication:
+        _selectPrimaryWorkspace();
+        await gateway.showAndFocus(acknowledgeUnread: true);
       case DesktopShellCommand.openTray:
-        if (activityController.unseenCount > 0) {
-          controller.open(0);
-          activityController.requestReveal();
-        } else {
-          final int workspace = defaultWorkspaceIndex();
-          controller.open(workspace);
-          if (workspace == 2) {
-            _refreshClipboard();
-          }
-        }
+        _selectPrimaryWorkspace();
         await gateway.toggleAndFocus(acknowledgeUnread: true);
       case DesktopShellCommand.showToday:
         controller.open(0);
@@ -77,6 +71,19 @@ final class DesktopShellService {
         controller.requestClipboardRefresh();
       case DesktopShellCommand.quit:
         await gateway.quit();
+    }
+  }
+
+  void _selectPrimaryWorkspace() {
+    if (activityController.unseenCount > 0) {
+      controller.open(0);
+      activityController.requestReveal();
+      return;
+    }
+    final int workspace = defaultWorkspaceIndex();
+    controller.open(workspace);
+    if (workspace == 2) {
+      _refreshClipboard();
     }
   }
 

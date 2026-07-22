@@ -84,7 +84,9 @@ final class PluginDesktopShellGateway
     }
     await _rebuildContextMenu();
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
-      if (call.method == 'pressed') {
+      if (call.method == 'openApplication') {
+        _commands.add(DesktopShellCommand.openApplication);
+      } else if (call.method == 'pressed') {
         _commands.add(DesktopShellCommand.toggleClipboard);
       } else if (call.method == 'workspaceShortcut' &&
           call.arguments == 'today') {
@@ -102,8 +104,8 @@ final class PluginDesktopShellGateway
         shortcutHints.value = call.arguments == true;
       }
     });
-    await _hotKeyChannel.invokeMethod<void>('register');
     await windowManager.hide();
+    await _hotKeyChannel.invokeMethod<void>('register');
     _started = true;
   }
 

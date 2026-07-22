@@ -18,8 +18,12 @@ class AppDelegate: FlutterAppDelegate {
   private var activeNotificationSound: NSSound?
   private var updaterChannel: FlutterMethodChannel?
   private var applicationUpdater: DingDongUpdater?
+  private var desktopShellReady = false
+  private var pendingApplicationOpen = false
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
+    let openedInteractively = NSApp.isActive ||
+      NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
     if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
       let channel = FlutterMethodChannel(
         name: "dingdong/clipboard_monitor",
@@ -84,8 +88,12 @@ class AppDelegate: FlutterAppDelegate {
       hotKeyChannel.setMethodCallHandler { [weak self] call, result in
         switch call.method {
         case "register":
-          result(self?.registerClipboardHotKey() ?? false)
+          let registered = self?.registerClipboardHotKey() ?? false
+          self?.desktopShellReady = true
+          result(registered)
+          self?.flushPendingApplicationOpen()
         case "unregister":
+          self?.desktopShellReady = false
           self?.unregisterClipboardHotKey()
           result(nil)
         case "pasteToPrevious":
@@ -222,6 +230,17 @@ class AppDelegate: FlutterAppDelegate {
     }
     NSApp.setActivationPolicy(.accessory)
     mainFlutterWindow?.orderOut(nil)
+    if openedInteractively {
+      requestApplicationOpen()
+    }
+  }
+
+  override func applicationShouldHandleReopen(
+    _ sender: NSApplication,
+    hasVisibleWindows flag: Bool
+  ) -> Bool {
+    requestApplicationOpen()
+    return false
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -318,6 +337,22 @@ class AppDelegate: FlutterAppDelegate {
     )
     if status != noErr { unregisterClipboardHotKey() }
     return status == noErr
+  }
+
+  private func requestApplicationOpen() {
+    guard desktopShellReady else {
+      pendingApplicationOpen = true
+      return
+    }
+    hotKeyChannel?.invokeMethod("openApplication", arguments: nil)
+  }
+
+  private func flushPendingApplicationOpen() {
+    guard desktopShellReady, pendingApplicationOpen else { return }
+    pendingApplicationOpen = false
+    DispatchQueue.main.async { [weak self] in
+      self?.hotKeyChannel?.invokeMethod("openApplication", arguments: nil)
+    }
   }
 
   private func unregisterClipboardHotKey() {

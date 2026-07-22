@@ -55,6 +55,27 @@ void main() {
     await service.stop();
   });
 
+  test('opening the application shows rather than toggles the panel', () async {
+    final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
+    final ShellController controller = ShellController(initialIndex: 0);
+    final DesktopShellService service = DesktopShellService(
+      gateway: gateway,
+      controller: controller,
+      activityController: ActivityController(),
+      defaultWorkspaceIndex: () => 2,
+    );
+    await service.start();
+
+    gateway.emit(DesktopShellCommand.openApplication);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.selectedIndex, 2);
+    expect(controller.clipboardRefreshRevision, 1);
+    expect(gateway.showCount, 1);
+    expect(gateway.toggleCount, 0);
+    await service.stop();
+  });
+
   test('showing Clipboard refreshes history without recapturing it', () async {
     final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
     final ShellController controller = ShellController();
