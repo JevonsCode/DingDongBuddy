@@ -84,8 +84,9 @@ final class ClaudeCodePluginSkillCatalog implements AgentSkillCatalog {
           if (installPathValue is! String || installPathValue.trim().isEmpty) {
             continue;
           }
+          final String installPath = path.normalize(installPathValue.trim());
           final Directory skillRoot = Directory(
-            path.join(installPathValue, 'skills'),
+            path.join(installPath, 'skills'),
           );
           if (!await skillRoot.exists()) {
             continue;
@@ -96,7 +97,9 @@ final class ClaudeCodePluginSkillCatalog implements AgentSkillCatalog {
             if (entity is! Directory) {
               continue;
             }
-            final File skillFile = File(path.join(entity.path, 'SKILL.md'));
+            final File skillFile = File(
+              path.normalize(path.join(entity.path, 'SKILL.md')),
+            );
             if (!await skillFile.exists()) {
               continue;
             }
@@ -108,7 +111,7 @@ final class ClaudeCodePluginSkillCatalog implements AgentSkillCatalog {
                 name: skill.name,
                 clientName: 'Claude Code',
                 providerName: providerName,
-                targetPath: skillFile.path,
+                targetPath: path.normalize(skillFile.path),
               );
               discovered['$pluginId\u0000${skill.name}'] = external;
             } on Object {
