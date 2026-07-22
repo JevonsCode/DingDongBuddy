@@ -7,6 +7,7 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
@@ -58,6 +59,7 @@ class DingDongApp extends StatefulWidget {
     this.clipboardGroupOrderStore,
     this.clipboardGateway,
     this.desktopContextMenuGateway,
+    this.desktopContextMenuController,
     this.clipboardMonitoring,
     this.clipboardStore,
     this.clipboardPreviewLauncher,
@@ -97,6 +99,7 @@ class DingDongApp extends StatefulWidget {
   final ClipboardGroupOrderStore? clipboardGroupOrderStore;
   final ClipboardGateway? clipboardGateway;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
+  final DesktopContextMenuController? desktopContextMenuController;
   final ClipboardMonitoring? clipboardMonitoring;
   final ClipboardStore? clipboardStore;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
@@ -132,6 +135,7 @@ class DingDongApp extends StatefulWidget {
 
 class _DingDongAppState extends State<DingDongApp> {
   late final ClipboardViewModel _clipboardViewModel;
+  late final DesktopContextMenuController _desktopContextMenuController;
   late final DataRevisionBus _dataRevisions;
   late final ActivityController _activityController;
   late final LibraryViewModel _libraryViewModel;
@@ -145,6 +149,8 @@ class _DingDongAppState extends State<DingDongApp> {
   @override
   void initState() {
     super.initState();
+    _desktopContextMenuController =
+        widget.desktopContextMenuController ?? DesktopContextMenuController();
     _ownsActivityController = widget.activityController == null;
     _ownsIssueCenterController = widget.issueCenterController == null;
     _issueCenterController =
@@ -237,7 +243,10 @@ class _DingDongAppState extends State<DingDongApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           builder: (BuildContext context, Widget? child) {
-            final Widget content = child ?? const SizedBox.shrink();
+            final Widget content = DesktopContextMenuScope(
+              controller: _desktopContextMenuController,
+              child: child ?? const SizedBox.shrink(),
+            );
             if (usesSystemWindowCorners(Theme.of(context).platform)) {
               return content;
             }

@@ -187,6 +187,22 @@ void main() {
     expect(source, contains('StartAttentionFlash'));
     expect(source, contains('AdvanceAttentionFlash'));
     expect(source, contains('CancelAttentionFlash'));
+    expect(
+      source,
+      contains('''  } else {
+    CancelAttentionFlash();
+    ApplyIconFrame(false);
+  }'''),
+    );
+    expect(
+      source,
+      isNot(
+        contains('''    CancelAttentionFlash();
+    if (!tray_icon_setted) {
+      ApplyIconFrame(false);
+    }'''),
+      ),
+    );
     expect(source, contains('WM_TIMER'));
     expect(source, contains('SetTimer'));
     expect(source, contains('KillTimer'));

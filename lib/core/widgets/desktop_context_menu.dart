@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +8,62 @@ import 'package:flutter/material.dart';
 const double _windowsMenuMinWidth = 252;
 const double _windowsMenuMaxWidth = 280;
 const double _windowsMenuItemHeight = 32;
+
+typedef _DesktopContextMenuDismissal = Future<void> Function();
+
+/// Tracks the Flutter-owned desktop context menu that is currently open.
+///
+/// Desktop hosts should dismiss the active menu before hiding their window so
+/// the menu route cannot reappear when the window is shown again.
+final class DesktopContextMenuController {
+  Object? _activeSession;
+  _DesktopContextMenuDismissal? _activeDismissal;
+
+  Future<void> dismissActiveMenu() async {
+    final _DesktopContextMenuDismissal? dismissal = _activeDismissal;
+    _activeSession = null;
+    _activeDismissal = null;
+    await dismissal?.call();
+  }
+
+  Object _register(_DesktopContextMenuDismissal dismissal) {
+    final Object session = Object();
+    _activeSession = session;
+    _activeDismissal = dismissal;
+    return session;
+  }
+
+  void _unregister(Object session) {
+    if (!identical(_activeSession, session)) {
+      return;
+    }
+    _activeSession = null;
+    _activeDismissal = null;
+  }
+}
+
+/// Makes a [DesktopContextMenuController] available to application-owned
+/// desktop context menus without subscribing event handlers to rebuilds.
+final class DesktopContextMenuScope extends InheritedWidget {
+  const DesktopContextMenuScope({
+    required this.controller,
+    required super.child,
+    super.key,
+  });
+
+  final DesktopContextMenuController controller;
+
+  static DesktopContextMenuController? maybeOf(BuildContext context) {
+    return context
+        .getInheritedWidgetOfExactType<DesktopContextMenuScope>()
+        ?.controller;
+  }
+
+  @override
+  bool updateShouldNotify(DesktopContextMenuScope oldWidget) {
+    return !identical(controller, oldWidget.controller);
+  }
+}
 
 /// A platform-aware entry used by application-owned context menus.
 sealed class DesktopMenuEntry<T> {
@@ -59,7 +117,7 @@ Future<T?> showDesktopContextMenu<T>({
   required BuildContext context,
   required Offset globalPosition,
   required List<DesktopMenuEntry<T>> entries,
-}) {
+}) async {
   final bool windows = defaultTargetPlatform == TargetPlatform.windows;
   final Brightness brightness = Theme.of(context).brightness;
   final bool dark = brightness == Brightness.dark;
@@ -85,10 +143,24 @@ Future<T?> showDesktopContextMenu<T>({
 
   final bool reduceMotion =
       MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-  return showMenu<T>(
+  final NavigatorState navigator = Navigator.of(context);
+  final Completer<Route<dynamic>?> menuRoute = Completer<Route<dynamic>?>();
+  final List<PopupMenuEntry<T>> trackedEntries = popupEntries
+      .map(
+        (PopupMenuEntry<T> entry) => _RouteTrackingPopupMenuEntry<T>(
+          entry: entry,
+          onRouteAvailable: (Route<dynamic> route) {
+            if (!menuRoute.isCompleted) {
+              menuRoute.complete(route);
+            }
+          },
+        ),
+      )
+      .toList(growable: false);
+  final Future<T?> result = showMenu<T>(
     context: context,
     position: desktopContextMenuPosition(context, globalPosition),
-    items: popupEntries,
+    items: trackedEntries,
     elevation: windows ? 2 : null,
     shadowColor: windows
         ? Colors.black.withValues(alpha: dark ? 0.24 : 0.1)
@@ -123,6 +195,76 @@ Future<T?> showDesktopContextMenu<T>({
         : AnimationStyle.noAnimation,
     requestFocus: true,
   );
+  unawaited(
+    result.then<void>(
+      (_) {
+        if (!menuRoute.isCompleted) {
+          menuRoute.complete(null);
+        }
+      },
+      onError: (Object _, StackTrace _) {
+        if (!menuRoute.isCompleted) {
+          menuRoute.complete(null);
+        }
+      },
+    ),
+  );
+  final DesktopContextMenuController? controller =
+      DesktopContextMenuScope.maybeOf(context);
+  Object? session;
+  bool dismissalRequested = false;
+  if (controller != null) {
+    session = controller._register(() async {
+      if (dismissalRequested) {
+        return;
+      }
+      dismissalRequested = true;
+      final Route<dynamic>? activeMenuRoute = await menuRoute.future;
+      if (navigator.mounted && activeMenuRoute?.isActive == true) {
+        navigator.removeRoute(activeMenuRoute!);
+      }
+      await result;
+    });
+  }
+  try {
+    return await result;
+  } finally {
+    if (controller != null && session != null) {
+      controller._unregister(session);
+    }
+  }
+}
+
+final class _RouteTrackingPopupMenuEntry<T> extends PopupMenuEntry<T> {
+  const _RouteTrackingPopupMenuEntry({
+    required this.entry,
+    required this.onRouteAvailable,
+  });
+
+  final PopupMenuEntry<T> entry;
+  final ValueChanged<Route<dynamic>> onRouteAvailable;
+
+  @override
+  double get height => entry.height;
+
+  @override
+  bool represents(T? value) => entry.represents(value);
+
+  @override
+  State<_RouteTrackingPopupMenuEntry<T>> createState() =>
+      _RouteTrackingPopupMenuEntryState<T>();
+}
+
+final class _RouteTrackingPopupMenuEntryState<T>
+    extends State<_RouteTrackingPopupMenuEntry<T>> {
+  @override
+  Widget build(BuildContext context) {
+    final ModalRoute<dynamic>? route = ModalRoute.of(context);
+    if (route != null) {
+      widget.onRouteAvailable(route);
+    }
+    return widget.entry;
+  }
 }
 
 PopupMenuItem<T> _materialPopupMenuItem<T>(DesktopMenuItem<T> item) {

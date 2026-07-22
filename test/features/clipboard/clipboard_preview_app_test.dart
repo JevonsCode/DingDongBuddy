@@ -44,5 +44,39 @@ void main() {
     expect(find.text('Clipboard'), findsOneWidget);
     expect(find.text('Project'), findsOneWidget);
     expect(find.text('Cursor'), findsOneWidget);
+    expect(find.text('分享'), findsOneWidget);
+  });
+
+  testWidgets('preview hides share when no platform handler is available', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 304,
+          height: 420,
+          child: ClipboardPreviewCard(
+            record: ClipboardRecord(
+              id: 'preview',
+              group: 'Clipboard',
+              title: 'Preview item',
+              content: 'Preview content',
+              tags: const <String>['clipboard', 'text'],
+              pinned: false,
+              enabled: true,
+              activation: 'taskMatch',
+              createdAt: now,
+              updatedAt: now,
+            ),
+            onCopy: () {},
+            onClose: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('复制'), findsOneWidget);
+    expect(find.text('分享'), findsNothing);
   });
 }

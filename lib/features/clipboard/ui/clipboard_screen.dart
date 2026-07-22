@@ -271,6 +271,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                             final Widget list = _ClipboardList(
                               viewModel: viewModel,
                               compact: compact,
+                              includeShare: onShare != null,
                               showShortcutHints: showShortcutHints,
                               onShortcutStartIndexChanged:
                                   _handleShortcutStartIndexChanged,

@@ -23,7 +23,7 @@ class ClipboardPreviewApp extends StatefulWidget {
   final ClipboardRecord initialRecord;
   final WindowController windowController;
   final ClipboardGateway clipboardGateway;
-  final ClipboardShareGateway shareGateway;
+  final ClipboardShareGateway? shareGateway;
 
   @override
   State<ClipboardPreviewApp> createState() => _ClipboardPreviewAppState();
@@ -76,7 +76,9 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
         body: ClipboardPreviewCard(
           record: _record,
           onCopy: _copy,
-          onShare: () => widget.shareGateway.share(_record),
+          onShare: widget.shareGateway == null
+              ? null
+              : () => widget.shareGateway!.share(_record),
           onClose: widget.windowController.hide,
         ),
       ),
@@ -88,14 +90,14 @@ class ClipboardPreviewCard extends StatelessWidget {
   const ClipboardPreviewCard({
     required this.record,
     required this.onCopy,
-    required this.onShare,
+    this.onShare,
     required this.onClose,
     super.key,
   });
 
   final ClipboardRecord record;
   final VoidCallback onCopy;
-  final VoidCallback onShare;
+  final VoidCallback? onShare;
   final VoidCallback onClose;
 
   @override
@@ -203,12 +205,14 @@ class ClipboardPreviewCard extends StatelessWidget {
                   icon: const Icon(Icons.copy_rounded, size: 15),
                   label: const Text('复制'),
                 ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: onShare,
-                  icon: const Icon(Icons.share_outlined, size: 15),
-                  label: const Text('分享'),
-                ),
+                if (onShare != null) ...<Widget>[
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: onShare,
+                    icon: const Icon(Icons.share_outlined, size: 15),
+                    label: const Text('分享'),
+                  ),
+                ],
               ],
             ),
           ],

@@ -827,8 +827,42 @@ void main() {
       expect(find.text('Save as knowledge'), findsNothing);
       expect(find.text('Archive'), findsNothing);
       expect(find.text('Archive to…'), findsOneWidget);
-      expect(find.text('Share'), findsOneWidget);
+      expect(find.text('Share'), findsNothing);
       expect(find.text('Delete'), findsOneWidget);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'secondary click keeps share when a platform handler is available',
+    TargetPlatform.windows,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ClipboardRecord record = _record();
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[record]),
+      )..load();
+      ClipboardRecord? shared;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ClipboardScreen(
+            viewModel: model,
+            onShare: (ClipboardRecord record) async {
+              shared = record;
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text(record.title), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Share'), findsOneWidget);
+      await tester.tap(find.text('Share'));
+      await tester.pumpAndSettle();
+      expect(shared?.id, record.id);
     },
   );
 

@@ -392,9 +392,7 @@ void TrayManagerPlugin::SetIcon(
     StartAttentionFlash();
   } else {
     CancelAttentionFlash();
-    if (!tray_icon_setted) {
-      ApplyIconFrame(false);
-    }
+    ApplyIconFrame(false);
   }
 
   if (previous_source != nullptr) {
