@@ -39,19 +39,24 @@ final class DesktopShellService {
   Future<void> _handleCommand(DesktopShellCommand command) async {
     switch (command) {
       case DesktopShellCommand.openApplication:
+        _refreshLibrary();
         _selectPrimaryWorkspace();
         await gateway.showAndFocus(acknowledgeUnread: true);
       case DesktopShellCommand.openTray:
+        _refreshLibrary();
         _selectPrimaryWorkspace();
         await gateway.toggleAndFocus(acknowledgeUnread: true);
       case DesktopShellCommand.showToday:
+        _refreshLibrary();
         controller.open(0);
         await gateway.showAndFocus();
       case DesktopShellCommand.showClipboard:
+        _refreshLibrary();
         controller.open(2);
         _refreshClipboard();
         await gateway.showAndFocus();
       case DesktopShellCommand.toggleClipboard:
+        _refreshLibrary();
         controller.open(2);
         _refreshClipboard();
         await gateway.toggleAndFocus();
@@ -89,5 +94,9 @@ final class DesktopShellService {
 
   void _refreshClipboard() {
     controller.requestClipboardRefresh();
+  }
+
+  void _refreshLibrary() {
+    controller.requestLibraryRefresh();
   }
 }

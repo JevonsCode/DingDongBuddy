@@ -64,12 +64,25 @@ void main() {
     await model.load();
 
     await tester.pumpWidget(
-      MaterialApp(home: ReleaseSettingsSection(viewModel: model)),
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.macOS),
+        home: SingleChildScrollView(
+          child: ReleaseSettingsSection(viewModel: model),
+        ),
+      ),
     );
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('settings-install-update')), findsOneWidget);
+    expect(
+      find.byKey(const Key('settings-macos-update-permission-notice')),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('grant DingDong\'s macOS permissions again'),
+      findsOneWidget,
+    );
     expect(find.text('Update to 0.8.0'), findsOneWidget);
     expect(find.byType(FilledButton), findsOneWidget);
 
@@ -78,6 +91,33 @@ void main() {
 
     expect(updater.installCount, 1);
     expect(find.text("You're up to date"), findsOneWidget);
+    model.dispose();
+  });
+
+  testWidgets('Windows native update omits the macOS permission notice', (
+    WidgetTester tester,
+  ) async {
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      releaseMetadataSource: const _ReleaseSource(),
+      applicationUpdater: _ApplicationUpdater(),
+    );
+    await model.load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.windows),
+        home: ReleaseSettingsSection(viewModel: model),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('settings-check-updates')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('settings-install-update')), findsOneWidget);
+    expect(
+      find.byKey(const Key('settings-macos-update-permission-notice')),
+      findsNothing,
+    );
     model.dispose();
   });
 }

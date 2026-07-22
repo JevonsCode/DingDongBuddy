@@ -173,6 +173,17 @@ class _ResourceCard extends StatelessWidget {
                               for (final (int index, String tag)
                                   in visibleTags.indexed)
                                 _ResourceTag(
+                                  key:
+                                      resource.isScopedSkill &&
+                                          tag ==
+                                              context.localized(
+                                                'Scoped',
+                                                '有触发范围',
+                                              )
+                                      ? Key(
+                                          'resource-card-scope-${resource.id}',
+                                        )
+                                      : null,
                                   label: tag,
                                   prominent:
                                       index == 0 && resource.group.isNotEmpty,
@@ -286,7 +297,12 @@ class _CardAction extends StatelessWidget {
 }
 
 class _ResourceTag extends StatelessWidget {
-  const _ResourceTag({required this.label, this.prominent = false, this.type});
+  const _ResourceTag({
+    required this.label,
+    this.prominent = false,
+    this.type,
+    super.key,
+  });
 
   final String label;
   final bool prominent;
@@ -343,6 +359,7 @@ List<String> _resourceCardTags(
         display.variant == ResourceCardVariant.skillOnline ? 'Online' : 'Local',
         display.variant == ResourceCardVariant.skillOnline ? '在线' : '本地',
       ),
+      if (resource.isScopedSkill) context.localized('Scoped', '有触发范围'),
       ...resource.tags,
     ],
     ResourceType.mcp => <String>['MCP', display.variantLabel, ...resource.tags],

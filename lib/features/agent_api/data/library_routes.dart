@@ -78,7 +78,7 @@ final class LibraryRoutes {
       final SkillConfiguration skill = SkillConfiguration.parseOnline(
         installed.skillDocument,
       );
-      final List<Resource> resources = await _store.load();
+      final List<Resource> resources = List<Resource>.of(await _store.load());
       final List<Resource> sourceMatches = resources
           .where(
             (Resource resource) =>
@@ -172,7 +172,7 @@ final class LibraryRoutes {
               .where((String value) => value.isNotEmpty)
               .toSet()
               .toList(growable: false);
-      final List<Resource> resources = await _store.load();
+      final List<Resource> resources = List<Resource>.of(await _store.load());
       final int resourceIndex = resources.indexWhere(
         (Resource resource) => resource.id == id,
       );
@@ -529,7 +529,7 @@ final class LibraryRoutes {
       if (decoded is! Map<String, Object?> || decoded.isEmpty) {
         return _invalidUpdate('At least one resource field is required');
       }
-      final List<Resource> resources = await _store.load();
+      final List<Resource> resources = List<Resource>.of(await _store.load());
       final int index = resources.indexWhere(
         (Resource resource) =>
             resource.id == id && resource.type.isLibraryResource,

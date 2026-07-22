@@ -903,11 +903,13 @@ final class SynchronizedResourceStore implements ResourceStore {
     this._delegate,
     this._synchronizer, {
     this.issueCenter,
+    this.onChanged,
   });
 
   final ResourceStore _delegate;
   final AgentResourceSynchronizer _synchronizer;
   final IssueCenterController? issueCenter;
+  final void Function()? onChanged;
 
   @override
   Future<List<Resource>> load() => _delegate.load();
@@ -943,6 +945,7 @@ final class SynchronizedResourceStore implements ResourceStore {
       issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
       Error.throwWithStackTrace(error, stackTrace);
     }
+    onChanged?.call();
   }
 
   Future<void> _cleanupRemovedPackages(

@@ -161,7 +161,7 @@ extension _AgentRouterResourceHandlers on AgentRouter {
     if (store == null) {
       return _resourceUnavailable();
     }
-    final List<Resource> resources = await store.load();
+    final List<Resource> resources = List<Resource>.of(await store.load());
     final int resourceIndex = resources.indexWhere(
       (Resource item) => item.id == id,
     );

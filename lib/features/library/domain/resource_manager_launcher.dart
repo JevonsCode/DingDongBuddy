@@ -12,6 +12,10 @@ enum ResourceManagerDestination {
   }
 }
 
+/// Multi-window signal emitted after the resource manager commits a library
+/// change to shared storage.
+const String resourceLibraryChangedMethod = 'resource_library_changed';
+
 /// Opens the full resource management experience in its own desktop window.
 abstract interface class ResourceManagerLauncher {
   Future<void> show({

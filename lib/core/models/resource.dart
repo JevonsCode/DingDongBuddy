@@ -152,6 +152,13 @@ final class Resource {
   final ResourceActivation activation;
   final List<String> triggerGroupIds;
 
+  /// Whether this Skill is limited to an explicit trigger scope.
+  ///
+  /// Project paths are a derived synchronization result, so the persisted
+  /// trigger-group relationship remains the source of truth.
+  bool get isScopedSkill =>
+      type == ResourceType.skill && triggerGroupIds.isNotEmpty;
+
   /// Absolute local project roots where this Skill is mirrored natively.
   ///
   /// An empty list retains the legacy user-global Skill synchronization.

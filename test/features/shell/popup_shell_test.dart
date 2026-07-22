@@ -359,6 +359,7 @@ description: Use when product decisions should follow saved preferences.
 Apply the user's saved preferences.''',
         updateUrl:
             'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste',
+        triggerGroupIds: const <String>['dingdong-project'],
         enabled: true,
         createdAt: now,
         updatedAt: now,
@@ -395,6 +396,13 @@ Apply the user's saved preferences.''',
         ),
         findsNothing,
       );
+      expect(
+        find.descendant(
+          of: enabledCard,
+          matching: find.byKey(const Key('today-enabled-scope-user-taste')),
+        ),
+        findsOneWidget,
+      );
 
       controller.open(1);
       await tester.pumpAndSettle();
@@ -427,8 +435,90 @@ Apply the user's saved preferences.''',
         findsOneWidget,
       );
       expect(
+        find.descendant(
+          of: tags,
+          matching: find.byKey(const Key('resource-card-scope-user-taste')),
+        ),
+        findsOneWidget,
+      );
+      expect(
         find.descendant(of: tags, matching: find.text('Skills')),
         findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'library refresh keeps resource and enabled Skill views in sync',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController();
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 22);
+      Resource skill(String id) => Resource(
+        id: id,
+        type: ResourceType.skill,
+        title: id,
+        content:
+            '---\nname: $id\ndescription: Use $id when needed.\n---\n\n# $id',
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      );
+      final Resource builtInPrompt = Resource(
+        id: 'built-in-prompt',
+        type: ResourceType.prompt,
+        title: 'Built-in prompt',
+        content: 'Always available.',
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      );
+      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+        builtInPrompt,
+        skill('skill-one'),
+      ]);
+
+      await tester.pumpWidget(
+        DingDongApp(resourceStore: store, shellController: controller),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('today-enabled-skill-one')), findsOneWidget);
+      expect(find.byKey(const Key('today-enabled-skill-two')), findsNothing);
+
+      await store.save(<Resource>[
+        builtInPrompt,
+        skill('skill-one'),
+        skill('skill-two'),
+        skill('skill-three'),
+      ]);
+      controller.requestLibraryRefresh();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('today-enabled-skill-one')), findsOneWidget);
+      expect(find.byKey(const Key('today-enabled-skill-two')), findsOneWidget);
+      expect(
+        find.byKey(const Key('today-enabled-skill-three')),
+        findsOneWidget,
+      );
+
+      controller.open(1);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('resource-card-title-skill-one')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('resource-card-title-skill-two')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('resource-card-title-skill-three')),
+        findsOneWidget,
       );
     },
   );

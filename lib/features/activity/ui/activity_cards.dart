@@ -454,7 +454,19 @@ class _EnabledResourceCard extends StatelessWidget {
                     spacing: 4,
                     runSpacing: 3,
                     children: <Widget>[
-                      ...tags.take(4).map((String tag) => _TinyTag(label: tag)),
+                      ...tags
+                          .take(4)
+                          .map(
+                            (String tag) => _TinyTag(
+                              key:
+                                  resource.isScopedSkill &&
+                                      tag ==
+                                          context.localized('Scoped', '有触发范围')
+                                  ? Key('today-enabled-scope-${resource.id}')
+                                  : null,
+                              label: tag,
+                            ),
+                          ),
                     ],
                   ),
                 ],
@@ -539,6 +551,7 @@ List<String> _enabledResourceTags(
         display.variant == ResourceCardVariant.skillOnline ? 'Online' : 'Local',
         display.variant == ResourceCardVariant.skillOnline ? '在线' : '本地',
       ),
+      if (resource.isScopedSkill) context.localized('Scoped', '有触发范围'),
       ...resource.tags,
     ],
     ResourceType.mcp => <String>['MCP', display.variantLabel, ...resource.tags],
@@ -559,7 +572,7 @@ List<String> _enabledResourceTags(
 }
 
 class _TinyTag extends StatelessWidget {
-  const _TinyTag({required this.label});
+  const _TinyTag({required this.label, super.key});
 
   final String label;
 

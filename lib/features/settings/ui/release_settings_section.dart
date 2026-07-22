@@ -62,6 +62,13 @@ class ReleaseSettingsSection extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 8),
+              if (status.isUpdateAvailable == true &&
+                  viewModel.applicationUpdaterSupported &&
+                  Theme.of(context).platform ==
+                      TargetPlatform.macOS) ...<Widget>[
+                const _MacOsUpdatePermissionNotice(),
+                const SizedBox(height: 12),
+              ],
               if (installStatus.isBusy) ...<Widget>[
                 LinearProgressIndicator(
                   value:
@@ -151,6 +158,47 @@ class ReleaseSettingsSection extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MacOsUpdatePermissionNotice extends StatelessWidget {
+  const _MacOsUpdatePermissionNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      key: const Key('settings-macos-update-permission-notice'),
+      decoration: BoxDecoration(
+        color: colors.tertiaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              Icons.warning_amber_rounded,
+              color: colors.onTertiaryContainer,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                context.localized(
+                  'After updating, you will need to grant DingDong\'s macOS permissions again in System Settings.',
+                  '更新完成后，需要在 macOS“系统设置”中重新授予 DingDong 相关权限。',
+                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onTertiaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

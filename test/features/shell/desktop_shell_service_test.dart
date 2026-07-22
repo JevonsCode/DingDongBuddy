@@ -25,6 +25,7 @@ void main() {
 
       expect(controller.selectedIndex, 2);
       expect(gateway.showCount, 1);
+      expect(controller.libraryRefreshRevision, 1);
 
       gateway.emit(DesktopShellCommand.showToday);
       await Future<void>.delayed(Duration.zero);
@@ -52,6 +53,7 @@ void main() {
     expect(gateway.toggleCount, 1);
     expect(gateway.showCount, 0);
     expect(controller.clipboardRefreshRevision, 1);
+    expect(controller.libraryRefreshRevision, 1);
     await service.stop();
   });
 
@@ -71,6 +73,7 @@ void main() {
 
     expect(controller.selectedIndex, 2);
     expect(controller.clipboardRefreshRevision, 1);
+    expect(controller.libraryRefreshRevision, 1);
     expect(gateway.showCount, 1);
     expect(gateway.toggleCount, 0);
     await service.stop();
@@ -91,6 +94,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(controller.clipboardRefreshRevision, 1);
+    expect(controller.libraryRefreshRevision, 1);
     expect(gateway.showCount, 1);
     await service.stop();
   });

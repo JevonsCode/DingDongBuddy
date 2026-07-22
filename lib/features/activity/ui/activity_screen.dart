@@ -70,7 +70,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
             .libraryViewModel
             .configurableResources
             .where((Resource resource) => resource.enabled)
-            .take(3)
             .toList(growable: false);
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),

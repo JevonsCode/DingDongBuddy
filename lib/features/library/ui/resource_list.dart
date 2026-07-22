@@ -112,12 +112,26 @@ class ResourceList extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Text(
-                              display.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text(
+                                    display.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                if (resource.isScopedSkill) ...<Widget>[
+                                  const SizedBox(width: 7),
+                                  _TriggerScopeBadge(
+                                    key: Key('resource-scope-${resource.id}'),
+                                  ),
+                                ],
+                              ],
                             ),
                             const SizedBox(height: 3),
                             Text(
@@ -200,6 +214,44 @@ class ResourceList extends StatelessWidget {
     if (action == _ResourceRowAction.delete) {
       onDeleteResource(resource);
     }
+  }
+}
+
+class _TriggerScopeBadge extends StatelessWidget {
+  const _TriggerScopeBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: context.localized(
+        'Only active in its configured trigger scope',
+        '仅在已配置的触发范围内生效',
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.filter_alt_outlined, size: 11, color: colors.primary),
+            const SizedBox(width: 3),
+            Text(
+              context.localized('Scoped', '有触发范围'),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.primary,
+                fontSize: 9,
+                height: 1,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

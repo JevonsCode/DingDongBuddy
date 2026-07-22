@@ -5,6 +5,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/dingdong_app.dart';
+import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
@@ -95,6 +96,7 @@ Future<void> main(List<String> arguments) async {
   );
   dependencies = AppDependencies.production(
     preferencesBackend: preferencesBackend,
+    onResourceLibraryChanged: shellController.requestLibraryRefresh,
     onNotification: (request) async {
       activityController.record(
         source: request.source ?? 'Agent',
@@ -113,6 +115,7 @@ Future<void> main(List<String> arguments) async {
       }
     },
     onShowUi: (int index) {
+      shellController.requestLibraryRefresh();
       if (index == 4) {
         unawaited(settingsWindowLauncher.show());
         return;
@@ -234,6 +237,9 @@ Future<void> main(List<String> arguments) async {
         return dependencies.issueCenterController.issues
             .map((AppIssue issue) => issue.toJson())
             .toList(growable: false);
+      case resourceLibraryChangedMethod:
+        shellController.requestLibraryRefresh();
+        return null;
       default:
         break;
     }
@@ -480,6 +486,7 @@ Future<void> _runResourceManagerWindow(
   final ResourceRepository baseResourceStore = ResourceRepository(
     ResourceFileService(paths.resourceLibraryFile),
   );
+  final DataRevisionBus dataRevisions = DataRevisionBus();
   final AgentResourceSynchronizer resourceSynchronizer =
       AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory);
   issueCenterController.setInspector(
@@ -489,6 +496,17 @@ Future<void> _runResourceManagerWindow(
     baseResourceStore,
     resourceSynchronizer,
     issueCenter: issueCenterController,
+    onChanged: () {
+      final WindowController? host = parent;
+      if (host == null) {
+        return;
+      }
+      unawaited(
+        host
+            .invokeMethod<void>(resourceLibraryChangedMethod)
+            .catchError((Object _) {}),
+      );
+    },
   );
   final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
     TriggerGroupFileService(paths.triggerGroupsFile),
@@ -496,12 +514,14 @@ Future<void> _runResourceManagerWindow(
   final LibraryViewModel viewModel = createDesktopLibraryViewModel(
     resourceStore,
     triggerGroupStore: triggerGroupStore,
+    revisions: dataRevisions,
   );
   await viewModel.load();
   final ClipboardViewModel clipboardViewModel = ClipboardViewModel(
     ClipboardRepository.open(paths.clipboardDatabaseFile.path),
     gateway: DesktopClipboardGateway(),
     resourceStore: resourceStore,
+    revisions: dataRevisions,
     categoryRuleStore: FileClipboardCategoryRuleStore(
       paths.clipboardCategoryRulesFile,
     ),

@@ -644,7 +644,8 @@ void main() {
         '---\nname: reviewer\ndescription: Review checkout changes\n---\n\n# Review';
     File('${package.path}/SKILL.md').writeAsStringSync(document);
     File('${package.path}/reference.md').writeAsStringSync('policy');
-    final InMemoryResourceStore resources = InMemoryResourceStore();
+    final _UnmodifiableLoadResourceStore resources =
+        _UnmodifiableLoadResourceStore();
     final AgentRouter router = AgentRouter(
       resourceStore: resources,
       skillPackageInstaller: _StaticSkillInstaller(package, document),
@@ -726,7 +727,8 @@ void main() {
     );
     addTearDown(() => project.deleteSync(recursive: true));
     final DateTime now = DateTime.utc(2026, 7, 21);
-    final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+    final _UnmodifiableLoadResourceStore
+    resources = _UnmodifiableLoadResourceStore(<Resource>[
       Resource(
         id: 'reviewer',
         type: ResourceType.skill,
@@ -975,16 +977,17 @@ void main() {
     'tracked full reads increment usage while ordinary reads do not',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 13);
-      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
-        Resource(
-          id: 'skill-1',
-          type: ResourceType.skill,
-          title: 'Review skill',
-          content: 'Review carefully.',
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ]);
+      final _UnmodifiableLoadResourceStore store =
+          _UnmodifiableLoadResourceStore(<Resource>[
+            Resource(
+              id: 'skill-1',
+              type: ResourceType.skill,
+              title: 'Review skill',
+              content: 'Review carefully.',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ]);
       final AgentRouter router = AgentRouter(
         resourceStore: store,
         now: () => now.add(const Duration(minutes: 5)),
@@ -1009,17 +1012,18 @@ void main() {
     'library groups, patch, export, and delete preserve the public contract',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 12);
-      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
-        Resource(
-          id: 'resource-1',
-          type: ResourceType.prompt,
-          group: 'Release',
-          title: 'Release prompt',
-          content: 'Original',
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ]);
+      final _UnmodifiableLoadResourceStore store =
+          _UnmodifiableLoadResourceStore(<Resource>[
+            Resource(
+              id: 'resource-1',
+              type: ResourceType.prompt,
+              group: 'Release',
+              title: 'Release prompt',
+              content: 'Original',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ]);
       final AgentRouter router = AgentRouter(resourceStore: store);
 
       final groups = await router.route(
@@ -1363,7 +1367,8 @@ void main() {
     'agent presence, sessions, memories, bundles, and handoffs coordinate state',
     () async {
       var sequence = 0;
-      final InMemoryResourceStore resources = InMemoryResourceStore();
+      final _UnmodifiableLoadResourceStore resources =
+          _UnmodifiableLoadResourceStore();
       final AgentRouter router = AgentRouter(
         resourceStore: resources,
         idGenerator: () => 'state-${++sequence}',
@@ -1407,6 +1412,13 @@ void main() {
               '{"title":"Continue refactor","summary":"Finish QA","source":"Codex"}',
         ),
       );
+      final patchedSession = await router.route(
+        const HttpRequestData(
+          method: 'PATCH',
+          uri: '/agent/session/state-1',
+          body: '{"status":"complete"}',
+        ),
+      );
       final sessions = await router.route(
         const HttpRequestData(method: 'GET', uri: '/agent/sessions'),
       );
@@ -1422,6 +1434,7 @@ void main() {
       expect(memory.statusCode, 201);
       expect(bundle.statusCode, 201);
       expect(handoff.statusCode, 201);
+      expect(patchedSession.statusCode, 200);
       expect((sessions.json['sessions'] as List<Object?>), hasLength(1));
       expect((memories.json['memories'] as List<Object?>), hasLength(1));
       expect((handoffs.json['handoffs'] as List<Object?>), hasLength(1));
@@ -1483,6 +1496,21 @@ void main() {
       expect((await resources.load()).single.id, 'collection-1');
     },
   );
+}
+
+final class _UnmodifiableLoadResourceStore implements ResourceStore {
+  _UnmodifiableLoadResourceStore([
+    List<Resource> resources = const <Resource>[],
+  ]) : _delegate = InMemoryResourceStore(resources);
+
+  final InMemoryResourceStore _delegate;
+
+  @override
+  Future<List<Resource>> load() async =>
+      List<Resource>.unmodifiable(await _delegate.load());
+
+  @override
+  Future<void> save(List<Resource> resources) => _delegate.save(resources);
 }
 
 final class _StaticClipboardGateway implements ClipboardGateway {

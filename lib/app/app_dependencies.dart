@@ -46,6 +46,7 @@ final class AppDependencies {
 
   factory AppDependencies.production({
     void Function(int index)? onShowUi,
+    void Function()? onResourceLibraryChanged,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
     PreferencesBackend? preferencesBackend,
@@ -89,6 +90,7 @@ final class AppDependencies {
       baseResourceStore,
       resourceSynchronizer,
       issueCenter: issueCenterController,
+      onChanged: onResourceLibraryChanged,
     );
     final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
       TriggerGroupFileService(paths.triggerGroupsFile),

@@ -9,11 +9,13 @@ final class ShellController extends ChangeNotifier {
   int _clipboardFilterToggleRevision = 0;
   int _clipboardRefreshRevision = 0;
   int _clipboardSearchFocusRevision = 0;
+  int _libraryRefreshRevision = 0;
 
   int get selectedIndex => _selectedIndex;
   int get clipboardFilterToggleRevision => _clipboardFilterToggleRevision;
   int get clipboardRefreshRevision => _clipboardRefreshRevision;
   int get clipboardSearchFocusRevision => _clipboardSearchFocusRevision;
+  int get libraryRefreshRevision => _libraryRefreshRevision;
 
   void open(int index) {
     final int next = index.clamp(0, 3);
@@ -36,6 +38,11 @@ final class ShellController extends ChangeNotifier {
 
   void requestClipboardSearchFocus() {
     _clipboardSearchFocusRevision += 1;
+    notifyListeners();
+  }
+
+  void requestLibraryRefresh() {
+    _libraryRefreshRevision += 1;
     notifyListeners();
   }
 }

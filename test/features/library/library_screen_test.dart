@@ -79,6 +79,55 @@ void main() {
     expect(find.byKey(const Key('resource-editor')), findsNothing);
   });
 
+  testWidgets('scoped Skill is identified in the resource manager list', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026);
+    final LibraryViewModel model = LibraryViewModel(
+      _MemoryStore(<Resource>[
+        Resource(
+          id: 'scoped-skill',
+          type: ResourceType.skill,
+          title: 'Scoped Skill',
+          content: 'Use only for the configured project.',
+          triggerGroupIds: const <String>['project-scope'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'global-skill',
+          type: ResourceType.skill,
+          title: 'Global Skill',
+          content: 'Use in any project.',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+    await model.load();
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    final Finder scopedRow = find.byKey(const Key('resource-row-scoped-skill'));
+    final Finder globalRow = find.byKey(const Key('resource-row-global-skill'));
+    expect(
+      find.descendant(
+        of: scopedRow,
+        matching: find.byKey(const Key('resource-scope-scoped-skill')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: globalRow,
+        matching: find.byKey(const Key('resource-scope-global-skill')),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Scoped'), findsOneWidget);
+  });
+
   testWidgets('detail header uses a compact two-level breadcrumb', (
     WidgetTester tester,
   ) async {

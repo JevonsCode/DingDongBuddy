@@ -44,7 +44,13 @@ and macOS golden images; the items below exercise real operating-system state.
 - Local Skills can be edited directly or imported from a local folder.
 - Trigger groups can be named, searched, assigned to multiple resources, and
   limited by workspace path or repository-address rules.
+- A Skill with a trigger scope is visibly marked in the Resource Manager list,
+  the popup resource library, and the popup Enabled list.
 - Search and type/pinned filters preserve the active editor selection.
+- Creating, enabling, disabling, or deleting resources in the dedicated
+  Resource Manager updates the popup resource list, Dynamic resource count,
+  and the complete Enabled list without restarting DingDong; reopening the
+  popup also recovers the latest on-disk state if a notification was missed.
 - Folder import reports imported and skipped files; JSON export can be saved and reopened.
 - GitHub repository, folder, `blob` `SKILL.md`, and raw `SKILL.md` links install
   the complete Skill directory rather than only its entry file.

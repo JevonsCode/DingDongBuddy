@@ -424,7 +424,9 @@ final class AgentStateRoutes {
     String id,
     Map<String, Object?> record,
   ) async {
-    final List<Resource> resources = await resourceStore.load();
+    final List<Resource> resources = List<Resource>.of(
+      await resourceStore.load(),
+    );
     final int index = resources.indexWhere((Resource item) => item.id == id);
     if (index < 0) {
       return;

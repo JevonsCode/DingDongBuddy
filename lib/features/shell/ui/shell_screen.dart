@@ -92,6 +92,7 @@ class _ShellScreenState extends State<ShellScreen> {
   int _clipboardShortcutStartIndex = 0;
   late int _lastClipboardFilterToggleRevision;
   late int _lastClipboardRefreshRevision;
+  late int _lastLibraryRefreshRevision;
   late int _lastSelectedIndex;
 
   @override
@@ -100,6 +101,7 @@ class _ShellScreenState extends State<ShellScreen> {
     _lastClipboardFilterToggleRevision =
         widget.controller.clipboardFilterToggleRevision;
     _lastClipboardRefreshRevision = widget.controller.clipboardRefreshRevision;
+    _lastLibraryRefreshRevision = widget.controller.libraryRefreshRevision;
     _lastSelectedIndex = widget.controller.selectedIndex;
     widget.controller.addListener(_handleNavigationChanged);
     widget.shortcutHints?.addListener(_handleExternalShortcutHints);
@@ -117,6 +119,7 @@ class _ShellScreenState extends State<ShellScreen> {
           widget.controller.clipboardFilterToggleRevision;
       _lastClipboardRefreshRevision =
           widget.controller.clipboardRefreshRevision;
+      _lastLibraryRefreshRevision = widget.controller.libraryRefreshRevision;
       _lastSelectedIndex = widget.controller.selectedIndex;
     }
     if (oldWidget.shortcutHints != widget.shortcutHints) {
@@ -135,6 +138,9 @@ class _ShellScreenState extends State<ShellScreen> {
 
   void _handleNavigationChanged() {
     final int selectedIndex = widget.controller.selectedIndex;
+    if (selectedIndex == 1 && _lastSelectedIndex != 1) {
+      widget.libraryViewModel.load();
+    }
     if (selectedIndex == 2 && _lastSelectedIndex != 2) {
       widget.clipboardViewModel.load();
     }
@@ -148,6 +154,11 @@ class _ShellScreenState extends State<ShellScreen> {
     if (refreshRevision != _lastClipboardRefreshRevision) {
       _lastClipboardRefreshRevision = refreshRevision;
       widget.clipboardViewModel.load();
+    }
+    final int libraryRefreshRevision = widget.controller.libraryRefreshRevision;
+    if (libraryRefreshRevision != _lastLibraryRefreshRevision) {
+      _lastLibraryRefreshRevision = libraryRefreshRevision;
+      widget.libraryViewModel.load();
     }
     setState(() {
       final int revision = widget.controller.clipboardFilterToggleRevision;

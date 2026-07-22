@@ -289,6 +289,7 @@ void main() {
     addTearDown(() => temp.deleteSync(recursive: true));
     final InMemoryResourceStore base = InMemoryResourceStore();
     final IssueCenterController issueCenter = IssueCenterController();
+    int changeCount = 0;
     final SynchronizedResourceStore store = SynchronizedResourceStore(
       base,
       AgentResourceSynchronizer(
@@ -308,6 +309,7 @@ void main() {
         managedStateFile: File('${temp.path}/state.json'),
       ),
       issueCenter: issueCenter,
+      onChanged: () => changeCount += 1,
     );
     final Resource resource = _resource(
       type: ResourceType.skill,
@@ -323,6 +325,7 @@ void main() {
       AppIssueKind.pluginSkillNameConflict,
     );
     expect(issueCenter.issues.single.severity, AppIssueSeverity.warning);
+    expect(changeCount, 1);
   });
 
   test('reports a user-owned Skill collision without changing it', () async {
@@ -411,6 +414,7 @@ void main() {
     Directory('${target.path}/reviewer').createSync(recursive: true);
     final InMemoryResourceStore base = InMemoryResourceStore();
     final IssueCenterController issueCenter = IssueCenterController();
+    int changeCount = 0;
     final SynchronizedResourceStore store = SynchronizedResourceStore(
       base,
       AgentResourceSynchronizer(
@@ -420,6 +424,7 @@ void main() {
         managedStateFile: File('${temp.path}/state.json'),
       ),
       issueCenter: issueCenter,
+      onChanged: () => changeCount += 1,
     );
     final Resource resource = _resource(
       type: ResourceType.skill,
@@ -434,6 +439,7 @@ void main() {
     expect(await base.load(), isEmpty);
     expect(issueCenter.issues, hasLength(1));
     expect(issueCenter.issues.single.kind, AppIssueKind.skillNameConflict);
+    expect(changeCount, 0);
   });
 
   test(
