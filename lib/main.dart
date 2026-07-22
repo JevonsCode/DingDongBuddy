@@ -49,6 +49,7 @@ import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:dingdong/platform/preferences_tray_unread_store.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as path;
@@ -262,7 +263,9 @@ Future<void> main(List<String> arguments) async {
       clipboardMonitoring: dependencies.clipboardMonitorService,
       clipboardStore: dependencies.clipboardStore,
       clipboardPreviewLauncher: clipboardPreviewLauncher,
-      clipboardShareGateway: NativeClipboardShareGateway(),
+      clipboardShareGateway: createNativeClipboardShareGateway(
+        defaultTargetPlatform,
+      ),
       quickPasteGateway: quickPasteGateway,
       quickPastePermissionGateway: quickPasteGateway,
       resourceStore: dependencies.resourceStore,
@@ -434,7 +437,7 @@ Future<void> _runClipboardPreviewWindow(
       initialRecord: record,
       windowController: windowController,
       clipboardGateway: DesktopClipboardGateway(),
-      shareGateway: NativeClipboardShareGateway(),
+      shareGateway: createNativeClipboardShareGateway(defaultTargetPlatform),
     ),
   );
   await windowController.showInactive();

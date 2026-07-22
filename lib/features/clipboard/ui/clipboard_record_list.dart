@@ -4,6 +4,7 @@ class _ClipboardList extends StatefulWidget {
   const _ClipboardList({
     required this.viewModel,
     required this.compact,
+    required this.includeShare,
     required this.showShortcutHints,
     required this.onShortcutStartIndexChanged,
     required this.onPreview,
@@ -14,6 +15,7 @@ class _ClipboardList extends StatefulWidget {
 
   final ClipboardViewModel viewModel;
   final bool compact;
+  final bool includeShare;
   final bool showShortcutHints;
   final ValueChanged<int> onShortcutStartIndexChanged;
   final Future<void> Function(ClipboardRecord record)? onPreview;
@@ -130,12 +132,14 @@ class _ClipboardListState extends State<_ClipboardList> {
                       ? _showClipboardContextMenu(
                           context,
                           details.globalPosition,
+                          widget.includeShare,
                           widget.onAction,
                         )
                       : _showNativeClipboardContextMenu(
                           context,
                           details.globalPosition,
                           widget.contextMenuGateway!,
+                          widget.includeShare,
                           widget.onAction,
                         ),
                 );
@@ -188,6 +192,7 @@ Future<void> _showNativeClipboardContextMenu(
   BuildContext context,
   Offset position,
   DesktopContextMenuGateway gateway,
+  bool includeShare,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
   final ClipboardContextAction? action = clipboardActionFromId(
@@ -195,7 +200,7 @@ Future<void> _showNativeClipboardContextMenu(
       x: position.dx,
       y: position.dy,
       useChinese: Localizations.localeOf(context).languageCode == 'zh',
-      items: clipboardContextMenuItems(),
+      items: clipboardContextMenuItems(includeShare: includeShare),
     ),
   );
   if (action != null) {
@@ -222,6 +227,7 @@ _ClipboardAction? _actionFromNative(ClipboardContextAction action) =>
 Future<void> _showClipboardContextMenu(
   BuildContext context,
   Offset position,
+  bool includeShare,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
   final _ClipboardAction? action =
@@ -260,11 +266,12 @@ Future<void> _showClipboardContextMenu(
             symbol: 'archive_to',
             label: context.localized('Archive to…', '归档到…'),
           ),
-          DesktopMenuItem<_ClipboardAction>(
-            value: _ClipboardAction.share,
-            symbol: 'share',
-            label: context.localized('Share', '分享'),
-          ),
+          if (includeShare)
+            DesktopMenuItem<_ClipboardAction>(
+              value: _ClipboardAction.share,
+              symbol: 'share',
+              label: context.localized('Share', '分享'),
+            ),
           const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.delete,
