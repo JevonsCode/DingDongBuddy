@@ -1,0 +1,88 @@
+test/contract/http_contract_test.dart
+  s_9ed601806220d6::t_0dac5bfb5b2358 730-731
+  s_9ed601806220d6::t_59ed2407bfe5d5 647-648,980-990,1015-1026,1415-1421,1437
+  s_9ed601806220d6::t_156b9da58b5438 1370-1371,1501-1513
+lib/features/shell/ui/shell_controller.dart
+  s_9ed601806220d6::t_e06727f733335e 12,18,43-45
+test/features/library/agent_resource_synchronizer_test.dart
+  s_9ed601806220d6::t_d48631b36b0b5d 292,312,328,417,427,442
+lib/features/activity/ui/activity_cards.dart
+  s_9ed601806220d6::t_d7ec9ab48ac24e 457-469
+  s_9ed601806220d6::t_c556a516a48346 575
+  s_9ed601806220d6::t_2bc5aa98cdfb62 554
+test/features/settings/release_settings_section_test.dart
+  s_e097015e2ebc6b::t_5475adb610a315 67-68,72,78-85,96-120
+  s_e097015e2ebc6b::t_81506a53bb79e2 69-71
+docs/product/manual-regression.md
+  s_9ed601806220d6::t_c93d0bec15b5a4 50-53
+  s_9ed601806220d6::t_8313a3dd346e37 47-48
+lib/features/library/ui/resource_browser_cards.dart
+  s_9ed601806220d6::t_c556a516a48346 176-186,300-305
+  s_9ed601806220d6::t_2bc5aa98cdfb62 362
+lib/features/shell/ui/shell_screen.dart
+  s_9ed601806220d6::t_ad047e0b99ed3a 95,104,122,141-143,159-161
+  s_9ed601806220d6::t_0f8d16181fef79 158
+lib/features/library/domain/resource_manager_launcher.dart
+  s_9ed601806220d6::t_e06727f733335e 15-18
+lib/main.dart
+  s_9ed601806220d6::t_ac013a2ef4c63e 8,99,118,240-242
+  s_9ed601806220d6::t_ddcb881fc749f9 489,499-509,517,524
+test/features/library/library_screen_test.dart
+  s_9ed601806220d6::t_1322975efd4189 115-118,122-125
+  s_9ed601806220d6::t_8313a3dd346e37 82-111,114,119-121,126-130
+  s_9ed601806220d6::t_d7ec9ab48ac24e 112-113
+lib/features/shell/domain/desktop_shell_service.dart
+  s_9ed601806220d6::t_ad047e0b99ed3a 42,46,50,54,59,98-100
+lib/features/settings/ui/release_settings_section.dart
+  s_e097015e2ebc6b::t_8c4ad732c6d1bf 65-66,69-71,165-201
+  s_e097015e2ebc6b::t_4bf57588466ff5 67-68
+test/features/shell/desktop_shell_service_test.dart
+  s_9ed601806220d6::t_8eb5d511303755 28,56,76,97
+lib/features/agent_api/data/agent_state_routes.dart
+  s_9ed601806220d6::t_59ed2407bfe5d5 427-429
+lib/features/library/ui/resource_list.dart
+  s_9ed601806220d6::t_2bc5aa98cdfb62 243
+  s_9ed601806220d6::t_d7ec9ab48ac24e 125,131
+  s_9ed601806220d6::t_8313a3dd346e37 115-124,126-130,132-134,220-242,244-254
+lib/app/app_dependencies.dart
+  s_9ed601806220d6::t_e06727f733335e 49,93
+test/features/shell/popup_shell_test.dart
+  s_9ed601806220d6::t_8313a3dd346e37 362,399,404-405,437
+  s_9ed601806220d6::t_d7ec9ab48ac24e 402,440
+  s_9ed601806220d6::t_1322975efd4189 400-401,403,438-439,441
+  s_9ed601806220d6::t_202b0e2bdfdf96 451-470,480,482-492,494-525
+  s_9ed601806220d6::t_7ee6a6214d1343 471-479,481,493
+lib/features/agent_api/data/library_routes.dart
+  s_9ed601806220d6::t_59ed2407bfe5d5 81,175,532
+lib/core/models/resource.dart
+  s_9ed601806220d6::t_8313a3dd346e37 155,159,161
+  s_9ed601806220d6::t_2bc5aa98cdfb62 156-158,160
+lib/features/library/data/agent_resource_synchronizer.dart
+  s_9ed601806220d6::t_e06727f733335e 906,912,948
+lib/features/agent_api/data/agent_router_resource_handlers.dart
+  s_9ed601806220d6::t_59ed2407bfe5d5 164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "df43b5416a938ab13c3c564ff958691079135c9d",
+  "prompts": {},
+  "sessions": {
+    "s_9ed601806220d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8875-7cea-70f0-b267-8795550c0a1c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_e097015e2ebc6b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f87ae-7c0f-7e52-ba99-3ae2e123ae9c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
