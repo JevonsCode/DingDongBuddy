@@ -1,0 +1,51 @@
+test/features/library/skill_package_installer_test.dart
+  s_9ed601806220d6::t_4eead663e8c252 72-115
+packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift
+  s_9ed601806220d6::t_3dae3d0f6990fc 21-22
+test/features/shell/desktop_shell_service_test.dart
+  s_9ed601806220d6::t_6347d24ee686de 58-78
+lib/platform/plugin_desktop_shell_gateway.dart
+  s_9ed601806220d6::t_3dae3d0f6990fc 87-89
+  s_9ed601806220d6::t_44e9023cc9edf7 108
+README.md
+  s_9ed601806220d6::t_7e90fd3510dca4 58-79
+lib/features/shell/domain/desktop_shell_service.dart
+  s_9ed601806220d6::t_3dae3d0f6990fc 41-43,45,77-86
+test/features/library/library_screen_test.dart
+  s_9ed601806220d6::t_4eead663e8c252 602-643,1014-1020
+lib/features/library/ui/resource_editor.dart
+  s_9ed601806220d6::t_4eead663e8c252 691-698
+macos/Runner/AppDelegate.swift
+  s_9ed601806220d6::t_3dae3d0f6990fc 21-22,25-26,91-94,96,233-243,342-355
+lib/features/shell/domain/desktop_shell_gateway.dart
+  s_9ed601806220d6::t_3dae3d0f6990fc 3
+README.zh.md
+  s_9ed601806220d6::t_7e90fd3510dca4 52-70
+docs/product/manual-regression.md
+  s_9ed601806220d6::t_7e90fd3510dca4 12-14,16-17
+lib/features/library/domain/skill_package_installer.dart
+  s_9ed601806220d6::t_4eead663e8c252 364-366
+test/platform/tray_manager_visual_contract_test.dart
+  s_9ed601806220d6::t_6347d24ee686de 153-162
+test/packaging/desktop_identity_test.dart
+  s_9ed601806220d6::t_6347d24ee686de 97-111,116-117
+  s_9ed601806220d6::t_84d89275663935 215,222
+  s_9ed601806220d6::t_7e90fd3510dca4 193-214,216-221,223
+  s_9ed601806220d6::t_44e9023cc9edf7 112-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.35-trip",
+  "base_commit_sha": "1fc771117623d7f422096bc6c265d538d17c6e7d",
+  "prompts": {},
+  "sessions": {
+    "s_9ed601806220d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8875-7cea-70f0-b267-8795550c0a1c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
