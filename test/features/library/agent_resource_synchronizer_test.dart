@@ -268,7 +268,10 @@ void main() {
       expect(inspected.single.kind, AppIssueKind.pluginSkillNameConflict);
       expect(inspected.single.severity, AppIssueSeverity.warning);
       expect(inspected.single.clientName, 'Claude Code · superpowers');
-      expect(inspected.single.targetPath, '${pluginSkill.path}/SKILL.md');
+      expect(
+        inspected.single.targetPath,
+        path.join(pluginSkill.path, 'SKILL.md'),
+      );
       expect(synchronized.single.id, inspected.single.id);
       expect(
         File(
@@ -351,7 +354,7 @@ void main() {
     expect(issues, hasLength(1));
     expect(issues.single.kind, AppIssueKind.skillNameConflict);
     expect(issues.single.clientName, 'Codex');
-    expect(issues.single.targetPath, existing.path);
+    expect(issues.single.targetPath, path.normalize(existing.path));
     await expectLater(
       synchronizer.sync(<Resource>[resource]),
       throwsA(isA<AppIssueException>()),
