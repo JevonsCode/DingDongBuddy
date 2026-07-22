@@ -80,7 +80,7 @@ confirm the MCP bridge, completion Hook, and applicable resource sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.7.25`, using the same version constant as the release UI. A small
+  `v0.7.26`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;

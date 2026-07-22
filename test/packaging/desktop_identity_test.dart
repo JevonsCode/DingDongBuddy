@@ -46,19 +46,19 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.7.25 from pubspec', () {
+  test('desktop hosts consume application version 0.7.26 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.25+25'));
+    expect(pubspec, contains('version: 0.7.26+26'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync(),
-      contains("const String currentAppBuild = '25';"),
+      contains("const String currentAppBuild = '26';"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
@@ -293,7 +293,11 @@ void main() {
     expect(website, isNot(contains('knowledge')));
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
-    expect(website, contains('./assets/symbols/refresh.png'));
+    expect(website, isNot(contains('./assets/symbols/refresh.png')));
+    expect(website, contains('<span class="demo-version">v0.7.26</span>'));
+    expect(website, contains('demo-enabled-card'));
+    expect(website, contains('"Scoped"'));
+    expect(website, contains('"有触发范围"'));
     expect(website, contains('./assets/symbols/library.png'));
     expect(website, contains('createDemoSymbol(item.type'));
     expect(website, contains('createDemoStatusIcon(enabled)'));
@@ -332,14 +336,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.7.25"'));
-    expect(releaseMetadata, contains('"latestBuild": "25"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.26"'));
+    expect(releaseMetadata, contains('"latestBuild": "26"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.7.25-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.7.26-windows-x64-beta-Setup.exe'),
     );
   });
 
