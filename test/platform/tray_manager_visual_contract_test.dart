@@ -163,7 +163,7 @@ void main() {
   test('Windows tray bridge samples the real taskbar and refreshes safely', () {
     final String source = File(
       'packages/tray_manager/windows/tray_manager_plugin.cpp',
-    ).readAsStringSync();
+    ).readAsStringSync().replaceAll('\r\n', '\n');
     final String gateway = File(
       'lib/platform/plugin_desktop_shell_gateway.dart',
     ).readAsStringSync();
