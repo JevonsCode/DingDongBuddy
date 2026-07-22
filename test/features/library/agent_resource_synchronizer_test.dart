@@ -270,7 +270,7 @@ void main() {
       expect(inspected.single.clientName, 'Claude Code · superpowers');
       expect(
         inspected.single.targetPath,
-        path.join(pluginSkill.path, 'SKILL.md'),
+        path.normalize(path.join(pluginSkill.path, 'SKILL.md')),
       );
       expect(synchronized.single.id, inspected.single.id);
       expect(
