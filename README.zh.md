@@ -649,3 +649,15 @@ scripts/setup_sparkle_keys.sh /secure/private/dingdong-sparkle-key
 ## 许可证
 
 MIT，见 [LICENSE](LICENSE)。
+
+## macOS 安装说明
+
+作者目前没有付费的 Apple Developer 账号，因此 macOS 社区版本没有固定的
+Developer ID 签名。每次安装后，macOS 都可能阻止首次启动。请打开
+**系统设置 → 隐私与安全性**，滚动到 **安全性**，为 DingDong 点击
+**仍要打开**。
+
+第二次或之后重新安装时，macOS 可能不会把之前授予的剪贴板/快捷粘贴相关辅助功能
+权限转移给新的应用版本。请在 **隐私与安全性** 对应的权限列表中选中旧的
+**DingDong**，点击 **−** 删除；再点击 **+**，重新添加本次安装的
+**DingDong.app**（通常位于 `/Applications/DingDong.app`），然后再次启用权限。

@@ -701,3 +701,18 @@ Developer ID identity.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## macOS installation note
+
+The maintainer does not currently have a paid Apple Developer account, so the
+macOS community build does not carry a stable Developer ID signature. After
+each installation, macOS may block the first launch. Open **System Settings →
+Privacy & Security**, scroll to **Security**, and click **Open Anyway** for
+DingDong.
+
+On a reinstall or later installation, macOS may not transfer the previous
+clipboard/quick-paste Accessibility permission to the new application build.
+Open the corresponding permission list in **Privacy & Security**, select the
+old **DingDong** entry and click **−**, then click **+** and add the newly
+installed **DingDong.app** (normally `/Applications/DingDong.app`) before
+enabling the permission again.
