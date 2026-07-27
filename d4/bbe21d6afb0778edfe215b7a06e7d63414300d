@@ -1,0 +1,322 @@
+lib/features/library/data/agent_resource_synchronizer.dart
+  s_bea1693fc2a54b::t_92658564d69dcc 78-84
+  s_670a63bff4be43::t_ac2663c8903a94 603-620
+  s_670a63bff4be43::t_377860d704fb8f 1123-1124
+  s_670a63bff4be43::t_dc5b9c9ebc7394 874-900,938-990,992-1001
+  s_bea1693fc2a54b::t_cac3f41b3f99ac 901,903-937
+  s_670a63bff4be43::t_76d0ac5bed27a9 991
+  s_bea1693fc2a54b::t_25a1df419dd9ef 1237-1248,1252-1258,1260-1263,1274-1281,1286-1295
+  s_bea1693fc2a54b::t_19d514128dad8e 124,127-163,165-166,168,171-172,174,207-240,242,245-256,262-279
+  s_670a63bff4be43::t_f0d2d9251769b5 50-51
+  s_bea1693fc2a54b::t_8c1c78e8d73494 902
+  s_bea1693fc2a54b::t_3a2d97198d275c 1249-1251,1259,1264-1273,1282-1285
+  s_670a63bff4be43::t_10f34c8e589778 5,35
+  s_670a63bff4be43::t_485eb6b62e1cb6 74-75
+  s_670a63bff4be43::t_8de043cd860e4c 350-354
+  s_670a63bff4be43::t_1967c883879377 60,62,65,70,72-73,85,89-95,98-99,102,116
+docs/release-notes.md
+  s_bea1693fc2a54b::t_772a7aafd913bf 1-47,53,55,57-66,68,70-74,76,78-84,86
+docs/product/manual-regression.md
+  s_bea1693fc2a54b::t_047e7154183355 1,143-147
+  s_bea1693fc2a54b::t_78cce1ecf857b2 37-40,74-81,104-105,120-122
+"Assets/Agent Adapters/claude-code.yaml"
+  s_670a63bff4be43::t_cb46f97671d44a 1-18
+macos/Runner/DingDongUpdater.swift
+  s_670a63bff4be43::t_24c9019fb2a040 9,13-17,23,30,43
+README.md
+  s_653f6f948694e2::t_72718c12ce3d93 101-102
+  s_bea1693fc2a54b::t_047e7154183355 83
+  s_653f6f948694e2::t_db5cde14806c8c 104
+  s_670a63bff4be43::t_466ab709b18687 215-218,371-376
+  s_670a63bff4be43::t_c433998d7aa16a 367-370,377
+lib/platform/plugin_desktop_shell_gateway.dart
+  s_670a63bff4be43::t_24c9019fb2a040 27,29-30,36,187-193,231
+"Assets/Agent Adapters/cursor.yaml"
+  s_670a63bff4be43::t_cb46f97671d44a 1-14
+test/features/agent_adapters/agent_adapter_repository_test.dart
+  s_bea1693fc2a54b::t_2af218d847572d 152-155
+  s_bea1693fc2a54b::t_99eefb614b78ce 113-151,156-162
+  s_670a63bff4be43::t_b79737900ee631 7-21,23-25,27-30,32-33,35,37-38,40,42-54,88-103,105,107-112
+  s_670a63bff4be43::t_733b74bf35c2cf 1-6,22,26,41,87,104,106,163-177
+  s_670a63bff4be43::t_c4b3a111dec18e 31,36,67
+  s_670a63bff4be43::t_1010ce5a7e2b60 34,39,55-66,68-86
+"Assets/Agent Adapters/kiro.yaml"
+  s_670a63bff4be43::t_cb46f97671d44a 1-14
+docs/product/agent-launcher-configuration.md
+  s_670a63bff4be43::t_7ad6fdba04d8df 113,116-117,122-123
+  s_670a63bff4be43::t_27a496d01c9fd7 26-29
+  s_bea1693fc2a54b::t_f89b97a42ac764 114-115,119-121
+  s_670a63bff4be43::t_c433998d7aa16a 1-25,30-112,118,124-157
+test/features/agent_adapters/agent_adapter_test.dart
+  s_670a63bff4be43::t_c4b3a111dec18e 96-98
+  s_bea1693fc2a54b::t_99eefb614b78ce 75-87
+  s_670a63bff4be43::t_733b74bf35c2cf 2-5,8-73,100-102
+  s_670a63bff4be43::t_5d3cab1b51053c 1,74,88-95,99
+  s_670a63bff4be43::t_f97dd48fa538aa 6-7
+test/features/settings/settings_repository_test.dart
+  s_653f6f948694e2::t_628822846b8e77 6-16
+skills/dingdong-configure/SKILL.md
+  s_bea1693fc2a54b::t_f89b97a42ac764 82,85,93
+  s_670a63bff4be43::t_27a496d01c9fd7 97-131,136,138-140,152,167
+  s_bea1693fc2a54b::t_7fc8286c26c454 84,90,92,95,132,134
+  s_670a63bff4be43::t_7ad6fdba04d8df 133,135,137
+  s_670a63bff4be43::t_46db6e31761adb 3,51-81,83,86-89,91,94,96,151,165-166
+lib/features/library/domain/built_in_resource_installer.dart
+  s_670a63bff4be43::t_46db6e31761adb 20,62
+docs/schemas/agent-adapter.schema.json
+  s_670a63bff4be43::t_c165d81f2b22d5 100
+  s_670a63bff4be43::t_9f5f5690ec8281 1-50,53-99,101-103
+  s_bea1693fc2a54b::t_0cff4348ba794a 51-52
+lib/main.dart
+  s_670a63bff4be43::t_8d891bf099dc3b 15,608
+  s_653f6f948694e2::t_744ae3933e1c88 211
+  s_653f6f948694e2::t_154971b7e3fd04 83,94,108,267
+  s_670a63bff4be43::t_377860d704fb8f 14,110,521-524
+  s_bea1693fc2a54b::t_d4e215cb7d142f 544-550
+  s_670a63bff4be43::t_5cf27386039688 46
+  s_670a63bff4be43::t_297afab8ecddca 269-271,614-616
+  s_670a63bff4be43::t_f6b19c5bb0fe9f 12,268,272,613,617
+  s_670a63bff4be43::t_76d0ac5bed27a9 513-519
+test/packaging/desktop_identity_test.dart
+  s_670a63bff4be43::t_24c9019fb2a040 61-63
+  s_bea1693fc2a54b::t_01e1f64750e86b 70,77,82,318,360-361,367
+  s_bea1693fc2a54b::t_11431953b1c4f5 59
+  s_bea1693fc2a54b::t_604071bb8eb977 51
+  s_bea1693fc2a54b::t_1d1d789c7833a9 56-58
+  s_670a63bff4be43::t_17ffeeb8a6cc8f 44-47,60
+  s_670a63bff4be43::t_80ccb243fc489f 55
+  s_bea1693fc2a54b::t_0cff4348ba794a 48-50,52-54
+lib/core/models/clipboard_record.dart
+  s_653f6f948694e2::t_639d438dca4fab 46
+  s_653f6f948694e2::t_58ae53e59d3587 40-45,47-54,161-176
+lib/features/settings/domain/app_settings.dart
+  s_653f6f948694e2::t_db5cde14806c8c 70-71,73
+test/features/library/agent_resource_synchronizer_test.dart
+  s_bea1693fc2a54b::t_92658564d69dcc 104-129,178
+  s_bea1693fc2a54b::t_3a2d97198d275c 201,263,266,1012-1013
+  s_bea1693fc2a54b::t_cac3f41b3f99ac 130,132,135-158,160,162,167-174
+  s_670a63bff4be43::t_2d1f3ce03cf12b 5,71,80,82-84
+  s_bea1693fc2a54b::t_591c16e43d2bf8 103,179-200,202-262,264-265,267-269,1006-1011,1014-1028
+  s_670a63bff4be43::t_310e1ed20b84cf 934-981
+  s_670a63bff4be43::t_76d0ac5bed27a9 17-25,28-42,45-51,53-61,63-69
+  s_bea1693fc2a54b::t_7e21b4df361df7 26,43-44,52,62,77,90,93-94,97-98
+test/features/activity/activity_controller_test.dart
+  s_653f6f948694e2::t_628822846b8e77 52,60,64-65,67
+test/features/agent_adapters/agent_adapter_controller_test.dart
+  s_670a63bff4be43::t_ee9f2f7f5b8381 1-14,16-22,28-39,42-44,46-47,49-51,80-91
+  s_bea1693fc2a54b::t_2edd99b439ddf3 52-73,75-79
+  s_bea1693fc2a54b::t_60885b7585dea1 15,23-27,48,74
+  s_670a63bff4be43::t_1010ce5a7e2b60 40-41,45
+test/contract/http_contract_test.dart
+  s_bea1693fc2a54b::t_3a2d97198d275c 149,170,178
+  s_dd549dfb5de932::t_a9ad3111a05164 64-117
+  s_dd549dfb5de932::t_8f51e6135fff14 61-63
+  s_bea1693fc2a54b::t_926d32948080b1 119-148,150-158,166,174,183-184
+macos/Runner.xcodeproj/project.pbxproj
+  s_670a63bff4be43::t_17ffeeb8a6cc8f 656-657
+  s_bea1693fc2a54b::t_0cff4348ba794a 429
+  s_670a63bff4be43::t_27947a6a3aae41 347
+lib/features/activity/domain/agent_launcher_configuration.dart
+  s_670a63bff4be43::t_f6b19c5bb0fe9f 1-27,30-32,34-36,38-41,43-44,46-54,56-58,60-62,64-88,90-92,98-100,103-104,110-125,128-166,168-172,177-183,186-190,192-195,197-200,202-242
+  s_670a63bff4be43::t_8242de80c6d5b9 42
+  s_670a63bff4be43::t_297afab8ecddca 89,93-97,101-102,105-109,126-127,173-176,185
+  s_670a63bff4be43::t_d1f8abc4d2c9ca 28-29,33,37,45,55,59,63,167,184,191,196,201
+lib/features/agent_adapters/data/agent_adapter_repository.dart
+  s_670a63bff4be43::t_b79737900ee631 84,124-127,192,213,220,231-232,247-249,267-270,273,352,357-363
+  s_670a63bff4be43::t_d0a43da65d09c6 1-83,85-108,110-123,128-139,141-191,193-212,214-219,221,223-230,233-237,241-246,250,252-259,261-266,274,280-281,309-351,353-356,364-390,394-435
+  s_bea1693fc2a54b::t_2b0bd4e300a139 109,140,222
+  s_670a63bff4be43::t_151798f83970a0 238-240,251,260,271-272,275-279,282-308,391-393
+test/features/clipboard/clipboard_screen_test.dart
+  s_653f6f948694e2::t_d37bf48b0c7f58 289-351,353-358
+  s_653f6f948694e2::t_7ebd4d04c095d7 352
+  s_bea1693fc2a54b::t_56c6da30da755a 1173-1176
+docs/product/agent-adapter-configuration.md
+  s_670a63bff4be43::t_b168b6dc54de73 1-29,34-81,85-86,91-116,124,128-130
+  s_670a63bff4be43::t_9f5f5690ec8281 30-33
+  s_bea1693fc2a54b::t_f89b97a42ac764 82-84,117-123,125-127
+  s_bea1693fc2a54b::t_0739ec0c3ca144 87-90
+lib/features/agent_api/data/agent_router.dart
+  s_bea1693fc2a54b::t_3a2d97198d275c 185
+  s_dd549dfb5de932::t_a9ad3111a05164 496
+  s_bea1693fc2a54b::t_81549aaefc0a9f 128,183-184,186-200
+  s_dd549dfb5de932::t_77782887497153 182
+lib/app/app_data_paths.dart
+  s_670a63bff4be43::t_80ccb243fc489f 97-105
+  s_670a63bff4be43::t_17ffeeb8a6cc8f 11,17-18,26,28,31-32,93-96,106-115
+  s_653f6f948694e2::t_94629f9310acf0 5-9,37,44
+  s_670a63bff4be43::t_70aae066df3ac2 30
+  s_670a63bff4be43::t_5715ab8c31d01b 41
+  s_670a63bff4be43::t_d0a43da65d09c6 75-82
+  s_670a63bff4be43::t_f6b19c5bb0fe9f 71-74
+docs/schemas/agent-launchers.schema.json
+  s_670a63bff4be43::t_c433998d7aa16a 1-62
+skills/dingdong-configure/agents/openai.yaml
+  s_670a63bff4be43::t_46db6e31761adb 3,5
+README.zh.md
+  s_670a63bff4be43::t_c433998d7aa16a 324-327,332
+  s_bea1693fc2a54b::t_047e7154183355 73
+  s_653f6f948694e2::t_72718c12ce3d93 86
+  s_653f6f948694e2::t_db5cde14806c8c 88
+  s_670a63bff4be43::t_3d380f2b6fdf5a 175-177,328-331
+lib/features/agent_adapters/domain/agent_adapter.dart
+  s_670a63bff4be43::t_cb46f97671d44a 1-54,64-67,69-73,75-84,86,88-110,112,117-152,166-173,176,178-233,243-244,290-296,306-340,342-348,350-390,392-394,396-397
+  s_bea1693fc2a54b::t_2b0bd4e300a139 153-165,234-242,246-270,274,281,285-289,391
+  s_bea1693fc2a54b::t_0cff4348ba794a 245
+  s_bea1693fc2a54b::t_3a2d97198d275c 271-273,275-277,282-284
+  s_670a63bff4be43::t_87ed9cd255caca 297-305
+  s_670a63bff4be43::t_b79737900ee631 55-63,68,74,85,87,111,113-116,174-175,177,341,349,395
+  s_bea1693fc2a54b::t_dd231e239d3f4d 278-280
+lib/features/library/domain/resource_manager_launcher.dart
+  s_670a63bff4be43::t_8d891bf099dc3b 5
+test/features/agent_adapters/agent_adapter_screen_test.dart
+  s_670a63bff4be43::t_017fc648810fbf 47
+  s_670a63bff4be43::t_7d77ec10ac2412 90-91
+  s_670a63bff4be43::t_3f172c57d30b45 1-29,31,34-43,50-58,62-75,78-89,92-114
+  s_670a63bff4be43::t_42a60d733c8048 30
+  s_670a63bff4be43::t_7464f7563a531b 32,59-61,76-77
+  s_670a63bff4be43::t_7e1814aa154997 44
+  s_670a63bff4be43::t_3b99b1500a4707 33
+  s_670a63bff4be43::t_072e74e45c51e5 45-46,48-49
+test/platform/native_agent_conversation_launcher_test.dart
+  s_670a63bff4be43::t_d1f8abc4d2c9ca 77
+  s_670a63bff4be43::t_5cd69e95963dbc 2,57,72-76,78-81,92,100
+  s_670a63bff4be43::t_297afab8ecddca 62-71,82-91,93-99,101-112
+lib/features/clipboard/ui/clipboard_view_model.dart
+  s_653f6f948694e2::t_58ae53e59d3587 98
+  s_bea1693fc2a54b::t_3a2d97198d275c 144,534
+  s_653f6f948694e2::t_ba472a5b8b5af5 64-65
+lib/features/settings/data/settings_repository.dart
+  s_653f6f948694e2::t_db5cde14806c8c 41-42,48
+lib/features/activity/ui/activity_controller.dart
+  s_653f6f948694e2::t_db5cde14806c8c 9
+lib/features/activity/data/agent_launcher_configuration_store.dart
+  s_670a63bff4be43::t_f6b19c5bb0fe9f 1-17
+lib/features/clipboard/ui/clipboard_filter_bar.dart
+  s_653f6f948694e2::t_ba472a5b8b5af5 22,32,64
+lib/features/agent_adapters/ui/agent_adapter_screen.dart
+  s_670a63bff4be43::t_c26461e9af1bee 106-108,137-139,195,220-222,332,481-482,584,726-746
+  s_670a63bff4be43::t_a7b70612401517 1-19,21-72,79-86,88-91,93-105,109-136,140-194,196-219,223-243,245-331,333-361,381,401-446,448-469,472-480,483-583,585-725,747-848
+  s_670a63bff4be43::t_a5fe1f8b5ab9de 74-78,362-380,382-400
+  s_670a63bff4be43::t_7e1814aa154997 447
+  s_670a63bff4be43::t_072e74e45c51e5 470-471
+  s_bea1693fc2a54b::t_0cff4348ba794a 20,73,87,92,244
+lib/features/clipboard/ui/clipboard_screen.dart
+  s_653f6f948694e2::t_ba472a5b8b5af5 70,76-77,87-91,100-101,145-155,232,250
+lib/features/shell/ui/shell_screen.dart
+  s_653f6f948694e2::t_61886f0e6e1077 45,70,410
+test/features/agent_adapters/agent_adapter_diff_test.dart
+  s_670a63bff4be43::t_0d171a4f0f2643 1-25
+pubspec.yaml
+  s_670a63bff4be43::t_cb46f97671d44a 27,41
+  s_bea1693fc2a54b::t_01e1f64750e86b 4
+lib/features/library/ui/resource_manager_app.dart
+  s_670a63bff4be43::t_8d891bf099dc3b 10-11,36,49,80,103-108,212-217,299,309,319-321,324-332,341-342
+  s_670a63bff4be43::t_c26461e9af1bee 300-302,310-312,322-323,333-334,344-345
+lib/features/agent_api/data/mcp_server.dart
+  s_dd549dfb5de932::t_77782887497153 219-223
+  s_bea1693fc2a54b::t_01e1f64750e86b 39
+.github/workflows/flutter-desktop.yml
+  s_bea1693fc2a54b::t_1d1d789c7833a9 108,112
+test/app/app_data_paths_test.dart
+  s_670a63bff4be43::t_f6b19c5bb0fe9f 49-54,90
+  s_653f6f948694e2::t_50c04009bd746e 56-62,73-80
+  s_670a63bff4be43::t_17ffeeb8a6cc8f 55,64-72,81-89
+  s_670a63bff4be43::t_70aae066df3ac2 63
+lib/app/app_dependencies.dart
+  s_670a63bff4be43::t_f0d2d9251769b5 6
+  s_670a63bff4be43::t_377860d704fb8f 49,55,83-91,93,95
+  s_653f6f948694e2::t_744ae3933e1c88 189-196,215
+  s_670a63bff4be43::t_252596c73a8f74 2
+"Assets/Agent Adapters/codex.yaml"
+  s_670a63bff4be43::t_cb46f97671d44a 1-18
+test/contract/mcp_contract_test.dart
+  s_dd549dfb5de932::t_a9ad3111a05164 98
+  s_dd549dfb5de932::t_8f51e6135fff14 97,99
+test/features/library/built_in_resource_installer_test.dart
+  s_670a63bff4be43::t_33031a250d918d 168-181,210-228
+  s_670a63bff4be43::t_27a496d01c9fd7 154-161,166-167,182,191
+  s_670a63bff4be43::t_fb7846d39c21aa 162-165
+"Assets/Agent Adapters/gemini.yaml"
+  s_670a63bff4be43::t_cb46f97671d44a 1-14
+lib/app/dingdong_app.dart
+  s_653f6f948694e2::t_7512aad5ad22f2 57,98,264
+lib/features/shell/ui/popup_header.dart
+  s_653f6f948694e2::t_4735da7756f210 24,34,93-96,184-205
+docs/index.html
+  s_bea1693fc2a54b::t_9b48148896a388 61,240,245,247,253,255,261,371,373,375,469,471,473,528,573
+lib/features/clipboard/domain/clipboard_capture_service.dart
+  s_bea1693fc2a54b::t_56c6da30da755a 177-180,204-207
+lib/features/settings/domain/release_update.dart
+  s_bea1693fc2a54b::t_01e1f64750e86b 114-115
+lib/features/agent_adapters/ui/agent_adapter_controller.dart
+  s_670a63bff4be43::t_0d171a4f0f2643 1-8,14-15,18-90,92-110,112-131,135-208,228,246,254-260,273-274,278-280,282-289
+  s_bea1693fc2a54b::t_6810b890f2a2e4 212-227
+  s_bea1693fc2a54b::t_0cff4348ba794a 232,237-239,247-253
+  s_bea1693fc2a54b::t_d4e215cb7d142f 12,17,91,111,132-134,229-231,233-236,240-245
+  s_670a63bff4be43::t_42a60d733c8048 9-11,13,16,209-211
+  s_670a63bff4be43::t_3b99b1500a4707 261-272,275-277,281
+test/features/library/resource_manager_app_test.dart
+  s_670a63bff4be43::t_3f172c57d30b45 104-106
+lib/platform/native_agent_conversation_launcher.dart
+  s_670a63bff4be43::t_d1f8abc4d2c9ca 129,212,217
+  s_670a63bff4be43::t_f6b19c5bb0fe9f 4,14-15,24,27-29,34,65,72,93,113,123-128,130-131,203-208,210-211,213-216,218-232
+  s_670a63bff4be43::t_297afab8ecddca 209
+test/features/clipboard/clipboard_repository_test.dart
+  s_653f6f948694e2::t_686ddb781bfb3a 206-270,315-322,325-326,329
+  s_bea1693fc2a54b::t_926d32948080b1 271,284,290,296,301
+  s_bea1693fc2a54b::t_3a2d97198d275c 272-283,285-289,291-295,297-300,302-312
+test/features/activity/agent_launcher_configuration_test.dart
+  s_670a63bff4be43::t_5cd69e95963dbc 1-24,27-36,38-41,43-55,58-63,66-93
+  s_670a63bff4be43::t_d1f8abc4d2c9ca 25-26,37,42,56-57,64-65
+lib/features/agent_adapters/domain/agent_adapter_diff.dart
+  s_670a63bff4be43::t_0d171a4f0f2643 1-88
+test/app/dingdong_app_test.dart
+  s_653f6f948694e2::t_50c04009bd746e 45,51-57
+  s_bea1693fc2a54b::t_01e1f64750e86b 37,43-44
+lib/features/clipboard/data/clipboard_repository.dart
+  s_653f6f948694e2::t_58ae53e59d3587 92-118,120-125,179-199
+  s_653f6f948694e2::t_5a5e4c9121cc08 119
+  s_bea1693fc2a54b::t_56c6da30da755a 9-12,28-35,64-68,70-73,75-82,285-304
+docs/dingdong-release.json
+  s_bea1693fc2a54b::t_248dd0c3c9f931 3-5,11,15,21,27-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.38-trip",
+  "base_commit_sha": "d4bbe21d6afb0778edfe215b7a06e7d63414300d",
+  "prompts": {},
+  "sessions": {
+    "s_653f6f948694e2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9291-e60b-7651-9435-30e14647f1d2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_670a63bff4be43": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f8d3a-03dc-78b2-8905-eedefa576c34",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_bea1693fc2a54b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fa13a-f07c-7a40-8530-16df94d34c0a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_dd549dfb5de932": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f9200-5c36-7c33-b259-c84767bdac6d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
