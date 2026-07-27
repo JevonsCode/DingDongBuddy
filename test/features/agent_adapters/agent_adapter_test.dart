@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,11 +28,17 @@ prompt:
 
     expect(adapter.id, 'new-agent');
     expect(adapter.displayName, 'New Agent');
+    final String homeDirectory = Platform.isWindows
+        ? r'C:\Users\example'
+        : '/Users/example';
     expect(
-      adapter.resolvedGlobalSkillPath('/Users/example'),
-      '/Users/example/.new-agent/skills',
+      adapter.resolvedGlobalSkillPath(homeDirectory),
+      path.join(homeDirectory, '.new-agent', 'skills'),
     );
-    expect(adapter.resolvedProjectSkillPath(), '.new-agent/skills');
+    expect(
+      adapter.resolvedProjectSkillPath(),
+      path.join('.new-agent', 'skills'),
+    );
     expect(adapter.mcpKind, AgentMcpConfigKind.mcpServersJson);
     expect(adapter.includeBridgeRoutingInstructions, isFalse);
   });
