@@ -1,0 +1,19 @@
+test/features/agent_adapters/agent_adapter_test.dart
+  s_bea1693fc2a54b::t_35b8f19a2c2f89 1-2,6,31-37,39-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.38-trip",
+  "base_commit_sha": "fe45f163154c78d79f2daa02c4e198c69befca35",
+  "prompts": {},
+  "sessions": {
+    "s_bea1693fc2a54b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fa13a-f07c-7a40-8530-16df94d34c0a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
