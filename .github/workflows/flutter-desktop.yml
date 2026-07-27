@@ -105,11 +105,11 @@ jobs:
         run: |
           chmod +x scripts/thin_macos_app.sh
           scripts/thin_macos_app.sh \
-            build/macos/Build/Products/Debug/DingDong.app \
+            "build/macos/Build/Products/Debug/DingDong DEV.app" \
             "${{ matrix.arch }}"
       - name: Verify macOS application architecture
         run: |
-          app_binary="build/macos/Build/Products/Debug/DingDong.app/Contents/MacOS/DingDong"
+          app_binary="build/macos/Build/Products/Debug/DingDong DEV.app/Contents/MacOS/DingDong DEV"
           description="$(/usr/bin/file -b "$app_binary")"
           printf '%s\n' "$description"
           architectures="$(/usr/bin/lipo -archs "$app_binary")"
