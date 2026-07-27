@@ -49,7 +49,7 @@ void main() {
     expect(controller.recentCount, 1);
   });
 
-  test('detail retention defaults to 200 without capping the recent count', () {
+  test('detail retention defaults to 500 without capping the recent count', () {
     var id = 0;
     final DateTime now = DateTime.utc(2026, 7, 21, 10);
     final ActivityController controller = ActivityController(
@@ -57,14 +57,14 @@ void main() {
       now: () => now,
     );
 
-    for (var index = 0; index < 205; index += 1) {
+    for (var index = 0; index < 505; index += 1) {
       controller.record(source: 'Agent', message: 'Task $index');
     }
 
-    expect(controller.activities, hasLength(200));
-    expect(controller.activities.first.message, 'Task 204');
+    expect(controller.activities, hasLength(500));
+    expect(controller.activities.first.message, 'Task 504');
     expect(controller.activities.last.message, 'Task 5');
-    expect(controller.recentCount, 205);
+    expect(controller.recentCount, 505);
   });
 
   test('recent count follows the configurable rolling hour window', () {

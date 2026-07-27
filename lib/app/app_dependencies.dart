@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
@@ -44,13 +46,13 @@ final class AppDependencies {
     required this.agentHttpServer,
   });
 
-  factory AppDependencies.production({
+  static Future<AppDependencies> production({
     void Function(int index)? onShowUi,
     void Function()? onResourceLibraryChanged,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
     PreferencesBackend? preferencesBackend,
-  }) {
+  }) async {
     final AppDataPaths paths = AppDataPaths.current();
     paths.applicationSupportDirectory.createSync(recursive: true);
     final ClipboardRepository clipboardStore = ClipboardRepository.open(
@@ -78,9 +80,19 @@ final class AppDependencies {
     final SkillPackageInstaller skillPackageInstaller =
         GitHubSkillPackageInstaller(paths.skillPackagesDirectory);
     final IssueCenterController issueCenterController = IssueCenterController();
+    final AgentAdapterRepository agentAdapterRepository =
+        AgentAdapterRepository(
+          userDirectory: paths.agentAdaptersDirectory,
+          historyDirectory: paths.agentAdapterHistoryDirectory,
+          homeDirectory:
+              Platform.environment['HOME'] ??
+              Platform.environment['USERPROFILE']!,
+          loadBuiltIns: loadBundledAgentAdapterDocuments,
+        );
     final AgentResourceSynchronizer resourceSynchronizer =
-        AgentResourceSynchronizer.currentUser(
+        await AgentResourceSynchronizer.currentUser(
           paths.skillPackagesDirectory,
+          loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
           skillPackageInstaller: skillPackageInstaller,
         );
     issueCenterController.setInspector(
@@ -174,6 +186,14 @@ final class AppDependencies {
   final AgentHttpServer agentHttpServer;
   AppSettings initialSettings = const AppSettings();
 
+  void applyClipboardRetention(AppSettings settings, {DateTime? now}) {
+    clipboardStore.trim(
+      maxItems: settings.clipboardMaxItems,
+      maxAgeDays: settings.clipboardMaxAgeDays,
+      now: now ?? DateTime.now().toUtc(),
+    );
+  }
+
   Future<void> start() async {
     await paths.applicationSupportDirectory.create(recursive: true);
     bool builtInInstallFailed = false;
@@ -192,6 +212,7 @@ final class AppDependencies {
       }
     }
     initialSettings = await settingsRepository.load();
+    applyClipboardRetention(initialSettings);
     await agentHttpServer.start(port: initialSettings.apiPort);
     await paths.activePortFile.writeAsString(
       agentHttpServer.baseUri.port.toString(),

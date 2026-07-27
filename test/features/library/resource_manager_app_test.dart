@@ -101,6 +101,10 @@ void main() {
         findsOneWidget,
       );
       expect(
+        find.byKey(const Key('resource-manager-nav-agent-adapters')),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(const Key('resource-manager-nav-issues')),
         findsOneWidget,
       );

@@ -61,6 +61,8 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   ClipboardRecord? get selectedRecord => _selectedRecord;
 
+  String get query => _query;
+
   ClipboardKind? get selectedKind => _selectedKind;
 
   String? get selectedCategoryId => _selectedCategoryId;
@@ -93,7 +95,7 @@ final class ClipboardViewModel extends ChangeNotifier {
         .map((String group) => group.trim())
         .where(
           (String group) =>
-              group.isNotEmpty && !_legacyAutomaticGroups.contains(group),
+              group.isNotEmpty && !isAutomaticClipboardGroup(group),
         )
         .toSet();
     final List<String> groups = values.toList();
@@ -139,7 +141,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   void load() {
-    _records = _store.list(limit: 5000);
+    _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
     _categoryRules = List<ClipboardCategoryRule>.of(_categoryRuleStore.load());
     _groupOrder
       ..clear()
@@ -529,7 +531,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (captured == null) {
       return;
     }
-    _records = _store.list(limit: 5000);
+    _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
     _selectedRecord = captured;
     notifyListeners();
     _revisions?.changed(DataCollection.clipboard);
@@ -551,20 +553,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     _selectedRecord = visible.first;
   }
 }
-
-const Set<String> _legacyAutomaticGroups = <String>{
-  'Archive',
-  'Clipboard',
-  'Code',
-  'Commands',
-  'Email',
-  'Files',
-  'Images',
-  'JSON',
-  'Paths',
-  'Sensitive',
-  'URLs',
-};
 
 List<String> _uniqueTags(List<String> tags) {
   final Set<String> seen = <String>{};

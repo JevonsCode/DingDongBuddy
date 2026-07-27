@@ -54,6 +54,7 @@ class DingDongApp extends StatefulWidget {
     this.activityController,
     this.agentConversationLauncher,
     this.agentBaseUri,
+    this.developmentBuild = false,
     this.clipboardCaptureService,
     this.clipboardCategoryRuleStore,
     this.clipboardGroupOrderStore,
@@ -94,6 +95,7 @@ class DingDongApp extends StatefulWidget {
   final ActivityController? activityController;
   final AgentConversationLauncher? agentConversationLauncher;
   final Uri? agentBaseUri;
+  final bool developmentBuild;
   final ClipboardCaptureService? clipboardCaptureService;
   final ClipboardCategoryRuleStore? clipboardCategoryRuleStore;
   final ClipboardGroupOrderStore? clipboardGroupOrderStore;
@@ -259,6 +261,7 @@ class _DingDongAppState extends State<DingDongApp> {
           },
           home: ShellScreen(
             activityController: _activityController,
+            developmentBuild: widget.developmentBuild,
             agentConversationLauncher:
                 widget.agentConversationLauncher ??
                 NativeAgentConversationLauncher(),

@@ -151,7 +151,35 @@ void main() {
     expect(document, contains('project-native Skill directories'));
   });
 
-  test('version four refreshes the existing built-in Skill document', () async {
+  test('bundled Skill documents Agent launcher configuration', () async {
+    final String document = await _loadConfigureSkill();
+
+    expect(document, contains('agent-launchers.json'));
+    expect(document, contains('claude-code'));
+    expect(document, contains('"macosTerminal": "iterm"'));
+    expect(document, contains('"itermOpenMode": "new-tab"'));
+    expect(document, contains('atomically replace'));
+    expect(
+      document,
+      contains('does not locate or focus an original terminal tab'),
+    );
+  });
+
+  test('bundled Skill documents Agent Adapter configuration', () async {
+    final String document = await _loadConfigureSkill();
+
+    expect(document, contains('Agent Adapters'));
+    expect(
+      document,
+      contains('~/Library/Application Support/DingDong/Agent Adapters'),
+    );
+    expect(document, contains('schemaVersion: 1'));
+    expect(document, contains('mcpServers-json'));
+    expect(document, contains('Agent Adapter History'));
+    expect(document, contains('Do not edit the history directory directly'));
+  });
+
+  test('version five refreshes the existing built-in Skill document', () async {
     final DateTime originalTime = DateTime.utc(2026, 7, 1);
     final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
       builtInDingDongConfigureSkill(
@@ -160,7 +188,7 @@ void main() {
       ).copyWith(enabled: false),
     ]);
     final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
-      ..values[BuiltInResourceInstaller.preferenceKey] = 3;
+      ..values[BuiltInResourceInstaller.preferenceKey] = 4;
     final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
       store,
       preferences,
@@ -174,6 +202,30 @@ void main() {
     expect(skill.content, await _loadConfigureSkill());
     expect(skill.enabled, isFalse);
     expect(skill.updatedAt, DateTime.utc(2026, 7, 21));
+    expect(
+      preferences.values[BuiltInResourceInstaller.preferenceKey],
+      BuiltInResourceInstaller.currentVersion,
+    );
+  });
+
+  test('version six refreshes the Agent Adapter instructions', () async {
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      builtInDingDongConfigureSkill(
+        'instructions without Agent Adapters',
+        DateTime.utc(2026, 7, 1),
+      ),
+    ]);
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 5;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      now: () => DateTime.utc(2026, 7, 23),
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isTrue);
+    expect((await store.load()).single.content, await _loadConfigureSkill());
     expect(
       preferences.values[BuiltInResourceInstaller.preferenceKey],
       BuiltInResourceInstaller.currentVersion,

@@ -94,6 +94,10 @@ void main() {
                   as Map<String, Object?>)['properties']
               as Map<String, Object?>;
       expect(
+        toolNamed('dingdong_notify')['description'],
+        allOf(contains('configured completion hook'), contains('Do not call')),
+      );
+      expect(
         notifyProperties.keys,
         containsAll(<String>['conversationId', 'workspacePath']),
       );

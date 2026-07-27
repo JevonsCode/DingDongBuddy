@@ -24,13 +24,16 @@ final class PluginDesktopShellGateway
     this.unreadStore,
     bool Function()? clipboardMonitoringState,
     bool Function()? useChineseLabels,
+    bool? developmentBuild,
   }) : _clipboardMonitoringState = clipboardMonitoringState ?? (() => false),
-       _useChineseLabels = useChineseLabels ?? (() => false);
+       _useChineseLabels = useChineseLabels ?? (() => false),
+       _developmentBuild = developmentBuild ?? kDebugMode;
 
   final Future<void> Function()? onHideAuxiliaryWindows;
   final TrayUnreadStore? unreadStore;
   final bool Function() _clipboardMonitoringState;
   final bool Function() _useChineseLabels;
+  final bool _developmentBuild;
   static const MethodChannel _hotKeyChannel = MethodChannel(
     'dingdong/global_hotkey',
   );
@@ -181,7 +184,13 @@ final class PluginDesktopShellGateway
           ),
           MenuItem.separator(),
           MenuItem(
-            label: chinese ? '退出 DingDong' : 'Quit DingDong',
+            label: chinese
+                ? _developmentBuild
+                      ? '退出 DingDong DEV'
+                      : '退出 DingDong'
+                : _developmentBuild
+                ? 'Quit DingDong DEV'
+                : 'Quit DingDong',
             onClick: (_) => _commands.add(DesktopShellCommand.quit),
           ),
         ],
@@ -219,7 +228,7 @@ final class PluginDesktopShellGateway
     }
     if (Platform.isMacOS) {
       await trayManager.setTitle(
-        title,
+        _developmentBuild ? (hot ? ' DEV$title' : ' DEV') : title,
         style: hot ? TrayTitleStyle.unreadBadge : TrayTitleStyle.plain,
       );
     }

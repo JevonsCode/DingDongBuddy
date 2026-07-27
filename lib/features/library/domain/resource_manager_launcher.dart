@@ -2,6 +2,7 @@ enum ResourceManagerDestination {
   resources,
   clipboard,
   recentAgents,
+  agentAdapters,
   issues;
 
   static ResourceManagerDestination parse(Object? value) {

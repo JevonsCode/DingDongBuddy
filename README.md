@@ -80,7 +80,7 @@ confirm the MCP bridge, completion Hook, and applicable resource sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.7.26`, using the same version constant as the release UI. A small
+  `v0.7.27`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
@@ -98,8 +98,10 @@ confirm the MCP bridge, completion Hook, and applicable resource sync in the PR.
   New copies still arrive through monitoring or the explicit capture action.
 - Dragged clipboard group order is saved separately from record membership and
   restored when the clipboard or resource-manager window is reopened.
+- Automatic clipboard retention defaults to 5,000 unarchived items and 120
+  days; pinned and archived items are excluded from both limits.
 - **Recent agents** shows a compact rolling count beside its heading. The
-  default window is 24 hours. Completion details default to the latest 200
+  default window is 24 hours. Completion details default to the latest 500
   items, survive restart by default, and are available as a read-only list in
   Resource Manager. Remembering, detail capacity, and count-window hours are
   configurable in Settings.
@@ -210,8 +212,10 @@ resource, and target path, opening the affected resource, or running a manual
 check. Enabled Claude Code plugins are also inspected: an exact Skill-name match
 is shown as a non-blocking warning because the plugin namespace can coexist with
 the native Skill. The old simulated refresh behavior has been removed. Client
-paths and capabilities live in one Agent adapter registry, so a future client is
-added through an adapter rather than scattered sync branches.
+paths and capabilities live in extensible Agent Adapters. Users can inspect,
+edit, and compare the current and two prior versions in **Resource Manager →
+Agent access**; external Agent edits to user YAML are observed automatically.
+See [Agent Adapter configuration](docs/product/agent-adapter-configuration.md).
 
 ### Architecture
 
@@ -359,6 +363,17 @@ path. The usual macOS path is:
 On Windows, the bridge is inside the installed application at
 `mcp\bundle\bin\dingdong_mcp.exe`. Copy the exact path shown in DingDong rather
 than guessing the install directory.
+
+CLI conversations opened from completion reminders use Terminal.app by default
+on macOS. Users or AI Agents can select iTerm through the documented
+[`agent-launchers.json`](docs/product/agent-launcher-configuration.md)
+configuration.
+
+To add an Agent or change its Skill, MCP, and Prompt integration paths, edit its
+declarative YAML under **Resource Manager → Agent access**, or ask a local AI
+Agent to follow the
+[Agent Adapter configuration](docs/product/agent-adapter-configuration.md)
+protocol.
 
 ### Automatic setup (recommended)
 

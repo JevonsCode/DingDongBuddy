@@ -1,83 +1,86 @@
-# DingDong 0.7.26
+# DingDong 0.7.27
 
-This release keeps DingDong's resource views consistent, makes scoped Skills
-visible, improves macOS access, and fixes several Windows desktop behaviors.
+This release adds configurable Agent integrations, protects archived clipboard
+history, and tightens completion notifications and development-build isolation.
 
-## Resource synchronization and scope clarity
+## Agent access and conversation launchers
 
-- Refreshes the popup library after resources are created, edited, enabled,
-  disabled, or deleted in Resource Manager.
-- Reloads the latest on-disk library whenever the popup is reopened or the
-  Library workspace is entered, recovering safely from a missed window signal.
-- Shows the complete Enabled resource list instead of limiting it to three.
-- Marks scoped Skills in Resource Manager, the popup Library, and Dynamic with
-  a clear `Scoped` label while keeping trigger groups as the source of truth.
-- Keeps Agent API mutations compatible with stores that return unmodifiable
-  resource lists.
+- Adds **Resource Manager → Agent access** for viewing and editing declarative
+  Agent Adapter YAML.
+- Bundles validated adapters for Codex, Claude Code, Cursor, Gemini CLI, and
+  Kiro, while allowing complete user overrides and custom clients.
+- Keeps the current Adapter plus two earlier revisions, detects external YAML
+  edits, and shows invalid documents without silently applying them.
+- Synchronizes current resources immediately after an Adapter change and
+  removes DingDong-managed Skill, Prompt, and MCP content from old targets when
+  paths change or an Adapter is removed.
+- Restricts user paths to the home directory after resolving symbolic links and
+  rejects unsafe cross-platform project paths.
+- Adds `agent-launchers.json` preferences for opening supported CLI Agent
+  conversations in Terminal.app or an iTerm window or tab.
 
-## Skill import and Agent verification
+## Clipboard and Recent Agents
 
-- Accepts GitHub Skill repositories, folders, `blob` `SKILL.md` links, and raw
-  `SKILL.md` links.
-- Adds working `user-taste` and `grilling` examples when a Skill URL is invalid.
-- Separates implemented Agent integrations from real-client verification in the
-  README; Codex and Claude Code are verified end to end on macOS.
+- Excludes pinned and archived records from automatic item and age limits,
+  including legacy archives and user-created archive groups.
+- Keeps protected history visible even when more than 5,000 newer ordinary
+  records exist.
+- Raises new-install clipboard defaults to 5,000 ordinary items and 120 days.
+- Keeps Clipboard search text synchronized when the view is remounted and makes
+  programmatic clearing visible in the field.
+- Raises the default remembered Recent Agent detail capacity to 500 while
+  retaining the 24-hour count window.
 
-## Desktop fixes
+## Notifications and desktop development
 
-- Reveals and focuses the panel when DingDong is opened from Applications,
-  Launchpad, or Spotlight, including when the app is already running.
-- Restores the user's Command-dragged macOS menu bar icon position after
-  relaunching DingDong.
-- Warns macOS users that an application update may require granting permissions
-  again.
-- Refreshes replacement tray icons immediately on Windows.
-- Dismisses Flutter-owned context menus before the Windows panel is hidden so
-  stale routes cannot reappear later.
-- Hides Share actions on Windows, where the native share bridge is unavailable.
-
-## Website
-
-- Updates the interactive DingDong model to match the current popup header,
-  compact status and metric cards, Recent Agent rows, Enabled cards, version,
-  and scoped-Skill treatment.
+- Deduplicates a completion-hook fallback only against the matching Agent's
+  recent primary notification, including mixed source casing and interleaved
+  Agent events.
+- Leaves fallback-only notifications independent so separate tasks are not
+  accidentally suppressed.
+- Clarifies that the normal completion hook owns the final alert, while
+  `dingdong_notify` remains available for blocked or waiting states.
+- Isolates macOS Debug builds as **DingDong DEV** with a separate bundle ID,
+  application-data directory, tray identity, visible badge, and disabled
+  release updater.
+- Expands the community-install documentation for macOS Gatekeeper,
+  Accessibility permission, and safe app replacement.
 
 Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本让 DingDong 的资源视图保持一致，明确展示 Skill 的触发范围，同时改善 macOS
-入口并修复多项 Windows 桌面行为。
+本版本新增可配置的 Agent 接入，保护归档剪贴板历史，并收紧完成提醒与开发版隔离。
 
-## 资源同步与触发范围
+## Agent 接入与对话启动器
 
-- 在资源管理器中创建、编辑、启用、停用或删除资源后，唤出面板的资源库会立即刷新。
-- 每次重新唤出面板或进入资源库时都会重新读取磁盘状态，跨窗口通知遗漏后也能恢复。
-- “已启用”不再只展示前三项，而是展示完整资源列表。
-- 在资源管理器、唤出面板资源库和 Dynamic 中为限定范围的 Skill 显示“有触发范围”，
-  并继续以触发组关系作为判断依据。
-- Agent API 现在兼容返回只读资源列表的存储实现。
+- 新增 **资源管理 → Agent 接入**，可查看和编辑声明式 Agent Adapter YAML。
+- 内置 Codex、Claude Code、Cursor、Gemini CLI 和 Kiro 的严格校验定义，同时支持完整
+  用户覆盖和自定义客户端。
+- 保留当前版及前两个 Adapter 修订版本；可观察外部 YAML 修改，无效原文会显示出来，
+  但不会被静默应用。
+- Adapter 修改后立即同步当前资源；路径变化或 Adapter 删除时，会清理旧目标中由
+  DingDong 托管的 Skill、Prompt 和 MCP 内容。
+- 解析符号链接后仍要求用户路径位于主目录内，并拒绝跨平台不安全的项目相对路径。
+- 新增 `agent-launchers.json`，可让受支持的 CLI Agent 对话通过 Terminal.app、
+  iTerm 新窗口或新标签页恢复。
 
-## Skill 导入与 Agent 实测状态
+## 剪贴板与最近 Agent
 
-- 支持从 GitHub Skill 仓库、目录、`blob` `SKILL.md` 和 raw `SKILL.md` 地址导入。
-- Skill 地址无效时展示可直接参考的 `user-taste` 与 `grilling` 示例。
-- README 将“已实现”和“真实客户端端到端验证”分开记录；Codex 与 Claude Code
-  已在 macOS 端到端验证。
+- 置顶和归档记录不计入自动条数与时间限制，兼容旧版归档标记和用户创建的归档分组。
+- 即使存在超过 5000 条更新的普通记录，受保护历史仍然可见。
+- 新安装的剪贴板默认保留 5000 条普通记录、120 天。
+- 剪贴板视图重新挂载或程序清空搜索时，输入框与实际筛选条件保持一致。
+- 最近 Agent 完成详情默认容量提升到 500 条，计数窗口仍为 24 小时。
 
-## 桌面端修复
+## 提醒与桌面开发
 
-- 从“应用程序”、Launchpad 或 Spotlight 打开 DingDong 时会显示并聚焦面板；应用
-  已在运行时再次点击也同样生效。
-- macOS 菜单栏图标经 Command 拖拽后，会在下次启动恢复用户排列的位置。
-- macOS 检测到更新时，会提前提示更新后可能需要重新授予系统权限。
-- Windows 更换托盘图标后立即刷新显示。
-- Windows 隐藏面板前会关闭 Flutter 菜单，避免旧菜单路由在再次打开时出现。
-- Windows 未提供原生分享桥接时，不再展示无法使用的“分享”操作。
+- 完成 Hook 的兜底提醒只与同一 Agent 最近的主提醒去重，支持来源大小写差异和多个
+  Agent 交错到达。
+- 纯兜底提醒彼此独立，避免不同任务被误抑制。
+- 明确正常的最终完成提醒由 Hook 负责；`dingdong_notify` 继续用于阻塞或等待关注。
+- macOS Debug 构建独立为 **DingDong DEV**，使用单独 Bundle ID、数据目录、托盘身份
+  和可见标记，并关闭正式版更新器。
+- 补充 macOS Gatekeeper、辅助功能授权和安全替换应用的社区安装说明。
 
-## 官网
-
-- 官网交互模型已同步当前唤出面板的页头、紧凑状态和指标卡、最近 Agent、已启用
-  资源、版本号以及“有触发范围”样式。
-
-Intel macOS 和 Windows 安装包继续标记为 beta。
+Intel macOS 与 Windows 安装包继续标记为 beta。

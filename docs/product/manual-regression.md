@@ -1,4 +1,4 @@
-# DingDong 0.7.26 Manual Regression Checklist
+# DingDong 0.7.27 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -34,6 +34,10 @@ and macOS golden images; the items below exercise real operating-system state.
 - macOS requests Accessibility access when quick paste needs it; Settings reflects the latest status.
 - Windows quick paste does not require a separate Accessibility permission.
 - A 5,000-row retained history scrolls smoothly without eagerly building every row.
+- Pinned, legacy-archived, and custom-group archived rows survive item and age
+  retention; an old archive remains searchable beyond 5,000 newer ordinary rows.
+- Search text remains visible after leaving and returning to Clipboard, and
+  clearing it restores the complete visible history.
 - Sensitive rows stay hidden from default Agent API responses.
 
 ## Resource library
@@ -67,6 +71,14 @@ and macOS golden images; the items below exercise real operating-system state.
   and can open the affected resource when one is recorded.
 - An enabled Claude Code plugin with the same Skill name produces a warning
   rather than blocking synchronization.
+- Agent access shows the five bundled Adapters, validates user YAML, preserves
+  current plus two prior revisions, and does not overwrite an unsaved editor
+  when its file changes externally.
+- Saving, restoring, or deleting an Adapter immediately resynchronizes current
+  resources. Changing its paths removes only DingDong-managed content from the
+  old Skill, Prompt, and MCP targets while preserving user-owned content.
+- An Adapter path that leaves the home directory directly or through a symbolic
+  link remains visible as invalid and blocks synchronization.
 - The list remains responsive with 10,000 resources.
 
 ## Agent API and MCP
@@ -89,6 +101,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - When more than six items exist, the `More` button opens Resource Manager directly at Recent Agents.
 - A resumable Recent Agent item opens its exact conversation from both Dynamic and Resource Manager.
 - Codex thread links, Claude Code, Gemini, and Kiro resume commands reopen the expected session.
+- A valid `agent-launchers.json` can open Claude Code in a new iTerm tab; an
+  invalid file fails visibly without silently falling back to Terminal.app.
 - Cursor background-agent links open the exact conversation; local Cursor sessions fall back to the recorded workspace.
 - An item without a safe resume target has no open affordance and does not launch a process.
 - A failed launch keeps DingDong responsive and shows a visible error.
@@ -103,6 +117,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - Notifications play the selected sound without requesting Dock icon attention.
 - Completion hooks show the first useful sentence from the Agent's final reply;
   missing or unreadable hook context falls back to a generic completion message.
+- A fallback completion alert is suppressed only after the same Agent's recent
+  primary alert; interleaved Agents and separate fallback-only tasks remain
+  independent.
 - Choosing a custom sound uses the OS file picker; clearing it returns to the default.
 - Version checking shows current/latest values, notes, failure state, website, and release links.
 - A newer release adds a small orange-red dot beside the popup version; current,
@@ -123,8 +140,11 @@ and macOS golden images; the items below exercise real operating-system state.
 - The final MCP bundle contains native `arm64` and `x86_64` sub-bundles and one stable executable launcher path.
 - The launcher selects and runs the native MCP successfully on both an Apple Silicon Mac and an Intel Mac.
 - The Windows MCP executable passes `tools/list` on a Windows x64 machine.
-- The macOS app metadata is version `0.7.26` build `26` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.26.26` and product name `DingDong`.
+- A Debug macOS build is named `DingDong DEV`, uses bundle id
+  `com.dingdongbuddy.app.dev`, stores data under `DingDong DEV`, shows a DEV
+  badge, and does not offer release updates.
+- The macOS release app metadata is version `0.7.27` build `27` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.7.27.27` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

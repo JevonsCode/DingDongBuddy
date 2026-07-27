@@ -58,59 +58,130 @@ void main() {
     expect(received?.conversationTarget?.workspacePath, '/workspace/dingdong');
   });
 
-  test('completion hook suppresses a duplicate Agent notification', () async {
+  test(
+    'completion hook suppresses a duplicate Agent notification across source casing',
+    () async {
+      int notificationCount = 0;
+      DingRequest? suppressedRequest;
+      DateTime now = DateTime.utc(2026, 7, 17, 12);
+      final AgentRouter router = AgentRouter(
+        onDing: (DingRequest request) => notificationCount += 1,
+        onSuppressedDing: (DingRequest request) => suppressedRequest = request,
+        now: () => now,
+      );
+
+      await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body: '{"message":"Done","source":"codex"}',
+        ),
+      );
+      now = now.add(const Duration(seconds: 1));
+      final suppressed = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body:
+              '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true,"conversationId":"thread-1","workspacePath":"/workspace/dingdong"}',
+        ),
+      );
+
+      expect(notificationCount, 1);
+      expect(suppressed.json['status'], 'suppressed');
+      expect(suppressedRequest?.conversationTarget?.conversationId, 'thread-1');
+
+      final otherAgent = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body:
+              '{"message":"Claude Code 已完成本轮任务","source":"Claude Code","fallback":true}',
+        ),
+      );
+      expect(notificationCount, 2);
+      expect(otherAgent.json['status'], 'triggered');
+
+      now = now.add(const Duration(seconds: 5));
+      final triggered = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body: '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true}',
+        ),
+      );
+
+      expect(notificationCount, 3);
+      expect(triggered.json['status'], 'triggered');
+    },
+  );
+
+  test(
+    'completion hook matches the same Agent when notifications interleave',
+    () async {
+      int notificationCount = 0;
+      DateTime now = DateTime.utc(2026, 7, 17, 12);
+      final AgentRouter router = AgentRouter(
+        onDing: (DingRequest request) => notificationCount += 1,
+        now: () => now,
+      );
+
+      await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body: '{"message":"Codex done","source":"Codex"}',
+        ),
+      );
+      now = now.add(const Duration(seconds: 1));
+      await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body: '{"message":"Claude done","source":"Claude Code"}',
+        ),
+      );
+      now = now.add(const Duration(seconds: 1));
+      final suppressed = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body: '{"message":"Codex 已完成本轮任务","source":"codex","fallback":true}',
+        ),
+      );
+
+      expect(notificationCount, 2);
+      expect(suppressed.json['status'], 'suppressed');
+    },
+  );
+
+  test('fallback-only notifications are never deduplicated', () async {
     int notificationCount = 0;
-    DingRequest? suppressedRequest;
     DateTime now = DateTime.utc(2026, 7, 17, 12);
     final AgentRouter router = AgentRouter(
       onDing: (DingRequest request) => notificationCount += 1,
-      onSuppressedDing: (DingRequest request) => suppressedRequest = request,
       now: () => now,
     );
 
-    await router.route(
+    final first = await router.route(
       const HttpRequestData(
         method: 'POST',
         uri: '/ding',
-        body: '{"message":"Done","source":"Codex"}',
+        body: '{"message":"Codex 已完成第一轮任务","source":"Codex","fallback":true}',
       ),
     );
     now = now.add(const Duration(seconds: 1));
-    final suppressed = await router.route(
+    final second = await router.route(
       const HttpRequestData(
         method: 'POST',
         uri: '/ding',
-        body:
-            '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true,"conversationId":"thread-1","workspacePath":"/workspace/dingdong"}',
+        body: '{"message":"Codex 已完成第二轮任务","source":"Codex","fallback":true}',
       ),
     );
 
-    expect(notificationCount, 1);
-    expect(suppressed.json['status'], 'suppressed');
-    expect(suppressedRequest?.conversationTarget?.conversationId, 'thread-1');
-
-    final otherAgent = await router.route(
-      const HttpRequestData(
-        method: 'POST',
-        uri: '/ding',
-        body:
-            '{"message":"Claude Code 已完成本轮任务","source":"Claude Code","fallback":true}',
-      ),
-    );
     expect(notificationCount, 2);
-    expect(otherAgent.json['status'], 'triggered');
-
-    now = now.add(const Duration(seconds: 5));
-    final triggered = await router.route(
-      const HttpRequestData(
-        method: 'POST',
-        uri: '/ding',
-        body: '{"message":"Codex 已完成本轮任务","source":"Codex","fallback":true}',
-      ),
-    );
-
-    expect(notificationCount, 3);
-    expect(triggered.json['status'], 'triggered');
+    expect(first.json['status'], 'triggered');
+    expect(second.json['status'], 'triggered');
   });
 
   test('POST /library creates a resource that GET /library can query', () async {

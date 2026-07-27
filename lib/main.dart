@@ -9,7 +9,10 @@ import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
+import 'package:dingdong/features/activity/data/agent_launcher_configuration_store.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
+import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -40,6 +43,7 @@ import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:dingdong/platform/multi_window_resource_manager_launcher.dart';
 import 'package:dingdong/platform/multi_window_settings_host_bridge.dart';
 import 'package:dingdong/platform/multi_window_settings_launcher.dart';
+import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:dingdong/platform/native_application_updater.dart';
 import 'package:dingdong/platform/native_clipboard_share_gateway.dart';
 import 'package:dingdong/platform/native_desktop_context_menu_gateway.dart';
@@ -76,6 +80,7 @@ Future<void> main(List<String> arguments) async {
     return;
   }
 
+  final AppDataPaths appDataPaths = AppDataPaths.current();
   final ShellController shellController = ShellController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
       MultiWindowClipboardPreviewLauncher();
@@ -86,7 +91,7 @@ Future<void> main(List<String> arguments) async {
   final SharedPreferencesBackend preferencesBackend =
       SharedPreferencesBackend();
   final ActivityController activityController = ActivityController(
-    store: FileAgentActivityStore(AppDataPaths.current().agentActivityFile),
+    store: FileAgentActivityStore(appDataPaths.agentActivityFile),
   );
   late final AppDependencies dependencies;
   late final SettingsViewModel settingsViewModel;
@@ -100,8 +105,9 @@ Future<void> main(List<String> arguments) async {
         dependencies.clipboardMonitorService.isRunning,
     useChineseLabels: () =>
         _usesChineseLabels(settingsViewModel.settings.language),
+    developmentBuild: appDataPaths.development,
   );
-  dependencies = AppDependencies.production(
+  dependencies = await AppDependencies.production(
     preferencesBackend: preferencesBackend,
     onResourceLibraryChanged: shellController.requestLibraryRefresh,
     onNotification: (request) async {
@@ -202,6 +208,7 @@ Future<void> main(List<String> arguments) async {
         return null;
       case 'settings_changed':
         await settingsViewModel.reload();
+        dependencies.applyClipboardRetention(settingsViewModel.settings);
         activityController.configure(
           rememberAcrossRestarts:
               settingsViewModel.settings.rememberAgentActivity,
@@ -257,6 +264,12 @@ Future<void> main(List<String> arguments) async {
   runApp(
     DingDongApp(
       activityController: activityController,
+      developmentBuild: appDataPaths.development,
+      agentConversationLauncher: NativeAgentConversationLauncher(
+        configurationLoader: FileAgentLauncherConfigurationStore(
+          dependencies.paths.agentLaunchersFile,
+        ).load,
+      ),
       agentBaseUri: dependencies.agentHttpServer.baseUri,
       clipboardCaptureService: dependencies.clipboardCaptureService,
       clipboardCategoryRuleStore: dependencies.clipboardCategoryRuleStore,
@@ -497,8 +510,18 @@ Future<void> _runResourceManagerWindow(
     ResourceFileService(paths.resourceLibraryFile),
   );
   final DataRevisionBus dataRevisions = DataRevisionBus();
+  final AgentAdapterRepository agentAdapterRepository = AgentAdapterRepository(
+    userDirectory: paths.agentAdaptersDirectory,
+    historyDirectory: paths.agentAdapterHistoryDirectory,
+    homeDirectory:
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!,
+    loadBuiltIns: loadBundledAgentAdapterDocuments,
+  );
   final AgentResourceSynchronizer resourceSynchronizer =
-      AgentResourceSynchronizer.currentUser(paths.skillPackagesDirectory);
+      await AgentResourceSynchronizer.currentUser(
+        paths.skillPackagesDirectory,
+        loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
+      );
   issueCenterController.setInspector(
     () async => resourceSynchronizer.inspect(await baseResourceStore.load()),
   );
@@ -518,6 +541,13 @@ Future<void> _runResourceManagerWindow(
       );
     },
   );
+  final AgentAdapterController agentAdapterController = AgentAdapterController(
+    repository: agentAdapterRepository,
+    onAdaptersChanged: () async {
+      await resourceStore.save(await resourceStore.load());
+    },
+  );
+  await agentAdapterController.load();
   final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
     TriggerGroupFileService(paths.triggerGroupsFile),
   );
@@ -575,10 +605,16 @@ Future<void> _runResourceManagerWindow(
       viewModel: viewModel,
       clipboardViewModel: clipboardViewModel,
       activityController: activityController,
+      agentAdapterController: agentAdapterController,
       issueCenterController: issueCenterController,
       settings: settings,
       windowController: windowController,
       initialDestination: initialDestination,
+      agentConversationLauncher: NativeAgentConversationLauncher(
+        configurationLoader: FileAgentLauncherConfigurationStore(
+          paths.agentLaunchersFile,
+        ).load,
+      ),
       onLoadHostIssues: parent == null ? null : loadHostIssues,
       desktopContextMenuGateway: Platform.isMacOS
           ? NativeDesktopContextMenuGateway()

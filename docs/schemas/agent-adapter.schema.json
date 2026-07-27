@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dingdong.app/schemas/agent-adapter.schema.json",
+  "title": "DingDong Agent Adapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "displayName",
+    "detect"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "detect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory"
+      ],
+      "properties": {
+        "directory": {
+          "$ref": "#/$defs/userPath"
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "global",
+        "project"
+      ],
+      "properties": {
+        "global": {
+          "$ref": "#/$defs/userPath"
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?!/)(?!\\.$)[^\\u0000\\r\\n]+$"
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "format"
+      ],
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/userPath"
+        },
+        "format": {
+          "enum": [
+            "codex-toml",
+            "claude-json",
+            "cursor-json",
+            "gemini-json",
+            "kiro-json",
+            "mcpServers-json"
+          ]
+        }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file"
+      ],
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/userPath"
+        },
+        "includeBridgeRoutingInstructions": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "userPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(~(?:/.*)?|/.*|[A-Za-z]:[\\\\/].*)$"
+    }
+  }
+}

@@ -6,7 +6,7 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:flutter/foundation.dart';
 
-const int defaultAgentActivityMaxItems = 200;
+const int defaultAgentActivityMaxItems = 500;
 const int defaultAgentActivityCountHours = 24;
 const int maximumAgentActivityCountHours = 24 * 365;
 

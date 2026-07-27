@@ -6,7 +6,10 @@ import 'package:sqlite3/sqlite3.dart';
 
 /// SQLite-backed source of truth compatible with the native Core Data table.
 abstract interface class ClipboardStore {
-  List<ClipboardRecord> list({required int limit});
+  List<ClipboardRecord> list({
+    required int limit,
+    bool includeProtectedBeyondLimit = false,
+  });
 
   void save(ClipboardRecord record);
 
@@ -22,8 +25,14 @@ final class InMemoryClipboardStore implements ClipboardStore {
   final List<ClipboardRecord> _records;
 
   @override
-  List<ClipboardRecord> list({required int limit}) =>
-      _records.take(limit).toList(growable: false);
+  List<ClipboardRecord> list({
+    required int limit,
+    bool includeProtectedBeyondLimit = false,
+  }) => _boundedHistory(
+    _records,
+    limit: limit,
+    includeProtectedBeyondLimit: includeProtectedBeyondLimit,
+  );
 
   @override
   void save(ClipboardRecord record) {
@@ -52,34 +61,25 @@ final class ClipboardRepository implements ClipboardStore {
   final Database _database;
 
   @override
-  List<ClipboardRecord> list({required int limit}) {
+  List<ClipboardRecord> list({
+    required int limit,
+    bool includeProtectedBeyondLimit = false,
+  }) {
+    final int boundedLimit = limit.clamp(0, 5000);
     final ResultSet rows = _database.select(
-      'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC LIMIT ?',
-      <Object?>[limit.clamp(0, 5000)],
+      includeProtectedBeyondLimit
+          ? 'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC'
+          : 'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC LIMIT ?',
+      includeProtectedBeyondLimit ? const <Object?>[] : <Object?>[boundedLimit],
     );
-    return List<ClipboardRecord>.unmodifiable(
-      rows.map((Row row) {
-        final List<String> tags = _decodeTags(row['ZTAGSDATA']);
-        final List<String> groups = _decodeGroups(
-          row['ZGROUP'] as String? ?? 'Clipboard',
-        );
-        return ClipboardRecord(
-          id: row['ZID'] as String? ?? '',
-          group: groups.isEmpty ? '' : groups.first,
-          groups: groups,
-          title: row['ZTITLE'] as String? ?? '',
-          content: row['ZCONTENT'] as String? ?? '',
-          tags: tags,
-          source: row['ZSOURCE'] as String?,
-          pinned: (row['ZPINNED'] as int? ?? 0) != 0,
-          enabled: (row['ZENABLED'] as int? ?? 1) != 0,
-          activation: row['ZACTIVATION'] as String? ?? 'taskMatch',
-          sortOrder: row['ZSORTORDER'] as int?,
-          createdAt: _decodeDate(row['ZCREATEDAT']),
-          updatedAt: _decodeDate(row['ZUPDATEDAT']),
-        );
-      }),
-    );
+    final Iterable<ClipboardRecord> records = rows.map(_recordFromRow);
+    return includeProtectedBeyondLimit
+        ? _boundedHistory(
+            records,
+            limit: boundedLimit,
+            includeProtectedBeyondLimit: true,
+          )
+        : List<ClipboardRecord>.unmodifiable(records);
   }
 
   void trim({
@@ -89,21 +89,40 @@ final class ClipboardRepository implements ClipboardStore {
   }) {
     final int boundedItems = maxItems.clamp(20, 5000);
     final int boundedDays = maxAgeDays.clamp(1, 730);
-    final double cutoff = _encodeDate(
-      now.toUtc().subtract(Duration(days: boundedDays)),
-    );
-    _database.execute(
-      'DELETE FROM ZCLIPBOARDRECORD '
-      'WHERE ZPINNED = 0 AND ZUPDATEDAT < ?',
-      <Object?>[cutoff],
-    );
-    _database.execute(
-      'DELETE FROM ZCLIPBOARDRECORD '
-      'WHERE ZPINNED = 0 AND Z_PK NOT IN ('
-      'SELECT Z_PK FROM ZCLIPBOARDRECORD WHERE ZPINNED = 0 '
-      'ORDER BY ZUPDATEDAT DESC LIMIT ?)',
-      <Object?>[boundedItems],
-    );
+    final DateTime cutoff = now.toUtc().subtract(Duration(days: boundedDays));
+    _database.execute('BEGIN IMMEDIATE');
+    try {
+      final ResultSet rows = _database.select(
+        'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC',
+      );
+      final List<int> primaryKeysToDelete = <int>[];
+      var ordinaryItemCount = 0;
+      for (final Row row in rows) {
+        final ClipboardRecord record = _recordFromRow(row);
+        if (record.pinned || record.isArchived) {
+          continue;
+        }
+        ordinaryItemCount += 1;
+        if (record.updatedAt.isBefore(cutoff) ||
+            ordinaryItemCount > boundedItems) {
+          primaryKeysToDelete.add(row['Z_PK']! as int);
+        }
+      }
+      final PreparedStatement deleteStatement = _database.prepare(
+        'DELETE FROM ZCLIPBOARDRECORD WHERE Z_PK = ?',
+      );
+      try {
+        for (final int primaryKey in primaryKeysToDelete) {
+          deleteStatement.execute(<Object?>[primaryKey]);
+        }
+      } finally {
+        deleteStatement.close();
+      }
+      _database.execute('COMMIT');
+    } on Object {
+      _database.execute('ROLLBACK');
+      rethrow;
+    }
   }
 
   @override
@@ -156,6 +175,28 @@ final class ClipboardRepository implements ClipboardStore {
   }
 
   void close() => _database.close();
+
+  static ClipboardRecord _recordFromRow(Row row) {
+    final List<String> tags = _decodeTags(row['ZTAGSDATA']);
+    final List<String> groups = _decodeGroups(
+      row['ZGROUP'] as String? ?? 'Clipboard',
+    );
+    return ClipboardRecord(
+      id: row['ZID'] as String? ?? '',
+      group: groups.isEmpty ? '' : groups.first,
+      groups: groups,
+      title: row['ZTITLE'] as String? ?? '',
+      content: row['ZCONTENT'] as String? ?? '',
+      tags: tags,
+      source: row['ZSOURCE'] as String?,
+      pinned: (row['ZPINNED'] as int? ?? 0) != 0,
+      enabled: (row['ZENABLED'] as int? ?? 1) != 0,
+      activation: row['ZACTIVATION'] as String? ?? 'taskMatch',
+      sortOrder: row['ZSORTORDER'] as int?,
+      createdAt: _decodeDate(row['ZCREATEDAT']),
+      updatedAt: _decodeDate(row['ZUPDATEDAT']),
+    );
+  }
 
   static DateTime _decodeDate(Object? value) {
     final num seconds = value as num? ?? 0;
@@ -239,6 +280,28 @@ final class ClipboardRepository implements ClipboardStore {
         'ON ZCLIPBOARDRECORD (ZID COLLATE BINARY ASC)',
       );
   }
+}
+
+List<ClipboardRecord> _boundedHistory(
+  Iterable<ClipboardRecord> records, {
+  required int limit,
+  required bool includeProtectedBeyondLimit,
+}) {
+  final int boundedLimit = limit.clamp(0, 5000);
+  if (!includeProtectedBeyondLimit) {
+    return List<ClipboardRecord>.unmodifiable(records.take(boundedLimit));
+  }
+  final List<ClipboardRecord> result = <ClipboardRecord>[];
+  var ordinaryCount = 0;
+  for (final ClipboardRecord record in records) {
+    if (record.pinned || record.isArchived) {
+      result.add(record);
+    } else if (ordinaryCount < boundedLimit) {
+      ordinaryCount += 1;
+      result.add(record);
+    }
+  }
+  return List<ClipboardRecord>.unmodifiable(result);
 }
 
 List<String> _uniqueGroups(Iterable<String> values) {

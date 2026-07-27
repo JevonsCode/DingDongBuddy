@@ -1,0 +1,18 @@
+schemaVersion: 1
+id: claude-code
+displayName: Claude Code
+
+detect:
+  directory: ~/.claude
+
+skills:
+  global: ~/.claude/skills
+  project: .claude/skills
+
+mcp:
+  file: ~/.claude.json
+  format: claude-json
+
+prompt:
+  file: ~/.claude/CLAUDE.md
+  includeBridgeRoutingInstructions: false

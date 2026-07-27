@@ -21,6 +21,7 @@ class PopupHeader extends StatelessWidget {
     required this.onBrand,
     required this.onSettings,
     required this.onVersion,
+    this.developmentBuild = false,
     this.onStartDragging,
     this.onHide,
     super.key,
@@ -30,6 +31,7 @@ class PopupHeader extends StatelessWidget {
   final int issueCount;
   final bool updateAvailable;
   final bool showShortcutHints;
+  final bool developmentBuild;
   final ValueChanged<int> onSelected;
   final VoidCallback onIssues;
   final VoidCallback onBrand;
@@ -88,6 +90,10 @@ class PopupHeader extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                if (developmentBuild) ...<Widget>[
+                                  const SizedBox(width: 5),
+                                  const _DevelopmentBadge(),
+                                ],
                                 const SizedBox(width: 3),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4),
@@ -170,6 +176,33 @@ class PopupHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DevelopmentBadge extends StatelessWidget {
+  const _DevelopmentBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('popup-development-badge'),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: PopupStyle.mcpSoft,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFE8A08B)),
+      ),
+      child: const Text(
+        'DEV',
+        style: TextStyle(
+          color: PopupStyle.mcp,
+          fontSize: 8,
+          height: 1,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.35,
+        ),
       ),
     );
   }

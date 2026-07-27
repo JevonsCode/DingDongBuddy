@@ -42,6 +42,7 @@ class ShellScreen extends StatefulWidget {
     required this.settingsViewModel,
     required this.controller,
     this.agentBaseUri,
+    this.developmentBuild = false,
     this.clipboardGateway,
     this.desktopContextMenuGateway,
     this.clipboardPreviewLauncher,
@@ -66,6 +67,7 @@ class ShellScreen extends StatefulWidget {
   final SettingsViewModel settingsViewModel;
   final ShellController controller;
   final Uri? agentBaseUri;
+  final bool developmentBuild;
   final ClipboardGateway? clipboardGateway;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
@@ -405,6 +407,7 @@ class _ShellScreenState extends State<ShellScreen> {
                   builder: (BuildContext context, _) => PopupHeader(
                     selectedIndex: widget.controller.selectedIndex,
                     issueCount: widget.issueCenterController.count,
+                    developmentBuild: widget.developmentBuild,
                     updateAvailable:
                         widget
                             .settingsViewModel

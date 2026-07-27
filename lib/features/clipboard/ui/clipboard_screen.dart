@@ -67,11 +67,14 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   bool _showFilters = false;
   int _shortcutStartIndex = 0;
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'clipboard-search');
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _searchController = TextEditingController(text: viewModel.query);
+    viewModel.addListener(_syncSearchController);
     unawaited(widget.settingsViewModel?.refreshQuickPastePermission());
     if (widget.searchFocusRevision > 0) {
       _scheduleSearchFocus();
@@ -81,6 +84,11 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   @override
   void didUpdateWidget(covariant ClipboardScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel != widget.viewModel) {
+      oldWidget.viewModel.removeListener(_syncSearchController);
+      widget.viewModel.addListener(_syncSearchController);
+      _syncSearchController();
+    }
     if (widget.searchFocusRevision != oldWidget.searchFocusRevision) {
       _scheduleSearchFocus();
     }
@@ -89,6 +97,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    viewModel.removeListener(_syncSearchController);
+    _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -131,6 +141,17 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   }
 
   void _focusSearch() => _searchFocusNode.requestFocus();
+
+  void _syncSearchController() {
+    final String query = viewModel.query;
+    if (_searchController.text == query) {
+      return;
+    }
+    _searchController.value = TextEditingValue(
+      text: query,
+      selection: TextSelection.collapsed(offset: query.length),
+    );
+  }
 
   void _handleShortcutStartIndexChanged(int index) {
     _shortcutStartIndex = index;
@@ -208,6 +229,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                     _CompactClipboardToolbar(
                       viewModel: viewModel,
                       searchFocusNode: _searchFocusNode,
+                      searchController: _searchController,
                       settingsViewModel: settingsViewModel,
                       filtersExpanded: filtersExpanded,
                       showShortcutHint: showShortcutHints,
@@ -225,6 +247,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                                 child: TextField(
                                   key: const Key('clipboard-search'),
                                   focusNode: _searchFocusNode,
+                                  controller: _searchController,
                                   onChanged: viewModel.setQuery,
                                   decoration: InputDecoration(
                                     hintText: context.localized(

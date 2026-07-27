@@ -38,14 +38,14 @@ final class SettingsRepository {
           : 0.90,
       density: PanelDensityPreference.parse(values[5]),
       defaultWorkspace: DefaultWorkspace.parse(values[6]),
-      clipboardMaxItems: values[7] is int ? values[7]! as int : 1000,
-      clipboardMaxAgeDays: values[8] is int ? values[8]! as int : 90,
+      clipboardMaxItems: values[7] is int ? values[7]! as int : 5000,
+      clipboardMaxAgeDays: values[8] is int ? values[8]! as int : 120,
       selectedSound: values[9] is String ? values[9]! as String : 'default',
       customSoundPath: values[10] as String?,
       apiPort: values[11] is int ? values[11]! as int : 2333,
       mcpAccessSeen: values[12] is bool ? values[12]! as bool : false,
       rememberAgentActivity: values[13] is bool ? values[13]! as bool : true,
-      agentActivityMaxItems: values[14] is int ? values[14]! as int : 200,
+      agentActivityMaxItems: values[14] is int ? values[14]! as int : 500,
       agentActivityCountHours: values[15] is int ? values[15]! as int : 24,
     ).sanitized();
   }

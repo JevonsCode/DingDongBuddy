@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_launcher_configuration.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef AgentUriOpener = Future<bool> Function(Uri uri);
@@ -10,6 +11,8 @@ typedef AgentProcessStarter =
       List<String> arguments, {
       String? workingDirectory,
     });
+typedef AgentLauncherConfigurationLoader =
+    Future<AgentLauncherConfiguration> Function();
 
 /// Opens only known Agent clients using identifiers captured from their hooks.
 final class NativeAgentConversationLauncher
@@ -18,13 +21,17 @@ final class NativeAgentConversationLauncher
     String? operatingSystem,
     AgentUriOpener? uriOpener,
     AgentProcessStarter? processStarter,
+    AgentLauncherConfigurationLoader? configurationLoader,
   }) : _operatingSystem = operatingSystem ?? Platform.operatingSystem,
        _uriOpener = uriOpener ?? _openExternalUri,
-       _processStarter = processStarter ?? _startDetached;
+       _processStarter = processStarter ?? _startDetached,
+       _configurationLoader =
+           configurationLoader ?? _loadDefaultLauncherConfiguration;
 
   final String _operatingSystem;
   final AgentUriOpener _uriOpener;
   final AgentProcessStarter _processStarter;
+  final AgentLauncherConfigurationLoader _configurationLoader;
 
   @override
   bool canOpen(AgentConversationTarget target) {
@@ -55,12 +62,14 @@ final class NativeAgentConversationLauncher
         );
       case AgentClient.claudeCode:
         await _openCliSession(
+          client: target.client,
           executable: 'claude',
           arguments: <String>['--resume', id!],
           workspacePath: workspace!,
         );
       case AgentClient.geminiCli:
         await _openCliSession(
+          client: target.client,
           executable: 'gemini',
           arguments: <String>['--resume', id!],
           workspacePath: workspace!,
@@ -81,6 +90,7 @@ final class NativeAgentConversationLauncher
       case AgentClient.kiro:
         if (id != null && workspace != null) {
           await _openCliSession(
+            client: target.client,
             executable: 'kiro-cli',
             arguments: <String>['chat', '--resume-id', id],
             workspacePath: workspace,
@@ -100,6 +110,7 @@ final class NativeAgentConversationLauncher
   }
 
   Future<void> _openCliSession({
+    required AgentClient client,
     required String executable,
     required List<String> arguments,
     required String workspacePath,
@@ -109,11 +120,15 @@ final class NativeAgentConversationLauncher
         'cd -- ${_shellQuote(workspacePath)}',
         'exec ${_shellQuote(executable)} ${arguments.map(_shellQuote).join(' ')}',
       ].join(' && ');
-      final String script =
-          'tell application "Terminal"\n'
-          'activate\n'
-          'do script "${_appleScriptQuote(command)}"\n'
-          'end tell';
+      final AgentLauncherSettings settings = (await _configurationLoader())
+          .settingsFor(client);
+      final String script = switch (settings.macosTerminal) {
+        MacOsTerminalApplication.terminal => _terminalAppleScript(command),
+        MacOsTerminalApplication.iTerm => _iTermAppleScript(
+          command,
+          settings.iTermOpenMode,
+        ),
+      };
       await _processStarter('osascript', <String>['-e', script]);
       return;
     }
@@ -184,6 +199,37 @@ String _appleScriptQuote(String value) => value
     .replaceAll('"', r'\"')
     .replaceAll('\n', r'\n')
     .replaceAll('\r', r'\r');
+
+String _terminalAppleScript(String command) =>
+    'tell application "Terminal"\n'
+    'activate\n'
+    'do script "${_appleScriptQuote(command)}"\n'
+    'end tell';
+
+String _iTermAppleScript(String command, ITermOpenMode openMode) {
+  final String quoted = _appleScriptQuote(command);
+  return switch (openMode) {
+    ITermOpenMode.newWindow =>
+      'tell application "iTerm"\n'
+          'activate\n'
+          'create window with default profile command "$quoted"\n'
+          'end tell',
+    ITermOpenMode.newTab =>
+      'tell application "iTerm"\n'
+          'activate\n'
+          'if (count of windows) = 0 then\n'
+          'create window with default profile command "$quoted"\n'
+          'else\n'
+          'tell current window\n'
+          'create tab with default profile command "$quoted"\n'
+          'end tell\n'
+          'end if\n'
+          'end tell',
+  };
+}
+
+Future<AgentLauncherConfiguration> _loadDefaultLauncherConfiguration() async =>
+    const AgentLauncherConfiguration();
 
 abstract final class PathAccess {
   static bool isAbsolute(String value) {

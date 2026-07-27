@@ -17,7 +17,7 @@ final class BuiltInResourceInstaller {
        _skillDocumentLoader = skillDocumentLoader;
 
   static const String preferenceKey = 'dingdong.library.builtInResourceVersion';
-  static const int currentVersion = 4;
+  static const int currentVersion = 6;
 
   final ResourceStore _store;
   final PreferencesBackend _preferences;
@@ -59,7 +59,7 @@ final class BuiltInResourceInstaller {
       next.add(builtInDingDongConfigureSkill(await loadBundledSkill(), _now()));
       changed = true;
     }
-    if (installedVersion < 4) {
+    if (installedVersion < 6) {
       final int index = next.indexWhere(
         (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
       );

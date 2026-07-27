@@ -1,0 +1,14 @@
+schemaVersion: 1
+id: kiro
+displayName: Kiro
+
+detect:
+  directory: ~/.kiro
+
+skills:
+  global: ~/.kiro/skills
+  project: .kiro/skills
+
+mcp:
+  file: ~/.kiro/settings/mcp.json
+  format: kiro-json

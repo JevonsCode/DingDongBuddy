@@ -6,22 +6,28 @@ import Sparkle
 @MainActor
 final class DingDongUpdater {
   private let userDriver = DingDongUpdateUserDriver()
-  private let updater: SPUUpdater
+  private let updater: SPUUpdater?
   private(set) var startupError: String?
 
   init() {
-    updater = SPUUpdater(
+    #if DEBUG
+    updater = nil
+    startupError = "Updates are disabled in DingDong DEV."
+    #else
+    let updater = SPUUpdater(
       hostBundle: .main,
       applicationBundle: .main,
       userDriver: userDriver,
       delegate: nil
     )
+    self.updater = updater
     do {
       try updater.start()
     } catch {
       startupError = error.localizedDescription
       userDriver.fail(error.localizedDescription)
     }
+    #endif
   }
 
   var isSupported: Bool {
@@ -34,7 +40,7 @@ final class DingDongUpdater {
     }
     guard !userDriver.status.isBusy else { return }
     userDriver.begin()
-    updater.checkForUpdates()
+    updater?.checkForUpdates()
   }
 
   func state() -> [String: Any] {

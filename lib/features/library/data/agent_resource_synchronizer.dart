@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_skill_catalog.dart';
@@ -10,14 +11,6 @@ import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:path/path.dart' as path;
-
-enum AgentMcpConfigKind {
-  codexToml,
-  claudeJson,
-  cursorJson,
-  geminiJson,
-  kiroJson,
-}
 
 final class AgentPromptTarget {
   const AgentPromptTarget(
@@ -39,96 +32,7 @@ final class AgentMcpTarget {
   final String clientName;
 }
 
-/// Data-driven native locations for one supported Agent client.
-final class AgentClientAdapter {
-  const AgentClientAdapter({
-    required this.id,
-    required this.displayName,
-    required this.homeMarker,
-    required this.globalSkillPath,
-    required this.projectSkillPath,
-    required this.mcpPath,
-    required this.mcpKind,
-    this.promptPath,
-    this.includeBridgeRoutingInstructions = true,
-  });
-
-  final String id;
-  final String displayName;
-  final String homeMarker;
-  final List<String> globalSkillPath;
-  final List<String> projectSkillPath;
-  final List<String> mcpPath;
-  final AgentMcpConfigKind mcpKind;
-  final List<String>? promptPath;
-  final bool includeBridgeRoutingInstructions;
-
-  bool isInstalled(String home) =>
-      Directory(path.join(home, homeMarker)).existsSync();
-
-  Directory globalSkillDirectory(String home) =>
-      Directory(path.joinAll(<String>[home, ...globalSkillPath]));
-
-  String get projectSkillRoot => path.joinAll(projectSkillPath);
-
-  File mcpFile(String home) => File(path.joinAll(<String>[home, ...mcpPath]));
-
-  File? promptFile(String home) => promptPath == null
-      ? null
-      : File(path.joinAll(<String>[home, ...promptPath!]));
-}
-
-const List<AgentClientAdapter> builtInAgentClientAdapters =
-    <AgentClientAdapter>[
-      AgentClientAdapter(
-        id: 'codex',
-        displayName: 'Codex',
-        homeMarker: '.codex',
-        globalSkillPath: <String>['.agents', 'skills'],
-        projectSkillPath: <String>['.agents', 'skills'],
-        promptPath: <String>['.codex', 'AGENTS.md'],
-        mcpPath: <String>['.codex', 'config.toml'],
-        mcpKind: AgentMcpConfigKind.codexToml,
-      ),
-      AgentClientAdapter(
-        id: 'claude-code',
-        displayName: 'Claude Code',
-        homeMarker: '.claude',
-        globalSkillPath: <String>['.claude', 'skills'],
-        projectSkillPath: <String>['.claude', 'skills'],
-        promptPath: <String>['.claude', 'CLAUDE.md'],
-        includeBridgeRoutingInstructions: false,
-        mcpPath: <String>['.claude.json'],
-        mcpKind: AgentMcpConfigKind.claudeJson,
-      ),
-      AgentClientAdapter(
-        id: 'cursor',
-        displayName: 'Cursor',
-        homeMarker: '.cursor',
-        globalSkillPath: <String>['.cursor', 'skills'],
-        projectSkillPath: <String>['.cursor', 'skills'],
-        mcpPath: <String>['.cursor', 'mcp.json'],
-        mcpKind: AgentMcpConfigKind.cursorJson,
-      ),
-      AgentClientAdapter(
-        id: 'gemini',
-        displayName: 'Gemini CLI',
-        homeMarker: '.gemini',
-        globalSkillPath: <String>['.gemini', 'skills'],
-        projectSkillPath: <String>['.gemini', 'skills'],
-        mcpPath: <String>['.gemini', 'settings.json'],
-        mcpKind: AgentMcpConfigKind.geminiJson,
-      ),
-      AgentClientAdapter(
-        id: 'kiro',
-        displayName: 'Kiro',
-        homeMarker: '.kiro',
-        globalSkillPath: <String>['.kiro', 'skills'],
-        projectSkillPath: <String>['.kiro', 'skills'],
-        mcpPath: <String>['.kiro', 'settings', 'mcp.json'],
-        mcpKind: AgentMcpConfigKind.kiroJson,
-      ),
-    ];
+typedef AgentAdapterLoader = Future<List<AgentAdapter>> Function();
 
 /// Makes DingDong's enabled state concrete in supported Agent clients.
 /// Skills are mirrored as complete packages; MCP resources become real client
@@ -143,6 +47,8 @@ final class AgentResourceSynchronizer {
     this.skillClientNames = const <String, String>{},
     this.projectSkillClientNames = const <String, String>{},
     this.externalSkillCatalogs = const <AgentSkillCatalog>[],
+    this._adapterLoader,
+    this._adapterHomeDirectory,
     File? managedStateFile,
     SkillPackageInstaller? skillPackageInstaller,
   }) : managedStateFile =
@@ -151,90 +57,49 @@ final class AgentResourceSynchronizer {
        skillPackageInstaller =
            skillPackageInstaller ?? GitHubSkillPackageInstaller(packageRoot);
 
-  factory AgentResourceSynchronizer.currentUser(
+  static Future<AgentResourceSynchronizer> currentUser(
     Directory packageRoot, {
+    required AgentAdapterLoader loadAdapters,
     SkillPackageInstaller? skillPackageInstaller,
     String? homeDirectory,
-  }) {
+  }) async {
     final String home =
         homeDirectory ??
         Platform.environment['HOME'] ??
         Platform.environment['USERPROFILE']!;
-    final List<AgentClientAdapter> installed = builtInAgentClientAdapters
-        .where((AgentClientAdapter adapter) => adapter.isInstalled(home))
-        .toList(growable: false);
-    final List<Directory> skills = installed
-        .map((AgentClientAdapter adapter) => adapter.globalSkillDirectory(home))
-        .toList(growable: false);
-    final List<String> projectSkills = installed
-        .map((AgentClientAdapter adapter) => adapter.projectSkillRoot)
-        .toList(growable: false);
-    final List<AgentPromptTarget> prompts = installed
-        .map((AgentClientAdapter adapter) {
-          final File? file = adapter.promptFile(home);
-          return file == null
-              ? null
-              : AgentPromptTarget(
-                  file,
-                  includeBridgeRoutingInstructions:
-                      adapter.includeBridgeRoutingInstructions,
-                  clientName: adapter.displayName,
-                );
-        })
-        .whereType<AgentPromptTarget>()
-        .toList(growable: false);
-    final List<AgentMcpTarget> mcps = installed
-        .map(
-          (AgentClientAdapter adapter) => AgentMcpTarget(
-            adapter.mcpFile(home),
-            adapter.mcpKind,
-            clientName: adapter.displayName,
-          ),
-        )
-        .toList(growable: false);
-    final List<AgentSkillCatalog> externalSkills = <AgentSkillCatalog>[
-      if (installed.any(
-        (AgentClientAdapter adapter) => adapter.id == 'claude-code',
-      ))
-        ClaudeCodePluginSkillCatalog(
-          settingsFile: File(path.join(home, '.claude', 'settings.json')),
-          installedPluginsFile: File(
-            path.join(home, '.claude', 'plugins', 'installed_plugins.json'),
-          ),
-        ),
-    ];
-    return AgentResourceSynchronizer(
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
       packageRoot: packageRoot,
-      skillRoots: skills,
-      projectSkillRoots: projectSkills,
-      promptTargets: prompts,
-      mcpTargets: mcps,
-      skillClientNames: <String, String>{
-        for (final AgentClientAdapter adapter in installed)
-          path.normalize(adapter.globalSkillDirectory(home).path):
-              adapter.displayName,
-      },
-      projectSkillClientNames: <String, String>{
-        for (final AgentClientAdapter adapter in installed)
-          path.normalize(adapter.projectSkillRoot): adapter.displayName,
-      },
-      externalSkillCatalogs: externalSkills,
+      skillRoots: const <Directory>[],
+      mcpTargets: const <AgentMcpTarget>[],
+      adapterLoader: loadAdapters,
+      adapterHomeDirectory: home,
       skillPackageInstaller: skillPackageInstaller,
     );
+    try {
+      await synchronizer._reloadAdapterTargets();
+    } on FormatException {
+      // Keep DingDong and Resource Manager available so the invalid user YAML
+      // can remain visible and be repaired. inspect/sync still surface the
+      // configuration error and do not apply a partial Adapter catalog.
+    }
+    return synchronizer;
   }
 
   final Directory packageRoot;
-  final List<Directory> skillRoots;
-  final List<String> projectSkillRoots;
-  final List<AgentPromptTarget> promptTargets;
-  final List<AgentMcpTarget> mcpTargets;
-  final Map<String, String> skillClientNames;
-  final Map<String, String> projectSkillClientNames;
-  final List<AgentSkillCatalog> externalSkillCatalogs;
+  List<Directory> skillRoots;
+  List<String> projectSkillRoots;
+  List<AgentPromptTarget> promptTargets;
+  List<AgentMcpTarget> mcpTargets;
+  Map<String, String> skillClientNames;
+  Map<String, String> projectSkillClientNames;
+  List<AgentSkillCatalog> externalSkillCatalogs;
   final File managedStateFile;
   final SkillPackageInstaller skillPackageInstaller;
+  final AgentAdapterLoader? _adapterLoader;
+  final String? _adapterHomeDirectory;
 
   Future<List<AppIssue>> sync(List<Resource> resources) async {
+    await _reloadAdapterTargets();
     final List<Resource> prompts = resources
         .where(
           (Resource item) => item.enabled && item.type == ResourceType.prompt,
@@ -248,7 +113,7 @@ final class AgentResourceSynchronizer {
     final List<Resource> mcps = resources
         .where((Resource item) => item.enabled && item.type == ResourceType.mcp)
         .toList(growable: false);
-    final List<AppIssue> issues = await inspect(resources);
+    final List<AppIssue> issues = await _inspect(resources);
     final List<AppIssue> blockingIssues = issues
         .where((AppIssue issue) => issue.severity == AppIssueSeverity.error)
         .toList(growable: false);
@@ -256,22 +121,57 @@ final class AgentResourceSynchronizer {
       throw AppIssueException(blockingIssues);
     }
     final Map<String, Set<String>> managed = await _readManagedMcpState();
+    _normalizeManagedTargetPaths(managed);
     final Set<String> previousProjectSkillRoots =
         managed.remove(_managedProjectSkillRootsStateKey) ?? <String>{};
-    for (final AgentPromptTarget target in promptTargets) {
-      await _syncPrompts(
-        target.file,
-        prompts,
-        includeBridgeRoutingInstructions:
-            target.includeBridgeRoutingInstructions,
-      );
-    }
+    final Set<String> previousGlobalSkillRoots =
+        managed.remove(_managedGlobalSkillRootsStateKey) ?? <String>{};
+    final Set<String> currentGlobalSkillRoots = skillRoots
+        .map((Directory root) => path.normalize(root.path))
+        .toSet();
+    final List<String> globalRootsToSync = <String>{
+      ...previousGlobalSkillRoots,
+      ...currentGlobalSkillRoots,
+    }.toList()..sort();
     final List<Resource> globalSkills = skills
         .where((Resource resource) => resource.skillProjectPaths.isEmpty)
         .toList(growable: false);
-    for (final Directory root in skillRoots) {
-      await _syncSkills(root, globalSkills);
+    for (final String root in globalRootsToSync) {
+      await _syncSkills(
+        Directory(root),
+        currentGlobalSkillRoots.contains(root)
+            ? globalSkills
+            : const <Resource>[],
+      );
     }
+    if (currentGlobalSkillRoots.isNotEmpty) {
+      managed[_managedGlobalSkillRootsStateKey] = currentGlobalSkillRoots;
+    }
+
+    final Set<String> previousPromptPaths =
+        managed.remove(_managedPromptTargetsStateKey) ?? <String>{};
+    final Map<String, AgentPromptTarget> currentPrompts =
+        <String, AgentPromptTarget>{
+          for (final AgentPromptTarget target in promptTargets)
+            path.normalize(target.file.path): target,
+        };
+    final List<String> promptPathsToSync = <String>{
+      ...previousPromptPaths,
+      ...currentPrompts.keys,
+    }.toList()..sort();
+    for (final String promptPath in promptPathsToSync) {
+      final AgentPromptTarget? target = currentPrompts[promptPath];
+      await _syncPrompts(
+        target?.file ?? File(promptPath),
+        target == null ? const <Resource>[] : prompts,
+        includeBridgeRoutingInstructions:
+            target?.includeBridgeRoutingInstructions ?? false,
+      );
+    }
+    if (currentPrompts.isNotEmpty) {
+      managed[_managedPromptTargetsStateKey] = currentPrompts.keys.toSet();
+    }
+
     final Map<String, List<Resource>> projectSkillsByRoot =
         <String, List<Resource>>{};
     for (final Resource resource in skills.where(
@@ -304,28 +204,79 @@ final class AgentResourceSynchronizer {
     if (currentProjectSkillRoots.isNotEmpty) {
       managed[_managedProjectSkillRootsStateKey] = currentProjectSkillRoots;
     }
-    for (final AgentMcpTarget target in mcpTargets) {
-      final Set<String> previousNames = managed[target.file.path] ?? <String>{};
-      if (mcps.isEmpty && previousNames.isEmpty) {
+
+    final Map<String, AgentMcpConfigKind> previousMcpKinds =
+        _decodeManagedMcpTargetKinds(
+          managed.remove(_managedMcpTargetKindsStateKey) ?? <String>{},
+        );
+    final Map<String, AgentMcpTarget> currentMcpTargets =
+        <String, AgentMcpTarget>{
+          for (final AgentMcpTarget target in mcpTargets)
+            path.normalize(target.file.path): target,
+        };
+    final Set<String> previousMcpPaths = managed.keys
+        .where((String key) => !_isManagedStateKey(key))
+        .toSet();
+    final List<String> mcpPathsToSync = <String>{
+      ...previousMcpPaths,
+      ...previousMcpKinds.keys,
+      ...currentMcpTargets.keys,
+    }.toList()..sort();
+    for (final String mcpPath in mcpPathsToSync) {
+      final AgentMcpTarget? target = currentMcpTargets[mcpPath];
+      final Set<String> previousNames = managed[mcpPath] ?? <String>{};
+      if (target == null) {
+        final File oldFile = File(mcpPath);
+        if (previousNames.isNotEmpty && await oldFile.exists()) {
+          await _syncMcpTarget(
+            oldFile,
+            previousMcpKinds[mcpPath] ?? _inferMcpKind(oldFile),
+            const <Resource>[],
+            previousNames,
+          );
+        }
+        managed.remove(mcpPath);
         continue;
       }
-      await switch (target.kind) {
-        AgentMcpConfigKind.codexToml => _syncCodex(target.file, mcps),
-        AgentMcpConfigKind.claudeJson ||
-        AgentMcpConfigKind.cursorJson ||
-        AgentMcpConfigKind.geminiJson ||
-        AgentMcpConfigKind.kiroJson => _syncJson(
-          target.file,
-          target.kind,
-          mcps,
-          previousNames,
-        ),
-      };
-      managed[target.file.path] = mcps.map(_serverName).toSet();
+      if (mcps.isEmpty && previousNames.isEmpty) {
+        managed.remove(mcpPath);
+        continue;
+      }
+      await _syncMcpTarget(target.file, target.kind, mcps, previousNames);
+      final Set<String> currentNames = mcps.map(_serverName).toSet();
+      if (currentNames.isEmpty) {
+        managed.remove(mcpPath);
+      } else {
+        managed[mcpPath] = currentNames;
+      }
+    }
+    if (currentMcpTargets.isNotEmpty) {
+      managed[_managedMcpTargetKindsStateKey] = _encodeManagedMcpTargetKinds(
+        currentMcpTargets,
+      );
     }
     await _writeManagedMcpState(managed);
     return issues;
   }
+
+  Future<void> _syncMcpTarget(
+    File file,
+    AgentMcpConfigKind kind,
+    List<Resource> resources,
+    Set<String> previousNames,
+  ) => switch (kind) {
+    AgentMcpConfigKind.codexToml => _syncCodex(file, resources),
+    AgentMcpConfigKind.claudeJson ||
+    AgentMcpConfigKind.cursorJson ||
+    AgentMcpConfigKind.geminiJson ||
+    AgentMcpConfigKind.kiroJson ||
+    AgentMcpConfigKind.mcpServersJson => _syncJson(
+      file,
+      kind,
+      resources,
+      previousNames,
+    ),
+  };
 
   Future<void> _syncPrompts(
     File file,
@@ -396,6 +347,11 @@ final class AgentResourceSynchronizer {
 
   /// Performs the same checks as sync without changing any Agent files.
   Future<List<AppIssue>> inspect(List<Resource> resources) async {
+    await _reloadAdapterTargets();
+    return _inspect(resources);
+  }
+
+  Future<List<AppIssue>> _inspect(List<Resource> resources) async {
     final List<Resource> skills = resources
         .where(
           (Resource item) => item.enabled && item.type == ResourceType.skill,
@@ -642,6 +598,24 @@ final class AgentResourceSynchronizer {
       for (final AppIssue issue in issues) issue.id: issue,
     };
     return unique.values.toList(growable: false);
+  }
+
+  Future<void> _reloadAdapterTargets() async {
+    final AgentAdapterLoader? load = _adapterLoader;
+    if (load == null) {
+      return;
+    }
+    final _AgentResourceTargets targets = _targetsForAdapters(
+      await load(),
+      _adapterHomeDirectory!,
+    );
+    skillRoots = targets.skillRoots;
+    projectSkillRoots = targets.projectSkillRoots;
+    promptTargets = targets.promptTargets;
+    mcpTargets = targets.mcpTargets;
+    skillClientNames = targets.skillClientNames;
+    projectSkillClientNames = targets.projectSkillClientNames;
+    externalSkillCatalogs = targets.externalSkillCatalogs;
   }
 
   void _validateProjectSkillPath(String projectPath) {
@@ -897,6 +871,134 @@ final class AgentResourceSynchronizer {
   }
 }
 
+final class _AgentResourceTargets {
+  const _AgentResourceTargets({
+    required this.skillRoots,
+    required this.projectSkillRoots,
+    required this.promptTargets,
+    required this.mcpTargets,
+    required this.skillClientNames,
+    required this.projectSkillClientNames,
+    required this.externalSkillCatalogs,
+  });
+
+  final List<Directory> skillRoots;
+  final List<String> projectSkillRoots;
+  final List<AgentPromptTarget> promptTargets;
+  final List<AgentMcpTarget> mcpTargets;
+  final Map<String, String> skillClientNames;
+  final Map<String, String> projectSkillClientNames;
+  final List<AgentSkillCatalog> externalSkillCatalogs;
+}
+
+_AgentResourceTargets _targetsForAdapters(
+  List<AgentAdapter> adapters,
+  String home,
+) {
+  final List<AgentAdapter> installed = adapters
+      .where((AgentAdapter adapter) => adapter.isInstalled(home))
+      .toList(growable: false);
+  final Map<String, ({AgentMcpConfigKind kind, String client})>
+  mcpTargetOwners = <String, ({AgentMcpConfigKind kind, String client})>{};
+  final Map<String, ({bool routing, String client})> promptTargetOwners =
+      <String, ({bool routing, String client})>{};
+  for (final AgentAdapter adapter in installed) {
+    if (adapter.resolvedMcpFilePath(home) case final String mcpPath) {
+      final String normalized = path.normalize(mcpPath);
+      final ({AgentMcpConfigKind kind, String client})? existing =
+          mcpTargetOwners[normalized];
+      if (existing != null && existing.kind != adapter.mcpKind) {
+        throw FormatException(
+          'Agent Adapters "${existing.client}" and "${adapter.displayName}" '
+          'use conflicting MCP formats for $normalized.',
+        );
+      }
+      mcpTargetOwners[normalized] = (
+        kind: adapter.mcpKind!,
+        client: adapter.displayName,
+      );
+    }
+    if (adapter.resolvedPromptFilePath(home) case final String promptPath) {
+      final String normalized = path.normalize(promptPath);
+      final ({bool routing, String client})? existing =
+          promptTargetOwners[normalized];
+      if (existing != null &&
+          existing.routing != adapter.includeBridgeRoutingInstructions) {
+        throw FormatException(
+          'Agent Adapters "${existing.client}" and "${adapter.displayName}" '
+          'use conflicting Prompt routing settings for $normalized.',
+        );
+      }
+      promptTargetOwners[normalized] = (
+        routing: adapter.includeBridgeRoutingInstructions,
+        client: adapter.displayName,
+      );
+    }
+  }
+  final List<Directory> skillRoots = installed
+      .map((AgentAdapter adapter) => adapter.resolvedGlobalSkillPath(home))
+      .whereType<String>()
+      .map(Directory.new)
+      .toList(growable: false);
+  final List<String> projectSkillRoots = installed
+      .where((AgentAdapter adapter) => adapter.projectSkillPath != null)
+      .map((AgentAdapter adapter) => adapter.resolvedProjectSkillPath())
+      .toList(growable: false);
+  final List<AgentPromptTarget> promptTargets = installed
+      .map((AgentAdapter adapter) {
+        final String? file = adapter.resolvedPromptFilePath(home);
+        return file == null
+            ? null
+            : AgentPromptTarget(
+                File(file),
+                includeBridgeRoutingInstructions:
+                    adapter.includeBridgeRoutingInstructions,
+                clientName: adapter.displayName,
+              );
+      })
+      .whereType<AgentPromptTarget>()
+      .toList(growable: false);
+  final List<AgentMcpTarget> mcpTargets = installed
+      .map((AgentAdapter adapter) {
+        final String? file = adapter.resolvedMcpFilePath(home);
+        return file == null
+            ? null
+            : AgentMcpTarget(
+                File(file),
+                adapter.mcpKind!,
+                clientName: adapter.displayName,
+              );
+      })
+      .whereType<AgentMcpTarget>()
+      .toList(growable: false);
+  return _AgentResourceTargets(
+    skillRoots: skillRoots,
+    projectSkillRoots: projectSkillRoots,
+    promptTargets: promptTargets,
+    mcpTargets: mcpTargets,
+    skillClientNames: <String, String>{
+      for (final AgentAdapter adapter in installed)
+        if (adapter.resolvedGlobalSkillPath(home) case final String root)
+          path.normalize(root): adapter.displayName,
+    },
+    projectSkillClientNames: <String, String>{
+      for (final AgentAdapter adapter in installed)
+        if (adapter.projectSkillPath != null)
+          path.normalize(adapter.resolvedProjectSkillPath()):
+              adapter.displayName,
+    },
+    externalSkillCatalogs: <AgentSkillCatalog>[
+      if (installed.any((AgentAdapter adapter) => adapter.id == 'claude-code'))
+        ClaudeCodePluginSkillCatalog(
+          settingsFile: File(path.join(home, '.claude', 'settings.json')),
+          installedPluginsFile: File(
+            path.join(home, '.claude', 'plugins', 'installed_plugins.json'),
+          ),
+        ),
+    ],
+  );
+}
+
 /// Adds transactional synchronization without changing callers of ResourceStore.
 final class SynchronizedResourceStore implements ResourceStore {
   SynchronizedResourceStore(
@@ -1018,7 +1120,8 @@ Map<String, Object?> _jsonMcp(
       AgentMcpConfigKind.claudeJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.cursorJson => 'Bearer \${env:$variable}',
       AgentMcpConfigKind.geminiJson => 'Bearer \$$variable',
-      AgentMcpConfigKind.kiroJson => 'Bearer \${$variable}',
+      AgentMcpConfigKind.kiroJson ||
+      AgentMcpConfigKind.mcpServersJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.codexToml => throw StateError(
         'Codex MCP configuration is not JSON.',
       ),
@@ -1131,6 +1234,65 @@ String _clientNameFromPath(String value) {
 const String _managedPromptsBegin = '<!-- BEGIN DINGDONG MANAGED PROMPTS -->';
 const String _managedPromptsEnd = '<!-- END DINGDONG MANAGED PROMPTS -->';
 const String _managedProjectSkillRootsStateKey = r'$dingdongProjectSkillRoots';
+const String _managedGlobalSkillRootsStateKey = r'$dingdongGlobalSkillRoots';
+const String _managedPromptTargetsStateKey = r'$dingdongPromptTargets';
+const String _managedMcpTargetKindsStateKey = r'$dingdongMcpTargetKinds';
+
+bool _isManagedStateKey(String value) => const <String>{
+  _managedProjectSkillRootsStateKey,
+  _managedGlobalSkillRootsStateKey,
+  _managedPromptTargetsStateKey,
+  _managedMcpTargetKindsStateKey,
+}.contains(value);
+
+void _normalizeManagedTargetPaths(Map<String, Set<String>> managed) {
+  for (final MapEntry<String, Set<String>> entry in managed.entries.toList(
+    growable: false,
+  )) {
+    if (_isManagedStateKey(entry.key)) {
+      continue;
+    }
+    final String normalized = path.normalize(entry.key);
+    if (normalized == entry.key) {
+      continue;
+    }
+    managed.putIfAbsent(normalized, () => <String>{}).addAll(entry.value);
+    managed.remove(entry.key);
+  }
+}
+
+Set<String> _encodeManagedMcpTargetKinds(Map<String, AgentMcpTarget> targets) =>
+    targets.entries
+        .map(
+          (MapEntry<String, AgentMcpTarget> entry) =>
+              jsonEncode(<String, String>{
+                'path': entry.key,
+                'kind': entry.value.kind.configValue,
+              }),
+        )
+        .toSet();
+
+Map<String, AgentMcpConfigKind> _decodeManagedMcpTargetKinds(
+  Set<String> encoded,
+) {
+  try {
+    return <String, AgentMcpConfigKind>{
+      for (final String value in encoded)
+        if (jsonDecode(value) case final Map<String, Object?> item)
+          path.normalize(item['path']! as String): AgentMcpConfigKind.parse(
+            item['kind'],
+            'managed MCP kind',
+          ),
+    };
+  } on Object {
+    throw const FormatException('DingDong Agent sync state is invalid.');
+  }
+}
+
+AgentMcpConfigKind _inferMcpKind(File file) =>
+    path.extension(file.path).toLowerCase() == '.toml'
+    ? AgentMcpConfigKind.codexToml
+    : AgentMcpConfigKind.mcpServersJson;
 
 final RegExp _managedPromptsPattern = RegExp(
   '${RegExp.escape(_managedPromptsBegin)}.*?${RegExp.escape(_managedPromptsEnd)}\\s*',

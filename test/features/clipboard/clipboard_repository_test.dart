@@ -203,15 +203,130 @@ void main() {
       );
     },
   );
+
+  test(
+    'retention excludes legacy and grouped archives from automatic deletion',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-clipboard-archive-retention-test-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final ClipboardRepository repository = ClipboardRepository.open(
+        '${directory.path}/clipboard-history.sqlite',
+      );
+      addTearDown(repository.close);
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      repository.save(
+        _record(
+          'legacy-archive',
+          now.subtract(const Duration(days: 30)),
+          group: 'Archive',
+          tags: const <String>['clipboard', 'text', 'archived'],
+        ),
+      );
+      repository.save(
+        _record(
+          'grouped-archive',
+          now.subtract(const Duration(days: 30)),
+          group: 'Clipboard',
+          groups: const <String>['Clipboard', '项目归档'],
+        ),
+      );
+      repository.save(
+        _record('expired', now.subtract(const Duration(days: 30))),
+      );
+      for (var index = 0; index < 22; index += 1) {
+        repository.save(
+          _record('recent-$index', now.add(Duration(seconds: index))),
+        );
+      }
+
+      repository.trim(maxItems: 20, maxAgeDays: 7, now: now);
+      final List<ClipboardRecord> records = repository.list(limit: 5000);
+
+      expect(
+        records.any((ClipboardRecord item) => item.id == 'legacy-archive'),
+        isTrue,
+      );
+      expect(
+        records.any((ClipboardRecord item) => item.id == 'grouped-archive'),
+        isTrue,
+      );
+      expect(
+        records.any((ClipboardRecord item) => item.id == 'expired'),
+        isFalse,
+      );
+      expect(
+        records
+            .where(
+              (ClipboardRecord item) =>
+                  !item.tags.contains('archived') &&
+                  !item.groupNames.contains('项目归档'),
+            )
+            .length,
+        20,
+      );
+    },
+  );
+
+  test(
+    'protected history remains listable beyond the ordinary limit',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-clipboard-protected-list-test-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final ClipboardRepository repository = ClipboardRepository.open(
+        '${directory.path}/clipboard-history.sqlite',
+      );
+      addTearDown(repository.close);
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      repository.save(
+        _record(
+          'old-archive',
+          now.subtract(const Duration(days: 30)),
+          tags: const <String>['clipboard', 'text', 'archived'],
+        ),
+      );
+      for (var index = 0; index < 22; index += 1) {
+        repository.save(
+          _record('recent-$index', now.add(Duration(seconds: index))),
+        );
+      }
+
+      final List<ClipboardRecord> records = repository.list(
+        limit: 20,
+        includeProtectedBeyondLimit: true,
+      );
+
+      expect(records, hasLength(21));
+      expect(
+        records.any((ClipboardRecord item) => item.id == 'old-archive'),
+        isTrue,
+      );
+      expect(
+        records.where((ClipboardRecord item) => !item.isArchived),
+        hasLength(20),
+      );
+    },
+  );
 }
 
-ClipboardRecord _record(String id, DateTime timestamp, {bool pinned = false}) {
+ClipboardRecord _record(
+  String id,
+  DateTime timestamp, {
+  bool pinned = false,
+  String group = 'Clipboard',
+  List<String> groups = const <String>[],
+  List<String> tags = const <String>['clipboard', 'text'],
+}) {
   return ClipboardRecord(
     id: id,
-    group: 'Clipboard',
+    group: group,
+    groups: groups,
     title: id,
     content: id,
-    tags: const <String>['clipboard', 'text'],
+    tags: tags,
     pinned: pinned,
     enabled: true,
     activation: pinned ? 'always' : 'taskMatch',

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dingdong.app/schemas/agent-launchers.v1.json",
+  "title": "DingDong Agent conversation launchers",
+  "description": "Selects the macOS terminal used when DingDong reopens CLI Agent conversations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "defaults": {
+      "$ref": "#/$defs/launcherSettings"
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "codex": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "claude-code": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "cursor": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "gemini-cli": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "kiro": {
+          "$ref": "#/$defs/launcherSettings"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "launcherSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "macosTerminal": {
+          "type": "string",
+          "enum": [
+            "terminal",
+            "iterm"
+          ]
+        },
+        "itermOpenMode": {
+          "type": "string",
+          "enum": [
+            "new-window",
+            "new-tab"
+          ]
+        }
+      }
+    }
+  }
+}

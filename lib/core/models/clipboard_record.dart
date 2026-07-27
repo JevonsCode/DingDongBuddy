@@ -37,6 +37,21 @@ final class ClipboardRecord {
 
   bool get sensitive => tags.contains('sensitive');
 
+  /// Whether automatic retention must leave this record untouched.
+  ///
+  /// Older releases marked archives with a tag, while current releases archive
+  /// by assigning a user-created group. Keep both representations readable so
+  /// upgrading cannot make an existing archive disposable.
+  bool get isArchived {
+    if (tags.any((String tag) => tag.trim().toLowerCase() == 'archived')) {
+      return true;
+    }
+    return groupNames.any((String value) {
+      final String normalized = value.trim().toLowerCase();
+      return normalized == 'archive' || !isAutomaticClipboardGroup(value);
+    });
+  }
+
   /// Every user-defined group this record belongs to, in display order.
   List<String> get groupNames {
     final Set<String> seen = <String>{};
@@ -142,6 +157,23 @@ final class ClipboardRecord {
     };
   }
 }
+
+bool isAutomaticClipboardGroup(String value) =>
+    _automaticClipboardGroups.contains(value.trim().toLowerCase());
+
+const Set<String> _automaticClipboardGroups = <String>{
+  'archive',
+  'clipboard',
+  'code',
+  'commands',
+  'email',
+  'files',
+  'images',
+  'json',
+  'paths',
+  'sensitive',
+  'urls',
+};
 
 List<String> _normalizedGroups(Iterable<String> values) {
   final Set<String> seen = <String>{};

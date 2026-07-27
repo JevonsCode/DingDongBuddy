@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
@@ -13,67 +14,80 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 
 void main() {
-  test('current user discovery includes native Codex and Claude prompts', () {
-    final Directory temp = Directory.systemTemp.createTempSync(
-      'dingdong-prompt-discovery-',
-    );
-    addTearDown(() => temp.deleteSync(recursive: true));
-    Directory('${temp.path}/.codex').createSync();
-    Directory('${temp.path}/.claude').createSync();
+  test(
+    'current user discovery includes native Codex and Claude prompts',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-prompt-discovery-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      Directory('${temp.path}/.codex').createSync();
+      Directory('${temp.path}/.claude').createSync();
+      final String resolvedHome = temp.resolveSymbolicLinksSync();
 
-    final AgentResourceSynchronizer synchronizer =
-        AgentResourceSynchronizer.currentUser(
-          Directory('${temp.path}/packages'),
-          homeDirectory: temp.path,
-        );
+      final AgentResourceSynchronizer synchronizer =
+          await AgentResourceSynchronizer.currentUser(
+            Directory('${temp.path}/packages'),
+            loadAdapters: () async => <AgentAdapter>[
+              AgentAdapter.parse(_codexAdapter),
+              AgentAdapter.parse(_claudeAdapter),
+            ],
+            homeDirectory: temp.path,
+          );
 
-    expect(
-      synchronizer.promptTargets.map(
-        (AgentPromptTarget target) => target.file.path,
-      ),
-      containsAll(<String>[
-        path.join(temp.path, '.codex', 'AGENTS.md'),
-        path.join(temp.path, '.claude', 'CLAUDE.md'),
-      ]),
-    );
-    expect(
-      synchronizer.promptTargets
-          .singleWhere(
-            (AgentPromptTarget target) =>
-                target.file.path == path.join(temp.path, '.codex', 'AGENTS.md'),
-          )
-          .includeBridgeRoutingInstructions,
-      isTrue,
-    );
-    expect(
-      synchronizer.promptTargets
-          .singleWhere(
-            (AgentPromptTarget target) =>
-                target.file.path ==
-                path.join(temp.path, '.claude', 'CLAUDE.md'),
-          )
-          .includeBridgeRoutingInstructions,
-      isFalse,
-    );
-    expect(synchronizer.externalSkillCatalogs, hasLength(1));
-  });
+      expect(
+        synchronizer.promptTargets.map(
+          (AgentPromptTarget target) => target.file.path,
+        ),
+        containsAll(<String>[
+          path.join(resolvedHome, '.codex', 'AGENTS.md'),
+          path.join(resolvedHome, '.claude', 'CLAUDE.md'),
+        ]),
+      );
+      expect(
+        synchronizer.promptTargets
+            .singleWhere(
+              (AgentPromptTarget target) =>
+                  target.file.path ==
+                  path.join(resolvedHome, '.codex', 'AGENTS.md'),
+            )
+            .includeBridgeRoutingInstructions,
+        isTrue,
+      );
+      expect(
+        synchronizer.promptTargets
+            .singleWhere(
+              (AgentPromptTarget target) =>
+                  target.file.path ==
+                  path.join(resolvedHome, '.claude', 'CLAUDE.md'),
+            )
+            .includeBridgeRoutingInstructions,
+        isFalse,
+      );
+      expect(synchronizer.externalSkillCatalogs, hasLength(1));
+    },
+  );
 
-  test('current user discovery includes Kiro native locations', () {
+  test('current user discovery includes Kiro native locations', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-kiro-discovery-',
     );
     addTearDown(() => temp.deleteSync(recursive: true));
     Directory('${temp.path}/.kiro').createSync();
+    final String resolvedHome = temp.resolveSymbolicLinksSync();
 
     final AgentResourceSynchronizer synchronizer =
-        AgentResourceSynchronizer.currentUser(
+        await AgentResourceSynchronizer.currentUser(
           Directory('${temp.path}/packages'),
+          loadAdapters: () async => <AgentAdapter>[
+            AgentAdapter.parse(_kiroAdapter),
+          ],
           homeDirectory: temp.path,
         );
 
     expect(
       synchronizer.skillRoots.map((Directory root) => root.path),
-      contains(path.join(temp.path, '.kiro', 'skills')),
+      contains(path.join(resolvedHome, '.kiro', 'skills')),
     );
     expect(
       synchronizer.projectSkillRoots,
@@ -81,10 +95,177 @@ void main() {
     );
     expect(
       synchronizer.mcpTargets.single.file.path,
-      path.join(temp.path, '.kiro', 'settings', 'mcp.json'),
+      path.join(resolvedHome, '.kiro', 'settings', 'mcp.json'),
     );
     expect(synchronizer.mcpTargets.single.kind, AgentMcpConfigKind.kiroJson);
   });
+
+  test(
+    'invalid Adapter YAML does not prevent startup but still blocks sync',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-invalid-adapter-startup-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final AgentResourceSynchronizer synchronizer =
+          await AgentResourceSynchronizer.currentUser(
+            Directory('${temp.path}/packages'),
+            loadAdapters: () async =>
+                throw const FormatException('invalid user Adapter'),
+            homeDirectory: temp.path,
+          );
+
+      expect(synchronizer.skillRoots, isEmpty);
+      expect(
+        synchronizer.inspect(const <Resource>[]),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        synchronizer.sync(const <Resource>[]),
+        throwsA(isA<FormatException>()),
+      );
+    },
+  );
+
+  test('conflicting shared Adapter targets block synchronization', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-conflicting-adapters-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    Directory('${temp.path}/.first').createSync();
+    Directory('${temp.path}/.second').createSync();
+    final List<AgentAdapter> adapters = <AgentAdapter>[
+      AgentAdapter.parse('''
+schemaVersion: 1
+id: first
+displayName: First
+detect:
+  directory: ~/.first
+mcp:
+  file: ~/.shared/mcp.json
+  format: mcpServers-json
+'''),
+      AgentAdapter.parse('''
+schemaVersion: 1
+id: second
+displayName: Second
+detect:
+  directory: ~/.second
+mcp:
+  file: ~/.shared/mcp.json
+  format: codex-toml
+'''),
+    ];
+    final AgentResourceSynchronizer synchronizer =
+        await AgentResourceSynchronizer.currentUser(
+          Directory('${temp.path}/packages'),
+          loadAdapters: () async => adapters,
+          homeDirectory: temp.path,
+        );
+
+    expect(
+      synchronizer.inspect(const <Resource>[]),
+      throwsA(
+        isA<FormatException>().having(
+          (FormatException error) => error.message,
+          'message',
+          contains('conflicting MCP formats'),
+        ),
+      ),
+    );
+  });
+
+  test(
+    'changing an Adapter migrates managed resources and cleans old targets after restart',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-adapter-migration-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      Directory('${temp.path}/.new-agent').createSync();
+      final Directory packageRoot = Directory('${temp.path}/packages');
+      final File oldPrompt = File('${temp.path}/.new-agent/old/AGENTS.md')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('Keep the old user instruction.\n');
+      final File oldMcp = File('${temp.path}/.new-agent/old/mcp.json')
+        ..createSync(recursive: true)
+        ..writeAsStringSync(
+          '{"theme":"dark","mcpServers":{"personal":{"command":"mine"}}}',
+        );
+      final Directory oldSkillRoot = Directory(
+        '${temp.path}/.new-agent/old/skills',
+      );
+      File(
+        '${oldSkillRoot.path}/user-owned/README.md',
+      ).createSync(recursive: true);
+      var adapters = <AgentAdapter>[AgentAdapter.parse(_movableAdapter('old'))];
+      final List<Resource> resources = <Resource>[
+        _resource(
+          id: 'MIGRATED-PROMPT',
+          type: ResourceType.prompt,
+          content: 'Keep responses concise.',
+          activation: ResourceActivation.always,
+        ),
+        _resource(
+          id: 'MIGRATED-SKILL',
+          type: ResourceType.skill,
+          content:
+              '---\nname: migrated-skill\ndescription: Migration test\n---\n',
+        ),
+        _resource(
+          id: 'MIGRATED-MCP',
+          type: ResourceType.mcp,
+          content: '{"type":"stdio","command":"npx","args":["server"]}',
+        ),
+      ];
+      AgentResourceSynchronizer synchronizer =
+          await AgentResourceSynchronizer.currentUser(
+            packageRoot,
+            loadAdapters: () async => adapters,
+            homeDirectory: temp.path,
+          );
+
+      await synchronizer.sync(resources);
+
+      expect(
+        File('${oldSkillRoot.path}/migrated-skill/SKILL.md').existsSync(),
+        isTrue,
+      );
+      expect(oldPrompt.readAsStringSync(), contains('Keep responses concise.'));
+      expect(_onlyServerCount(oldMcp), 2);
+
+      adapters = <AgentAdapter>[AgentAdapter.parse(_movableAdapter('new'))];
+      synchronizer = await AgentResourceSynchronizer.currentUser(
+        packageRoot,
+        loadAdapters: () async => adapters,
+        homeDirectory: temp.path,
+      );
+
+      await synchronizer.sync(resources);
+
+      expect(
+        Directory('${oldSkillRoot.path}/migrated-skill').existsSync(),
+        isFalse,
+      );
+      expect(
+        File('${oldSkillRoot.path}/user-owned/README.md').existsSync(),
+        isTrue,
+      );
+      expect(oldPrompt.readAsStringSync(), 'Keep the old user instruction.\n');
+      expect(_onlyServerCount(oldMcp), 1);
+      expect(
+        File(
+          '${temp.path}/.new-agent/new/skills/migrated-skill/SKILL.md',
+        ).existsSync(),
+        isTrue,
+      );
+      expect(
+        File('${temp.path}/.new-agent/new/AGENTS.md').readAsStringSync(),
+        contains('Keep responses concise.'),
+      );
+      expect(_onlyServerCount(File('${temp.path}/.new-agent/new/mcp.json')), 1);
+    },
+  );
 
   test('bundled online Skill syncs offline from embedded content', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
@@ -750,6 +931,54 @@ void main() {
   });
 }
 
+const String _codexAdapter = '''
+schemaVersion: 1
+id: codex
+displayName: Codex
+detect:
+  directory: ~/.codex
+skills:
+  global: ~/.codex/skills
+  project: .agents/skills
+mcp:
+  file: ~/.codex/config.toml
+  format: codex-toml
+prompt:
+  file: ~/.codex/AGENTS.md
+  includeBridgeRoutingInstructions: true
+''';
+
+const String _claudeAdapter = '''
+schemaVersion: 1
+id: claude-code
+displayName: Claude Code
+detect:
+  directory: ~/.claude
+skills:
+  global: ~/.claude/skills
+  project: .claude/skills
+mcp:
+  file: ~/.claude.json
+  format: claude-json
+prompt:
+  file: ~/.claude/CLAUDE.md
+  includeBridgeRoutingInstructions: false
+''';
+
+const String _kiroAdapter = '''
+schemaVersion: 1
+id: kiro
+displayName: Kiro
+detect:
+  directory: ~/.kiro
+skills:
+  global: ~/.kiro/skills
+  project: .kiro/skills
+mcp:
+  file: ~/.kiro/settings/mcp.json
+  format: kiro-json
+''';
+
 final class _OfflineInstaller implements SkillPackageInstaller {
   @override
   Future<SkillPackageInstallResult> install(Uri source) {
@@ -773,6 +1002,30 @@ Map<String, Object?> _onlyServer(File file) {
       root['mcpServers'] as Map<String, Object?>;
   return servers.values.single as Map<String, Object?>;
 }
+
+int _onlyServerCount(File file) {
+  final Map<String, Object?> root =
+      jsonDecode(file.readAsStringSync()) as Map<String, Object?>;
+  return (root['mcpServers'] as Map<String, Object?>).length;
+}
+
+String _movableAdapter(String target) =>
+    '''
+schemaVersion: 1
+id: new-agent
+displayName: New Agent
+detect:
+  directory: ~/.new-agent
+skills:
+  global: ~/.new-agent/$target/skills
+  project: .new-agent/skills
+mcp:
+  file: ~/.new-agent/$target/mcp.json
+  format: mcpServers-json
+prompt:
+  file: ~/.new-agent/$target/AGENTS.md
+  includeBridgeRoutingInstructions: true
+''';
 
 Resource _resource({
   String id = 'ABCDEF12-0000',

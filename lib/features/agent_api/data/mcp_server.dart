@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.7.26',
+              'version': '0.7.27',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
@@ -216,7 +216,11 @@ final class McpServer {
       name: 'dingdong_notify',
       title: 'Notify DingDong',
       description:
-          'Notify DingDong once when the whole user-visible task is complete, blocked, or waiting for attention. Use one short outcome sentence for message.',
+          'Notify DingDong when the task is blocked or waiting for attention. '
+          'A configured completion hook sends the final task-complete alert. '
+          'Do not call this tool before the final response when that hook is '
+          'available; use it for completion only if the client has no '
+          'completion hook. Use one short outcome sentence for message.',
       properties: <String, Object?>{
         'message': _stringProperty(),
         'source': _stringProperty(),

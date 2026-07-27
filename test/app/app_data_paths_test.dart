@@ -46,5 +46,47 @@ void main() {
       ).agentActivityFile.path,
       '/Users/example/Library/Application Support/DingDong/agent-activity.json',
     );
+    expect(
+      AppDataPaths.forPlatform(
+        operatingSystem: 'macos',
+        homeDirectory: '/Users/example',
+      ).agentLaunchersFile.path,
+      '/Users/example/Library/Application Support/DingDong/agent-launchers.json',
+    );
+    expect(
+      AppDataPaths.forPlatform(
+        operatingSystem: 'macos',
+        homeDirectory: '/Users/example',
+      ).development,
+      isFalse,
+    );
+  });
+
+  test('development builds use an isolated application-support directory', () {
+    expect(
+      AppDataPaths.forPlatform(
+        operatingSystem: 'macos',
+        homeDirectory: '/Users/example',
+        development: true,
+      ).applicationSupportDirectory.path,
+      '/Users/example/Library/Application Support/DingDong DEV',
+    );
+    expect(
+      AppDataPaths.forPlatform(
+        operatingSystem: 'macos',
+        homeDirectory: '/Users/example',
+        development: true,
+      ).development,
+      isTrue,
+    );
+    expect(
+      AppDataPaths.forPlatform(
+        operatingSystem: 'windows',
+        homeDirectory: r'C:\Users\example',
+        appDataDirectory: r'C:\Users\example\AppData\Roaming',
+        development: true,
+      ).applicationSupportDirectory.path,
+      r'C:\Users\example\AppData\Roaming\DingDong DEV',
+    );
   });
 }

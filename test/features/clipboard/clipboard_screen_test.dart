@@ -286,6 +286,76 @@ void main() {
     expect(editable.focusNode.hasFocus, isTrue);
   });
 
+  testWidgets(
+    'search stays visible after remount and clearing restores all history',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 7, 24);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[
+          ClipboardRecord(
+            id: 'proxy',
+            group: 'Clipboard',
+            title: 'Proxy dependency',
+            content: 'proxy-agent',
+            tags: const <String>['clipboard', 'text'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          ClipboardRecord(
+            id: 'history',
+            group: 'Clipboard',
+            title: 'Earlier history',
+            content: 'older clipboard value',
+            tags: const <String>['clipboard', 'text'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(hours: 1)),
+            updatedAt: now.subtract(const Duration(hours: 1)),
+          ),
+        ]),
+      )..load();
+
+      Widget clipboardScreen() =>
+          MaterialApp(home: ClipboardScreen(viewModel: model));
+
+      await tester.pumpWidget(clipboardScreen());
+      await tester.enterText(
+        find.byKey(const Key('clipboard-search')),
+        'proxy-agent',
+      );
+      await tester.pump();
+      expect(find.text('Proxy dependency'), findsOneWidget);
+      expect(find.text('Earlier history'), findsNothing);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      await tester.pumpWidget(clipboardScreen());
+      await tester.pump();
+
+      final Finder searchEditable = find.descendant(
+        of: find.byKey(const Key('clipboard-search')),
+        matching: find.byType(EditableText),
+      );
+      expect(
+        tester.widget<EditableText>(searchEditable).controller.text,
+        'proxy-agent',
+      );
+
+      await tester.enterText(find.byKey(const Key('clipboard-search')), '');
+      await tester.pump();
+      expect(find.text('Proxy dependency'), findsOneWidget);
+      expect(find.text('Earlier history'), findsOneWidget);
+    },
+  );
+
   testWidgets('filter icon explains expand and collapse actions on hover', (
     WidgetTester tester,
   ) async {
@@ -1100,8 +1170,10 @@ final class _MemoryClipboardStore implements ClipboardStore {
   final List<ClipboardRecord> records;
 
   @override
-  List<ClipboardRecord> list({required int limit}) =>
-      records.take(limit).toList();
+  List<ClipboardRecord> list({
+    required int limit,
+    bool includeProtectedBeyondLimit = false,
+  }) => records.take(limit).toList();
 
   @override
   void save(ClipboardRecord record) {}

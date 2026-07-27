@@ -1,4 +1,5 @@
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_launcher_configuration.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,9 +54,62 @@ void main() {
 
     expect(executable, 'osascript');
     expect(arguments, hasLength(2));
+    expect(arguments![1], contains('tell application "Terminal"'));
     expect(arguments![1], contains("exec 'kiro-cli' 'chat' '--resume-id'"));
     expect(arguments![1], contains("'kiro-session-1'"));
   });
+
+  test(
+    'Claude Code can resume in a new iTerm tab from JSON settings',
+    () async {
+      String? executable;
+      List<String>? arguments;
+      final NativeAgentConversationLauncher launcher =
+          NativeAgentConversationLauncher(
+            operatingSystem: 'macos',
+            configurationLoader: () async =>
+                AgentLauncherConfiguration.decode('''
+{
+  "schemaVersion": 1,
+  "agents": {
+    "claude-code": {
+      "macosTerminal": "iterm",
+      "itermOpenMode": "new-tab"
+    }
+  }
+}
+'''),
+            processStarter:
+                (
+                  String value,
+                  List<String> values, {
+                  String? workingDirectory,
+                }) async {
+                  executable = value;
+                  arguments = values;
+                },
+          );
+
+      await launcher.open(
+        const AgentConversationTarget(
+          client: AgentClient.claudeCode,
+          conversationId: 'claude-session-1',
+          workspacePath: '/workspace/claude project',
+        ),
+      );
+
+      expect(executable, 'osascript');
+      expect(arguments, hasLength(2));
+      expect(arguments![1], contains('tell application "iTerm"'));
+      expect(
+        arguments![1],
+        contains('create tab with default profile command'),
+      );
+      expect(arguments![1], contains("cd -- '/workspace/claude project'"));
+      expect(arguments![1], contains("exec 'claude' '--resume'"));
+      expect(arguments![1], contains("'claude-session-1'"));
+    },
+  );
 
   test(
     'local Cursor conversation falls back to opening its workspace',

@@ -41,24 +41,45 @@ void main() {
 
     expect(macProject, contains('com.dingdongbuddy.app.RunnerTests'));
     expect(
+      macProject,
+      contains('PRODUCT_BUNDLE_IDENTIFIER = com.dingdongbuddy.app.dev;'),
+    );
+    expect(macProject, contains('PRODUCT_NAME = "DingDong DEV";'));
+    expect(
+      macProject,
+      contains(
+        r'TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DingDong DEV.app/'
+        r'$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DingDong DEV";',
+      ),
+    );
+    expect(macProject, contains('dingdong-development.marker'));
+    final String desktopWorkflow = File(
+      '.github/workflows/flutter-desktop.yml',
+    ).readAsStringSync();
+    expect(desktopWorkflow, contains('Build/Products/Debug/DingDong DEV.app'));
+    expect(
+      File('macos/Runner/DingDongUpdater.swift').readAsStringSync(),
+      contains('Updates are disabled in DingDong DEV.'),
+    );
+    expect(
       RegExp(r'MACOSX_DEPLOYMENT_TARGET = 13\.0;').allMatches(macProject),
       hasLength(3),
     );
   });
 
-  test('desktop hosts consume application version 0.7.26 from pubspec', () {
+  test('desktop hosts consume application version 0.7.27 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.7.26+26'));
+    expect(pubspec, contains('version: 0.7.27+27'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync(),
-      contains("const String currentAppBuild = '26';"),
+      contains("const String currentAppBuild = '27';"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
@@ -294,7 +315,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v0.7.26</span>'));
+    expect(website, contains('<span class="demo-version">v0.7.27</span>'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
@@ -336,14 +357,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.7.26"'));
-    expect(releaseMetadata, contains('"latestBuild": "26"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.7.27"'));
+    expect(releaseMetadata, contains('"latestBuild": "27"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.7.26-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.7.27-windows-x64-beta-Setup.exe'),
     );
   });
 

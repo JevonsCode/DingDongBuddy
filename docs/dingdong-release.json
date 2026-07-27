@@ -1,34 +1,34 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.7.26",
-  "latestBuild": "26",
-  "publishedAt": "2026-07-22T15:33:03Z",
+  "latestVersion": "0.7.27",
+  "latestBuild": "27",
+  "publishedAt": "2026-07-27T02:17:18Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.26/DingDong-0.7.26-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.27/DingDong-0.7.27-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.26/DingDong-0.7.26-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.27/DingDong-0.7.27-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.26/DingDong-0.7.26-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.7.27/DingDong-0.7.27-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Keeps the popup resource library and complete Enabled list synchronized with Resource Manager changes without restarting DingDong.",
-    "Marks project- or task-scoped Skills in Resource Manager, the popup library, and Dynamic so their activation boundaries stay visible.",
-    "Accepts GitHub Skill repositories, folders, blob SKILL.md links, and raw SKILL.md links with clearer examples for invalid input.",
-    "Lets macOS users reveal the panel by opening DingDong and restores a Command-dragged menu bar icon position across launches.",
-    "Fixes Windows tray icon replacement, stale Flutter context menus, and unsupported Share actions.",
-    "Documents verified Codex and Claude Code paths separately from implemented but not yet end-to-end verified Agent integrations."
+    "Adds editable, validated Agent Adapter YAML with built-in client definitions, three-version history, external-change detection, and immediate resource synchronization.",
+    "Adds user-level Terminal.app or iTerm launcher preferences for resuming Claude Code, Gemini CLI, and Kiro conversations.",
+    "Protects pinned and archived clipboard records from retention limits, keeps protected history visible beyond the ordinary cap, and expands defaults to 5,000 items and 120 days.",
+    "Keeps Clipboard search text consistent across remounts and expands remembered Recent Agent details to 500 items.",
+    "Prevents duplicate completion alerts without suppressing distinct fallback-only tasks or notifications from interleaved Agents.",
+    "Isolates macOS Debug builds as DingDong DEV with separate identity and data while improving community-install permission guidance."
   ]
 }

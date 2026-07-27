@@ -3,6 +3,17 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('uses expanded clipboard and recent Agent defaults', () async {
+    final AppSettings settings = await SettingsRepository(
+      MemoryPreferencesBackend(),
+    ).load();
+
+    expect(settings.clipboardMaxItems, 5000);
+    expect(settings.clipboardMaxAgeDays, 120);
+    expect(settings.agentActivityMaxItems, 500);
+    expect(settings.agentActivityCountHours, 24);
+  });
+
   test('loads legacy preference keys and sanitizes unsafe limits', () async {
     final MemoryPreferencesBackend backend =
         MemoryPreferencesBackend(<String, Object>{

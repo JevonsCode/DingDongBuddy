@@ -174,7 +174,10 @@ final class ClipboardCaptureService {
   }
 
   ClipboardRecord? _findDuplicate(String content, _ClipboardPayload payload) {
-    for (final ClipboardRecord record in _store.list(limit: 5000)) {
+    for (final ClipboardRecord record in _store.list(
+      limit: 5000,
+      includeProtectedBeyondLimit: true,
+    )) {
       if (record.content != content) {
         continue;
       }
@@ -198,7 +201,10 @@ final class ClipboardCaptureService {
       return null;
     }
     final String imageStorePath = path.absolute(imageStoreDirectory.path);
-    for (final ClipboardRecord record in _store.list(limit: 5000)) {
+    for (final ClipboardRecord record in _store.list(
+      limit: 5000,
+      includeProtectedBeyondLimit: true,
+    )) {
       if (!record.tags.contains('image')) {
         continue;
       }

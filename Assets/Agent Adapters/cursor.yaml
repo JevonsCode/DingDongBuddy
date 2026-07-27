@@ -1,0 +1,14 @@
+schemaVersion: 1
+id: cursor
+displayName: Cursor
+
+detect:
+  directory: ~/.cursor
+
+skills:
+  global: ~/.cursor/skills
+  project: .cursor/skills
+
+mcp:
+  file: ~/.cursor/mcp.json
+  format: cursor-json

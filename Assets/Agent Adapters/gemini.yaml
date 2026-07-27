@@ -1,0 +1,14 @@
+schemaVersion: 1
+id: gemini
+displayName: Gemini CLI
+
+detect:
+  directory: ~/.gemini
+
+skills:
+  global: ~/.gemini/skills
+  project: .gemini/skills
+
+mcp:
+  file: ~/.gemini/settings.json
+  format: gemini-json

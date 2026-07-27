@@ -125,8 +125,7 @@ final class AgentRouter {
   final TriggerGroupStore? _triggerGroupStore;
   final String Function() _idGenerator;
   final DateTime Function() _now;
-  DateTime? _lastDingAt;
-  String? _lastDingSource;
+  final Map<String?, DateTime> _recentPrimaryDings = <String?, DateTime>{};
 
   static const Duration _completionHookDeduplicationWindow = Duration(
     seconds: 5,
@@ -180,22 +179,26 @@ final class AgentRouter {
       try {
         final DingRequest dingRequest = DingRequest.parse(request.body);
         final DateTime now = _now();
-        final DateTime? lastDingAt = _lastDingAt;
-        if (dingRequest.fallback &&
-            lastDingAt != null &&
-            dingRequest.source == _lastDingSource &&
-            now.difference(lastDingAt) < _completionHookDeduplicationWindow) {
-          _onSuppressedDing(dingRequest);
-          return HttpResponseData(
-            statusCode: 200,
-            json: <String, Object?>{
-              'status': 'suppressed',
-              'message': dingRequest.message,
-            },
-          );
+        final String? sourceKey = _notificationSourceKey(dingRequest.source);
+        _recentPrimaryDings.removeWhere((String? _, DateTime recordedAt) {
+          final Duration age = now.difference(recordedAt);
+          return age.isNegative || age >= _completionHookDeduplicationWindow;
+        });
+        if (dingRequest.fallback) {
+          final DateTime? primaryDingAt = _recentPrimaryDings.remove(sourceKey);
+          if (primaryDingAt != null) {
+            _onSuppressedDing(dingRequest);
+            return HttpResponseData(
+              statusCode: 200,
+              json: <String, Object?>{
+                'status': 'suppressed',
+                'message': dingRequest.message,
+              },
+            );
+          }
+        } else {
+          _recentPrimaryDings[sourceKey] = now;
         }
-        _lastDingAt = now;
-        _lastDingSource = dingRequest.source;
         _onDing(dingRequest);
         return HttpResponseData(
           statusCode: 200,
@@ -489,6 +492,8 @@ final class AgentRouter {
     );
   }
 }
+
+String? _notificationSourceKey(String? source) => source?.trim().toLowerCase();
 
 void _ignoreDing(DingRequest request) {}
 

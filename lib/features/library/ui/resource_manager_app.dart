@@ -7,6 +7,8 @@ import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
+import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
+import 'package:dingdong/features/agent_adapters/ui/agent_adapter_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
@@ -31,6 +33,7 @@ class ResourceManagerApp extends StatefulWidget {
     required this.issueCenterController,
     required this.settings,
     required this.windowController,
+    this.agentAdapterController,
     this.initialDestination = ResourceManagerDestination.resources,
     this.agentConversationLauncher,
     this.desktopContextMenuGateway,
@@ -43,6 +46,7 @@ class ResourceManagerApp extends StatefulWidget {
   final ClipboardViewModel clipboardViewModel;
   final ActivityController activityController;
   final IssueCenterController issueCenterController;
+  final AgentAdapterController? agentAdapterController;
   final AppSettings settings;
   final WindowController windowController;
   final ResourceManagerDestination initialDestination;
@@ -73,6 +77,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             await widget.viewModel.load();
             widget.clipboardViewModel.load();
             widget.activityController.reload();
+            await widget.agentAdapterController?.load();
             final ResourceManagerDestination destination =
                 ResourceManagerDestination.parse(call.arguments);
             if (destination == ResourceManagerDestination.issues) {
@@ -93,6 +98,12 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
         }
       }),
     );
+  }
+
+  @override
+  void dispose() {
+    widget.agentAdapterController?.dispose();
+    super.dispose();
   }
 
   void _selectDestination(ResourceManagerDestination destination) {
@@ -198,6 +209,12 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
                         controller: widget.activityController,
                         conversationLauncher: _agentConversationLauncher,
                       ),
+                    ResourceManagerDestination.agentAdapters =>
+                      widget.agentAdapterController == null
+                          ? const SizedBox.shrink()
+                          : AgentAdapterScreen(
+                              controller: widget.agentAdapterController!,
+                            ),
                     ResourceManagerDestination.issues => IssueCenterScreen(
                       controller: widget.issueCenterController,
                       onOpenResource: _openIssueResource,
@@ -279,33 +296,53 @@ class _WorkspaceSidebar extends StatelessWidget {
                 key: const Key('resource-manager-nav-resources'),
                 icon: Icons.layers_outlined,
                 label: _localized(context, 'Resources', '资源'),
-                selected: selectedIndex == 0,
-                onTap: () => onSelected(0),
+                selected:
+                    selectedIndex == ResourceManagerDestination.resources.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.resources.index),
               ),
               const SizedBox(height: 3),
               _SidebarItem(
                 key: const Key('resource-manager-nav-clipboard'),
                 icon: Icons.content_paste_outlined,
                 label: _localized(context, 'Clipboard', '剪贴板'),
-                selected: selectedIndex == 1,
-                onTap: () => onSelected(1),
+                selected:
+                    selectedIndex == ResourceManagerDestination.clipboard.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.clipboard.index),
               ),
               const SizedBox(height: 3),
               _SidebarItem(
                 key: const Key('resource-manager-nav-agent-activity'),
                 icon: Icons.smart_toy_outlined,
                 label: _localized(context, 'Recent agents', '最近 Agent'),
-                selected: selectedIndex == 2,
-                onTap: () => onSelected(2),
+                selected:
+                    selectedIndex ==
+                    ResourceManagerDestination.recentAgents.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.recentAgents.index),
+              ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-agent-adapters'),
+                icon: Icons.hub_outlined,
+                label: _localized(context, 'Agent access', 'Agent 接入'),
+                selected:
+                    selectedIndex ==
+                    ResourceManagerDestination.agentAdapters.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.agentAdapters.index),
               ),
               const SizedBox(height: 3),
               _SidebarItem(
                 key: const Key('resource-manager-nav-issues'),
                 icon: Icons.error_outline_rounded,
                 label: _localized(context, 'Issues', '问题'),
-                selected: selectedIndex == 3,
+                selected:
+                    selectedIndex == ResourceManagerDestination.issues.index,
                 badgeCount: issueCount,
-                onTap: () => onSelected(3),
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.issues.index),
               ),
               const Spacer(),
               Padding(
