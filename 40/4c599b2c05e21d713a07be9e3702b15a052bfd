@@ -1,0 +1,19 @@
+test/platform/tray_manager_visual_contract_test.dart
+  s_b48a2238435bde::t_d1613ad25dae04 203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.38-trip",
+  "base_commit_sha": "404c599b2c05e21d713a07be9e3702b15a052bfd",
+  "prompts": {},
+  "sessions": {
+    "s_b48a2238435bde": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fad1b-71ab-7d52-8b4d-fae662bc21fa",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
