@@ -44,6 +44,8 @@ class FlutterWindow : public Win32Window {
       updater_channel_;
   std::shared_ptr<ApplicationUpdater> application_updater_;
   bool hotkey_registered_ = false;
+  UINT hotkey_modifiers_ = MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT;
+  UINT hotkey_virtual_key_ = 'V';
   HWND previous_foreground_window_ = nullptr;
 };
 

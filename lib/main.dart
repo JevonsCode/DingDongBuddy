@@ -161,6 +161,7 @@ Future<void> main(List<String> arguments) async {
     onWindowOpacityChanged: shellGateway.setOpacity,
     onDockIconHiddenChanged: shellGateway.setDockIconHidden,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
+    onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: applicationUpdater,
@@ -220,6 +221,17 @@ Future<void> main(List<String> arguments) async {
           TrayNotificationColor.parse(values['color']),
         );
         return null;
+      case 'settings_global_hot_key_set':
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        return shellGateway.setGlobalHotKey(
+          GlobalHotKey(
+            key: values['key']! as String,
+            primary: values['primary']! as bool,
+            shift: values['shift']! as bool,
+            alt: values['alt']! as bool,
+            secondary: values['secondary']! as bool,
+          ),
+        );
       case 'settings_changed':
         await settingsViewModel.reload();
         dependencies.applyClipboardRetention(settingsViewModel.settings);
@@ -362,6 +374,7 @@ Future<void> _runSettingsWindow(
     onWindowOpacityChanged: hostBridge.setOpacity,
     onDockIconHiddenChanged: hostBridge.setDockIconHidden,
     onTrayNotificationColorChanged: hostBridge.setTrayNotificationColor,
+    onGlobalHotKeyChanged: hostBridge.setGlobalHotKey,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: hostBridge,

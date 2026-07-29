@@ -4,6 +4,101 @@ import ApplicationServices
 import FlutterMacOS
 import ServiceManagement
 
+private struct GlobalHotKeyConfiguration: Equatable {
+  let keyCode: UInt32
+  let modifiers: UInt32
+
+  static let defaultValue = GlobalHotKeyConfiguration(
+    keyCode: UInt32(kVK_ANSI_V),
+    modifiers: UInt32(cmdKey | shiftKey)
+  )
+
+  init(keyCode: UInt32, modifiers: UInt32) {
+    self.keyCode = keyCode
+    self.modifiers = modifiers
+  }
+
+  init?(arguments: Any?) {
+    guard let arguments else {
+      self = .defaultValue
+      return
+    }
+    guard let values = arguments as? [String: Any],
+          let key = values["key"] as? String,
+          let keyCode = Self.keyCode(for: key)
+    else {
+      return nil
+    }
+    var modifiers: UInt32 = 0
+    if values["primary"] as? Bool == true { modifiers |= UInt32(cmdKey) }
+    if values["secondary"] as? Bool == true { modifiers |= UInt32(controlKey) }
+    if values["alt"] as? Bool == true { modifiers |= UInt32(optionKey) }
+    if values["shift"] as? Bool == true { modifiers |= UInt32(shiftKey) }
+    guard modifiers != 0 else { return nil }
+    self.init(keyCode: keyCode, modifiers: modifiers)
+  }
+
+  private static func keyCode(for name: String) -> UInt32? {
+    switch name {
+    case "A": return UInt32(kVK_ANSI_A)
+    case "B": return UInt32(kVK_ANSI_B)
+    case "C": return UInt32(kVK_ANSI_C)
+    case "D": return UInt32(kVK_ANSI_D)
+    case "E": return UInt32(kVK_ANSI_E)
+    case "F": return UInt32(kVK_ANSI_F)
+    case "G": return UInt32(kVK_ANSI_G)
+    case "H": return UInt32(kVK_ANSI_H)
+    case "I": return UInt32(kVK_ANSI_I)
+    case "J": return UInt32(kVK_ANSI_J)
+    case "K": return UInt32(kVK_ANSI_K)
+    case "L": return UInt32(kVK_ANSI_L)
+    case "M": return UInt32(kVK_ANSI_M)
+    case "N": return UInt32(kVK_ANSI_N)
+    case "O": return UInt32(kVK_ANSI_O)
+    case "P": return UInt32(kVK_ANSI_P)
+    case "Q": return UInt32(kVK_ANSI_Q)
+    case "R": return UInt32(kVK_ANSI_R)
+    case "S": return UInt32(kVK_ANSI_S)
+    case "T": return UInt32(kVK_ANSI_T)
+    case "U": return UInt32(kVK_ANSI_U)
+    case "V": return UInt32(kVK_ANSI_V)
+    case "W": return UInt32(kVK_ANSI_W)
+    case "X": return UInt32(kVK_ANSI_X)
+    case "Y": return UInt32(kVK_ANSI_Y)
+    case "Z": return UInt32(kVK_ANSI_Z)
+    case "0": return UInt32(kVK_ANSI_0)
+    case "1": return UInt32(kVK_ANSI_1)
+    case "2": return UInt32(kVK_ANSI_2)
+    case "3": return UInt32(kVK_ANSI_3)
+    case "4": return UInt32(kVK_ANSI_4)
+    case "5": return UInt32(kVK_ANSI_5)
+    case "6": return UInt32(kVK_ANSI_6)
+    case "7": return UInt32(kVK_ANSI_7)
+    case "8": return UInt32(kVK_ANSI_8)
+    case "9": return UInt32(kVK_ANSI_9)
+    case "F1": return UInt32(kVK_F1)
+    case "F2": return UInt32(kVK_F2)
+    case "F3": return UInt32(kVK_F3)
+    case "F4": return UInt32(kVK_F4)
+    case "F5": return UInt32(kVK_F5)
+    case "F6": return UInt32(kVK_F6)
+    case "F7": return UInt32(kVK_F7)
+    case "F8": return UInt32(kVK_F8)
+    case "F9": return UInt32(kVK_F9)
+    case "F10": return UInt32(kVK_F10)
+    case "F11": return UInt32(kVK_F11)
+    case "F12": return UInt32(kVK_F12)
+    case "SPACE": return UInt32(kVK_Space)
+    case "RETURN": return UInt32(kVK_Return)
+    case "LEFT": return UInt32(kVK_LeftArrow)
+    case "RIGHT": return UInt32(kVK_RightArrow)
+    case "UP": return UInt32(kVK_UpArrow)
+    case "DOWN": return UInt32(kVK_DownArrow)
+    default: return nil
+    }
+  }
+}
+
 @main
 class AppDelegate: FlutterAppDelegate {
   private var clipboardMonitorChannel: FlutterMethodChannel?
@@ -14,6 +109,7 @@ class AppDelegate: FlutterAppDelegate {
   private var modifierMonitor: Any?
   private var hotKeyRef: EventHotKeyRef?
   private var hotKeyHandlerRef: EventHandlerRef?
+  private var registeredHotKeyConfiguration: GlobalHotKeyConfiguration?
   private var previousApplication: NSRunningApplication?
   private var activeNotificationSound: NSSound?
   private var updaterChannel: FlutterMethodChannel?
@@ -155,7 +251,14 @@ class AppDelegate: FlutterAppDelegate {
       hotKeyChannel.setMethodCallHandler { [weak self] call, result in
         switch call.method {
         case "register":
-          let registered = self?.registerClipboardHotKey() ?? false
+          guard let configuration = GlobalHotKeyConfiguration(
+            arguments: call.arguments
+          ) else {
+            result(false)
+            return
+          }
+          let registered =
+            self?.registerClipboardHotKey(configuration: configuration) ?? false
           self?.desktopShellReady = true
           result(registered)
           self?.flushPendingApplicationOpen()
@@ -389,8 +492,31 @@ class AppDelegate: FlutterAppDelegate {
     return FileManager.default.fileExists(atPath: candidate) ? candidate : nil
   }
 
-  private func registerClipboardHotKey() -> Bool {
-    guard hotKeyRef == nil else { return true }
+  private func registerClipboardHotKey(
+    configuration: GlobalHotKeyConfiguration
+  ) -> Bool {
+    if hotKeyRef != nil, registeredHotKeyConfiguration == configuration {
+      return true
+    }
+    let previousConfiguration =
+      registeredHotKeyConfiguration ?? GlobalHotKeyConfiguration.defaultValue
+    let hadRegisteredHotKey = hotKeyRef != nil
+    if let hotKeyRef {
+      UnregisterEventHotKey(hotKeyRef)
+      self.hotKeyRef = nil
+    }
+    guard installHotKeyHandlerIfNeeded() else { return false }
+    if registerHotKeyOnly(configuration) {
+      return true
+    }
+    if hadRegisteredHotKey || configuration != .defaultValue {
+      _ = registerHotKeyOnly(previousConfiguration)
+    }
+    return false
+  }
+
+  private func installHotKeyHandlerIfNeeded() -> Bool {
+    guard hotKeyHandlerRef == nil else { return true }
     var eventSpec = EventTypeSpec(
       eventClass: OSType(kEventClassKeyboard),
       eventKind: UInt32(kEventHotKeyPressed)
@@ -412,17 +538,26 @@ class AppDelegate: FlutterAppDelegate {
       Unmanaged.passUnretained(self).toOpaque(),
       &hotKeyHandlerRef
     )
-    guard handlerStatus == noErr else { return false }
+    return handlerStatus == noErr
+  }
+
+  private func registerHotKeyOnly(
+    _ configuration: GlobalHotKeyConfiguration
+  ) -> Bool {
     let hotKeyID = EventHotKeyID(signature: 0x44444356, id: 1)
     let status = RegisterEventHotKey(
-      UInt32(kVK_ANSI_V),
-      UInt32(cmdKey | shiftKey),
+      configuration.keyCode,
+      configuration.modifiers,
       hotKeyID,
       GetApplicationEventTarget(),
       0,
       &hotKeyRef
     )
-    if status != noErr { unregisterClipboardHotKey() }
+    if status == noErr {
+      registeredHotKeyConfiguration = configuration
+    } else {
+      hotKeyRef = nil
+    }
     return status == noErr
   }
 
@@ -447,6 +582,7 @@ class AppDelegate: FlutterAppDelegate {
     if let hotKeyHandlerRef { RemoveEventHandler(hotKeyHandlerRef) }
     hotKeyRef = nil
     hotKeyHandlerRef = nil
+    registeredHotKeyConfiguration = nil
   }
 
   @IBAction func openWebsite(_ sender: Any?) {

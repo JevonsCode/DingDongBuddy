@@ -84,7 +84,7 @@ sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.9.1`, using the same version constant as the release UI. A small
+  `v0.9.2`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
@@ -119,6 +119,48 @@ sync in the PR.
   update in one action: download, signature verification, transactional
   replacement, obsolete-file cleanup, and relaunch. macOS uses Sparkle 2;
   Windows uses a per-user Velopack installation and does not need elevation.
+
+## Default shortcuts and settings
+
+The system-wide **Open or hide Clipboard** shortcut is configurable in
+**Settings → Keyboard shortcuts**. Click the current shortcut, press a new
+combination, and it takes effect immediately. A shortcut must contain at least
+one modifier and may use a letter, number, F1–F12, arrow key, Space, or Return.
+If another application already owns the combination, DingDong keeps the
+previous shortcut.
+
+| Action | macOS | Windows |
+| --- | --- | --- |
+| Open or hide Clipboard | `⌘⇧V` (configurable) | `Ctrl+Shift+V` (configurable) |
+| Open Dynamic / Library / Clipboard | `⌘Q` / `⌘W` / `⌘E` | `Ctrl+Q` / `Ctrl+W` / `Ctrl+E` |
+| Focus Clipboard search | `⌘F` | `Ctrl+F` |
+| Show or hide Clipboard filters | `⌘R` | `Ctrl+R` |
+| Use visible Clipboard item 1–9 | `⌘1`–`⌘9` | `Ctrl+1`–`Ctrl+9` |
+| Paste visible item 1–9 as plain text | `⌥⌘1`–`⌥⌘9` | — |
+| Move Clipboard selection | `↑` / `↓` | `↑` / `↓` |
+| Preview selected item | `Space` | `Space` |
+| Use selected item | `Return` | `Enter` |
+| Close preview, then hide the panel | `Esc` | `Esc` |
+
+Settings are stored locally and take effect immediately unless noted:
+
+| Setting | Default | Available values or limits |
+| --- | --- | --- |
+| Open or hide Clipboard | `⌘⇧V` | Configurable shortcut; Windows default is `Ctrl+Shift+V` |
+| Launch at startup | Off | On / off |
+| Hide Dock icon (macOS) | Off | On / off |
+| Language | System | System / English / 中文 |
+| Theme | Light | System / Light / Dark |
+| Window opacity | 90% | 82%–96% |
+| List density | Comfortable | Comfortable / Compact |
+| Default workspace | Dynamic | Dynamic / Library / Clipboard |
+| Clipboard monitoring | Off | On / off |
+| Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |
+| Remember Recent Agents | On | On / off |
+| Recent Agent limits | 500 details, 24-hour count | 1–5,000 details; 1–8,760 hours |
+| Completion sound | DingDong Classic | Classic, Soft, Bright, Crisp, Deep, custom file, system sound, or muted |
+| Menu bar alert color (macOS) | Orange | Orange / Pink / Blue / Green / Purple |
+| Local Agent API port | `2333` | `1024`–`65535`; changing it requires restart |
 
 ## Download
 

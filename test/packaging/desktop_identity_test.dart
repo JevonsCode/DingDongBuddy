@@ -67,19 +67,19 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.9.1 from pubspec', () {
+  test('desktop hosts consume application version 0.9.2 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.1+28'));
+    expect(pubspec, contains('version: 0.9.2+29'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync(),
-      contains("const String currentAppBuild = '28';"),
+      contains("const String currentAppBuild = '29';"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
@@ -132,7 +132,7 @@ void main() {
     expect(gateway, contains('DesktopShellCommand.openApplication'));
     expect(
       gateway.indexOf('await windowManager.hide();'),
-      lessThan(gateway.indexOf("invokeMethod<void>('register')")),
+      lessThan(gateway.indexOf('await _registerGlobalHotKey(_globalHotKey);')),
     );
   });
 
@@ -315,7 +315,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v0.9.1</span>'));
+    expect(website, contains('<span class="demo-version">v0.9.2</span>'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
@@ -357,14 +357,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.9.1"'));
-    expect(releaseMetadata, contains('"latestBuild": "28"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.9.2"'));
+    expect(releaseMetadata, contains('"latestBuild": "29"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.9.1-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.9.2-windows-x64-beta-Setup.exe'),
     );
   });
 

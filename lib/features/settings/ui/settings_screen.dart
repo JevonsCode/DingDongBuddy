@@ -7,6 +7,7 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
+import 'package:dingdong/features/settings/ui/global_hot_key_recorder.dart';
 import 'package:dingdong/features/settings/ui/quick_paste_permission_section.dart';
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -231,6 +232,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   value: settings.hideDockIcon,
                                   onChanged: widget.viewModel.setHideDockIcon,
                                 ),
+                            ],
+                          ),
+                          _SettingsSection(
+                            title: context.localized(
+                              'Keyboard shortcuts',
+                              '键盘快捷键',
+                            ),
+                            description: context.localized(
+                              'Set the system-wide shortcut that opens or hides the clipboard panel.',
+                              '设置用于打开或隐藏剪贴板面板的全局快捷键。',
+                            ),
+                            children: <Widget>[
+                              _SettingRow(
+                                label: context.localized(
+                                  'Open or hide clipboard',
+                                  '打开或隐藏剪贴板',
+                                ),
+                                child: GlobalHotKeyRecorder(
+                                  value: settings.globalHotKey,
+                                  onChanged: widget.viewModel.setGlobalHotKey,
+                                ),
+                              ),
                             ],
                           ),
                           QuickPastePermissionSection(

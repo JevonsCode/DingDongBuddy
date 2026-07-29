@@ -2,6 +2,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
+import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/launch_at_startup.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
@@ -76,6 +77,14 @@ final class MultiWindowSettingsHostBridge
       'settings_tray_notification_color_set',
       <String, String>{'color': value.name},
     );
+  }
+
+  Future<bool> setGlobalHotKey(GlobalHotKey value) async {
+    return await _parent.invokeMethod<bool>(
+          'settings_global_hot_key_set',
+          value.toPlatformArguments(),
+        ) ??
+        false;
   }
 
   Future<void> notifyChanged() {

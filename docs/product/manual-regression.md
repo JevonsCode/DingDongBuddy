@@ -1,4 +1,4 @@
-# DingDong 0.9.1 Manual Regression Checklist
+# DingDong 0.9.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -23,6 +23,13 @@ and macOS golden images; the items below exercise real operating-system state.
 ## Clipboard
 
 - The global shortcut opens Clipboard and remembers the previously focused application.
+- Settings → Keyboard shortcuts records a modified global shortcut, applies it
+  immediately, updates the popup footer, and restores it after relaunch.
+- The shortcut recorder rejects a key without a modifier, Escape cancels
+  recording, and Reset restores Command-Shift-V on macOS or
+  Control-Shift-V on Windows.
+- Choosing a shortcut already owned by another application keeps the previous
+  working shortcut and shows an actionable error.
 - Every Clipboard reveal performs a fallback system read and places the latest non-duplicate item first.
 - `Command-F` focuses Clipboard search on macOS; `Control-F` does the same on Windows.
 - Text, URLs, commands, file selections, and bitmap images appear in history.
@@ -157,8 +164,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - A Debug macOS build is named `DingDong DEV`, uses bundle id
   `com.dingdongbuddy.app.dev`, stores data under `DingDong DEV`, shows a DEV
   badge, and does not offer release updates.
-- The macOS release app metadata is version `0.9.1` build `28` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.1.28` and product name `DingDong`.
+- The macOS release app metadata is version `0.9.2` build `29` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.2.29` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

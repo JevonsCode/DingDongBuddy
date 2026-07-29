@@ -1309,6 +1309,95 @@ h3 {
   letter-spacing: -0.02em;
 }
 
+.defaults-section {
+  padding: 54px 0 24px;
+}
+
+.defaults-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 30px;
+  margin-top: 26px;
+}
+
+.defaults-panel {
+  min-width: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-strong);
+}
+
+.defaults-panel > p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.defaults-table-scroll {
+  margin-top: 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.defaults-panel table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.defaults-panel th,
+.defaults-panel td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.defaults-panel tr:last-child td {
+  border-bottom: 0;
+}
+
+.defaults-panel th {
+  color: var(--muted);
+  background: var(--surface-muted);
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.defaults-panel td:first-child {
+  color: var(--ink);
+  font-weight: 680;
+}
+
+.defaults-panel td:not(:first-child) {
+  color: var(--muted);
+}
+
+.defaults-panel kbd,
+.defaults-panel code {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.94em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+html[lang="zh-CN"] .defaults-panel th {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .sound-section {
   margin: 28px 0 0;
   padding: 28px;
@@ -1715,6 +1804,7 @@ footer span {
   }
 
   .feature-grid,
+  .defaults-grid,
   .tool-grid,
   .sound-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1732,6 +1822,7 @@ footer span {
 
   .hero,
   .principles,
+  .defaults-grid,
   .setup-card,
   .api-band,
   .download-section {
@@ -1879,6 +1970,14 @@ footer span {
 
   .sound-section {
     padding: 20px 16px;
+  }
+
+  .defaults-section {
+    padding-top: 42px;
+  }
+
+  .defaults-panel table {
+    font-size: 11px;
   }
 
   .api-band,

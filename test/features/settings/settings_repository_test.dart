@@ -14,6 +14,7 @@ void main() {
     expect(settings.agentActivityCountHours, 24);
     expect(settings.hideDockIcon, isFalse);
     expect(settings.trayNotificationColor, TrayNotificationColor.orange);
+    expect(settings.globalHotKey, GlobalHotKey.defaultValue);
   });
 
   test('supports a build-specific default tray notification color', () async {
@@ -47,6 +48,12 @@ void main() {
           'dingdong.agentActivity.countHours': 0,
           'dingdong.macos.hideDockIcon': true,
           'dingdong.macos.trayNotificationColor': 'purple',
+          'dingdong.shortcut.openClipboard': const GlobalHotKey(
+            key: 'K',
+            primary: true,
+            shift: false,
+            alt: true,
+          ).encode(),
         });
 
     final settings = await SettingsRepository(backend).load();
@@ -68,6 +75,10 @@ void main() {
     expect(settings.agentActivityCountHours, 1);
     expect(settings.hideDockIcon, isTrue);
     expect(settings.trayNotificationColor, TrayNotificationColor.purple);
+    expect(
+      settings.globalHotKey,
+      const GlobalHotKey(key: 'K', primary: true, shift: false, alt: true),
+    );
   });
 
   test('saves settings with the native app preference contract', () async {
@@ -87,6 +98,7 @@ void main() {
       agentActivityCountHours: 48,
       hideDockIcon: true,
       trayNotificationColor: TrayNotificationColor.green,
+      globalHotKey: GlobalHotKey(key: 'SPACE', primary: true, shift: false),
       selectedSound: 'muted',
       customSoundPath: '/tmp/quiet.wav',
       mcpAccessSeen: true,
@@ -109,6 +121,10 @@ void main() {
     expect(backend.values['dingdong.agentActivity.countHours'], 48);
     expect(backend.values['dingdong.macos.hideDockIcon'], isTrue);
     expect(backend.values['dingdong.macos.trayNotificationColor'], 'green');
+    expect(
+      GlobalHotKey.parse(backend.values['dingdong.shortcut.openClipboard']),
+      const GlobalHotKey(key: 'SPACE', primary: true, shift: false),
+    );
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
     expect(backend.values, isNot(contains('dingdong.mcpSetupPromptOverride')));

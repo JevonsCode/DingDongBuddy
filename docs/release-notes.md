@@ -1,106 +1,65 @@
-# DingDong 0.9.1
+# DingDong 0.9.2
 
-This release moves managed Agent resources to a dynamic, scope-checked delivery
-model, preserves clipboard formatting, and adds more control over the macOS
-menu-bar experience.
+This release makes DingDong's system-wide Clipboard shortcut configurable and
+publishes a complete reference for the keyboard shortcuts and settings shipped
+with the app.
 
-## Dynamic Prompt and Skill delivery
+## Configurable global Clipboard shortcut
 
-- Keeps only a persistent DingDong Bridge bootstrap in supported native Agent
-  instruction files instead of copying Prompt bodies into them.
-- Treats every successful Bridge call as the authoritative Prompt snapshot for
-  the current task and returns the complete catalog of every valid, enabled,
-  scope-matched Skill as ID, name, and description.
-- Adds dedicated Skill loading and supporting-file APIs. Full `SKILL.md`
-  content is fetched only after an Agent matches a returned description, and
-  referenced package files are read on demand.
-- Re-checks enabled state and project scope on every full Skill, package-file,
-  and full resource read so an old ID or name cannot bypass current policy.
-- Rejects ambiguous Skill names unless the Agent supplies a catalog ID, blocks
-  package paths that leave the Skill root, and limits individual file reads to
-  5 MiB.
+- Adds **Settings → Keyboard shortcuts → Open or hide Clipboard**.
+- Keeps `Command-Shift-V` on macOS and `Control-Shift-V` on Windows as the
+  defaults while allowing a different combination to be recorded.
+- Supports letters, numbers, F1–F12, arrow keys, Space, and Return with at
+  least one modifier.
+- Applies the new shortcut immediately, persists it across restarts, and offers
+  a one-click reset to the platform default.
+- Updates the Clipboard popup footer to show the configured shortcut.
 
-## Strict project scope and Skill migration
+## Conflict-safe desktop registration
 
-- Requires strict project Skills to use exact, existing absolute project paths,
-  resolves symbolic links, and keeps a canonical persisted path guard.
-- Updates trigger groups and their affected Skills as one coordinated change,
-  rolls both stores back after a failure, and disables resources that lose
-  their final valid scope.
-- Stops deploying DingDong-managed Skills into native Agent Skill directories.
-  Synchronization now removes only legacy copies carrying DingDong's ownership
-  marker and preserves independently installed native Skills.
-- Reports independent native Skill and duplicate managed-name collisions as
-  warnings; Agents can use catalog IDs to select duplicate names safely.
-- Stages local Skill packages inside the MCP process before loopback import,
-  improving access to macOS protected folders, and recognizes Windows drive
-  paths before URI parsing.
+- Registers custom combinations through the native macOS and Windows runners.
+- Keeps the previous working shortcut when another application already owns the
+  requested combination.
+- Falls back safely when a saved shortcut is malformed or is no longer
+  available during startup.
+- Uses one portable preference representation while preserving platform-native
+  Command, Control, Option, Alt, and Windows-key labels.
 
-## Clipboard fidelity and paste controls
+## Public defaults reference
 
-- Captures and persists original text plus HTML and RTF representations, with a
-  compatible SQLite migration for existing clipboard history.
-- Restores formatted text by default and adds **Paste as Plain Text** to
-  textual clipboard-row context menus.
-- Adds `Option-Command-1…9` plain-text quick paste on macOS, including matching
-  shortcut hints, while preserving the existing original-format shortcuts.
-- Restores a single image with bitmap and source-file representations together
-  so image editors and Finder-style file paste both remain compatible.
-
-## macOS Dock and menu-bar notifications
-
-- Adds a persistent **Hide Dock icon** setting and the same action to DingDong's
-  Dock menu; main and auxiliary windows follow the resulting taskbar policy.
-- Adds orange, pink, blue, green, and purple menu-bar unread colors with live
-  refresh. Release builds default to orange and development builds to pink.
-- Shows the colored capsule only while notifications are unread, avoiding a
-  permanent development label or stale background.
+- Adds bilingual shortcut and settings-default tables to the DingDong website.
+- Adds the same reference to the English and Chinese READMEs.
+- Documents supported shortcut keys, configuration limits, restart
+  requirements, and platform-specific defaults.
 
 Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本将托管的 Agent 资源改为动态、按作用域校验的交付方式，同时保留剪贴板格式，并
-增强 macOS 菜单栏体验的可配置性。
+本版本让 DingDong 的系统级剪贴板快捷键支持自定义，并在官网及中英文 README 中
+补齐应用内默认快捷键和设置项参考。
 
-## Prompt 与 Skill 动态交付
+## 可自定义的全局剪贴板快捷键
 
-- 支持的 Agent 原生指令文件只保留固定 DingDong Bridge 引导，不再写入 Prompt 正文。
-- 每次 Bridge 成功响应都是当前任务的权威 Prompt 快照，并返回所有有效、已启用且
-  作用域匹配 Skill 的完整目录；每项只包含 ID、名称与描述。
-- 新增专用 Skill 加载和引用文件读取接口。Agent 只有在已返回描述匹配任务后才获取
-  完整 `SKILL.md`，并按需读取它引用的 Package 文件。
-- 每次读取完整 Skill、Package 文件或完整资源时都会重新校验启用状态和项目作用域，
-  旧 ID 或名称不能绕过当前策略。
-- 同名 Skill 必须提供目录 ID 才能消歧；Package 文件不能逃出 Skill 根目录，单个
-  文件读取上限为 5 MiB。
+- 新增 **设置 → 键盘快捷键 → 打开或隐藏剪贴板**。
+- macOS 默认仍为 `Command-Shift-V`，Windows 默认仍为
+  `Control-Shift-V`，用户可直接录入其他组合。
+- 主键支持字母、数字、F1–F12、方向键、空格和回车，且必须至少包含一个修饰键。
+- 新组合录入后立即生效并跨重启保存，可一键恢复平台默认值。
+- 剪贴板弹窗底部会显示当前已配置的快捷键。
 
-## 严格项目范围与 Skill 迁移
+## 安全的双平台注册与冲突回退
 
-- 严格项目 Skill 只接受真实存在的绝对项目路径；路径会解析符号链接，并保存规范化
-  结果作为额外的闭锁校验。
-- Trigger Group 与受影响 Skill 会作为一组协调更新；失败时两边都会回滚，失去最后
-  一个有效范围的资源会自动停用。
-- DingDong 不再把托管 Skill 部署到 Agent 原生 Skill 目录；同步只清理由 DingDong
-  所有权标记识别的旧版镜像，并保留用户独立安装的原生 Skill。
-- 独立原生 Skill 和托管 Skill 重名会作为警告展示；Agent 可以用目录 ID 安全选择
-  同名资源。
-- MCP 进程会先暂存本地 Skill Package 再交给回环服务导入，改善 macOS 受保护目录
-  访问；Windows 盘符路径也会在 URI 解析前正确识别。
+- 通过 macOS 与 Windows 原生 Runner 动态注册自定义组合。
+- 如果新组合已被其他应用占用，继续保留此前可用的快捷键。
+- 已保存的组合格式异常或启动时失效时，会安全回退并显示提示。
+- 使用统一的可移植配置格式，同时保留 Command、Control、Option、Alt 和 Windows
+  键的平台原生显示。
 
-## 剪贴板格式与粘贴控制
+## 公开默认值参考
 
-- 采集并持久保存原始文本、HTML 和 RTF，并为现有剪贴板数据库提供兼容迁移。
-- 默认恢复原格式；文本类记录的右键菜单新增“粘贴为纯文本”。
-- macOS 新增 `Option-Command-1…9` 纯文本快速粘贴及对应提示，原格式快捷键保持不变。
-- 单张图片会同时写入位图和源文件表示，兼容图片编辑器与 Finder 风格文件粘贴。
-
-## macOS Dock 与菜单栏提醒
-
-- 新增持久化“隐藏 Dock 图标”设置，Dock 菜单也提供同一操作；主窗口和辅助窗口统一
-  遵循对应的任务栏策略。
-- 菜单栏未读提示新增橙、粉、蓝、绿、紫五种颜色并即时刷新；正式版默认橙色，开发版
-  默认粉色。
-- 只有存在未读提醒时才显示彩色胶囊，避免开发标记常驻或背景残留。
+- 官网新增中英文快捷键与设置默认值表格。
+- English README 与中文 README 同步加入相同参考。
+- 明确记录可用主键、配置范围、需要重启的设置以及平台差异。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

@@ -3,11 +3,13 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
+import 'package:dingdong/features/settings/ui/global_hot_key_recorder.dart';
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_screen.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void testWidgetsOnPlatform(
@@ -116,6 +118,8 @@ void main() {
         find.byKey(const Key('settings-launch-at-startup')),
         findsOneWidget,
       );
+      expect(find.byType(GlobalHotKeyRecorder), findsOneWidget);
+      expect(find.byKey(const Key('settings-global-hot-key')), findsOneWidget);
       expect(find.byKey(const Key('settings-hide-dock-icon')), findsOneWidget);
       expect(
         find.byKey(const Key('settings-anonymous-telemetry')),
@@ -189,6 +193,43 @@ void main() {
       await tester.tap(purple);
       await tester.pumpAndSettle();
       expect(backend.values['dingdong.macos.trayNotificationColor'], 'purple');
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'global shortcut recorder saves a custom Command shortcut',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1000, 820);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(backend),
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(viewModel: model)),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder recorder = find.byKey(const Key('settings-global-hot-key'));
+      await tester.ensureVisible(recorder);
+      await tester.tap(recorder);
+      await tester.pump();
+      expect(find.text('Press a shortcut…'), findsOneWidget);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyK);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyK);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+
+      expect(
+        GlobalHotKey.parse(backend.values['dingdong.shortcut.openClipboard']),
+        const GlobalHotKey(key: 'K', primary: true, shift: false),
+      );
+      expect(find.text('⌘K'), findsOneWidget);
     },
   );
 

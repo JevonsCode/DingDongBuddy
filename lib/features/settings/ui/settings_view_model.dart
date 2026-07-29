@@ -24,6 +24,7 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function(bool value)? onDockIconHiddenChanged,
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
+    Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
     ApplicationUpdater? applicationUpdater,
@@ -36,6 +37,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onWindowOpacityChanged = onWindowOpacityChanged,
        _onDockIconHiddenChanged = onDockIconHiddenChanged,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
+       _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
        _applicationUpdater = applicationUpdater,
@@ -49,6 +51,7 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function(bool value)? _onDockIconHiddenChanged;
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
+  final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
   final ApplicationUpdater? _applicationUpdater;
@@ -118,6 +121,15 @@ final class SettingsViewModel extends ChangeNotifier
       await _onTrayNotificationColorChanged?.call(
         _settings.trayNotificationColor,
       );
+      String? loadWarning;
+      final Future<bool> Function(GlobalHotKey value)? updateGlobalHotKey =
+          _onGlobalHotKeyChanged;
+      if (updateGlobalHotKey != null &&
+          !await updateGlobalHotKey(_settings.globalHotKey)) {
+        _settings = _settings.copyWith(globalHotKey: GlobalHotKey.defaultValue);
+        await _repository.save(_settings);
+        loadWarning = _globalHotKeyRegistrationError;
+      }
       if (_settings.clipboardMonitoring) {
         await _clipboardMonitoring?.start();
       }
@@ -126,7 +138,7 @@ final class SettingsViewModel extends ChangeNotifier
       await _loadSystemUsage();
       await _loadApplicationUpdater();
       _loaded = true;
-      _errorMessage = null;
+      _errorMessage = loadWarning;
     } on Object {
       _loaded = true;
       _errorMessage = 'Settings could not be loaded.';
@@ -194,6 +206,25 @@ final class SettingsViewModel extends ChangeNotifier
       await _save();
     } on Object {
       _errorMessage = 'Menu bar notification color could not be updated.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> setGlobalHotKey(GlobalHotKey value) async {
+    final GlobalHotKey previous = _settings.globalHotKey;
+    final GlobalHotKey candidate = value.sanitized();
+    _settings = _settings.copyWith(globalHotKey: candidate);
+    notifyListeners();
+    try {
+      final bool registered =
+          await _onGlobalHotKeyChanged?.call(candidate) ?? true;
+      if (!registered) {
+        throw StateError('Global hot key is unavailable.');
+      }
+      await _save();
+    } on Object {
+      _settings = _settings.copyWith(globalHotKey: previous);
+      _errorMessage = _globalHotKeyRegistrationError;
       notifyListeners();
     }
   }
@@ -442,3 +473,6 @@ final class SettingsViewModel extends ChangeNotifier
     notifyListeners();
   }
 }
+
+const String _globalHotKeyRegistrationError =
+    'Shortcut could not be registered. It may already be used by another app.';

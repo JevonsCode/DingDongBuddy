@@ -5,6 +5,7 @@ import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
@@ -57,9 +58,11 @@ final class PluginDesktopShellGateway
   );
   Timer? _unreadAcknowledgementTimer;
   bool _started = false;
+  bool _methodHandlersInstalled = false;
   bool _taskbarIsLight = false;
   bool _hideDockIcon = false;
   TrayNotificationColor _trayNotificationColor;
+  GlobalHotKey _globalHotKey = GlobalHotKey.defaultValue;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
 
   @override
@@ -101,6 +104,16 @@ final class PluginDesktopShellGateway
       await _unreadController.refresh();
     }
     await _rebuildContextMenu();
+    _installMethodHandlers();
+    await windowManager.hide();
+    await _registerGlobalHotKey(_globalHotKey);
+    _started = true;
+  }
+
+  void _installMethodHandlers() {
+    if (_methodHandlersInstalled) {
+      return;
+    }
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'openApplication') {
         _commands.add(DesktopShellCommand.openApplication);
@@ -124,9 +137,7 @@ final class PluginDesktopShellGateway
         shortcutHints.value = call.arguments == true;
       }
     });
-    await windowManager.hide();
-    await _hotKeyChannel.invokeMethod<void>('register');
-    _started = true;
+    _methodHandlersInstalled = true;
   }
 
   @override
@@ -161,6 +172,24 @@ final class PluginDesktopShellGateway
     if (_started && Platform.isMacOS) {
       await _unreadController.refresh();
     }
+  }
+
+  Future<bool> setGlobalHotKey(GlobalHotKey value) async {
+    final GlobalHotKey candidate = value.sanitized();
+    _installMethodHandlers();
+    final bool registered = await _registerGlobalHotKey(candidate);
+    if (registered) {
+      _globalHotKey = candidate;
+    }
+    return registered;
+  }
+
+  Future<bool> _registerGlobalHotKey(GlobalHotKey value) async {
+    return await _hotKeyChannel.invokeMethod<bool>(
+          'register',
+          value.toPlatformArguments(),
+        ) ??
+        false;
   }
 
   Future<void> startDragging() {
@@ -339,6 +368,7 @@ final class PluginDesktopShellGateway
     await _hotKeyChannel.invokeMethod<void>('unregister');
     _hotKeyChannel.setMethodCallHandler(null);
     _modifierChannel.setMethodCallHandler(null);
+    _methodHandlersInstalled = false;
     shortcutHints.value = false;
     trayManager.removeListener(this);
     windowManager.removeListener(this);

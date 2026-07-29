@@ -59,6 +59,99 @@ const flutter::EncodableValue* FindArgument(
   return found == arguments->end() ? nullptr : &found->second;
 }
 
+struct GlobalHotKeyConfiguration {
+  UINT modifiers;
+  UINT virtual_key;
+};
+
+constexpr GlobalHotKeyConfiguration kDefaultGlobalHotKey{
+    MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, 'V'};
+
+std::optional<UINT> GlobalHotKeyVirtualKey(const std::string& name) {
+  if (name.size() == 1) {
+    const char value = name.front();
+    if ((value >= 'A' && value <= 'Z') || (value >= '0' && value <= '9')) {
+      return static_cast<UINT>(value);
+    }
+  }
+  if (name.size() >= 2 && name.front() == 'F') {
+    int number = 0;
+    for (size_t index = 1; index < name.size(); index += 1) {
+      const char value = name[index];
+      if (value < '0' || value > '9') {
+        return std::nullopt;
+      }
+      number = number * 10 + (value - '0');
+    }
+    if (number >= 1 && number <= 12) {
+      return static_cast<UINT>(VK_F1 + number - 1);
+    }
+  }
+  if (name == "SPACE") {
+    return VK_SPACE;
+  }
+  if (name == "RETURN") {
+    return VK_RETURN;
+  }
+  if (name == "LEFT") {
+    return VK_LEFT;
+  }
+  if (name == "RIGHT") {
+    return VK_RIGHT;
+  }
+  if (name == "UP") {
+    return VK_UP;
+  }
+  if (name == "DOWN") {
+    return VK_DOWN;
+  }
+  return std::nullopt;
+}
+
+std::optional<GlobalHotKeyConfiguration> ReadGlobalHotKeyConfiguration(
+    const flutter::MethodCall<flutter::EncodableValue>& call) {
+  if (!call.arguments()) {
+    return kDefaultGlobalHotKey;
+  }
+  const auto* key_value = FindArgument(call, "key");
+  const auto* key = key_value ? std::get_if<std::string>(key_value) : nullptr;
+  if (!key) {
+    return std::nullopt;
+  }
+  const std::optional<UINT> virtual_key = GlobalHotKeyVirtualKey(*key);
+  if (!virtual_key) {
+    return std::nullopt;
+  }
+  UINT modifiers = MOD_NOREPEAT;
+  const auto is_enabled = [&call](const char* name) {
+    const auto* value = FindArgument(call, name);
+    const auto* enabled = value ? std::get_if<bool>(value) : nullptr;
+    return enabled && *enabled;
+  };
+  if (is_enabled("primary")) {
+    modifiers |= MOD_CONTROL;
+  }
+  if (is_enabled("secondary")) {
+    modifiers |= MOD_WIN;
+  }
+  if (is_enabled("alt")) {
+    modifiers |= MOD_ALT;
+  }
+  if (is_enabled("shift")) {
+    modifiers |= MOD_SHIFT;
+  }
+  if (modifiers == MOD_NOREPEAT) {
+    return std::nullopt;
+  }
+  return GlobalHotKeyConfiguration{modifiers, *virtual_key};
+}
+
+bool SameGlobalHotKey(const GlobalHotKeyConfiguration& left,
+                      const GlobalHotKeyConfiguration& right) {
+  return left.modifiers == right.modifiers &&
+         left.virtual_key == right.virtual_key;
+}
+
 std::wstring Utf8ToWide(const std::string& value) {
   const int size = ::MultiByteToWideChar(
       CP_UTF8, 0, value.c_str(), -1, nullptr, 0);
@@ -283,10 +376,38 @@ bool FlutterWindow::OnCreate() {
       [this](const flutter::MethodCall<flutter::EncodableValue>& call,
              std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
         if (call.method_name() == "register") {
-          hotkey_registered_ =
-              ::RegisterHotKey(GetHandle(), 0xDD01,
-                               MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT, 'V') != 0;
-          result->Success(flutter::EncodableValue(hotkey_registered_));
+          const auto configuration = ReadGlobalHotKeyConfiguration(call);
+          if (!configuration) {
+            result->Success(flutter::EncodableValue(false));
+            return;
+          }
+          const GlobalHotKeyConfiguration previous{
+              hotkey_modifiers_, hotkey_virtual_key_};
+          if (hotkey_registered_ &&
+              SameGlobalHotKey(previous, *configuration)) {
+            result->Success(flutter::EncodableValue(true));
+            return;
+          }
+          const bool had_registered_hotkey = hotkey_registered_;
+          if (hotkey_registered_) {
+            ::UnregisterHotKey(GetHandle(), 0xDD01);
+            hotkey_registered_ = false;
+          }
+          const bool registered =
+              ::RegisterHotKey(GetHandle(), 0xDD01, configuration->modifiers,
+                               configuration->virtual_key) != 0;
+          if (registered) {
+            hotkey_registered_ = true;
+            hotkey_modifiers_ = configuration->modifiers;
+            hotkey_virtual_key_ = configuration->virtual_key;
+          } else if (had_registered_hotkey ||
+                     !SameGlobalHotKey(*configuration,
+                                       kDefaultGlobalHotKey)) {
+            hotkey_registered_ =
+                ::RegisterHotKey(GetHandle(), 0xDD01, previous.modifiers,
+                                 previous.virtual_key) != 0;
+          }
+          result->Success(flutter::EncodableValue(registered));
           return;
         }
         if (call.method_name() == "unregister") {

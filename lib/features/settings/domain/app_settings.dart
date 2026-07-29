@@ -1,3 +1,5 @@
+import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+
 /// Language choice persisted independently from the current system locale.
 enum AppLanguagePreference {
   system(null),
@@ -89,6 +91,7 @@ final class AppSettings {
     this.launchAtStartup = false,
     this.hideDockIcon = false,
     this.trayNotificationColor = TrayNotificationColor.orange,
+    this.globalHotKey = GlobalHotKey.defaultValue,
     this.backgroundOpacity = 0.90,
     this.density = PanelDensityPreference.comfortable,
     this.defaultWorkspace = DefaultWorkspace.today,
@@ -109,6 +112,7 @@ final class AppSettings {
   final bool launchAtStartup;
   final bool hideDockIcon;
   final TrayNotificationColor trayNotificationColor;
+  final GlobalHotKey globalHotKey;
   final double backgroundOpacity;
   final PanelDensityPreference density;
   final DefaultWorkspace defaultWorkspace;
@@ -130,6 +134,7 @@ final class AppSettings {
       launchAtStartup: launchAtStartup,
       hideDockIcon: hideDockIcon,
       trayNotificationColor: trayNotificationColor,
+      globalHotKey: globalHotKey.sanitized(),
       backgroundOpacity: backgroundOpacity.clamp(0.82, 0.96),
       density: density,
       defaultWorkspace: defaultWorkspace,
@@ -156,6 +161,7 @@ final class AppSettings {
     bool? launchAtStartup,
     bool? hideDockIcon,
     TrayNotificationColor? trayNotificationColor,
+    GlobalHotKey? globalHotKey,
     double? backgroundOpacity,
     PanelDensityPreference? density,
     DefaultWorkspace? defaultWorkspace,
@@ -177,6 +183,7 @@ final class AppSettings {
       hideDockIcon: hideDockIcon ?? this.hideDockIcon,
       trayNotificationColor:
           trayNotificationColor ?? this.trayNotificationColor,
+      globalHotKey: globalHotKey ?? this.globalHotKey,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       density: density ?? this.density,
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,

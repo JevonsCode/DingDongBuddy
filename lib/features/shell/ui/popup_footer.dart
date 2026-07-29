@@ -1,17 +1,26 @@
 import 'dart:io';
 
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:flutter/material.dart';
 
 /// Persistent local-service status shown at the bottom of the callout.
 class PopupFooter extends StatelessWidget {
-  const PopupFooter({required this.apiPort, super.key});
+  const PopupFooter({
+    required this.apiPort,
+    required this.globalHotKey,
+    super.key,
+  });
 
   final int apiPort;
+  final GlobalHotKey globalHotKey;
 
   @override
   Widget build(BuildContext context) {
-    final String shortcut = Platform.isMacOS ? '⌘⇧V' : 'Ctrl+Shift+V';
+    final TargetPlatform shortcutPlatform = Platform.isWindows
+        ? TargetPlatform.windows
+        : TargetPlatform.macOS;
+    final String shortcut = globalHotKey.label(shortcutPlatform);
     return Container(
       height: 39,
       padding: const EdgeInsets.symmetric(horizontal: 16),

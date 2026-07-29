@@ -462,7 +462,10 @@ class _ShellScreenState extends State<ShellScreen> {
                   ),
                 ),
                 Expanded(child: _selectedWorkspace()),
-                PopupFooter(apiPort: widget.settingsViewModel.settings.apiPort),
+                PopupFooter(
+                  apiPort: widget.settingsViewModel.settings.apiPort,
+                  globalHotKey: widget.settingsViewModel.settings.globalHotKey,
+                ),
               ],
             ),
           ),

@@ -141,6 +141,84 @@ void main() {
     expect(backend.values['dingdong.macos.trayNotificationColor'], 'purple');
   });
 
+  test('applies and persists a registered global shortcut', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final List<GlobalHotKey> values = <GlobalHotKey>[];
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      onGlobalHotKeyChanged: (GlobalHotKey value) async {
+        values.add(value);
+        return true;
+      },
+    );
+    const GlobalHotKey shortcut = GlobalHotKey(
+      key: 'K',
+      primary: true,
+      shift: false,
+      alt: true,
+    );
+
+    await model.load();
+    await model.setGlobalHotKey(shortcut);
+
+    expect(values, <GlobalHotKey>[GlobalHotKey.defaultValue, shortcut]);
+    expect(model.settings.globalHotKey, shortcut);
+    expect(
+      GlobalHotKey.parse(backend.values['dingdong.shortcut.openClipboard']),
+      shortcut,
+    );
+  });
+
+  test('keeps the previous shortcut when native registration fails', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      onGlobalHotKeyChanged: (GlobalHotKey value) async =>
+          value == GlobalHotKey.defaultValue,
+    );
+
+    await model.load();
+    await model.setGlobalHotKey(
+      const GlobalHotKey(key: 'K', primary: true, shift: false),
+    );
+
+    expect(model.settings.globalHotKey, GlobalHotKey.defaultValue);
+    expect(
+      model.errorMessage,
+      'Shortcut could not be registered. It may already be used by another app.',
+    );
+    expect(backend.values, isNot(contains('dingdong.shortcut.openClipboard')));
+  });
+
+  test('falls back when a saved shortcut is no longer available', () async {
+    const GlobalHotKey savedShortcut = GlobalHotKey(
+      key: 'K',
+      primary: true,
+      shift: false,
+    );
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend(
+      <String, Object>{
+        'dingdong.shortcut.openClipboard': savedShortcut.encode(),
+      },
+    );
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      onGlobalHotKeyChanged: (GlobalHotKey value) async => false,
+    );
+
+    await model.load();
+
+    expect(model.settings.globalHotKey, GlobalHotKey.defaultValue);
+    expect(
+      GlobalHotKey.parse(backend.values['dingdong.shortcut.openClipboard']),
+      GlobalHotKey.defaultValue,
+    );
+    expect(
+      model.errorMessage,
+      'Shortcut could not be registered. It may already be used by another app.',
+    );
+  });
+
   test('custom notification sound can be selected and cleared', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
     final SettingsViewModel model = SettingsViewModel(

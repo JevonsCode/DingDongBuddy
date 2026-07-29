@@ -1,34 +1,32 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.9.1",
-  "latestBuild": "28",
-  "publishedAt": "2026-07-29T09:19:43Z",
+  "latestVersion": "0.9.2",
+  "latestBuild": "29",
+  "publishedAt": "2026-07-29T12:17:28Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.1/DingDong-0.9.1-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.2/DingDong-0.9.2-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.1/DingDong-0.9.1-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.2/DingDong-0.9.2-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.1/DingDong-0.9.1-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.2/DingDong-0.9.2-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Delivers each task's authoritative Prompt snapshot and complete enabled, scope-matched Skill catalog through the DingDong Bridge.",
-    "Loads full Skill instructions and referenced package files on demand while re-checking enabled state, exact project scope, duplicate names, and safe file boundaries.",
-    "Removes only legacy DingDong-managed native Skill mirrors, preserves independent native Skills, and stages local imports to handle protected macOS folders and Windows paths.",
-    "Preserves clipboard HTML and RTF, adds original and plain-text paste paths, and restores images as both bitmap data and file URLs.",
-    "Adds macOS Dock-icon hiding plus selectable unread menu-bar colors that update immediately.",
-    "Coordinates trigger-group and strict Skill changes transactionally so scope edits cannot leave partially updated or globally exposed resources."
+    "Makes the system-wide Clipboard shortcut configurable from Settings while keeping Command-Shift-V on macOS and Control-Shift-V on Windows as the defaults.",
+    "Applies a recorded shortcut immediately, persists it across restarts, and keeps the previous working shortcut when another application already owns the new combination.",
+    "Supports letters, numbers, F1-F12, arrow keys, Space, and Return with at least one modifier through native macOS and Windows registration.",
+    "Publishes the complete default keyboard-shortcut and user-facing settings reference on the website and in both READMEs."
   ]
 }

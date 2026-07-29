@@ -1,7 +1,9 @@
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 
 export 'package:dingdong/features/settings/domain/app_settings.dart';
+export 'package:dingdong/features/settings/domain/global_hot_key.dart';
 
 /// Loads and saves settings using the native DingDong preference key contract.
 final class SettingsRepository {
@@ -33,6 +35,7 @@ final class SettingsRepository {
       _backend.read(_agentActivityCountHoursKey),
       _backend.read(_hideDockIconKey),
       _backend.read(_trayNotificationColorKey),
+      _backend.read(_globalHotKeyKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -58,6 +61,7 @@ final class SettingsRepository {
         values[17],
         fallback: defaultTrayNotificationColor,
       ),
+      globalHotKey: GlobalHotKey.parse(values[18]),
     ).sanitized();
   }
 
@@ -94,6 +98,7 @@ final class SettingsRepository {
         _trayNotificationColorKey,
         settings.trayNotificationColor.name,
       ),
+      _backend.write(_globalHotKeyKey, settings.globalHotKey.encode()),
     ]);
   }
 }
@@ -119,3 +124,4 @@ const String _agentActivityMaxItemsKey = 'dingdong.agentActivity.maxItems';
 const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
 const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';
 const String _trayNotificationColorKey = 'dingdong.macos.trayNotificationColor';
+const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';
