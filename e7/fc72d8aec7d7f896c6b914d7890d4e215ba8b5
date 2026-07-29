@@ -1,0 +1,407 @@
+test/core/platform/desktop_window_policy_test.dart
+  s_95efb607250e34::t_69afc941f1ab14 1-43
+test/features/shell/desktop_shell_service_test.dart
+  s_95efb607250e34::t_a8fc025fd762ad 128,143-145,153,160
+lib/features/agent_api/data/agent_router.dart
+  s_f5f07ff5996a8a::t_b596f253ee280a 498-499,501-505
+  s_4b7d9f121ec36a::t_80c6593a8c3d2c 242-266
+  s_f5f07ff5996a8a::t_75da7fb98f1d9c 500,506-508
+  s_3e322a45102469::t_b02dccdce6b9a1 26
+lib/features/agent_api/data/library_routes.dart
+  s_3e322a45102469::t_b02dccdce6b9a1 15
+  s_3e322a45102469::t_8f8288767ac268 216-219,224-225
+  s_3e322a45102469::t_aa756fa9ec87a2 62,69-73
+test/features/library/resource_repository_test.dart
+  s_3e322a45102469::t_3be6a66937286a 30,36-51
+test/features/library/library_view_model_test.dart
+  s_3e322a45102469::t_aa395c5b43b4b7 306-307
+  s_3e322a45102469::t_6b2beeb54dd1f5 311-334,337-381,383,388-389,393,395-397
+  s_3e322a45102469::t_1bcf649f26975b 2,310,335-336,382,384-387,390-392,394
+test/features/clipboard/clipboard_screen_test.dart
+  s_f5f07ff5996a8a::t_69e5989e3e1c36 892-893,1198,1208
+  s_f5f07ff5996a8a::t_409533efe535d0 1118-1121
+lib/features/settings/ui/settings_sections.dart
+  s_3e322a45102469::t_842752eb7f3425 3-4,19,21-22,25-34,121-199
+test/contract/http_contract_test.dart
+  s_3e322a45102469::t_daad3b271228af 607
+  s_3e322a45102469::t_6fd34ac495bc85 461-480,482-495,497-498,500-529,593-597,687-718,1661,1665-1666
+  s_3e322a45102469::t_d1aeccd5ffab7f 219,481,496,499,530,633-641,653-654,673-674,678,685,1344,1349-1352,1356-1440,1519,1525,1527-1579,1601,1652-1660,1662-1664,1667-1669
+  s_3e322a45102469::t_ee6db0a9dfca63 622,668,675-676,681,2063-2069
+  s_3e322a45102469::t_d5b1b625585f39 623-632,651-652,655-656,661-667,669-672,677,679-680,682-684,686
+  s_3e322a45102469::t_305f6a0fcdfa46 642-650,657-660
+  s_f5f07ff5996a8a::t_2a844741355f4d 379-422,2223-2224,2230,2244-2248
+test/features/settings/settings_screen_test.dart
+  s_95efb607250e34::t_2e97b9dfd8a231 9
+  s_3e322a45102469::t_b25235bf4f3d6e 191
+  s_b48a2238435bde::t_aa88051fe57b3c 77,285,287
+  s_95efb607250e34::t_1ebf09b7606226 13-24,26,95,97
+  s_95efb607250e34::t_968471ec655d8e 25,27,168-170
+  s_95efb607250e34::t_d3db1f34ee86c3 119
+  s_3e322a45102469::t_159320cf460e14 150-165,183-190
+lib/platform/multi_window_settings_host_bridge.dart
+  s_95efb607250e34::t_69afc941f1ab14 68,79-80
+  s_95efb607250e34::t_d3db1f34ee86c3 69-71
+  s_3e322a45102469::t_38af1237167aa5 3,72-78
+lib/features/clipboard/ui/clipboard_screen.dart
+  s_f5f07ff5996a8a::t_9c768f5d665fb7 21
+  s_f5f07ff5996a8a::t_04056a0e28b43d 121
+  s_f5f07ff5996a8a::t_244e9a2d17dbb4 38,54,220-224,308-309,331-333
+lib/features/clipboard/ui/clipboard_record_list.dart
+  s_f5f07ff5996a8a::t_a0cc5807eab3d7 255,261
+  s_f5f07ff5996a8a::t_04056a0e28b43d 229,262
+  s_f5f07ff5996a8a::t_38a61e54257f1b 137,145,202,211-215,228,244,253-254,256-260,263-264,328-329
+  s_f5f07ff5996a8a::t_244e9a2d17dbb4 9,21,158-160
+lib/features/shell/ui/shell_screen.dart
+  s_f5f07ff5996a8a::t_244e9a2d17dbb4 91,204,208-209,211-216,221-229,285-288,292,411-414,502
+  s_f5f07ff5996a8a::t_99330e5778e64e 183-191
+  s_f5f07ff5996a8a::t_04056a0e28b43d 210,410
+test/features/library/agent_resource_synchronizer_test.dart
+  s_4b7d9f121ec36a::t_2d9eeffedbf202 364,383-386,390
+  s_4b7d9f121ec36a::t_040d0b535d1b0e 284,311-316
+  s_4b7d9f121ec36a::t_83782cdfb77917 780-781
+  s_3e322a45102469::t_4ea175a9597072 783
+  s_4b7d9f121ec36a::t_8b1a890167b16a 805
+  s_3e322a45102469::t_3b8d3c760683d0 782
+  s_4b7d9f121ec36a::t_0bb52865470269 65,740,779,787-790,804,813-815,817-818,824,857,1011
+  s_4b7d9f121ec36a::t_2ba15769232b30 487
+  s_4b7d9f121ec36a::t_a6550a674dbd3e 179,201-206,238,270
+  s_4b7d9f121ec36a::t_5cc29d1f57cb5c 652,665-670,674,694
+  s_4b7d9f121ec36a::t_fc48d86c928a4e 240-243,274-278
+  s_4b7d9f121ec36a::t_a43b468d1fdef2 786
+  s_4b7d9f121ec36a::t_26e2e7ee194686 538,566,569
+  s_4b7d9f121ec36a::t_fd95fcbe7997e7 321,334-335,339,355,357
+  s_4b7d9f121ec36a::t_c33171d76de4de 336-338,387-389,403,613-639,641,643-649,671-673
+  s_4b7d9f121ec36a::t_d62354cda71302 784-785
+test/features/clipboard/clipboard_view_model_test.dart
+  s_f5f07ff5996a8a::t_ce453f37a6e2cc 117-142,144,146-148,150-157
+  s_f5f07ff5996a8a::t_2a844741355f4d 192-228,592-595,598,606,624-628
+  s_f5f07ff5996a8a::t_69e5989e3e1c36 1-2,143,145,149,158,591,599-605,607-610,629-639
+lib/features/library/ui/library_view_model.dart
+  s_3e322a45102469::t_522cb806363daa 10,346-349,351,353-356,378-387,392-395,398-402,424,426-427,437-479
+  s_3e322a45102469::t_6fd34ac495bc85 357-377,403-423,425,428-435
+  s_3e322a45102469::t_1a5778dd212b8b 579-590
+docs/product/agent-adapter-configuration.md
+  s_4b7d9f121ec36a::t_8254300b02fb97 3-7,67-68,71-72
+lib/features/agent_api/data/agent_router_resource_handlers.dart
+  s_3e322a45102469::t_1fca3fbb103566 150,188-189,193-194,196-219
+  s_3e322a45102469::t_ace4c978c3ee7b 190-192,195
+packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift
+  s_3e322a45102469::t_26390b31757f78 56-60,66,77,95-106
+  s_3e322a45102469::t_4100d28f9e537a 63-65
+lib/features/clipboard/ui/clipboard_actions.dart
+  s_f5f07ff5996a8a::t_38a61e54257f1b 13-18
+test/features/settings/release_settings_section_test.dart
+  s_b48a2238435bde::t_aa88051fe57b3c 25,86,146,158
+docs/release-notes.md
+  s_b48a2238435bde::t_3c32ec18fa0869 1-57,63-104
+packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift
+  s_3e322a45102469::t_26390b31757f78 188,190
+lib/core/platform/clipboard_gateway.dart
+  s_f5f07ff5996a8a::t_2a844741355f4d 40-46
+  s_f5f07ff5996a8a::t_0f2b503493eded 7-8,15-16,30-38
+lib/core/models/resource.dart
+  s_3e322a45102469::t_ac05db91cd6799 71
+  s_3e322a45102469::t_6fd34ac495bc85 197,220,243
+  s_3e322a45102469::t_707fc0391f0079 106-110,113,131-134,161,270,298,326,336,351,358
+  s_4b7d9f121ec36a::t_35665dbf306813 170,172-173
+  s_3e322a45102469::t_4551796520f319 93
+test/contract/mcp_contract_test.dart
+  s_4b7d9f121ec36a::t_01c1df1e8903d4 27-28,61,95-97,107-108,110-112,122
+  s_3e322a45102469::t_dcc5c66a3430a0 98-106,114
+  s_4b7d9f121ec36a::t_83782cdfb77917 23-24
+  s_3e322a45102469::t_531261eac64862 26,81
+  s_3e322a45102469::t_dca82dc7a8115d 84
+  s_3e322a45102469::t_b8478cd0d12847 25,80,115-121
+  s_3e322a45102469::t_ee6db0a9dfca63 86
+  s_4b7d9f121ec36a::t_d6b203a017ef7e 79
+  s_4b7d9f121ec36a::t_40ed08dab5ae71 78,109,113
+test/features/clipboard/clipboard_capture_service_test.dart
+  s_f5f07ff5996a8a::t_ce453f37a6e2cc 31-47,49-52,54,56-61
+  s_f5f07ff5996a8a::t_69e5989e3e1c36 48,53,55,62
+packages/tray_manager/lib/src/tray_manager.dart
+  s_3e322a45102469::t_26390b31757f78 197,202
+test/packaging/desktop_identity_test.dart
+  s_b48a2238435bde::t_7eae52fafabf0b 70,77,82,210-211,284,318,360-361,367
+skills/dingdong-configure/SKILL.md
+  s_3e322a45102469::t_ee6db0a9dfca63 24
+  s_3e322a45102469::t_4ea175a9597072 21
+  s_4b7d9f121ec36a::t_cd185684a5fccb 20
+  s_4b7d9f121ec36a::t_e8fa9c473840a3 32,43,47,49
+  s_4b7d9f121ec36a::t_a7003259bfa139 53,93
+  s_4b7d9f121ec36a::t_e742450ac470ba 151,162-163
+lib/platform/desktop_clipboard_gateway.dart
+  s_f5f07ff5996a8a::t_2301161d91108a 50-67,70-77
+  s_f5f07ff5996a8a::t_04056a0e28b43d 97-102
+  s_f5f07ff5996a8a::t_75da7fb98f1d9c 1-2,9-12,48-49,68-69,78
+  s_f5f07ff5996a8a::t_ece5c7a8581a56 8,28,30,33-34,86-96,103-126
+lib/platform/plugin_desktop_shell_gateway.dart
+  s_3e322a45102469::t_4100d28f9e537a 265
+  s_3e322a45102469::t_26390b31757f78 7,29,32-37,62,156-165,266-267,414-415
+  s_95efb607250e34::t_69afc941f1ab14 61,82-88,149-153
+  s_95efb607250e34::t_a8fc025fd762ad 107-108
+  s_3e322a45102469::t_c6674d2b7e0cd7 412-413
+test/features/library/skill_package_installer_test.dart
+  s_3e322a45102469::t_aa756fa9ec87a2 10-24
+test/features/settings/settings_repository_test.dart
+  s_3e322a45102469::t_159320cf460e14 17-25,49,89
+  s_3e322a45102469::t_b25235bf4f3d6e 16,70,111
+  s_95efb607250e34::t_968471ec655d8e 15,48,69,88,110
+lib/features/library/domain/resource_scope_policy.dart
+  s_3e322a45102469::t_6fd34ac495bc85 44-49
+  s_3e322a45102469::t_b02dccdce6b9a1 1-43,50-117,125-130
+  s_3e322a45102469::t_a3fac0c5e59757 118-124
+lib/features/clipboard/domain/clipboard_context_menu.dart
+  s_f5f07ff5996a8a::t_38a61e54257f1b 5-6,19-20,24-36
+lib/features/clipboard/ui/clipboard_manager_screen.dart
+  s_f5f07ff5996a8a::t_38a61e54257f1b 458-459
+README.zh.md
+  s_3e322a45102469::t_0dc0d8b1b44014 128
+  s_3e322a45102469::t_5f3c7dd439f974 253
+  s_4b7d9f121ec36a::t_a17c61ca7bed28 40-45,123-126,137,141-142,151-154,157-174
+  s_3e322a45102469::t_b847c0dc1f3307 127,138,351
+  s_4b7d9f121ec36a::t_e2f77a14529c61 47-48
+  s_4b7d9f121ec36a::t_f0865611a7619d 203,229-230,242-243,252,254,258-263,272,274-275,281-282,290,296,300-306
+  s_3e322a45102469::t_ee6db0a9dfca63 129-131
+  s_b48a2238435bde::t_7eae52fafabf0b 61,63-67,69-72,76
+lib/features/library/domain/skill_package_installer.dart
+  s_3e322a45102469::t_aa756fa9ec87a2 22-26,28-41
+  s_3e322a45102469::t_d5b1b625585f39 27
+test/contract/loopback_mcp_tool_executor_test.dart
+  s_4b7d9f121ec36a::t_b96728fb523763 5,160
+  s_4b7d9f121ec36a::t_80ec48f4813bbf 167-172,250-252
+  s_4b7d9f121ec36a::t_4b14ff15402d56 1-2,153-159,161-166,173-182,184-192,226-230,232-241,243-249,253-256
+  s_4b7d9f121ec36a::t_2b83f4ed854bc7 90-135
+  s_3e322a45102469::t_a1af157f640801 66-89
+lib/core/models/clipboard_record.dart
+  s_f5f07ff5996a8a::t_0f2b503493eded 1-2,14-15,33-34,46-51,105-107,126-127
+lib/features/settings/data/settings_repository.dart
+  s_3e322a45102469::t_b25235bf4f3d6e 121
+  s_3e322a45102469::t_7c5d7e8c4909b7 8-11,14,35,57-60,93-96
+  s_95efb607250e34::t_968471ec655d8e 34,56,92,120
+"Assets/Agent Adapters/claude-code.yaml"
+  s_4b7d9f121ec36a::t_96c7fdef8b9eb8 18
+lib/features/shell/domain/desktop_shell_gateway.dart
+  s_95efb607250e34::t_a8fc025fd762ad 11
+lib/features/library/data/agent_resource_synchronizer.dart
+  s_4b7d9f121ec36a::t_96c7fdef8b9eb8 249,257,260,264-272,277-278
+  s_3e322a45102469::t_1014bd5072f25a 282
+  s_4b7d9f121ec36a::t_6b199244830601 38-41,106,132,158-161,164-165,170,172
+  s_4b7d9f121ec36a::t_35850827ddee04 276
+  s_4b7d9f121ec36a::t_82801e18f7bd33 280-281,283-285
+  s_4b7d9f121ec36a::t_7b20feab94d4f0 273-275
+  s_3e322a45102469::t_4ea175a9597072 279
+  s_4b7d9f121ec36a::t_930c5b739db9e5 407,410,419-421,424,429,432
+test/features/settings/settings_view_model_test.dart
+  s_3e322a45102469::t_b25235bf4f3d6e 124,129-130,140-141
+  s_b48a2238435bde::t_aa88051fe57b3c 184-185,187,203,207,423
+  s_4b7d9f121ec36a::t_513b01b32de8d5 277,331
+  s_3e322a45102469::t_159320cf460e14 122-123,125-128,131-139,142-143
+  s_95efb607250e34::t_968471ec655d8e 104-121
+docs/product/manual-regression.md
+  s_4b7d9f121ec36a::t_d39ea91be7b741 75-82,91-93
+  s_4b7d9f121ec36a::t_28c241cb41aee5 73-74
+  s_f5f07ff5996a8a::t_b65ea0a687bc99 32
+  s_f5f07ff5996a8a::t_3b2f03811d2c7f 35-36
+  s_b48a2238435bde::t_7eae52fafabf0b 1,160-161
+  s_f5f07ff5996a8a::t_ffa469014ffe1f 33-34,37-38
+  s_4b7d9f121ec36a::t_26d8a09c18274d 70-72
+lib/features/clipboard/ui/clipboard_list_tile.dart
+  s_f5f07ff5996a8a::t_1ec1c04098c374 187-191
+  s_f5f07ff5996a8a::t_244e9a2d17dbb4 21,32,41,108,117,199-201,209-219
+skills/dingdong-configure/references/agent-api.md
+  s_3e322a45102469::t_ee6db0a9dfca63 59
+  s_4b7d9f121ec36a::t_787f98680e93e0 30,51
+  s_4b7d9f121ec36a::t_02c9be5929920f 49,55
+  s_3e322a45102469::t_bb76acd90ec013 22,32-33
+  s_3e322a45102469::t_4ea175a9597072 56
+lib/main.dart
+  s_3e322a45102469::t_38af1237167aa5 163,217-222,353-355,364
+  s_95efb607250e34::t_69afc941f1ab14 10,162,213-216,351-352,356-357,359,363,374-376,378-382,467-469,471,475-479,481,628-630,632-636
+  s_95efb607250e34::t_a8fc025fd762ad 187
+pubspec.yaml
+  s_b48a2238435bde::t_7eae52fafabf0b 4
+lib/features/agent_api/data/agent_compatibility_routes.dart
+  s_3e322a45102469::t_ee6db0a9dfca63 130
+  s_4b7d9f121ec36a::t_87f61523cc1512 457-458,467-468
+  s_4b7d9f121ec36a::t_7483a960550c26 466
+lib/features/settings/ui/settings_view_model.dart
+  s_95efb607250e34::t_968471ec655d8e 24,37,49,117,177-184
+  s_3e322a45102469::t_38af1237167aa5 25-26,38,50-51,118-120,185-196
+lib/core/platform/desktop_window_policy.dart
+  s_95efb607250e34::t_69afc941f1ab14 15-24
+docs/index.html
+  s_b48a2238435bde::t_c469f90196ebc6 61,240,245,247,253,255,261,371,373,375,469,471,473,528,573
+  s_4b7d9f121ec36a::t_97888a2e1b76b7 182,353,451
+lib/features/agent_api/data/mcp_server.dart
+  s_4b7d9f121ec36a::t_35665dbf306813 247
+  s_3e322a45102469::t_49bdaad3ec7869 48
+  s_3e322a45102469::t_6fd34ac495bc85 324
+  s_3e322a45102469::t_6b2beeb54dd1f5 342
+  s_3e322a45102469::t_318265ce5034ba 47,150,156-163,171,184-187,210-214,312,322-323,325
+  s_3e322a45102469::t_86f2191e7cf914 343-347
+  s_4b7d9f121ec36a::t_563e7c6e770b14 172-183,188-209,259
+  s_3e322a45102469::t_4ea175a9597072 45
+  s_4b7d9f121ec36a::t_35850827ddee04 46
+  s_3e322a45102469::t_ee6db0a9dfca63 112
+  s_4b7d9f121ec36a::t_7b20feab94d4f0 44
+  s_b48a2238435bde::t_7eae52fafabf0b 39
+lib/features/settings/ui/settings_screen.dart
+  s_95efb607250e34::t_968471ec655d8e 216-231,233
+  s_3e322a45102469::t_842752eb7f3425 541
+  s_95efb607250e34::t_2e97b9dfd8a231 15
+  s_95efb607250e34::t_d3db1f34ee86c3 215,232
+macos/Runner/Info.plist
+  s_4b7d9f121ec36a::t_82b05d00af3d0a 27-32
+test/features/library/resource_scope_policy_test.dart
+  s_3e322a45102469::t_6fd34ac495bc85 9-41,43-44,52-56,64-77,79-84
+  s_3e322a45102469::t_57d0ce7ffa52ce 1-8,42,45-51,57-63,78,85
+lib/app/app_dependencies.dart
+  s_3e322a45102469::t_7c5d7e8c4909b7 114-116
+lib/features/library/domain/trigger_group.dart
+  s_3e322a45102469::t_e3f52bcfeb831e 3-4,49-61,159-164,166,169-172,174-176,179
+  s_4b7d9f121ec36a::t_1f8e8441263175 168,177
+  s_3e322a45102469::t_d5b1b625585f39 173
+  s_4b7d9f121ec36a::t_4755bdf7507045 1-2
+test/platform/tray_manager_visual_contract_test.dart
+  s_3e322a45102469::t_159320cf460e14 4,36,51-52,58-59,200,204-206,211,214-218
+  s_3e322a45102469::t_4100d28f9e537a 37-48,54-56,60,70,201-203,207-210,213
+  s_3e322a45102469::t_c6674d2b7e0cd7 5,49-50,53,57,61-62,212
+  s_3e322a45102469::t_b25235bf4f3d6e 63-69
+docs/dingdong-release.json
+  s_b48a2238435bde::t_3768465422a2f0 3-5,11,15,21,27-32
+test/features/settings/settings_window_app_test.dart
+  s_b48a2238435bde::t_aa88051fe57b3c 115,117
+lib/features/settings/domain/mcp_setup_prompt.dart
+  s_3e322a45102469::t_4ea175a9597072 34,66
+  s_4b7d9f121ec36a::t_e4f54b3bde2a19 36,68
+  s_4b7d9f121ec36a::t_35850827ddee04 33,65
+lib/features/agent_api/data/agent_bridge.dart
+  s_3e322a45102469::t_daad3b271228af 170
+  s_3e322a45102469::t_6fd34ac495bc85 70-77
+  s_4b7d9f121ec36a::t_3dfdb0e41aab2c 2,9,12,15-17,30-32,60-63,65-66,68,92,162-163,192-274,276-285,287-371,394-434,436-452,454-482,515-559,561-583,585-611,614-618
+  s_3e322a45102469::t_ee6db0a9dfca63 78-85,91
+  s_3e322a45102469::t_45ba1df8364580 10
+  s_4b7d9f121ec36a::t_f330f31eba10cf 96-103
+  s_3e322a45102469::t_fa2c0e11957059 161,167
+  s_4b7d9f121ec36a::t_962fc3cadefe1a 93-95,275,286,372-378,384-393,435,453,560,584,612-613
+  s_3e322a45102469::t_ed4e7605b11922 6,67,86-90,121-125,137,171,379-383
+  s_3e322a45102469::t_0ec74f08b2246f 14
+  s_4b7d9f121ec36a::t_7b20feab94d4f0 169
+test/features/library/trigger_group_test.dart
+  s_4b7d9f121ec36a::t_e04ff9a871fb96 1-2,62-69,74-80,110-114
+  s_4b7d9f121ec36a::t_f330f31eba10cf 81-83
+  s_3e322a45102469::t_d5b1b625585f39 109
+  s_3e322a45102469::t_e3f52bcfeb831e 70-73,84-108
+README.md
+  s_3e322a45102469::t_ee6db0a9dfca63 162-165
+  s_b48a2238435bde::t_7eae52fafabf0b 68,70-82,87
+  s_4b7d9f121ec36a::t_c1511608f94291 46-50,158,175-177,189-192,195-197,200-218
+  s_4b7d9f121ec36a::t_9a914d13d593a4 272-273,285-286,295-297,301-306,315,317-318,324,333,343-347,349-351
+  s_3e322a45102469::t_b847c0dc1f3307 159,172
+  s_4b7d9f121ec36a::t_28c241cb41aee5 156-157,171
+  s_3e322a45102469::t_0dc0d8b1b44014 160-161,401
+  s_4b7d9f121ec36a::t_26d8a09c18274d 44-45,151-155,246,325,348
+  s_4b7d9f121ec36a::t_d3cca462c75ea9 339
+test/features/library/built_in_resource_installer_test.dart
+  s_3e322a45102469::t_37c7760d8317bf 152-158
+  s_3e322a45102469::t_3b8d3c760683d0 151
+  s_4b7d9f121ec36a::t_35665dbf306813 159
+  s_4b7d9f121ec36a::t_dad72597306e8e 242,258
+  s_3e322a45102469::t_cc9939c5b71ea8 243-257,259-268
+lib/features/shell/domain/desktop_shell_service.dart
+  s_95efb607250e34::t_a8fc025fd762ad 17,27,72-73
+lib/features/agent_api/data/trigger_group_routes.dart
+  s_3e322a45102469::t_45ba1df8364580 140,192
+  s_3e322a45102469::t_12f07996d05c16 7,117,124-134,139,168-169,173,176-186,191,203-215,222,227-240,262-276,279-283,310,319-376,378
+  s_3e322a45102469::t_6fd34ac495bc85 241-261,284-309,311-318
+macos/Runner/AppDelegate.swift
+  s_f5f07ff5996a8a::t_75da7fb98f1d9c 88-113
+  s_95efb607250e34::t_a8fc025fd762ad 313-327,344-346
+  s_f5f07ff5996a8a::t_ece5c7a8581a56 47-87
+lib/features/clipboard/data/clipboard_repository.dart
+  s_f5f07ff5996a8a::t_0f2b503493eded 135-136,149-151,168-169,194-195,235-243,290-292,299-309
+lib/features/clipboard/domain/clipboard_capture_service.dart
+  s_f5f07ff5996a8a::t_04056a0e28b43d 79-81
+  s_f5f07ff5996a8a::t_9c768f5d665fb7 5
+  s_f5f07ff5996a8a::t_20941bc812e6bc 77-78,89-94,97,105-106,242-253
+lib/features/clipboard/ui/clipboard_view_model.dart
+  s_f5f07ff5996a8a::t_75da7fb98f1d9c 533-536,540-543
+  s_f5f07ff5996a8a::t_04056a0e28b43d 523
+  s_f5f07ff5996a8a::t_b596f253ee280a 537-539
+  s_f5f07ff5996a8a::t_62fa5bca38057a 19-20,320-323,326,330,365,369,504-508,511,515-517,521,524,545,548-550,554-559,561
+  s_f5f07ff5996a8a::t_9c768f5d665fb7 551-553
+test/features/shell/popup_shell_test.dart
+  s_b48a2238435bde::t_aa88051fe57b3c 715
+  s_f5f07ff5996a8a::t_409533efe535d0 1069-1125,1498-1499,1501-1503,1515-1524
+lib/features/settings/domain/release_update.dart
+  s_b48a2238435bde::t_7eae52fafabf0b 114-115
+test/app/dingdong_app_test.dart
+  s_b48a2238435bde::t_7eae52fafabf0b 37,43-44
+lib/features/agent_api/data/loopback_mcp_tool_executor.dart
+  s_4b7d9f121ec36a::t_1243c975746f38 7,74,103-106,109-128,130-139
+  s_3e322a45102469::t_aa756fa9ec87a2 107-108
+  s_3e322a45102469::t_747bc23115330f 45,47-48,52-53,55-58,60-63,162-171,187
+  s_4b7d9f121ec36a::t_4ea5a8772f458a 59,161,172-186
+test/features/clipboard/clipboard_repository_test.dart
+  s_f5f07ff5996a8a::t_69e5989e3e1c36 3,112-147
+INSTALL_WITH_AGENT.md
+  s_4b7d9f121ec36a::t_cdfdc43a6832e9 97-99,163-165
+  s_3e322a45102469::t_0dc0d8b1b44014 150,152-153
+  s_4b7d9f121ec36a::t_26d8a09c18274d 94-96,100-101
+  s_3e322a45102469::t_294bae3f2009f6 154
+  s_3e322a45102469::t_ee6db0a9dfca63 156
+  s_3e322a45102469::t_b847c0dc1f3307 151,155
+lib/features/settings/domain/app_settings.dart
+  s_3e322a45102469::t_7c5d7e8c4909b7 60-82,91,111,132,158,178-179
+  s_95efb607250e34::t_968471ec655d8e 90,110,131,157,177
+lib/features/library/domain/built_in_resource_installer.dart
+  s_3e322a45102469::t_37c7760d8317bf 20,62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.38-trip",
+  "base_commit_sha": "e7fc72d8aec7d7f896c6b914d7890d4e215ba8b5",
+  "prompts": {},
+  "sessions": {
+    "s_3e322a45102469": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fabca-4dd4-7741-a2b0-59ab2afa7cda",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_4b7d9f121ec36a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fa8d3-eb10-7800-a0d1-251ee493a306",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_95efb607250e34": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fa80f-da46-7ae3-90b1-85d23430783a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_b48a2238435bde": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fad1b-71ab-7d52-8b4d-fae662bc21fa",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_f5f07ff5996a8a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fac5c-d61e-7542-92a6-a001bc4ce7ee",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
