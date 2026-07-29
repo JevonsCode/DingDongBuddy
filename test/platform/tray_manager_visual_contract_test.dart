@@ -200,7 +200,7 @@ void main() {
   test('macOS unread tray uses the selected RGB capsule color', () {
     final String gateway = File(
       'lib/platform/plugin_desktop_shell_gateway.dart',
-    ).readAsStringSync();
+    ).readAsStringSync().replaceAll('\r\n', '\n');
     final String plugin = File(
       'packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift',
     ).readAsStringSync();
