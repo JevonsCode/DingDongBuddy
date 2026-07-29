@@ -125,6 +125,7 @@ void main() {
       final List<bool> monitoringChanges = <bool>[];
       int clearCount = 0;
       int settingsCount = 0;
+      int hideDockIconCount = 0;
       final DesktopShellService service = DesktopShellService(
         gateway: gateway,
         controller: controller,
@@ -139,6 +140,9 @@ void main() {
         onShowSettings: () async {
           settingsCount += 1;
         },
+        onHideDockIcon: () async {
+          hideDockIconCount += 1;
+        },
       );
       await service.start();
 
@@ -146,12 +150,14 @@ void main() {
       gateway.emit(DesktopShellCommand.stopClipboardMonitoring);
       gateway.emit(DesktopShellCommand.clearClipboardHistory);
       gateway.emit(DesktopShellCommand.showSettings);
+      gateway.emit(DesktopShellCommand.hideDockIcon);
       gateway.emit(DesktopShellCommand.focusClipboardSearch);
       await Future<void>.delayed(Duration.zero);
 
       expect(monitoringChanges, <bool>[true, false]);
       expect(clearCount, 1);
       expect(settingsCount, 1);
+      expect(hideDockIconCount, 1);
       expect(controller.selectedIndex, 2);
       expect(controller.clipboardSearchFocusRevision, 1);
       await service.stop();

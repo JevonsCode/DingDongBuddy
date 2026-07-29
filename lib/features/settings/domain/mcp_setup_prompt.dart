@@ -30,10 +30,10 @@ String defaultMcpSetupPrompt({
    - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
    - Kiro：执行 /mcp 检查 MCP，并用 /hooks 检查当前会话实际加载的 Stop Hook
 6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
-   - Prompt：所有命中的 Prompt 都是必须自动应用的指令，并以完整正文提供；全局、始终生效的 Prompt 会直接进入 Codex 的 AGENTS.md 或 Claude Code 的 CLAUDE.md 托管区块
-   - Skill：由 Agent 根据 description 判断是否匹配，只有匹配当前任务时才加载或使用完整 Skill；未限定范围的 Skill 全局同步，严格项目 Skill 只同步到项目内原生 Skill 目录；Skill 摘要不是指令
+   - Prompt：Codex 的 AGENTS.md 或 Claude Code 的 CLAUDE.md 托管区块只保留固定的 Bridge 引导；每个用户任务开始时调用 dingdong_bridge，动态获取所有命中的全局、项目和任务 Prompt；每次成功响应都是当前任务的权威 Prompt 快照并替换此前的 Prompt 集合，当前未返回的 Prompt 已失效；每个返回的 Prompt 都是必须自动应用的指令，必须完整应用；Bridge 失败时必须说明 Prompt 和 Skill 目录均未加载，不能把上一次结果当作当前配置
+   - Skill：每次 dingdong_bridge 成功响应中的 active.skills 是当前任务和工作区的权威完整 Skill 目录，包含每个有效、已启用且作用域匹配 Skill 的 id、name 和 description；未返回的 Skill 当前不可用、已停用、格式无效或不在作用域内；只能加载当前目录实际返回的 Skill；由 Agent 根据 description 判断是否匹配，匹配后调用 dingdong_load_skill 并传入 id 或 name 和当前工作区，获取完整 SKILL.md；只用 dingdong_read_skill_file 按需读取 SKILL.md 引用的包文件；Skill 候选不是指令
    - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用
-   - 用户明确要求“通过 DingDong 给某项目安装 Skill”时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group 和 dingdong_bind_resource_scope，并启用 strictProjectSkill；不要用全局 Skill 加路由提示冒充项目隔离
+   - 用户明确要求“通过 DingDong 给某项目安装 Skill”时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group 和 dingdong_bind_resource_scope，并启用 strictProjectSkill；加载接口会再次校验当前工作区，不能绕过项目作用域
 7. 分别验证两条链路，不能只验证 MCP：
    - 结束 Hook：用当前 shell 把 {"summary":"DingDong 任务结束提醒已接入"} 作为 JSON 标准输入传给第 3 步的 Hook 命令，确认 DingDong 收到这条提醒
    - MCP：确认工具列表里出现 dingdong_notify，然后立即调用一次，message 为“DingDong MCP 已接入”，source 为当前客户端名称
@@ -62,10 +62,10 @@ String defaultMcpSetupPrompt({
    - Gemini CLI: run /mcp reload and inspect /hooks panel
    - Kiro: inspect MCP with /mcp and verify the Stop hook actually loaded for the current session with /hooks
 6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
-   - Prompt: every active Prompt is a required instruction, delivered in full and applied automatically; global always-on Prompts are placed directly in DingDong-managed Codex AGENTS.md and Claude Code CLAUDE.md blocks
-   - Skill: the Agent matches its description first and loads or uses the complete Skill only when it fits the current task; unscoped Skills are synchronized globally, while strict project Skills are synchronized only into native Skill directories inside that project; a Skill summary is not an instruction
+   - Prompt: DingDong-managed Codex AGENTS.md and Claude Code CLAUDE.md blocks contain only a persistent bridge bootstrap; call dingdong_bridge at the start of every user task; each successful response is the authoritative Prompt snapshot for the current task and replaces every earlier Prompt set, so an absent Prompt is inactive; every returned global, project, or task-matched Prompt is a required instruction and must be applied in full; if the Bridge fails, report that neither Prompts nor the Skill catalog loaded and do not treat any previous result as current
+   - Skill: active.skills in each successful dingdong_bridge response is the authoritative complete Skill catalog for the current task and workspace; it contains the id, name, and description of every valid, enabled, scope-matched Skill, so an absent Skill is unavailable, disabled, invalid, or out of scope; load only a Skill actually returned by the current catalog; match the description first, then call dingdong_load_skill with its id or name and the current workspace to fetch the complete SKILL.md; use dingdong_read_skill_file only for package files referenced by that document; a Skill candidate is not an instruction
    - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn
-   - When the user explicitly asks to install a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill enabled; never imitate project isolation with a global Skill plus a routing hint
+   - When the user explicitly asks to install a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill enabled; the load endpoint re-checks the current workspace and cannot bypass project scope
 7. Test both paths; testing MCP alone is not enough:
    - Completion hook: using the current shell, pipe {"summary":"DingDong task-completion hook is connected"} as JSON stdin to the hook command from step 3 and confirm that DingDong receives it
    - MCP: confirm dingdong_notify appears in the tool list, then call it once with message "DingDong MCP is connected" and source set to the current client name

@@ -18,6 +18,7 @@ import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_organize_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -34,6 +35,7 @@ class ClipboardScreen extends StatefulWidget {
     this.compact = false,
     this.settingsViewModel,
     this.showShortcutHints = false,
+    this.showPlainTextShortcutHints = false,
     this.onPreview,
     this.onDismissPreview,
     this.onShare,
@@ -49,6 +51,7 @@ class ClipboardScreen extends StatefulWidget {
   final bool compact;
   final ClipboardSettingsController? settingsViewModel;
   final bool showShortcutHints;
+  final bool showPlainTextShortcutHints;
   final Future<void> Function(ClipboardRecord record)? onPreview;
   final Future<void> Function()? onDismissPreview;
   final Future<void> Function(ClipboardRecord record)? onShare;
@@ -115,6 +118,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   ClipboardSettingsController? get settingsViewModel =>
       widget.settingsViewModel;
   bool get showShortcutHints => widget.showShortcutHints;
+  bool get showPlainTextShortcutHints => widget.showPlainTextShortcutHints;
   Future<void> Function(ClipboardRecord record)? get onPreview =>
       widget.onPreview;
   Future<void> Function()? get onDismissPreview => widget.onDismissPreview;
@@ -213,6 +217,11 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                 unawaited(
                   viewModel.restoreVisibleAt(
                     _shortcutStartIndex + shortcutIndex,
+                    mode:
+                        defaultTargetPlatform == TargetPlatform.macOS &&
+                            keyboard.isAltPressed
+                        ? ClipboardPasteMode.plainText
+                        : ClipboardPasteMode.original,
                   ),
                 );
                 return KeyEventResult.handled;
@@ -296,6 +305,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                               compact: compact,
                               includeShare: onShare != null,
                               showShortcutHints: showShortcutHints,
+                              showPlainTextShortcutHints:
+                                  showPlainTextShortcutHints,
                               onShortcutStartIndexChanged:
                                   _handleShortcutStartIndexChanged,
                               onPreview: onPreview,
@@ -317,7 +328,9 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                                 Expanded(
                                   child: _ClipboardPreview(
                                     record: viewModel.selectedRecord,
-                                    onRestore: viewModel.restoreSelected,
+                                    onRestore: () async {
+                                      await viewModel.restoreSelected();
+                                    },
                                     onTogglePinned: viewModel.togglePinned,
                                     onAction: (_ClipboardAction action) =>
                                         _handleAction(context, action),

@@ -5,9 +5,13 @@ export 'package:dingdong/features/settings/domain/app_settings.dart';
 
 /// Loads and saves settings using the native DingDong preference key contract.
 final class SettingsRepository {
-  const SettingsRepository(this._backend);
+  const SettingsRepository(
+    this._backend, {
+    this.defaultTrayNotificationColor = TrayNotificationColor.orange,
+  });
 
   final PreferencesBackend _backend;
+  final TrayNotificationColor defaultTrayNotificationColor;
 
   Future<AppSettings> load() async {
     final List<Object?> values = await Future.wait(<Future<Object?>>[
@@ -27,6 +31,8 @@ final class SettingsRepository {
       _backend.read(_rememberAgentActivityKey),
       _backend.read(_agentActivityMaxItemsKey),
       _backend.read(_agentActivityCountHoursKey),
+      _backend.read(_hideDockIconKey),
+      _backend.read(_trayNotificationColorKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -47,6 +53,11 @@ final class SettingsRepository {
       rememberAgentActivity: values[13] is bool ? values[13]! as bool : true,
       agentActivityMaxItems: values[14] is int ? values[14]! as int : 500,
       agentActivityCountHours: values[15] is int ? values[15]! as int : 24,
+      hideDockIcon: values[16] is bool ? values[16]! as bool : false,
+      trayNotificationColor: TrayNotificationColor.parse(
+        values[17],
+        fallback: defaultTrayNotificationColor,
+      ),
     ).sanitized();
   }
 
@@ -78,6 +89,11 @@ final class SettingsRepository {
         _agentActivityCountHoursKey,
         settings.agentActivityCountHours,
       ),
+      _backend.write(_hideDockIconKey, settings.hideDockIcon),
+      _backend.write(
+        _trayNotificationColorKey,
+        settings.trayNotificationColor.name,
+      ),
     ]);
   }
 }
@@ -101,3 +117,5 @@ const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';
 const String _rememberAgentActivityKey = 'dingdong.agentActivity.remember';
 const String _agentActivityMaxItemsKey = 'dingdong.agentActivity.maxItems';
 const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
+const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';
+const String _trayNotificationColorKey = 'dingdong.macos.trayNotificationColor';

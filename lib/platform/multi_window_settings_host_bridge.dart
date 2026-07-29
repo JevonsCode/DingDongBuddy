@@ -1,5 +1,6 @@
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
+import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/launch_at_startup.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
@@ -62,6 +63,19 @@ final class MultiWindowSettingsHostBridge
     return _parent.invokeMethod<void>('settings_opacity_set', <String, double>{
       'value': value,
     });
+  }
+
+  Future<void> setDockIconHidden(bool value) {
+    return _parent.invokeMethod<void>('settings_dock_icon_set', <String, bool>{
+      'hidden': value,
+    });
+  }
+
+  Future<void> setTrayNotificationColor(TrayNotificationColor value) {
+    return _parent.invokeMethod<void>(
+      'settings_tray_notification_color_set',
+      <String, String>{'color': value.name},
+    );
   }
 
   Future<void> notifyChanged() {

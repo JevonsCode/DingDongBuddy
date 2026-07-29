@@ -1,13 +1,20 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
+import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:path/path.dart' as path;
 
-/// Delivers required Prompt instructions in full while keeping Skill and MCP
-/// discovery summary-first until the Agent deliberately uses them.
+/// Delivers required Prompt instructions and the dynamic Skill catalog.
+///
+/// Prompt bodies are returned in full. Skills remain metadata-only until the
+/// Agent deliberately loads one through [loadSkill].
 final class AgentBridge {
   AgentBridge(
     this._store, {
@@ -20,6 +27,9 @@ final class AgentBridge {
   final TriggerGroupStore _triggerGroupStore;
   final DateTime Function() _now;
 
+  static const int _maximumSkillPackageFiles = 200;
+  static const int _maximumSkillFileBytes = 5 * 1024 * 1024;
+
   Future<HttpResponseData> respond(String body) async {
     try {
       final Map<String, Object?> request = body.trim().isEmpty
@@ -28,7 +38,6 @@ final class AgentBridge {
       final String task = (request['task'] as String? ?? '').trim();
       final String source = (request['source'] as String? ?? 'Agent').trim();
       final String expand = request['expand'] as String? ?? 'prompts';
-      final int limit = (request['limit'] as int? ?? 12).clamp(1, 60);
       final TriggerContext context = TriggerContext(
         projectPath: _firstString(request, const <String>[
           'workspacePath',
@@ -48,25 +57,50 @@ final class AgentBridge {
           .toSet();
       final List<Resource> resources = await _store.load();
       final List<TriggerGroup> triggerGroups = await _triggerGroupStore.load();
-      final Map<String, TriggerGroup> triggerGroupsById =
-          <String, TriggerGroup>{
-            for (final TriggerGroup group in triggerGroups) group.id: group,
-          };
-      bool matchesScope(Resource resource) {
-        if (resource.triggerGroupIds.isEmpty) {
-          return true;
-        }
-        return resource.triggerGroupIds.any(
-          (String id) => triggerGroupsById[id]?.matches(context) ?? false,
-        );
-      }
-
-      final List<Resource> selected = resources
+      final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
+        triggerGroups,
+      );
+      final List<Resource> available = resources
           .where((Resource resource) => resource.enabled)
-          .where(matchesScope)
-          .where((Resource resource) => _isActive(resource, terms))
-          .take(limit)
+          .where(
+            (Resource resource) =>
+                resourceMatchesScope(resource, context, triggerGroupsById),
+          )
           .toList(growable: false);
+      final List<Resource> prompts =
+          available
+              .where(
+                (Resource resource) => resource.type == ResourceType.prompt,
+              )
+              .where((Resource resource) => _isActive(resource, terms))
+              .toList(growable: false)
+            ..sort(compareResources);
+      List<Resource> candidates(ResourceType type) =>
+          available
+              .where((Resource resource) => resource.type == type)
+              .where((Resource resource) => _isActive(resource, terms))
+              .toList(growable: false)
+            ..sort(compareResources);
+      final List<Resource> mcps = candidates(ResourceType.mcp);
+      final List<Resource> knowledge = candidates(ResourceType.knowledge);
+      final List<Resource> selected = <Resource>[
+        ...prompts,
+        ...mcps,
+        ...knowledge,
+      ];
+      final List<_ResolvedSkill> skillCandidates =
+          _resolvedSkills(
+            available.where(
+              (Resource resource) => resource.type == ResourceType.skill,
+            ),
+          )..sort((_ResolvedSkill left, _ResolvedSkill right) {
+            final int name = left.configuration.name.compareTo(
+              right.configuration.name,
+            );
+            return name != 0
+                ? name
+                : left.resource.id.compareTo(right.resource.id);
+          });
       final Set<String> selectedIds = selected
           .map((Resource resource) => resource.id)
           .toSet();
@@ -84,8 +118,11 @@ final class AgentBridge {
       if (selectedIds.isNotEmpty) {
         await _store.save(updatedResources);
       }
-      final List<Resource> used = updatedResources
-          .where((Resource resource) => selectedIds.contains(resource.id))
+      final Map<String, Resource> updatedById = <String, Resource>{
+        for (final Resource resource in updatedResources) resource.id: resource,
+      };
+      final List<Resource> used = selected
+          .map((Resource resource) => updatedById[resource.id]!)
           .toList(growable: false);
       final Set<String> matchedTriggerGroupIds = triggerGroups
           .where((TriggerGroup group) => group.matches(context))
@@ -97,8 +134,7 @@ final class AgentBridge {
             .where((Resource resource) => resource.type == type)
             .map((Resource resource) {
               final bool contentIncluded =
-                  expand == 'all' ||
-                  (expand == 'prompts' && type == ResourceType.prompt);
+                  type == ResourceType.prompt || expand == 'all';
               return <String, Object?>{
                 ...(contentIncluded
                     ? resource.toApiJson()
@@ -122,13 +158,17 @@ final class AgentBridge {
           },
           'active': <String, Object?>{
             'prompts': items(ResourceType.prompt),
-            'skills': items(ResourceType.skill),
+            'skills': skillCandidates
+                .map(_skillCandidateJson)
+                .toList(growable: false),
             'mcps': items(ResourceType.mcp),
             'knowledge': items(ResourceType.knowledge),
           },
-          'delivery': const <String, Object?>{
+          'delivery': <String, Object?>{
             'prompts': 'full-required-instructions',
-            'skills': 'summary-load-on-match',
+            'promptSnapshot': 'authoritative-replace',
+            'skills': 'id-name-description-catalog-load-on-match',
+            'skillCatalogSnapshot': 'authoritative-replace',
             'mcps': 'summary-call-on-demand',
           },
           'privacy': const <String, Object?>{
@@ -148,6 +188,297 @@ final class AgentBridge {
         },
       );
     }
+  }
+
+  /// Loads one full Skill after re-checking its enabled state and scope.
+  Future<HttpResponseData> loadSkill(Map<String, String> query) async {
+    try {
+      final _SkillLookup lookup = await _lookupSkill(query);
+      final HttpResponseData? error = lookup.error;
+      if (error != null) {
+        return error;
+      }
+      final _ResolvedSkill skill = lookup.skill!;
+      final List<Resource> resources = lookup.resources;
+      final int resourceIndex = resources.indexWhere(
+        (Resource resource) => resource.id == skill.resource.id,
+      );
+      final Resource tracked = skill.resource.copyWith(
+        usageCount: skill.resource.usageCount + 1,
+        lastUsedAt: _now().toUtc(),
+      );
+      resources[resourceIndex] = tracked;
+      await _store.save(resources);
+      final Map<String, Object?> package = await _packageSummary(tracked);
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'ok',
+          'context': _contextJson(lookup.context),
+          'skill': <String, Object?>{
+            'id': tracked.id,
+            'type': ResourceType.skill.name,
+            'name': skill.configuration.name,
+            'description': skill.configuration.description,
+            'content': tracked.content,
+            'contentIncluded': true,
+            'package': package,
+          },
+          'delivery': const <String, Object?>{
+            'content': 'full-skill-md-required-workflow',
+            'supportingFiles': 'manifest-read-on-demand',
+          },
+        },
+      );
+    } on Object {
+      return const HttpResponseData(
+        statusCode: 400,
+        json: <String, Object?>{
+          'status': 'error',
+          'message': 'Invalid Skill load request',
+        },
+      );
+    }
+  }
+
+  /// Reads one package file without exposing an unrestricted local path.
+  Future<HttpResponseData> readSkillFile(Map<String, String> query) async {
+    try {
+      final String requestedPath = (query['path'] ?? '').trim();
+      final List<String>? segments = _safeSkillFileSegments(requestedPath);
+      if (segments == null) {
+        return const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'path must be a safe relative Skill package path',
+          },
+        );
+      }
+      final _SkillLookup lookup = await _lookupSkill(query);
+      final HttpResponseData? error = lookup.error;
+      if (error != null) {
+        return error;
+      }
+      final _ResolvedSkill skill = lookup.skill!;
+      final String? packagePath = skill.resource.packagePath;
+      if (packagePath == null) {
+        return const HttpResponseData(
+          statusCode: 404,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill package file not found',
+          },
+        );
+      }
+      final Directory root = Directory(packagePath);
+      if (await FileSystemEntity.type(root.path, followLinks: false) !=
+          FileSystemEntityType.directory) {
+        return const HttpResponseData(
+          statusCode: 404,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill package file not found',
+          },
+        );
+      }
+      final File file = File(path.joinAll(<String>[root.path, ...segments]));
+      if (await FileSystemEntity.type(file.path, followLinks: false) !=
+          FileSystemEntityType.file) {
+        return const HttpResponseData(
+          statusCode: 404,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill package file not found',
+          },
+        );
+      }
+      final String resolvedRoot = await root.resolveSymbolicLinks();
+      final String resolvedFile = await file.resolveSymbolicLinks();
+      if (!path.isWithin(resolvedRoot, resolvedFile)) {
+        return const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill package path escapes its root',
+          },
+        );
+      }
+      final int byteCount = await file.length();
+      if (byteCount > _maximumSkillFileBytes) {
+        return const HttpResponseData(
+          statusCode: 413,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill package file exceeds the 5 MiB limit',
+          },
+        );
+      }
+      final List<int> bytes = await file.readAsBytes();
+      String? text;
+      try {
+        text = utf8.decode(bytes);
+      } on FormatException {
+        text = null;
+      }
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'ok',
+          'context': _contextJson(lookup.context),
+          'skill': <String, Object?>{
+            'id': skill.resource.id,
+            'name': skill.configuration.name,
+          },
+          'file': <String, Object?>{
+            'path': segments.join('/'),
+            'byteCount': byteCount,
+            'encoding': text == null ? 'base64' : 'utf-8',
+            'content': text ?? base64Encode(bytes),
+          },
+        },
+      );
+    } on Object {
+      return const HttpResponseData(
+        statusCode: 400,
+        json: <String, Object?>{
+          'status': 'error',
+          'message': 'Invalid Skill file request',
+        },
+      );
+    }
+  }
+
+  Future<_SkillLookup> _lookupSkill(Map<String, String> query) async {
+    final String id = (query['id'] ?? '').trim();
+    final String name = (query['name'] ?? '').trim().toLowerCase();
+    final TriggerContext context = _contextFromStrings(query);
+    if (id.isEmpty && name.isEmpty) {
+      return _SkillLookup.error(
+        context,
+        const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill name or id is required',
+          },
+        ),
+      );
+    }
+    final List<Resource> resources = List<Resource>.of(await _store.load());
+    final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
+      await _triggerGroupStore.load(),
+    );
+    final List<_ResolvedSkill> matches =
+        _resolvedSkills(
+              resources
+                  .where(
+                    (Resource resource) =>
+                        resource.enabled &&
+                        resource.type == ResourceType.skill &&
+                        resourceMatchesScope(
+                          resource,
+                          context,
+                          triggerGroupsById,
+                        ),
+                  )
+                  .where(
+                    (Resource resource) => id.isEmpty || resource.id == id,
+                  ),
+            )
+            .where(
+              (_ResolvedSkill skill) =>
+                  name.isEmpty || skill.configuration.name == name,
+            )
+            .toList(growable: false);
+    if (matches.isEmpty) {
+      return _SkillLookup.error(
+        context,
+        const HttpResponseData(
+          statusCode: 404,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill is disabled, out of scope, or not found',
+          },
+        ),
+      );
+    }
+    if (matches.length > 1) {
+      return _SkillLookup.error(
+        context,
+        HttpResponseData(
+          statusCode: 409,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Skill name is ambiguous; include its id',
+            'candidateIds': matches
+                .map((_ResolvedSkill skill) => skill.resource.id)
+                .toList(growable: false),
+          },
+        ),
+      );
+    }
+    return _SkillLookup.success(context, resources, matches.single);
+  }
+
+  Future<Map<String, Object?>> _packageSummary(Resource resource) async {
+    final String? packagePath = resource.packagePath;
+    if (packagePath == null) {
+      return const <String, Object?>{
+        'available': false,
+        'fileCount': 0,
+        'truncated': false,
+        'files': <Object?>[],
+      };
+    }
+    final Directory root = Directory(packagePath);
+    if (await FileSystemEntity.type(root.path, followLinks: false) !=
+        FileSystemEntityType.directory) {
+      return const <String, Object?>{
+        'available': false,
+        'fileCount': 0,
+        'truncated': false,
+        'files': <Object?>[],
+      };
+    }
+    final List<Map<String, Object?>> files = <Map<String, Object?>>[];
+    await for (final FileSystemEntity entity in root.list(
+      recursive: true,
+      followLinks: false,
+    )) {
+      if (files.length > _maximumSkillPackageFiles) {
+        break;
+      }
+      if (entity is! File ||
+          await FileSystemEntity.type(entity.path, followLinks: false) !=
+              FileSystemEntityType.file) {
+        continue;
+      }
+      final String relative = path
+          .relative(entity.path, from: root.path)
+          .replaceAll(path.separator, '/');
+      if (relative == 'SKILL.md' || relative == '.dingdong-managed') {
+        continue;
+      }
+      files.add(<String, Object?>{
+        'path': relative,
+        'byteCount': await entity.length(),
+      });
+    }
+    files.sort(
+      (Map<String, Object?> left, Map<String, Object?> right) =>
+          (left['path']! as String).compareTo(right['path']! as String),
+    );
+    final bool truncated = files.length > _maximumSkillPackageFiles;
+    final List<Map<String, Object?>> visible = truncated
+        ? files.take(_maximumSkillPackageFiles).toList(growable: false)
+        : files;
+    return <String, Object?>{
+      'available': true,
+      'fileCount': visible.length,
+      'truncated': truncated,
+      'files': visible,
+    };
   }
 }
 
@@ -180,4 +511,109 @@ bool _isActive(Resource resource, Set<String> terms) {
     ResourceActivation.taskMatch => _matches(resource, terms),
     ResourceActivation.manual => false,
   };
+}
+
+Map<String, TriggerGroup> _groupsById(List<TriggerGroup> groups) =>
+    <String, TriggerGroup>{
+      for (final TriggerGroup group in groups) group.id: group,
+    };
+
+List<_ResolvedSkill> _resolvedSkills(Iterable<Resource> resources) {
+  final List<_ResolvedSkill> skills = <_ResolvedSkill>[];
+  for (final Resource resource in resources) {
+    try {
+      skills.add(
+        _ResolvedSkill(
+          resource,
+          SkillConfiguration.parseOnline(resource.content),
+        ),
+      );
+    } on FormatException {
+      // Invalid Skills remain visible in DingDong's Issues workspace without
+      // breaking delivery of valid Prompts and Skill candidates.
+    }
+  }
+  return skills;
+}
+
+Map<String, Object?> _skillCandidateJson(_ResolvedSkill skill) =>
+    <String, Object?>{
+      'id': skill.resource.id,
+      'name': skill.configuration.name,
+      'description': skill.configuration.description,
+    };
+
+TriggerContext _contextFromStrings(Map<String, String> values) =>
+    TriggerContext(
+      projectPath: _firstNonEmptyString(values, const <String>[
+        'workspacePath',
+        'projectPath',
+        'cwd',
+      ]),
+      repositoryUrl: _firstNonEmptyString(values, const <String>[
+        'repositoryUrl',
+        'repository',
+        'projectUrl',
+      ]),
+    );
+
+String _firstNonEmptyString(Map<String, String> values, List<String> keys) {
+  for (final String key in keys) {
+    final String value = (values[key] ?? '').trim();
+    if (value.isNotEmpty) {
+      return value;
+    }
+  }
+  return '';
+}
+
+Map<String, Object?> _contextJson(TriggerContext context) => <String, Object?>{
+  'workspacePath': context.projectPath,
+  'repositoryUrl': context.repositoryUrl,
+};
+
+List<String>? _safeSkillFileSegments(String value) {
+  if (value.isEmpty ||
+      value.startsWith('/') ||
+      value.contains(r'\') ||
+      value.contains('\u0000')) {
+    return null;
+  }
+  final List<String> segments = value.split('/');
+  if (segments.any(
+    (String segment) => segment.isEmpty || segment == '.' || segment == '..',
+  )) {
+    return null;
+  }
+  return segments;
+}
+
+final class _ResolvedSkill {
+  const _ResolvedSkill(this.resource, this.configuration);
+
+  final Resource resource;
+  final SkillConfiguration configuration;
+}
+
+final class _SkillLookup {
+  const _SkillLookup._(
+    this.context, {
+    required this.resources,
+    this.skill,
+    this.error,
+  });
+
+  factory _SkillLookup.success(
+    TriggerContext context,
+    List<Resource> resources,
+    _ResolvedSkill skill,
+  ) => _SkillLookup._(context, resources: resources, skill: skill);
+
+  factory _SkillLookup.error(TriggerContext context, HttpResponseData error) =>
+      _SkillLookup._(context, resources: const <Resource>[], error: error);
+
+  final TriggerContext context;
+  final List<Resource> resources;
+  final _ResolvedSkill? skill;
+  final HttpResponseData? error;
 }

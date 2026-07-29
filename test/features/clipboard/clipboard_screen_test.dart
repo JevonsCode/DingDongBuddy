@@ -889,6 +889,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('windows-context-menu')), findsOneWidget);
+      expect(find.text('Paste'), findsOneWidget);
+      expect(find.text('Paste as Plain Text'), findsOneWidget);
       expect(find.text('Details'), findsOneWidget);
       expect(find.text('Copy'), findsOneWidget);
       expect(find.text('Add title'), findsOneWidget);
@@ -1113,6 +1115,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(menuGateway.showCount, 1);
+    expect(
+      menuGateway.lastItems.map((DesktopContextMenuItem item) => item.id),
+      containsAll(<String>['paste', 'pastePlainText']),
+    );
     expect(clipboardGateway.writtenText, record.content);
     expect(find.text('Details'), findsNothing);
   });
@@ -1189,6 +1195,7 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
 
   final ClipboardContextAction? result;
   int showCount = 0;
+  List<DesktopContextMenuItem> lastItems = const <DesktopContextMenuItem>[];
 
   @override
   Future<String?> show({
@@ -1198,6 +1205,7 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
     required List<DesktopContextMenuItem> items,
   }) async {
     showCount += 1;
+    lastItems = items;
     return result?.name;
   }
 }

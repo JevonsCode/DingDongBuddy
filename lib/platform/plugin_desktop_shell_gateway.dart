@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
@@ -25,9 +26,15 @@ final class PluginDesktopShellGateway
     bool Function()? clipboardMonitoringState,
     bool Function()? useChineseLabels,
     bool? developmentBuild,
+    TrayNotificationColor? trayNotificationColor,
   }) : _clipboardMonitoringState = clipboardMonitoringState ?? (() => false),
        _useChineseLabels = useChineseLabels ?? (() => false),
-       _developmentBuild = developmentBuild ?? kDebugMode;
+       _developmentBuild = developmentBuild ?? kDebugMode,
+       _trayNotificationColor =
+           trayNotificationColor ??
+           ((developmentBuild ?? kDebugMode)
+               ? TrayNotificationColor.pink
+               : TrayNotificationColor.orange);
 
   final Future<void> Function()? onHideAuxiliaryWindows;
   final TrayUnreadStore? unreadStore;
@@ -51,6 +58,8 @@ final class PluginDesktopShellGateway
   Timer? _unreadAcknowledgementTimer;
   bool _started = false;
   bool _taskbarIsLight = false;
+  bool _hideDockIcon = false;
+  TrayNotificationColor _trayNotificationColor;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
 
   @override
@@ -70,7 +79,13 @@ final class PluginDesktopShellGateway
     await windowManager.setMaximumSize(PopupWindowPolicy.maximumSize);
     await windowManager.setResizable(true);
     await windowManager.setAlwaysOnTop(true);
-    await windowManager.setSkipTaskbar(true);
+    await windowManager.setSkipTaskbar(
+      desktopWindowSkipsTaskbar(
+        defaultTargetPlatform,
+        hideDockIcon: _hideDockIcon,
+        fallback: true,
+      ),
+    );
     await windowManager.setBackgroundColor(
       desktopWindowBackground(
         defaultTargetPlatform,
@@ -89,6 +104,8 @@ final class PluginDesktopShellGateway
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'openApplication') {
         _commands.add(DesktopShellCommand.openApplication);
+      } else if (call.method == 'hideDockIcon') {
+        _commands.add(DesktopShellCommand.hideDockIcon);
       } else if (call.method == 'pressed') {
         _commands.add(DesktopShellCommand.toggleClipboard);
       } else if (call.method == 'workspaceShortcut' &&
@@ -127,6 +144,23 @@ final class PluginDesktopShellGateway
 
   Future<void> setOpacity(double value) {
     return windowManager.setOpacity(value.clamp(0.82, 0.96));
+  }
+
+  Future<void> setDockIconHidden(bool value) async {
+    _hideDockIcon = value;
+    if (_started && Platform.isMacOS) {
+      await windowManager.setSkipTaskbar(value);
+    }
+  }
+
+  Future<void> setTrayNotificationColor(TrayNotificationColor value) async {
+    if (_trayNotificationColor == value) {
+      return;
+    }
+    _trayNotificationColor = value;
+    if (_started && Platform.isMacOS) {
+      await _unreadController.refresh();
+    }
   }
 
   Future<void> startDragging() {
@@ -228,8 +262,9 @@ final class PluginDesktopShellGateway
     }
     if (Platform.isMacOS) {
       await trayManager.setTitle(
-        _developmentBuild ? (hot ? ' DEV$title' : ' DEV') : title,
-        style: hot ? TrayTitleStyle.unreadBadge : TrayTitleStyle.plain,
+        title,
+        style: macOSTrayTitleStyle(hot: hot),
+        badgeColorRgb: _trayNotificationColor.rgbValue,
       );
     }
   }
@@ -374,3 +409,7 @@ final class PluginDesktopShellGateway
     }
   }
 }
+
+@visibleForTesting
+TrayTitleStyle macOSTrayTitleStyle({required bool hot}) =>
+    hot ? TrayTitleStyle.unreadBadge : TrayTitleStyle.plain;

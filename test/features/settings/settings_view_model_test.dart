@@ -101,6 +101,46 @@ void main() {
     },
   );
 
+  test('applies saved and updated Dock icon visibility', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend(
+      <String, Object>{'dingdong.macos.hideDockIcon': true},
+    );
+    final List<bool> values = <bool>[];
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      onDockIconHiddenChanged: (bool value) async => values.add(value),
+    );
+
+    await model.load();
+    await model.setHideDockIcon(false);
+
+    expect(values, <bool>[true, false]);
+    expect(model.settings.hideDockIcon, isFalse);
+    expect(backend.values['dingdong.macos.hideDockIcon'], isFalse);
+  });
+
+  test('applies and persists the menu bar notification color', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend(
+      <String, Object>{'dingdong.macos.trayNotificationColor': 'blue'},
+    );
+    final List<TrayNotificationColor> values = <TrayNotificationColor>[];
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      onTrayNotificationColorChanged: (TrayNotificationColor value) async =>
+          values.add(value),
+    );
+
+    await model.load();
+    await model.setTrayNotificationColor(TrayNotificationColor.purple);
+
+    expect(values, <TrayNotificationColor>[
+      TrayNotificationColor.blue,
+      TrayNotificationColor.purple,
+    ]);
+    expect(model.settings.trayNotificationColor, TrayNotificationColor.purple);
+    expect(backend.values['dingdong.macos.trayNotificationColor'], 'purple');
+  });
+
   test('custom notification sound can be selected and cleared', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
     final SettingsViewModel model = SettingsViewModel(
@@ -141,10 +181,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '0.8.0',
-        latestBuild: '8',
+        latestVersion: '0.10.0',
+        latestBuild: '29',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/0.8.0'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/0.10.0'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -160,11 +200,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '0.8.0');
+    expect(model.releaseStatus.latestVersion, '0.10.0');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/0.8.0'),
+      Uri.parse('https://example.com/dingdong/releases/0.10.0'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -234,7 +274,7 @@ void main() {
       expect(model.mcpSetupPrompt, contains('required instruction'));
       expect(
         model.mcpSetupPrompt,
-        contains('Skill summary is not an instruction'),
+        contains('a Skill candidate is not an instruction'),
       );
       expect(
         model.mcpSetupPrompt,
@@ -288,7 +328,7 @@ void main() {
       expect(model.mcpSetupPrompt, contains('立即调用一次'));
       expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
       expect(model.mcpSetupPrompt, contains('必须自动应用的指令'));
-      expect(model.mcpSetupPrompt, contains('Skill 摘要不是指令'));
+      expect(model.mcpSetupPrompt, contains('Skill 候选不是指令'));
       expect(model.mcpSetupPrompt, contains('MCP 摘要不是指令'));
       expect(
         model.mcpSetupPrompt,
@@ -380,7 +420,7 @@ final class _FakeApplicationUpdater implements ApplicationUpdater {
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.downloading,
       progress: 0.42,
-      targetVersion: '0.8.0',
+      targetVersion: '0.10.0',
     );
   }
 

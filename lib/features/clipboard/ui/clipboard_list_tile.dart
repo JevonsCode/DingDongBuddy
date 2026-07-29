@@ -18,6 +18,7 @@ class ClipboardListTile extends StatelessWidget {
     this.onSecondaryTapUp,
     this.callout = false,
     this.shortcutIndex,
+    this.plainTextShortcut = false,
     super.key,
   });
 
@@ -28,6 +29,7 @@ class ClipboardListTile extends StatelessWidget {
   final GestureTapUpCallback? onSecondaryTapUp;
   final bool callout;
   final int? shortcutIndex;
+  final bool plainTextShortcut;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +38,7 @@ class ClipboardListTile extends StatelessWidget {
         record: record,
         selected: selected,
         shortcutIndex: shortcutIndex,
+        plainTextShortcut: plainTextShortcut,
         onSelected: onSelected,
         onDoubleTap: onDoubleTap,
         onSecondaryTapUp: onSecondaryTapUp,
@@ -102,6 +105,7 @@ class _CalloutClipboardTile extends StatelessWidget {
     required this.record,
     required this.selected,
     required this.shortcutIndex,
+    required this.plainTextShortcut,
     required this.onSelected,
     required this.onDoubleTap,
     required this.onSecondaryTapUp,
@@ -110,6 +114,7 @@ class _CalloutClipboardTile extends StatelessWidget {
   final ClipboardRecord record;
   final bool selected;
   final int? shortcutIndex;
+  final bool plainTextShortcut;
   final VoidCallback onSelected;
   final VoidCallback? onDoubleTap;
   final GestureTapUpCallback? onSecondaryTapUp;
@@ -179,7 +184,11 @@ class _CalloutClipboardTile extends StatelessWidget {
                 if (shortcutIndex != null) ...<Widget>[
                   const SizedBox(width: 10),
                   Container(
-                    width: usesMetaAsPrimaryModifier(platform) ? 38 : 44,
+                    width: plainTextShortcut
+                        ? 52
+                        : usesMetaAsPrimaryModifier(platform)
+                        ? 38
+                        : 44,
                     height: 29,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
@@ -187,7 +196,9 @@ class _CalloutClipboardTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      primaryShortcutLabel('$shortcutIndex', platform),
+                      plainTextShortcut
+                          ? '⌥⌘ $shortcutIndex'
+                          : primaryShortcutLabel('$shortcutIndex', platform),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -195,6 +206,17 @@ class _CalloutClipboardTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (plainTextShortcut) ...<Widget>[
+                    const SizedBox(width: 6),
+                    Text(
+                      context.localized('Plain text', '纯文本'),
+                      style: const TextStyle(
+                        color: PopupStyle.textSecondary,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ],
               ],
             ),

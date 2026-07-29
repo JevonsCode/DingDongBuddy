@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -302,6 +303,98 @@ void main() {
       expect(model.triggerGroups, isEmpty);
       expect(resources.savedResources.single.triggerGroupIds, isEmpty);
       expect(model.selectedResource?.triggerGroupIds, isEmpty);
+      expect(resources.savedResources.single.enabled, isFalse);
+      expect(model.selectedResource?.enabled, isFalse);
+    },
+  );
+
+  test(
+    'strict Skill group edits stay exact and refresh canonical paths',
+    () async {
+      final Directory first = Directory.systemTemp.createTempSync(
+        'dingdong-view-model-first-',
+      );
+      final Directory second = Directory.systemTemp.createTempSync(
+        'dingdong-view-model-second-',
+      );
+      addTearDown(() => first.deleteSync(recursive: true));
+      addTearDown(() => second.deleteSync(recursive: true));
+      final String firstPath = first.resolveSymbolicLinksSync();
+      final String secondPath = second.resolveSymbolicLinksSync();
+      final DateTime now = DateTime.utc(2026, 7, 29);
+      final TriggerGroup group = TriggerGroup(
+        id: 'project',
+        name: 'Project',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.equals,
+            value: firstPath,
+          ),
+        ],
+        createdAt: now,
+        updatedAt: now,
+      );
+      final _FakeResourceStore resources = _FakeResourceStore(<Resource>[
+        Resource(
+          id: 'reviewer',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content: '---\nname: reviewer\ndescription: Review code\n---\n',
+          strictProjectSkill: true,
+          triggerGroupIds: const <String>['project'],
+          skillProjectPaths: <String>[firstPath],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore triggerGroups = InMemoryTriggerGroupStore(
+        <TriggerGroup>[group],
+      );
+      final LibraryViewModel model = LibraryViewModel(
+        resources,
+        triggerGroupStore: triggerGroups,
+        now: () => now.add(const Duration(hours: 1)),
+      );
+      await model.load();
+
+      await expectLater(
+        model.updateTriggerGroup(
+          group.copyWith(
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.projectPath,
+                operator: TriggerRuleOperator.contains,
+                value: 'dingdong',
+              ),
+            ],
+          ),
+        ),
+        throwsFormatException,
+      );
+      expect(
+        (await triggerGroups.load()).single.rules.single.operator,
+        TriggerRuleOperator.equals,
+      );
+      expect(resources.savedResources.single.skillProjectPaths, <String>[
+        firstPath,
+      ]);
+
+      await model.updateTriggerGroup(
+        group.copyWith(
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.equals,
+              value: secondPath,
+            ),
+          ],
+        ),
+      );
+
+      expect(resources.savedResources.single.skillProjectPaths, <String>[
+        secondPath,
+      ]);
     },
   );
 }

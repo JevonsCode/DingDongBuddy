@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
@@ -73,8 +74,11 @@ final class ClipboardCaptureService {
         return image;
       }
     }
-    final String? text = snapshot.text?.trim();
-    if (text == null || text.isEmpty) {
+    final String? text = snapshot.text;
+    final String? classificationText = text?.trim();
+    if (text == null ||
+        classificationText == null ||
+        classificationText.isEmpty) {
       return null;
     }
     final ClipboardRecord? duplicate = _findDuplicate(
@@ -82,10 +86,15 @@ final class ClipboardCaptureService {
       _ClipboardPayload.text,
     );
     if (duplicate != null) {
-      return _promoteDuplicate(duplicate);
+      return _promoteDuplicate(
+        duplicate,
+        htmlData: snapshot.htmlData,
+        rtfData: snapshot.rtfData,
+        replaceFormattedText: true,
+      );
     }
     final ClipboardClassification classification = ClipboardClassifier.classify(
-      text,
+      classificationText,
     );
     final DateTime timestamp = _now().toUtc();
     final ClipboardRecord record = ClipboardRecord(
@@ -93,6 +102,8 @@ final class ClipboardCaptureService {
       group: classification.group,
       title: classification.title,
       content: text,
+      htmlData: snapshot.htmlData,
+      rtfData: snapshot.rtfData,
       tags: classification.tags,
       source: snapshot.source,
       pinned: false,
@@ -228,8 +239,18 @@ final class ClipboardCaptureService {
     return null;
   }
 
-  ClipboardRecord _promoteDuplicate(ClipboardRecord record) {
-    final ClipboardRecord updated = record.copyWith(updatedAt: _now().toUtc());
+  ClipboardRecord _promoteDuplicate(
+    ClipboardRecord record, {
+    Uint8List? htmlData,
+    Uint8List? rtfData,
+    bool replaceFormattedText = false,
+  }) {
+    final ClipboardRecord updated = record.copyWith(
+      htmlData: htmlData,
+      rtfData: rtfData,
+      replaceFormattedText: replaceFormattedText,
+      updatedAt: _now().toUtc(),
+    );
     _store.save(updated);
     return updated;
   }

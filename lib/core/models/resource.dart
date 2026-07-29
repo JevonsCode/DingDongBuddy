@@ -68,6 +68,7 @@ final class Resource {
     this.enabled = true,
     ResourceActivation? activation,
     List<String> triggerGroupIds = const <String>[],
+    bool strictProjectSkill = false,
     List<String> skillProjectPaths = const <String>[],
     this.sortOrder,
     this.usageCount = 0,
@@ -89,6 +90,7 @@ final class Resource {
              .where((String id) => id.isNotEmpty)
              .toSet(),
        ),
+       strictProjectSkill = type == ResourceType.skill && strictProjectSkill,
        skillProjectPaths = List<String>.unmodifiable(
          skillProjectPaths
              .map((String projectPath) => projectPath.trim())
@@ -101,9 +103,14 @@ final class Resource {
 
   factory Resource.fromJson(Map<String, Object?> json) {
     final bool pinned = json['pinned'] as bool? ?? false;
+    final ResourceType type = ResourceType.parse(json['type']);
+    final List<String> skillProjectPaths =
+        (json['skillProjectPaths'] as List<Object?>? ?? const <Object?>[])
+            .map((Object? value) => value as String)
+            .toList(growable: false);
     return Resource(
       id: _requiredString(json, 'id'),
-      type: ResourceType.parse(json['type']),
+      type: type,
       group: _requiredString(json, 'group'),
       title: _requiredString(json, 'title'),
       content: _requiredString(json, 'content'),
@@ -121,10 +128,10 @@ final class Resource {
           (json['triggerGroupIds'] as List<Object?>? ?? const <Object?>[])
               .map((Object? value) => value as String)
               .toList(growable: false),
-      skillProjectPaths:
-          (json['skillProjectPaths'] as List<Object?>? ?? const <Object?>[])
-              .map((Object? value) => value as String)
-              .toList(growable: false),
+      strictProjectSkill:
+          json['strictProjectSkill'] as bool? ??
+          (type == ResourceType.skill && skillProjectPaths.isNotEmpty),
+      skillProjectPaths: skillProjectPaths,
       sortOrder: json['sortOrder'] as int?,
       usageCount: json['usageCount'] as int? ?? 0,
       lastUsedAt: json['lastUsedAt'] == null
@@ -151,6 +158,7 @@ final class Resource {
   final bool enabled;
   final ResourceActivation activation;
   final List<String> triggerGroupIds;
+  final bool strictProjectSkill;
 
   /// Whether this Skill is limited to an explicit trigger scope.
   ///
@@ -159,9 +167,10 @@ final class Resource {
   bool get isScopedSkill =>
       type == ResourceType.skill && triggerGroupIds.isNotEmpty;
 
-  /// Absolute local project roots where this Skill is mirrored natively.
+  /// Canonical project roots derived for strict Skill loading.
   ///
-  /// An empty list retains the legacy user-global Skill synchronization.
+  /// Retained in persisted data for exact-scope validation and cleanup of
+  /// legacy DingDong-managed native mirrors.
   final List<String> skillProjectPaths;
   final int? sortOrder;
   final int usageCount;
@@ -185,6 +194,7 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       if (triggerGroupIds.isNotEmpty) 'triggerGroupIds': triggerGroupIds,
+      if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
       if (sortOrder != null) 'sortOrder': sortOrder,
       'usageCount': usageCount,
@@ -207,6 +217,7 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       'triggerGroupIds': triggerGroupIds,
+      if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
       'usageCount': usageCount,
       if (lastUsedAt != null)
@@ -229,6 +240,7 @@ final class Resource {
       'enabled': enabled,
       'activation': activation.name,
       'triggerGroupIds': triggerGroupIds,
+      if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
       'usageCount': usageCount,
       if (lastUsedAt != null)
@@ -255,6 +267,7 @@ final class Resource {
     bool? enabled,
     ResourceActivation? activation,
     List<String>? triggerGroupIds,
+    bool? strictProjectSkill,
     List<String>? skillProjectPaths,
     int? sortOrder,
     int? usageCount,
@@ -282,6 +295,7 @@ final class Resource {
       enabled: enabled ?? this.enabled,
       activation: resolvedActivation,
       triggerGroupIds: triggerGroupIds ?? this.triggerGroupIds,
+      strictProjectSkill: strictProjectSkill ?? this.strictProjectSkill,
       skillProjectPaths: skillProjectPaths ?? this.skillProjectPaths,
       sortOrder: sortOrder ?? this.sortOrder,
       usageCount: usageCount ?? this.usageCount,
@@ -309,6 +323,7 @@ final class Resource {
             enabled == other.enabled &&
             activation == other.activation &&
             _listEquals(triggerGroupIds, other.triggerGroupIds) &&
+            strictProjectSkill == other.strictProjectSkill &&
             _listEquals(skillProjectPaths, other.skillProjectPaths) &&
             sortOrder == other.sortOrder &&
             usageCount == other.usageCount &&
@@ -318,7 +333,7 @@ final class Resource {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll(<Object?>[
     id,
     type,
     group,
@@ -333,13 +348,14 @@ final class Resource {
     enabled,
     activation,
     Object.hashAll(triggerGroupIds),
+    strictProjectSkill,
     Object.hashAll(skillProjectPaths),
     sortOrder,
     usageCount,
     lastUsedAt,
     createdAt,
     updatedAt,
-  );
+  ]);
 }
 
 String _requiredString(Map<String, Object?> json, String key) {

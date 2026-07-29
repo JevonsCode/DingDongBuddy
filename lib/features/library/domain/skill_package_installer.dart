@@ -19,6 +19,26 @@ abstract interface class SkillPackageInstaller {
   Future<SkillPackageInstallResult> install(Uri source);
 }
 
+/// Parses an HTTPS URL, file URI, or absolute local Skill package path.
+///
+/// Absolute paths must be recognized before URI parsing because a Windows
+/// drive letter (for example, `C:\Skills\reviewer`) otherwise looks like a URI
+/// scheme.
+Uri? parseSkillPackageSource(String source, {path.Context? pathContext}) {
+  final String value = source.trim();
+  if (value.isEmpty) {
+    return null;
+  }
+  final path.Context context = pathContext ?? path.context;
+  if (context.isAbsolute(value)) {
+    return Uri.file(
+      context.normalize(value),
+      windows: context.style == path.Style.windows,
+    );
+  }
+  return Uri.tryParse(value);
+}
+
 /// Installs a complete GitHub Skill directory, including scripts, references,
 /// assets and other sibling files. Downloads are staged and replaced atomically.
 final class GitHubSkillPackageInstaller implements SkillPackageInstaller {

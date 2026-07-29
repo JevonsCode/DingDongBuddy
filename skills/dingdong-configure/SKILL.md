@@ -17,11 +17,11 @@ Keep the three resource types distinct:
 
 | Type | How it reaches the Agent | What the Agent does |
 |---|---|---|
-| Prompt | A global always-on Prompt is injected into DingDong's managed Codex `AGENTS.md` and Claude Code `CLAUDE.md` blocks. Routed Prompts are returned in full by `dingdong_bridge`. | Apply every active Prompt automatically as a required instruction. |
-| Skill | Enabled unscoped Skills are mirrored globally. Strict project-scoped Skills are mirrored only into that project's native Skill directories. The bridge returns only candidate metadata until full content is requested. | Match the Skill description first; load or use it only when the task fits. A Skill summary is not an instruction. |
+| Prompt | Native instruction files contain only a persistent Bridge bootstrap. Every active Prompt is returned in full by `dingdong_bridge`. | Treat each successful response as the current authoritative Prompt snapshot and apply every active Prompt automatically as a required instruction. |
+| Skill | Each successful Bridge response contains the authoritative complete catalog of every valid, enabled, scope-matched Skill as `id`, `name`, and `description` only. Full content stays in DingDong until requested. | Match a returned description first, then call `dingdong_load_skill` with the candidate ID or name and current workspace. Apply the returned full `SKILL.md`; read only referenced package files with `dingdong_read_skill_file`. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope. |
 | MCP | Enabled MCP servers are written into the client's native MCP configuration. The bridge returns only candidate metadata. | Call a configured MCP tool only when the task needs it. MCP availability is not an instruction and does not require a call every turn. |
 
-Activation and trigger groups filter bridge routing. MCP servers remain client-global because native MCP configuration is global. A Skill bound with strict project scope is absent from global Skill directories and is copied only to project-native Skill directories such as `.agents/skills`, `.claude/skills`, `.cursor/skills`, and `.gemini/skills`.
+Enabled state and trigger groups filter the Skill catalog, and every Skill and supporting-file load re-checks them so an old name or ID cannot bypass a disabled or out-of-scope resource. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP servers remain client-global because native MCP configuration is global. DingDong no longer mirrors managed Skills into native Agent Skill directories; Adapter Skill paths remain useful for removing legacy DingDong mirrors and warning about independently installed native Skills with the same name.
 
 ## Workflow
 
@@ -29,7 +29,7 @@ Activation and trigger groups filter bridge routing. MCP servers remain client-g
 2. Read before writing. Call `dingdong_search_assets` and inspect existing scopes before creating anything; update or reuse a matching object instead of duplicating it.
 3. Model the request:
    - Store behavioral policy as a `prompt`.
-   - Store reusable procedures as a `skill` with valid `SKILL.md` content.
+   - Store reusable procedures as a `skill` with valid `SKILL.md` content and an optional complete package.
    - Store connection settings as an `mcp` resource.
    - Model a SKU, service, environment, or team as tags/group metadata; DingDong has no first-class SKU type.
    - Model where a resource applies with a trigger group, then attach its ID through `triggerGroupIds`.
@@ -40,17 +40,17 @@ Activation and trigger groups filter bridge routing. MCP servers remain client-g
 
 When the user asks to install “this Skill through DingDong for project X”:
 
-1. Resolve the Skill source to either an official GitHub repository/folder/`SKILL.md` URL or an absolute local Skill directory/`SKILL.md` path. Resolve project X to its existing exact absolute project path. Do not guess either value. If a local source is already inside a user-global native Skill directory and is not a DingDong-managed copy, warn that importing it cannot hide that original global copy; ask the user to move/remove the original or use a neutral/GitHub source before claiming strict isolation.
+1. Resolve the Skill source to either an official GitHub repository/folder/`SKILL.md` URL or an absolute local Skill directory/`SKILL.md` path. Resolve project X to its existing exact absolute project path. Do not guess either value. If a separate native Skill with the same name already exists in an Agent's global directory, warn that DingDong's switch cannot disable that independent copy.
 2. Search for the Skill first. If it is not already managed by DingDong, call `dingdong_install_skill`. Keep the returned resource `id`.
 3. Call `dingdong_upsert_trigger_group` with a stable name dedicated to this Skill/project pair and only the exact absolute `projectPath`. Keep the returned group `id`; do not add another OR-ed rule to a strict project Skill group or reuse a shared group's name when its rules would change.
 4. Call `dingdong_bind_resource_scope` with the resource ID, that group ID, and `strictProjectSkill: true`.
-5. Call `dingdong_bridge` once with the matching workspace and once with an unrelated workspace. The Skill must be a candidate only in the matching context.
+5. Call `dingdong_bridge` once with the matching workspace and once with an unrelated workspace. The Skill must be a candidate only in the matching context. Call `dingdong_load_skill` in both contexts as well: the matching load must succeed and the unrelated load must fail.
 
-These writes are idempotent: installation updates the same source/name, trigger-group upsert reuses its name, and scope binding replaces the resource's group IDs. A newly installed Skill stays disabled until it is successfully bound, so the multi-step workflow does not create a transient DingDong-managed global copy. Strict binding rejects `contains`, repository rules, relative, root, missing, or unknown project scopes. Never emulate strict scope with a global Skill plus a routing hint.
+These writes are idempotent: installation updates the same source/name, trigger-group upsert reuses its name, and scope binding replaces the resource's group IDs. A newly installed Skill stays disabled until it is successfully bound, so the multi-step workflow does not create a transient globally available candidate. Strict binding rejects `contains`, repository rules, relative, root, missing, or unknown project scopes. Never treat Bridge filtering alone as sufficient: the full-content load must enforce the same scope.
 
 ## Configure Agent Adapters
 
-Agent Adapters are user-level declarative YAML files for Agent detection and native Skill, MCP, and Prompt locations. Use them when the user asks to add a client or change where DingDong syncs Agent resources. Do not use them for conversation terminal selection; that is `agent-launchers.json`.
+Agent Adapters are user-level declarative YAML files for Agent detection, MCP and Prompt targets, and native Skill locations retained for legacy DingDong mirror cleanup and independent-Skill collision warnings. Use them when the user asks to add a client or change those Agent integration paths. DingDong-managed Skills are delivered dynamically and are not deployed to the Adapter's Skill paths. Do not use Adapters for conversation terminal selection; that is `agent-launchers.json`.
 
 Resolve the user directory by operating system:
 
@@ -90,7 +90,7 @@ When modifying an Adapter:
 3. Preserve the `id` and unrelated fields. Reject invalid YAML, duplicate YAML keys, unknown fields, unsafe paths, duplicate IDs, and unsupported MCP formats instead of guessing. Stop on an unknown field; remove it only after the user explicitly authorizes that exact removal with the loss explained.
 4. Never add arbitrary commands, scripts, Hooks, tokens, environment variables, workspace paths, or conversation IDs.
 5. Require the target to be absent or a regular non-symlink file and require its real parent directory to remain inside the expected DingDong directory. Write through a uniquely named regular temporary file in that same directory. Immediately before replacement, re-read the target and stop if it changed since inspection. Preserve its permissions where supported, atomically replace it, read it back, and clean up or restore the original after a failed replacement.
-6. Report the exact file and requested fields. Keep **Resource Manager → Agent access** open so DingDong can validate the external change and synchronize current resources; otherwise reopen Resource Manager or restart DingDong before verifying the real Skill, Prompt, and MCP targets. An Adapter showing as valid is not by itself proof that resource synchronization succeeded.
+6. Report the exact file and requested fields. Keep **Resource Manager → Agent access** open so DingDong can validate the external change and synchronize current resources; otherwise reopen Resource Manager or restart DingDong before verifying Prompt/MCP targets and legacy Skill cleanup. An Adapter showing as valid is not by itself proof that synchronization succeeded.
 
 DingDong retains three snapshots per ID: current, previous, and two versions ago. The internal directory is named `Agent Adapter History`. Do not edit the history directory directly. If the user requires that no history copy exist, stop instead of modifying an Adapter; this history cannot be disabled through the Adapter document. Invalid external YAML remains visible in Resource Manager for repair but blocks Agent resource synchronization.
 
@@ -148,7 +148,7 @@ These settings currently affect macOS CLI launchers for Claude Code, Gemini CLI,
 | Project/repository scope | Trigger group with OR-ed rules |
 | SKU/domain ownership | Resource tags, title, and group |
 | Reusable clipboard item | Alias/tag or promoted resource |
-| Agent Skill/MCP/Prompt locations | User-level Agent Adapter YAML |
+| Agent MCP/Prompt targets and legacy Skill cleanup locations | User-level Agent Adapter YAML |
 | Reminder conversation destination | User-level `agent-launchers.json` |
 | Completion/attention signal | `/ding` or `dingdong_notify` |
 
@@ -159,8 +159,8 @@ These settings currently affect macOS CLI launchers for Claude Code, Gemini CLI,
 - Ask before destructive deletion. Deleting a trigger group detaches it from every resource.
 - Keep clipboard content hidden unless the user explicitly requests it; sensitive content requires separate explicit consent.
 - Treat `contains` as case-insensitive substring matching, not a path-segment boundary check.
-- Strict project Skill installation requires an `equals` rule with an existing exact absolute project path.
-- Strict scope controls DingDong-managed copies only. Detect and disclose any separate user-owned global copy of the same Skill before claiming that other projects cannot use it.
+- Strict project Skill loading requires an `equals` rule with an existing exact absolute project path.
+- Strict scope controls DingDong's dynamic catalog and load endpoints only. Detect and disclose any separate user-owned native copy of the same Skill before claiming that other projects cannot use it.
 - Never treat Skill or MCP candidate summaries as Prompt instructions.
 - Never place commands, scripts, Hooks, tokens, or environment variables in Agent Adapter YAML.
 - Do not edit the `Agent Adapter History` directory directly.

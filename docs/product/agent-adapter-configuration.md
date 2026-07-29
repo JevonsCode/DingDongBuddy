@@ -1,8 +1,10 @@
 # Agent Adapter 配置
 
-Agent Adapter 描述 DingDong 如何识别一个本机 Agent，以及把已启用的 Skill、MCP 和
-全局 Prompt 同步到哪里。它只登记受支持的文件位置和格式，不允许提供任意命令、Hook、
-Token 或启动脚本。
+Agent Adapter 描述 DingDong 如何识别一个本机 Agent、把 MCP 与固定的 Prompt
+Bridge 引导写到哪里，以及到哪些原生 Skill 目录清理旧版 DingDong 镜像并检查独立
+Skill 冲突。DingDong 管理的 Skill 已改为通过 Bridge 动态发现和按需加载，不再部署到
+这些目录。Adapter 只登记受支持的文件位置和格式，不允许提供任意命令、Hook、Token
+或启动脚本。
 
 用户可以在 **资源管理 → Agent 接入** 查看所有内置和自定义 Adapter、编辑 YAML，并
 比较当前版本与前两个版本。外部 AI Agent 修改同一份用户 YAML 后，页面会自动刷新；
@@ -62,12 +64,12 @@ prompt:
 | `id` | 是 | 1–64 位小写字母、数字和单连字符 |
 | `displayName` | 是 | 资源管理和问题中心显示的客户端名称 |
 | `detect.directory` | 是 | 目录存在时，认为该 Agent 已安装并参与同步 |
-| `skills.global` | 否 | 用户级 Skill 目录；与 `skills.project` 成对出现 |
-| `skills.project` | 否 | 相对于项目根目录的 Skill 目录 |
+| `skills.global` | 否 | 用户级原生 Skill 目录，仅用于旧版托管镜像清理和独立 Skill 冲突检查；与 `skills.project` 成对出现 |
+| `skills.project` | 否 | 相对于项目根目录的原生 Skill 目录，仅用于旧版托管镜像清理和冲突检查 |
 | `mcp.file` | 否 | Agent 的用户级 MCP 配置文件；与 `mcp.format` 成对出现 |
 | `mcp.format` | 否 | MCP 配置格式 |
-| `prompt.file` | 否 | DingDong 托管全局 Prompt 区块的文件 |
-| `prompt.includeBridgeRoutingInstructions` | 否 | 是否在托管区块加入 Bridge 路由说明，默认 `true` |
+| `prompt.file` | 否 | DingDong 写入固定 Prompt/Skill Bridge 引导的原生指令文件 |
+| `prompt.includeBridgeRoutingInstructions` | 否 | 是否在托管区块加入 Bridge 引导，默认 `true` |
 
 支持的 MCP 格式：
 

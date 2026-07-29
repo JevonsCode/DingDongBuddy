@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// User-facing clipboard content categories.
 enum ClipboardKind { text, url, command, code, json, path, email, file, image }
 
@@ -9,6 +11,8 @@ final class ClipboardRecord {
     this.groups = const <String>[],
     required this.title,
     required this.content,
+    this.htmlData,
+    this.rtfData,
     required this.tags,
     required this.pinned,
     required this.enabled,
@@ -26,6 +30,8 @@ final class ClipboardRecord {
   final List<String> groups;
   final String title;
   final String content;
+  final Uint8List? htmlData;
+  final Uint8List? rtfData;
   final List<String> tags;
   final String? source;
   final bool pinned;
@@ -36,6 +42,12 @@ final class ClipboardRecord {
   final DateTime updatedAt;
 
   bool get sensitive => tags.contains('sensitive');
+
+  bool get canPasteAsPlainText =>
+      kind != ClipboardKind.file && kind != ClipboardKind.image;
+
+  bool get hasFormattedText =>
+      (htmlData?.isNotEmpty ?? false) || (rtfData?.isNotEmpty ?? false);
 
   /// Whether automatic retention must leave this record untouched.
   ///
@@ -90,6 +102,9 @@ final class ClipboardRecord {
     List<String>? groups,
     String? title,
     String? content,
+    Uint8List? htmlData,
+    Uint8List? rtfData,
+    bool replaceFormattedText = false,
     List<String>? tags,
     bool? pinned,
     bool? enabled,
@@ -108,6 +123,8 @@ final class ClipboardRecord {
       groups: resolvedGroups ?? (group == null ? this.groups : <String>[group]),
       title: title ?? this.title,
       content: content ?? this.content,
+      htmlData: replaceFormattedText ? htmlData : htmlData ?? this.htmlData,
+      rtfData: replaceFormattedText ? rtfData : rtfData ?? this.rtfData,
       tags: tags ?? this.tags,
       source: source,
       pinned: pinned ?? this.pinned,

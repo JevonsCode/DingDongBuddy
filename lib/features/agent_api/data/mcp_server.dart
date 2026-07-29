@@ -36,12 +36,16 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.7.27',
+              'version': '0.9.1',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
                 'Every active Prompt returned there is a required instruction: it is included in full and must be applied automatically. '
-                'Skill entries are candidates, not instructions; load or use a Skill only when its description matches the task. '
+                'Each successful response is the authoritative Prompt snapshot for the current task and replaces every Prompt set returned for earlier tasks; a Prompt absent from the current snapshot is inactive and must not be applied. '
+                'The same response contains the authoritative Skill catalog for the current task and workspace: every valid, enabled, scope-matched Skill as an id, name, and description candidate. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope. '
+                'If the Bridge call fails, report that DingDong resources could not be loaded and do not reuse an earlier Prompt or Skill set. '
+                'A Skill candidate is not an instruction: only when its description matches the task, call dingdong_load_skill with its id or name and current workspace before applying the returned full SKILL.md. '
+                'Load only a Skill returned by the current catalog. Read only referenced package files with dingdong_read_skill_file. '
                 'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. '
                 'When the user explicitly asks to configure a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, and dingdong_bind_resource_scope with strict project scope. '
                 'Use dingdong_notify when the task is blocked or waiting for '
@@ -105,7 +109,7 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call this first with expand="prompts" at the start of each user request. Active Prompts are full required instructions. Skill and MCP entries are summary-only candidates, not instructions.',
+          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative Skill catalog containing every valid, enabled, scope-matched Skill as id, name, and description only. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(),
@@ -117,7 +121,6 @@ final class McpServer {
           description:
               'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
         ),
-        'limit': _integerProperty(maximum: 60),
         'expand': _enumProperty(<String>['none', 'prompts', 'all']),
       },
     ),
@@ -144,12 +147,20 @@ final class McpServer {
       name: 'dingdong_get_asset',
       title: 'Get DingDong Asset',
       description:
-          'Fetch one DingDong resource by id. Summary mode removes full content from the MCP response.',
+          'Fetch one DingDong resource by id. Summary mode removes full content. Full mode re-checks enabled state and project scope.',
       properties: <String, Object?>{
         'id': _stringProperty(),
         'mode': _enumProperty(<String>['summary', 'full']),
         'includeClipboard': _booleanProperty(),
         'includeSensitiveClipboard': _booleanProperty(),
+        'workspacePath': _stringProperty(
+          description:
+              'Current project directory. DingDong fills this automatically when omitted.',
+        ),
+        'repositoryUrl': _stringProperty(
+          description:
+              'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
+        ),
       },
       required: <String>['id'],
     ),
@@ -157,9 +168,50 @@ final class McpServer {
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
       description:
-          'Fetch full content for one DingDong Skill only after its description matches the current task.',
-      properties: <String, Object?>{'id': _stringProperty()},
-      required: <String>['id'],
+          'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and project scope are checked again on every load.',
+      properties: <String, Object?>{
+        'name': _stringProperty(),
+        'id': _stringProperty(),
+        'workspacePath': _stringProperty(
+          description:
+              'Current project directory. DingDong fills this automatically when omitted.',
+        ),
+        'repositoryUrl': _stringProperty(
+          description:
+              'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
+        ),
+      },
+      anyOfRequired: const <List<String>>[
+        <String>['name'],
+        <String>['id'],
+      ],
+    ),
+    _tool(
+      name: 'dingdong_read_skill_file',
+      title: 'Read DingDong Skill File',
+      description:
+          'Read one supporting file referenced by a loaded SKILL.md. The Skill enabled state and scope are re-checked, paths cannot escape the package, and files are bounded to 5 MiB.',
+      properties: <String, Object?>{
+        'name': _stringProperty(),
+        'id': _stringProperty(),
+        'path': _stringProperty(
+          description:
+              'Forward-slash relative path listed in the loaded Skill package manifest.',
+        ),
+        'workspacePath': _stringProperty(
+          description:
+              'Current project directory. DingDong fills this automatically when omitted.',
+        ),
+        'repositoryUrl': _stringProperty(
+          description:
+              'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
+        ),
+      },
+      required: <String>['path'],
+      anyOfRequired: const <List<String>>[
+        <String>['name'],
+        <String>['id'],
+      ],
     ),
     _tool(
       name: 'dingdong_recommend_mcp',
@@ -192,7 +244,7 @@ final class McpServer {
       name: 'dingdong_upsert_trigger_group',
       title: 'Upsert DingDong Trigger Group',
       description:
-          'Create or replace one exact trigger group by name. For strict native Skill isolation, provide only an absolute local projectPath; repositoryUrl is for non-strict routing and must not be mixed into that strict group because rules are OR-ed.',
+          'Create or replace one exact trigger group by name. For strict project Skill loading, provide only an absolute local projectPath; repositoryUrl is for non-strict routing and must not be mixed into that strict group because rules are OR-ed.',
       properties: <String, Object?>{
         'name': _stringProperty(),
         'projectPath': _stringProperty(),
@@ -204,7 +256,7 @@ final class McpServer {
       name: 'dingdong_bind_resource_scope',
       title: 'Bind DingDong Resource Scope',
       description:
-          'Replace a resource project scope with known trigger-group ids. Skills default to strict project-native installation and require an exact existing absolute projectPath rule.',
+          'Replace a resource project scope with known trigger-group ids. Skills default to strict project routing and require an exact existing absolute projectPath rule.',
       properties: <String, Object?>{
         'resourceId': _stringProperty(),
         'triggerGroupIds': _stringArrayProperty(),
@@ -257,6 +309,7 @@ Map<String, Object?> _tool({
   required String description,
   required Map<String, Object?> properties,
   List<String> required = const <String>[],
+  List<List<String>> anyOfRequired = const <List<String>>[],
 }) {
   return <String, Object?>{
     'name': name,
@@ -266,6 +319,10 @@ Map<String, Object?> _tool({
       'type': 'object',
       'properties': properties,
       if (required.isNotEmpty) 'required': required,
+      if (anyOfRequired.isNotEmpty)
+        'anyOf': anyOfRequired
+            .map((List<String> fields) => <String, Object?>{'required': fields})
+            .toList(growable: false),
     },
   };
 }
@@ -282,8 +339,12 @@ Map<String, Object?> _stringArrayProperty() => const <String, Object?>{
   'items': <String, Object?>{'type': 'string'},
 };
 
-Map<String, Object?> _integerProperty({required int maximum}) {
-  return <String, Object?>{'type': 'integer', 'minimum': 0, 'maximum': maximum};
+Map<String, Object?> _integerProperty({int minimum = 0, required int maximum}) {
+  return <String, Object?>{
+    'type': 'integer',
+    'minimum': minimum,
+    'maximum': maximum,
+  };
 }
 
 Map<String, Object?> _enumProperty(List<String> values) {

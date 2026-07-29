@@ -16,6 +16,8 @@ import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:flutter/foundation.dart';
 
+enum ClipboardPasteMode { original, plainText }
+
 /// Observable filters and selection for clipboard history.
 final class ClipboardViewModel extends ChangeNotifier {
   ClipboardViewModel(
@@ -315,14 +317,17 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> restoreVisibleAt(int index) async {
+  Future<bool> restoreVisibleAt(
+    int index, {
+    ClipboardPasteMode mode = ClipboardPasteMode.original,
+  }) async {
     final List<ClipboardRecord> visible = visibleRecords;
     if (index < 0 || index >= visible.length) {
-      return;
+      return false;
     }
     _selectedRecord = visible[index];
     notifyListeners();
-    await restoreSelected();
+    return restoreSelected(mode: mode);
   }
 
   void togglePinned() {
@@ -357,9 +362,11 @@ final class ClipboardViewModel extends ChangeNotifier {
       return;
     }
     final String requestedGroup = group.trim();
+    final bool contentChanged = content != selected.content;
     final ClipboardRecord updated = selected.copyWith(
       title: title.trim(),
       content: content,
+      replaceFormattedText: contentChanged,
       groups: requestedGroup == selected.group
           ? selected.groupNames
           : <String>[requestedGroup],
@@ -494,19 +501,27 @@ final class ClipboardViewModel extends ChangeNotifier {
     return resource;
   }
 
-  Future<void> restoreSelected() async {
-    await copySelected();
-    if (_selectedRecord != null) {
+  Future<bool> restoreSelected({
+    ClipboardPasteMode mode = ClipboardPasteMode.original,
+  }) async {
+    final bool copied = await copySelected(mode: mode);
+    if (copied) {
       await _quickPasteGateway?.pasteIntoPreviousApplication();
     }
+    return copied;
   }
 
   /// Copies the selected record without pasting into another application.
-  Future<void> copySelected() async {
+  Future<bool> copySelected({
+    ClipboardPasteMode mode = ClipboardPasteMode.original,
+  }) async {
     final ClipboardRecord? selected = _selectedRecord;
     final ClipboardGateway? gateway = _gateway;
     if (selected == null || gateway == null) {
-      return;
+      return false;
+    }
+    if (mode == ClipboardPasteMode.plainText && !selected.canPasteAsPlainText) {
+      return false;
     }
     if (selected.tags.contains('file-url')) {
       final List<String> paths = selected.content
@@ -515,11 +530,35 @@ final class ClipboardViewModel extends ChangeNotifier {
           .where((String value) => value.isNotEmpty)
           .toList(growable: false);
       if (paths.isNotEmpty) {
+        if (mode == ClipboardPasteMode.original &&
+            selected.kind == ClipboardKind.image &&
+            paths.length == 1 &&
+            gateway is ImageClipboardGateway) {
+          final ImageClipboardGateway imageGateway =
+              gateway as ImageClipboardGateway;
+          final bool written = await imageGateway.writeImageFile(paths.single);
+          if (written) {
+            return true;
+          }
+        }
         await gateway.writeFiles(paths);
-        return;
+        return true;
       }
     }
+    if (mode == ClipboardPasteMode.original &&
+        selected.hasFormattedText &&
+        gateway is FormattedTextClipboardGateway) {
+      final FormattedTextClipboardGateway formattedGateway =
+          gateway as FormattedTextClipboardGateway;
+      await formattedGateway.writeFormattedText(
+        plainText: selected.content,
+        htmlData: selected.htmlData,
+        rtfData: selected.rtfData,
+      );
+      return true;
+    }
     await gateway.writeText(selected.content);
+    return true;
   }
 
   Future<void> captureNow() async {

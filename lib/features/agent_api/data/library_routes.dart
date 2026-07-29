@@ -12,9 +12,9 @@ import 'package:dingdong/features/library/domain/knowledge_indexer.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
-import 'package:path/path.dart' as path;
 
 /// Handles resource-library reads and mutations that share the public API.
 final class LibraryRoutes {
@@ -59,19 +59,28 @@ final class LibraryRoutes {
       final Map<String, Object?> payload =
           jsonDecode(body) as Map<String, Object?>;
       final String source = (payload['source'] as String? ?? '').trim();
-      final Uri? parsedSource = Uri.tryParse(source);
-      final Uri? sourceUri = parsedSource == null
-          ? null
-          : parsedSource.scheme.isEmpty && path.isAbsolute(source)
-          ? Uri.file(path.normalize(source))
-          : parsedSource;
+      final Uri? sourceUri = parseSkillPackageSource(source);
       if (sourceUri == null ||
           (sourceUri.scheme != 'https' && sourceUri.scheme != 'file')) {
         return _invalidUpdate(
           'source must be an HTTPS GitHub Skill URL or absolute local Skill path',
         );
       }
-      final String normalizedSource = sourceUri.toString();
+      final String sourceReference =
+          (payload['sourceReference'] as String? ?? '').trim();
+      final Uri? sourceReferenceUri = sourceReference.isEmpty
+          ? null
+          : parseSkillPackageSource(sourceReference);
+      if (sourceReference.isNotEmpty &&
+          (sourceUri.scheme != 'file' ||
+              sourceReferenceUri == null ||
+              sourceReferenceUri.scheme != 'file')) {
+        return _invalidUpdate(
+          'sourceReference must be an absolute local Skill path',
+        );
+      }
+      final String normalizedSource = (sourceReferenceUri ?? sourceUri)
+          .toString();
       final SkillPackageInstallResult installed = await installer.install(
         sourceUri,
       );
@@ -204,46 +213,16 @@ final class LibraryRoutes {
         if (!strictProjectSkill || triggerGroupIds.isEmpty) {
           skillProjectPaths = const <String>[];
         } else {
-          final List<TriggerRule> selectedRules = triggerGroupIds
-              .expand((String groupId) => groupsById[groupId]!.rules)
-              .toList(growable: false);
-          if (selectedRules.any(
-            (TriggerRule rule) =>
-                rule.field != TriggerRuleField.projectPath ||
-                rule.operator != TriggerRuleOperator.equals,
-          )) {
-            return _invalidUpdate(
-              'Strict project Skill scope accepts only exact absolute projectPath rules',
-            );
-          }
-          final List<String> requestedPaths = selectedRules
-              .map((TriggerRule rule) => rule.value)
-              .toSet()
-              .toList(growable: false);
-          if (requestedPaths.isEmpty) {
-            return _invalidUpdate(
-              'Strict project Skill scope requires an exact absolute projectPath rule',
-            );
-          }
-          final List<String> resolvedPaths = <String>[];
-          for (final String requestedPath in requestedPaths) {
-            final String normalized = path.normalize(requestedPath);
-            final Directory directory = Directory(normalized);
-            if (!path.isAbsolute(normalized) ||
-                path.equals(normalized, path.dirname(normalized)) ||
-                !await directory.exists()) {
-              return _invalidUpdate(
-                'Strict project Skill scope requires an exact absolute projectPath that exists: $requestedPath',
-              );
-            }
-            resolvedPaths.add(await directory.resolveSymbolicLinks());
-          }
-          skillProjectPaths = resolvedPaths.toSet().toList(growable: false)
-            ..sort();
+          skillProjectPaths = resolveStrictSkillProjectPaths(
+            triggerGroupIds,
+            groupsById,
+          );
         }
       }
       final Resource updated = existing.copyWith(
         triggerGroupIds: triggerGroupIds,
+        strictProjectSkill:
+            existing.type == ResourceType.skill && strictProjectSkill,
         skillProjectPaths: skillProjectPaths,
         enabled: existing.type == ResourceType.skill
             ? triggerGroupIds.isNotEmpty

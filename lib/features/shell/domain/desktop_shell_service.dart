@@ -14,6 +14,7 @@ final class DesktopShellService {
     this.onClipboardMonitoringChanged,
     this.onClearClipboardHistory,
     this.onShowSettings,
+    this.onHideDockIcon,
   });
 
   final DesktopShellGateway gateway;
@@ -23,6 +24,7 @@ final class DesktopShellService {
   final Future<void> Function(bool enabled)? onClipboardMonitoringChanged;
   final Future<void> Function()? onClearClipboardHistory;
   final Future<void> Function()? onShowSettings;
+  final Future<void> Function()? onHideDockIcon;
   StreamSubscription<DesktopShellCommand>? _subscription;
 
   Future<void> start() async {
@@ -67,6 +69,8 @@ final class DesktopShellService {
         controller.requestClipboardSearchFocus();
       case DesktopShellCommand.showSettings:
         await onShowSettings?.call();
+      case DesktopShellCommand.hideDockIcon:
+        await onHideDockIcon?.call();
       case DesktopShellCommand.startClipboardMonitoring:
         await onClipboardMonitoringChanged?.call(true);
       case DesktopShellCommand.stopClipboardMonitoring:

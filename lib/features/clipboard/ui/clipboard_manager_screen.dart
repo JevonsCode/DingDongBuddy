@@ -455,6 +455,8 @@ enum _ManagerAction {
 
 _ManagerAction? _managerActionFromNative(ClipboardContextAction? action) =>
     switch (action) {
+      ClipboardContextAction.paste ||
+      ClipboardContextAction.pastePlainText => null,
       ClipboardContextAction.details => _ManagerAction.details,
       ClipboardContextAction.copy => _ManagerAction.copy,
       ClipboardContextAction.addTitle => _ManagerAction.addTitle,

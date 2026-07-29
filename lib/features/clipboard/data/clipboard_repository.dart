@@ -132,8 +132,8 @@ final class ClipboardRepository implements ClipboardStore {
       INSERT INTO ZCLIPBOARDRECORD (
         Z_ENT, Z_OPT, ZENABLED, ZPINNED, ZSORTORDER,
         ZCREATEDAT, ZUPDATEDAT, ZACTIVATION, ZCONTENT, ZGROUP,
-        ZID, ZSOURCE, ZTITLE, ZTAGSDATA
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ZID, ZSOURCE, ZTITLE, ZTAGSDATA, ZHTMLDATA, ZRTFDATA
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(ZID) DO UPDATE SET
         Z_OPT = Z_OPT + 1,
         ZENABLED = excluded.ZENABLED,
@@ -146,7 +146,9 @@ final class ClipboardRepository implements ClipboardStore {
         ZGROUP = excluded.ZGROUP,
         ZSOURCE = excluded.ZSOURCE,
         ZTITLE = excluded.ZTITLE,
-        ZTAGSDATA = excluded.ZTAGSDATA
+        ZTAGSDATA = excluded.ZTAGSDATA,
+        ZHTMLDATA = excluded.ZHTMLDATA,
+        ZRTFDATA = excluded.ZRTFDATA
     ''',
       <Object?>[
         1,
@@ -163,6 +165,8 @@ final class ClipboardRepository implements ClipboardStore {
         record.source,
         record.title,
         Uint8List.fromList(utf8.encode(jsonEncode(record.tags))),
+        record.htmlData,
+        record.rtfData,
       ],
     );
   }
@@ -187,6 +191,8 @@ final class ClipboardRepository implements ClipboardStore {
       groups: groups,
       title: row['ZTITLE'] as String? ?? '',
       content: row['ZCONTENT'] as String? ?? '',
+      htmlData: _decodeOptionalBytes(row['ZHTMLDATA']),
+      rtfData: _decodeOptionalBytes(row['ZRTFDATA']),
       tags: tags,
       source: row['ZSOURCE'] as String?,
       pinned: (row['ZPINNED'] as int? ?? 0) != 0,
@@ -224,6 +230,15 @@ final class ClipboardRepository implements ClipboardStore {
     final List<Object?> values =
         jsonDecode(utf8.decode(bytes)) as List<Object?>;
     return List<String>.unmodifiable(values.cast<String>());
+  }
+
+  static Uint8List? _decodeOptionalBytes(Object? value) {
+    final Uint8List bytes = switch (value) {
+      final Uint8List data => data,
+      final List<int> data => Uint8List.fromList(data),
+      _ => Uint8List(0),
+    };
+    return bytes.isEmpty ? null : bytes;
   }
 
   static List<String> _decodeGroups(String value) {
@@ -272,13 +287,26 @@ final class ClipboardRepository implements ClipboardStore {
           ZID VARCHAR,
           ZSOURCE VARCHAR,
           ZTITLE VARCHAR,
-          ZTAGSDATA BLOB
+          ZTAGSDATA BLOB,
+          ZHTMLDATA BLOB,
+          ZRTFDATA BLOB
         )
       ''')
       ..execute(
         'CREATE UNIQUE INDEX IF NOT EXISTS Z_ClipboardRecord_UNIQUE_id '
         'ON ZCLIPBOARDRECORD (ZID COLLATE BINARY ASC)',
       );
+    _ensureColumn(database, 'ZHTMLDATA', 'BLOB');
+    _ensureColumn(database, 'ZRTFDATA', 'BLOB');
+  }
+
+  static void _ensureColumn(Database database, String name, String type) {
+    final bool exists = database
+        .select('PRAGMA table_info(ZCLIPBOARDRECORD)')
+        .any((Row row) => row['name'] == name);
+    if (!exists) {
+      database.execute('ALTER TABLE ZCLIPBOARDRECORD ADD COLUMN $name $type');
+    }
   }
 }
 

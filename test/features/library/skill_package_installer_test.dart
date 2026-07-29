@@ -7,6 +7,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 
 void main() {
+  test('parses a Windows drive path before treating it as a URI', () {
+    final path.Context windows = path.Context(style: path.Style.windows);
+
+    final Uri? source = parseSkillPackageSource(
+      r'C:\Users\tester\Skills\reviewer\SKILL.md',
+      pathContext: windows,
+    );
+
+    expect(source?.scheme, 'file');
+    expect(
+      source?.toFilePath(windows: true),
+      r'C:\Users\tester\Skills\reviewer\SKILL.md',
+    );
+  });
+
   test('installs the complete GitHub Skill directory', () async {
     final Directory root = Directory.systemTemp.createTempSync(
       'dingdong-skill-package-',

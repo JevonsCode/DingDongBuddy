@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -107,6 +108,43 @@ void main() {
       expect(stored.source, 'Terminal');
     },
   );
+
+  test('rich-text representations persist across repository reopen', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-clipboard-rich-text-test-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final String path = '${directory.path}/clipboard-history.sqlite';
+    final Uint8List htmlData = Uint8List.fromList('<b>value</b>'.codeUnits);
+    final Uint8List rtfData = Uint8List.fromList(r'{\rtf1 value}'.codeUnits);
+    final ClipboardRepository first = ClipboardRepository.open(path);
+    first
+      ..save(
+        ClipboardRecord(
+          id: 'rich-text',
+          group: 'Clipboard',
+          title: 'Rich value',
+          content: 'value',
+          htmlData: htmlData,
+          rtfData: rtfData,
+          tags: const <String>['clipboard', 'text'],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: DateTime.utc(2026, 7, 12),
+          updatedAt: DateTime.utc(2026, 7, 12),
+        ),
+      )
+      ..close();
+
+    final ClipboardRepository reopened = ClipboardRepository.open(path);
+    addTearDown(reopened.close);
+    final ClipboardRecord stored = reopened.list(limit: 10).single;
+
+    expect(stored.htmlData, htmlData);
+    expect(stored.rtfData, rtfData);
+    expect(stored.hasFormattedText, isTrue);
+  });
 
   test(
     'multiple clipboard groups round-trip through the legacy column',

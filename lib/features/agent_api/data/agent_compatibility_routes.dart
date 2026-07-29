@@ -48,7 +48,6 @@ final class AgentCompatibilityRoutes {
             'task': query['task'] ?? query['q'] ?? '',
             'source': query['source'] ?? 'Agent',
             'expand': query['expand'] ?? 'none',
-            'limit': int.tryParse(query['limit'] ?? '') ?? 12,
             'workspacePath':
                 query['workspacePath'] ??
                 query['projectPath'] ??
@@ -128,7 +127,7 @@ final class AgentCompatibilityRoutes {
         'health': '/health',
         'status': '/system/status',
         'toolkit': '/agent/toolkit',
-        'bridge': '/agent/bridge?source=AGENT&task=TASK&limit=20',
+        'bridge': '/agent/bridge?source=AGENT&task=TASK',
         'startup': '/agent/startup?task=TASK&limit=10',
         'workbench': '/agent/workbench?task=TASK&limit=8',
         'instructions': '/agent/instructions?task=TASK&limit=6',
@@ -455,6 +454,8 @@ const List<String> _features = <String>[
   'agentContextPack',
   'mcpWriteConfiguration',
   'strictProjectSkillScope',
+  'dynamicSkillCatalog',
+  'scopedSkillLoading',
 ];
 
 const List<Map<String, String>> _endpoints = <Map<String, String>>[
@@ -462,7 +463,9 @@ const List<Map<String, String>> _endpoints = <Map<String, String>>[
   <String, String>{'method': 'GET', 'path': '/system/status'},
   <String, String>{'method': 'POST', 'path': '/ding'},
   <String, String>{'method': 'GET', 'path': '/agent/manifest'},
-  <String, String>{'method': 'GET', 'path': '/agent/bridge'},
+  <String, String>{'method': 'POST', 'path': '/agent/bridge'},
+  <String, String>{'method': 'GET', 'path': '/agent/skills/load'},
+  <String, String>{'method': 'GET', 'path': '/agent/skills/file'},
   <String, String>{'method': 'GET', 'path': '/agent/context'},
   <String, String>{'method': 'GET', 'path': '/library'},
   <String, String>{'method': 'POST', 'path': '/library'},

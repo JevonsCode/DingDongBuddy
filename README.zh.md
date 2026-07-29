@@ -37,12 +37,15 @@ DingDong 把剪贴板历史、提示词、Skill 和 MCP Server 留在本机，�
 - 在一个资源库里保存提示词、完整 Skill Package 和 MCP 配置
 - 从 GitHub 或本机路径安装整个 Skill 目录，包括 `scripts/`、`references/` 和
   `assets/`，需要时再手动更新
-- 把已启用、全局、始终生效的 Prompt 同步到 Codex 的
-  `~/.codex/AGENTS.md` 与 Claude Code 的 `~/.claude/CLAUDE.md` 托管区块，同时保留原有用户规则
-- 把未限定范围的 Skill 全局同步、严格项目 Skill 只同步到指定项目内，并把 MCP
-  同步到 Codex、Claude Code、Cursor、Gemini CLI 和 Kiro，同时保留客户端原有配置
+- 在 Codex `~/.codex/AGENTS.md` 与 Claude Code
+  `~/.claude/CLAUDE.md` 中只保留固定 Bridge 引导，同时保留原有用户规则
+- 把已启用、作用域匹配的 Skill 作为动态名称／描述目录发布；Agent 选中后才按需
+  加载完整 `SKILL.md` 和它引用的 Package 文件
+- 把已启用的 MCP 同步到 Codex、Claude Code、Cursor、Gemini CLI 和 Kiro，
+  同时保留客户端原有配置
 - 按工作区路径或仓库地址缩小每个任务的桥接候选范围
-- 默认给 Agent 完整 Prompt；Skill 和 MCP 先提供摘要，确实要用时再加载或调用
+- 默认给 Agent 完整 Prompt；Skill 提供完整名称／描述目录，MCP 先提供摘要，
+  确实要用时再加载或调用
 - 在 Agent 原生的完成事件上稳定提醒；客户端能提供最终回复时，通知里会显示
   第一条有用的结果
 - 持久保存托盘未读数，重启应用不会丢失未查看的完成提醒
@@ -55,22 +58,22 @@ DingDong 把剪贴板历史、提示词、Skill 和 MCP Server 留在本机，�
 客户端，把 MCP、完成 Hook 和适用的资源同步链路完整跑通。两者分开记录，避免把
 代码支持表述成对所有客户端版本和操作系统的完整保证。
 
-| Agent | MCP 配置 | 完成通知 | 托管的原生资源 | 当前验证状态 |
+| Agent | MCP 配置 | 完成通知 | 托管的原生引导 | 当前验证状态 |
 | --- | --- | --- | --- | --- |
-| Codex | `~/.codex/config.toml` | `Stop` | Prompt、Skill | **已在 macOS 端到端验证** |
-| Claude Code | `~/.claude.json` | `Stop` | Prompt、Skill | **已在 macOS 端到端验证** |
-| Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` | Skill | 已实现；待真实客户端端到端验证 |
-| Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` | Skill | 已实现；待真实客户端端到端验证 |
-| Kiro | `~/.kiro/settings/mcp.json` | CLI `stop` / IDE Agent Stop | Skill | 已实现；待真实客户端端到端验证 |
+| Codex | `~/.codex/config.toml` | `Stop` | Prompt Bridge | **已在 macOS 端到端验证** |
+| Claude Code | `~/.claude.json` | `Stop` | Prompt Bridge | **已在 macOS 端到端验证** |
+| Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` | 无 | 已实现；待真实客户端端到端验证 |
+| Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` | 无 | 已实现；待真实客户端端到端验证 |
+| Kiro | `~/.kiro/settings/mcp.json` | CLI `stop` / IDE Agent Stop | 无 | 已实现；待真实客户端端到端验证 |
 
-项目或任务匹配的 Prompt 会通过 `dingdong_bridge` 提供给所有已连接客户端；“托管的
-原生资源”一列只列 DingDong 会直接部署到客户端原生资源目录的文件。要把一行更新为
-**已验证**，PR 中应注明操作系统、客户端版本，并确认 MCP Bridge、完成 Hook 和适用
-的资源同步链路。
+所有自动生效的 Prompt 和权威 Skill 目录都会通过 `dingdong_bridge` 提供给已连接
+客户端；“托管的原生引导”一列只列 DingDong 写入客户端原生指令文件的固定 Bridge
+说明，托管 Skill 保留在 DingDong 内并按需加载。要把一行更新为 **已验证**，PR 中
+应注明操作系统、客户端版本，并确认 MCP Bridge、完成 Hook 和适用的引导同步链路。
 
 ## 当前界面行为
 
-- 页头在 **DingDong** 右侧显示当前应用版本，例如 `v0.7.27`；版本值和应用的
+- 页头在 **DingDong** 右侧显示当前应用版本，例如 `v0.9.1`；版本值和应用的
   发布版本共用同一个常量。检测到新版本时，右侧会出现一个橘红色小圆点。点击版本号
   会打开设置，并直接定位到版本与更新区域。
 - 点击页头 **DingDong** 会试听用户当前配置的提示音；静音配置不会播放。品牌名和
@@ -117,23 +120,26 @@ DingDong 使用两条原生链路，不依赖模型每次结束时“记得说�
 2. **完成 Hook**：在客户端最终回复后确定性执行一次。内置程序直接从 Hook
    数据或本地会话记录里截取一句结果，不会额外调用一次模型。
 
-这两条接入链路和用户在 DingDong 里启用的资源是两回事。全局、始终生效
-Prompt 会写入 Codex `~/.codex/AGENTS.md` 与 Claude Code `~/.claude/CLAUDE.md` 的 DingDong 托管区块；带项目规则或任务匹配的
-Prompt 由 `dingdong_bridge` 路由，Manual Prompt 不会自动激活。未限定范围的 Skill
-会同步到客户端全局原生 Skill 位置；严格项目 Skill 只同步到指定项目目录下。已启用
-的 MCP 会写成真实的客户端 MCP 配置。Bridge 默认返回 Prompt 完整正文，而 Skill
-和 MCP 保持摘要优先。
+这两条接入链路和用户在 DingDong 里启用的资源是两回事。Codex
+`~/.codex/AGENTS.md` 与 Claude Code `~/.claude/CLAUDE.md` 只保留一段固定引导，
+要求每个任务开始调用 `dingdong_bridge`。Bridge 动态返回命中的全局、项目和任务
+Prompt 完整正文；每次成功响应都是当前任务的权威快照，Manual Prompt 不会自动激活。
+同一响应还会返回所有有效、已启用且作用域匹配 Skill 的权威完整目录，且每项只有 `id`、
+`name` 和 `description`。Agent 选中后再按 ID 或名称通过 DingDong 加载完整
+`SKILL.md` 及其引用文件。同一响应还会返回所有已激活且作用域匹配的 MCP 与
+Knowledge 候选摘要。DingDong 不再把托管 Skill 复制到 Agent 原生 Skill 目录。
+已启用的 MCP 会写成真实的客户端 MCP 配置。
 
 ### Prompt、Skill 和 MCP 的调用逻辑
 
 | 类型 | 如何进入 Agent | Agent 应如何处理 |
 |---|---|---|
-| Prompt | 全局、始终生效 Prompt 直接写入 Codex `AGENTS.md` 与 Claude Code `CLAUDE.md` 的 DingDong 托管区块；项目或任务 Prompt 由 Bridge 返回完整正文 | 每个命中的 Prompt 都是必须自动应用的指令，不需要 Agent 再决定是否调用 |
-| Skill | 未限定范围的 Skill 全局同步；严格项目 Skill 只同步到指定项目内；Bridge 只返回候选摘要 | 先按 description 判断是否匹配，匹配任务时才加载或使用完整 Skill；摘要本身不是指令 |
+| Prompt | 原生指令文件只保留固定 Bridge 引导；启用的全局、项目和任务 Prompt 由 `dingdong_bridge` 动态返回完整正文 | 每个任务开始调用 Bridge，把成功响应视为替换此前集合的权威 Prompt 快照，并自动应用全部返回内容 |
+| Skill | 每次 Bridge 成功响应都返回所有有效、已启用且作用域匹配 Skill 的权威完整目录，每项只有 `id`、`name` 和 `description`；完整 Package 留在 DingDong | 先判断已返回的 description，匹配后按 ID 或名称调用 `dingdong_load_skill` 并应用完整 `SKILL.md`；只通过 `dingdong_read_skill_file` 读取它引用的文件；候选本身不是指令，未返回即表示当前不可用、已停用、格式无效或不在作用域内 |
 | MCP | 已启用 MCP 写入客户端原生 MCP 配置；Bridge 只返回候选摘要 | 配置只表示工具可用，任务确实需要时才调用对应工具；不要求每轮调用 |
 
-激活方式和触发组控制 Bridge 的候选路由。MCP 仍是客户端全局配置；严格项目 Skill
-还会落实原生文件边界，不会出现在客户端的全局 Skill 目录。
+Prompt 的激活方式和触发组控制 Prompt 返回；Skill 候选由启用状态和触发组过滤，
+完整正文与文件加载时会再次校验相同条件。MCP 仍是客户端全局配置。
 
 ### 给一个项目配置 Skill
 
@@ -142,38 +148,30 @@ Prompt 由 `dingdong_bridge` 路由，Manual Prompt 不会自动激活。未限�
 1. `dingdong_install_skill` 从 GitHub 地址或绝对本机 Skill 路径安装或更新完整包。
 2. `dingdong_upsert_trigger_group` 用已存在项目的精确绝对路径创建或复用触发组。
 3. `dingdong_bind_resource_scope` 用返回的两个 ID 绑定，并设置
-   `strictProjectSkill: true`。
-4. 用 `dingdong_bridge` 分别验证一个命中工作区和一个无关工作区。
+   `strictProjectSkill: true`；这个兼容字段现在表示严格动态加载范围，而不是原生文件
+   部署。
+4. 用 `dingdong_bridge` 和 `dingdong_load_skill` 分别验证一个命中工作区和一个
+   无关工作区。
 
 这三个写操作都是幂等的。严格绑定只接受精确项目路径规则，会拒绝 `contains`、仓库
-规则、相对路径、磁盘根目录、不存在的路径和未知触发组。对应客户端存在时，DingDong 会把完整包同步
-到项目下的 `.agents/skills`、`.claude/skills`、`.cursor/skills`、
-`.gemini/skills` 或 `.kiro/skills`。这些目录遵循各客户端原生的项目 Skill 发现规则：
-[Codex](https://learn.chatgpt.com/docs/build-skills)、
-[Claude Code](https://code.claude.com/docs/en/skills)、
-[Cursor](https://cursor.com/docs/skills)、
-[Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/) 和
-[Kiro](https://kiro.dev/docs/skills/)。
+规则、相对路径、磁盘根目录、不存在的路径和未知触发组。完整 Package 保留在
+DingDong Package Store；命中工作区可以动态发现并加载，无关工作区不能。
 
-通过 MCP 新安装的 Skill 会保持禁用，直到范围绑定成功，因此不会在多步操作中被
-DingDong 短暂全局同步。严格范围只能移除 DingDong 托管的全局副本；如果本机源目录
-本身就是用户自己放在全局 Skill 目录中的副本，需要先明确移动/删除它，或改从中立
-目录/GitHub 安装，才能把“其他项目不可用”视为真正完成。
+通过 MCP 新安装的 Skill 会保持禁用，直到范围绑定成功，因此不会在多步操作中短暂
+进入动态目录。用户在 Agent 原生目录里独立安装的 Skill 不归 DingDong 控制，
+DingDong 的开关不能隐藏或删除它。
 
-DingDong 资源库与内部 Package Store 是 Skill 的逻辑单一来源；各 Agent 原生 Skill
-目录中的内容只是由它原子同步的部署副本，不应分别编辑。当前不使用软链接，因为不同
-客户端、打包方式和权限环境对链接的发现与跟随行为并不一致。DingDong 只更新或删除带
-`.dingdong-managed` 标记的副本。Skill 编辑或改名并保存后，会刷新所有当前 Agent
-镜像，并清理同一资源遗留的旧目录名。
+DingDong 资源库与内部 Package Store 是托管 Skill 的单一来源。同步时只会清理带
+`.dingdong-managed` 标记的旧版原生副本，不会删除用户独立安装的 Skill。同名原生
+Skill 或已启用的 Claude Code 插件会显示非阻断警告，因为它们仍在 DingDong 开关之外
+可用。多个已启用的 DingDong Skill 使用同一个名称时也会警告；Agent 加载时必须同时
+带目录中的 `id` 来消除歧义。
 
-每次写入前都会预检目标。如果同名位置已有用户自己的 Skill，或两个已启用的 DingDong
-Skill 会写入同一位置，本次保存会回滚，已有文件保持不变；主窗口原刷新按钮的位置会
-出现红色问题图标，点击后会直接进入资源管理的“问题”一级页面。这个入口始终显示，
-可以按客户端、资源和目标路径查看问题、跳转处理或手动重新检测。已启用的 Claude Code
-插件也会参与检测；插件与 DingDong Skill 完全同名时显示非阻断警告，因为插件命名空间
-仍可与原生 Skill 共存。刷新按钮原有的模拟加载逻辑已移除。客户端路径和能力集中登记在
-可扩展的 Agent Adapter 中；用户可在 **资源管理 → Agent 接入** 查看、编辑并比较当前版
-与前两个版本，外部 Agent 修改用户 YAML 后页面也会自动刷新。完整字段与安全修改协议见
+主窗口的问题图标会进入资源管理的“问题”一级页面，可按客户端、资源和路径查看诊断、
+跳转处理或手动检测。客户端路径和能力集中登记在可扩展的 Agent Adapter 中；Skill
+路径只用于清理旧版托管镜像和检查独立原生 Skill 冲突，不再是部署目标。用户可在
+**资源管理 → Agent 接入** 查看、编辑并比较当前版与前两个版本，外部 Agent 修改用户
+YAML 后页面也会自动刷新。完整字段与安全修改协议见
 [Agent Adapter 配置](docs/product/agent-adapter-configuration.md)。
 
 ### 详细架构
@@ -202,19 +200,13 @@ flowchart TB
   subgraph NativeConfig["Agent 用户级原生配置"]
     McpConfig["MCP 配置<br/>Codex TOML · Claude/Cursor/Gemini/Kiro JSON"]
     HookConfig["完成 Hook<br/>Stop · afterAgentResponse · AfterAgent"]
-    PromptFile["全局 Prompt 文件<br/>Codex AGENTS.md · Claude CLAUDE.md"]
-    SkillFolders["原生 Skill 目录<br/>完整 Package"]
+    PromptFile["Prompt Bridge 引导<br/>Codex AGENTS.md · Claude CLAUDE.md"]
   end
 
   Clients -->|"接入时写入并重新加载"| McpConfig
   Clients -->|"接入时写入并信任"| HookConfig
   PromptFile --> Codex
   PromptFile --> Claude
-  SkillFolders --> Codex
-  SkillFolders --> Claude
-  SkillFolders --> Cursor
-  SkillFolders --> Gemini
-  SkillFolders --> Kiro
 
   subgraph Executable["应用内置 dingdong_mcp 程序"]
     Stdio["STDIO JSON-RPC 模式"]
@@ -234,6 +226,8 @@ flowchart TB
     HTTP["127.0.0.1 HTTP Server"]
     Router["Agent Router"]
     Bridge["POST /agent/bridge"]
+    SkillLoad["GET /agent/skills/load<br/>GET /skill"]
+    SkillFile["GET /agent/skills/file"]
     Library["GET /library<br/>摘要或完整正文"]
     Ding["POST /ding"]
     Deduplicate["同来源 5 秒去重"]
@@ -245,6 +239,8 @@ flowchart TB
   ToolExecutor -->|"回环 HTTP"| HTTP
   HTTP --> Router
   Router --> Bridge
+  Router --> SkillLoad
+  Router --> SkillFile
   Router --> Library
   Router --> Ding
   Summary --> Ding
@@ -253,15 +249,18 @@ flowchart TB
   subgraph Routing["每个任务开始时的资源路由"]
     Context["任务文本<br/>工作区路径<br/>Git remote.origin.url"]
     Scope["项目规则<br/>路径/仓库 equals 或 contains"]
-    Activation["已启用 + 激活方式<br/>always · taskMatch · manual 不自动"]
-    SummaryFirst["最多 12 条候选<br/>Prompt 正文 · Skill/MCP 摘要"]
-    FullLoad["确定需要后读取正文<br/>get_asset · load_skill"]
+    PromptActivation["Prompt 激活方式<br/>always · taskMatch · manual 不自动"]
+    Delivery["完整 Prompt 快照<br/>限量 Skill 元数据与截断标记<br/>MCP 摘要"]
+    FullLoad["选中 Skill 后按需加载<br/>完整 SKILL.md · 引用文件"]
   end
 
   Clients -->|"MCP instructions 要求调用 dingdong_bridge"| ToolServer
-  Bridge --> Context --> Scope --> Activation --> SummaryFirst --> Clients
-  Clients -->|"选中资源后再读取"| ToolServer
-  Library --> FullLoad --> Clients
+  Bridge --> Context --> Scope
+  Scope --> PromptActivation --> Delivery --> Clients
+  Scope --> Delivery
+  Clients -->|"匹配 Skill description 后加载"| ToolServer
+  SkillLoad --> FullLoad --> Clients
+  SkillFile --> FullLoad
 
   subgraph Storage["本机持久化数据"]
     ResourceStore["resource-library.json<br/>提示词 · Skill · MCP"]
@@ -270,16 +269,17 @@ flowchart TB
     SyncState["agent-sync-state.json"]
   end
 
-  ResourceStore --> Activation
+  ResourceStore --> Scope
   TriggerStore --> Scope
-  PackageStore --> Library
+  PackageStore --> SkillLoad
+  PackageStore --> SkillFile
 
   subgraph Sync["原生资源同步"]
     Transaction["事务式 ResourceStore<br/>失败自动回滚"]
     Preflight["预检<br/>Skill metadata · MCP transport · 配置格式"]
     SkillInstaller["在线 Skill 安装器<br/>Git sparse clone 或 GitHub API"]
-    SkillMirror["完整目录原子镜像<br/>.dingdong-managed 标记"]
-    PromptWriter["原生 Prompt 托管写入<br/>保留用户原有规则"]
+    LegacyCleanup["清理旧版 Skill 镜像<br/>仅处理 .dingdong-managed 标记"]
+    PromptWriter["固定 Bridge 引导写入<br/>保留用户原有规则"]
     MCPWriter["托管 MCP 写入<br/>保留用户其他配置"]
   end
 
@@ -287,22 +287,23 @@ flowchart TB
   Transaction --> Preflight
   SkillInstaller --> PackageStore
   Transaction --> PromptWriter --> PromptFile
-  Preflight --> SkillMirror
+  Preflight --> LegacyCleanup
   Preflight --> MCPWriter
-  PackageStore --> SkillMirror --> SkillFolders
   MCPWriter --> McpConfig
   MCPWriter --> SyncState
 ```
 
-四条主要路径是：
+主要路径是：
 
 - **首次接入**：复制应用生成的提示词 → Agent 写入原生 MCP 和完成 Hook 配置 →
   重新加载并分别测试两条链路。
-- **任务开始**：Agent → `dingdong_bridge` → Prompt 完整正文与 Skill/MCP 摘要 →
-  需要时再读取完整 Skill 或调用 MCP。
-- **启用资源**：资源库启用状态 → Codex 或 Claude Code 全局 Prompt 托管区块、全局或项目内原生
-  Skill 目录、或 MCP 配置；DingDong 使用托管标记避免误删用户文件。严格 Skill
-  范围同时控制原生目录位置和 `dingdong_bridge` 路由。
+- **任务开始**：Agent → `dingdong_bridge` → 完整 Prompt 快照、全部作用域匹配的
+  Skill 元数据目录与 MCP 摘要。
+- **使用 Skill**：Agent 匹配 description → `dingdong_load_skill` → 完整
+  `SKILL.md` → 需要时再用 `dingdong_read_skill_file` 读取引用文件。
+- **启用资源**：Prompt 状态在下一次 Bridge 调用生效；Skill 状态改变下一次目录和
+  后续每次加载校验；MCP 状态更新原生配置。DingDong 只清理有托管标记的旧版 Skill
+  镜像，保留用户文件。
 - **任务结束**：客户端完成 Hook → `--notify-stop` → 本机提取一句结果 →
   `/ding` → 声音和动态记录。
 
@@ -347,7 +348,7 @@ Windows 的桥接位于应用安装目录下的 `mcp\bundle\bin\dingdong_mcp.exe
    "<DINGDONG_MCP_PATH>" --notify-stop --source "当前客户端名称"
    Codex 使用 ~/.codex/config.toml 的 Stop，Claude Code 使用 ~/.claude/settings.json 的 Stop，Cursor 使用 ~/.cursor/hooks.json 的 afterAgentResponse，Gemini CLI 使用 ~/.gemini/settings.json 的 AfterAgent，Kiro 使用 Stop Hook。
 4. 重新加载客户端。Codex 需要重启 MCP Server，并在 /hooks 审核和信任 Hook。
-5. 保持三类资源语义独立：Prompt 命中后完整、自动应用；Skill 先按 description 匹配再按需加载；MCP 只在任务需要时调用工具。Skill/MCP 摘要都不是 Prompt 指令。用户明确要求给项目配置 Skill 时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group、dingdong_bind_resource_scope，并启用 strictProjectSkill。
+5. 保持三类资源语义独立：每个任务开始调用 dingdong_bridge，并把返回的 Prompt 当作权威完整快照自动应用；active.skills 是所有有效、已启用、作用域匹配 Skill 的权威完整 ID／名称／描述目录，按已返回的 description 匹配后，再按 ID 或名称用 dingdong_load_skill 和 dingdong_read_skill_file 按需加载；MCP 只在任务需要时调用工具。Skill 候选和 MCP 摘要都不是 Prompt 指令。用户明确要求给项目配置 Skill 时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group、dingdong_bind_resource_scope，并启用 strictProjectSkill。
 6. 把 {"summary":"DingDong 任务结束提醒已接入"} 作为标准输入传给 Hook 命令，确认收到提醒。
 7. 确认 dingdong_notify 存在，再调用一次：message 为“DingDong MCP 已接入”，source 为当前客户端名称。
 8. 最后只报告修改的用户级配置文件和两项测试是否成功；失败时保留原配置并返回原始错误。

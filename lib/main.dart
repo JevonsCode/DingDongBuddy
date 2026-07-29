@@ -7,6 +7,7 @@ import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/data/agent_launcher_configuration_store.dart';
@@ -158,6 +159,8 @@ Future<void> main(List<String> arguments) async {
     clipboardMonitoring: dependencies.clipboardMonitorService,
     launchAtStartup: launchAtStartup,
     onWindowOpacityChanged: shellGateway.setOpacity,
+    onDockIconHiddenChanged: shellGateway.setDockIconHidden,
+    onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: applicationUpdater,
@@ -181,6 +184,7 @@ Future<void> main(List<String> arguments) async {
       await shellGateway.hide();
       await settingsWindowLauncher.show();
     },
+    onHideDockIcon: () => settingsViewModel.setHideDockIcon(true),
   );
   await desktopShellService.start();
   Future<Object?> handleChildWindowCall(MethodCall call) async {
@@ -205,6 +209,16 @@ Future<void> main(List<String> arguments) async {
       case 'settings_opacity_set':
         final Map<Object?, Object?> values = call.arguments! as Map;
         await shellGateway.setOpacity((values['value']! as num).toDouble());
+        return null;
+      case 'settings_dock_icon_set':
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        await shellGateway.setDockIconHidden(values['hidden']! as bool);
+        return null;
+      case 'settings_tray_notification_color_set':
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        await shellGateway.setTrayNotificationColor(
+          TrayNotificationColor.parse(values['color']),
+        );
         return null;
       case 'settings_changed':
         await settingsViewModel.reload();
@@ -334,11 +348,20 @@ Future<void> _runSettingsWindow(
   final String parentWindowId = arguments['parentWindowId']! as String;
   final MultiWindowSettingsHostBridge hostBridge =
       MultiWindowSettingsHostBridge(parentWindowId);
+  final SettingsRepository settingsRepository = SettingsRepository(
+    SharedPreferencesBackend(),
+    defaultTrayNotificationColor: paths.development
+        ? TrayNotificationColor.pink
+        : TrayNotificationColor.orange,
+  );
+  final AppSettings windowSettings = await settingsRepository.load();
   final SettingsViewModel viewModel = SettingsViewModel(
-    SettingsRepository(SharedPreferencesBackend()),
+    settingsRepository,
     clipboardMonitoring: hostBridge,
     launchAtStartup: hostBridge,
     onWindowOpacityChanged: hostBridge.setOpacity,
+    onDockIconHiddenChanged: hostBridge.setDockIconHidden,
+    onTrayNotificationColorChanged: hostBridge.setTrayNotificationColor,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: hostBridge,
@@ -348,11 +371,15 @@ Future<void> _runSettingsWindow(
   );
 
   await windowManager.ensureInitialized();
-  const WindowOptions options = WindowOptions(
-    size: Size(620, 680),
-    minimumSize: Size(620, 560),
+  final WindowOptions options = WindowOptions(
+    size: const Size(620, 680),
+    minimumSize: const Size(620, 560),
     center: true,
-    skipTaskbar: false,
+    skipTaskbar: desktopWindowSkipsTaskbar(
+      defaultTargetPlatform,
+      hideDockIcon: windowSettings.hideDockIcon,
+      fallback: false,
+    ),
     title: 'DingDong · 设置',
     titleBarStyle: TitleBarStyle.normal,
   );
@@ -437,14 +464,21 @@ Future<void> _runClipboardPreviewWindow(
     (arguments['x']! as num).toDouble(),
     (arguments['y']! as num).toDouble(),
   );
+  final AppSettings windowSettings = await SettingsRepository(
+    SharedPreferencesBackend(),
+  ).load();
   await windowManager.ensureInitialized();
-  const WindowOptions options = WindowOptions(
+  final WindowOptions options = WindowOptions(
     size: clipboardPreviewWindowSize,
     minimumSize: clipboardPreviewWindowSize,
     maximumSize: clipboardPreviewWindowSize,
-    skipTaskbar: true,
+    skipTaskbar: desktopWindowSkipsTaskbar(
+      defaultTargetPlatform,
+      hideDockIcon: windowSettings.hideDockIcon,
+      fallback: true,
+    ),
     alwaysOnTop: true,
-    backgroundColor: Color(0x00000000),
+    backgroundColor: const Color(0x00000000),
     titleBarStyle: TitleBarStyle.hidden,
   );
   await windowManager.waitUntilReadyToShow(options);
@@ -591,11 +625,15 @@ Future<void> _runResourceManagerWindow(
         ..load();
 
   await windowManager.ensureInitialized();
-  const WindowOptions options = WindowOptions(
-    size: Size(1080, 752),
-    minimumSize: Size(980, 680),
+  final WindowOptions options = WindowOptions(
+    size: const Size(1080, 752),
+    minimumSize: const Size(980, 680),
     center: true,
-    skipTaskbar: false,
+    skipTaskbar: desktopWindowSkipsTaskbar(
+      defaultTargetPlatform,
+      hideDockIcon: settings.hideDockIcon,
+      fallback: false,
+    ),
     title: '资源管理',
     titleBarStyle: TitleBarStyle.normal,
   );

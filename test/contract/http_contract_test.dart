@@ -7,6 +7,7 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
+import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
@@ -215,6 +216,7 @@ void main() {
     expect((items.single as Map<String, Object?>)['triggerGroupIds'], <Object?>[
       'dingdong',
     ]);
+    expect(items.single as Map<String, Object?>, isNot(contains('content')));
   });
 
   test(
@@ -374,6 +376,51 @@ void main() {
   });
 
   test(
+    'POST /clipboard/restore writes a single image as bitmap and file URL',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final InMemoryClipboardStore clipboardStore = InMemoryClipboardStore(
+        <ClipboardRecord>[
+          ClipboardRecord(
+            id: 'image',
+            group: 'Images',
+            title: 'clipboard-image.png',
+            content: '/tmp/clipboard-image.png',
+            tags: const <String>[
+              'clipboard',
+              'ext:png',
+              'file',
+              'file-url',
+              'image',
+            ],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
+      final _StaticClipboardGateway gateway = _StaticClipboardGateway(
+        const ClipboardSnapshot(),
+      );
+      final AgentRouter router = AgentRouter(
+        clipboardGateway: gateway,
+        clipboardStore: clipboardStore,
+      );
+
+      final response = await router.route(
+        const HttpRequestData(method: 'POST', uri: '/clipboard/restore/image'),
+      );
+
+      expect(response.statusCode, 200);
+      expect(gateway.writtenImagePath, '/tmp/clipboard-image.png');
+      expect(gateway.writtenFiles, isNull);
+      expect(gateway.writtenText, isNull);
+    },
+  );
+
+  test(
     'GET /library/{id} defaults to summary and supports full mode',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 12);
@@ -411,6 +458,76 @@ void main() {
     },
   );
 
+  test('full library reads cannot bypass a scoped Skill workspace', () async {
+    final DateTime now = DateTime.utc(2026, 7, 29);
+    final Directory project = Directory.systemTemp.createTempSync(
+      'dingdong-full-read-scope-',
+    );
+    addTearDown(() => project.deleteSync(recursive: true));
+    final String resolvedProject = project.resolveSymbolicLinksSync();
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'reviewer',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content:
+              '---\nname: reviewer\ndescription: Review scoped code\n---\n',
+          strictProjectSkill: true,
+          triggerGroupIds: const <String>['project'],
+          skillProjectPaths: <String>[resolvedProject],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+      triggerGroupStore: InMemoryTriggerGroupStore(<TriggerGroup>[
+        TriggerGroup(
+          id: 'project',
+          name: 'Project',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.equals,
+              value: resolvedProject,
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+
+    final withoutContext = await router.route(
+      const HttpRequestData(method: 'GET', uri: '/library/reviewer?mode=full'),
+    );
+    final outside = await router.route(
+      const HttpRequestData(
+        method: 'GET',
+        uri: '/library/reviewer?mode=full&workspacePath=%2Fworkspace%2Fother',
+      ),
+    );
+    final inside = await router.route(
+      HttpRequestData(
+        method: 'GET',
+        uri: Uri(
+          path: '/library/reviewer',
+          queryParameters: <String, String>{
+            'mode': 'full',
+            'workspacePath': resolvedProject,
+          },
+        ).toString(),
+      ),
+    );
+
+    expect(withoutContext.statusCode, 404);
+    expect(outside.statusCode, 404);
+    expect(inside.statusCode, 200);
+    expect(
+      (inside.json['item'] as Map<String, Object?>)['content'],
+      contains('Review scoped code'),
+    );
+  });
+
   test(
     'POST /agent/bridge expands prompts while keeping other assets summarized',
     () async {
@@ -430,7 +547,8 @@ void main() {
           id: 'skill',
           type: ResourceType.skill,
           title: 'Flutter skill',
-          content: 'Long skill instructions',
+          content:
+              '---\nname: flutter-skill\ndescription: Build and release Flutter applications\n---\n\nLong skill instructions',
           tags: const <String>['flutter'],
           pinned: true,
           createdAt: now,
@@ -472,15 +590,27 @@ void main() {
         (skills.single as Map<String, Object?>),
         isNot(contains('content')),
       );
+      expect((skills.single as Map<String, Object?>).keys, <String>[
+        'id',
+        'name',
+        'description',
+      ]);
+      expect(skills.single, containsPair('name', 'flutter-skill'));
+      expect(
+        skills.single,
+        containsPair('description', 'Build and release Flutter applications'),
+      );
       expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
       expect(response.json['delivery'], <String, Object?>{
         'prompts': 'full-required-instructions',
-        'skills': 'summary-load-on-match',
+        'promptSnapshot': 'authoritative-replace',
+        'skills': 'id-name-description-catalog-load-on-match',
+        'skillCatalogSnapshot': 'authoritative-replace',
         'mcps': 'summary-call-on-demand',
       });
       expect(
         (await store.load()).map((Resource item) => item.usageCount),
-        <int>[1, 1, 1],
+        <int>[1, 0, 1],
       );
       expect(
         (await store.load()).first.lastUsedAt,
@@ -488,6 +618,159 @@ void main() {
       );
     },
   );
+
+  test('Bridge returns every applicable resource without count caps', () async {
+    final DateTime now = DateTime.utc(2026, 7, 28);
+    Resource skill(String id, String name) => Resource(
+      id: id,
+      type: ResourceType.skill,
+      title: name,
+      content:
+          '---\nname: $name\ndescription: Use $name for matching work\n---\n\n# $name',
+      createdAt: now,
+      updatedAt: now,
+    );
+    Resource prompt(String id) => Resource(
+      id: id,
+      type: ResourceType.prompt,
+      title: id,
+      content: 'Required instructions for $id',
+      activation: ResourceActivation.always,
+      createdAt: now,
+      updatedAt: now,
+    );
+    Resource candidate(String id, ResourceType type) => Resource(
+      id: id,
+      type: type,
+      title: id,
+      content: 'Candidate metadata for $id',
+      activation: ResourceActivation.always,
+      createdAt: now,
+      updatedAt: now,
+    );
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(<Resource>[
+        prompt('prompt-a'),
+        prompt('prompt-b'),
+        skill('alpha-id', 'alpha-skill'),
+        skill('beta-id', 'beta-skill'),
+        candidate('mcp-a', ResourceType.mcp),
+        candidate('mcp-b', ResourceType.mcp),
+        candidate('knowledge-a', ResourceType.knowledge),
+        candidate('knowledge-b', ResourceType.knowledge),
+      ]),
+    );
+
+    final response = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"anything"}',
+      ),
+    );
+
+    final active = response.json['active'] as Map<String, Object?>;
+    expect(active['prompts'], hasLength(2));
+    expect(active['skills'], hasLength(2));
+    expect(active['mcps'], hasLength(2));
+    expect(active['knowledge'], hasLength(2));
+    expect(
+      (active['skills'] as List<Object?>).first,
+      containsPair('name', 'alpha-skill'),
+    );
+    expect(response.json, isNot(contains('catalog')));
+    expect(
+      (response.json['delivery']
+          as Map<String, Object?>)['skillCatalogSnapshot'],
+      'authoritative-replace',
+    );
+  });
+
+  test(
+    'Skill loading uses catalog id to disambiguate duplicate names',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 28);
+      Resource skill(String id, String description) => Resource(
+        id: id,
+        type: ResourceType.skill,
+        title: id,
+        content: '---\nname: reviewer\ndescription: $description\n---\n\n# $id',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final AgentRouter router = AgentRouter(
+        resourceStore: InMemoryResourceStore(<Resource>[
+          skill('reviewer-a', 'Review application code'),
+          skill('reviewer-b', 'Review release documentation'),
+        ]),
+      );
+
+      final ambiguous = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/skill?name=reviewer'),
+      );
+      expect(ambiguous.statusCode, 409);
+      expect(ambiguous.json['candidateIds'], <Object?>[
+        'reviewer-a',
+        'reviewer-b',
+      ]);
+
+      final selected = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/skill?id=reviewer-b'),
+      );
+      expect(selected.statusCode, 200);
+      expect(
+        (selected.json['skill'] as Map<String, Object?>)['content'],
+        contains('# reviewer-b'),
+      );
+    },
+  );
+
+  test('POST /agent/bridge stops returning a disabled global prompt', () async {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'global-prompt',
+        type: ResourceType.prompt,
+        title: 'Global response rule',
+        content: 'Add a marker to every response.',
+        activation: ResourceActivation.always,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final AgentRouter router = AgentRouter(resourceStore: store);
+
+    final enabled = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"Answer the user"}',
+      ),
+    );
+    expect(
+      ((enabled.json['active'] as Map<String, Object?>)['prompts'] as List),
+      hasLength(1),
+    );
+
+    final prompt = (await store.load()).single;
+    await store.save(<Resource>[prompt.copyWith(enabled: false)]);
+    final disabled = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"Answer the user"}',
+      ),
+    );
+
+    expect(
+      ((disabled.json['active'] as Map<String, Object?>)['prompts'] as List),
+      isEmpty,
+    );
+    expect(
+      (disabled.json['delivery'] as Map<String, Object?>)['promptSnapshot'],
+      'authoritative-replace',
+    );
+  });
 
   test('POST /agent/bridge never auto-activates manual resources', () async {
     final DateTime now = DateTime.utc(2026, 7, 12);
@@ -524,7 +807,8 @@ void main() {
         id: 'scoped',
         type: ResourceType.skill,
         title: 'DingDong skill',
-        content: 'Only use inside DingDong.',
+        content:
+            '---\nname: dingdong-skill\ndescription: Only use inside DingDong\n---\n',
         pinned: true,
         triggerGroupIds: const <String>['dingdong'],
         createdAt: now,
@@ -534,7 +818,8 @@ void main() {
         id: 'global',
         type: ResourceType.skill,
         title: 'Global skill',
-        content: 'Available everywhere.',
+        content:
+            '---\nname: global-skill\ndescription: Available everywhere\n---\n',
         pinned: true,
         createdAt: now,
         updatedAt: now,
@@ -584,6 +869,146 @@ void main() {
       <Object?>['dingdong'],
     );
   });
+
+  test(
+    'dynamic Skill catalog and load enforce enabled state and workspace scope',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 28);
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-dynamic-skill-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory package = Directory('${temp.path}/reviewer')
+        ..createSync();
+      const String document =
+          '---\nname: reviewer\ndescription: Review DingDong changes\n---\n\n# Review\n\nRead `references/policy.md`.';
+      File('${package.path}/SKILL.md').writeAsStringSync(document);
+      File('${package.path}/references/policy.md')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('Require tests.');
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'reviewer-id',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content: document,
+          packagePath: package.path,
+          activation: ResourceActivation.manual,
+          triggerGroupIds: const <String>['dingdong'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: InMemoryTriggerGroupStore(<TriggerGroup>[
+          TriggerGroup(
+            id: 'dingdong',
+            name: 'DingDong',
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.projectPath,
+                operator: TriggerRuleOperator.contains,
+                value: 'dingdong',
+              ),
+            ],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+        now: () => now.add(const Duration(hours: 1)),
+      );
+
+      final outside = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"review","workspacePath":"/workspace/other"}',
+        ),
+      );
+      final inside = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"unrelated","workspacePath":"/workspace/dingdong"}',
+        ),
+      );
+      List<Object?> skills(HttpResponseData response) =>
+          (response.json['active'] as Map<String, Object?>)['skills']
+              as List<Object?>;
+      expect(skills(outside), isEmpty);
+      expect(skills(inside), <Object?>[
+        <String, Object?>{
+          'id': 'reviewer-id',
+          'name': 'reviewer',
+          'description': 'Review DingDong changes',
+        },
+      ]);
+
+      final loaded = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/skill?name=reviewer&workspacePath=%2Fworkspace%2Fdingdong',
+        ),
+      );
+      expect(loaded.statusCode, 200);
+      final skill = loaded.json['skill'] as Map<String, Object?>;
+      expect(skill['content'], document);
+      expect(
+        ((skill['package'] as Map<String, Object?>)['files'] as List<Object?>)
+            .single,
+        <String, Object?>{'path': 'references/policy.md', 'byteCount': 14},
+      );
+      expect((await resources.load()).single.usageCount, 1);
+
+      final file = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri:
+              '/agent/skills/file?name=reviewer&path=references%2Fpolicy.md&workspacePath=%2Fworkspace%2Fdingdong',
+        ),
+      );
+      expect(file.statusCode, 200);
+      expect(
+        (file.json['file'] as Map<String, Object?>)['content'],
+        'Require tests.',
+      );
+      final escaped = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri:
+              '/agent/skills/file?name=reviewer&path=..%2Fsecret&workspacePath=%2Fworkspace%2Fdingdong',
+        ),
+      );
+      expect(escaped.statusCode, 400);
+
+      final outOfScopeLoad = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/skill?name=reviewer&workspacePath=%2Fworkspace%2Fother',
+        ),
+      );
+      expect(outOfScopeLoad.statusCode, 404);
+
+      final resource = (await resources.load()).single;
+      await resources.save(<Resource>[resource.copyWith(enabled: false)]);
+      final disabledLoad = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/skill?name=reviewer&workspacePath=%2Fworkspace%2Fdingdong',
+        ),
+      );
+      expect(disabledLoad.statusCode, 404);
+      final disabledCatalog = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"review","workspacePath":"/workspace/dingdong"}',
+        ),
+      );
+      expect(skills(disabledCatalog), isEmpty);
+    },
+  );
 
   test(
     'Agent API creates and updates project trigger groups for scoped resources',
@@ -757,6 +1182,49 @@ void main() {
     expect(resource.packagePath, package.path);
   });
 
+  test(
+    'staged local Skill installation preserves its original source',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-http-staged-skill-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory package = Directory('${temp.path}/local-probe')
+        ..createSync();
+      const String document =
+          '---\n'
+          'name: local-probe\n'
+          'description: Use when testing local Skill sources.\n'
+          '---\n\n'
+          '# Local Probe';
+      File('${package.path}/SKILL.md').writeAsStringSync(document);
+      final _UnmodifiableLoadResourceStore resources =
+          _UnmodifiableLoadResourceStore();
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        skillPackageInstaller: _StaticSkillInstaller(package, document),
+        idGenerator: () => 'local-probe-resource',
+        now: () => DateTime.utc(2026, 7, 21),
+      );
+
+      final installed = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library/skills/install',
+          body:
+              '{"source":"file:///tmp/dingdong-staged/local-probe",'
+              '"sourceReference":"/Users/example/Documents/local-probe"}',
+        ),
+      );
+
+      expect(installed.statusCode, 201);
+      expect(
+        (await resources.load()).single.updateUrl,
+        'file:///Users/example/Documents/local-probe',
+      );
+    },
+  );
+
   test('Agent API upserts one exact project trigger group', () async {
     final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
     final AgentRouter router = AgentRouter(
@@ -873,14 +1341,103 @@ void main() {
       resolvedProjectPath,
     ]);
     expect((await resources.load()).single.enabled, isTrue);
+    expect((await resources.load()).single.strictProjectSkill, isTrue);
     expect(
       (bound.json['item'] as Map<String, Object?>)['skillProjectPaths'],
       <String>[resolvedProjectPath],
     );
+    expect(
+      (bound.json['item'] as Map<String, Object?>)['strictProjectSkill'],
+      isTrue,
+    );
   });
 
   test(
-    'MCP write workflow never exposes a new scoped Skill globally',
+    'strict Skill trigger groups reject broadening and refresh exact paths',
+    () async {
+      final Directory firstProject = Directory.systemTemp.createTempSync(
+        'dingdong-strict-first-',
+      );
+      final Directory secondProject = Directory.systemTemp.createTempSync(
+        'dingdong-strict-second-',
+      );
+      addTearDown(() => firstProject.deleteSync(recursive: true));
+      addTearDown(() => secondProject.deleteSync(recursive: true));
+      final DateTime now = DateTime.utc(2026, 7, 29);
+      final String firstPath = firstProject.resolveSymbolicLinksSync();
+      final String secondPath = secondProject.resolveSymbolicLinksSync();
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'reviewer',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content:
+              '---\nname: reviewer\ndescription: Review one project\n---\n',
+          strictProjectSkill: true,
+          triggerGroupIds: const <String>['project'],
+          skillProjectPaths: <String>[firstPath],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore(
+        <TriggerGroup>[
+          TriggerGroup(
+            id: 'project',
+            name: 'Project',
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.projectPath,
+                operator: TriggerRuleOperator.equals,
+                value: firstPath,
+              ),
+            ],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        now: () => now.add(const Duration(minutes: 1)),
+      );
+
+      final broadened = await router.route(
+        const HttpRequestData(
+          method: 'PATCH',
+          uri: '/library/trigger-groups/project',
+          body:
+              '{"rules":[{"field":"projectPath","operator":"contains","value":"dingdong"}]}',
+        ),
+      );
+      final moved = await router.route(
+        HttpRequestData(
+          method: 'PATCH',
+          uri: '/library/trigger-groups/project',
+          body: jsonEncode(<String, Object?>{
+            'rules': <Object?>[
+              <String, Object?>{
+                'field': 'projectPath',
+                'operator': 'equals',
+                'value': secondPath,
+              },
+            ],
+          }),
+        ),
+      );
+
+      expect(broadened.statusCode, 400);
+      expect(broadened.json['message'], contains('strict project Skill'));
+      expect(moved.statusCode, 200);
+      expect((await resources.load()).single.skillProjectPaths, <String>[
+        secondPath,
+      ]);
+    },
+  );
+
+  test(
+    'MCP write workflow exposes a scoped Skill only through dynamic loading',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
         'dingdong-scoped-workflow-',
@@ -959,14 +1516,67 @@ void main() {
       final String resolvedProject = await project.resolveSymbolicLinks();
       expect(
         File('$resolvedProject/.agents/skills/reviewer/SKILL.md').existsSync(),
-        isTrue,
+        isFalse,
       );
       expect(
         File(
           '$resolvedProject/.agents/skills/reviewer/scripts/check.dart',
         ).existsSync(),
-        isTrue,
+        isFalse,
       );
+
+      final matchingBridge = await router.route(
+        HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: jsonEncode(<String, Object?>{
+            'task': 'review',
+            'workspacePath': resolvedProject,
+          }),
+        ),
+      );
+      final unrelatedBridge = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"review","workspacePath":"/unrelated"}',
+        ),
+      );
+      List<Object?> candidates(HttpResponseData response) =>
+          (response.json['active'] as Map<String, Object?>)['skills']
+              as List<Object?>;
+      expect(
+        candidates(matchingBridge),
+        hasLength(1),
+        reason:
+            'bridge=${matchingBridge.json} resources=${(await resources.load()).map((Resource item) => item.toApiJson()).toList()} groups=${(await groups.load()).map((TriggerGroup group) => group.toJson()).toList()}',
+      );
+      expect(candidates(unrelatedBridge), isEmpty);
+
+      final matchingLoad = await router.route(
+        HttpRequestData(
+          method: 'GET',
+          uri: Uri(
+            path: '/agent/skills/load',
+            queryParameters: <String, String>{
+              'name': 'reviewer',
+              'workspacePath': resolvedProject,
+            },
+          ).toString(),
+        ),
+      );
+      final unrelatedLoad = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/agent/skills/load?name=reviewer&workspacePath=%2Funrelated',
+        ),
+      );
+      expect(matchingLoad.statusCode, 200);
+      expect(
+        (matchingLoad.json['skill'] as Map<String, Object?>)['content'],
+        document,
+      );
+      expect(unrelatedLoad.statusCode, 404);
     },
   );
 
@@ -988,6 +1598,7 @@ void main() {
         title: 'Reviewer',
         content:
             '---\nname: reviewer\ndescription: Review checkout changes\n---\n',
+        strictProjectSkill: true,
         triggerGroupIds: const <String>['checkout'],
         skillProjectPaths: const <String>['/work/checkout'],
         createdAt: now,
@@ -1038,6 +1649,24 @@ void main() {
     );
     expect(skill.triggerGroupIds, isEmpty);
     expect(skill.skillProjectPaths, isEmpty);
+    expect(skill.strictProjectSkill, isTrue);
+    expect(skill.enabled, isFalse);
+    final bridge = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"review","workspacePath":"/work/checkout"}',
+      ),
+    );
+    expect((bridge.json['active'] as Map<String, Object?>)['skills'], isEmpty);
+    final load = await router.route(
+      const HttpRequestData(
+        method: 'GET',
+        uri:
+            '/agent/skills/load?name=reviewer&workspacePath=%2Fwork%2Fcheckout',
+      ),
+    );
+    expect(load.statusCode, 404);
     expect(
       detached.singleWhere((Resource item) => item.id == 'policy').updatedAt,
       now.add(const Duration(minutes: 1)),
@@ -1431,6 +2060,13 @@ void main() {
           reason: path,
         );
       }
+      final manifest = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/agent/manifest'),
+      );
+      expect(
+        (manifest.json['entrypoints'] as Map<String, Object?>)['bridge'],
+        '/agent/bridge?source=AGENT&task=TASK',
+      );
     },
   );
 
@@ -1584,12 +2220,14 @@ final class _UnmodifiableLoadResourceStore implements ResourceStore {
   Future<void> save(List<Resource> resources) => _delegate.save(resources);
 }
 
-final class _StaticClipboardGateway implements ClipboardGateway {
+final class _StaticClipboardGateway
+    implements ClipboardGateway, ImageClipboardGateway {
   _StaticClipboardGateway(this.snapshot);
 
   final ClipboardSnapshot snapshot;
   String? writtenText;
   List<String>? writtenFiles;
+  String? writtenImagePath;
 
   @override
   Future<ClipboardSnapshot> read() async => snapshot;
@@ -1602,6 +2240,12 @@ final class _StaticClipboardGateway implements ClipboardGateway {
   @override
   Future<void> writeFiles(List<String> paths) async {
     writtenFiles = paths;
+  }
+
+  @override
+  Future<bool> writeImageFile(String path) async {
+    writtenImagePath = path;
+    return true;
   }
 }
 

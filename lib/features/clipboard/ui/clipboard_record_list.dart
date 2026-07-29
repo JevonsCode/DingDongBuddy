@@ -6,6 +6,7 @@ class _ClipboardList extends StatefulWidget {
     required this.compact,
     required this.includeShare,
     required this.showShortcutHints,
+    required this.showPlainTextShortcutHints,
     required this.onShortcutStartIndexChanged,
     required this.onPreview,
     required this.onDismissPreview,
@@ -17,6 +18,7 @@ class _ClipboardList extends StatefulWidget {
   final bool compact;
   final bool includeShare;
   final bool showShortcutHints;
+  final bool showPlainTextShortcutHints;
   final ValueChanged<int> onShortcutStartIndexChanged;
   final Future<void> Function(ClipboardRecord record)? onPreview;
   final Future<void> Function()? onDismissPreview;
@@ -132,6 +134,7 @@ class _ClipboardListState extends State<_ClipboardList> {
                       ? _showClipboardContextMenu(
                           context,
                           details.globalPosition,
+                          record,
                           widget.includeShare,
                           widget.onAction,
                         )
@@ -139,6 +142,7 @@ class _ClipboardListState extends State<_ClipboardList> {
                           context,
                           details.globalPosition,
                           widget.contextMenuGateway!,
+                          record,
                           widget.includeShare,
                           widget.onAction,
                         ),
@@ -151,6 +155,9 @@ class _ClipboardListState extends State<_ClipboardList> {
                       shortcutIndex <= 9
                   ? shortcutIndex
                   : null,
+              plainTextShortcut:
+                  widget.showPlainTextShortcutHints &&
+                  record.canPasteAsPlainText,
             );
           },
         ),
@@ -192,6 +199,7 @@ Future<void> _showNativeClipboardContextMenu(
   BuildContext context,
   Offset position,
   DesktopContextMenuGateway gateway,
+  ClipboardRecord record,
   bool includeShare,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
@@ -200,7 +208,11 @@ Future<void> _showNativeClipboardContextMenu(
       x: position.dx,
       y: position.dy,
       useChinese: Localizations.localeOf(context).languageCode == 'zh',
-      items: clipboardContextMenuItems(includeShare: includeShare),
+      items: clipboardContextMenuItems(
+        includePaste: true,
+        canPasteAsPlainText: record.canPasteAsPlainText,
+        includeShare: includeShare,
+      ),
     ),
   );
   if (action != null) {
@@ -213,6 +225,8 @@ Future<void> _showNativeClipboardContextMenu(
 
 _ClipboardAction? _actionFromNative(ClipboardContextAction action) =>
     switch (action) {
+      ClipboardContextAction.paste => _ClipboardAction.paste,
+      ClipboardContextAction.pastePlainText => _ClipboardAction.pastePlainText,
       ClipboardContextAction.details => _ClipboardAction.details,
       ClipboardContextAction.copy => _ClipboardAction.copy,
       ClipboardContextAction.addTitle => _ClipboardAction.addTitle,
@@ -227,6 +241,7 @@ _ClipboardAction? _actionFromNative(ClipboardContextAction action) =>
 Future<void> _showClipboardContextMenu(
   BuildContext context,
   Offset position,
+  ClipboardRecord record,
   bool includeShare,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
@@ -235,6 +250,18 @@ Future<void> _showClipboardContextMenu(
         context: context,
         globalPosition: position,
         entries: <DesktopMenuEntry<_ClipboardAction>>[
+          DesktopMenuItem<_ClipboardAction>(
+            value: _ClipboardAction.paste,
+            symbol: 'clipboard',
+            label: context.localized('Paste', '粘贴'),
+          ),
+          if (record.canPasteAsPlainText)
+            DesktopMenuItem<_ClipboardAction>(
+              value: _ClipboardAction.pastePlainText,
+              symbol: 'text',
+              label: context.localized('Paste as Plain Text', '粘贴为纯文本'),
+            ),
+          const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.details,
             symbol: 'details',
@@ -298,6 +325,8 @@ String _typeLabel(BuildContext context, ResourceType type) {
 }
 
 enum _ClipboardAction {
+  paste,
+  pastePlainText,
   details,
   copy,
   addTitle,

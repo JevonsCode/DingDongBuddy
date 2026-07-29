@@ -44,6 +44,73 @@ class AppDelegate: FlutterAppDelegate {
           } else {
             result(name)
           }
+        case "readTextFormats":
+          var formats: [String: Any] = [:]
+          if let htmlData = NSPasteboard.general.data(forType: .html),
+             !htmlData.isEmpty
+          {
+            formats["htmlData"] = FlutterStandardTypedData(bytes: htmlData)
+          }
+          if let rtfData = NSPasteboard.general.data(forType: .rtf),
+             !rtfData.isEmpty
+          {
+            formats["rtfData"] = FlutterStandardTypedData(bytes: rtfData)
+          }
+          result(formats)
+        case "writeTextFormats":
+          guard let arguments = call.arguments as? [String: Any],
+                let plainText = arguments["plainText"] as? String
+          else {
+            result(
+              FlutterError(
+                code: "invalid_arguments",
+                message: "plainText must be a string.",
+                details: nil
+              )
+            )
+            return
+          }
+          let item = NSPasteboardItem()
+          item.setString(plainText, forType: .string)
+          if let html = arguments["htmlData"] as? FlutterStandardTypedData,
+             !html.data.isEmpty
+          {
+            item.setData(html.data, forType: .html)
+          }
+          if let rtf = arguments["rtfData"] as? FlutterStandardTypedData,
+             !rtf.data.isEmpty
+          {
+            item.setData(rtf.data, forType: .rtf)
+          }
+          NSPasteboard.general.clearContents()
+          _ = NSPasteboard.general.writeObjects([item])
+          result(nil)
+        case "writeImageFile":
+          guard let arguments = call.arguments as? [String: Any],
+                let path = arguments["path"] as? String,
+                let imageData = arguments["imageData"] as? FlutterStandardTypedData,
+                let image = NSImage(data: imageData.data),
+                let tiffData = image.tiffRepresentation
+          else {
+            result(
+              FlutterError(
+                code: "invalid_image",
+                message: "path and valid imageData are required.",
+                details: nil
+              )
+            )
+            return
+          }
+          let item = NSPasteboardItem()
+          item.setString(URL(fileURLWithPath: path).absoluteString, forType: .fileURL)
+          item.setData(tiffData, forType: .tiff)
+          if let bitmap = NSBitmapImageRep(data: tiffData),
+             let pngData = bitmap.representation(using: .png, properties: [:])
+          {
+            item.setData(pngData, forType: .png)
+          }
+          NSPasteboard.general.clearContents()
+          result(NSPasteboard.general.writeObjects([item]))
         default:
           result(FlutterMethodNotImplemented)
         }
@@ -243,6 +310,21 @@ class AppDelegate: FlutterAppDelegate {
     return false
   }
 
+  override func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+    let menu = NSMenu()
+    let usesChinese = Locale.preferredLanguages.first?
+      .lowercased()
+      .hasPrefix("zh") == true
+    let item = NSMenuItem(
+      title: usesChinese ? "隐藏 Dock 图标" : "Hide Dock Icon",
+      action: #selector(hideDockIconFromDockMenu(_:)),
+      keyEquivalent: ""
+    )
+    item.target = self
+    menu.addItem(item)
+    return menu
+  }
+
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return false
   }
@@ -257,6 +339,11 @@ class AppDelegate: FlutterAppDelegate {
     }
     unregisterClipboardHotKey()
     super.applicationWillTerminate(notification)
+  }
+
+  @objc private func hideDockIconFromDockMenu(_ sender: NSMenuItem) {
+    NSApp.setActivationPolicy(.accessory)
+    hotKeyChannel?.invokeMethod("hideDockIcon", arguments: nil)
   }
 
   private func playNotificationSound(_ arguments: [String: Any]) {

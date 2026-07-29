@@ -91,10 +91,14 @@ resolved release version and filename match the manifest before opening it.
 ## 3. Verify first launch
 
 DingDong installs its built-in always-on Prompt and `dingdong-configure` Skill
-on first launch. It syncs the Prompt into managed blocks in detected Codex
-`~/.codex/AGENTS.md` and Claude Code `~/.claude/CLAUDE.md` files, and mirrors the Skill into detected supported clients'
-native Skill directories. Do not copy those files manually and do not edit
-DingDong's `resource-library.json`.
+on first launch. It writes only a persistent Prompt-bridge bootstrap into
+managed blocks in detected Codex `~/.codex/AGENTS.md` and Claude Code
+`~/.claude/CLAUDE.md` files; Prompt bodies are delivered dynamically by
+`dingdong_bridge`. The same Bridge response publishes enabled, scope-matched
+Skills as name/description candidates; a matching Skill is loaded in full
+through DingDong on demand. DingDong does not mirror managed Skills into native
+Skill directories. Do not copy those files manually and do not edit DingDong's
+`resource-library.json`.
 
 Read the active loopback port from the platform-specific file:
 
@@ -143,17 +147,22 @@ perform this setup in the current local Agent or IDE:
 4. Keep DingDong's resource semantics distinct after connection:
    - Prompt: every active Prompt is delivered in full and applied automatically
      as a required instruction.
-   - Skill: match its description first and load the complete Skill only when the
-     task fits. Unscoped Skills are global, while strict project Skills are
-     synchronized only into native Skill directories below that project; a Skill summary is not an instruction.
+   - Skill: every successful Bridge response returns the authoritative complete
+     catalog of every valid, enabled, scope-matched Skill as `id`, `name`, and
+     `description` only. Match a returned description first, then use its ID or
+     name with `dingdong_load_skill` to load the complete `SKILL.md`; use
+     `dingdong_read_skill_file` only for referenced package files.
+     A Skill candidate is not an instruction; an absent Skill is unavailable,
+     disabled, invalid, or out of scope.
    - MCP: configuration only makes tools available; call an MCP tool when the
      task needs it, not automatically on every turn.
 5. Confirm the configuration tools `dingdong_install_skill`,
    `dingdong_upsert_trigger_group`, and `dingdong_bind_resource_scope` are
    present. When the user explicitly asks to install a Skill through DingDong
    for one project, use them in that order with an exact existing absolute
-   project path and `strictProjectSkill: true`. Do not imitate project isolation
-   with a globally synchronized Skill plus a routing hint.
+   project path and `strictProjectSkill: true`. Verify both the catalog and full
+   load in a matching and an unrelated workspace; the latter must reject the
+   Skill.
 
 ## 5. Test both connections and report
 

@@ -2,6 +2,8 @@ import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 
 /// Commands exposed by the desktop clipboard item's native context menu.
 enum ClipboardContextAction {
+  paste,
+  pastePlainText,
   details,
   copy,
   addTitle,
@@ -14,9 +16,24 @@ enum ClipboardContextAction {
 }
 
 List<DesktopContextMenuItem> clipboardContextMenuItems({
+  bool includePaste = false,
+  bool canPasteAsPlainText = false,
   bool includeShare = true,
   bool? enabled,
 }) => <DesktopContextMenuItem>[
+  if (includePaste)
+    const DesktopContextMenuItem(
+      id: 'paste',
+      englishLabel: 'Paste',
+      chineseLabel: '粘贴',
+    ),
+  if (includePaste && canPasteAsPlainText)
+    const DesktopContextMenuItem(
+      id: 'pastePlainText',
+      englishLabel: 'Paste as Plain Text',
+      chineseLabel: '粘贴为纯文本',
+    ),
+  if (includePaste) const DesktopContextMenuItem.separator(),
   const DesktopContextMenuItem(
     id: 'details',
     englishLabel: 'Details',

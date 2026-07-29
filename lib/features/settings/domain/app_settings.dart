@@ -57,6 +57,29 @@ enum DefaultWorkspace {
   }
 }
 
+/// Preset background colors used by the macOS unread notification capsule.
+enum TrayNotificationColor {
+  orange(0xDB7333),
+  pink(0xE85991),
+  blue(0x3B7DDD),
+  green(0x2F9D68),
+  purple(0x8C5BD6);
+
+  const TrayNotificationColor(this.rgbValue);
+
+  final int rgbValue;
+
+  static TrayNotificationColor parse(
+    Object? value, {
+    TrayNotificationColor fallback = TrayNotificationColor.orange,
+  }) {
+    return values.firstWhere(
+      (TrayNotificationColor item) => item.name == value,
+      orElse: () => fallback,
+    );
+  }
+}
+
 /// User-editable settings with legacy-compatible defaults and bounds.
 final class AppSettings {
   const AppSettings({
@@ -64,6 +87,8 @@ final class AppSettings {
     this.language = AppLanguagePreference.system,
     this.themeMode = AppThemePreference.light,
     this.launchAtStartup = false,
+    this.hideDockIcon = false,
+    this.trayNotificationColor = TrayNotificationColor.orange,
     this.backgroundOpacity = 0.90,
     this.density = PanelDensityPreference.comfortable,
     this.defaultWorkspace = DefaultWorkspace.today,
@@ -82,6 +107,8 @@ final class AppSettings {
   final AppLanguagePreference language;
   final AppThemePreference themeMode;
   final bool launchAtStartup;
+  final bool hideDockIcon;
+  final TrayNotificationColor trayNotificationColor;
   final double backgroundOpacity;
   final PanelDensityPreference density;
   final DefaultWorkspace defaultWorkspace;
@@ -101,6 +128,8 @@ final class AppSettings {
       language: language,
       themeMode: themeMode,
       launchAtStartup: launchAtStartup,
+      hideDockIcon: hideDockIcon,
+      trayNotificationColor: trayNotificationColor,
       backgroundOpacity: backgroundOpacity.clamp(0.82, 0.96),
       density: density,
       defaultWorkspace: defaultWorkspace,
@@ -125,6 +154,8 @@ final class AppSettings {
     AppLanguagePreference? language,
     AppThemePreference? themeMode,
     bool? launchAtStartup,
+    bool? hideDockIcon,
+    TrayNotificationColor? trayNotificationColor,
     double? backgroundOpacity,
     PanelDensityPreference? density,
     DefaultWorkspace? defaultWorkspace,
@@ -143,6 +174,9 @@ final class AppSettings {
       language: language ?? this.language,
       themeMode: themeMode ?? this.themeMode,
       launchAtStartup: launchAtStartup ?? this.launchAtStartup,
+      hideDockIcon: hideDockIcon ?? this.hideDockIcon,
+      trayNotificationColor:
+          trayNotificationColor ?? this.trayNotificationColor,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       density: density ?? this.density,
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,

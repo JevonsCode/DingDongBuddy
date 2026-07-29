@@ -88,6 +88,7 @@ class ShellScreen extends StatefulWidget {
 
 class _ShellScreenState extends State<ShellScreen> {
   bool _showShortcutHints = false;
+  bool _showPlainTextShortcutHints = false;
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
   bool _focusMcpOnOpen = false;
@@ -179,8 +180,15 @@ class _ShellScreenState extends State<ShellScreen> {
 
   void _handleExternalShortcutHints() {
     final bool show = widget.shortcutHints?.value ?? false;
-    if (show != _showShortcutHints && mounted) {
-      setState(() => _showShortcutHints = show);
+    if ((show != _showShortcutHints ||
+            (!show && _showPlainTextShortcutHints)) &&
+        mounted) {
+      setState(() {
+        _showShortcutHints = show;
+        if (!show) {
+          _showPlainTextShortcutHints = false;
+        }
+      });
     }
   }
 
@@ -193,18 +201,32 @@ class _ShellScreenState extends State<ShellScreen> {
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     final TargetPlatform platform = defaultTargetPlatform;
+    final HardwareKeyboard keyboard = HardwareKeyboard.instance;
     final bool isModifierKey = isPrimaryModifierKey(event.logicalKey, platform);
     final bool show = isModifierKey
         ? event is! KeyUpEvent
-        : isPrimaryModifierPressed(HardwareKeyboard.instance, platform);
-    if (show != _showShortcutHints) {
-      setState(() => _showShortcutHints = show);
+        : isPrimaryModifierPressed(keyboard, platform);
+    final bool showPlainText =
+        show && usesMetaAsPrimaryModifier(platform) && keyboard.isAltPressed;
+    if (show != _showShortcutHints ||
+        showPlainText != _showPlainTextShortcutHints) {
+      setState(() {
+        _showShortcutHints = show;
+        _showPlainTextShortcutHints = showPlainText;
+      });
     }
     if (event is KeyDownEvent && widget.controller.selectedIndex == 2) {
       final int? shortcutIndex = _clipboardShortcutIndex(event.logicalKey);
       if (shortcutIndex != null &&
-          isPrimaryModifierPressed(HardwareKeyboard.instance, platform)) {
-        unawaited(_useClipboardRecordAt(shortcutIndex));
+          isPrimaryModifierPressed(keyboard, platform)) {
+        unawaited(
+          _useClipboardRecordAt(
+            shortcutIndex,
+            mode: showPlainText
+                ? ClipboardPasteMode.plainText
+                : ClipboardPasteMode.original,
+          ),
+        );
         return KeyEventResult.handled;
       }
       if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -260,10 +282,14 @@ class _ShellScreenState extends State<ShellScreen> {
     await widget.clipboardViewModel.restoreSelected();
   }
 
-  Future<void> _useClipboardRecordAt(int index) async {
+  Future<void> _useClipboardRecordAt(
+    int index, {
+    ClipboardPasteMode mode = ClipboardPasteMode.original,
+  }) async {
     await _hideClipboardPreview();
     await widget.clipboardViewModel.restoreVisibleAt(
       _clipboardShortcutStartIndex + index,
+      mode: mode,
     );
   }
 
@@ -381,8 +407,11 @@ class _ShellScreenState extends State<ShellScreen> {
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
         onFocusChange: (bool focused) {
-          if (!focused && _showShortcutHints) {
-            setState(() => _showShortcutHints = false);
+          if (!focused && (_showShortcutHints || _showPlainTextShortcutHints)) {
+            setState(() {
+              _showShortcutHints = false;
+              _showPlainTextShortcutHints = false;
+            });
           }
         },
         child: RepaintBoundary(
@@ -470,6 +499,7 @@ class _ShellScreenState extends State<ShellScreen> {
         compact: compact,
         settingsViewModel: widget.settingsViewModel,
         showShortcutHints: _showShortcutHints,
+        showPlainTextShortcutHints: _showPlainTextShortcutHints,
         onPreview: _showClipboardPreview,
         onDismissPreview: _hideClipboardPreview,
         onShare: widget.clipboardShareGateway?.share,

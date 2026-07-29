@@ -147,7 +147,7 @@ extension _AgentRouterResourceHandlers on AgentRouter {
       json: <String, Object?>{
         'status': 'ok',
         'items': limited
-            .map((Resource resource) => resource.toApiJson())
+            .map((Resource resource) => resource.toSummaryApiJson())
             .toList(growable: false),
       },
     );
@@ -185,6 +185,38 @@ extension _AgentRouterResourceHandlers on AgentRouter {
         },
       );
     }
+    final bool full = query['mode'] == 'full';
+    if (full) {
+      final List<TriggerGroup> triggerGroups =
+          await (_triggerGroupStore?.load() ??
+              Future<List<TriggerGroup>>.value(const <TriggerGroup>[]));
+      final Map<String, TriggerGroup> triggerGroupsById =
+          <String, TriggerGroup>{
+            for (final TriggerGroup group in triggerGroups) group.id: group,
+          };
+      final TriggerContext context = TriggerContext(
+        projectPath:
+            query['workspacePath'] ??
+            query['projectPath'] ??
+            query['cwd'] ??
+            '',
+        repositoryUrl:
+            query['repositoryUrl'] ??
+            query['repository'] ??
+            query['projectUrl'] ??
+            '',
+      );
+      if (!resource.enabled ||
+          !resourceMatchesScope(resource, context, triggerGroupsById)) {
+        return const HttpResponseData(
+          statusCode: 404,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'Resource is disabled, out of scope, or not found',
+          },
+        );
+      }
+    }
     if (query['trackUsage'] == 'true') {
       resource = resource.copyWith(
         usageCount: resource.usageCount + 1,
@@ -193,7 +225,6 @@ extension _AgentRouterResourceHandlers on AgentRouter {
       resources[resourceIndex] = resource;
       await store.save(resources);
     }
-    final bool full = query['mode'] == 'full';
     return HttpResponseData(
       statusCode: 200,
       json: <String, Object?>{

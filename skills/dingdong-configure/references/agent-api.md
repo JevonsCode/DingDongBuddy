@@ -19,7 +19,7 @@ Set `BASE=http://127.0.0.1:<port>`, then call `GET $BASE/health` and `GET $BASE/
 | `GET /library?q=...&type=prompt` | Search resources |
 | `POST /library` | Create a resource |
 | `POST /library/skills/install` | Idempotently install a complete GitHub or local Skill package |
-| `GET /library/{id}?mode=full` | Read one resource |
+| `GET /library/{id}?mode=full&workspacePath=...` | Read one enabled, in-scope resource |
 | `PATCH /library/{id}` | Patch a resource |
 | `DELETE /library/{id}` | Delete after confirmation |
 | `GET /library/trigger-groups` | List scopes |
@@ -27,8 +27,10 @@ Set `BASE=http://127.0.0.1:<port>`, then call `GET $BASE/health` and `GET $BASE/
 | `POST /library/trigger-groups/upsert` | Idempotently create or replace an exact scope by name |
 | `PATCH /library/trigger-groups/{id}` | Patch a scope |
 | `DELETE /library/trigger-groups/{id}` | Delete and detach a scope |
-| `POST /library/{id}/scope` | Replace scope IDs and optionally enforce project-native Skill isolation |
+| `POST /library/{id}/scope` | Replace scope IDs and optionally enforce exact-project Skill loading |
 | `POST /agent/bridge` | Verify task and project routing |
+| `GET /agent/skills/load?id=...&workspacePath=...` | Load a scoped Skill's complete `SKILL.md` by ID or name |
+| `GET /agent/skills/file?id=...&path=...&workspacePath=...` | Read one referenced package file by Skill ID or name |
 
 A resource accepts `type`, `title`, `content`, `group`, `tags`, `source`, `updateURL`, `pinned`, `enabled`, `activation`, `triggerGroupIds`, and `sortOrder`. User-facing configurable types are `prompt`, `skill`, and `mcp`. Activations are `always`, `taskMatch`, and `manual`.
 
@@ -44,17 +46,17 @@ Prefer these tools over manually composing loopback HTTP:
 | `dingdong_upsert_trigger_group` | `name`, plus `projectPath` and/or `repositoryUrl` | Creates or updates one exact trigger group and returns its ID |
 | `dingdong_bind_resource_scope` | `resourceId`, `triggerGroupIds` | Replaces the binding; Skills default to `strictProjectSkill: true` |
 
-For a strict project Skill, every bound rule must be an existing exact absolute `projectPath` using the `equals` operator. Do not mix in repository or `contains` rules because trigger-group rules are OR-ed. DingDong copies that Skill only into the selected project's native Skill directories and removes its DingDong-managed global copies.
+For a strict project Skill, every bound rule must be an existing exact absolute `projectPath` using the `equals` operator. Do not mix in repository or `contains` rules because trigger-group rules are OR-ed. DingDong includes that Skill only in matching Bridge catalogs, and both full-content and package-file loads re-check the same scope.
 
-Strict scope cannot remove a separate user-owned copy that already lives in a client's user-global native Skill directory. Inspect a local source before promising isolation; if it is such a copy, ask the user to move/remove it or install from a neutral directory/GitHub source. Never delete that source without explicit permission.
+Strict dynamic scope does not control a separate user-owned copy that already lives in a client's native Skill directory. Warn about that independent copy before promising a global off switch. Never delete it without explicit permission.
 
 ## Runtime delivery
 
-- **Prompt:** `dingdong_bridge` includes every active Prompt in full and marks it as required instruction content. Global always-on Prompts without a trigger group are also injected directly into DingDong's managed `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md` blocks. Claude Code receives only these static global Prompts through its native file; routed Prompts still require bridge delivery.
-- **Skill:** the bridge returns summary metadata. Match its description first, then fetch the complete Skill with `dingdong_load_skill` or use the synchronized native Skill package. Unscoped Skills are global; strict project Skills are project-native only. Do not execute a Skill summary as an instruction.
+- **Prompt:** native instruction files contain only the persistent Bridge bootstrap. `dingdong_bridge` includes every active Prompt in full and marks the successful response as the authoritative replacement snapshot for the current task.
+- **Skill:** each successful Bridge response contains the authoritative complete set of every valid, enabled, scope-matched Skill for the current workspace as `id`, `name`, and `description` only. Match a returned description first, then fetch the complete `SKILL.md` by ID or name with `dingdong_load_skill`; read only referenced package files with `dingdong_read_skill_file`. Every load re-checks enabled state and scope. Do not execute a Skill candidate as an instruction. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope.
 - **MCP:** the bridge returns summary metadata and the enabled server is synchronized to native client configuration. Call its tools only when needed; do not interpret an MCP summary as an instruction or mandatory call.
 
-Trigger groups and activation rules filter bridge candidates. MCP servers and unscoped Skills remain globally available. Strict project Skills are synchronized only below each exact project root, so their native availability follows the configured project boundary.
+Trigger groups filter dynamic Skill candidates while Prompt activation rules filter Prompt delivery. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP servers remain client-global. Unscoped Skills appear in every workspace catalog; strict project Skills appear and load only inside each exact configured project root.
 
 ## Trigger groups
 

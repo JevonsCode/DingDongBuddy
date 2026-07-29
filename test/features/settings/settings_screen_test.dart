@@ -6,8 +6,24 @@ import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_screen.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+void testWidgetsOnPlatform(
+  String description,
+  TargetPlatform platform,
+  WidgetTesterCallback callback,
+) {
+  testWidgets(description, (WidgetTester tester) async {
+    debugDefaultTargetPlatformOverride = platform;
+    try {
+      await callback(tester);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
+  });
+}
 
 void main() {
   testWidgets('version destination scrolls directly to release settings', (
@@ -58,7 +74,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(source.fetchCount, 1);
-    expect(find.text('0.8.0'), findsOneWidget);
+    expect(find.text('0.10.0'), findsOneWidget);
   });
 
   testWidgets('default workspace uses the Dynamic product name', (
@@ -76,8 +92,9 @@ void main() {
     expect(find.text('Today'), findsNothing);
   });
 
-  testWidgets(
+  testWidgetsOnPlatform(
     'settings expose appearance, monitoring, retention, and API controls',
+    TargetPlatform.macOS,
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(1000, 820);
@@ -99,6 +116,7 @@ void main() {
         find.byKey(const Key('settings-launch-at-startup')),
         findsOneWidget,
       );
+      expect(find.byKey(const Key('settings-hide-dock-icon')), findsOneWidget);
       expect(
         find.byKey(const Key('settings-anonymous-telemetry')),
         findsNothing,
@@ -129,7 +147,27 @@ void main() {
       );
       expect(find.byKey(const Key('settings-api-port')), findsOneWidget);
       expect(find.byKey(const Key('settings-sound')), findsOneWidget);
+      expect(
+        find.byKey(const Key('settings-tray-notification-color')),
+        findsOneWidget,
+      );
+      for (final String color in <String>[
+        'orange',
+        'pink',
+        'blue',
+        'green',
+        'purple',
+      ]) {
+        expect(
+          find.byKey(Key('settings-tray-notification-color-$color')),
+          findsOneWidget,
+        );
+      }
       expect(find.byKey(const Key('settings-refresh-usage')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('settings-hide-dock-icon')));
+      await tester.pumpAndSettle();
+      expect(backend.values['dingdong.macos.hideDockIcon'], isTrue);
 
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
       await tester.pumpAndSettle();
@@ -142,6 +180,15 @@ void main() {
       await tester.tap(find.text('Dark'));
       await tester.pumpAndSettle();
       expect(backend.values['dingdong.panel.themeMode'], 'dark');
+
+      final Finder purple = find.byKey(
+        const Key('settings-tray-notification-color-purple'),
+      );
+      await tester.ensureVisible(purple);
+      await tester.pumpAndSettle();
+      await tester.tap(purple);
+      await tester.pumpAndSettle();
+      expect(backend.values['dingdong.macos.trayNotificationColor'], 'purple');
     },
   );
 
@@ -235,9 +282,9 @@ final class _CountingReleaseSource implements ReleaseMetadataSource {
     fetchCount += 1;
     return ReleaseMetadata(
       app: 'DingDong',
-      latestVersion: '0.8.0',
+      latestVersion: '0.10.0',
       website: Uri.parse('https://example.com'),
-      releasePage: Uri.parse('https://example.com/releases/0.8.0'),
+      releasePage: Uri.parse('https://example.com/releases/0.10.0'),
     );
   }
 }

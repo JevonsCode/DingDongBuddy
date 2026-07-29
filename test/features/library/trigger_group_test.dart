@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -57,4 +59,57 @@ void main() {
 
     expect(TriggerGroup.fromJson(original.toJson()), original);
   });
+
+  test(
+    'existing project paths match across symbolic-link aliases',
+    () {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-trigger-path-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory target = Directory('${temp.path}/TargetProject')
+        ..createSync();
+      final Link alias = Link('${temp.path}/AliasProject')
+        ..createSync(target.path);
+      final TriggerRule rule = TriggerRule(
+        field: TriggerRuleField.projectPath,
+        operator: TriggerRuleOperator.equals,
+        value: alias.path,
+      );
+
+      expect(
+        rule.matches(
+          TriggerContext(projectPath: target.resolveSymbolicLinksSync()),
+        ),
+        isTrue,
+      );
+    },
+    skip: Platform.isWindows
+        ? 'Creating symbolic links requires additional Windows privileges.'
+        : false,
+  );
+
+  test(
+    'contains keeps the lexical symbolic-link alias',
+    () {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-trigger-contains-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory target = Directory('${temp.path}/target-project')
+        ..createSync();
+      final Link alias = Link('${temp.path}/alias-project')
+        ..createSync(target.path);
+      final TriggerRule rule = TriggerRule(
+        field: TriggerRuleField.projectPath,
+        operator: TriggerRuleOperator.contains,
+        value: 'alias-project',
+      );
+
+      expect(rule.matches(TriggerContext(projectPath: alias.path)), isTrue);
+    },
+    skip: Platform.isWindows
+        ? 'Creating symbolic links requires additional Windows privileges.'
+        : false,
+  );
 }

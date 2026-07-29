@@ -712,7 +712,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '0.8.0'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '0.10.0'),
       );
       addTearDown(settings.dispose);
       await settings.load();
@@ -1061,6 +1061,64 @@ description: Use when product decisions should follow saved preferences.
       await tester.pump();
 
       expect(clipboard.writtenText, 'exposed value 11');
+      expect(quickPaste.pasteCount, 1);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'Option-Command number switches the hint and pastes plain text',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      final _RecordingClipboardGateway clipboard = _RecordingClipboardGateway();
+      final _RecordingQuickPasteGateway quickPaste =
+          _RecordingQuickPasteGateway();
+      addTearDown(controller.dispose);
+      final Uint8List htmlData = Uint8List.fromList(
+        '<b>Rich value</b>'.codeUnits,
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[
+            ClipboardRecord(
+              id: 'plain-text-shortcut',
+              group: 'Clipboard',
+              title: 'Plain-text shortcut',
+              content: 'Rich value',
+              htmlData: htmlData,
+              tags: const <String>['clipboard', 'text'],
+              pinned: false,
+              enabled: true,
+              activation: 'taskMatch',
+              createdAt: DateTime.utc(2026, 7, 29),
+              updatedAt: DateTime.utc(2026, 7, 29),
+            ),
+          ]),
+          clipboardGateway: clipboard,
+          quickPasteGateway: quickPaste,
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.pump();
+
+      expect(find.text('⌥⌘ 1'), findsOneWidget);
+      expect(find.text('Plain text'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+
+      expect(clipboard.writtenText, 'Rich value');
+      expect(clipboard.formattedPlainText, isNull);
       expect(quickPaste.pasteCount, 1);
     },
   );
@@ -1437,8 +1495,12 @@ final class _FakeClipboardPreviewLauncher implements ClipboardPreviewLauncher {
   }
 }
 
-final class _RecordingClipboardGateway implements ClipboardGateway {
+final class _RecordingClipboardGateway
+    implements ClipboardGateway, FormattedTextClipboardGateway {
   String? writtenText;
+  String? formattedPlainText;
+  Uint8List? formattedHtmlData;
+  Uint8List? formattedRtfData;
 
   @override
   Future<ClipboardSnapshot> read() async => const ClipboardSnapshot();
@@ -1449,6 +1511,17 @@ final class _RecordingClipboardGateway implements ClipboardGateway {
   @override
   Future<void> writeText(String text) async {
     writtenText = text;
+  }
+
+  @override
+  Future<void> writeFormattedText({
+    required String plainText,
+    Uint8List? htmlData,
+    Uint8List? rtfData,
+  }) async {
+    formattedPlainText = plainText;
+    formattedHtmlData = htmlData;
+    formattedRtfData = rtfData;
   }
 }
 

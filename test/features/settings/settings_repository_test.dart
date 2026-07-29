@@ -12,6 +12,17 @@ void main() {
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
+    expect(settings.hideDockIcon, isFalse);
+    expect(settings.trayNotificationColor, TrayNotificationColor.orange);
+  });
+
+  test('supports a build-specific default tray notification color', () async {
+    final AppSettings settings = await SettingsRepository(
+      MemoryPreferencesBackend(),
+      defaultTrayNotificationColor: TrayNotificationColor.pink,
+    ).load();
+
+    expect(settings.trayNotificationColor, TrayNotificationColor.pink);
   });
 
   test('loads legacy preference keys and sanitizes unsafe limits', () async {
@@ -34,6 +45,8 @@ void main() {
           'dingdong.agentActivity.remember': false,
           'dingdong.agentActivity.maxItems': 9000,
           'dingdong.agentActivity.countHours': 0,
+          'dingdong.macos.hideDockIcon': true,
+          'dingdong.macos.trayNotificationColor': 'purple',
         });
 
     final settings = await SettingsRepository(backend).load();
@@ -53,6 +66,8 @@ void main() {
     expect(settings.rememberAgentActivity, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
     expect(settings.agentActivityCountHours, 1);
+    expect(settings.hideDockIcon, isTrue);
+    expect(settings.trayNotificationColor, TrayNotificationColor.purple);
   });
 
   test('saves settings with the native app preference contract', () async {
@@ -70,6 +85,8 @@ void main() {
       rememberAgentActivity: false,
       agentActivityMaxItems: 320,
       agentActivityCountHours: 48,
+      hideDockIcon: true,
+      trayNotificationColor: TrayNotificationColor.green,
       selectedSound: 'muted',
       customSoundPath: '/tmp/quiet.wav',
       mcpAccessSeen: true,
@@ -90,6 +107,8 @@ void main() {
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
     expect(backend.values['dingdong.agentActivity.maxItems'], 320);
     expect(backend.values['dingdong.agentActivity.countHours'], 48);
+    expect(backend.values['dingdong.macos.hideDockIcon'], isTrue);
+    expect(backend.values['dingdong.macos.trayNotificationColor'], 'green');
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
     expect(backend.values, isNot(contains('dingdong.mcpSetupPromptOverride')));

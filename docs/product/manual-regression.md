@@ -1,4 +1,4 @@
-# DingDong 0.7.27 Manual Regression Checklist
+# DingDong 0.9.1 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -29,7 +29,13 @@ and macOS golden images; the items below exercise real operating-system state.
 - Search, kind filters, group filters, pinning, organizing, deletion, and promotion persist.
 - Hovering the Clipboard monitoring switch keeps the surface stable, shows a click cursor, and explains whether clicking will turn monitoring on or pause it.
 - Arrow keys change selection and Enter restores it.
-- `Command-1…9` on macOS and `Control-1…9` on Windows restore the matching visible row.
+- Textual-row context menus expose both Paste and Paste as Plain Text; file and
+  image rows do not expose the plain-text action.
+- `Command-1…9` on macOS restores the matching visible row with its original
+  rich-text representation when available; `Control-1…9` restores the matching
+  row on Windows.
+- Holding Option changes the macOS row hint to `Option-Command-1…9`, adds the
+  Plain text label, and restores only the plain-text representation.
 - Restoring from the global shortcut returns focus and pastes into the previous app.
 - macOS requests Accessibility access when quick paste needs it; Settings reflects the latest status.
 - Windows quick paste does not require a separate Accessibility permission.
@@ -61,12 +67,19 @@ and macOS golden images; the items below exercise real operating-system state.
 - Updating an online Skill replaces the complete local package only after the
   new package passes metadata and path validation.
 - Failed or empty updates preserve the prior resource content and show an error.
-- Global always-on Prompts appear inside DingDong-managed blocks in both Codex
-  `AGENTS.md` and Claude Code `CLAUDE.md` without changing user-owned sections.
-- Editing or renaming a Skill refreshes every active managed Agent mirror and
-  removes the old managed directory name.
-- A user-owned Skill at the same destination blocks the save, preserves the
-  existing directory, and appears in Resource Manager's first-level Issues page.
+- Codex `AGENTS.md` and Claude Code `CLAUDE.md` contain only DingDong's
+  persistent bridge bootstrap without changing user-owned sections; enabled
+  global, project, and task Prompts are returned dynamically by the next bridge
+  call, each successful response replaces the previous Prompt snapshot, and
+  Prompt bodies never appear in those native files.
+- Every successful Bridge call returns all enabled, scope-matched Skills as
+  `id`, `name`, and `description` only, regardless of Prompt activation mode.
+- Loading a returned Skill provides its complete `SKILL.md` and package
+  manifest; referenced files can be read on demand, while disabled or
+  out-of-scope loads fail.
+- Existing DingDong-managed native Skill mirrors are removed during
+  synchronization; user-owned native Skills are preserved and appear as
+  warnings in Resource Manager's first-level Issues page.
 - The Issues page stays available when empty, has one manual detection action,
   and can open the affected resource when one is recorded.
 - An enabled Claude Code plugin with the same Skill name produces a warning
@@ -75,8 +88,9 @@ and macOS golden images; the items below exercise real operating-system state.
   current plus two prior revisions, and does not overwrite an unsaved editor
   when its file changes externally.
 - Saving, restoring, or deleting an Adapter immediately resynchronizes current
-  resources. Changing its paths removes only DingDong-managed content from the
-  old Skill, Prompt, and MCP targets while preserving user-owned content.
+  resources. Changing its paths removes only legacy DingDong-managed Skill
+  copies and managed Prompt/MCP content from old targets while preserving
+  user-owned content.
 - An Adapter path that leaves the home directory directly or through a symbolic
   link remains visible as invalid and blocks synchronization.
 - The list remains responsive with 10,000 resources.
@@ -143,8 +157,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - A Debug macOS build is named `DingDong DEV`, uses bundle id
   `com.dingdongbuddy.app.dev`, stores data under `DingDong DEV`, shows a DEV
   badge, and does not offer release updates.
-- The macOS release app metadata is version `0.7.27` build `27` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.7.27.27` and product name `DingDong`.
+- The macOS release app metadata is version `0.9.1` build `28` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.1.28` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

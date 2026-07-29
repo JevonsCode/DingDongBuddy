@@ -148,7 +148,15 @@ void main() {
     expect(document, contains('dingdong_bind_resource_scope'));
     expect(document, contains('strictProjectSkill'));
     expect(document, contains('exact absolute project path'));
-    expect(document, contains('project-native Skill directories'));
+    expect(document, contains('authoritative complete catalog'));
+    expect(
+      document,
+      contains(
+        'Every active, scope-matched MCP and Knowledge candidate is returned',
+      ),
+    );
+    expect(document, isNot(contains('Bridge `limit`')));
+    expect(document, contains('dingdong_read_skill_file'));
   });
 
   test('bundled Skill documents Agent launcher configuration', () async {
@@ -226,6 +234,33 @@ void main() {
 
     expect(await installer.install(), isTrue);
     expect((await store.load()).single.content, await _loadConfigureSkill());
+    expect(
+      preferences.values[BuiltInResourceInstaller.preferenceKey],
+      BuiltInResourceInstaller.currentVersion,
+    );
+  });
+
+  test('version nine removes the obsolete Bridge limit instructions', () async {
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      builtInDingDongConfigureSkill(
+        'instructions for native Skill mirrors',
+        DateTime.utc(2026, 7, 1),
+      ).copyWith(enabled: false),
+    ]);
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 8;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      now: () => DateTime.utc(2026, 7, 28),
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isTrue);
+    final Resource skill = (await store.load()).single;
+    expect(skill.content, await _loadConfigureSkill());
+    expect(skill.enabled, isFalse);
+    expect(skill.updatedAt, DateTime.utc(2026, 7, 28));
     expect(
       preferences.values[BuiltInResourceInstaller.preferenceKey],
       BuiltInResourceInstaller.currentVersion,

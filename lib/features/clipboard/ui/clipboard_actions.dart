@@ -10,6 +10,12 @@ extension _ClipboardActions on _ClipboardScreenState {
       return;
     }
     switch (action) {
+      case _ClipboardAction.paste:
+        await onDismissPreview?.call();
+        await viewModel.restoreSelected();
+      case _ClipboardAction.pastePlainText:
+        await onDismissPreview?.call();
+        await viewModel.restoreSelected(mode: ClipboardPasteMode.plainText);
       case _ClipboardAction.details:
         await onPreview?.call(selected);
       case _ClipboardAction.edit:

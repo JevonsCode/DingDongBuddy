@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
+import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 
 /// HTTP boundary used by the stdio MCP adapter.
 abstract interface class McpHttpTransport {
@@ -41,23 +42,25 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
         path: '/library',
         query: _stringQuery(arguments, <String>['query', 'type', 'limit']),
       ),
-      'dingdong_get_asset' => _transport.request(
-        method: 'GET',
+      'dingdong_get_asset' => _contextualGet(
         path: '/library/${arguments['id'] ?? ''}',
-        query: _stringQuery(arguments, <String>[
+        arguments: arguments,
+        keys: const <String>[
           'mode',
           'includeClipboard',
           'includeSensitiveClipboard',
-        ])..['trackUsage'] = 'true',
+        ],
+        extraQuery: const <String, String>{'trackUsage': 'true'},
       ),
-      'dingdong_load_skill' => _transport.request(
-        method: 'GET',
-        path: '/library/${arguments['id'] ?? ''}',
-        query: const <String, String>{
-          'mode': 'full',
-          'expectedType': 'skill',
-          'trackUsage': 'true',
-        },
+      'dingdong_load_skill' => _contextualGet(
+        path: '/agent/skills/load',
+        arguments: arguments,
+        keys: const <String>['id', 'name'],
+      ),
+      'dingdong_read_skill_file' => _contextualGet(
+        path: '/agent/skills/file',
+        arguments: arguments,
+        keys: const <String>['id', 'name', 'path'],
       ),
       'dingdong_recommend_mcp' => _transport.request(
         method: 'GET',
@@ -68,11 +71,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
           if (arguments['limit'] != null) 'limit': '${arguments['limit']}',
         },
       ),
-      'dingdong_install_skill' => _transport.request(
-        method: 'POST',
-        path: '/library/skills/install',
-        body: arguments,
-      ),
+      'dingdong_install_skill' => _installSkill(arguments),
       'dingdong_upsert_trigger_group' => _transport.request(
         method: 'POST',
         path: '/library/trigger-groups/upsert',
@@ -101,6 +100,45 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     );
   }
 
+  Future<Map<String, Object?>> _installSkill(
+    Map<String, Object?> arguments,
+  ) async {
+    final String source = (arguments['source'] as String? ?? '').trim();
+    final Uri? parsed = parseSkillPackageSource(source);
+    final Uri? localSource = parsed?.scheme == 'file' ? parsed : null;
+    if (localSource == null) {
+      return _transport.request(
+        method: 'POST',
+        path: '/library/skills/install',
+        body: arguments,
+      );
+    }
+
+    // The GUI app may not have macOS protected-folder permission for a
+    // workspace under Documents/Desktop/Downloads. The MCP process already
+    // operates in the Agent's authorized workspace, so copy and validate the
+    // complete package in a private system-temporary directory first.
+    final Directory stagingRoot = await Directory.systemTemp.createTemp(
+      'dingdong-mcp-skill-',
+    );
+    try {
+      final SkillPackageInstallResult staged =
+          await GitHubSkillPackageInstaller(stagingRoot).install(localSource);
+      final Map<String, Object?> body = Map<String, Object?>.of(arguments)
+        ..['source'] = staged.directoryPath
+        ..['sourceReference'] = source;
+      return await _transport.request(
+        method: 'POST',
+        path: '/library/skills/install',
+        body: body,
+      );
+    } finally {
+      if (await stagingRoot.exists()) {
+        await stagingRoot.delete(recursive: true);
+      }
+    }
+  }
+
   Future<Map<String, Object?>> _bridge(Map<String, Object?> arguments) async {
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
     final String directory =
@@ -119,6 +157,34 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       path: '/agent/bridge',
       body: body,
     );
+  }
+
+  Future<Map<String, Object?>> _contextualGet({
+    required String path,
+    required Map<String, Object?> arguments,
+    required List<String> keys,
+    Map<String, String> extraQuery = const <String, String>{},
+  }) async {
+    final Map<String, String> query = <String, String>{
+      ..._stringQuery(arguments, keys),
+      ...extraQuery,
+    };
+    final String directory =
+        (arguments['workspacePath'] as String? ?? '').trim().isEmpty
+        ? _currentDirectory()
+        : (arguments['workspacePath'] as String).trim();
+    query['workspacePath'] = directory;
+    final String explicitRepository =
+        (arguments['repositoryUrl'] as String? ?? '').trim();
+    if (explicitRepository.isNotEmpty) {
+      query['repositoryUrl'] = explicitRepository;
+    } else {
+      final String? repositoryUrl = await _repositoryUrlResolver(directory);
+      if (repositoryUrl != null && repositoryUrl.trim().isNotEmpty) {
+        query['repositoryUrl'] = repositoryUrl.trim();
+      }
+    }
+    return _transport.request(method: 'GET', path: path, query: query);
   }
 }
 

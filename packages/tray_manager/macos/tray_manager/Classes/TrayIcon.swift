@@ -53,11 +53,17 @@ public class TrayIcon: NSView {
         self.frame = statusItem!.button!.frame
     }
     
-    public func setTitle(_ title: String, _ style: String) {
+    public func setTitle(
+        _ title: String,
+        _ style: String,
+        _ badgeColorRgb: UInt32?
+    ) {
         guard let button = statusItem?.button else { return }
 
-        if style == "unreadBadge" && !title.isEmpty {
-            let countText = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let countText = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isUnreadBadge = style == "unreadBadge" && !countText.isEmpty
+
+        if isUnreadBadge {
             button.title = ""
             button.attributedTitle = NSAttributedString(
                 string: " \(countText)\u{2009}",
@@ -68,12 +74,7 @@ public class TrayIcon: NSView {
             )
             button.imagePosition = .imageLeading
             button.wantsLayer = true
-            button.layer?.backgroundColor = NSColor(
-                calibratedRed: 0.86,
-                green: 0.45,
-                blue: 0.20,
-                alpha: 0.95
-            ).cgColor
+            button.layer?.backgroundColor = badgeBackgroundColor(badgeColorRgb)
             button.layer?.cornerRadius = 12
             button.layer?.masksToBounds = true
             statusItem?.length = countText.count > 2 ? 65 : 55
@@ -90,6 +91,19 @@ public class TrayIcon: NSView {
                 : NSStatusItem.variableLength
         }
         self.frame = statusItem!.button!.frame
+    }
+
+    private func badgeBackgroundColor(_ rgb: UInt32?) -> CGColor {
+        let value = rgb ?? 0xDB7333
+        let red = CGFloat((value >> 16) & 0xFF) / 255
+        let green = CGFloat((value >> 8) & 0xFF) / 255
+        let blue = CGFloat(value & 0xFF) / 255
+        return NSColor(
+            calibratedRed: red,
+            green: green,
+            blue: blue,
+            alpha: 0.95
+        ).cgColor
     }
     
     public func setToolTip(_ toolTip: String) {

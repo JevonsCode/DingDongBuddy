@@ -194,10 +194,12 @@ class TrayManager {
   Future<void> setTitle(
     String title, {
     TrayTitleStyle style = TrayTitleStyle.plain,
+    int? badgeColorRgb,
   }) async {
     final Map<String, dynamic> arguments = {
       'title': title,
       'style': style.name,
+      if (badgeColorRgb != null) 'badgeColorRgb': badgeColorRgb & 0xFFFFFF,
     };
     await _channel.invokeMethod('setTitle', arguments);
   }

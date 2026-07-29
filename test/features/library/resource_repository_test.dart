@@ -27,9 +27,26 @@ void main() {
 
       final Resource scoped = resource.copyWith(
         skillProjectPaths: <String>[directory.path],
+        strictProjectSkill: true,
       );
       await repository.save(<Resource>[scoped]);
       expect((await repository.load()).single, scoped);
     },
   );
+
+  test('legacy project paths migrate to an explicit strict Skill flag', () {
+    final Resource resource = Resource.fromJson(<String, Object?>{
+      'id': 'reviewer',
+      'type': 'skill',
+      'group': 'Skills',
+      'title': 'Reviewer',
+      'content': 'Review code',
+      'skillProjectPaths': <String>['/work/project'],
+      'createdAt': '2026-07-29T00:00:00.000Z',
+      'updatedAt': '2026-07-29T00:00:00.000Z',
+    });
+
+    expect(resource.strictProjectSkill, isTrue);
+    expect(resource.toJson()['strictProjectSkill'], isTrue);
+  });
 }

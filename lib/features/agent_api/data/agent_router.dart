@@ -23,6 +23,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 
@@ -237,6 +238,31 @@ final class AgentRouter {
         triggerGroupStore: _triggerGroupStore,
         now: _now,
       ).respond(request.body);
+    }
+    if (request.method == 'GET' &&
+        (request.parsedUri.path == '/agent/skills/load' ||
+            request.parsedUri.path == '/skill')) {
+      final ResourceStore? store = _resourceStore;
+      if (store == null) {
+        return _resourceUnavailable();
+      }
+      return AgentBridge(
+        store,
+        triggerGroupStore: _triggerGroupStore,
+        now: _now,
+      ).loadSkill(request.parsedUri.queryParameters);
+    }
+    if (request.method == 'GET' &&
+        request.parsedUri.path == '/agent/skills/file') {
+      final ResourceStore? store = _resourceStore;
+      if (store == null) {
+        return _resourceUnavailable();
+      }
+      return AgentBridge(
+        store,
+        triggerGroupStore: _triggerGroupStore,
+        now: _now,
+      ).readSkillFile(request.parsedUri.queryParameters);
     }
     if (request.method == 'GET' && request.parsedUri.path == '/library') {
       return _listResources(request.parsedUri.queryParameters);
@@ -469,7 +495,17 @@ final class AgentRouter {
             .where((String value) => value.isNotEmpty)
             .toList(growable: false);
         if (paths.isNotEmpty) {
-          await gateway.writeFiles(paths);
+          bool imageWritten = false;
+          if (record.kind == ClipboardKind.image &&
+              paths.length == 1 &&
+              gateway is ImageClipboardGateway) {
+            final ImageClipboardGateway imageGateway =
+                gateway as ImageClipboardGateway;
+            imageWritten = await imageGateway.writeImageFile(paths.single);
+          }
+          if (!imageWritten) {
+            await gateway.writeFiles(paths);
+          }
         } else {
           await gateway.writeText(record.content);
         }

@@ -35,8 +35,10 @@ final class AgentMcpTarget {
 typedef AgentAdapterLoader = Future<List<AgentAdapter>> Function();
 
 /// Makes DingDong's enabled state concrete in supported Agent clients.
-/// Skills are mirrored as complete packages; MCP resources become real client
-/// configuration entries. Only DingDong-marked files and entries are removed.
+///
+/// Prompts install a stable Bridge bootstrap, Skills are delivered dynamically
+/// through that Bridge, and MCP resources become real client configuration
+/// entries. Legacy Skill mirrors are removed only when DingDong marked them.
 final class AgentResourceSynchronizer {
   AgentResourceSynchronizer({
     required this.packageRoot,
@@ -100,15 +102,8 @@ final class AgentResourceSynchronizer {
 
   Future<List<AppIssue>> sync(List<Resource> resources) async {
     await _reloadAdapterTargets();
-    final List<Resource> prompts = resources
-        .where(
-          (Resource item) => item.enabled && item.type == ResourceType.prompt,
-        )
-        .toList(growable: false);
     final List<Resource> skills = resources
-        .where(
-          (Resource item) => item.enabled && item.type == ResourceType.skill,
-        )
+        .where((Resource item) => item.type == ResourceType.skill)
         .toList(growable: false);
     final List<Resource> mcps = resources
         .where((Resource item) => item.enabled && item.type == ResourceType.mcp)
@@ -133,19 +128,8 @@ final class AgentResourceSynchronizer {
       ...previousGlobalSkillRoots,
       ...currentGlobalSkillRoots,
     }.toList()..sort();
-    final List<Resource> globalSkills = skills
-        .where((Resource resource) => resource.skillProjectPaths.isEmpty)
-        .toList(growable: false);
     for (final String root in globalRootsToSync) {
-      await _syncSkills(
-        Directory(root),
-        currentGlobalSkillRoots.contains(root)
-            ? globalSkills
-            : const <Resource>[],
-      );
-    }
-    if (currentGlobalSkillRoots.isNotEmpty) {
-      managed[_managedGlobalSkillRootsStateKey] = currentGlobalSkillRoots;
+      await _syncSkills(Directory(root), const <Resource>[]);
     }
 
     final Set<String> previousPromptPaths =
@@ -163,7 +147,6 @@ final class AgentResourceSynchronizer {
       final AgentPromptTarget? target = currentPrompts[promptPath];
       await _syncPrompts(
         target?.file ?? File(promptPath),
-        target == null ? const <Resource>[] : prompts,
         includeBridgeRoutingInstructions:
             target?.includeBridgeRoutingInstructions ?? false,
       );
@@ -172,37 +155,21 @@ final class AgentResourceSynchronizer {
       managed[_managedPromptTargetsStateKey] = currentPrompts.keys.toSet();
     }
 
-    final Map<String, List<Resource>> projectSkillsByRoot =
-        <String, List<Resource>>{};
-    for (final Resource resource in skills.where(
-      (Resource item) => item.skillProjectPaths.isNotEmpty,
-    )) {
+    final Set<String> knownProjectSkillRoots = <String>{
+      ...previousProjectSkillRoots,
+    };
+    for (final Resource resource in skills) {
       for (final String projectPath in resource.skillProjectPaths) {
-        _validateProjectSkillPath(projectPath);
         for (final String relativeRoot in projectSkillRoots) {
-          final String root = path.normalize(
-            path.join(projectPath, relativeRoot),
+          knownProjectSkillRoots.add(
+            path.normalize(path.join(projectPath, relativeRoot)),
           );
-          projectSkillsByRoot
-              .putIfAbsent(root, () => <Resource>[])
-              .add(resource);
         }
       }
     }
-    final Set<String> currentProjectSkillRoots = projectSkillsByRoot.keys
-        .toSet();
-    final List<String> rootsToSync = <String>{
-      ...previousProjectSkillRoots,
-      ...currentProjectSkillRoots,
-    }.toList()..sort();
+    final List<String> rootsToSync = knownProjectSkillRoots.toList()..sort();
     for (final String root in rootsToSync) {
-      await _syncSkills(
-        Directory(root),
-        projectSkillsByRoot[root] ?? const <Resource>[],
-      );
-    }
-    if (currentProjectSkillRoots.isNotEmpty) {
-      managed[_managedProjectSkillRootsStateKey] = currentProjectSkillRoots;
+      await _syncSkills(Directory(root), const <Resource>[]);
     }
 
     final Map<String, AgentMcpConfigKind> previousMcpKinds =
@@ -279,58 +246,44 @@ final class AgentResourceSynchronizer {
   };
 
   Future<void> _syncPrompts(
-    File file,
-    List<Resource> enabled, {
+    File file, {
     required bool includeBridgeRoutingInstructions,
   }) async {
-    final List<Resource> direct =
-        enabled
-            .where(
-              (Resource resource) =>
-                  resource.activation == ResourceActivation.always &&
-                  resource.triggerGroupIds.isEmpty,
-            )
-            .toList(growable: false)
-          ..sort(_comparePromptOrder);
-    final bool hasRoutedPrompts =
-        includeBridgeRoutingInstructions &&
-        enabled.any(
-          (Resource resource) =>
-              resource.activation != ResourceActivation.manual &&
-              !direct.contains(resource),
-        );
     final String current = await file.exists() ? await file.readAsString() : '';
     final String cleaned = current
         .replaceAll(_managedPromptsPattern, '')
         .trimRight();
     final StringBuffer block = StringBuffer();
-    if (direct.isNotEmpty || hasRoutedPrompts) {
+    if (includeBridgeRoutingInstructions) {
       block
         ..writeln(_managedPromptsBegin)
-        ..writeln('# DingDong managed prompts')
+        ..writeln('# DingDong prompt bridge')
         ..writeln()
         ..writeln(
           'This section is maintained by DingDong. Preserve and follow these instructions.',
+        )
+        ..writeln()
+        ..writeln(
+          '- At the start of each user task, call DingDong `dingdong_bridge` with `expand: "prompts"`.',
+        )
+        ..writeln(
+          '- Apply every returned active Prompt in full before responding. The bridge routes global, project, and task-matched Prompts dynamically.',
+        )
+        ..writeln(
+          '- Treat `active.prompts` in each successful bridge response as the authoritative snapshot for that user task. It replaces every Prompt set returned for earlier tasks; any Prompt absent now is inactive and must not be applied.',
+        )
+        ..writeln(
+          '- If the bridge call fails, state that DingDong Prompts and the Skill catalog could not be loaded; do not silently treat any previous Prompt or Skill set as current.',
+        )
+        ..writeln(
+          '- Treat `active.skills` in each successful response as the authoritative Skill catalog for that task and workspace. It contains every valid, enabled, scope-matched Skill, with each entry limited to `id`, `name`, and `description`; a Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope. Load only a Skill returned by the current catalog.',
+        )
+        ..writeln(
+          '- A Skill candidate is not an instruction. Only when its description matches the task, call `dingdong_load_skill` with its id or name and current workspace, then apply the returned full `SKILL.md`. Read only supporting files referenced by that document with `dingdong_read_skill_file`.',
+        )
+        ..writeln(
+          '- Returned MCP entries are tool references, not instructions. Call configured MCP tools only when the task requires them.',
         );
-      for (final Resource prompt in direct) {
-        block
-          ..writeln()
-          ..writeln('## ${_safeManagedPromptText(prompt.title)}')
-          ..writeln()
-          ..writeln(_safeManagedPromptText(prompt.content).trim());
-      }
-      if (hasRoutedPrompts) {
-        block
-          ..writeln()
-          ..writeln('## Project and task prompts')
-          ..writeln()
-          ..writeln(
-            '- At the start of each user task, call DingDong `dingdong_bridge` with `expand: "prompts"` and apply every returned active prompt before responding.',
-          )
-          ..writeln(
-            '- Returned Skill and MCP entries are candidates, not instructions. Load a Skill only when its description matches the task; call MCP tools only when the task requires them.',
-          );
-      }
       block.writeln(_managedPromptsEnd);
     }
     final String managed = block.toString().trimRight();
@@ -360,14 +313,9 @@ final class AgentResourceSynchronizer {
     final List<Resource> mcps = resources
         .where((Resource item) => item.enabled && item.type == ResourceType.mcp)
         .toList(growable: false);
-    final Set<String> enabledSkillIds = skills
-        .map((Resource resource) => resource.id)
-        .toSet();
     final List<AppIssue> issues = <AppIssue>[];
     final Map<String, List<Resource>> resourcesBySkillName =
         <String, List<Resource>>{};
-    final Map<String, List<({Resource resource, String name})>> destinations =
-        <String, List<({Resource resource, String name})>>{};
 
     for (final Resource resource in skills) {
       late final String skillName;
@@ -443,12 +391,6 @@ final class AgentResourceSynchronizer {
           path.join(target.root.path, skillName),
         );
         final String destinationPath = path.normalize(destination.path);
-        destinations
-            .putIfAbsent(
-              destinationPath,
-              () => <({Resource resource, String name})>[],
-            )
-            .add((resource: resource, name: skillName));
         final FileSystemEntityType destinationType =
             await FileSystemEntity.type(destinationPath, followLinks: false);
         if (destinationType == FileSystemEntityType.notFound) {
@@ -462,26 +404,10 @@ final class AgentResourceSynchronizer {
             _issue(
               resource: resource,
               kind: AppIssueKind.skillNameConflict,
+              severity: AppIssueSeverity.warning,
               title: 'Skill name conflict',
               detail:
-                  'An existing Skill named "$skillName" is managed outside DingDong.',
-              clientName: target.clientName,
-              targetPath: destinationPath,
-            ),
-          );
-          continue;
-        }
-        final String managedId = (await marker.readAsString()).trim();
-        if (managedId.isNotEmpty &&
-            managedId != resource.id &&
-            enabledSkillIds.contains(managedId)) {
-          issues.add(
-            _issue(
-              resource: resource,
-              kind: AppIssueKind.managedSkillNameConflict,
-              title: 'DingDong Skills use the same name',
-              detail:
-                  'The destination is already managed by another DingDong resource.',
+                  'An existing native Skill named "$skillName" is managed outside DingDong and remains available independently of DingDong\'s switch.',
               clientName: target.clientName,
               targetPath: destinationPath,
             ),
@@ -490,25 +416,20 @@ final class AgentResourceSynchronizer {
       }
     }
 
-    for (final MapEntry<String, List<({Resource resource, String name})>> entry
-        in destinations.entries) {
-      final Map<String, Resource> distinct = <String, Resource>{
-        for (final ({Resource resource, String name}) item in entry.value)
-          item.resource.id: item.resource,
-      };
-      if (distinct.length < 2) {
+    for (final MapEntry<String, List<Resource>> entry
+        in resourcesBySkillName.entries) {
+      if (entry.value.length < 2) {
         continue;
       }
-      for (final Resource resource in distinct.values) {
+      for (final Resource resource in entry.value) {
         issues.add(
           _issue(
             resource: resource,
             kind: AppIssueKind.managedSkillNameConflict,
+            severity: AppIssueSeverity.warning,
             title: 'DingDong Skills use the same name',
             detail:
-                'Multiple enabled DingDong Skills resolve to the same destination.',
-            clientName: _clientNameFromPath(entry.key),
-            targetPath: entry.key,
+                'Loading "${entry.key}" by name is ambiguous; Agents must include the candidate id.',
           ),
         );
       }
@@ -616,14 +537,6 @@ final class AgentResourceSynchronizer {
     skillClientNames = targets.skillClientNames;
     projectSkillClientNames = targets.projectSkillClientNames;
     externalSkillCatalogs = targets.externalSkillCatalogs;
-  }
-
-  void _validateProjectSkillPath(String projectPath) {
-    if (!_isValidProjectSkillPath(projectPath)) {
-      throw FormatException(
-        'Project-scoped Skill path must be an existing absolute project directory: $projectPath',
-      );
-    }
   }
 
   bool _isValidProjectSkillPath(String projectPath) {
@@ -1298,21 +1211,6 @@ final RegExp _managedPromptsPattern = RegExp(
   '${RegExp.escape(_managedPromptsBegin)}.*?${RegExp.escape(_managedPromptsEnd)}\\s*',
   dotAll: true,
 );
-
-int _comparePromptOrder(Resource left, Resource right) {
-  final int order = (left.sortOrder ?? 1 << 30).compareTo(
-    right.sortOrder ?? 1 << 30,
-  );
-  if (order != 0) {
-    return order;
-  }
-  final int title = left.title.compareTo(right.title);
-  return title != 0 ? title : left.id.compareTo(right.id);
-}
-
-String _safeManagedPromptText(String value) => value
-    .replaceAll(_managedPromptsBegin, '&lt;!-- BEGIN DINGDONG PROMPTS --&gt;')
-    .replaceAll(_managedPromptsEnd, '&lt;!-- END DINGDONG PROMPTS --&gt;');
 
 String _toml(String value) => value
     .replaceAll(r'\', r'\\')

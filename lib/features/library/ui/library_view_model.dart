@@ -7,6 +7,7 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
@@ -342,39 +343,146 @@ final class LibraryViewModel extends ChangeNotifier {
   }
 
   Future<void> updateTriggerGroup(TriggerGroup group) async {
-    _triggerGroups = <TriggerGroup>[
+    final DateTime timestamp = _now().toUtc();
+    final List<TriggerGroup> previousGroups = _triggerGroups;
+    final List<Resource> previousResources = _resources;
+    final List<TriggerGroup> proposedGroups = <TriggerGroup>[
       ..._triggerGroups.where((TriggerGroup item) => item.id != group.id),
-      group.copyWith(updatedAt: _now().toUtc()),
+      group.copyWith(updatedAt: timestamp),
     ];
-    await _triggerGroupStore.save(_triggerGroups);
+    final Map<String, TriggerGroup> groupsById = <String, TriggerGroup>{
+      for (final TriggerGroup item in proposedGroups) item.id: item,
+    };
+    var resourcesChanged = false;
+    final List<Resource> proposedResources = _resources
+        .map((Resource resource) {
+          if (resource.type != ResourceType.skill ||
+              !resource.strictProjectSkill ||
+              !resource.triggerGroupIds.contains(group.id)) {
+            return resource;
+          }
+          final List<String> projectPaths = resolveStrictSkillProjectPaths(
+            resource.triggerGroupIds,
+            groupsById,
+          );
+          if (_sameStringValues(projectPaths, resource.skillProjectPaths)) {
+            return resource;
+          }
+          resourcesChanged = true;
+          return resource.copyWith(
+            skillProjectPaths: projectPaths,
+            updatedAt: timestamp,
+          );
+        })
+        .toList(growable: false);
+    await _persistTriggerGroupMutation(
+      previousGroups: previousGroups,
+      proposedGroups: proposedGroups,
+      previousResources: previousResources,
+      proposedResources: proposedResources,
+      saveResources: resourcesChanged,
+    );
+    _triggerGroups = proposedGroups;
+    _resources = proposedResources;
+    _refreshSelectedResource();
     notifyListeners();
   }
 
   Future<void> deleteTriggerGroup(String id) async {
-    _triggerGroups = _triggerGroups
+    final DateTime timestamp = _now().toUtc();
+    final List<TriggerGroup> previousGroups = _triggerGroups;
+    final List<Resource> previousResources = _resources;
+    final List<TriggerGroup> proposedGroups = _triggerGroups
         .where((TriggerGroup group) => group.id != id)
         .toList(growable: false);
-    _resources = _resources
-        .map(
-          (Resource resource) => resource.triggerGroupIds.contains(id)
-              ? resource.copyWith(
-                  triggerGroupIds: resource.triggerGroupIds
-                      .where((String groupId) => groupId != id)
-                      .toList(growable: false),
-                  updatedAt: _now().toUtc(),
-                )
-              : resource,
-        )
+    final Map<String, TriggerGroup> groupsById = <String, TriggerGroup>{
+      for (final TriggerGroup group in proposedGroups) group.id: group,
+    };
+    var resourcesChanged = false;
+    final List<Resource> proposedResources = _resources
+        .map((Resource resource) {
+          if (!resource.triggerGroupIds.contains(id)) {
+            return resource;
+          }
+          resourcesChanged = true;
+          final List<String> remainingGroupIds = resource.triggerGroupIds
+              .where((String groupId) => groupId != id)
+              .toList(growable: false);
+          var enabled = remainingGroupIds.isEmpty ? false : resource.enabled;
+          List<String> projectPaths = resource.skillProjectPaths;
+          if (resource.type == ResourceType.skill &&
+              resource.strictProjectSkill) {
+            if (remainingGroupIds.isEmpty) {
+              projectPaths = const <String>[];
+            } else {
+              try {
+                projectPaths = resolveStrictSkillProjectPaths(
+                  remainingGroupIds,
+                  groupsById,
+                );
+              } on FormatException {
+                projectPaths = const <String>[];
+                enabled = false;
+              }
+            }
+          }
+          return resource.copyWith(
+            triggerGroupIds: remainingGroupIds,
+            skillProjectPaths: projectPaths,
+            enabled: enabled,
+            updatedAt: timestamp,
+          );
+        })
         .toList(growable: false);
-    await _triggerGroupStore.save(_triggerGroups);
-    await _repository.save(_resources);
+    await _persistTriggerGroupMutation(
+      previousGroups: previousGroups,
+      proposedGroups: proposedGroups,
+      previousResources: previousResources,
+      proposedResources: proposedResources,
+      saveResources: resourcesChanged,
+    );
+    _triggerGroups = proposedGroups;
+    _resources = proposedResources;
+    _refreshSelectedResource();
+    notifyListeners();
+  }
+
+  Future<void> _persistTriggerGroupMutation({
+    required List<TriggerGroup> previousGroups,
+    required List<TriggerGroup> proposedGroups,
+    required List<Resource> previousResources,
+    required List<Resource> proposedResources,
+    required bool saveResources,
+  }) async {
+    try {
+      await _triggerGroupStore.save(proposedGroups);
+      if (saveResources) {
+        await _repository.save(proposedResources);
+      }
+    } on Object catch (error, stackTrace) {
+      try {
+        await _triggerGroupStore.save(previousGroups);
+      } on Object {
+        // Preserve the original failure.
+      }
+      if (saveResources) {
+        try {
+          await _repository.save(previousResources);
+        } on Object {
+          // Preserve the original failure.
+        }
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+
+  void _refreshSelectedResource() {
     final String? selectedId = _selectedResource?.id;
     if (selectedId != null) {
       _selectedResource = _resources
           .where((Resource resource) => resource.id == selectedId)
           .firstOrNull;
     }
-    notifyListeners();
   }
 
   @override
@@ -467,6 +575,18 @@ final class LibraryViewModel extends ChangeNotifier {
 }
 
 DateTime _utcNow() => DateTime.now().toUtc();
+
+bool _sameStringValues(List<String> left, List<String> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+  for (var index = 0; index < left.length; index += 1) {
+    if (left[index] != right[index]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 String _generateUuid() {
   final Random random = Random.secure();

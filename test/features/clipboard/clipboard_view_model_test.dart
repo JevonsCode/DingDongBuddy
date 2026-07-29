@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
@@ -113,6 +115,48 @@ void main() {
   );
 
   test(
+    'original and plain-text restore use distinct clipboard paths',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final Uint8List htmlData = Uint8List.fromList('<b>Value</b>'.codeUnits);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'rich',
+        group: 'Clipboard',
+        title: 'Rich value',
+        content: 'Value',
+        htmlData: htmlData,
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final _RecordingClipboardGateway gateway = _RecordingClipboardGateway();
+      final _FakeQuickPasteGateway quickPaste = _FakeQuickPasteGateway();
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[record]),
+        gateway: gateway,
+        quickPasteGateway: quickPaste,
+      )..load();
+      model.select(record);
+
+      await model.restoreSelected();
+
+      expect(gateway.formattedPlainText, 'Value');
+      expect(gateway.formattedHtmlData, htmlData);
+      expect(gateway.writtenText, isNull);
+
+      gateway.clearWrites();
+      await model.restoreSelected(mode: ClipboardPasteMode.plainText);
+
+      expect(gateway.writtenText, 'Value');
+      expect(gateway.formattedPlainText, isNull);
+      expect(quickPaste.pasteCount, 2);
+    },
+  );
+
+  test(
     'restoring a file record writes each stored path as a file URL',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 12);
@@ -141,6 +185,43 @@ void main() {
         '/tmp/first.txt',
         '/tmp/second.png',
       ]);
+      expect(gateway.writtenText, isNull);
+    },
+  );
+
+  test(
+    'restoring one image writes bitmap data with its source file URL',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'image',
+        group: 'Images',
+        title: 'clipboard-image.png',
+        content: '/tmp/clipboard-image.png',
+        tags: const <String>[
+          'clipboard',
+          'ext:png',
+          'file',
+          'file-url',
+          'image',
+        ],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final _RecordingClipboardGateway gateway = _RecordingClipboardGateway();
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[record]),
+        gateway: gateway,
+      )..load();
+      model.select(record);
+
+      expect(await model.copySelected(), isTrue);
+
+      expect(gateway.writtenImagePath, '/tmp/clipboard-image.png');
+      expect(gateway.writtenFiles, isNull);
       expect(gateway.writtenText, isNull);
     },
   );
@@ -507,9 +588,26 @@ ClipboardRecord _record(DateTime now) {
   );
 }
 
-final class _RecordingClipboardGateway implements ClipboardGateway {
+final class _RecordingClipboardGateway
+    implements
+        ClipboardGateway,
+        FormattedTextClipboardGateway,
+        ImageClipboardGateway {
   String? writtenText;
   List<String>? writtenFiles;
+  String? writtenImagePath;
+  String? formattedPlainText;
+  Uint8List? formattedHtmlData;
+  Uint8List? formattedRtfData;
+
+  void clearWrites() {
+    writtenText = null;
+    writtenFiles = null;
+    writtenImagePath = null;
+    formattedPlainText = null;
+    formattedHtmlData = null;
+    formattedRtfData = null;
+  }
 
   @override
   Future<ClipboardSnapshot> read() async => const ClipboardSnapshot();
@@ -522,6 +620,23 @@ final class _RecordingClipboardGateway implements ClipboardGateway {
   @override
   Future<void> writeFiles(List<String> paths) async {
     writtenFiles = paths;
+  }
+
+  @override
+  Future<bool> writeImageFile(String path) async {
+    writtenImagePath = path;
+    return true;
+  }
+
+  @override
+  Future<void> writeFormattedText({
+    required String plainText,
+    Uint8List? htmlData,
+    Uint8List? rtfData,
+  }) async {
+    formattedPlainText = plainText;
+    formattedHtmlData = htmlData;
+    formattedRtfData = rtfData;
   }
 }
 

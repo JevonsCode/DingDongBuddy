@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   test('notify maps to the stable ding loopback route', () async {
@@ -60,6 +63,76 @@ void main() {
     );
   });
 
+  test('full asset reads add current workspace context', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async =>
+          'https://github.com/example/dingdong.git',
+    );
+
+    await executor.execute('dingdong_get_asset', <String, Object?>{
+      'id': 'reviewer-id',
+      'mode': 'full',
+    });
+
+    expect(transport.method, 'GET');
+    expect(transport.path, '/library/reviewer-id');
+    expect(transport.query, <String, String>{
+      'mode': 'full',
+      'trackUsage': 'true',
+      'workspacePath': '/workspace/dingdong',
+      'repositoryUrl': 'https://github.com/example/dingdong.git',
+    });
+  });
+
+  test('Skill loading adds identity and current workspace context', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async =>
+          'https://github.com/example/dingdong.git',
+    );
+
+    await executor.execute('dingdong_load_skill', <String, Object?>{
+      'name': 'reviewer',
+      'id': 'reviewer-id',
+    });
+
+    expect(transport.method, 'GET');
+    expect(transport.path, '/agent/skills/load');
+    expect(transport.query, <String, String>{
+      'id': 'reviewer-id',
+      'name': 'reviewer',
+      'workspacePath': '/workspace/dingdong',
+      'repositoryUrl': 'https://github.com/example/dingdong.git',
+    });
+  });
+
+  test('Skill supporting-file reads keep the relative path', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async => null,
+    );
+
+    await executor.execute('dingdong_read_skill_file', <String, Object?>{
+      'name': 'reviewer',
+      'path': 'references/policy.md',
+    });
+
+    expect(transport.method, 'GET');
+    expect(transport.path, '/agent/skills/file');
+    expect(transport.query, <String, String>{
+      'name': 'reviewer',
+      'path': 'references/policy.md',
+      'workspacePath': '/workspace/dingdong',
+    });
+  });
+
   test('Skill installation maps to the dedicated write route', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
@@ -76,6 +149,46 @@ void main() {
       'https://github.com/acme/skills/tree/main/reviewer',
     );
   });
+
+  test(
+    'local Skill installation stages the package before loopback access',
+    () async {
+      final Directory source = Directory.systemTemp.createTempSync(
+        'dingdong-mcp-source-',
+      );
+      addTearDown(() => source.deleteSync(recursive: true));
+      File(p.join(source.path, 'SKILL.md')).writeAsStringSync(
+        '---\n'
+        'name: local-probe\n'
+        'description: Use when testing local Skill staging.\n'
+        '---\n\n'
+        '# Local Probe',
+      );
+      File(p.join(source.path, 'references', 'probe.md'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('DD_LOCAL_REFERENCE');
+      final _InspectingInstallTransport transport = _InspectingInstallTransport(
+        originalSource: source.path,
+      );
+      final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+        transport,
+      );
+
+      await executor.execute('dingdong_install_skill', <String, Object?>{
+        'source': source.path,
+        'title': 'Local Probe',
+      });
+
+      expect(transport.receivedSource, isNot(source.path));
+      expect(transport.receivedSourceReference, source.path);
+      expect(transport.sawCompletePackage, isTrue);
+      expect(
+        Directory(transport.receivedSource!).existsSync(),
+        isFalse,
+        reason: 'The private staging package must be removed after the call.',
+      );
+    },
+  );
 
   test('trigger-group upsert maps to the idempotent write route', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
@@ -108,6 +221,39 @@ void main() {
     expect(transport.body?['triggerGroupIds'], <String>['checkout']);
     expect(transport.body?['strictProjectSkill'], isTrue);
   });
+}
+
+final class _InspectingInstallTransport implements McpHttpTransport {
+  _InspectingInstallTransport({required this.originalSource});
+
+  final String originalSource;
+  String? receivedSource;
+  String? receivedSourceReference;
+  bool sawCompletePackage = false;
+
+  @override
+  Future<Map<String, Object?>> request({
+    required String method,
+    required String path,
+    Map<String, String> query = const <String, String>{},
+    Map<String, Object?>? body,
+  }) async {
+    receivedSource = body?['source'] as String?;
+    receivedSourceReference = body?['sourceReference'] as String?;
+    final String? staged = receivedSource;
+    if (method == 'POST' &&
+        path == '/library/skills/install' &&
+        staged != null &&
+        staged != originalSource) {
+      sawCompletePackage =
+          File(
+            p.join(staged, 'SKILL.md'),
+          ).readAsStringSync().contains('name: local-probe') &&
+          File(p.join(staged, 'references', 'probe.md')).readAsStringSync() ==
+              'DD_LOCAL_REFERENCE';
+    }
+    return const <String, Object?>{'status': 'created'};
+  }
 }
 
 final class _RecordingMcpHttpTransport implements McpHttpTransport {

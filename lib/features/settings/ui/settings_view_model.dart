@@ -21,6 +21,9 @@ final class SettingsViewModel extends ChangeNotifier
     ClipboardMonitoring? clipboardMonitoring,
     LaunchAtStartup? launchAtStartup,
     Future<void> Function(double value)? onWindowOpacityChanged,
+    Future<void> Function(bool value)? onDockIconHiddenChanged,
+    Future<void> Function(TrayNotificationColor value)?
+    onTrayNotificationColorChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
     ApplicationUpdater? applicationUpdater,
@@ -31,6 +34,8 @@ final class SettingsViewModel extends ChangeNotifier
   }) : _clipboardMonitoring = clipboardMonitoring,
        _launchAtStartup = launchAtStartup,
        _onWindowOpacityChanged = onWindowOpacityChanged,
+       _onDockIconHiddenChanged = onDockIconHiddenChanged,
+       _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
        _applicationUpdater = applicationUpdater,
@@ -41,6 +46,9 @@ final class SettingsViewModel extends ChangeNotifier
   final ClipboardMonitoring? _clipboardMonitoring;
   final LaunchAtStartup? _launchAtStartup;
   final Future<void> Function(double value)? _onWindowOpacityChanged;
+  final Future<void> Function(bool value)? _onDockIconHiddenChanged;
+  final Future<void> Function(TrayNotificationColor value)?
+  _onTrayNotificationColorChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
   final ApplicationUpdater? _applicationUpdater;
@@ -106,6 +114,10 @@ final class SettingsViewModel extends ChangeNotifier
         );
       }
       await _onWindowOpacityChanged?.call(_settings.backgroundOpacity);
+      await _onDockIconHiddenChanged?.call(_settings.hideDockIcon);
+      await _onTrayNotificationColorChanged?.call(
+        _settings.trayNotificationColor,
+      );
       if (_settings.clipboardMonitoring) {
         await _clipboardMonitoring?.start();
       }
@@ -158,6 +170,30 @@ final class SettingsViewModel extends ChangeNotifier
       await _save();
     } on Object {
       _errorMessage = 'Launch at startup could not be updated.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> setHideDockIcon(bool value) async {
+    _settings = _settings.copyWith(hideDockIcon: value);
+    notifyListeners();
+    try {
+      await _onDockIconHiddenChanged?.call(value);
+      await _save();
+    } on Object {
+      _errorMessage = 'Dock icon visibility could not be updated.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> setTrayNotificationColor(TrayNotificationColor value) async {
+    _settings = _settings.copyWith(trayNotificationColor: value);
+    notifyListeners();
+    try {
+      await _onTrayNotificationColorChanged?.call(value);
+      await _save();
+    } on Object {
+      _errorMessage = 'Menu bar notification color could not be updated.';
       notifyListeners();
     }
   }

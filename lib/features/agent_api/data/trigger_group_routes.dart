@@ -1,12 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
-import 'package:path/path.dart' as path;
 
 /// Public CRUD for reusable project and repository trigger scopes.
 final class TriggerGroupRoutes {
@@ -115,17 +114,30 @@ final class TriggerGroupRoutes {
         );
       }
       final int index = matches.single;
+      final List<TriggerGroup> previousGroups = List<TriggerGroup>.of(groups);
       final TriggerGroup updated = groups[index].copyWith(
         name: name,
         rules: rules,
         updatedAt: timestamp,
       );
       groups[index] = updated;
-      await store.save(groups);
+      final _ResourceMutation? resourceMutation =
+          await _strictSkillMutationForGroupUpdate(
+            changedGroupId: updated.id,
+            proposedGroups: groups,
+            timestamp: timestamp,
+          );
+      await _saveCoordinatedChange(
+        previousGroups: previousGroups,
+        proposedGroups: groups,
+        resourceMutation: resourceMutation,
+      );
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{'status': 'updated', 'group': updated.toJson()},
       );
+    } on FormatException catch (error) {
+      return _badRequest(error.message.toString());
     } on Object {
       return _badRequest('Invalid trigger group JSON body');
     }
@@ -153,17 +165,31 @@ final class TriggerGroupRoutes {
       if (invalid != null) {
         return invalid;
       }
+      final List<TriggerGroup> previousGroups = List<TriggerGroup>.of(groups);
+      final DateTime timestamp = now().toUtc();
       final TriggerGroup updated = existing.copyWith(
         name: name,
         rules: rules,
-        updatedAt: now().toUtc(),
+        updatedAt: timestamp,
       );
       groups[index] = updated;
-      await store.save(groups);
+      final _ResourceMutation? resourceMutation =
+          await _strictSkillMutationForGroupUpdate(
+            changedGroupId: updated.id,
+            proposedGroups: groups,
+            timestamp: timestamp,
+          );
+      await _saveCoordinatedChange(
+        previousGroups: previousGroups,
+        proposedGroups: groups,
+        resourceMutation: resourceMutation,
+      );
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{'status': 'updated', 'group': updated.toJson()},
       );
+    } on FormatException catch (error) {
+      return _badRequest(error.message.toString());
     } on Object {
       return _badRequest('Invalid trigger group JSON body');
     }
@@ -174,80 +200,182 @@ final class TriggerGroupRoutes {
     if (!groups.any((TriggerGroup group) => group.id == id)) {
       return _notFound();
     }
-    var detachedResourceCount = 0;
-    final ResourceStore? resources = resourceStore;
-    if (resources != null) {
-      final List<Resource> current = await resources.load();
-      final DateTime timestamp = now().toUtc();
-      final Map<String, TriggerGroup> remainingGroups = <String, TriggerGroup>{
-        for (final TriggerGroup group in groups)
-          if (group.id != id) group.id: group,
-      };
-      final List<Resource> updated = current
-          .map((Resource resource) {
-            if (!resource.triggerGroupIds.contains(id)) {
-              return resource;
-            }
-            detachedResourceCount += 1;
-            final List<String> remainingGroupIds = resource.triggerGroupIds
-                .where((String groupId) => groupId != id)
-                .toList(growable: false);
-            final List<String> remainingProjectPaths =
-                resource.type == ResourceType.skill &&
-                    resource.skillProjectPaths.isNotEmpty
-                ? remainingGroupIds
-                      .expand(
-                        (String groupId) =>
-                            remainingGroups[groupId]?.rules ??
-                            const <TriggerRule>[],
-                      )
-                      .where(
-                        (TriggerRule rule) =>
-                            rule.field == TriggerRuleField.projectPath &&
-                            rule.operator == TriggerRuleOperator.equals,
-                      )
-                      .map(
-                        (TriggerRule rule) => _resolvedProjectPath(rule.value),
-                      )
-                      .whereType<String>()
-                      .toSet()
-                      .toList(growable: false)
-                : resource.skillProjectPaths;
-            return resource.copyWith(
-              triggerGroupIds: remainingGroupIds,
-              skillProjectPaths: remainingProjectPaths,
-              updatedAt: timestamp,
-            );
-          })
-          .toList(growable: false);
-      if (detachedResourceCount > 0) {
-        await resources.save(updated);
-      }
-    }
-    await store.save(
-      groups.where((TriggerGroup group) => group.id != id).toList(),
+    final List<TriggerGroup> proposedGroups = groups
+        .where((TriggerGroup group) => group.id != id)
+        .toList(growable: false);
+    final _ResourceMutation? resourceMutation =
+        await _resourceMutationForGroupDeletion(
+          deletedGroupId: id,
+          proposedGroups: proposedGroups,
+          timestamp: now().toUtc(),
+        );
+    await _saveCoordinatedChange(
+      previousGroups: groups,
+      proposedGroups: proposedGroups,
+      resourceMutation: resourceMutation,
     );
     return HttpResponseData(
       statusCode: 200,
       json: <String, Object?>{
         'status': 'deleted',
         'id': id,
-        'detachedResourceCount': detachedResourceCount,
+        'detachedResourceCount': resourceMutation?.affectedCount ?? 0,
       },
     );
   }
-}
 
-String? _resolvedProjectPath(String value) {
-  try {
-    final String normalized = path.normalize(value);
-    if (!path.isAbsolute(normalized) || !Directory(normalized).existsSync()) {
+  Future<_ResourceMutation?> _strictSkillMutationForGroupUpdate({
+    required String changedGroupId,
+    required List<TriggerGroup> proposedGroups,
+    required DateTime timestamp,
+  }) async {
+    final ResourceStore? resources = resourceStore;
+    if (resources == null) {
       return null;
     }
-    return Directory(normalized).resolveSymbolicLinksSync();
-  } on FileSystemException {
-    return null;
+    final List<Resource> previous = List<Resource>.of(await resources.load());
+    final Map<String, TriggerGroup> groupsById = <String, TriggerGroup>{
+      for (final TriggerGroup group in proposedGroups) group.id: group,
+    };
+    var affectedCount = 0;
+    final List<Resource> proposed = previous
+        .map((Resource resource) {
+          if (resource.type != ResourceType.skill ||
+              !resource.strictProjectSkill ||
+              !resource.triggerGroupIds.contains(changedGroupId)) {
+            return resource;
+          }
+          final List<String> projectPaths = resolveStrictSkillProjectPaths(
+            resource.triggerGroupIds,
+            groupsById,
+          );
+          if (_sameStrings(projectPaths, resource.skillProjectPaths)) {
+            return resource;
+          }
+          affectedCount += 1;
+          return resource.copyWith(
+            skillProjectPaths: projectPaths,
+            updatedAt: timestamp,
+          );
+        })
+        .toList(growable: false);
+    return _ResourceMutation(
+      store: resources,
+      previous: previous,
+      proposed: proposed,
+      affectedCount: affectedCount,
+    );
   }
+
+  Future<_ResourceMutation?> _resourceMutationForGroupDeletion({
+    required String deletedGroupId,
+    required List<TriggerGroup> proposedGroups,
+    required DateTime timestamp,
+  }) async {
+    final ResourceStore? resources = resourceStore;
+    if (resources == null) {
+      return null;
+    }
+    final List<Resource> previous = List<Resource>.of(await resources.load());
+    final Map<String, TriggerGroup> groupsById = <String, TriggerGroup>{
+      for (final TriggerGroup group in proposedGroups) group.id: group,
+    };
+    var affectedCount = 0;
+    final List<Resource> proposed = previous
+        .map((Resource resource) {
+          if (!resource.triggerGroupIds.contains(deletedGroupId)) {
+            return resource;
+          }
+          affectedCount += 1;
+          final List<String> remainingGroupIds = resource.triggerGroupIds
+              .where((String groupId) => groupId != deletedGroupId)
+              .toList(growable: false);
+          var enabled = remainingGroupIds.isEmpty ? false : resource.enabled;
+          List<String> projectPaths = resource.skillProjectPaths;
+          if (resource.type == ResourceType.skill &&
+              resource.strictProjectSkill) {
+            if (remainingGroupIds.isEmpty) {
+              projectPaths = const <String>[];
+            } else {
+              try {
+                projectPaths = resolveStrictSkillProjectPaths(
+                  remainingGroupIds,
+                  groupsById,
+                );
+              } on FormatException {
+                projectPaths = const <String>[];
+                enabled = false;
+              }
+            }
+          }
+          return resource.copyWith(
+            triggerGroupIds: remainingGroupIds,
+            skillProjectPaths: projectPaths,
+            enabled: enabled,
+            updatedAt: timestamp,
+          );
+        })
+        .toList(growable: false);
+    return _ResourceMutation(
+      store: resources,
+      previous: previous,
+      proposed: proposed,
+      affectedCount: affectedCount,
+    );
+  }
+
+  Future<void> _saveCoordinatedChange({
+    required List<TriggerGroup> previousGroups,
+    required List<TriggerGroup> proposedGroups,
+    required _ResourceMutation? resourceMutation,
+  }) async {
+    try {
+      await store.save(proposedGroups);
+      if (resourceMutation != null && resourceMutation.affectedCount > 0) {
+        await resourceMutation.store.save(resourceMutation.proposed);
+      }
+    } on Object catch (error, stackTrace) {
+      try {
+        await store.save(previousGroups);
+      } on Object {
+        // Preserve the original failure.
+      }
+      if (resourceMutation != null && resourceMutation.affectedCount > 0) {
+        try {
+          await resourceMutation.store.save(resourceMutation.previous);
+        } on Object {
+          // Preserve the original failure.
+        }
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+}
+
+final class _ResourceMutation {
+  const _ResourceMutation({
+    required this.store,
+    required this.previous,
+    required this.proposed,
+    required this.affectedCount,
+  });
+
+  final ResourceStore store;
+  final List<Resource> previous;
+  final List<Resource> proposed;
+  final int affectedCount;
+}
+
+bool _sameStrings(List<String> left, List<String> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+  for (var index = 0; index < left.length; index += 1) {
+    if (left[index] != right[index]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 Map<String, Object?> _decode(String body) =>

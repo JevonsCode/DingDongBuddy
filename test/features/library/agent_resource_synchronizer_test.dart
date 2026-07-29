@@ -62,7 +62,7 @@ void main() {
                   path.join(resolvedHome, '.claude', 'CLAUDE.md'),
             )
             .includeBridgeRoutingInstructions,
-        isFalse,
+        isTrue,
       );
       expect(synchronizer.externalSkillCatalogs, hasLength(1));
     },
@@ -176,7 +176,7 @@ mcp:
   });
 
   test(
-    'changing an Adapter migrates managed resources and cleans old targets after restart',
+    'changing an Adapter migrates Prompt and MCP while cleaning legacy Skill mirrors',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
         'dingdong-adapter-migration-',
@@ -198,6 +198,12 @@ mcp:
       File(
         '${oldSkillRoot.path}/user-owned/README.md',
       ).createSync(recursive: true);
+      File(
+        '${oldSkillRoot.path}/migrated-skill/SKILL.md',
+      ).createSync(recursive: true);
+      File(
+        '${oldSkillRoot.path}/migrated-skill/.dingdong-managed',
+      ).writeAsStringSync('MIGRATED-SKILL');
       var adapters = <AgentAdapter>[AgentAdapter.parse(_movableAdapter('old'))];
       final List<Resource> resources = <Resource>[
         _resource(
@@ -229,9 +235,13 @@ mcp:
 
       expect(
         File('${oldSkillRoot.path}/migrated-skill/SKILL.md').existsSync(),
-        isTrue,
+        isFalse,
       );
-      expect(oldPrompt.readAsStringSync(), contains('Keep responses concise.'));
+      expect(oldPrompt.readAsStringSync(), contains('dingdong_bridge'));
+      expect(
+        oldPrompt.readAsStringSync(),
+        isNot(contains('Keep responses concise.')),
+      );
       expect(_onlyServerCount(oldMcp), 2);
 
       adapters = <AgentAdapter>[AgentAdapter.parse(_movableAdapter('new'))];
@@ -257,17 +267,21 @@ mcp:
         File(
           '${temp.path}/.new-agent/new/skills/migrated-skill/SKILL.md',
         ).existsSync(),
-        isTrue,
+        isFalse,
       );
       expect(
         File('${temp.path}/.new-agent/new/AGENTS.md').readAsStringSync(),
-        contains('Keep responses concise.'),
+        contains('dingdong_bridge'),
+      );
+      expect(
+        File('${temp.path}/.new-agent/new/AGENTS.md').readAsStringSync(),
+        isNot(contains('Keep responses concise.')),
       );
       expect(_onlyServerCount(File('${temp.path}/.new-agent/new/mcp.json')), 1);
     },
   );
 
-  test('bundled online Skill syncs offline from embedded content', () async {
+  test('bundled Skill stays dynamic without creating a native mirror', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-sync-',
     );
@@ -294,14 +308,17 @@ mcp:
     await synchronizer.sync(<Resource>[resource]);
 
     expect(
-      File('${target.path}/dingdong-configure/SKILL.md').readAsStringSync(),
-      document,
+      File('${target.path}/dingdong-configure/SKILL.md').existsSync(),
+      isFalse,
     );
-    expect(File('${cached.path}/SKILL.md').readAsStringSync(), document);
+    expect(
+      File('${cached.path}/SKILL.md').readAsStringSync(),
+      'stale instructions',
+    );
   });
 
   test(
-    'mirrors enabled Skill packages and removes them when disabled',
+    'keeps enabled Skill packages in DingDong and removes legacy mirrors',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
         'dingdong-sync-',
@@ -314,6 +331,12 @@ mcp:
       Directory('${package.path}/references').createSync();
       File('${package.path}/references/policy.md').writeAsStringSync('policy');
       final Directory target = Directory('${temp.path}/agent-skills');
+      final Directory legacy = Directory('${target.path}/reviewer')
+        ..createSync(recursive: true);
+      File(
+        '${legacy.path}/.dingdong-managed',
+      ).writeAsStringSync('RESOURCE-0000');
+      File('${legacy.path}/SKILL.md').writeAsStringSync('legacy');
       final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
         packageRoot: Directory('${temp.path}/packages'),
         skillRoots: <Directory>[target],
@@ -329,15 +352,16 @@ mcp:
       await synchronizer.sync(<Resource>[resource]);
       expect(
         File('${target.path}/reviewer/references/policy.md').existsSync(),
-        isTrue,
+        isFalse,
       );
+      expect(File('${package.path}/references/policy.md').existsSync(), isTrue);
 
       await synchronizer.sync(<Resource>[resource.copyWith(enabled: false)]);
       expect(Directory('${target.path}/reviewer').existsSync(), isFalse);
     },
   );
 
-  test('Skill edits replace every mirror and remove the previous name', () async {
+  test('Skill edits remain dynamic and leave native roots clean', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-skill-rename-',
     );
@@ -356,6 +380,14 @@ mcp:
       content:
           '---\nname: old-reviewer\ndescription: Review old code\n---\n\n# Old',
     );
+    for (final Directory root in <Directory>[codex, claude]) {
+      final Directory legacy = Directory('${root.path}/old-reviewer')
+        ..createSync(recursive: true);
+      File('${legacy.path}/SKILL.md').writeAsStringSync('# Legacy');
+      File(
+        '${legacy.path}/.dingdong-managed',
+      ).writeAsStringSync('RENAMED-SKILL');
+    }
 
     await synchronizer.sync(<Resource>[original]);
     await synchronizer.sync(<Resource>[
@@ -368,13 +400,7 @@ mcp:
 
     for (final Directory root in <Directory>[codex, claude]) {
       expect(Directory('${root.path}/old-reviewer').existsSync(), isFalse);
-      final File mirrored = File('${root.path}/new-reviewer/SKILL.md');
-      expect(mirrored.existsSync(), isTrue);
-      expect(mirrored.readAsStringSync(), contains('# New'));
-      expect(
-        File('${root.path}/new-reviewer/.dingdong-managed').readAsStringSync(),
-        'RENAMED-SKILL',
-      );
+      expect(File('${root.path}/new-reviewer/SKILL.md').existsSync(), isFalse);
     }
   });
 
@@ -458,7 +484,7 @@ mcp:
         File(
           '${target.path}/verification-before-completion/SKILL.md',
         ).existsSync(),
-        isTrue,
+        isFalse,
       );
     },
   );
@@ -509,7 +535,7 @@ mcp:
     expect(changeCount, 1);
   });
 
-  test('reports a user-owned Skill collision without changing it', () async {
+  test('warns about an independent native Skill without changing it', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-user-skill-conflict-',
     );
@@ -537,12 +563,10 @@ mcp:
 
     expect(issues, hasLength(1));
     expect(issues.single.kind, AppIssueKind.skillNameConflict);
+    expect(issues.single.severity, AppIssueSeverity.warning);
     expect(issues.single.clientName, 'Codex');
     expect(issues.single.targetPath, path.normalize(existing.path));
-    await expectLater(
-      synchronizer.sync(<Resource>[resource]),
-      throwsA(isA<AppIssueException>()),
-    );
+    expect(await synchronizer.sync(<Resource>[resource]), hasLength(1));
     expect(existingSkill.readAsStringSync(), 'user owned');
     expect(File('${existing.path}/.dingdong-managed').existsSync(), isFalse);
   });
@@ -586,45 +610,46 @@ mcp:
     },
   );
 
-  test('transaction rollback publishes a structured issue', () async {
-    final Directory temp = Directory.systemTemp.createTempSync(
-      'dingdong-sync-issue-',
-    );
-    addTearDown(() => temp.deleteSync(recursive: true));
-    final Directory target = Directory('${temp.path}/skills');
-    Directory('${target.path}/reviewer').createSync(recursive: true);
-    final InMemoryResourceStore base = InMemoryResourceStore();
-    final IssueCenterController issueCenter = IssueCenterController();
-    int changeCount = 0;
-    final SynchronizedResourceStore store = SynchronizedResourceStore(
-      base,
-      AgentResourceSynchronizer(
-        packageRoot: Directory('${temp.path}/packages'),
-        skillRoots: <Directory>[target],
-        mcpTargets: const <AgentMcpTarget>[],
-        managedStateFile: File('${temp.path}/state.json'),
-      ),
-      issueCenter: issueCenter,
-      onChanged: () => changeCount += 1,
-    );
-    final Resource resource = _resource(
-      type: ResourceType.skill,
-      content: '---\nname: reviewer\ndescription: Review code\n---\n',
-    );
+  test(
+    'native Skill conflicts publish warnings without rolling back',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sync-issue-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory target = Directory('${temp.path}/skills');
+      Directory('${target.path}/reviewer').createSync(recursive: true);
+      final InMemoryResourceStore base = InMemoryResourceStore();
+      final IssueCenterController issueCenter = IssueCenterController();
+      int changeCount = 0;
+      final SynchronizedResourceStore store = SynchronizedResourceStore(
+        base,
+        AgentResourceSynchronizer(
+          packageRoot: Directory('${temp.path}/packages'),
+          skillRoots: <Directory>[target],
+          mcpTargets: const <AgentMcpTarget>[],
+          managedStateFile: File('${temp.path}/state.json'),
+        ),
+        issueCenter: issueCenter,
+        onChanged: () => changeCount += 1,
+      );
+      final Resource resource = _resource(
+        type: ResourceType.skill,
+        content: '---\nname: reviewer\ndescription: Review code\n---\n',
+      );
 
-    await expectLater(
-      store.save(<Resource>[resource]),
-      throwsA(isA<AppIssueException>()),
-    );
+      await store.save(<Resource>[resource]);
 
-    expect(await base.load(), isEmpty);
-    expect(issueCenter.issues, hasLength(1));
-    expect(issueCenter.issues.single.kind, AppIssueKind.skillNameConflict);
-    expect(changeCount, 0);
-  });
+      expect(await base.load(), hasLength(1));
+      expect(issueCenter.issues, hasLength(1));
+      expect(issueCenter.issues.single.kind, AppIssueKind.skillNameConflict);
+      expect(issueCenter.issues.single.severity, AppIssueSeverity.warning);
+      expect(changeCount, 1);
+    },
+  );
 
   test(
-    'project-scoped Skills avoid global roots and clean stale project copies',
+    'project-scoped dynamic Skills clean global and project legacy copies',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
         'dingdong-sync-',
@@ -637,6 +662,16 @@ mcp:
       final Directory globalRoot = Directory('${temp.path}/global-skills');
       final Directory project = Directory('${temp.path}/checkout')
         ..createSync();
+      for (final Directory legacy in <Directory>[
+        Directory('${globalRoot.path}/reviewer'),
+        Directory('${project.path}/.agents/skills/reviewer'),
+      ]) {
+        legacy.createSync(recursive: true);
+        File('${legacy.path}/SKILL.md').writeAsStringSync('legacy');
+        File(
+          '${legacy.path}/.dingdong-managed',
+        ).writeAsStringSync('RESOURCE-0000');
+      }
       final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
         packageRoot: Directory('${temp.path}/packages'),
         skillRoots: <Directory>[globalRoot],
@@ -656,7 +691,7 @@ mcp:
       expect(Directory('${globalRoot.path}/reviewer').existsSync(), isFalse);
       expect(
         File('${project.path}/.agents/skills/reviewer/SKILL.md').existsSync(),
-        isTrue,
+        isFalse,
       );
 
       await synchronizer.sync(<Resource>[scoped.copyWith(enabled: false)]);
@@ -702,7 +737,7 @@ mcp:
   });
 
   test(
-    'manages global always-on prompts without replacing user instructions',
+    'keeps a bridge bootstrap without copying prompt bodies into AGENTS',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
         'dingdong-sync-',
@@ -740,10 +775,19 @@ mcp:
 
       String contents = agents.readAsStringSync();
       expect(contents, startsWith('- Keep the existing user instruction.'));
-      expect(contents, contains('Add one star to every complete response.'));
       expect(contents, contains('dingdong_bridge'));
-      expect(contents, contains('Skill and MCP entries are candidates'));
-      expect(contents, contains('call MCP tools only when'));
+      expect(contents, contains('every returned active Prompt'));
+      expect(contents, contains('authoritative snapshot'));
+      expect(contents, contains('replaces every Prompt set'));
+      expect(contents, contains('authoritative Skill catalog'));
+      expect(contents, contains('every valid, enabled, scope-matched Skill'));
+      expect(contents, contains('dingdong_load_skill'));
+      expect(contents, contains('dingdong_read_skill_file'));
+      expect(contents, contains('Call configured MCP tools only when'));
+      expect(
+        contents,
+        isNot(contains('Add one star to every complete response.')),
+      );
       expect(contents, isNot(contains('Only apply inside one project.')));
       expect(contents, isNot(contains('Only load when explicitly requested.')));
       expect(
@@ -757,24 +801,27 @@ mcp:
         manual,
       ]);
       contents = agents.readAsStringSync();
-      expect(contents, contains('Use the updated global instruction.'));
+      expect(contents, contains('dingdong_bridge'));
+      expect(contents, isNot(contains('Use the updated global instruction.')));
       expect(contents, isNot(contains('Add one star')));
-      expect(contents, isNot(contains('dingdong_bridge')));
 
       await synchronizer.sync(<Resource>[
         global.copyWith(enabled: false),
         routed.copyWith(enabled: false),
         manual,
       ]);
+      contents = agents.readAsStringSync();
+      expect(contents, startsWith('- Keep the existing user instruction.'));
+      expect(contents, contains('dingdong_bridge'));
       expect(
-        agents.readAsStringSync(),
-        '- Keep the existing user instruction.\n',
+        RegExp('BEGIN DINGDONG MANAGED PROMPTS').allMatches(contents),
+        hasLength(1),
       );
     },
   );
 
   test(
-    'Claude prompt target mirrors only global always-on instructions',
+    'prompt targets without bridge routing remove legacy inline prompts',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(
         'dingdong-claude-prompt-sync-',
@@ -807,8 +854,7 @@ mcp:
       await synchronizer.sync(<Resource>[global, routed]);
 
       String contents = claude.readAsStringSync();
-      expect(contents, startsWith('- Keep the existing Claude instruction.'));
-      expect(contents, contains('Add one star to every complete response.'));
+      expect(contents, '- Keep the existing Claude instruction.\n');
       expect(contents, isNot(contains('Only apply inside one project.')));
       expect(contents, isNot(contains('dingdong_bridge')));
 
@@ -962,7 +1008,7 @@ mcp:
   format: claude-json
 prompt:
   file: ~/.claude/CLAUDE.md
-  includeBridgeRoutingInstructions: false
+  includeBridgeRoutingInstructions: true
 ''';
 
 const String _kiroAdapter = '''

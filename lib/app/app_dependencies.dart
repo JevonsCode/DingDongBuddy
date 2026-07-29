@@ -111,6 +111,9 @@ final class AppDependencies {
         preferencesBackend ?? SharedPreferencesBackend();
     final SettingsRepository settingsRepository = SettingsRepository(
       preferences,
+      defaultTrayNotificationColor: paths.development
+          ? TrayNotificationColor.pink
+          : TrayNotificationColor.orange,
     );
     final BuiltInResourceInstaller builtInResourceInstaller =
         BuiltInResourceInstaller(

@@ -12,6 +12,7 @@ import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/sound_choices.dart';
 import 'package:dingdong/features/settings/ui/system_usage_section.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 part 'settings_fields.dart';
@@ -211,6 +212,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 value: settings.launchAtStartup,
                                 onChanged: widget.viewModel.setLaunchAtStartup,
                               ),
+                              if (defaultTargetPlatform == TargetPlatform.macOS)
+                                CompactSwitchListTile(
+                                  key: const Key('settings-hide-dock-icon'),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    context.localized(
+                                      'Hide Dock icon',
+                                      '隐藏 Dock 图标',
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    context.localized(
+                                      'Keep DingDong in the menu bar without showing it in the Dock.',
+                                      '仅保留菜单栏入口，不在 Dock 中显示 DingDong。',
+                                    ),
+                                  ),
+                                  value: settings.hideDockIcon,
+                                  onChanged: widget.viewModel.setHideDockIcon,
+                                ),
                             ],
                           ),
                           QuickPastePermissionSection(
@@ -518,7 +538,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ],
                           ),
-                          _NotificationSoundSettingsSection(
+                          _NotificationSettingsSection(
                             viewModel: widget.viewModel,
                             settings: settings,
                             soundFileGateway: widget.soundFileGateway,

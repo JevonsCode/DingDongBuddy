@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:path/path.dart' as path;
+
 /// Project context passed by an Agent when it asks DingDong for resources.
 final class TriggerContext {
   const TriggerContext({this.projectPath = '', this.repositoryUrl = ''});
@@ -42,8 +46,19 @@ final class TriggerRule {
     if (value.isEmpty) {
       return false;
     }
-    final String candidate = _normalized(field, field.valueFrom(context));
-    final String expected = _normalized(field, value);
+    final bool resolveExistingProjectPath =
+        field == TriggerRuleField.projectPath &&
+        operator == TriggerRuleOperator.equals;
+    final String candidate = _normalized(
+      field,
+      field.valueFrom(context),
+      resolveExistingProjectPath: resolveExistingProjectPath,
+    );
+    final String expected = _normalized(
+      field,
+      value,
+      resolveExistingProjectPath: resolveExistingProjectPath,
+    );
     if (candidate.isEmpty || expected.isEmpty) {
       return false;
     }
@@ -141,12 +156,27 @@ final class TriggerGroup {
       Object.hash(id, name, Object.hashAll(rules), createdAt, updatedAt);
 }
 
-String _normalized(TriggerRuleField field, String value) {
-  final String trimmed = value.trim().toLowerCase();
+String _normalized(
+  TriggerRuleField field,
+  String value, {
+  required bool resolveExistingProjectPath,
+}) {
+  final String trimmed = value.trim();
   if (field == TriggerRuleField.repositoryUrl) {
-    return trimmed;
+    return trimmed.toLowerCase();
   }
-  final String normalized = trimmed.replaceAll(r'\', '/');
+  String normalized = trimmed.replaceAll(r'\', '/');
+  if (resolveExistingProjectPath && path.isAbsolute(normalized)) {
+    try {
+      final Directory directory = Directory(normalized);
+      if (directory.existsSync()) {
+        normalized = directory.resolveSymbolicLinksSync().replaceAll(r'\', '/');
+      }
+    } on FileSystemException {
+      // Fall back to lexical normalization for unavailable or transient paths.
+    }
+  }
+  normalized = normalized.toLowerCase();
   return normalized.length > 1
       ? normalized.replaceFirst(RegExp(r'/+$'), '')
       : normalized;

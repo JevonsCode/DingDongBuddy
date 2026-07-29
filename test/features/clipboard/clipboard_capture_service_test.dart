@@ -29,6 +29,38 @@ void main() {
   );
 
   test(
+    'capture keeps the original text and rich-text representations',
+    () async {
+      final InMemoryClipboardStore store = InMemoryClipboardStore();
+      final Uint8List htmlData = Uint8List.fromList(
+        '<b>Rich value</b>'.codeUnits,
+      );
+      final Uint8List rtfData = Uint8List.fromList(
+        r'{\rtf1\b Rich value\b0}'.codeUnits,
+      );
+      final ClipboardCaptureService service = ClipboardCaptureService(
+        gateway: _FakeClipboardGateway(
+          ClipboardSnapshot(
+            text: '  Rich value\n',
+            htmlData: htmlData,
+            rtfData: rtfData,
+          ),
+        ),
+        store: store,
+        idGenerator: () => 'RICH-ID',
+        now: () => DateTime.utc(2026, 7, 12),
+      );
+
+      final record = await service.capture();
+
+      expect(record?.content, '  Rich value\n');
+      expect(record?.htmlData, htmlData);
+      expect(record?.rtfData, rtfData);
+      expect(record?.hasFormattedText, isTrue);
+    },
+  );
+
+  test(
     'capture stores file URLs before any plain-text representation',
     () async {
       final InMemoryClipboardStore store = InMemoryClipboardStore();

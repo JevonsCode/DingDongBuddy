@@ -20,7 +20,12 @@ void main() {
       expect(result['instructions'], contains('dingdong_bridge'));
       expect(result['instructions'], contains('expand="prompts"'));
       expect(result['instructions'], contains('required instruction'));
-      expect(result['instructions'], contains('Skill entries are candidates'));
+      expect(result['instructions'], contains('authoritative Prompt snapshot'));
+      expect(result['instructions'], contains('replaces'));
+      expect(result['instructions'], contains('authoritative Skill catalog'));
+      expect(result['instructions'], contains('every valid, enabled'));
+      expect(result['instructions'], contains('dingdong_load_skill'));
+      expect(result['instructions'], contains('dingdong_read_skill_file'));
       expect(
         result['instructions'],
         contains('MCP entries are tool references'),
@@ -53,6 +58,7 @@ void main() {
           'dingdong_search_assets',
           'dingdong_get_asset',
           'dingdong_load_skill',
+          'dingdong_read_skill_file',
           'dingdong_recommend_mcp',
           'dingdong_install_skill',
           'dingdong_upsert_trigger_group',
@@ -69,10 +75,15 @@ void main() {
         properties.keys,
         containsAll(<String>['workspacePath', 'repositoryUrl']),
       );
+      expect(bridge['description'], contains('id, name, and description'));
+      expect(bridge['description'], contains('authoritative Prompt snapshot'));
+      expect(bridge['description'], contains('authoritative Skill catalog'));
+      expect(bridge['description'], contains('every valid, enabled'));
       expect(
         bridge['description'],
-        contains('Skill and MCP entries are summary-only candidates'),
+        contains('Every active, scope-matched MCP'),
       );
+      expect(properties, isNot(contains('limit')));
 
       Map<String, Object?> toolNamed(String name) => tools
           .cast<Map<String, Object?>>()
@@ -81,6 +92,34 @@ void main() {
           toolNamed('dingdong_install_skill')['inputSchema']
               as Map<String, Object?>;
       expect(installSchema['required'], <String>['source']);
+      final Map<String, Object?> loadSchema =
+          toolNamed('dingdong_load_skill')['inputSchema']
+              as Map<String, Object?>;
+      expect(loadSchema['required'], isNull);
+      expect(loadSchema['anyOf'], <Map<String, Object?>>[
+        <String, Object?>{
+          'required': <String>['name'],
+        },
+        <String, Object?>{
+          'required': <String>['id'],
+        },
+      ]);
+      expect(
+        (loadSchema['properties'] as Map<String, Object?>).keys,
+        containsAll(<String>['id', 'name', 'workspacePath', 'repositoryUrl']),
+      );
+      expect(
+        (toolNamed('dingdong_read_skill_file')['inputSchema']
+            as Map<String, Object?>)['required'],
+        <String>['path'],
+      );
+      expect(
+        ((toolNamed('dingdong_get_asset')['inputSchema']
+                    as Map<String, Object?>)['properties']
+                as Map<String, Object?>)
+            .keys,
+        containsAll(<String>['workspacePath', 'repositoryUrl']),
+      );
       final Map<String, Object?> bindProperties =
           (toolNamed('dingdong_bind_resource_scope')['inputSchema']
                   as Map<String, Object?>)['properties']

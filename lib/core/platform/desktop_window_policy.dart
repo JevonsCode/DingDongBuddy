@@ -12,3 +12,13 @@ Color desktopWindowBackground(
 }) {
   return usesSystemWindowCorners(platform) ? opaqueColor : Colors.transparent;
 }
+
+/// Resolves macOS's app-wide Dock policy while preserving other platforms'
+/// existing per-window taskbar behavior.
+bool desktopWindowSkipsTaskbar(
+  TargetPlatform platform, {
+  required bool hideDockIcon,
+  required bool fallback,
+}) {
+  return platform == TargetPlatform.macOS ? hideDockIcon : fallback;
+}

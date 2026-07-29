@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +32,41 @@ void main() {
       'style': 'unreadBadge',
     });
   });
+
+  test('tray title forwards the selected badge color', () async {
+    MethodCall? receivedCall;
+    const MethodChannel channel = MethodChannel('tray_manager');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall call) async {
+          receivedCall = call;
+          return true;
+        });
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    await trayManager.setTitle(
+      ' 1',
+      style: TrayTitleStyle.unreadBadge,
+      badgeColorRgb: TrayNotificationColor.purple.rgbValue,
+    );
+
+    expect(receivedCall?.method, 'setTitle');
+    expect(receivedCall?.arguments, <String, Object>{
+      'title': ' 1',
+      'style': 'unreadBadge',
+      'badgeColorRgb': TrayNotificationColor.purple.rgbValue,
+    });
+  });
+
+  test(
+    'tray badge background is enabled only while a notification is unread',
+    () {
+      expect(macOSTrayTitleStyle(hot: false), TrayTitleStyle.plain);
+      expect(macOSTrayTitleStyle(hot: true), TrayTitleStyle.unreadBadge);
+    },
+  );
 
   test(
     'Windows tray icons carry an alternate attention icon and count',
@@ -158,6 +195,27 @@ void main() {
     expect(source, contains('statusItem?.autosaveName ='));
     expect(source, contains('Bundle.main.bundleIdentifier'));
     expect(source, contains('.primary-status-item'));
+  });
+
+  test('macOS unread tray uses the selected RGB capsule color', () {
+    final String gateway = File(
+      'lib/platform/plugin_desktop_shell_gateway.dart',
+    ).readAsStringSync();
+    final String plugin = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift',
+    ).readAsStringSync();
+    final String source = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
+    ).readAsStringSync();
+
+    expect(gateway, contains('badgeColorRgb: _trayNotificationColor.rgbValue'));
+    expect(gateway, isNot(contains('hot || macDevelopment')));
+    expect(gateway, contains('await trayManager.setTitle(\n        title,'));
+    expect(plugin, contains('args["badgeColorRgb"] as? NSNumber'));
+    expect(source, contains('style == "unreadBadge" && !countText.isEmpty'));
+    expect(source, contains('let value = rgb ?? 0xDB7333'));
+    expect(source, contains('let red = CGFloat((value >> 16) & 0xFF) / 255'));
+    expect(source, contains('button.layer?.backgroundColor = nil'));
   });
 
   test('Windows tray bridge samples the real taskbar and refreshes safely', () {

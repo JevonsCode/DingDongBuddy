@@ -15,4 +15,4 @@ mcp:
 
 prompt:
   file: ~/.claude/CLAUDE.md
-  includeBridgeRoutingInstructions: false
+  includeBridgeRoutingInstructions: true
