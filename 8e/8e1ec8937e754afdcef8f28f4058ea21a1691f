@@ -1,0 +1,21 @@
+README.zh.md
+  s_359d8711a1840d::t_43e3a733152a07 579-605
+README.md
+  s_359d8711a1840d::t_43e3a733152a07 633-666
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.38-trip",
+  "base_commit_sha": "8e8e1ec8937e754afdcef8f28f4058ea21a1691f",
+  "prompts": {},
+  "sessions": {
+    "s_359d8711a1840d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fad76-cff9-7fb2-8699-8deabde91fe1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
