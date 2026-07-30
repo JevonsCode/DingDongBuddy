@@ -576,6 +576,33 @@ PowerShell：
 `dingdong_notify` 出现在工具列表并调用一次。只看到 MCP 工具不代表完成 Hook 已经
 安装，所以两项都必须测试。
 
+### Codex 升级、Hook 信任与 MCP 修改
+
+Codex 会把 DingDong MCP Server 和完成 Hook 当作两套独立配置，尽管它们通常启动
+的是同一个 `dingdong_mcp` 可执行文件。
+
+- 如果 DingDong 是原地正常升级，应用路径不变，而且 Hook 定义也没有变化，就不应
+  导致 Hook 重新失信。Codex 信任的是完整 Hook 定义及其当前哈希；只替换同一路径下
+  的可执行文件内容，本身不会改变这份定义。
+- 升级、迁移、重新安装或再次接入时，只要改了 Hook 的命令路径、参数、来源名称、
+  matcher、timeout 或其他定义字段，仍会触发重新审核。常见例子是从
+  `/Applications/DingDong DEV.app/...` 切换到
+  `/Applications/DingDong.app/...`，或反向切换。Codex 会把 Hook 标记为新增或
+  已修改，并在用户打开 `/hooks` 信任当前定义之前跳过执行。重启 Codex 只会重新
+  加载配置，不会自动授予信任。
+- `[mcp_servers.dingdong]` 配置不使用 Hook 的信任哈希，也不经过 `/hooks` 审核。
+  修改 MCP command 后，重启 MCP Server 或 Codex，再确认 `dingdong_bridge` 或
+  `dingdong_notify` 可用即可。路径无效会导致 MCP 启动失败，但这属于连接／配置
+  错误，不是 Hook 失信。
+- DingDong 路径变化时，应同时更新 MCP command 和完成 Hook command；然后重新加载
+  Codex，只在 `/hooks` 中信任发生变化的 Hook，并分别测试 MCP 与 Hook。只改其中
+  一边，可能出现 Prompt／MCP 工具仍可用但任务结束不提醒，或提醒可用但 MCP 失效
+  的割裂状态。
+
+发布和更新逻辑应尽量保持正式版应用路径稳定，也不要重写语义完全相同的 Hook。
+如果某次版本确实必须修改 Hook 定义，应明确提示用户到 `/hooks` 重新审核，而不能
+假设重启就会恢复提醒。
+
 ### 客户端对应关系
 
 | 客户端 | MCP 位置 | 完成 Hook | 一句话结果来源 |

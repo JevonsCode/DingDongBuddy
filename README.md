@@ -630,6 +630,40 @@ The command returns `{}` and DingDong should ring. Then reload the MCP server,
 confirm `dingdong_notify` appears, and call it once. A visible MCP tool does not
 prove that the completion hook is installed, so both tests matter.
 
+### Codex upgrades, Hook trust, and MCP changes
+
+Codex treats the DingDong MCP server and the completion Hook as two independent
+configurations, even though both normally launch the same `dingdong_mcp`
+executable.
+
+- A normal in-place DingDong upgrade that keeps the application at the same
+  path and leaves the Hook definition unchanged should not invalidate Hook
+  trust. Codex trusts the exact Hook definition and records its current hash;
+  replacing the executable contents at the same command path does not by
+  itself change that definition.
+- An upgrade, migration, reinstall, or setup rerun can still require review if
+  it changes the Hook's command path, arguments, source label, matcher, timeout,
+  or other definition fields. A common example is switching between
+  `/Applications/DingDong DEV.app/...` and
+  `/Applications/DingDong.app/...`. Codex marks the Hook as new or modified and
+  skips it until the user opens `/hooks` and trusts the current definition.
+  Restarting Codex only reloads the configuration; it does not grant trust.
+- The `[mcp_servers.dingdong]` entry does not use the Hook trust hash or the
+  `/hooks` review flow. After changing its command, restart the MCP server or
+  Codex and verify that `dingdong_bridge` or `dingdong_notify` is available.
+  An invalid path can make the MCP server fail to start, but that is a
+  connection/configuration failure rather than a Hook trust failure.
+- When the DingDong path changes, update both the MCP command and the completion
+  Hook command. Then reload Codex, trust only the changed Hook in `/hooks`, and
+  test the MCP and Hook paths separately. Updating only one side can produce
+  the confusing state where Prompt/MCP tools still work but completion
+  reminders do not, or the reverse.
+
+For release and updater code, keep the production application path stable and
+avoid rewriting a semantically identical Hook. If a release must change the
+Hook definition, surface an explicit `/hooks` review step instead of assuming a
+restart will restore notifications.
+
 ### Client mapping
 
 | Client | MCP location | Completion hook | Summary source |
