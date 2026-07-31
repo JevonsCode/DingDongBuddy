@@ -1,0 +1,117 @@
+lib/features/agent_adapters/ui/agent_adapter_overview.dart
+  s_5bb36c637deb01::t_3125550a1f7158 215,313,410-411,413-440,465-472
+  s_5bb36c637deb01::t_7f2ee3988b471b 70,73,89-91,195-214,216-312,314-351,395-409,412
+  s_5bb36c637deb01::t_b2515c6968109a 441-464
+  s_5bb36c637deb01::t_fdda1ff7ed4a6a 87-88,352-394
+lib/features/agent_api/data/mcp_server.dart
+  s_5bb36c637deb01::t_46be052136d0dd 39
+lib/features/settings/domain/mcp_setup_prompt.dart
+  s_5bb36c637deb01::t_d5ad1904eeab0a 27,59
+docs/dingdong-release.json
+  s_5bb36c637deb01::t_af1c2bc0508544 3-5,11,15,21,27-30
+test/features/shell/popup_shell_test.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 164-165,189-198
+test/features/settings/settings_view_model_test.dart
+  s_5bb36c637deb01::t_ff60c63412e8af 488-489,536-537
+docs/release-notes.md
+  s_5bb36c637deb01::t_d38741ac50a476 1-35,41-65
+lib/main.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 119
+  s_5bb36c637deb01::t_54521972602146 16,565-566,570,599-605
+README.zh.md
+  s_5bb36c637deb01::t_d5ad1904eeab0a 484-487,612-613,619,624
+  s_5bb36c637deb01::t_8f6b57d5b89563 399
+  s_5bb36c637deb01::t_a7a9dc7a565d11 489-497
+  s_5bb36c637deb01::t_5bc5f9c54cc8ce 620-621
+  s_5bb36c637deb01::t_46be052136d0dd 76
+docs/product/manual-regression.md
+  s_5bb36c637deb01::t_46be052136d0dd 1,228-229
+lib/features/agent_adapters/data/codex_completion_hook_gateway.dart
+  s_5bb36c637deb01::t_e33d5abee35bf9 1-24,27-28,30-41,43-81,83-96,101-112,114-148,157-238,241-265,270-277,289-415,417-469
+  s_5bb36c637deb01::t_fdda1ff7ed4a6a 82,97-100,113,239-240,416
+  s_5bb36c637deb01::t_5bc5f9c54cc8ce 25-26,29,42,149-156
+  s_5bb36c637deb01::t_96b462a9c647a4 266-269,278-288
+README.md
+  s_5bb36c637deb01::t_5bc5f9c54cc8ce 684-685
+  s_5bb36c637deb01::t_d5ad1904eeab0a 537-541,673-675,682-683,689
+  s_5bb36c637deb01::t_a7a9dc7a565d11 543-552
+  s_5bb36c637deb01::t_46be052136d0dd 87
+  s_5bb36c637deb01::t_8f6b57d5b89563 452
+lib/features/shell/ui/popup_header.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 20,37,71
+lib/features/agent_adapters/domain/codex_completion_hook.dart
+  s_5bb36c637deb01::t_11fde67d348b39 1-45,49-54,59
+  s_5bb36c637deb01::t_96b462a9c647a4 46-48,55-58
+INSTALL_WITH_AGENT.md
+  s_5bb36c637deb01::t_8f6b57d5b89563 145-148
+test/features/agent_adapters/agent_adapter_controller_test.dart
+  s_5bb36c637deb01::t_3d25ca44b95e0a 5,81-134,139,142-149
+  s_5bb36c637deb01::t_b80855e125d465 135-138,140-141
+lib/features/agent_adapters/ui/agent_adapter_controller.dart
+  s_5bb36c637deb01::t_fdda1ff7ed4a6a 100,272
+  s_5bb36c637deb01::t_b2515c6968109a 114
+  s_5bb36c637deb01::t_69d807cb0c4d6f 5,14,20,28-30,35,43-46,71,81,88,93-99,101-112,115-119,124-131,261-271,333,347
+  s_5bb36c637deb01::t_96b462a9c647a4 113,120-123
+lib/app/app_dependencies.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 54,79
+test/features/clipboard/clipboard_monitor_service_test.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 17,26,35,44
+lib/features/clipboard/domain/clipboard_monitor_service.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 22,24-25,29,41-44
+lib/features/shell/ui/popup_mascot.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 5-7,43-50,57-60,66
+test/app/dingdong_app_test.dart
+  s_5bb36c637deb01::t_46be052136d0dd 37,43-44
+test/packaging/desktop_identity_test.dart
+  s_5bb36c637deb01::t_46be052136d0dd 70,77,82,345,387-388,394
+  s_5bb36c637deb01::t_ff60c63412e8af 231-234
+test/features/agent_adapters/agent_adapter_screen_test.dart
+  s_5bb36c637deb01::t_b80855e125d465 138-141
+  s_5bb36c637deb01::t_d1f88b9dd8ea03 4,24-25,34,61-68,123-137,142-150
+  s_5bb36c637deb01::t_fdda1ff7ed4a6a 60
+pubspec.yaml
+  s_5bb36c637deb01::t_46be052136d0dd 4
+lib/features/agent_adapters/ui/agent_adapter_screen.dart
+  s_5bb36c637deb01::t_7f2ee3988b471b 6,357-359
+lib/features/settings/domain/release_update.dart
+  s_5bb36c637deb01::t_46be052136d0dd 114-115
+lib/features/shell/ui/shell_screen.dart
+  s_f75d2f13575221::t_ab0597c93b41b8 475
+test/features/agent_adapters/codex_completion_hook_gateway_test.dart
+  s_5bb36c637deb01::t_6bc1afb7c41c4e 1-14,16-43,45-53,58-68,70-77,95,100,165-169,171-182,184-190,192-203,206-240
+  s_5bb36c637deb01::t_fdda1ff7ed4a6a 15,44,69,78-94,101-108,191,204-205
+  s_5bb36c637deb01::t_b80855e125d465 54-57,96-99,109-138,170,183
+  s_5bb36c637deb01::t_439f55caa6e83d 139-164
+lib/features/shell/ui/shell_controller.dart
+  s_f75d2f13575221::t_8b5d7b321a9494 13,20,50-52
+scripts/trust_codex_dingdong_hook.dart
+  s_5bb36c637deb01::t_fdda1ff7ed4a6a 20-21,54-56
+  s_5bb36c637deb01::t_96b462a9c647a4 67-70
+  s_5bb36c637deb01::t_83d1956a926980 1-19,22-53,57-66,71-107
+docs/index.html
+  s_5bb36c637deb01::t_4ff76a6080b9b0 62,352,357,359,365,367,373,541,543,545,697,699,701,756,801
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "fd404c696a654d6ea2460c974de58808c9735393",
+  "prompts": {},
+  "sessions": {
+    "s_5bb36c637deb01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb76c-64cf-7510-930a-5aecf2693ed1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_f75d2f13575221": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb6c8-9162-7620-ba92-92b8b8208a3b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
