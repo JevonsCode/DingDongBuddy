@@ -34,7 +34,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('zh'),
+        locale: const Locale('en'),
         home: Scaffold(body: AgentAdapterScreen(controller: controller)),
       ),
     );
@@ -43,6 +43,21 @@ void main() {
     expect(find.byKey(const Key('agent-adapter-screen')), findsOneWidget);
     expect(find.text('Codex'), findsNWidgets(2));
     expect(find.text('Built in'), findsOneWidget);
+    expect(
+      find.byKey(const Key('agent-adapter-status-overview')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('agent-adapter-verification-boundary')),
+      findsOneWidget,
+    );
+    expect(find.text('Detected'), findsWidgets);
+    expect(find.textContaining('does not verify MCP'), findsOneWidget);
+    expect(find.byKey(const Key('agent-adapter-editor')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('agent-adapter-toggle-advanced')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('agent-adapter-editor')), findsOneWidget);
     expect(
       find.text('A comparison appears after the next saved or external edit.'),
       findsOneWidget,

@@ -136,7 +136,10 @@ final class AgentCompatibilityRoutes {
       'privacyDefaults': <String, Object?>{
         'clipboardContentIncluded': false,
         'sensitiveClipboardIncluded': false,
-        'networkRule': 'DingDong listens on loopback only.',
+        'clipboardContentPermission':
+            'Disabled in DingDong Settings by default.',
+        'networkRule':
+            'Loopback only; browser cross-origin requests are rejected.',
         'knowledgeIndexing': 'On-demand and bounded.',
       },
       'features': _features,
@@ -331,7 +334,8 @@ final class AgentCompatibilityRoutes {
       'id': 'ding-complete',
       'title': 'Task Complete',
       'summary': 'Notify DingDong once when the whole task is final.',
-      'command': 'curl -X POST $_origin/ding',
+      'command':
+          "curl -X POST -H 'Content-Type: application/json' -d '{}' $_origin/ding",
     },
     <String, String>{
       'id': 'system-status',

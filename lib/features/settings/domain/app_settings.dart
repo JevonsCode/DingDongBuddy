@@ -1,4 +1,6 @@
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
+import 'package:flutter/foundation.dart';
 
 /// Language choice persisted independently from the current system locale.
 enum AppLanguagePreference {
@@ -92,11 +94,13 @@ final class AppSettings {
     this.hideDockIcon = false,
     this.trayNotificationColor = TrayNotificationColor.orange,
     this.globalHotKey = GlobalHotKey.defaultValue,
+    this.workspaceShortcuts = WorkspaceShortcuts.defaultValue,
     this.backgroundOpacity = 0.90,
     this.density = PanelDensityPreference.comfortable,
     this.defaultWorkspace = DefaultWorkspace.today,
     this.clipboardMaxItems = 5000,
     this.clipboardMaxAgeDays = 120,
+    this.allowAgentClipboardContent = false,
     this.rememberAgentActivity = true,
     this.agentActivityMaxItems = 500,
     this.agentActivityCountHours = 24,
@@ -113,11 +117,13 @@ final class AppSettings {
   final bool hideDockIcon;
   final TrayNotificationColor trayNotificationColor;
   final GlobalHotKey globalHotKey;
+  final WorkspaceShortcuts workspaceShortcuts;
   final double backgroundOpacity;
   final PanelDensityPreference density;
   final DefaultWorkspace defaultWorkspace;
   final int clipboardMaxItems;
   final int clipboardMaxAgeDays;
+  final bool allowAgentClipboardContent;
   final bool rememberAgentActivity;
   final int agentActivityMaxItems;
   final int agentActivityCountHours;
@@ -135,11 +141,13 @@ final class AppSettings {
       hideDockIcon: hideDockIcon,
       trayNotificationColor: trayNotificationColor,
       globalHotKey: globalHotKey.sanitized(),
+      workspaceShortcuts: workspaceShortcuts.sanitized(defaultTargetPlatform),
       backgroundOpacity: backgroundOpacity.clamp(0.82, 0.96),
       density: density,
       defaultWorkspace: defaultWorkspace,
       clipboardMaxItems: clipboardMaxItems.clamp(20, 5000),
       clipboardMaxAgeDays: clipboardMaxAgeDays.clamp(1, 730),
+      allowAgentClipboardContent: allowAgentClipboardContent,
       rememberAgentActivity: rememberAgentActivity,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
@@ -162,11 +170,13 @@ final class AppSettings {
     bool? hideDockIcon,
     TrayNotificationColor? trayNotificationColor,
     GlobalHotKey? globalHotKey,
+    WorkspaceShortcuts? workspaceShortcuts,
     double? backgroundOpacity,
     PanelDensityPreference? density,
     DefaultWorkspace? defaultWorkspace,
     int? clipboardMaxItems,
     int? clipboardMaxAgeDays,
+    bool? allowAgentClipboardContent,
     bool? rememberAgentActivity,
     int? agentActivityMaxItems,
     int? agentActivityCountHours,
@@ -184,11 +194,14 @@ final class AppSettings {
       trayNotificationColor:
           trayNotificationColor ?? this.trayNotificationColor,
       globalHotKey: globalHotKey ?? this.globalHotKey,
+      workspaceShortcuts: workspaceShortcuts ?? this.workspaceShortcuts,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
       density: density ?? this.density,
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,
       clipboardMaxItems: clipboardMaxItems ?? this.clipboardMaxItems,
       clipboardMaxAgeDays: clipboardMaxAgeDays ?? this.clipboardMaxAgeDays,
+      allowAgentClipboardContent:
+          allowAgentClipboardContent ?? this.allowAgentClipboardContent,
       rememberAgentActivity:
           rememberAgentActivity ?? this.rememberAgentActivity,
       agentActivityMaxItems:

@@ -71,6 +71,9 @@ final class SettingsViewModel extends ChangeNotifier
   bool? _isQuickPastePermissionGranted;
   SystemUsageSnapshot? _systemUsage;
   int _loadedApiPort = 2333;
+  bool _savePending = false;
+  Future<void>? _saveInFlight;
+  bool _disposed = false;
 
   AppSettings get settings => _settings;
   @override
@@ -213,6 +216,17 @@ final class SettingsViewModel extends ChangeNotifier
   Future<void> setGlobalHotKey(GlobalHotKey value) async {
     final GlobalHotKey previous = _settings.globalHotKey;
     final GlobalHotKey candidate = value.sanitized();
+    if (_settings.workspaceShortcuts.values.any(
+      (WorkspaceShortcut shortcut) => _globalHotKeyConflictsWithWorkspace(
+        candidate,
+        shortcut,
+        defaultTargetPlatform,
+      ),
+    )) {
+      _errorMessage = _workspaceHotKeyConflictError;
+      notifyListeners();
+      return;
+    }
     _settings = _settings.copyWith(globalHotKey: candidate);
     notifyListeners();
     try {
@@ -227,6 +241,45 @@ final class SettingsViewModel extends ChangeNotifier
       _errorMessage = _globalHotKeyRegistrationError;
       notifyListeners();
     }
+  }
+
+  Future<bool> setWorkspaceShortcut(
+    int workspaceIndex,
+    WorkspaceShortcut value,
+  ) async {
+    final WorkspaceShortcut fallback = WorkspaceShortcuts.defaultValue.at(
+      workspaceIndex,
+    );
+    final WorkspaceShortcut candidate = value.sanitized(fallback);
+    final TargetPlatform platform = defaultTargetPlatform;
+    final WorkspaceShortcuts shortcuts = _settings.workspaceShortcuts.replace(
+      workspaceIndex,
+      candidate,
+    );
+    final bool duplicatesAnotherWorkspace = shortcuts.values
+        .asMap()
+        .entries
+        .where((MapEntry<int, WorkspaceShortcut> entry) {
+          return entry.key != workspaceIndex;
+        })
+        .any((MapEntry<int, WorkspaceShortcut> entry) {
+          return candidate.conflictsWith(entry.value, platform);
+        });
+    if (duplicatesAnotherWorkspace ||
+        _globalHotKeyConflictsWithWorkspace(
+          _settings.globalHotKey,
+          candidate,
+          platform,
+        ) ||
+        _workspaceShortcutIsReserved(candidate, platform)) {
+      _errorMessage = _workspaceHotKeyConflictError;
+      notifyListeners();
+      return false;
+    }
+    _settings = _settings.copyWith(workspaceShortcuts: shortcuts);
+    notifyListeners();
+    await _save();
+    return true;
   }
 
   Future<void> setBackgroundOpacity(double value) async {
@@ -271,6 +324,12 @@ final class SettingsViewModel extends ChangeNotifier
       clipboardMaxItems: maxItems,
       clipboardMaxAgeDays: maxAgeDays,
     );
+    notifyListeners();
+    await _save();
+  }
+
+  Future<void> setAllowAgentClipboardContent(bool value) async {
+    _settings = _settings.copyWith(allowAgentClipboardContent: value);
     notifyListeners();
     await _save();
   }
@@ -459,20 +518,81 @@ final class SettingsViewModel extends ChangeNotifier
 
   @override
   void dispose() {
+    _disposed = true;
     _applicationUpdatePollTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _save() async {
-    try {
-      await _repository.save(_settings);
-      _errorMessage = null;
-    } on Object {
-      _errorMessage = 'Settings could not be saved.';
+  Future<void> _save() {
+    _savePending = true;
+    return _saveInFlight ??= _drainSaves();
+  }
+
+  Future<void> _drainSaves() async {
+    do {
+      _savePending = false;
+      final AppSettings snapshot = _settings;
+      try {
+        await _repository.save(snapshot);
+        _errorMessage = null;
+      } on Object {
+        _errorMessage = 'Settings could not be saved.';
+      }
+    } while (_savePending);
+    _saveInFlight = null;
+    if (!_disposed) {
+      notifyListeners();
     }
-    notifyListeners();
   }
 }
 
 const String _globalHotKeyRegistrationError =
     'Shortcut could not be registered. It may already be used by another app.';
+const String _workspaceHotKeyConflictError =
+    'Shortcut conflicts with another DingDong or system action.';
+
+bool _globalHotKeyConflictsWithWorkspace(
+  GlobalHotKey globalHotKey,
+  WorkspaceShortcut workspaceShortcut,
+  TargetPlatform platform,
+) {
+  return globalHotKey.key == workspaceShortcut.key &&
+      globalHotKeyModifiers(globalHotKey, platform) ==
+          workspaceShortcut.modifiers(platform);
+}
+
+bool _workspaceShortcutIsReserved(
+  WorkspaceShortcut shortcut,
+  TargetPlatform platform,
+) {
+  final DesktopShortcutModifiers modifiers = shortcut.modifiers(platform);
+  final bool primaryPressed = platform == TargetPlatform.macOS
+      ? modifiers.meta
+      : modifiers.control;
+  final bool primaryOnly =
+      primaryPressed &&
+      !modifiers.alt &&
+      !modifiers.shift &&
+      (platform != TargetPlatform.macOS || !modifiers.control) &&
+      (platform == TargetPlatform.macOS || !modifiers.meta);
+  if (primaryOnly && (shortcut.key == 'F' || shortcut.key == 'R')) {
+    return true;
+  }
+  if (primaryPressed && RegExp(r'^[1-9]$').hasMatch(shortcut.key)) {
+    return true;
+  }
+  if (<String>{'UP', 'DOWN', 'SPACE', 'RETURN'}.contains(shortcut.key)) {
+    return true;
+  }
+  if (platform == TargetPlatform.macOS &&
+      primaryOnly &&
+      (shortcut.key == 'Q' || shortcut.key == 'W')) {
+    return true;
+  }
+  return platform == TargetPlatform.windows &&
+      modifiers.alt &&
+      !modifiers.control &&
+      !modifiers.meta &&
+      !modifiers.shift &&
+      shortcut.key == 'F4';
+}

@@ -1,16 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 
 /// Loopback-only HTTP transport for the framework-independent agent router.
 final class AgentHttpServer {
-  AgentHttpServer(this._router);
+  AgentHttpServer(
+    this._router, {
+    Uri? websiteUri,
+    this.maxRequestBodyBytes = 8 * 1024 * 1024,
+  }) : assert(maxRequestBodyBytes > 0),
+       _websiteUri = websiteUri ?? defaultWebsiteUri;
 
   final AgentRouter _router;
+  final Uri _websiteUri;
+  final int maxRequestBodyBytes;
   HttpServer? _server;
   StreamSubscription<HttpRequest>? _subscription;
 
@@ -43,6 +52,7 @@ final class AgentHttpServer {
         shared: false,
       );
     }
+    server.idleTimeout = const Duration(seconds: 15);
     _server = server;
     _router.updateBaseUri(baseUri);
     _subscription = server.listen(_handleRequest);
@@ -57,7 +67,43 @@ final class AgentHttpServer {
 
   Future<void> _handleRequest(HttpRequest request) async {
     try {
-      final String body = await utf8.decoder.bind(request).join();
+      if (request.method == 'GET' && request.uri.path == '/') {
+        request.response
+          ..statusCode = HttpStatus.found
+          ..headers.set(HttpHeaders.locationHeader, _websiteUri.toString())
+          ..headers.set(HttpHeaders.cacheControlHeader, 'no-store');
+        return;
+      }
+      if (_isBrowserCrossOriginRequest(request)) {
+        _writeJson(
+          request.response,
+          HttpStatus.forbidden,
+          const <String, Object?>{
+            'status': 'error',
+            'message': 'Browser cross-origin requests are not allowed.',
+          },
+        );
+        return;
+      }
+      if (_requiresJsonContentType(request) &&
+          !_hasJsonContentType(request.headers.contentType)) {
+        _writeJson(
+          request.response,
+          HttpStatus.unsupportedMediaType,
+          const <String, Object?>{
+            'status': 'error',
+            'message': 'POST and PATCH requests require application/json.',
+          },
+        );
+        return;
+      }
+      if (request.contentLength > maxRequestBodyBytes) {
+        throw const _RequestBodyTooLarge();
+      }
+      final String body = await _readBody(
+        request,
+        maximumBytes: maxRequestBodyBytes,
+      );
       final HttpResponseData routed = await _router.route(
         HttpRequestData(
           method: request.method,
@@ -65,22 +111,101 @@ final class AgentHttpServer {
           body: body,
         ),
       );
-      request.response
-        ..statusCode = routed.statusCode
-        ..headers.contentType = ContentType.json
-        ..write(jsonEncode(routed.json));
+      _writeJson(request.response, routed.statusCode, routed.json);
+    } on _RequestBodyTooLarge {
+      _writeJson(
+        request.response,
+        HttpStatus.requestEntityTooLarge,
+        <String, Object?>{
+          'status': 'error',
+          'message': 'Request body exceeds $maxRequestBodyBytes bytes.',
+        },
+      );
+    } on _InvalidRequestEncoding {
+      _writeJson(
+        request.response,
+        HttpStatus.badRequest,
+        const <String, Object?>{
+          'status': 'error',
+          'message': 'Request body must be valid UTF-8.',
+        },
+      );
     } on Object {
-      request.response
-        ..statusCode = HttpStatus.internalServerError
-        ..headers.contentType = ContentType.json
-        ..write(
-          jsonEncode(<String, Object?>{
-            'status': 'error',
-            'message': 'Internal server error',
-          }),
-        );
+      _writeJson(
+        request.response,
+        HttpStatus.internalServerError,
+        const <String, Object?>{
+          'status': 'error',
+          'message': 'Internal server error',
+        },
+      );
     } finally {
       await request.response.close();
     }
   }
+}
+
+bool _isBrowserCrossOriginRequest(HttpRequest request) {
+  if (request.method == 'GET' && request.uri.path == '/health') {
+    return false;
+  }
+  final String? origin = request.headers.value('origin');
+  if (origin != null && origin.trim().isNotEmpty) {
+    return true;
+  }
+  final String? fetchSite = request.headers
+      .value('sec-fetch-site')
+      ?.trim()
+      .toLowerCase();
+  return fetchSite != null && fetchSite != 'none' && fetchSite != 'same-origin';
+}
+
+bool _requiresJsonContentType(HttpRequest request) =>
+    request.method == 'POST' || request.method == 'PATCH';
+
+bool _hasJsonContentType(ContentType? contentType) {
+  final String? mimeType = contentType?.mimeType.toLowerCase();
+  return mimeType == 'application/json' ||
+      (mimeType?.endsWith('+json') ?? false);
+}
+
+Future<String> _readBody(
+  HttpRequest request, {
+  required int maximumBytes,
+}) async {
+  final BytesBuilder bytes = BytesBuilder(copy: false);
+  var length = 0;
+  await for (final List<int> chunk in request) {
+    length += chunk.length;
+    if (length > maximumBytes) {
+      throw const _RequestBodyTooLarge();
+    }
+    bytes.add(chunk);
+  }
+  try {
+    return utf8.decode(bytes.takeBytes());
+  } on FormatException {
+    throw const _InvalidRequestEncoding();
+  }
+}
+
+void _writeJson(
+  HttpResponse response,
+  int statusCode,
+  Map<String, Object?> body,
+) {
+  response
+    ..statusCode = statusCode
+    ..headers.contentType = ContentType.json
+    ..headers.set(HttpHeaders.cacheControlHeader, 'no-store')
+    ..headers.set('x-content-type-options', 'nosniff')
+    ..write(jsonEncode(body));
+}
+
+final class _RequestBodyTooLarge implements Exception {
+  const _RequestBodyTooLarge();
+}
+
+final class _InvalidRequestEncoding implements Exception {
+  const _InvalidRequestEncoding();
 }

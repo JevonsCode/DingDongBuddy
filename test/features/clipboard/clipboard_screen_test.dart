@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
@@ -16,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void testWidgetsOnPlatform(
@@ -34,6 +37,102 @@ void testWidgetsOnPlatform(
 }
 
 void main() {
+  testWidgets('list timestamps show time, month and day, then year', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime(2026, 7, 30, 12);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _datedRecord('today', DateTime(2026, 7, 30, 10, 37)),
+        _datedRecord('this-year', DateTime(2026, 6, 29, 10, 37)),
+        _datedRecord('last-year', DateTime(2025, 6, 29, 10, 37)),
+      ]),
+    )..load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
+        localizationsDelegates: const <LocalizationsDelegate<Object>>[
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: ClipboardScreen(viewModel: model, now: () => now),
+      ),
+    );
+
+    expect(find.textContaining('10:37'), findsOneWidget);
+    expect(find.text('6月29日'), findsOneWidget);
+    expect(find.text('2025年6月29日'), findsOneWidget);
+  });
+
+  testWidgets('image and file leading items invoke the system content action', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ClipboardRecord image = ClipboardRecord(
+      id: 'image',
+      group: 'Images',
+      title: 'Image',
+      content: File('Assets/AgentToolIcon.png').absolute.path,
+      tags: const <String>['clipboard', 'image'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: DateTime(2026, 7, 30),
+      updatedAt: DateTime(2026, 7, 30),
+    );
+    final ClipboardRecord file = ClipboardRecord(
+      id: 'file',
+      group: 'Files',
+      title: 'File',
+      content: File('pubspec.yaml').absolute.path,
+      tags: const <String>['clipboard', 'file', 'file-url'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: DateTime(2026, 7, 29),
+      updatedAt: DateTime(2026, 7, 29),
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[image, file]),
+    )..load();
+    final List<ClipboardRecord> opened = <ClipboardRecord>[];
+    int previewCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardScreen(
+          viewModel: model,
+          onOpenContent: (ClipboardRecord record) async {
+            opened.add(record);
+          },
+          onPreview: (_) async {
+            previewCount += 1;
+          },
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('clipboard-open-content-image')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('clipboard-open-content-file')));
+    await tester.pump();
+
+    expect(opened, <ClipboardRecord>[image, file]);
+    expect(previewCount, 0);
+    expect(find.byTooltip('Preview image with system app'), findsOneWidget);
+    expect(find.byTooltip('Open file with system app'), findsOneWidget);
+  });
+
   testWidgets('5000 clipboard rows build only the visible window', (
     WidgetTester tester,
   ) async {
@@ -212,7 +311,7 @@ void main() {
     expect(model.selectedRecord?.id, 'item-1');
   });
 
-  testWidgets('Command-R toggles clipboard filters from the icon button', (
+  testWidgets('Command-R opens, resets, then closes clipboard filters', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -234,6 +333,10 @@ void main() {
     expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
     expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
 
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+    await tester.pump();
+    expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
+
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
     await tester.pump();
@@ -243,11 +346,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('clipboard-category-text')), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('clipboard-category-text')));
+    await tester.pumpAndSettle();
+    expect(model.selectedCategoryId, 'text');
+
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
     expect(tester.widget<ScaleTransition>(transition).scale.value, lessThan(1));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+    expect(model.selectedCategoryId, isNull);
+    expect(find.byKey(const Key('clipboard-category-text')), findsOneWidget);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
@@ -389,7 +503,7 @@ void main() {
   });
 
   testWidgets(
-    'clipboard monitoring switch explains its action without a hover background',
+    'compact clipboard toolbar leaves monitoring controls to the tray menu',
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(390, 760);
@@ -415,21 +529,78 @@ void main() {
         ),
       );
 
-      expect(find.byTooltip('Turn on clipboard monitoring'), findsOneWidget);
       expect(
-        tester
-            .widget<MouseRegion>(
-              find.byKey(const Key('clipboard-monitoring-toggle')),
-            )
-            .cursor,
-        SystemMouseCursors.click,
+        find.byKey(const Key('clipboard-monitoring-toggle')),
+        findsNothing,
       );
-      expect(find.byKey(const Key('clipboard-monitoring-hover')), findsNothing);
+      expect(
+        find.byKey(const Key('clipboard-monitoring-switch')),
+        findsNothing,
+      );
+      expect(find.byTooltip('Turn on clipboard monitoring'), findsNothing);
+      expect(find.byTooltip('Pause clipboard monitoring'), findsNothing);
+    },
+  );
 
-      await tester.tap(find.byKey(const Key('clipboard-monitoring-switch')));
-      await tester.pumpAndSettle();
-      expect(settings.clipboardMonitoring, isTrue);
-      expect(find.byTooltip('Pause clipboard monitoring'), findsOneWidget);
+  testWidgets(
+    'quick clipboard keeps source controls out of the history popup',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 7, 31);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[
+          _sourceRecord(
+            id: 'chrome',
+            title: 'Chrome value',
+            source: 'Google Chrome · com.google.Chrome',
+            now: now,
+          ),
+          _sourceRecord(
+            id: 'notes',
+            title: 'Notes value',
+            source: 'Notes · com.apple.Notes',
+            now: now.subtract(const Duration(seconds: 1)),
+          ),
+          _sourceRecord(
+            id: 'generic',
+            title: 'Generic clipboard value',
+            source: 'Clipboard',
+            now: now.subtract(const Duration(seconds: 2)),
+          ),
+        ]),
+      )..load();
+      addTearDown(model.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ClipboardScreen(
+            viewModel: model,
+            compact: true,
+            filtersExpanded: true,
+          ),
+        ),
+      );
+
+      expect(model.sourceOptions, hasLength(2));
+      expect(
+        find.byKey(const Key('clipboard-manager-source-filter')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(
+          const Key('clipboard-manager-source-bundle:com.google.chrome'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.byKey(
+          const Key('clipboard-manager-source-bundle:com.apple.notes'),
+        ),
+        findsNothing,
+      );
     },
   );
 
@@ -505,7 +676,7 @@ void main() {
     },
   );
 
-  testWidgets('clipboard group filters use concise names and small type', (
+  testWidgets('clipboard group filters use concise names and readable type', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -535,7 +706,7 @@ void main() {
     expect(find.text('项目甲'), findsWidgets);
     expect(find.text('All groups'), findsNothing);
     expect(find.text('Group: 项目甲'), findsNothing);
-    expect(tester.widget<Text>(find.text('项目甲')).style?.fontSize, 9);
+    expect(tester.widget<Text>(find.text('项目甲')).style?.fontSize, 10);
   });
 
   testWidgets('group filters keep a dedicated drag target', (
@@ -1168,6 +1339,38 @@ ClipboardRecord _record() => ClipboardRecord(
   activation: 'taskMatch',
   createdAt: DateTime.utc(2026, 7, 12),
   updatedAt: DateTime.utc(2026, 7, 12),
+);
+
+ClipboardRecord _sourceRecord({
+  required String id,
+  required String title,
+  required String source,
+  required DateTime now,
+}) => ClipboardRecord(
+  id: id,
+  group: 'Clipboard',
+  title: title,
+  content: title,
+  tags: const <String>['clipboard', 'text'],
+  source: source,
+  pinned: false,
+  enabled: true,
+  activation: 'taskMatch',
+  createdAt: now,
+  updatedAt: now,
+);
+
+ClipboardRecord _datedRecord(String id, DateTime timestamp) => ClipboardRecord(
+  id: id,
+  group: 'Clipboard',
+  title: id,
+  content: id,
+  tags: const <String>['clipboard', 'text'],
+  pinned: false,
+  enabled: true,
+  activation: 'taskMatch',
+  createdAt: timestamp,
+  updatedAt: timestamp,
 );
 
 final class _MemoryClipboardStore implements ClipboardStore {

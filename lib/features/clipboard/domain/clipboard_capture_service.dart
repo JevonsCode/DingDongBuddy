@@ -8,6 +8,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
+import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:path/path.dart' as path;
 
 /// Converts one platform clipboard snapshot into durable classified history.
@@ -174,14 +175,27 @@ final class ClipboardCaptureService {
       }
       return null;
     }
-    return _saveRecord(
-      id: id,
-      group: '',
-      title: path.basename(target.path),
-      content: target.path,
-      tags: const <String>['clipboard', 'ext:png', 'file', 'file-url', 'image'],
-      source: source,
-    );
+    try {
+      return _saveRecord(
+        id: id,
+        group: '',
+        title: path.basename(target.path),
+        content: target.path,
+        tags: const <String>[
+          'clipboard',
+          'ext:png',
+          'file',
+          'file-url',
+          'image',
+        ],
+        source: source,
+      );
+    } on Object {
+      if (await target.exists()) {
+        await target.delete();
+      }
+      rethrow;
+    }
   }
 
   ClipboardRecord? _findDuplicate(String content, _ClipboardPayload payload) {
@@ -199,7 +213,8 @@ final class ClipboardCaptureService {
       }
       if (payload == _ClipboardPayload.file &&
           isFile &&
-          !_isManagedClipboardImage(record)) {
+          (_imageStoreDirectory == null ||
+              !isManagedClipboardImage(record, _imageStoreDirectory))) {
         return record;
       }
     }
@@ -211,18 +226,14 @@ final class ClipboardCaptureService {
     if (imageStoreDirectory == null) {
       return null;
     }
-    final String imageStorePath = path.absolute(imageStoreDirectory.path);
     for (final ClipboardRecord record in _store.list(
       limit: 5000,
       includeProtectedBeyondLimit: true,
     )) {
-      if (!record.tags.contains('image')) {
+      if (!isManagedClipboardImage(record, imageStoreDirectory)) {
         continue;
       }
       final File candidate = File(record.content);
-      if (!path.isWithin(imageStorePath, path.absolute(candidate.path))) {
-        continue;
-      }
       try {
         if (!await candidate.exists() ||
             await candidate.length() != bytes.length) {
@@ -253,17 +264,6 @@ final class ClipboardCaptureService {
     );
     _store.save(updated);
     return updated;
-  }
-
-  bool _isManagedClipboardImage(ClipboardRecord record) {
-    final Directory? directory = _imageStoreDirectory;
-    if (directory == null || !record.tags.contains('image')) {
-      return false;
-    }
-    return path.isWithin(
-      path.absolute(directory.path),
-      path.absolute(record.content),
-    );
   }
 
   ClipboardRecord _saveRecord({

@@ -49,6 +49,20 @@ final class ClipboardRecord {
   bool get hasFormattedText =>
       (htmlData?.isNotEmpty ?? false) || (rtfData?.isNotEmpty ?? false);
 
+  /// Local paths carried by Finder/Explorer-style clipboard records.
+  List<String> get filePaths {
+    if (!tags.contains('file') &&
+        !tags.contains('file-url') &&
+        !tags.contains('image')) {
+      return const <String>[];
+    }
+    return content
+        .split('\n')
+        .map((String path) => path.trim())
+        .where((String path) => path.isNotEmpty)
+        .toList(growable: false);
+  }
+
   /// Whether automatic retention must leave this record untouched.
   ///
   /// Older releases marked archives with a tag, while current releases archive

@@ -1,9 +1,12 @@
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
+import 'package:flutter/foundation.dart';
 
 export 'package:dingdong/features/settings/domain/app_settings.dart';
 export 'package:dingdong/features/settings/domain/global_hot_key.dart';
+export 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 
 /// Loads and saves settings using the native DingDong preference key contract.
 final class SettingsRepository {
@@ -36,6 +39,8 @@ final class SettingsRepository {
       _backend.read(_hideDockIconKey),
       _backend.read(_trayNotificationColorKey),
       _backend.read(_globalHotKeyKey),
+      _backend.read(_allowAgentClipboardContentKey),
+      _backend.read(_workspaceShortcutsKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -62,6 +67,13 @@ final class SettingsRepository {
         fallback: defaultTrayNotificationColor,
       ),
       globalHotKey: GlobalHotKey.parse(values[18]),
+      allowAgentClipboardContent: values[19] is bool
+          ? values[19]! as bool
+          : false,
+      workspaceShortcuts: WorkspaceShortcuts.parse(
+        values[20],
+        platform: defaultTargetPlatform,
+      ),
     ).sanitized();
   }
 
@@ -80,6 +92,10 @@ final class SettingsRepository {
       _backend.write(_defaultWorkspaceKey, settings.defaultWorkspace.name),
       _backend.write(_maxItemsKey, settings.clipboardMaxItems),
       _backend.write(_maxAgeKey, settings.clipboardMaxAgeDays),
+      _backend.write(
+        _allowAgentClipboardContentKey,
+        settings.allowAgentClipboardContent,
+      ),
       _backend.write(_selectedSoundKey, settings.selectedSound),
       settings.customSoundPath == null
           ? _backend.remove(_customSoundPathKey)
@@ -99,6 +115,10 @@ final class SettingsRepository {
         settings.trayNotificationColor.name,
       ),
       _backend.write(_globalHotKeyKey, settings.globalHotKey.encode()),
+      _backend.write(
+        _workspaceShortcutsKey,
+        settings.workspaceShortcuts.encode(),
+      ),
     ]);
   }
 }
@@ -113,6 +133,8 @@ const String _densityKey = 'dingdong.panel.density';
 const String _defaultWorkspaceKey = 'dingdong.panel.defaultTab';
 const String _maxItemsKey = 'dingdong.clipboard.maxItems';
 const String _maxAgeKey = 'dingdong.clipboard.maxAgeDays';
+const String _allowAgentClipboardContentKey =
+    'dingdong.agentApi.allowClipboardContent';
 const String _selectedSoundKey = 'dingdong.selectedSound';
 const String _customSoundPathKey = 'dingdong.customSoundPath';
 const String _legacyMcpSetupPromptOverrideKey =
@@ -125,3 +147,4 @@ const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
 const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';
 const String _trayNotificationColorKey = 'dingdong.macos.trayNotificationColor';
 const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';
+const String _workspaceShortcutsKey = 'dingdong.shortcut.workspaces';

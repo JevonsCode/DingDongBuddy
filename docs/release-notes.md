@@ -1,65 +1,115 @@
-# DingDong 0.9.2
+# DingDong 0.9.3
 
-This release makes DingDong's system-wide Clipboard shortcut configurable and
-publishes a complete reference for the keyboard shortcuts and settings shipped
-with the app.
+This release makes Clipboard history easier to manage, gives users an explicit
+privacy boundary for Agent access, and replaces ambiguous connection indicators
+with verifiable status.
 
-## Configurable global Clipboard shortcut
+## Clipboard workflow and durable image history
 
-- Adds **Settings → Keyboard shortcuts → Open or hide Clipboard**.
-- Keeps `Command-Shift-V` on macOS and `Control-Shift-V` on Windows as the
-  defaults while allowing a different combination to be recorded.
-- Supports letters, numbers, F1–F12, arrow keys, Space, and Return with at
-  least one modifier.
-- Applies the new shortcut immediately, persists it across restarts, and offers
-  a one-click reset to the platform default.
-- Updates the Clipboard popup footer to show the configured shortcut.
+- Adds a compact, searchable, multi-select source filter to
+  **Resource Manager → Clipboard**. Only applications represented in the
+  current history are offered.
+- Changes `Command-R` on macOS and `Control-R` on Windows into a three-stage
+  filter shortcut: open filters, reset active filters to All, then close them.
+- Keeps the quick Clipboard panel lightweight by removing its duplicate
+  monitoring switch; monitoring remains available from the tray menu.
+- Stores copied image files as source paths without duplicating or deleting the
+  originals. Screenshots and other raw bitmap data are persisted in managed
+  local storage and follow Clipboard retention.
+- Preserves managed image data for pinned or archived records and cleans it up
+  when an ordinary record is deleted or expires.
+- Adds direct open actions for available image and file records.
 
-## Conflict-safe desktop registration
+## Configurable workspace shortcuts and reliable settings
 
-- Registers custom combinations through the native macOS and Windows runners.
-- Keeps the previous working shortcut when another application already owns the
-  requested combination.
-- Falls back safely when a saved shortcut is malformed or is no longer
-  available during startup.
-- Uses one portable preference representation while preserving platform-native
-  Command, Control, Option, Alt, and Windows-key labels.
+- Makes the Dynamic, Library, and Clipboard workspace shortcuts independently
+  configurable from Settings.
+- Uses safe defaults that preserve standard operating-system shortcuts:
+  `Control-Q/W/E` on macOS and `Alt-Q/W/E` on Windows.
+- Rejects duplicate workspace shortcuts, DingDong action conflicts, reserved
+  system combinations, and unavailable global shortcuts without replacing the
+  previous working value.
+- Saves numeric settings when editing ends, so Clipboard item and day limits
+  survive closing and reopening Settings without requiring Return.
+- Reapplies the selected popup opacity after switching macOS Spaces.
 
-## Public defaults reference
+## Safer local Agent access
 
-- Adds bilingual shortcut and settings-default tables to the DingDong website.
-- Adds the same reference to the English and Chinese READMEs.
-- Documents supported shortcut keys, configuration limits, restart
-  requirements, and platform-specific defaults.
+- Adds **Allow Agents to read clipboard content**, off by default. Clipboard
+  metadata remains available while content reads, capture, collection, and
+  promotion are blocked.
+- Keeps sensitive Clipboard records behind a second explicit request even after
+  Agent content access is enabled.
+- Redirects the loopback server root to the DingDong website and rejects
+  cross-origin browser calls outside `/` and `/health`.
+- Requires JSON for write requests, limits request bodies to 8 MiB, and rejects
+  unsupported form-style or oversized requests before routing.
+- Documents that these browser protections prevent web-page and accidental
+  calls but do not authenticate another ordinary local application running as
+  the same user.
+
+## Clearer Agent connections and desktop polish
+
+- Reorganizes Agent connections around the actual bound origin, preferred-port
+  fallback, health checks, test receipts, and advanced API/MCP details.
+- Replaces misleading green connection dots with evidence-based Agent Adapter
+  summaries. YAML editing and revision comparison remain under
+  **Advanced config**.
+- Adds semantic labels and improves the smallest status text across navigation,
+  Settings, Clipboard, Agent connections, and Resource Manager.
+- Adds a direct **Resource Manager** entry above **Settings** in the tray menu.
+- Adds a real macOS integration smoke test for occupied-port fallback,
+  `/health`, and clean test-host shutdown.
 
 Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本让 DingDong 的系统级剪贴板快捷键支持自定义，并在官网及中英文 README 中
-补齐应用内默认快捷键和设置项参考。
+本版本重点优化剪贴板历史管理、Agent 读取权限和连接状态表达，并修复设置持久化及
+macOS 多空间透明度问题。
 
-## 可自定义的全局剪贴板快捷键
+## 剪贴板流程与持久图片历史
 
-- 新增 **设置 → 键盘快捷键 → 打开或隐藏剪贴板**。
-- macOS 默认仍为 `Command-Shift-V`，Windows 默认仍为
-  `Control-Shift-V`，用户可直接录入其他组合。
-- 主键支持字母、数字、F1–F12、方向键、空格和回车，且必须至少包含一个修饰键。
-- 新组合录入后立即生效并跨重启保存，可一键恢复平台默认值。
-- 剪贴板弹窗底部会显示当前已配置的快捷键。
+- 在 **资源管理 → 剪贴板** 新增紧凑的来源筛选，可搜索、多选，并且只显示当前历史
+  中真实出现过的应用。
+- macOS 的 `Command-R` 和 Windows 的 `Control-R` 改为三段式筛选快捷键：打开筛选、
+  将已启用筛选重置为“全部”，然后收起筛选。
+- 删除快速剪贴板面板中重复的监听开关；开始或停止监听继续由托盘菜单负责。
+- 复制图片文件时只保存源路径，不复制也不删除原文件；截图等原始位图会持久保存到
+  DingDong 的本机托管目录，并遵守剪贴板保留上限。
+- 置顶或归档记录的托管图片不会被自动清理；普通记录被删除或过期时会同步清理。
+- 图片和文件记录新增直接打开操作。
 
-## 安全的双平台注册与冲突回退
+## 可配置工作区快捷键与可靠设置
 
-- 通过 macOS 与 Windows 原生 Runner 动态注册自定义组合。
-- 如果新组合已被其他应用占用，继续保留此前可用的快捷键。
-- 已保存的组合格式异常或启动时失效时，会安全回退并显示提示。
-- 使用统一的可移植配置格式，同时保留 Command、Control、Option、Alt 和 Windows
-  键的平台原生显示。
+- 动态、资源库和剪贴板三个工作区快捷键现在可在设置中分别修改。
+- 默认快捷键避免覆盖系统常用操作：macOS 使用 `Control-Q/W/E`，Windows 使用
+  `Alt-Q/W/E`。
+- 新组合与其他工作区、DingDong 已有操作、系统保留组合冲突，或全局快捷键无法注册
+  时，会保留此前可用的值。
+- 数字设置在结束编辑时自动保存，剪贴板条目上限和保留天数无需按回车也能跨窗口保留。
+- 切换 macOS 空间后会重新应用用户选择的面板透明度。
 
-## 公开默认值参考
+## 更安全的本机 Agent 访问
 
-- 官网新增中英文快捷键与设置默认值表格。
-- English README 与中文 README 同步加入相同参考。
-- 明确记录可用主键、配置范围、需要重启的设置以及平台差异。
+- 新增 **允许 Agent 读取剪贴板正文**，默认关闭；关闭时元数据仍可用，但正文读取、
+  API 采集、收集和提升都会被拒绝。
+- 开启正文权限后，敏感记录仍需要调用方再次明确请求。
+- 本机服务根路径会跳转 DingDong 官网；除 `/` 与 `/health` 外，跨源网页请求会被
+  拒绝。
+- 写请求必须使用 JSON，请求体上限为 8 MiB；表单式或超限请求会在路由前被拒绝。
+- 文档明确区分安全边界：这些规则用于防网页和意外误调用，并不认证同一用户下运行的
+  其他普通本机应用。
+
+## 更清晰的 Agent 连接与桌面细节
+
+- Agent 连接页围绕真实监听地址、首选端口回退、健康检查、测试回执和高级 API/MCP
+  信息重新组织。
+- Agent Adapter 不再用绿色圆点暗示真实连接，改为可验证的证据摘要；YAML 编辑和
+  历史版本比较收进 **高级配置**。
+- 为导航、设置、剪贴板、Agent 连接和资源管理补充语义标签，并提高过小状态文字字号。
+- 托盘菜单在“设置”上方新增直接打开“资源管理”的入口。
+- 新增真实 macOS 集成冒烟测试，覆盖端口被占用后的回退、`/health` 和测试宿主正常
+  退出。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

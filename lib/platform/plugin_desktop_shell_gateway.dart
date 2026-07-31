@@ -61,6 +61,7 @@ final class PluginDesktopShellGateway
   bool _methodHandlersInstalled = false;
   bool _taskbarIsLight = false;
   bool _hideDockIcon = false;
+  double _windowOpacity = 0.90;
   TrayNotificationColor _trayNotificationColor;
   GlobalHotKey _globalHotKey = GlobalHotKey.defaultValue;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
@@ -95,6 +96,7 @@ final class PluginDesktopShellGateway
         opaqueColor: PopupStyle.background,
       ),
     );
+    await _applyWindowOpacity();
     await windowManager.setPreventClose(true);
     windowManager.addListener(this);
     trayManager.addListener(this);
@@ -148,14 +150,19 @@ final class PluginDesktopShellGateway
     await windowManager.show();
     await windowManager.restore();
     await windowManager.focus();
+    await _applyWindowOpacity();
     if (acknowledgeUnread) {
       _scheduleUnreadAcknowledgement();
     }
   }
 
-  Future<void> setOpacity(double value) {
-    return windowManager.setOpacity(value.clamp(0.82, 0.96));
+  Future<void> setOpacity(double value) async {
+    _windowOpacity = value.clamp(0.82, 0.96);
+    await _applyWindowOpacity();
   }
+
+  Future<void> _applyWindowOpacity() =>
+      windowManager.setOpacity(_windowOpacity);
 
   Future<void> setDockIconHidden(bool value) async {
     _hideDockIcon = value;
@@ -242,7 +249,12 @@ final class PluginDesktopShellGateway
           ),
           MenuItem.separator(),
           MenuItem(
-            label: chinese ? '设置…' : 'Settings…',
+            label: chinese ? '资源管理' : 'Resource Manager',
+            onClick: (_) =>
+                _commands.add(DesktopShellCommand.showResourceManager),
+          ),
+          MenuItem(
+            label: chinese ? '设置' : 'Settings',
             onClick: (_) => _commands.add(DesktopShellCommand.showSettings),
           ),
           MenuItem.separator(),
@@ -426,6 +438,16 @@ final class PluginDesktopShellGateway
   @override
   void onWindowBlur() {
     unawaited(_handleWindowBlur());
+  }
+
+  @override
+  void onWindowFocus() {
+    unawaited(_applyWindowOpacity());
+  }
+
+  @override
+  void onWindowMoved() {
+    unawaited(_applyWindowOpacity());
   }
 
   Future<void> _handleWindowBlur() async {

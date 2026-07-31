@@ -30,7 +30,7 @@ class _RecentAgentCount extends StatelessWidget {
               context.localized('$hours h · $count', '$hours 小时 · $count'),
               style: const TextStyle(
                 color: PopupStyle.textSecondary,
-                fontSize: 8,
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -208,7 +208,7 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: PopupStyle.textSecondary,
-                              fontSize: 9,
+                              fontSize: 10,
                             ),
                           ),
                         ],
@@ -219,8 +219,8 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                         widget.activity.completedAt.toLocal(),
                       ).format(context),
                       style: const TextStyle(
-                        color: PopupStyle.textTertiary,
-                        fontSize: 8,
+                        color: PopupStyle.textSecondary,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -268,98 +268,107 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: PopupStyle.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: PopupStyle.border),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          height: 72,
-          child: Stack(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Row(
+    return Semantics(
+      button: true,
+      label: '$label, $value',
+      child: ExcludeSemantics(
+        child: Material(
+          color: PopupStyle.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: PopupStyle.border),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: 72,
+              child: Stack(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 8,
+                    ),
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        PopupSymbolIcon(
-                          symbol,
-                          size: 18,
-                          color: PopupStyle.accent,
-                        ),
-                        const SizedBox(width: 7),
-                        Flexible(
-                          child: Text(
-                            value,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: PopupStyle.textPrimary,
-                              fontSize: 15,
-                              height: 1,
-                              fontWeight: FontWeight.w800,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            PopupSymbolIcon(
+                              symbol,
+                              size: 18,
+                              color: PopupStyle.accent,
                             ),
+                            const SizedBox(width: 7),
+                            Flexible(
+                              child: Text(
+                                value,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: PopupStyle.textPrimary,
+                                  fontSize: 15,
+                                  height: 1,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: PopupStyle.textSecondary,
+                            fontSize: 10,
+                            height: 1,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 7),
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: PopupStyle.textSecondary,
-                        fontSize: 9,
-                        height: 1,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (showBadge)
-                Positioned(
-                  key: const Key('today-mcp-badge'),
-                  top: 6,
-                  right: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: PopupStyle.accent,
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                          color: PopupStyle.accent.withValues(alpha: 0.20),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Text(
-                      'MCP',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 7,
-                        height: 1,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
                   ),
-                ),
-            ],
+                  if (showBadge)
+                    Positioned(
+                      key: const Key('today-mcp-badge'),
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: PopupStyle.accent,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: PopupStyle.accent.withValues(alpha: 0.20),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'MCP',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            height: 1,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -445,7 +454,7 @@ class _EnabledResourceCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: PopupStyle.textSecondary,
-                      fontSize: 9,
+                      fontSize: 10,
                       height: 1.25,
                     ),
                   ),
@@ -588,7 +597,7 @@ class _TinyTag extends StatelessWidget {
         label,
         style: const TextStyle(
           color: PopupStyle.textSecondary,
-          fontSize: 9,
+          fontSize: 10,
           height: 1,
           fontWeight: FontWeight.w600,
         ),

@@ -42,6 +42,7 @@ final class AgentRouter {
     SkillPackageInstaller? skillPackageInstaller,
     String Function()? idGenerator,
     DateTime Function()? now,
+    Future<bool> Function()? allowAgentClipboardContent,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
   }) : _onDing = onDing ?? _ignoreDing,
@@ -108,7 +109,9 @@ final class AgentRouter {
        _resourceStore = resourceStore,
        _triggerGroupStore = triggerGroupStore,
        _idGenerator = idGenerator ?? generateUuid,
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       _allowAgentClipboardContent =
+           allowAgentClipboardContent ?? _denyClipboardContent;
 
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
@@ -126,6 +129,7 @@ final class AgentRouter {
   final TriggerGroupStore? _triggerGroupStore;
   final String Function() _idGenerator;
   final DateTime Function() _now;
+  final Future<bool> Function() _allowAgentClipboardContent;
   final Map<String?, DateTime> _recentPrimaryDings = <String?, DateTime>{};
 
   static const Duration _completionHookDeduplicationWindow = Duration(
@@ -137,6 +141,18 @@ final class AgentRouter {
   }
 
   Future<HttpResponseData> route(HttpRequestData request) async {
+    if (_requestsClipboardContent(request) &&
+        !await _isAgentClipboardContentAllowed()) {
+      return const HttpResponseData(
+        statusCode: 403,
+        json: <String, Object?>{
+          'status': 'forbidden',
+          'message':
+              'Clipboard content access is disabled in DingDong Settings.',
+          'setting': 'allowAgentClipboardContent',
+        },
+      );
+    }
     final HttpResponseData? desktopResponse = _desktopControlRoutes.route(
       method: request.method,
       path: request.parsedUri.path,
@@ -175,8 +191,7 @@ final class AgentRouter {
         json: <String, Object?>{'status': 'ok', 'service': 'DingDong'},
       );
     }
-    if ((request.method == 'GET' || request.method == 'POST') &&
-        request.parsedUri.path == '/ding') {
+    if (request.method == 'POST' && request.parsedUri.path == '/ding') {
       try {
         final DingRequest dingRequest = DingRequest.parse(request.body);
         final DateTime now = _now();
@@ -527,11 +542,47 @@ final class AgentRouter {
       json: <String, Object?>{'status': 'error', 'message': 'Route not found'},
     );
   }
+
+  Future<bool> _isAgentClipboardContentAllowed() async {
+    try {
+      return await _allowAgentClipboardContent();
+    } on Object {
+      return false;
+    }
+  }
 }
 
 String? _notificationSourceKey(String? source) => source?.trim().toLowerCase();
 
 void _ignoreDing(DingRequest request) {}
+
+Future<bool> _denyClipboardContent() async => false;
+
+bool _requestsClipboardContent(HttpRequestData request) {
+  final Uri uri = request.parsedUri;
+  if (request.method == 'GET' &&
+      const <String>{
+        '/clipboard/history',
+        '/clipboard/snippets',
+        '/clipboard/digest',
+      }.contains(uri.path)) {
+    return _trueQueryValue(uri.queryParameters['includeContent']);
+  }
+  if (request.method != 'POST') {
+    return false;
+  }
+  if (uri.path == '/clipboard/capture' || uri.path == '/clipboard/collect') {
+    return true;
+  }
+  return uri.pathSegments.length == 3 &&
+      uri.pathSegments[0] == 'clipboard' &&
+      uri.pathSegments[1] == 'promote';
+}
+
+bool _trueQueryValue(String? value) => switch (value?.toLowerCase()) {
+  'true' || '1' || 'yes' || 'on' => true,
+  _ => false,
+};
 
 HttpResponseData _resourceUnavailable() {
   return const HttpResponseData(

@@ -119,7 +119,24 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(GlobalHotKeyRecorder), findsOneWidget);
+      expect(find.byType(WorkspaceShortcutRecorder), findsNWidgets(3));
       expect(find.byKey(const Key('settings-global-hot-key')), findsOneWidget);
+      expect(
+        find.byKey(const Key('settings-workspace-shortcut-today')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-workspace-shortcut-library')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-workspace-shortcut-clipboard')),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Dynamic workspace shortcut, ⌃ Q'),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('settings-hide-dock-icon')), findsOneWidget);
       expect(
         find.byKey(const Key('settings-anonymous-telemetry')),
@@ -133,6 +150,10 @@ void main() {
       );
       expect(
         find.byKey(const Key('settings-clipboard-monitoring')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-agent-clipboard-content')),
         findsOneWidget,
       );
       expect(find.byKey(const Key('settings-retention-items')), findsOneWidget);
@@ -173,11 +194,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(backend.values['dingdong.macos.hideDockIcon'], isTrue);
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+      await tester.ensureVisible(
+        find.byKey(const Key('settings-clipboard-monitoring')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('settings-clipboard-monitoring')));
       await tester.pumpAndSettle();
       expect(backend.values['dingdong.clipboard.monitoring'], isTrue);
+      await tester.ensureVisible(
+        find.byKey(const Key('settings-agent-clipboard-content')),
+      );
+      await tester.tap(
+        find.byKey(const Key('settings-agent-clipboard-content')),
+      );
+      await tester.pumpAndSettle();
+      expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
 
       await tester.ensureVisible(find.text('Dark'));
       await tester.pumpAndSettle();
@@ -232,6 +263,135 @@ void main() {
       expect(find.text('⌘K'), findsOneWidget);
     },
   );
+
+  testWidgetsOnPlatform(
+    'workspace shortcut recorder persists a custom local shortcut',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1000, 980);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(backend),
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(viewModel: model)),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder recorder = find.byKey(
+        const Key('settings-workspace-shortcut-today'),
+      );
+      await tester.ensureVisible(recorder);
+      await tester.tap(recorder);
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyT);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyT);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(find.text('⌃ T'), findsOneWidget);
+      expect(
+        WorkspaceShortcuts.parse(
+          backend.values['dingdong.shortcut.workspaces'],
+          platform: TargetPlatform.macOS,
+        ).today,
+        const WorkspaceShortcut(key: 'T', secondary: true),
+      );
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'workspace shortcut recorder rejects a duplicate shortcut',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1000, 980);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(viewModel: model)),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder recorder = find.byKey(
+        const Key('settings-workspace-shortcut-today'),
+      );
+      await tester.ensureVisible(recorder);
+      await tester.tap(recorder);
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyW);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyW);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('settings-workspace-shortcut-today-validation')),
+        findsOneWidget,
+      );
+      expect(find.text('⌃ Q'), findsOneWidget);
+    },
+  );
+
+  testWidgets('retention fields persist edits without requiring Return', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1000, 820);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend(
+      <String, Object>{
+        'dingdong.clipboard.maxItems': 1000,
+        'dingdong.clipboard.maxAgeDays': 90,
+      },
+    );
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    addTearDown(model.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(viewModel: model)),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder itemsField = find.descendant(
+      of: find.byKey(const Key('settings-retention-items')),
+      matching: find.byType(TextFormField),
+    );
+    await tester.ensureVisible(itemsField);
+    await tester.enterText(itemsField, '5000');
+    await tester.pumpAndSettle();
+
+    final Finder daysField = find.descendant(
+      of: find.byKey(const Key('settings-retention-days')),
+      matching: find.byType(TextFormField),
+    );
+    await tester.ensureVisible(daysField);
+    await tester.enterText(daysField, '190');
+    await tester.pumpAndSettle();
+
+    expect(backend.values['dingdong.clipboard.maxItems'], 5000);
+    expect(backend.values['dingdong.clipboard.maxAgeDays'], 190);
+
+    final SettingsViewModel reopened = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    addTearDown(reopened.dispose);
+    await reopened.load();
+
+    expect(reopened.settings.clipboardMaxItems, 5000);
+    expect(reopened.settings.clipboardMaxAgeDays, 190);
+  });
 
   testWidgets('sound picker keeps the DingDong family and supports preview', (
     WidgetTester tester,

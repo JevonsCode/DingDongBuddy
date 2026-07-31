@@ -124,6 +124,7 @@ void main() {
       final ShellController controller = ShellController();
       final List<bool> monitoringChanges = <bool>[];
       int clearCount = 0;
+      int resourceManagerCount = 0;
       int settingsCount = 0;
       int hideDockIconCount = 0;
       final DesktopShellService service = DesktopShellService(
@@ -137,6 +138,9 @@ void main() {
         onClearClipboardHistory: () async {
           clearCount += 1;
         },
+        onShowResourceManager: () async {
+          resourceManagerCount += 1;
+        },
         onShowSettings: () async {
           settingsCount += 1;
         },
@@ -149,6 +153,7 @@ void main() {
       gateway.emit(DesktopShellCommand.startClipboardMonitoring);
       gateway.emit(DesktopShellCommand.stopClipboardMonitoring);
       gateway.emit(DesktopShellCommand.clearClipboardHistory);
+      gateway.emit(DesktopShellCommand.showResourceManager);
       gateway.emit(DesktopShellCommand.showSettings);
       gateway.emit(DesktopShellCommand.hideDockIcon);
       gateway.emit(DesktopShellCommand.focusClipboardSearch);
@@ -156,6 +161,7 @@ void main() {
 
       expect(monitoringChanges, <bool>[true, false]);
       expect(clearCount, 1);
+      expect(resourceManagerCount, 1);
       expect(settingsCount, 1);
       expect(hideDockIconCount, 1);
       expect(controller.selectedIndex, 2);

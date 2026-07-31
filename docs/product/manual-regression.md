@@ -1,4 +1,4 @@
-# DingDong 0.9.2 Manual Regression Checklist
+# DingDong 0.9.3 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -9,6 +9,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
 - A saved non-default opacity can be restored before the desktop shell starts without a native window crash.
 - DingDong opens the saved default workspace and restores theme, density, and opacity.
+- On macOS, switching Spaces and reopening the popup keeps the selected opacity
+  instead of falling back to the default appearance.
 - Opening DingDong from Applications, Launchpad, or Spotlight reveals and focuses
   the panel both on a cold launch and when the app is already running; login
   startup remains silent.
@@ -17,6 +19,8 @@ and macOS golden images; the items below exercise real operating-system state.
   application restarts.
 - Right-click tray actions open Clipboard, toggle monitoring, clear history, open Settings, and quit the complete process.
 - Launch at startup reads and updates the current-user OS setting.
+- Change clipboard retention to 5,000 items and 190 days without pressing
+  Return, close Settings, and reopen it; both values remain saved.
 - The selected API port is written to the application data `api-port` file.
 - If the selected port is occupied, the UI and Agent manifest show the actual loopback fallback port.
 
@@ -25,6 +29,13 @@ and macOS golden images; the items below exercise real operating-system state.
 - The global shortcut opens Clipboard and remembers the previously focused application.
 - Settings → Keyboard shortcuts records a modified global shortcut, applies it
   immediately, updates the popup footer, and restores it after relaunch.
+- The same section records Dynamic, Library, and Clipboard shortcuts
+  independently; each change immediately updates navigation and the hint shown
+  while its modifier is held, and remains after reopening Settings.
+- A workspace shortcut that duplicates another workspace, the global panel
+  shortcut, `Command/Control-F`, `Command/Control-R`, item shortcuts 1–9, or a
+  reserved system combination is rejected without replacing the previous value.
+- Reset restores `Control-Q/W/E` on macOS or `Alt-Q/W/E` on Windows.
 - The shortcut recorder rejects a key without a modifier, Escape cancels
   recording, and Reset restores Command-Shift-V on macOS or
   Control-Shift-V on Windows.
@@ -32,8 +43,16 @@ and macOS golden images; the items below exercise real operating-system state.
   working shortcut and shows an actionable error.
 - Every Clipboard reveal performs a fallback system read and places the latest non-duplicate item first.
 - `Command-F` focuses Clipboard search on macOS; `Control-F` does the same on Windows.
-- Text, URLs, commands, file selections, and bitmap images appear in history.
+- Text, URLs, commands, and file selections appear in history. Copied image
+  files retain only their source path; screenshots or copied image pixels
+  without a source path remain available from DingDong-managed storage.
 - Search, kind filters, group filters, pinning, organizing, deletion, and promotion persist.
+- `Command-R`/`Control-R` opens filters; when filters are active, the next press
+  resets them to All while keeping the bar open, and the following press closes
+  the bar. Mouse clicks keep their existing behavior.
+- The default `Control-Q/W/E` changes workspaces on macOS without replacing
+  standard Command-Q/Command-W behavior; the default `Alt-Q/W/E` does the same
+  on Windows. All three combinations are individually configurable.
 - Hovering the Clipboard monitoring switch keeps the surface stable, shows a click cursor, and explains whether clicking will turn monitoring on or pause it.
 - Arrow keys change selection and Enter restores it.
 - Textual-row context menus expose both Paste and Paste as Plain Text; file and
@@ -49,6 +68,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - A 5,000-row retained history scrolls smoothly without eagerly building every row.
 - Pinned, legacy-archived, and custom-group archived rows survive item and age
   retention; an old archive remains searchable beyond 5,000 newer ordinary rows.
+- Managed screenshot/image data is deleted with an ordinary row removed by
+  retention or manual deletion, while archived and pinned managed images remain.
+  Deleting a copied source-image row never deletes the source file.
 - Search text remains visible after leaving and returning to Clipboard, and
   clearing it restores the complete visible history.
 - Sensitive rows stay hidden from default Agent API responses.
@@ -91,9 +113,13 @@ and macOS golden images; the items below exercise real operating-system state.
   and can open the affected resource when one is recorded.
 - An enabled Claude Code plugin with the same Skill name produces a warning
   rather than blocking synchronization.
-- Agent access shows the five bundled Adapters, validates user YAML, preserves
-  current plus two prior revisions, and does not overwrite an unsaved editor
-  when its file changes externally.
+- Agent access shows the five bundled Adapters and defaults to an evidence
+  summary. Detected/not-detected directory badges are explicit, and the page
+  says that directory detection or a declared path does not verify MCP, Hook,
+  Bridge, authentication, or completion callbacks.
+- Advanced config validates user YAML, preserves current plus two prior
+  revisions, and does not overwrite an unsaved editor when its file changes
+  externally.
 - Saving, restoring, or deleting an Adapter immediately resynchronizes current
   resources. Changing its paths removes only legacy DingDong-managed Skill
   copies and managed Prompt/MCP content from old targets while preserving
@@ -105,12 +131,23 @@ and macOS golden images; the items below exercise real operating-system state.
 ## Agent API and MCP
 
 - `GET /health` succeeds only on a loopback address.
-- The Agent API workspace displays the actual origin and can send a test notification.
+- Opening `/` redirects to the configured DingDong website.
+- Browser requests with a cross-origin `Origin` or cross-site Fetch Metadata are
+  rejected outside `/` and `/health`. Form-style POST requests are rejected,
+  while valid JSON Agent requests continue to work.
+- Request bodies above 8 MiB are rejected before routing.
+- Agent connections health-checks the actual bound origin, discloses preferred
+  port fallback, distinguishes real completion receipts from unknown state, and
+  can send a test notification.
 - The Agent setup prompt is read-only, can be copied with visible feedback, and
   describes how the Agent should install and verify DingDong MCP.
 - The displayed MCP executable exists inside the installed distribution.
 - Sending JSON-RPC `tools/list` to the bundled executable returns DingDong tools.
 - `dingdong_bridge` remains summary-first and does not include clipboard content by default.
+- With **Allow Agents to read clipboard content** off, metadata queries remain
+  available but content reads, API capture, collection, and promotion are
+  rejected. Enabling it takes effect without a restart; sensitive records still
+  require a separate explicit request.
 - `dingdong_notify` uses the sound selected in Settings when no sound is supplied.
 - Agent sessions, memories, bundles, and handoffs remain available after restarting DingDong.
 - Enabling or disabling an MCP updates supported Agent user configurations and preserves unrelated entries.
@@ -134,6 +171,7 @@ and macOS golden images; the items below exercise real operating-system state.
 - Language changes immediately update navigation and feature labels.
 - System/light/dark theme and list density render without clipped controls.
 - Clipboard retention accepts 20–5,000 items and 1–730 days.
+- Agent clipboard-content access defaults to off and persists after restart.
 - Built-in, random, system, muted, and custom notification sounds behave as labeled.
 - Notifications play the selected sound without requesting Dock icon attention.
 - Completion hooks show the first useful sentence from the Agent's final reply;
@@ -150,10 +188,33 @@ and macOS golden images; the items below exercise real operating-system state.
 - Memory and local storage usage can be refreshed without blocking navigation.
 - API port accepts 1024–65535 and states that restart is required.
 
+## Accessibility and readability
+
+- The Settings, Hide, Issues, workspace-tab, Clipboard monitoring, Clipboard
+  filter, resource action, metric, Agent connection, and Agent Adapter controls
+  expose explicit button, selected/toggled, enabled, label, and action semantics
+  where their visual composition would otherwise be ambiguous.
+- Workspace-tab semantics always include the configured shortcut, even when the
+  visual shortcut hint is hidden.
+- Recent-Agent counts, Agent metadata and timestamps, Activity status text,
+  Clipboard group labels, Clipboard timestamps, the Plain text label, and
+  resource tags use at least 10 px rather than the previous 7–9 px body/status
+  sizes. Small DEV, MCP, and numeric badges may remain 8–9 px because their
+  parent control exposes the complete accessible label.
+- Settings and Resource Manager expose named semantic roots. The current macOS
+  secondary-window accessibility bridge still needs a real VoiceOver pass
+  because automated inspection may expose only the native window shell.
+
 ## Packaging
 
 - `flutter analyze` passes.
 - `flutter test` passes on macOS.
+- `flutter test integration_test/desktop_agent_connection_smoke_test.dart -d
+  macos` passes with a real occupied loopback port, fallback bind, and `/health`
+  request. Its product data stores are explicitly in-memory test substitutes.
+- When that macOS test runner sends `SIGTERM`, the Debug host exits through
+  AppKit without opening an “unexpectedly quit” report; actual crash signals
+  remain unaffected.
 - `flutter test --exclude-tags golden` passes on Windows.
 - `flutter build macos --release` contains `Contents/MCP/bundle/bin/dingdong_mcp`.
 - `flutter build windows --release` contains `mcp/bundle/bin/dingdong_mcp.exe`.
@@ -164,8 +225,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - A Debug macOS build is named `DingDong DEV`, uses bundle id
   `com.dingdongbuddy.app.dev`, stores data under `DingDong DEV`, shows a DEV
   badge, and does not offer release updates.
-- The macOS release app metadata is version `0.9.2` build `29` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.2.29` and product name `DingDong`.
+- The macOS release app metadata is version `0.9.3` build `30` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.3.30` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

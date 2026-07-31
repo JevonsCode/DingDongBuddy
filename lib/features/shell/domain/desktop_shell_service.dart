@@ -13,6 +13,7 @@ final class DesktopShellService {
     required this.defaultWorkspaceIndex,
     this.onClipboardMonitoringChanged,
     this.onClearClipboardHistory,
+    this.onShowResourceManager,
     this.onShowSettings,
     this.onHideDockIcon,
   });
@@ -23,6 +24,7 @@ final class DesktopShellService {
   final int Function() defaultWorkspaceIndex;
   final Future<void> Function(bool enabled)? onClipboardMonitoringChanged;
   final Future<void> Function()? onClearClipboardHistory;
+  final Future<void> Function()? onShowResourceManager;
   final Future<void> Function()? onShowSettings;
   final Future<void> Function()? onHideDockIcon;
   StreamSubscription<DesktopShellCommand>? _subscription;
@@ -67,6 +69,8 @@ final class DesktopShellService {
       case DesktopShellCommand.focusClipboardSearch:
         controller.open(2);
         controller.requestClipboardSearchFocus();
+      case DesktopShellCommand.showResourceManager:
+        await onShowResourceManager?.call();
       case DesktopShellCommand.showSettings:
         await onShowSettings?.call();
       case DesktopShellCommand.hideDockIcon:

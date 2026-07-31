@@ -34,18 +34,18 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.9.2', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.9.3', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.9.2')), findsOneWidget);
-    expect(find.text('v0.9.2'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.9.3')), findsOneWidget);
+    expect(find.text('v0.9.3'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
-    expect(find.text('Agent API'), findsWidgets);
+    expect(find.text('Agent connections'), findsWidgets);
   });
 
   testWidgets('development build is visibly labeled beside DingDong', (
@@ -399,12 +399,29 @@ void main() {
     tester.view.physicalSize = const Size(390, 760);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
-    await tester.pumpWidget(DingDongApp(shellController: controller));
+    await tester.pumpWidget(
+      DingDongApp(
+        shellController: controller,
+        agentBaseUri: Uri.parse('http://127.0.0.1:58631'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('API 58631'), findsOneWidget);
+    expect(
+      find.textContaining('API listening on 127.0.0.1:58631'),
+      findsOneWidget,
+    );
 
     controller.open(3);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('http://127.0.0.1:2333'), findsOneWidget);
+    expect(find.text('http://127.0.0.1:58631'), findsWidgets);
+    final Finder advanced = find.byKey(const Key('agent-api-toggle-advanced'));
+    await tester.ensureVisible(advanced);
+    await tester.pumpAndSettle();
+    await tester.tap(advanced);
+    await tester.pumpAndSettle();
     expect(find.text('MCP access'), findsOneWidget);
     expect(find.byKey(const Key('agent-api-copy-health')), findsOneWidget);
   });
@@ -452,7 +469,7 @@ void main() {
     controller.open(3);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('agent-api-copy-health')), findsOneWidget);
+    expect(find.byKey(const Key('agent-connection-health')), findsOneWidget);
   });
 }
 

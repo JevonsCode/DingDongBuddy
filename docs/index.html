@@ -59,7 +59,7 @@
               <img src="./assets/dingdong-icon.png" alt="">
               <div class="demo-title-copy">
                 <strong>DingDong</strong>
-                <span class="demo-version">v0.9.2</span>
+                <span class="demo-version">v0.9.3</span>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
                 <span><img src="./assets/symbols/settings.png" alt=""></span>
@@ -135,13 +135,13 @@
         <div class="section-heading">
           <p class="eyebrow" data-i18n="defaults.eyebrow">Keyboard and settings reference</p>
           <h2 data-i18n="defaults.title">Know the defaults. Change the shortcut you use most.</h2>
-          <p data-i18n="defaults.body">The global Clipboard shortcut can be recorded in Settings and takes effect immediately. Everything else below shows the defaults shipped with DingDong.</p>
+          <p data-i18n="defaults.body">The global Clipboard shortcut and all three workspace shortcuts can be recorded in Settings and take effect immediately. The table shows DingDong’s defaults.</p>
         </div>
 
         <div class="defaults-grid">
           <article class="defaults-panel">
             <h3 data-i18n="defaults.shortcutsTitle">Default keyboard shortcuts</h3>
-            <p data-i18n="defaults.shortcutsBody">Open Settings → Keyboard shortcuts to replace the first shortcut. If the new combination is already in use, DingDong keeps the previous one.</p>
+            <p data-i18n="defaults.shortcutsBody">Open Settings → Keyboard shortcuts to record the global shortcut or any workspace shortcut. DingDong rejects combinations that conflict with an existing app, workspace, or reserved action.</p>
             <div class="defaults-table-scroll">
               <table>
                 <thead>
@@ -159,8 +159,8 @@
                   </tr>
                   <tr>
                     <td data-i18n="shortcuts.workspaces">Dynamic / Library / Clipboard</td>
-                    <td><kbd>⌘Q</kbd> / <kbd>⌘W</kbd> / <kbd>⌘E</kbd></td>
-                    <td><kbd>Ctrl+Q</kbd> / <kbd>Ctrl+W</kbd> / <kbd>Ctrl+E</kbd></td>
+                    <td><kbd>⌃Q</kbd> / <kbd>⌃W</kbd> / <kbd>⌃E</kbd></td>
+                    <td><kbd>Alt+Q</kbd> / <kbd>Alt+W</kbd> / <kbd>Alt+E</kbd></td>
                   </tr>
                   <tr>
                     <td data-i18n="shortcuts.search">Focus Clipboard search</td>
@@ -349,28 +349,28 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       <section class="download-section" id="download" aria-label="Download">
         <div class="download-actions">
-          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.2/DingDong-0.9.2-macos-arm64.dmg">
+          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.3/DingDong-0.9.3-macos-arm64.dmg">
             <span class="download-card-heading">
               <strong data-i18n="download.macosArm64">Mac with Apple silicon</strong>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.macosArm64Hint">DingDong 0.9.2 · DMG · arm64</span>
+            <span data-i18n="download.macosArm64Hint">DingDong 0.9.3 · DMG · arm64</span>
           </a>
-          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.2/DingDong-0.9.2-macos-x64-beta.dmg">
+          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.3/DingDong-0.9.3-macos-x64-beta.dmg">
             <span class="download-card-heading">
               <strong data-i18n="download.macosX64">Mac with Intel chip</strong>
               <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.macosX64Hint">DingDong 0.9.2 · DMG · x64</span>
+            <span data-i18n="download.macosX64Hint">DingDong 0.9.3 · DMG · x64</span>
           </a>
-          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.2/DingDong-0.9.2-windows-x64-beta-Setup.exe">
+          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.3/DingDong-0.9.3-windows-x64-beta-Setup.exe">
             <span class="download-card-heading">
               <strong data-i18n="download.windowsX64">Windows x64</strong>
               <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.windowsX64Hint">DingDong 0.9.2 · Setup · x64</span>
+            <span data-i18n="download.windowsX64Hint">DingDong 0.9.3 · Setup · x64</span>
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
@@ -443,9 +443,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "features.notify.body": "Pick a sound and get called back when an Agent finishes or needs your attention.",
           "defaults.eyebrow": "Keyboard and settings reference",
           "defaults.title": "Know the defaults. Change the shortcut you use most.",
-          "defaults.body": "The global Clipboard shortcut can be recorded in Settings and takes effect immediately. Everything else below shows the defaults shipped with DingDong.",
+          "defaults.body": "The global Clipboard shortcut and all three workspace shortcuts can be recorded in Settings and take effect immediately. The table shows DingDong’s defaults.",
           "defaults.shortcutsTitle": "Default keyboard shortcuts",
-          "defaults.shortcutsBody": "Open Settings → Keyboard shortcuts to replace the first shortcut. If the new combination is already in use, DingDong keeps the previous one.",
+          "defaults.shortcutsBody": "Open Settings → Keyboard shortcuts to record the global shortcut or any workspace shortcut. DingDong rejects combinations that conflict with an existing app, workspace, or reserved action.",
           "defaults.settingsTitle": "Settings defaults",
           "defaults.settingsBody": "Settings stay on this computer and apply immediately unless a restart is noted.",
           "defaults.action": "Action",
@@ -455,7 +455,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "shortcuts.open": "Open or hide Clipboard",
           "shortcuts.workspaces": "Dynamic / Library / Clipboard",
           "shortcuts.search": "Focus Clipboard search",
-          "shortcuts.filters": "Show or hide filters",
+          "shortcuts.filters": "Open, reset, or hide filters",
           "shortcuts.items": "Use visible item 1–9",
           "shortcuts.plainText": "Use visible item 1–9 as plain text",
           "shortcuts.move": "Move selection",
@@ -538,11 +538,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "download.latest": "Download DingDong",
           "download.latestHint": "Get the latest desktop release",
           "download.macosArm64": "Mac with Apple silicon",
-          "download.macosArm64Hint": "DingDong 0.9.2 · DMG · arm64",
+          "download.macosArm64Hint": "DingDong 0.9.3 · DMG · arm64",
           "download.macosX64": "Mac with Intel chip",
-          "download.macosX64Hint": "DingDong 0.9.2 · DMG · x64",
+          "download.macosX64Hint": "DingDong 0.9.3 · DMG · x64",
           "download.windowsX64": "Windows x64",
-          "download.windowsX64Hint": "DingDong 0.9.2 · Setup · x64",
+          "download.windowsX64Hint": "DingDong 0.9.3 · Setup · x64",
           "download.beta": "Beta",
           "download.recommended": "Recommended",
           "download.macHelp": "Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.",
@@ -599,9 +599,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "features.notify.body": "选一个喜欢的声音，Agent 完成或需要你时就叫你回来。",
           "defaults.eyebrow": "快捷键与设置参考",
           "defaults.title": "默认值写清楚，最常用的快捷键由你决定",
-          "defaults.body": "全局剪贴板快捷键可直接在设置中录入并立即生效；下面同时列出 DingDong 其余快捷键和配置默认值。",
+          "defaults.body": "全局剪贴板快捷键和三个工作区快捷键都可以在设置中录入并立即生效；下面列出 DingDong 的默认组合。",
           "defaults.shortcutsTitle": "默认键盘快捷键",
-          "defaults.shortcutsBody": "打开“设置 → 键盘快捷键”即可替换第一项；新组合被其他应用占用时，DingDong 会保留原快捷键。",
+          "defaults.shortcutsBody": "打开“设置 → 键盘快捷键”即可录制全局快捷键或任一工作区快捷键；与其他应用、工作区或保留操作冲突的组合不会保存。",
           "defaults.settingsTitle": "设置默认值",
           "defaults.settingsBody": "设置保存在本机；除注明需要重启外，修改后立即生效。",
           "defaults.action": "操作",
@@ -611,7 +611,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "shortcuts.open": "打开或隐藏剪贴板",
           "shortcuts.workspaces": "动态 / 资源库 / 剪贴板",
           "shortcuts.search": "聚焦剪贴板搜索",
-          "shortcuts.filters": "展开或收起筛选",
+          "shortcuts.filters": "展开、重置或收起筛选",
           "shortcuts.items": "使用当前可见的第 1–9 条",
           "shortcuts.plainText": "以纯文本使用当前可见的第 1–9 条",
           "shortcuts.move": "移动选择",
@@ -694,11 +694,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "download.latest": "下载 DingDong",
           "download.latestHint": "获取最新桌面版本",
           "download.macosArm64": "Mac（Apple 芯片）",
-          "download.macosArm64Hint": "DingDong 0.9.2 · DMG · arm64",
+          "download.macosArm64Hint": "DingDong 0.9.3 · DMG · arm64",
           "download.macosX64": "Mac（Intel 芯片）",
-          "download.macosX64Hint": "DingDong 0.9.2 · DMG · x64",
+          "download.macosX64Hint": "DingDong 0.9.3 · DMG · x64",
           "download.windowsX64": "Windows x64",
-          "download.windowsX64Hint": "DingDong 0.9.2 · Setup · x64",
+          "download.windowsX64Hint": "DingDong 0.9.3 · Setup · x64",
           "download.beta": "Beta",
           "download.recommended": "推荐",
           "download.macHelp": "需要 macOS 13 或更高版本。不确定 Mac 类型？打开苹果菜单  → 关于本机：显示“芯片”是 Apple 芯片，显示“处理器”是 Intel。",
@@ -721,7 +721,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         en: {
           today: {
             status: { title: "Clipboard monitoring is ready.", time: "17:17", state: "Ready" },
-            metrics: [["3", "Resources"], ["708", "Clipboard"], ["Online", "Agent API"]],
+            metrics: [["3", "Resources"], ["708", "Clipboard"], ["Check", "Agent connections"]],
             agents: [
               { source: "Codex", time: "17:16", body: "Release checks passed. DingDong played the selected alert." },
               { source: "Claude Code", time: "16:42", body: "The online Skill was refreshed from its source." },
@@ -753,7 +753,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { id: "text", label: "Text" }
             ],
             items: [
-              { id: "image", kind: "IMG", icon: "image", title: "DingDong 0.9.2 interface.png", body: "PNG · image · 271 KB", time: "17:04" },
+              { id: "image", kind: "IMG", icon: "image", title: "DingDong 0.9.3 interface.png", body: "PNG · image · 271 KB", time: "17:04" },
               { id: "path", kind: "PATH", icon: "path", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", icon: "command", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", icon: "link", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -766,7 +766,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         zh: {
           today: {
             status: { title: "剪贴板监听已就绪。", time: "17:17", state: "就绪" },
-            metrics: [["3", "资源"], ["708", "剪贴板"], ["在线", "Agent API"]],
+            metrics: [["3", "资源"], ["708", "剪贴板"], ["待确认", "Agent 连接"]],
             agents: [
               { source: "Codex", time: "17:16", body: "发布检查通过，DingDong 已播放提醒声音" },
               { source: "Claude Code", time: "16:42", body: "在线 Skill 已从来源更新" },
@@ -798,7 +798,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { id: "text", label: "文本" }
             ],
             items: [
-              { id: "image", kind: "图片", icon: "image", title: "DingDong 0.9.2 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
+              { id: "image", kind: "图片", icon: "image", title: "DingDong 0.9.3 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
               { id: "path", kind: "路径", icon: "path", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", icon: "command", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", icon: "link", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },

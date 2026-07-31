@@ -804,26 +804,27 @@ description: Use when product decisions should follow saved preferences.
   });
 
   testWidgetsOnPlatform(
-    'shortcut hints appear only while Command is held',
+    'workspace shortcut hints appear only while Control is held on macOS',
     TargetPlatform.macOS,
     (WidgetTester tester) async {
       await tester.pumpWidget(const DingDongApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('⌘ Q'), findsNothing);
+      expect(find.text('⌃ Q'), findsNothing);
+      expect(find.bySemanticsLabel('Dynamic, ⌃ Q'), findsOneWidget);
 
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
-      expect(find.text('⌘ Q'), findsOneWidget);
+      expect(find.text('⌃ Q'), findsOneWidget);
 
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
-      expect(find.text('⌘ Q'), findsNothing);
+      expect(find.text('⌃ Q'), findsNothing);
     },
   );
 
   testWidgetsOnPlatform(
-    'Control reveals shortcut hints on Windows',
+    'Windows keeps Alt workspace hints separate from Control item hints',
     TargetPlatform.windows,
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
@@ -852,21 +853,29 @@ description: Use when product decisions should follow saved preferences.
       );
       await tester.pumpAndSettle();
 
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.pump();
+      expect(find.text('Alt Q'), findsOneWidget);
+      expect(find.text('Ctrl 1'), findsNothing);
+      expect(find.text('⌘ 1'), findsNothing);
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.pump();
+      expect(find.text('Alt Q'), findsNothing);
+
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
-      expect(find.text('Ctrl Q'), findsOneWidget);
+      expect(find.text('Alt Q'), findsNothing);
       expect(find.text('Ctrl 1'), findsOneWidget);
-      expect(find.text('⌘ 1'), findsNothing);
 
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
-      expect(find.text('Ctrl Q'), findsNothing);
       expect(find.text('Ctrl 1'), findsNothing);
     },
   );
 
   testWidgetsOnPlatform(
-    'Command remains the primary hint modifier on macOS',
+    'macOS keeps Control workspace hints separate from Command item hints',
     TargetPlatform.macOS,
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
@@ -897,54 +906,152 @@ description: Use when product decisions should follow saved preferences.
 
       await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
       await tester.pump();
-      expect(find.text('⌘ Q'), findsOneWidget);
+      expect(find.text('⌃ Q'), findsNothing);
       expect(find.text('⌘ 1'), findsOneWidget);
       expect(find.text('Ctrl 1'), findsNothing);
 
       await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
       await tester.pump();
-      expect(find.text('⌘ Q'), findsNothing);
       expect(find.text('⌘ 1'), findsNothing);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('⌃ Q'), findsOneWidget);
+      expect(find.text('⌘ 1'), findsNothing);
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('⌃ Q'), findsNothing);
     },
   );
 
-  testWidgets('Command-Q switches the callout to Today instead of quitting', (
-    WidgetTester tester,
-  ) async {
-    final ShellController controller = ShellController(initialIndex: 2);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(DingDongApp(shellController: controller));
-    await tester.pumpAndSettle();
+  testWidgetsOnPlatform(
+    'Command-Q is left to macOS while Control-Q opens Dynamic',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(DingDongApp(shellController: controller));
+      await tester.pumpAndSettle();
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pump();
+      expect(controller.selectedIndex, 2);
 
-    expect(controller.selectedIndex, 0);
-    expect(find.byKey(const Key('today-open-clipboard')), findsOneWidget);
-  });
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyQ);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(controller.selectedIndex, 0);
+      expect(find.byKey(const Key('today-open-clipboard')), findsOneWidget);
+    },
+  );
 
-  testWidgets('Command-R toggles filters from the focused callout shell', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 760);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final ShellController controller = ShellController(initialIndex: 2);
-    addTearDown(controller.dispose);
-    await tester.pumpWidget(DingDongApp(shellController: controller));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('clipboard-category-all')), findsNothing);
+  testWidgetsOnPlatform(
+    'custom workspace shortcuts update navigation and visible hints',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      const WorkspaceShortcuts shortcuts = WorkspaceShortcuts(
+        today: WorkspaceShortcut(key: 'T', secondary: true),
+        library: WorkspaceShortcuts.defaultLibrary,
+        clipboard: WorkspaceShortcuts.defaultClipboard,
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          shellController: controller,
+          settingsRepository: SettingsRepository(
+            MemoryPreferencesBackend(<String, Object>{
+              'dingdong.shortcut.workspaces': shortcuts.encode(),
+            }),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
-    await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('⌃ T'), findsOneWidget);
+      expect(find.text('⌃Q'), findsNothing);
 
-    expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
-  });
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyT);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      expect(controller.selectedIndex, 0);
+      expect(find.byKey(const Key('today-open-clipboard')), findsOneWidget);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'Command-R opens, resets, then closes filters from the callout shell',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      final DateTime now = DateTime.utc(2026, 7, 30);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'filter-shortcut',
+        group: 'Clipboard',
+        title: 'Filter shortcut',
+        content: 'Filter shortcut value',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          shellController: controller,
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[record]),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-category-all')), findsNothing);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump();
+      expect(find.byKey(const Key('clipboard-category-all')), findsNothing);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('clipboard-category-text')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsOneWidget,
+      );
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
+      expect(
+        find.byKey(const Key('clipboard-filter-active-indicator')),
+        findsNothing,
+      );
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-category-all')), findsNothing);
+    },
+  );
 
   testWidgetsOnPlatform(
     'Command-2 restores the second clipboard row from the focused callout shell',
@@ -1179,7 +1286,7 @@ description: Use when product decisions should follow saved preferences.
   );
 
   testWidgetsOnPlatform(
-    'filter button shows R only while Command is held',
+    'Command-R hint follows the next clipboard filter action',
     TargetPlatform.macOS,
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
@@ -1188,7 +1295,25 @@ description: Use when product decisions should follow saved preferences.
       addTearDown(tester.view.resetPhysicalSize);
       final ShellController controller = ShellController(initialIndex: 2);
       addTearDown(controller.dispose);
-      await tester.pumpWidget(DingDongApp(shellController: controller));
+      final DateTime now = DateTime.utc(2026, 7, 31);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'filter-hint',
+        group: 'Clipboard',
+        title: 'Filter hint',
+        content: 'Filter hint value',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          shellController: controller,
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[record]),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
       expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
@@ -1200,10 +1325,61 @@ description: Use when product decisions should follow saved preferences.
         find.byKey(const Key('clipboard-filter-shortcut')),
         findsOneWidget,
       );
+      expect(find.text('⌘ R'), findsOneWidget);
 
       await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
       await tester.pump();
       expect(find.byKey(const Key('clipboard-filter-icon')), findsOneWidget);
+      expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('clipboard-filter-shortcut')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('clipboard-filter-reset-shortcut')),
+        findsNothing,
+      );
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('clipboard-category-text')));
+      await tester.pumpAndSettle();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
+      final Finder resetShortcut = find.byKey(
+        const Key('clipboard-filter-reset-shortcut'),
+      );
+      expect(resetShortcut, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('clipboard-category-all')),
+          matching: resetShortcut,
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('⌘ R'), findsOneWidget);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('clipboard-filter-reset-shortcut')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('clipboard-filter-shortcut')),
+        findsOneWidget,
+      );
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
       expect(find.byKey(const Key('clipboard-filter-shortcut')), findsNothing);
     },
   );
@@ -1290,7 +1466,7 @@ description: Use when product decisions should follow saved preferences.
   });
 
   testWidgetsOnPlatform(
-    'tab content is centered until Command reveals the shortcut',
+    'tab content is centered until Control reveals the workspace shortcut',
     TargetPlatform.macOS,
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
@@ -1308,21 +1484,21 @@ description: Use when product decisions should follow saved preferences.
         lessThan(1),
       );
 
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 180));
 
-      expect(find.text('⌘ Q'), findsOneWidget);
+      expect(find.text('⌃ Q'), findsOneWidget);
       expect(
         tester.getCenter(content).dx,
         lessThan(tester.getCenter(tab).dx - 10),
       );
 
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 180));
 
-      expect(find.text('⌘ Q'), findsNothing);
+      expect(find.text('⌃ Q'), findsNothing);
       expect(
         (tester.getCenter(tab).dx - tester.getCenter(content).dx).abs(),
         lessThan(1),

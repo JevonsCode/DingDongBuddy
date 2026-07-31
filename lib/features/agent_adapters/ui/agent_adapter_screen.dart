@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
+import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter_diff.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:flutter/material.dart';
+
+part 'agent_adapter_overview.dart';
 
 class AgentAdapterScreen extends StatefulWidget {
   const AgentAdapterScreen({required this.controller, super.key});
@@ -20,6 +23,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
   String? _activeKey;
   String? _pendingExternalDocument;
   bool _wasCreating = false;
+  bool _showAdvanced = false;
   int _comparisonIndex = 1;
 
   bool get _isDirty => _documentController.text != _baseDocument;
@@ -45,7 +49,13 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
   }
 
   void _controllerChanged() {
+    final bool wasCreating = _wasCreating;
     _synchronizeDocument();
+    if (wasCreating &&
+        !widget.controller.isCreating &&
+        widget.controller.selectedEntry != null) {
+      _showAdvanced = false;
+    }
     if (mounted) {
       setState(() {});
     }
@@ -97,6 +107,18 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
       text: document,
       selection: TextSelection.collapsed(offset: document.length),
     );
+  }
+
+  Future<void> _selectEntry(AgentAdapterEntry entry) async {
+    await widget.controller.select(entry);
+    if (mounted) {
+      setState(() => _showAdvanced = false);
+    }
+  }
+
+  void _beginCreate() {
+    widget.controller.beginCreate();
+    setState(() => _showAdvanced = true);
   }
 
   Future<void> _confirmReset() async {
@@ -172,9 +194,11 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
           _Header(
             directoryPath: controller.userDirectoryPath,
             isLoading: controller.isLoading,
-            onCreate: controller.beginCreate,
+            onCreate: _beginCreate,
             onRefresh: controller.load,
           ),
+          const Divider(height: 1),
+          _AdapterCatalogSummary(entries: controller.entries),
           const Divider(height: 1),
           Expanded(
             child: Row(
@@ -186,7 +210,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                     entries: controller.entries,
                     selected: controller.selectedEntry,
                     isCreating: controller.isCreating,
-                    onSelected: controller.select,
+                    onSelected: _selectEntry,
                   ),
                 ),
                 const VerticalDivider(width: 1),
@@ -294,6 +318,24 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                   child: Text(_localized(context, 'Delete', '删除')),
                 ),
               const SizedBox(width: 8),
+              OutlinedButton.icon(
+                key: const Key('agent-adapter-toggle-advanced'),
+                onPressed: controller.isCreating
+                    ? null
+                    : () => setState(() => _showAdvanced = !_showAdvanced),
+                icon: Icon(
+                  _showAdvanced
+                      ? Icons.fact_check_outlined
+                      : Icons.code_rounded,
+                  size: 16,
+                ),
+                label: Text(
+                  _showAdvanced
+                      ? _localized(context, 'Status', '状态')
+                      : _localized(context, 'Advanced config', '高级配置'),
+                ),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 key: const Key('agent-adapter-save'),
                 onPressed: controller.isSaving || !_isDirty
@@ -310,119 +352,125 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
             ],
           ),
         ),
-        Expanded(
-          flex: 3,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-            child: TextField(
-              key: const Key('agent-adapter-editor'),
-              controller: _documentController,
-              expands: true,
-              maxLines: null,
-              minLines: null,
-              textAlignVertical: TextAlignVertical.top,
-              keyboardType: TextInputType.multiline,
-              style: const TextStyle(
-                fontFamily: 'Menlo',
-                fontSize: 12,
-                height: 1.5,
-              ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-                contentPadding: const EdgeInsets.all(12),
-                border: const OutlineInputBorder(),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
+        if (!_showAdvanced && !controller.isCreating)
+          Expanded(child: _AdapterOverview(entry: entry!))
+        else ...<Widget>[
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+              child: TextField(
+                key: const Key('agent-adapter-editor'),
+                controller: _documentController,
+                expands: true,
+                maxLines: null,
+                minLines: null,
+                textAlignVertical: TextAlignVertical.top,
+                keyboardType: TextInputType.multiline,
+                style: const TextStyle(
+                  fontFamily: 'Menlo',
+                  fontSize: 12,
+                  height: 1.5,
+                ),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerLowest,
+                  contentPadding: const EdgeInsets.all(12),
+                  border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        const Divider(height: 1),
-        SizedBox(
-          height: 230,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 10, 18, 8),
-                child: Row(
-                  children: <Widget>[
-                    Text(
-                      _localized(context, 'Version comparison', '版本对比'),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+          const Divider(height: 1),
+          SizedBox(
+            height: 230,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 8),
+                  child: Row(
+                    children: <Widget>[
+                      Text(
+                        _localized(context, 'Version comparison', '版本对比'),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    if (maxComparison >= 1)
-                      SizedBox(
-                        width: 150,
-                        child: DropdownButton<int>(
-                          key: const Key('agent-adapter-history-selector'),
-                          value: comparison,
-                          isDense: true,
-                          isExpanded: true,
-                          underline: const SizedBox.shrink(),
-                          items: <DropdownMenuItem<int>>[
-                            DropdownMenuItem<int>(
-                              value: 1,
-                              child: Text(
-                                _localized(
-                                  context,
-                                  'Previous version',
-                                  '上一个版本',
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (maxComparison >= 2)
+                      const Spacer(),
+                      if (maxComparison >= 1)
+                        SizedBox(
+                          width: 150,
+                          child: DropdownButton<int>(
+                            key: const Key('agent-adapter-history-selector'),
+                            value: comparison,
+                            isDense: true,
+                            isExpanded: true,
+                            underline: const SizedBox.shrink(),
+                            items: <DropdownMenuItem<int>>[
                               DropdownMenuItem<int>(
-                                value: 2,
+                                value: 1,
                                 child: Text(
                                   _localized(
                                     context,
-                                    'Two versions ago',
-                                    '上两个版本',
+                                    'Previous version',
+                                    '上一个版本',
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                          ],
-                          onChanged: (int? value) {
-                            if (value != null) {
-                              setState(() => _comparisonIndex = value);
-                            }
-                          },
+                              if (maxComparison >= 2)
+                                DropdownMenuItem<int>(
+                                  value: 2,
+                                  child: Text(
+                                    _localized(
+                                      context,
+                                      'Two versions ago',
+                                      '上两个版本',
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                            onChanged: (int? value) {
+                              if (value != null) {
+                                setState(() => _comparisonIndex = value);
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: previousDocument == null
-                    ? Center(
-                        child: Text(
-                          _localized(
-                            context,
-                            'A comparison appears after the next saved or external edit.',
-                            '保存或外部修改下一版后，这里会显示差异。',
-                          ),
-                          style: TextStyle(
-                            color: Theme.of(
+                Expanded(
+                  child: previousDocument == null
+                      ? Center(
+                          child: Text(
+                            _localized(
                               context,
-                            ).colorScheme.onSurfaceVariant,
+                              'A comparison appears after the next saved or external edit.',
+                              '保存或外部修改下一版后，这里会显示差异。',
+                            ),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      )
-                    : _DiffView(lines: diff),
-              ),
-            ],
+                        )
+                      : _DiffView(lines: diff),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -455,7 +503,11 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    _localized(context, 'Agent Adapters', 'Agent 接入'),
+                    _localized(
+                      context,
+                      'Agent connection configuration',
+                      'Agent 连接配置',
+                    ),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -464,8 +516,8 @@ class _Header extends StatelessWidget {
                   Text(
                     _localized(
                       context,
-                      'Skill, MCP and prompt locations · current + two earlier versions',
-                      'Skill、MCP、Prompt 地址 · 当前版与前两个版本',
+                      'Directory detection and declared paths; verify runtime connections separately',
+                      '目录检测与配置路径；实际运行连接需单独验证',
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -526,7 +578,7 @@ class _AdapterList extends StatelessWidget {
             title: _localized(context, 'New Agent', '新 Agent'),
             subtitle: _localized(context, 'Unsaved', '尚未保存'),
             selected: true,
-            installed: false,
+            installed: null,
             invalid: false,
             onTap: () {},
           ),
@@ -559,72 +611,81 @@ class _AdapterRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool selected;
-  final bool installed;
+  final bool? installed;
   final bool invalid;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Material(
-        color: selected
-            ? colors.primary.withValues(alpha: 0.09)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(5),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(5),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-            child: Row(
-              children: <Widget>[
-                Icon(
-                  invalid ? Icons.warning_amber_rounded : Icons.hub_outlined,
-                  size: 17,
-                  color: invalid
-                      ? colors.error
-                      : selected
-                      ? colors.primary
-                      : colors.onSurfaceVariant,
+    final String detectionLabel = switch (installed) {
+      true => _localized(context, 'Directory detected', '已检测到目录'),
+      false => _localized(context, 'Directory not detected', '未检测到目录'),
+      null => _localized(context, 'Directory not checked', '目录尚未检查'),
+    };
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$title. $subtitle. $detectionLabel',
+      child: ExcludeSemantics(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Material(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.09)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(5),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(5),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 9,
                 ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: selected ? FontWeight.w600 : null,
-                        ),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      invalid
+                          ? Icons.warning_amber_rounded
+                          : Icons.hub_outlined,
+                      size: 17,
+                      color: invalid
+                          ? colors.error
+                          : selected
+                          ? colors.primary
+                          : colors.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontWeight: selected ? FontWeight.w600 : null,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 6),
+                    _DetectionBadge(installed: installed),
+                  ],
                 ),
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: installed
-                        ? const Color(0xFF2E8B57)
-                        : colors.outlineVariant,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -10,11 +10,13 @@ void main() {
 
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);
+    expect(settings.allowAgentClipboardContent, isFalse);
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
     expect(settings.hideDockIcon, isFalse);
     expect(settings.trayNotificationColor, TrayNotificationColor.orange);
     expect(settings.globalHotKey, GlobalHotKey.defaultValue);
+    expect(settings.workspaceShortcuts, WorkspaceShortcuts.defaultValue);
   });
 
   test('supports a build-specific default tray notification color', () async {
@@ -38,6 +40,7 @@ void main() {
           'dingdong.panel.defaultTab': 'clipboard',
           'dingdong.clipboard.maxItems': 9000,
           'dingdong.clipboard.maxAgeDays': 0,
+          'dingdong.agentApi.allowClipboardContent': true,
           'dingdong.selectedSound': 'dingBright',
           'dingdong.customSoundPath': '/tmp/chime.wav',
           'dingdong.mcpSetupPromptOverride': '  custom setup  ',
@@ -54,6 +57,11 @@ void main() {
             shift: false,
             alt: true,
           ).encode(),
+          'dingdong.shortcut.workspaces': const WorkspaceShortcuts(
+            today: WorkspaceShortcut(key: 'T', primary: true),
+            library: WorkspaceShortcut(key: 'L', primary: true),
+            clipboard: WorkspaceShortcut(key: 'C', primary: true),
+          ).encode(),
         });
 
     final settings = await SettingsRepository(backend).load();
@@ -66,6 +74,7 @@ void main() {
     expect(settings.defaultWorkspace, DefaultWorkspace.clipboard);
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 1);
+    expect(settings.allowAgentClipboardContent, isTrue);
     expect(settings.selectedSound, 'dingBright');
     expect(settings.customSoundPath, '/tmp/chime.wav');
     expect(settings.mcpAccessSeen, isTrue);
@@ -78,6 +87,14 @@ void main() {
     expect(
       settings.globalHotKey,
       const GlobalHotKey(key: 'K', primary: true, shift: false, alt: true),
+    );
+    expect(
+      settings.workspaceShortcuts,
+      const WorkspaceShortcuts(
+        today: WorkspaceShortcut(key: 'T', primary: true),
+        library: WorkspaceShortcut(key: 'L', primary: true),
+        clipboard: WorkspaceShortcut(key: 'C', primary: true),
+      ),
     );
   });
 
@@ -93,12 +110,18 @@ void main() {
       defaultWorkspace: DefaultWorkspace.library,
       clipboardMaxItems: 600,
       clipboardMaxAgeDays: 30,
+      allowAgentClipboardContent: true,
       rememberAgentActivity: false,
       agentActivityMaxItems: 320,
       agentActivityCountHours: 48,
       hideDockIcon: true,
       trayNotificationColor: TrayNotificationColor.green,
       globalHotKey: GlobalHotKey(key: 'SPACE', primary: true, shift: false),
+      workspaceShortcuts: WorkspaceShortcuts(
+        today: WorkspaceShortcut(key: 'T', secondary: true),
+        library: WorkspaceShortcut(key: 'L', secondary: true),
+        clipboard: WorkspaceShortcut(key: 'C', secondary: true),
+      ),
       selectedSound: 'muted',
       customSoundPath: '/tmp/quiet.wav',
       mcpAccessSeen: true,
@@ -116,6 +139,7 @@ void main() {
     expect(backend.values['dingdong.panel.defaultTab'], 'library');
     expect(backend.values['dingdong.clipboard.maxItems'], 600);
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 30);
+    expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
     expect(backend.values['dingdong.agentActivity.maxItems'], 320);
     expect(backend.values['dingdong.agentActivity.countHours'], 48);
@@ -124,6 +148,10 @@ void main() {
     expect(
       GlobalHotKey.parse(backend.values['dingdong.shortcut.openClipboard']),
       const GlobalHotKey(key: 'SPACE', primary: true, shift: false),
+    );
+    expect(
+      WorkspaceShortcuts.parse(backend.values['dingdong.shortcut.workspaces']),
+      settings.workspaceShortcuts,
     );
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');

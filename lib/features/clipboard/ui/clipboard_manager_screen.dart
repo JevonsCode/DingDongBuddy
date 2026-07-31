@@ -7,11 +7,16 @@ import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_source.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:flutter/material.dart';
+
+const double _managerSearchControlHeight = 40;
+const double _sourceFilterMenuWidth = 280;
 
 /// Large-window clipboard history manager with bounded lazy rows and bulk actions.
 class ClipboardManagerScreen extends StatefulWidget {
@@ -92,19 +97,27 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    TextField(
-                      key: const Key('clipboard-manager-search'),
-                      onChanged: widget.viewModel.setQuery,
-                      decoration: InputDecoration(
-                        hintText: context.localized(
-                          'Search clipboard history',
-                          '搜索剪贴板历史',
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: _ManagerSearchField(
+                            onChanged: widget.viewModel.setQuery,
+                          ),
                         ),
-                        prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                        prefixIconConstraints: const BoxConstraints(
-                          minWidth: 38,
-                        ),
-                      ),
+                        if (widget
+                            .viewModel
+                            .sourceOptions
+                            .isNotEmpty) ...<Widget>[
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 220,
+                            height: _managerSearchControlHeight,
+                            child: _SourceFilterDropdown(
+                              viewModel: widget.viewModel,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 10),
                     _ManagerFilters(
@@ -483,6 +496,523 @@ DesktopMenuItem<_ManagerAction> _managerMenuItem(
   destructive: destructive,
 );
 
+class _ManagerSearchField extends StatefulWidget {
+  const _ManagerSearchField({required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_ManagerSearchField> createState() => _ManagerSearchFieldState();
+}
+
+class _ManagerSearchFieldState extends State<_ManagerSearchField> {
+  final FocusNode _focusNode = FocusNode(
+    debugLabel: 'clipboard-manager-search',
+  );
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return AnimatedBuilder(
+      animation: _focusNode,
+      builder: (BuildContext context, Widget? child) => AnimatedContainer(
+        key: const Key('clipboard-manager-search-surface'),
+        height: _managerSearchControlHeight,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        clipBehavior: Clip.antiAlias,
+        decoration: _managerControlDecoration(
+          colors,
+          emphasized: _focusNode.hasFocus,
+        ),
+        child: child,
+      ),
+      child: _CenteredSearchInput(
+        textFieldKey: const Key('clipboard-manager-search'),
+        iconKey: const Key('clipboard-manager-search-icon'),
+        height: _managerSearchControlHeight,
+        leadingWidth: 38,
+        focusNode: _focusNode,
+        onChanged: widget.onChanged,
+        hintText: context.localized('Search clipboard history', '搜索剪贴板历史'),
+      ),
+    );
+  }
+}
+
+BoxDecoration _managerControlDecoration(
+  ColorScheme colors, {
+  required bool emphasized,
+}) => BoxDecoration(
+  color: colors.surface,
+  border: Border.all(
+    color: emphasized ? colors.outline : colors.outlineVariant,
+  ),
+  borderRadius: BorderRadius.circular(5),
+);
+
+class _CenteredSearchInput extends StatelessWidget {
+  const _CenteredSearchInput({
+    required this.textFieldKey,
+    required this.iconKey,
+    required this.height,
+    required this.leadingWidth,
+    required this.focusNode,
+    required this.onChanged,
+    required this.hintText,
+    this.controller,
+    this.onClear,
+  });
+
+  final Key textFieldKey;
+  final Key iconKey;
+  final double height;
+  final double leadingWidth;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+  final String hintText;
+  final TextEditingController? controller;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final TextStyle? textStyle = theme.textTheme.bodyMedium?.copyWith(
+      height: 1.05,
+      fontWeight: FontWeight.w400,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          key: iconKey,
+          width: leadingWidth,
+          height: height,
+          child: Center(
+            child: Icon(
+              Icons.search_rounded,
+              size: height <= 32 ? 16 : 17,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: TextField(
+              key: textFieldKey,
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: onChanged,
+              maxLines: 1,
+              cursorColor: colors.onSurfaceVariant,
+              cursorHeight: height <= 32 ? 16 : 17,
+              cursorWidth: 1.5,
+              style: textStyle,
+              decoration: InputDecoration(
+                isCollapsed: true,
+                filled: false,
+                hintText: hintText,
+                hintStyle: textStyle?.copyWith(color: colors.onSurfaceVariant),
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+            ),
+          ),
+        ),
+        if (onClear != null)
+          Semantics(
+            button: true,
+            label: context.localized('Clear search', '清除搜索'),
+            child: GestureDetector(
+              key: const Key('clipboard-manager-source-search-clear'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onClear,
+              child: SizedBox(
+                width: 28,
+                height: height,
+                child: Center(
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          )
+        else
+          const SizedBox(width: 8),
+      ],
+    );
+  }
+}
+
+class _SourceFilterDropdown extends StatefulWidget {
+  const _SourceFilterDropdown({required this.viewModel});
+
+  final ClipboardViewModel viewModel;
+
+  @override
+  State<_SourceFilterDropdown> createState() => _SourceFilterDropdownState();
+}
+
+class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
+  final MenuController _menuController = MenuController();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode(
+    debugLabel: 'clipboard-manager-source-search',
+  );
+  String _query = '';
+  bool _menuOpen = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<ClipboardSourceOption> sources = widget.viewModel.sourceOptions;
+    final String needle = _query.trim().toLowerCase();
+    final List<ClipboardSourceOption> filteredSources = sources
+        .where(
+          (ClipboardSourceOption source) =>
+              needle.isEmpty ||
+              source.label.toLowerCase().contains(needle) ||
+              source.id.toLowerCase().contains(needle),
+        )
+        .toList(growable: false);
+    final double resultsHeight = filteredSources.isEmpty
+        ? 42
+        : (filteredSources.length * 30.0).clamp(30.0, 150.0);
+    final bool hasSelection = widget.viewModel.selectedSourceIds.isNotEmpty;
+    final String summary = _summaryLabel(context, sources);
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final bool reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+    return MenuAnchor(
+      controller: _menuController,
+      alignmentOffset: const Offset(-_sourceFilterMenuWidth, 6),
+      clipBehavior: Clip.antiAlias,
+      animated: !reduceMotion,
+      onOpen: _handleOpen,
+      onClose: _handleClose,
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll<Color>(colors.surface),
+        shadowColor: WidgetStatePropertyAll<Color>(
+          Colors.black.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.28 : 0.12,
+          ),
+        ),
+        surfaceTintColor: const WidgetStatePropertyAll<Color>(
+          Colors.transparent,
+        ),
+        elevation: const WidgetStatePropertyAll<double>(4),
+        padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+          EdgeInsets.zero,
+        ),
+        side: WidgetStatePropertyAll<BorderSide>(
+          BorderSide(
+            color: colors.outline.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.82 : 0.72,
+            ),
+          ),
+        ),
+        shape: const WidgetStatePropertyAll<OutlinedBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+        alignment: AlignmentDirectional.bottomEnd,
+      ),
+      menuChildren: <Widget>[
+        SizedBox(
+          key: const Key('clipboard-manager-source-menu'),
+          width: _sourceFilterMenuWidth,
+          height: 89 + resultsHeight,
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Container(
+                  key: const Key('clipboard-manager-source-search-surface'),
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: _CenteredSearchInput(
+                    textFieldKey: const Key('clipboard-manager-source-search'),
+                    iconKey: const Key('clipboard-manager-source-search-icon'),
+                    height: 32,
+                    leadingWidth: 34,
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    onChanged: (String value) => setState(() => _query = value),
+                    hintText: context.localized('Search sources', '搜索来源'),
+                    onClear: _query.isEmpty ? null : _clearSearch,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                _SourceFilterOption(
+                  key: const Key('clipboard-manager-source-all'),
+                  label: context.localized('All sources', '全部来源'),
+                  selected: !hasSelection,
+                  onTap: widget.viewModel.clearSources,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Divider(
+                    height: 7,
+                    thickness: 1,
+                    color: colors.outlineVariant,
+                  ),
+                ),
+                SizedBox(
+                  height: resultsHeight,
+                  child: filteredSources.isEmpty
+                      ? SizedBox(
+                          height: 42,
+                          child: Center(
+                            child: Text(
+                              context.localized(
+                                'No matching sources',
+                                '没有匹配的来源',
+                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: colors.onSurfaceVariant),
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          primary: false,
+                          itemExtent: 30,
+                          itemCount: filteredSources.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final ClipboardSourceOption source =
+                                filteredSources[index];
+                            return _SourceFilterOption(
+                              key: Key('clipboard-manager-source-${source.id}'),
+                              label: source.label,
+                              selected: widget.viewModel.selectedSourceIds
+                                  .contains(source.id),
+                              onTap: () =>
+                                  widget.viewModel.toggleSource(source.id),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+      builder:
+          (BuildContext context, MenuController controller, Widget? child) =>
+              Semantics(
+                button: true,
+                selected: hasSelection,
+                expanded: _menuOpen,
+                label: context.localized(
+                  'Source filter: $summary',
+                  '来源筛选：$summary',
+                ),
+                child: AnimatedContainer(
+                  key: const Key('clipboard-manager-source-filter'),
+                  height: _managerSearchControlHeight,
+                  duration: const Duration(milliseconds: 120),
+                  curve: Curves.easeOutCubic,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: _managerControlDecoration(
+                    colors,
+                    emphasized: _menuOpen,
+                  ),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(5),
+                      hoverColor: colors.onSurface.withValues(alpha: 0.035),
+                      focusColor: colors.onSurface.withValues(alpha: 0.035),
+                      onTap: () {
+                        controller.isOpen
+                            ? controller.close()
+                            : controller.open();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 11),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.filter_list_rounded,
+                              size: 16,
+                              color: colors.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                summary,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colors.onSurface,
+                                  fontWeight: hasSelection
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Icon(
+                              _menuOpen
+                                  ? Icons.keyboard_arrow_up_rounded
+                                  : Icons.keyboard_arrow_down_rounded,
+                              size: 17,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+    );
+  }
+
+  String _summaryLabel(
+    BuildContext context,
+    List<ClipboardSourceOption> sources,
+  ) {
+    final Set<String> selected = widget.viewModel.selectedSourceIds;
+    if (selected.isEmpty) {
+      return context.localized('All sources', '全部来源');
+    }
+    if (selected.length == 1) {
+      for (final ClipboardSourceOption source in sources) {
+        if (selected.contains(source.id)) {
+          return source.label;
+        }
+      }
+    }
+    return context.localized(
+      '${selected.length} sources',
+      '已选 ${selected.length} 个来源',
+    );
+  }
+
+  void _handleOpen() {
+    if (mounted) {
+      setState(() => _menuOpen = true);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _menuController.isOpen) {
+        _searchFocusNode.requestFocus();
+      }
+    });
+  }
+
+  void _handleClose() {
+    _searchFocusNode.unfocus();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _menuOpen = false;
+      _query = '';
+      _searchController.clear();
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _query = '');
+    _searchFocusNode.requestFocus();
+  }
+}
+
+class _SourceFilterOption extends StatelessWidget {
+  const _SourceFilterOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    super.key,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? colors.surfaceContainerLow : Colors.transparent,
+        borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          hoverColor: colors.onSurface.withValues(alpha: 0.04),
+          focusColor: colors.onSurface.withValues(alpha: 0.04),
+          child: SizedBox(
+            height: 30,
+            child: Row(
+              children: <Widget>[
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurface,
+                      height: 1.05,
+                      fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 17,
+                  height: 30,
+                  child: selected
+                      ? Center(
+                          child: Icon(
+                            Icons.check_rounded,
+                            size: 15,
+                            color: colors.onSurface,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ManagerFilters extends StatelessWidget {
   const _ManagerFilters({
     required this.viewModel,
@@ -810,9 +1340,7 @@ class _ManagerRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  TimeOfDay.fromDateTime(
-                    record.createdAt.toLocal(),
-                  ).format(context),
+                  clipboardTimestampLabel(context, record.createdAt),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),

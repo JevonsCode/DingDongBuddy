@@ -6,9 +6,12 @@ Skill 冲突。DingDong 管理的 Skill 已改为通过 Bridge 动态发现和�
 这些目录。Adapter 只登记受支持的文件位置和格式，不允许提供任意命令、Hook、Token
 或启动脚本。
 
-用户可以在 **资源管理 → Agent 接入** 查看所有内置和自定义 Adapter、编辑 YAML，并
-比较当前版本与前两个版本。外部 AI Agent 修改同一份用户 YAML 后，页面会自动刷新；
-如果页面中还有未保存内容，会先提示冲突，不会静默覆盖编辑器。
+用户可以在 **资源管理 → Agent 接入** 查看所有内置和自定义 Adapter。页面默认展示
+可验证的配置证据：YAML 是否有效、检测目录是否存在，以及 MCP、Prompt、Skill 路径
+是否声明。目录存在和路径已声明都不能证明 MCP、Hook、Bridge 或完成回调已连接。
+YAML 编辑器及当前版本与前两个版本的比较收在 **高级配置**。外部 AI Agent 修改同一份
+用户 YAML 后，页面会自动刷新；如果页面中还有未保存内容，会先提示冲突，不会静默覆盖
+编辑器。
 
 对话从 Terminal.app 还是 iTerm 打开属于另一份
 [`agent-launchers.json`](agent-launcher-configuration.md) 配置。

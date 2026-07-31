@@ -84,7 +84,7 @@ sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.9.2`, using the same version constant as the release UI. A small
+  `v0.9.3`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
@@ -104,6 +104,11 @@ sync in the PR.
   restored when the clipboard or resource-manager window is reopened.
 - Automatic clipboard retention defaults to 5,000 unarchived items and 120
   days; pinned and archived items are excluded from both limits.
+- Copied image files keep only their source paths; DingDong does not duplicate
+  those files, so moving or deleting a source makes that history item
+  unavailable. Image data copied without a source file, such as a screenshot,
+  is persisted under `Clipboard Images` and follows the same item and age
+  limits. Its managed file is retained while the record is pinned or archived.
 - **Recent agents** shows a compact rolling count beside its heading. The
   default window is 24 hours. Completion details default to the latest 500
   items, survive restart by default, and are available as a read-only list in
@@ -122,19 +127,20 @@ sync in the PR.
 
 ## Default shortcuts and settings
 
-The system-wide **Open or hide Clipboard** shortcut is configurable in
-**Settings → Keyboard shortcuts**. Click the current shortcut, press a new
-combination, and it takes effect immediately. A shortcut must contain at least
-one modifier and may use a letter, number, F1–F12, arrow key, Space, or Return.
-If another application already owns the combination, DingDong keeps the
-previous shortcut.
+The system-wide **Open or hide Clipboard** shortcut and all three in-panel
+workspace shortcuts are configurable in **Settings → Keyboard shortcuts**.
+Click the current shortcut, press a new combination, and it takes effect
+immediately. A shortcut must contain at least one modifier and may use a letter,
+number, F1–F12, arrow key, Space, or Return. DingDong keeps the previous
+shortcut when a new combination conflicts with another workspace, an existing
+DingDong action, a reserved system action, or an unavailable global shortcut.
 
 | Action | macOS | Windows |
 | --- | --- | --- |
 | Open or hide Clipboard | `⌘⇧V` (configurable) | `Ctrl+Shift+V` (configurable) |
-| Open Dynamic / Library / Clipboard | `⌘Q` / `⌘W` / `⌘E` | `Ctrl+Q` / `Ctrl+W` / `Ctrl+E` |
+| Open Dynamic / Library / Clipboard | `⌃Q` / `⌃W` / `⌃E` (individually configurable) | `Alt+Q` / `Alt+W` / `Alt+E` (individually configurable) |
 | Focus Clipboard search | `⌘F` | `Ctrl+F` |
-| Show or hide Clipboard filters | `⌘R` | `Ctrl+R` |
+| Open, reset, or hide Clipboard filters | `⌘R` | `Ctrl+R` |
 | Use visible Clipboard item 1–9 | `⌘1`–`⌘9` | `Ctrl+1`–`Ctrl+9` |
 | Paste visible item 1–9 as plain text | `⌥⌘1`–`⌥⌘9` | — |
 | Move Clipboard selection | `↑` / `↓` | `↑` / `↓` |
@@ -156,6 +162,7 @@ Settings are stored locally and take effect immediately unless noted:
 | Default workspace | Dynamic | Dynamic / Library / Clipboard |
 | Clipboard monitoring | Off | On / off |
 | Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |
+| Allow Agents to read clipboard content | Off | On / off; metadata remains available |
 | Remember Recent Agents | On | On / off |
 | Recent Agent limits | 500 details, 24-hour count | 1–5,000 details; 1–8,760 hours |
 | Completion sound | DingDong Classic | Classic, Soft, Bright, Crisp, Deep, custom file, system sound, or muted |
@@ -254,9 +261,12 @@ A red issue icon opens the persistent Issues workspace in Resource Manager for
 reviewing client, resource, and path diagnostics. Client paths and capabilities
 live in extensible Agent Adapters. Skill paths remain in Adapters for legacy
 managed-copy cleanup and independent native-Skill collision checks; they are no
-longer deployment destinations. Users can inspect, edit, and compare the current
-and two prior Adapter versions in **Resource Manager → Agent access**; external
-Agent edits to user YAML are observed automatically. See
+longer deployment destinations. **Resource Manager → Agent access** opens with
+an evidence summary: valid YAML, detected directory, and declared MCP, Prompt,
+and Skill paths. These signals never claim that MCP, Hook, or Bridge is
+connected. YAML editing and comparison of the current and two prior Adapter
+versions remain available under **Advanced config**; external Agent edits to
+user YAML are observed automatically. See
 [Agent Adapter configuration](docs/product/agent-adapter-configuration.md).
 
 ### Architecture
@@ -399,8 +409,8 @@ The main paths are:
 Keep DingDong running while using the bridge. This integration is local: a
 cloud Agent cannot execute a path from your computer or reach its loopback API.
 
-Open **DingDong → Agent API → MCP access** and copy the displayed executable
-path. The usual macOS path is:
+Open **DingDong → Agent connections → Advanced API and MCP details → MCP
+access** and copy the displayed executable path. The usual macOS path is:
 
 ```text
 /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
@@ -692,8 +702,17 @@ Upstream references: [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp?surfa
 
 The HTTP server binds only to `127.0.0.1`. Port `2333` is preferred; if it is
 occupied, DingDong stores the actual bound port in its application data so the
-bundled bridge can reconnect. Clipboard endpoints omit full and sensitive
-content unless a caller explicitly requests a supported content mode.
+bundled bridge can reconnect. Opening the server root in a browser redirects to
+the DingDong website. Browser cross-origin requests are rejected outside the
+root and `/health`; `POST` and `PATCH` require JSON and request bodies are
+bounded. These checks prevent web-page and accidental form calls, but they are
+not authentication against another ordinary application running as the same
+user.
+
+Agent APIs cannot return, capture, collect, or promote clipboard content unless
+**Settings → Clipboard history → Allow Agents to read clipboard content** is
+enabled. Metadata remains available while it is off. When enabled, sensitive
+records still require the caller's separate explicit sensitive-content flag.
 
 Agent completion details are stored in `agent-activity.json` in the same local
 application-data directory. The rolling-count metadata stores completion times

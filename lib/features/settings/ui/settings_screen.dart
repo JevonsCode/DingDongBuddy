@@ -240,8 +240,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               '键盘快捷键',
                             ),
                             description: context.localized(
-                              'Set the system-wide shortcut that opens or hides the clipboard panel.',
-                              '设置用于打开或隐藏剪贴板面板的全局快捷键。',
+                              'Set the system-wide panel shortcut and the shortcuts used inside the focused panel.',
+                              '设置面板全局快捷键，以及面板获得焦点时使用的工作区快捷键。',
                             ),
                             children: <Widget>[
                               _SettingRow(
@@ -252,6 +252,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: GlobalHotKeyRecorder(
                                   value: settings.globalHotKey,
                                   onChanged: widget.viewModel.setGlobalHotKey,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  bottom: 2,
+                                ),
+                                child: Text(
+                                  context.localized(
+                                    'Workspace shortcuts apply only while the panel is focused. Defaults: Control+Q/W/E on macOS, Alt+Q/W/E on Windows.',
+                                    '工作区快捷键只在面板获得焦点时生效。默认：macOS 为 Control+Q/W/E，Windows 为 Alt+Q/W/E。',
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                              _SettingRow(
+                                label: context.localized(
+                                  'Dynamic workspace',
+                                  '动态工作区',
+                                ),
+                                child: WorkspaceShortcutRecorder(
+                                  settingId: 'today',
+                                  semanticLabel: context.localized(
+                                    'Dynamic workspace shortcut',
+                                    '动态工作区快捷键',
+                                  ),
+                                  value: settings.workspaceShortcuts.today,
+                                  defaultValue: WorkspaceShortcuts.defaultToday,
+                                  onChanged: (WorkspaceShortcut value) => widget
+                                      .viewModel
+                                      .setWorkspaceShortcut(0, value),
+                                ),
+                              ),
+                              _SettingRow(
+                                label: context.localized(
+                                  'Library workspace',
+                                  '资源库工作区',
+                                ),
+                                child: WorkspaceShortcutRecorder(
+                                  settingId: 'library',
+                                  semanticLabel: context.localized(
+                                    'Library workspace shortcut',
+                                    '资源库工作区快捷键',
+                                  ),
+                                  value: settings.workspaceShortcuts.library,
+                                  defaultValue:
+                                      WorkspaceShortcuts.defaultLibrary,
+                                  onChanged: (WorkspaceShortcut value) => widget
+                                      .viewModel
+                                      .setWorkspaceShortcut(1, value),
+                                ),
+                              ),
+                              _SettingRow(
+                                label: context.localized(
+                                  'Clipboard workspace',
+                                  '剪贴板工作区',
+                                ),
+                                child: WorkspaceShortcutRecorder(
+                                  settingId: 'clipboard',
+                                  semanticLabel: context.localized(
+                                    'Clipboard workspace shortcut',
+                                    '剪贴板工作区快捷键',
+                                  ),
+                                  value: settings.workspaceShortcuts.clipboard,
+                                  defaultValue:
+                                      WorkspaceShortcuts.defaultClipboard,
+                                  onChanged: (WorkspaceShortcut value) => widget
+                                      .viewModel
+                                      .setWorkspaceShortcut(2, value),
                                 ),
                               ),
                             ],
@@ -435,8 +504,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               '剪贴板历史',
                             ),
                             description: context.localized(
-                              'History stays on this device. Sensitive entries remain hidden from agent APIs by default.',
-                              '历史仅保存在本机；敏感内容默认不会暴露给 Agent API。',
+                              'History stays on this device. Agent access to clipboard content is controlled below.',
+                              '历史仅保存在本机；是否允许 Agent 读取正文由下方开关控制。',
                             ),
                             children: <Widget>[
                               CompactSwitchListTile(
@@ -458,6 +527,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 onChanged:
                                     widget.viewModel.setClipboardMonitoring,
                               ),
+                              CompactSwitchListTile(
+                                key: const Key(
+                                  'settings-agent-clipboard-content',
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  context.localized(
+                                    'Allow Agents to read clipboard content',
+                                    '允许 Agent 读取剪贴板正文',
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  context.localized(
+                                    'Off by default. Metadata stays available; sensitive records still require an explicit request when enabled.',
+                                    '默认关闭。关闭时只返回元数据；开启后，敏感记录仍需调用方明确请求。',
+                                  ),
+                                ),
+                                value: settings.allowAgentClipboardContent,
+                                onChanged: widget
+                                    .viewModel
+                                    .setAllowAgentClipboardContent,
+                              ),
                               _SettingRow(
                                 label: context.localized(
                                   'Maximum items',
@@ -466,7 +557,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: _NumberField(
                                   key: const Key('settings-retention-items'),
                                   initialValue: settings.clipboardMaxItems,
-                                  onSubmitted: (int value) =>
+                                  onChanged: (int value) =>
                                       widget.viewModel.setRetention(
                                         maxItems: value,
                                         maxAgeDays:
@@ -482,7 +573,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 child: _NumberField(
                                   key: const Key('settings-retention-days'),
                                   initialValue: settings.clipboardMaxAgeDays,
-                                  onSubmitted: (int value) =>
+                                  onChanged: (int value) =>
                                       widget.viewModel.setRetention(
                                         maxItems: settings.clipboardMaxItems,
                                         maxAgeDays: value,
@@ -532,7 +623,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     'settings-agent-activity-items',
                                   ),
                                   initialValue: settings.agentActivityMaxItems,
-                                  onSubmitted: (int value) =>
+                                  onChanged: (int value) =>
                                       widget.viewModel.setAgentActivityPolicy(
                                         maxItems: value,
                                         countHours:
@@ -551,7 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                   initialValue:
                                       settings.agentActivityCountHours,
-                                  onSubmitted: (int value) =>
+                                  onChanged: (int value) =>
                                       widget.viewModel.setAgentActivityPolicy(
                                         maxItems:
                                             settings.agentActivityMaxItems,
@@ -582,7 +673,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     _NumberField(
                                       key: const Key('settings-api-port'),
                                       initialValue: settings.apiPort,
-                                      onSubmitted: widget.viewModel.setApiPort,
+                                      onChanged: widget.viewModel.setApiPort,
                                     ),
                                     if (widget.viewModel.requiresRestart &&
                                         widget.onRestartApplication !=

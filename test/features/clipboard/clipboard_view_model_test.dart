@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dingdong/core/data/data_revision_bus.dart';
@@ -249,6 +250,62 @@ void main() {
     model.deleteSelected();
     expect(store.list(limit: 10), isEmpty);
   });
+
+  test(
+    'deleting history removes managed image data but preserves source files',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-managed-clipboard-delete-test-',
+      );
+      final Directory sourceDirectory = await Directory.systemTemp.createTemp(
+        'dingdong-source-clipboard-delete-test-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      addTearDown(() => sourceDirectory.delete(recursive: true));
+      final File managed = File('${directory.path}/clipboard-managed.png')
+        ..writeAsBytesSync(<int>[1, 2, 3]);
+      final File source = File('${sourceDirectory.path}/source.png')
+        ..writeAsBytesSync(<int>[4, 5, 6]);
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final ClipboardRecord managedRecord = ClipboardRecord(
+        id: 'managed',
+        group: '',
+        title: 'Managed image',
+        content: managed.path,
+        tags: const <String>['clipboard', 'file', 'file-url', 'image'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final ClipboardRecord sourceRecord = ClipboardRecord(
+        id: 'source',
+        group: '',
+        title: 'Source image',
+        content: source.path,
+        tags: const <String>['clipboard', 'file', 'file-url', 'image'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final InMemoryClipboardStore store = InMemoryClipboardStore(
+        <ClipboardRecord>[managedRecord, sourceRecord],
+      );
+      final ClipboardViewModel model = ClipboardViewModel(
+        store,
+        managedImageDirectory: directory,
+      )..load();
+
+      model.deleteMany(<String>{managedRecord.id, sourceRecord.id});
+
+      expect(managed.existsSync(), isFalse);
+      expect(source.existsSync(), isTrue);
+      expect(store.list(limit: 10), isEmpty);
+    },
+  );
 
   test('editing content preserves existing multi-group membership', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
@@ -512,6 +569,132 @@ void main() {
     expect(model.visibleRecords.single.id, 'multi-group');
   });
 
+  test('clearing filters resets category and group selections together', () {
+    final DateTime now = DateTime.utc(2026, 7, 30);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record(now, source: 'Terminal · com.apple.Terminal'),
+      ]),
+    )..load();
+
+    model.setCategory('text');
+    model.setGroup('Project');
+    model.toggleSource('bundle:com.apple.terminal');
+    expect(model.hasActiveFilters, isTrue);
+
+    model.clearFilters();
+
+    expect(model.hasActiveFilters, isFalse);
+    expect(model.selectedKind, isNull);
+    expect(model.selectedCategoryId, isNull);
+    expect(model.selectedGroup, isNull);
+    expect(model.selectedSourceIds, isEmpty);
+  });
+
+  test(
+    'source filters derive real application options and combine selections',
+    () {
+      final DateTime now = DateTime.utc(2026, 7, 31);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[
+          _record(now, source: 'Google Chrome · com.google.Chrome'),
+          ClipboardRecord(
+            id: 'chrome-second-window',
+            group: 'Clipboard',
+            title: 'Another Chrome window',
+            content: 'Second Chrome value',
+            tags: const <String>['clipboard', 'text'],
+            source: 'Chrome · com.google.Chrome',
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(seconds: 1)),
+            updatedAt: now.subtract(const Duration(seconds: 1)),
+          ),
+          ClipboardRecord(
+            id: 'notes',
+            group: 'Clipboard',
+            title: 'Notes value',
+            content: 'A note',
+            tags: const <String>['clipboard', 'text'],
+            source: 'Notes · com.apple.Notes',
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(seconds: 2)),
+            updatedAt: now.subtract(const Duration(seconds: 2)),
+          ),
+          ClipboardRecord(
+            id: 'generic',
+            group: 'Clipboard',
+            title: 'Generic value',
+            content: 'Generic clipboard',
+            tags: const <String>['clipboard', 'text'],
+            source: 'Clipboard',
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(seconds: 3)),
+            updatedAt: now.subtract(const Duration(seconds: 3)),
+          ),
+        ]),
+      )..load();
+
+      expect(
+        model.sourceOptions.map((option) => (option.id, option.label)),
+        <(String, String)>[
+          ('bundle:com.google.chrome', 'Google Chrome'),
+          ('bundle:com.apple.notes', 'Notes'),
+        ],
+      );
+
+      model.toggleSource('bundle:com.google.chrome');
+      expect(
+        model.visibleRecords.map((ClipboardRecord item) => item.id).toSet(),
+        <String>{'clip', 'chrome-second-window'},
+      );
+
+      model.toggleSource('bundle:com.apple.notes');
+      expect(
+        model.visibleRecords.map((ClipboardRecord item) => item.id).toSet(),
+        <String>{'clip', 'chrome-second-window', 'notes'},
+      );
+
+      model.clearFilters();
+      model.setQuery('com.apple.notes');
+      expect(model.visibleRecords.single.id, 'notes');
+    },
+  );
+
+  test(
+    'Windows source metadata groups changing window titles by executable',
+    () {
+      final DateTime now = DateTime.utc(2026, 7, 31);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[
+          _record(now, source: 'First document · notepad.exe'),
+          ClipboardRecord(
+            id: 'second-document',
+            group: 'Clipboard',
+            title: 'Second document',
+            content: 'Second document content',
+            tags: const <String>['clipboard', 'text'],
+            source: 'Second document · notepad.exe',
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(seconds: 1)),
+            updatedAt: now.subtract(const Duration(seconds: 1)),
+          ),
+        ]),
+      )..load();
+
+      expect(model.sourceOptions, hasLength(1));
+      expect(model.sourceOptions.single.id, 'exe:notepad.exe');
+      expect(model.sourceOptions.single.label, 'notepad.exe');
+    },
+  );
+
   test('deleting a group preserves records and their other memberships', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final InMemoryClipboardStore store = InMemoryClipboardStore(
@@ -573,13 +756,14 @@ void main() {
   });
 }
 
-ClipboardRecord _record(DateTime now) {
+ClipboardRecord _record(DateTime now, {String? source}) {
   return ClipboardRecord(
     id: 'clip',
     group: 'Clipboard',
     title: 'Run tests',
     content: 'flutter test',
     tags: const <String>['clipboard', 'command'],
+    source: source,
     pinned: false,
     enabled: true,
     activation: 'taskMatch',

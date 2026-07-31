@@ -20,7 +20,6 @@ class _CompactClipboardToolbar extends StatelessWidget {
     required this.viewModel,
     required this.searchFocusNode,
     required this.searchController,
-    required this.settingsViewModel,
     required this.filtersExpanded,
     required this.showShortcutHint,
     required this.contextMenuGateway,
@@ -30,7 +29,6 @@ class _CompactClipboardToolbar extends StatelessWidget {
   final ClipboardViewModel viewModel;
   final FocusNode searchFocusNode;
   final TextEditingController searchController;
-  final ClipboardSettingsController? settingsViewModel;
   final bool filtersExpanded;
   final bool showShortcutHint;
   final DesktopContextMenuGateway? contextMenuGateway;
@@ -38,10 +36,11 @@ class _CompactClipboardToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ClipboardSettingsController? settings = settingsViewModel;
-    final bool clipboardMonitoring = settings?.clipboardMonitoring ?? true;
-    final bool filtersActive =
-        viewModel.selectedCategoryId != null || viewModel.selectedGroup != null;
+    final bool filtersActive = viewModel.hasActiveFilters;
+    final bool showResetShortcutHint =
+        showShortcutHint && filtersExpanded && filtersActive;
+    final bool showFilterToggleShortcutHint =
+        showShortcutHint && !showResetShortcutHint;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 14, 16, filtersExpanded ? 12 : 20),
       child: Column(
@@ -52,11 +51,6 @@ class _CompactClipboardToolbar extends StatelessWidget {
             decoration: PopupStyle.card(radius: 10),
             child: Row(
               children: <Widget>[
-                _ClipboardMonitoringToggle(
-                  value: clipboardMonitoring,
-                  onChanged: settings?.setClipboardMonitoring,
-                ),
-                const SizedBox(width: 4),
                 Expanded(
                   child: TextField(
                     key: const Key('clipboard-search'),
@@ -93,34 +87,21 @@ class _CompactClipboardToolbar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Tooltip(
-                  message: filtersExpanded
-                      ? context.localized(
-                          'Hide categories and groups',
-                          '收起分类与分组',
-                        )
-                      : filtersActive
-                      ? context.localized(
-                          'Show categories and groups (filters active)',
-                          '展开分类与分组（筛选已启用）',
-                        )
-                      : context.localized(
-                          'Show categories and groups',
-                          '展开分类与分组',
-                        ),
-                  child: _FilterToggleButton(
-                    filtersExpanded: filtersExpanded,
-                    filtersActive: filtersActive,
-                    showShortcutHint: showShortcutHint,
-                    onPressed: onToggleFilters,
-                  ),
+                _FilterToggleButton(
+                  filtersExpanded: filtersExpanded,
+                  filtersActive: filtersActive,
+                  showShortcutHint: showFilterToggleShortcutHint,
+                  onPressed: onToggleFilters,
                 ),
               ],
             ),
           ),
           if (filtersExpanded) ...<Widget>[
             const SizedBox(height: 10),
-            _ClipboardKindFilters(viewModel: viewModel),
+            _ClipboardKindFilters(
+              viewModel: viewModel,
+              showResetShortcutHint: showResetShortcutHint,
+            ),
             if (viewModel.groups.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
               _ClipboardGroupFilters(
@@ -130,35 +111,6 @@ class _CompactClipboardToolbar extends StatelessWidget {
             ],
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _ClipboardMonitoringToggle extends StatelessWidget {
-  const _ClipboardMonitoringToggle({
-    required this.value,
-    required this.onChanged,
-  });
-
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool enabled = onChanged != null;
-    return Tooltip(
-      message: value
-          ? context.localized('Pause clipboard monitoring', '暂停剪贴板监听')
-          : context.localized('Turn on clipboard monitoring', '开启剪贴板监听'),
-      child: MouseRegion(
-        key: const Key('clipboard-monitoring-toggle'),
-        cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        child: CompactSwitch(
-          key: const Key('clipboard-monitoring-switch'),
-          value: value,
-          onChanged: onChanged,
-        ),
       ),
     );
   }
@@ -229,69 +181,89 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
     final Color background = highlighted
         ? PopupStyle.accentSoft
         : PopupStyle.surface;
-    return ScaleTransition(
-      key: const Key('clipboard-filter-transition'),
-      scale: _scale,
-      child: OutlinedButton(
-        key: const Key('clipboard-toggle-filters'),
-        onPressed: widget.onPressed,
-        style: OutlinedButton.styleFrom(
-          fixedSize: const Size(35, 36),
-          minimumSize: const Size(35, 36),
-          padding: EdgeInsets.zero,
-          foregroundColor: foreground,
-          backgroundColor: background,
-          side: BorderSide(
-            color: highlighted
-                ? PopupStyle.accent.withValues(alpha: 0.32)
-                : PopupStyle.border,
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          animationDuration: const Duration(milliseconds: 160),
-        ),
-        child: SizedBox(
-          width: 35,
-          height: 36,
-          child: Stack(
-            alignment: Alignment.center,
-            children: <Widget>[
-              if (widget.showShortcutHint)
-                const Text(
-                  'R',
-                  key: Key('clipboard-filter-shortcut'),
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
-                )
-              else
-                PopupSymbolIcon(
-                  widget.filtersExpanded ? 'collapse' : 'filter',
-                  key: Key(
-                    widget.filtersExpanded
-                        ? 'clipboard-collapse-filters-icon'
-                        : 'clipboard-filter-icon',
-                  ),
-                  size: 17,
-                  color: foreground,
+    final String label = widget.filtersExpanded
+        ? context.localized('Hide categories and groups', '收起分类与分组')
+        : widget.filtersActive
+        ? context.localized(
+            'Show categories and groups (filters active)',
+            '展开分类与分组（筛选已启用）',
+          )
+        : context.localized('Show categories and groups', '展开分类与分组');
+    return Semantics(
+      button: true,
+      expanded: widget.filtersExpanded,
+      label: label,
+      child: ExcludeSemantics(
+        child: Tooltip(
+          message: label,
+          excludeFromSemantics: true,
+          child: ScaleTransition(
+            key: const Key('clipboard-filter-transition'),
+            scale: _scale,
+            child: OutlinedButton(
+              key: const Key('clipboard-toggle-filters'),
+              onPressed: widget.onPressed,
+              style: OutlinedButton.styleFrom(
+                fixedSize: const Size(35, 36),
+                minimumSize: const Size(35, 36),
+                padding: EdgeInsets.zero,
+                foregroundColor: foreground,
+                backgroundColor: background,
+                side: BorderSide(
+                  color: highlighted
+                      ? PopupStyle.accent.withValues(alpha: 0.32)
+                      : PopupStyle.border,
                 ),
-              if (widget.filtersActive)
-                Positioned(
-                  top: 5,
-                  right: 5,
-                  child: Container(
-                    key: const Key('clipboard-filter-active-indicator'),
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: PopupStyle.accent,
-                      border: Border.all(color: background),
-                    ),
-                  ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-            ],
+                animationDuration: const Duration(milliseconds: 160),
+              ),
+              child: SizedBox(
+                width: 35,
+                height: 36,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    if (widget.showShortcutHint)
+                      Text(
+                        primaryShortcutLabel('R', defaultTargetPlatform),
+                        key: Key('clipboard-filter-shortcut'),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      )
+                    else
+                      PopupSymbolIcon(
+                        widget.filtersExpanded ? 'collapse' : 'filter',
+                        key: Key(
+                          widget.filtersExpanded
+                              ? 'clipboard-collapse-filters-icon'
+                              : 'clipboard-filter-icon',
+                        ),
+                        size: 17,
+                        color: foreground,
+                      ),
+                    if (widget.filtersActive)
+                      Positioned(
+                        top: 5,
+                        right: 5,
+                        child: Container(
+                          key: const Key('clipboard-filter-active-indicator'),
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: PopupStyle.accent,
+                            border: Border.all(color: background),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -300,9 +272,13 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
 }
 
 class _ClipboardKindFilters extends StatelessWidget {
-  const _ClipboardKindFilters({required this.viewModel});
+  const _ClipboardKindFilters({
+    required this.viewModel,
+    required this.showResetShortcutHint,
+  });
 
   final ClipboardViewModel viewModel;
+  final bool showResetShortcutHint;
 
   @override
   Widget build(BuildContext context) {
@@ -348,14 +324,46 @@ class _ClipboardKindFilters extends StatelessWidget {
       'files' => context.localized('Files', '文件'),
       _ => category!.name,
     };
+    final bool showShortcut = category == null && showResetShortcutHint;
+    final Widget labelWidget = Text(
+      showShortcut ? primaryShortcutLabel('R', defaultTargetPlatform) : label,
+      key: showShortcut
+          ? const Key('clipboard-filter-reset-shortcut')
+          : Key('clipboard-category-${category?.id ?? 'all'}-label'),
+      textAlign: TextAlign.center,
+      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+    );
     return FilterChip(
       key: Key('clipboard-category-${category?.id ?? 'all'}'),
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-      ),
-      selected: viewModel.selectedCategoryId == category?.id,
-      onSelected: (_) => viewModel.setCategory(category?.id),
+      label: category == null
+          ? SizedBox(
+              width: 24,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 140),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeOut,
+                transitionBuilder:
+                    (Widget child, Animation<double> animation) =>
+                        FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: Tween<double>(
+                              begin: 0.88,
+                              end: 1,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        ),
+                child: labelWidget,
+              ),
+            )
+          : labelWidget,
+      selected: category == null
+          ? !viewModel.hasActiveFilters
+          : viewModel.selectedCategoryId == category.id,
+      onSelected: (_) => category == null
+          ? viewModel.clearFilters()
+          : viewModel.setCategory(category.id),
       showCheckmark: false,
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -405,7 +413,7 @@ class _ClipboardGroupFilters extends StatelessWidget {
                   label: Text(
                     group,
                     style: const TextStyle(
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

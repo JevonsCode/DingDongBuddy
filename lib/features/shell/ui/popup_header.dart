@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
-import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
+import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:dingdong/features/shell/ui/popup_mascot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +16,7 @@ class PopupHeader extends StatelessWidget {
     required this.issueCount,
     required this.updateAvailable,
     required this.showShortcutHints,
+    required this.workspaceShortcuts,
     required this.onSelected,
     required this.onIssues,
     required this.onBrand,
@@ -31,6 +32,7 @@ class PopupHeader extends StatelessWidget {
   final int issueCount;
   final bool updateAvailable;
   final bool showShortcutHints;
+  final WorkspaceShortcuts workspaceShortcuts;
   final bool developmentBuild;
   final ValueChanged<int> onSelected;
   final VoidCallback onIssues;
@@ -145,7 +147,9 @@ class PopupHeader extends StatelessWidget {
                     selected: selectedIndex == 0,
                     symbol: 'today',
                     label: context.localized('Dynamic', '动态'),
-                    shortcut: _shortcut('Q'),
+                    shortcut: workspaceShortcuts.today.label(
+                      defaultTargetPlatform,
+                    ),
                     showShortcut: showShortcutHints,
                     onPressed: () => onSelected(0),
                   ),
@@ -156,7 +160,9 @@ class PopupHeader extends StatelessWidget {
                     selected: selectedIndex == 1,
                     symbol: 'library',
                     label: context.localized('Library', '资源库'),
-                    shortcut: _shortcut('W'),
+                    shortcut: workspaceShortcuts.library.label(
+                      defaultTargetPlatform,
+                    ),
                     showShortcut: showShortcutHints,
                     onPressed: () => onSelected(1),
                   ),
@@ -167,7 +173,9 @@ class PopupHeader extends StatelessWidget {
                     selected: selectedIndex == 2,
                     symbol: 'clipboard',
                     label: context.localized('Clipboard', '剪贴板'),
-                    shortcut: _shortcut('E'),
+                    shortcut: workspaceShortcuts.clipboard.label(
+                      defaultTargetPlatform,
+                    ),
                     showShortcut: showShortcutHints,
                     onPressed: () => onSelected(2),
                   ),
@@ -260,10 +268,6 @@ class _VersionButton extends StatelessWidget {
   }
 }
 
-String _shortcut(String key) {
-  return primaryShortcutLabel(key, defaultTargetPlatform);
-}
-
 class _HeaderButton extends StatelessWidget {
   const _HeaderButton({
     required this.tooltip,
@@ -278,24 +282,37 @@ class _HeaderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-      style: IconButton.styleFrom(
-        fixedSize: const Size.square(32),
-        minimumSize: const Size.square(32),
-        maximumSize: const Size.square(32),
-        padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.compact,
-        backgroundColor: PopupStyle.surface,
-        foregroundColor: PopupStyle.textSecondary,
-        side: const BorderSide(color: PopupStyle.border),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          style: IconButton.styleFrom(
+            fixedSize: const Size.square(32),
+            minimumSize: const Size.square(32),
+            maximumSize: const Size.square(32),
+            padding: EdgeInsets.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            backgroundColor: PopupStyle.surface,
+            foregroundColor: PopupStyle.textSecondary,
+            side: const BorderSide(color: PopupStyle.border),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          icon: PopupSymbolIcon(
+            symbol,
+            size: 16,
+            color: PopupStyle.textSecondary,
+          ),
+        ),
       ),
-      icon: PopupSymbolIcon(symbol, size: 16, color: PopupStyle.textSecondary),
     );
   }
 }
@@ -308,57 +325,69 @@ class _IssueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      key: const Key('popup-issues'),
-      tooltip: context.localized(
-        '$count issues need attention',
-        '$count 个问题需要处理',
-      ),
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-      style: IconButton.styleFrom(
-        fixedSize: const Size.square(32),
-        minimumSize: const Size.square(32),
-        maximumSize: const Size.square(32),
-        padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.compact,
-        backgroundColor: const Color(0xFFFFF3F1),
-        foregroundColor: const Color(0xFFB93A32),
-        side: const BorderSide(color: Color(0xFFF1C8C3)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      icon: Stack(
-        clipBehavior: Clip.none,
-        children: <Widget>[
-          const Icon(Icons.error_outline_rounded, size: 17),
-          if (count > 1)
-            Positioned(
-              top: -7,
-              right: -9,
-              child: Container(
-                key: const Key('popup-issue-count'),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB93A32),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: PopupStyle.surface, width: 1.5),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  count > 99 ? '99+' : '$count',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    height: 1,
-                    fontWeight: FontWeight.w800,
+    final String label = context.localized(
+      '$count issues need attention',
+      '$count 个问题需要处理',
+    );
+    return Semantics(
+      button: true,
+      label: label,
+      child: ExcludeSemantics(
+        child: IconButton(
+          key: const Key('popup-issues'),
+          tooltip: label,
+          onPressed: onPressed,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          style: IconButton.styleFrom(
+            fixedSize: const Size.square(32),
+            minimumSize: const Size.square(32),
+            maximumSize: const Size.square(32),
+            padding: EdgeInsets.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            backgroundColor: const Color(0xFFFFF3F1),
+            foregroundColor: const Color(0xFFB93A32),
+            side: const BorderSide(color: Color(0xFFF1C8C3)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: <Widget>[
+              const Icon(Icons.error_outline_rounded, size: 17),
+              if (count > 1)
+                Positioned(
+                  top: -7,
+                  right: -9,
+                  child: Container(
+                    key: const Key('popup-issue-count'),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB93A32),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: PopupStyle.surface, width: 1.5),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        height: 1,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -387,93 +416,100 @@ class _WorkspaceTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 36),
-          padding: const EdgeInsets.symmetric(horizontal: 9),
-          backgroundColor: selected
-              ? PopupStyle.accentSoft
-              : PopupStyle.surface,
-          foregroundColor: selected
-              ? PopupStyle.accent
-              : PopupStyle.textSecondary,
-          side: BorderSide(
-            color: selected
-                ? PopupStyle.accent.withValues(alpha: 0.25)
-                : PopupStyle.border,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            AnimatedPadding(
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.only(
-                left: showShortcut ? 2 : 0,
-                right: showShortcut ? 46 : 0,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: '$label, $shortcut',
+        child: ExcludeSemantics(
+          child: OutlinedButton(
+            onPressed: onPressed,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 9),
+              backgroundColor: selected
+                  ? PopupStyle.accentSoft
+                  : PopupStyle.surface,
+              foregroundColor: selected
+                  ? PopupStyle.accent
+                  : PopupStyle.textSecondary,
+              side: BorderSide(
+                color: selected
+                    ? PopupStyle.accent.withValues(alpha: 0.25)
+                    : PopupStyle.border,
               ),
-              child: Center(
-                child: FittedBox(
-                  key: contentKey,
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      SizedBox.square(
-                        dimension: 17,
-                        child: Center(
-                          child: PopupSymbolIcon(
-                            symbol,
-                            size: 17,
-                            color: selected
-                                ? PopupStyle.accent
-                                : PopupStyle.textSecondary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 7),
-                      Text(
-                        label,
-                        maxLines: 1,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-            if (showShortcut)
-              Positioned(
-                right: 10,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: SizedBox(
-                    width: 34,
-                    child: Text(
-                      shortcut,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: selected
-                            ? PopupStyle.accent.withValues(alpha: 0.86)
-                            : PopupStyle.textTertiary,
-                        fontFamily: 'monospace',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                AnimatedPadding(
+                  duration: const Duration(milliseconds: 160),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(
+                    left: showShortcut ? 2 : 0,
+                    right: showShortcut ? 46 : 0,
+                  ),
+                  child: Center(
+                    child: FittedBox(
+                      key: contentKey,
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          SizedBox.square(
+                            dimension: 17,
+                            child: Center(
+                              child: PopupSymbolIcon(
+                                symbol,
+                                size: 17,
+                                color: selected
+                                    ? PopupStyle.accent
+                                    : PopupStyle.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            label,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+                if (showShortcut)
+                  Positioned(
+                    right: 10,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: SizedBox(
+                        width: 34,
+                        child: Text(
+                          shortcut,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: selected
+                                ? PopupStyle.accent.withValues(alpha: 0.86)
+                                : PopupStyle.textTertiary,
+                            fontFamily: 'monospace',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

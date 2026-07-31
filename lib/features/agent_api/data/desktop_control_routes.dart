@@ -18,7 +18,7 @@ final class DesktopControlRoutes {
     if (method == 'POST' && path == '/clipboard/monitor') {
       return _monitor(query, body);
     }
-    if ((method == 'GET' || method == 'POST') && path == '/ui/show') {
+    if (method == 'POST' && path == '/ui/show') {
       return _show(query, body);
     }
     return null;

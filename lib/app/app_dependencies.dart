@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dingdong/app/app_data_paths.dart';
+import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
@@ -12,6 +13,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dar
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
+import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
@@ -141,6 +143,8 @@ final class AppDependencies {
       clipboardCaptureService: clipboardCaptureService,
       clipboardGateway: clipboardGateway,
       clipboardStore: clipboardStore,
+      allowAgentClipboardContent: () async =>
+          (await settingsRepository.load()).allowAgentClipboardContent,
       resourceStore: resourceStore,
       triggerGroupStore: triggerGroupStore,
       skillPackageInstaller: skillPackageInstaller,
@@ -190,10 +194,17 @@ final class AppDependencies {
   AppSettings initialSettings = const AppSettings();
 
   void applyClipboardRetention(AppSettings settings, {DateTime? now}) {
-    clipboardStore.trim(
+    final List<ClipboardRecord> deleted = clipboardStore.trim(
       maxItems: settings.clipboardMaxItems,
       maxAgeDays: settings.clipboardMaxAgeDays,
       now: now ?? DateTime.now().toUtc(),
+    );
+    for (final ClipboardRecord record in deleted) {
+      deleteManagedClipboardImage(record, paths.clipboardImagesDirectory);
+    }
+    pruneUnreferencedManagedClipboardImages(
+      clipboardStore.list(limit: 5000, includeProtectedBeyondLimit: true),
+      paths.clipboardImagesDirectory,
     );
   }
 

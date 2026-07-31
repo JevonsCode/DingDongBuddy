@@ -105,12 +105,22 @@ class _SettingsWindowAppState extends State<SettingsWindowApp> {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: SettingsScreen(
-            viewModel: widget.viewModel,
-            navigationController: _navigationController,
-            soundFileGateway: widget.soundFileGateway,
-            soundPreviewGateway: widget.soundPreviewGateway,
-            onRestartApplication: widget.onRestartApplication,
+          home: Builder(
+            builder: (BuildContext context) => Semantics(
+              container: true,
+              explicitChildNodes: true,
+              label: context.localized(
+                'DingDong settings window',
+                'DingDong 设置窗口',
+              ),
+              child: SettingsScreen(
+                viewModel: widget.viewModel,
+                navigationController: _navigationController,
+                soundFileGateway: widget.soundFileGateway,
+                soundPreviewGateway: widget.soundPreviewGateway,
+                onRestartApplication: widget.onRestartApplication,
+              ),
+            ),
           ),
         );
       },

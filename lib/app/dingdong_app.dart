@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
@@ -14,6 +15,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.d
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
@@ -43,6 +45,7 @@ import 'package:dingdong/features/shell/ui/shell_screen.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
+import 'package:dingdong/platform/url_launcher_clipboard_content_launcher.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +64,8 @@ class DingDongApp extends StatefulWidget {
     this.clipboardGateway,
     this.desktopContextMenuGateway,
     this.desktopContextMenuController,
+    this.clipboardContentLauncher,
+    this.clipboardImageStoreDirectory,
     this.clipboardMonitoring,
     this.clipboardStore,
     this.clipboardPreviewLauncher,
@@ -102,6 +107,8 @@ class DingDongApp extends StatefulWidget {
   final ClipboardGateway? clipboardGateway;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final DesktopContextMenuController? desktopContextMenuController;
+  final ClipboardContentLauncher? clipboardContentLauncher;
+  final Directory? clipboardImageStoreDirectory;
   final ClipboardMonitoring? clipboardMonitoring;
   final ClipboardStore? clipboardStore;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
@@ -168,6 +175,7 @@ class _DingDongAppState extends State<DingDongApp> {
       revisions: _dataRevisions,
       categoryRuleStore: widget.clipboardCategoryRuleStore,
       groupOrderStore: widget.clipboardGroupOrderStore,
+      managedImageDirectory: widget.clipboardImageStoreDirectory,
     );
     _libraryViewModel = createDesktopLibraryViewModel(
       widget.resourceStore ?? InMemoryResourceStore(),
@@ -268,6 +276,9 @@ class _DingDongAppState extends State<DingDongApp> {
             clipboardViewModel: _clipboardViewModel,
             clipboardGateway: widget.clipboardGateway,
             desktopContextMenuGateway: widget.desktopContextMenuGateway,
+            clipboardContentLauncher:
+                widget.clipboardContentLauncher ??
+                UrlLauncherClipboardContentLauncher(),
             clipboardPreviewLauncher: widget.clipboardPreviewLauncher,
             clipboardShareGateway: widget.clipboardShareGateway,
             libraryViewModel: _libraryViewModel,

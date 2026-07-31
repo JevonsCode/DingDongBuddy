@@ -102,9 +102,8 @@ class ClipboardPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final File image = File(record.content);
-    final bool hasImage =
-        record.kind == ClipboardKind.image && image.existsSync();
+    final File? image = _firstExistingImage(record);
+    final bool hasImage = record.kind == ClipboardKind.image && image != null;
     return Material(
       color: PopupStyle.background.withValues(alpha: 0.98),
       shape: RoundedRectangleBorder(
@@ -245,6 +244,16 @@ class _PreviewMeta extends StatelessWidget {
       ),
     ),
   );
+}
+
+File? _firstExistingImage(ClipboardRecord record) {
+  for (final String path in record.filePaths) {
+    final File file = File(path);
+    if (file.existsSync()) {
+      return file;
+    }
+  }
+  return null;
 }
 
 class _PreviewContent extends StatelessWidget {

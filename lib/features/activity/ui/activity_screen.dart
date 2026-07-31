@@ -29,6 +29,7 @@ class ActivityScreen extends StatefulWidget {
     required this.settingsViewModel,
     required this.onOpenWorkspace,
     required this.onOpenAgentApi,
+    this.agentBaseUri,
     this.onHideWindow,
     this.contextMenuGateway,
     this.resourceManagerLauncher,
@@ -43,6 +44,7 @@ class ActivityScreen extends StatefulWidget {
   final SettingsViewModel settingsViewModel;
   final ValueChanged<int> onOpenWorkspace;
   final VoidCallback onOpenAgentApi;
+  final Uri? agentBaseUri;
   final Future<void> Function()? onHideWindow;
   final DesktopContextMenuGateway? contextMenuGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
@@ -114,7 +116,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               ).format(context),
                               style: const TextStyle(
                                 color: PopupStyle.textSecondary,
-                                fontSize: 9,
+                                fontSize: 10,
                               ),
                             ),
                           ],
@@ -132,7 +134,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     context.localized('Ready', '就绪'),
                     style: const TextStyle(
                       color: PopupStyle.textSecondary,
-                      fontSize: 9,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -167,8 +169,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: _MetricCard(
                     key: const Key('today-agent-api'),
                     symbol: 'mcp',
-                    value: context.localized('Online', '在线'),
-                    label: 'Agent API',
+                    value: widget.agentBaseUri == null
+                        ? context.localized('Check', '待确认')
+                        : 'API ${widget.agentBaseUri!.port}',
+                    label: context.localized('Agent connections', 'Agent 连接'),
                     showBadge: !widget.settingsViewModel.settings.mcpAccessSeen,
                     onTap: widget.onOpenAgentApi,
                   ),

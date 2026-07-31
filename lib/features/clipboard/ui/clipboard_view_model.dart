@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:dingdong/core/data/data_revision_bus.dart';
@@ -12,6 +13,8 @@ import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dar
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_source.dart';
+import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -31,6 +34,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     DataRevisionBus? revisions,
     ClipboardCategoryRuleStore? categoryRuleStore,
     ClipboardGroupOrderStore? groupOrderStore,
+    Directory? managedImageDirectory,
   }) : _captureService = captureService,
        _gateway = gateway,
        _resourceStore = resourceStore,
@@ -38,6 +42,7 @@ final class ClipboardViewModel extends ChangeNotifier {
        _now = now ?? _utcNow,
        _quickPasteGateway = quickPasteGateway,
        _revisions = revisions,
+       _managedImageDirectory = managedImageDirectory,
        _categoryRuleStore =
            categoryRuleStore ?? InMemoryClipboardCategoryRuleStore(),
        _groupOrderStore = groupOrderStore ?? InMemoryClipboardGroupOrderStore();
@@ -50,6 +55,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   final DateTime Function() _now;
   final QuickPasteGateway? _quickPasteGateway;
   final DataRevisionBus? _revisions;
+  final Directory? _managedImageDirectory;
   final ClipboardCategoryRuleStore _categoryRuleStore;
   final ClipboardGroupOrderStore _groupOrderStore;
   List<ClipboardRecord> _records = const <ClipboardRecord>[];
@@ -59,6 +65,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   ClipboardKind? _selectedKind;
   String? _selectedCategoryId;
   String? _selectedGroup;
+  final Set<String> _selectedSourceIds = <String>{};
   ClipboardRecord? _selectedRecord;
 
   ClipboardRecord? get selectedRecord => _selectedRecord;
@@ -68,6 +75,29 @@ final class ClipboardViewModel extends ChangeNotifier {
   ClipboardKind? get selectedKind => _selectedKind;
 
   String? get selectedCategoryId => _selectedCategoryId;
+
+  bool get hasActiveFilters =>
+      _selectedKind != null ||
+      _selectedCategoryId != null ||
+      _selectedGroup != null ||
+      _selectedSourceIds.isNotEmpty;
+
+  Set<String> get selectedSourceIds =>
+      Set<String>.unmodifiable(_selectedSourceIds);
+
+  List<ClipboardSourceOption> get sourceOptions {
+    final Map<String, ClipboardSourceOption> options =
+        <String, ClipboardSourceOption>{};
+    for (final ClipboardRecord record in _records) {
+      final ClipboardSourceOption? option = clipboardSourceOption(
+        record.source,
+      );
+      if (option != null) {
+        options.putIfAbsent(option.id, () => option);
+      }
+    }
+    return List<ClipboardSourceOption>.unmodifiable(options.values);
+  }
 
   List<ClipboardCategoryRule> get categoryRules =>
       List<ClipboardCategoryRule>.unmodifiable(_categoryRules);
@@ -131,9 +161,17 @@ final class ClipboardViewModel extends ChangeNotifier {
             !record.groupNames.contains(_selectedGroup)) {
           return false;
         }
+        final ClipboardSourceOption? source = clipboardSourceOption(
+          record.source,
+        );
+        if (_selectedSourceIds.isNotEmpty &&
+            (source == null || !_selectedSourceIds.contains(source.id))) {
+          return false;
+        }
         return needle.isEmpty ||
             record.title.toLowerCase().contains(needle) ||
             record.content.toLowerCase().contains(needle) ||
+            (record.source?.toLowerCase().contains(needle) ?? false) ||
             record.groupNames.any(
               (String group) => group.toLowerCase().contains(needle),
             ) ||
@@ -155,6 +193,7 @@ final class ClipboardViewModel extends ChangeNotifier {
         )) {
       _selectedCategoryId = null;
     }
+    _pruneSelectedSources();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -246,6 +285,41 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void setGroup(String? value) {
     _selectedGroup = value;
+    _ensureSelectionVisible();
+    notifyListeners();
+  }
+
+  void toggleSource(String id) {
+    final bool available = sourceOptions.any(
+      (ClipboardSourceOption option) => option.id == id,
+    );
+    if (!available) {
+      return;
+    }
+    if (!_selectedSourceIds.add(id)) {
+      _selectedSourceIds.remove(id);
+    }
+    _ensureSelectionVisible();
+    notifyListeners();
+  }
+
+  void clearSources() {
+    if (_selectedSourceIds.isEmpty) {
+      return;
+    }
+    _selectedSourceIds.clear();
+    _ensureSelectionVisible();
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    if (!hasActiveFilters) {
+      return;
+    }
+    _selectedKind = null;
+    _selectedCategoryId = null;
+    _selectedGroup = null;
+    _selectedSourceIds.clear();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -421,12 +495,21 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   void deleteMany(Set<String> ids) {
+    final Map<String, ClipboardRecord> recordsById = <String, ClipboardRecord>{
+      for (final ClipboardRecord record in _records) record.id: record,
+    };
     for (final String id in ids) {
       _store.delete(id);
+      final ClipboardRecord? record = recordsById[id];
+      final Directory? directory = _managedImageDirectory;
+      if (record != null && directory != null) {
+        deleteManagedClipboardImage(record, directory);
+      }
     }
     _records = _records
         .where((ClipboardRecord record) => !ids.contains(record.id))
         .toList(growable: false);
+    _pruneSelectedSources();
     if (ids.contains(_selectedRecord?.id)) _selectedRecord = null;
     _ensureSelectionVisible();
     _revisions?.changed(DataCollection.clipboard);
@@ -463,10 +546,15 @@ final class ClipboardViewModel extends ChangeNotifier {
       return;
     }
     _store.delete(selected.id);
+    final Directory? directory = _managedImageDirectory;
+    if (directory != null) {
+      deleteManagedClipboardImage(selected, directory);
+    }
     _revisions?.changed(DataCollection.clipboard);
     _records = _records
         .where((ClipboardRecord record) => record.id != selected.id)
         .toList(growable: false);
+    _pruneSelectedSources();
     _selectedRecord = null;
     _ensureSelectionVisible();
     notifyListeners();
@@ -571,6 +659,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       return;
     }
     _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
+    _pruneSelectedSources();
     _selectedRecord = captured;
     notifyListeners();
     _revisions?.changed(DataCollection.clipboard);
@@ -590,6 +679,18 @@ final class ClipboardViewModel extends ChangeNotifier {
       }
     }
     _selectedRecord = visible.first;
+  }
+
+  void _pruneSelectedSources() {
+    if (_selectedSourceIds.isEmpty) {
+      return;
+    }
+    final Set<String> availableSourceIds = sourceOptions
+        .map((ClipboardSourceOption option) => option.id)
+        .toSet();
+    _selectedSourceIds.removeWhere(
+      (String id) => !availableSourceIds.contains(id),
+    );
   }
 }
 

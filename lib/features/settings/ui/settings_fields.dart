@@ -70,12 +70,12 @@ class _SettingRow extends StatelessWidget {
 class _NumberField extends StatelessWidget {
   const _NumberField({
     required this.initialValue,
-    required this.onSubmitted,
+    required this.onChanged,
     super.key,
   });
 
   final int initialValue;
-  final ValueChanged<int> onSubmitted;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -85,10 +85,10 @@ class _NumberField extends StatelessWidget {
         initialValue: initialValue.toString(),
         textAlign: TextAlign.end,
         keyboardType: TextInputType.number,
-        onFieldSubmitted: (String value) {
+        onChanged: (String value) {
           final int? parsed = int.tryParse(value.trim());
           if (parsed != null) {
-            onSubmitted(parsed);
+            onChanged(parsed);
           }
         },
       ),

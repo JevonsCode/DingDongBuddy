@@ -266,32 +266,41 @@ class _CardAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-      style: IconButton.styleFrom(
-        fixedSize: const Size.square(30),
-        minimumSize: const Size.square(30),
-        maximumSize: const Size.square(30),
-        padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.compact,
-        backgroundColor:
-            backgroundColor ?? PopupStyle.field.withValues(alpha: 0.72),
-        foregroundColor: color ?? PopupStyle.textSecondary,
-        disabledForegroundColor: PopupStyle.textTertiary,
-        disabledBackgroundColor: PopupStyle.field.withValues(alpha: 0.45),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      ),
-      icon: symbol == 'enabled' || symbol == 'paused'
-          ? EnabledStatusIcon(enabled: symbol == 'enabled', size: 16)
-          : PopupSymbolIcon(
-              symbol,
-              size: 16,
-              color: color ?? PopupStyle.textSecondary,
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: tooltip,
+      child: ExcludeSemantics(
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+          style: IconButton.styleFrom(
+            fixedSize: const Size.square(30),
+            minimumSize: const Size.square(30),
+            maximumSize: const Size.square(30),
+            padding: EdgeInsets.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            backgroundColor:
+                backgroundColor ?? PopupStyle.field.withValues(alpha: 0.72),
+            foregroundColor: color ?? PopupStyle.textSecondary,
+            disabledForegroundColor: PopupStyle.textTertiary,
+            disabledBackgroundColor: PopupStyle.field.withValues(alpha: 0.45),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
             ),
+          ),
+          icon: symbol == 'enabled' || symbol == 'paused'
+              ? EnabledStatusIcon(enabled: symbol == 'enabled', size: 16)
+              : PopupSymbolIcon(
+                  symbol,
+                  size: 16,
+                  color: color ?? PopupStyle.textSecondary,
+                ),
+        ),
+      ),
     );
   }
 }
@@ -332,7 +341,7 @@ class _ResourceTag extends StatelessWidget {
                   _ => const Color(0xFF75684F),
                 }
               : PopupStyle.textSecondary,
-          fontSize: 9,
+          fontSize: 10,
           height: 1,
           fontWeight: FontWeight.w600,
         ),

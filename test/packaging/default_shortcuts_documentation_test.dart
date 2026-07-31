@@ -12,6 +12,7 @@ void main() {
       expect(english, contains('## Default shortcuts and settings'));
       expect(english, contains('`⌘⇧V` (configurable)'));
       expect(english, contains('`Ctrl+Shift+V` (configurable)'));
+      expect(english, contains('(individually configurable)'));
       expect(english, contains('| Window opacity | 90% | 82%–96% |'));
       expect(
         english,
@@ -20,6 +21,7 @@ void main() {
       expect(chinese, contains('## 默认快捷键和设置'));
       expect(chinese, contains('`⌘⇧V`（可配置）'));
       expect(chinese, contains('`Ctrl+Shift+V`（可配置）'));
+      expect(chinese, contains('（可分别配置）'));
       expect(chinese, contains('| 窗口透明度 | 90% | 82%–96% |'));
       expect(chinese, contains('| 剪贴板保留 | 5000 条、120 天 |'));
     },

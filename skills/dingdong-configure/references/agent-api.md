@@ -1,6 +1,7 @@
 # DingDong Agent API Reference
 
 Use JSON over DingDong's local loopback HTTP service. Keep DingDong running.
+Every `POST` and `PATCH` request must send `Content-Type: application/json`.
 
 ## Locate the service
 
@@ -115,6 +116,13 @@ Confirm the group ID appears in `context.matchedTriggerGroupIds` and the policy 
 ## Clipboard and operational capabilities
 
 - Inspect counts with `GET /clipboard/overview`, groups with `GET /clipboard/groups`, and metadata with `GET /clipboard/history`.
+- Full clipboard content is available only when the user enables **Allow Agents
+  to read clipboard content** in DingDong Settings and the request explicitly
+  sets `includeContent=true`. Sensitive records additionally require
+  `includeSensitiveClipboard=true`.
+- Do not retry `403` clipboard-content responses or attempt to bypass the
+  setting through capture, collection, or promotion; ask the user to enable the
+  setting when the task genuinely requires content.
 - Patch a record's `title`, `group`/`groups`, `tags`, or `pinned` through `PATCH /clipboard/{id}`.
 - Promote a record with `POST /clipboard/promote/{id}` or assign snippet aliases with tags shaped as `alias:name`.
 - Clipboard classification-rule editing and desktop preferences are currently UI-only; do not claim they are Agent-configurable.

@@ -21,8 +21,12 @@ This checklist keeps the first session focused on the product's core loop: manag
 
 ## Privacy Baseline
 
-- Clipboard content is never included in bridge responses by default.
+- Clipboard history is local-only by default. Copied image files retain only
+  their source paths, while screenshots without a source path use managed local
+  storage and follow clipboard retention.
+- Agent clipboard content access is off by default and is controlled in
+  DingDong Settings; metadata remains available while it is off.
 - Skills and MCP resources should be summary-first.
 - Full resource content is loaded only by explicit id or user intent.
-- Sensitive clipboard content requires explicit opt-in.
-
+- Sensitive clipboard records require an additional explicit request even after
+  Agent clipboard content access is enabled.

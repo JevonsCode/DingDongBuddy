@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
@@ -216,7 +217,11 @@ void main() {
         );
       }
 
-      repository.trim(maxItems: 20, maxAgeDays: 7, now: now);
+      final List<ClipboardRecord> deleted = repository.trim(
+        maxItems: 20,
+        maxAgeDays: 7,
+        now: now,
+      );
       final List<ClipboardRecord> records = repository.list(limit: 5000);
 
       expect(
@@ -238,6 +243,46 @@ void main() {
       expect(
         records.any((ClipboardRecord item) => item.id == 'recent-21'),
         isTrue,
+      );
+      expect(
+        deleted.map((ClipboardRecord item) => item.id),
+        containsAll(<String>['expired', 'recent-0', 'recent-1']),
+      );
+      expect(
+        deleted.any((ClipboardRecord item) => item.id == 'pinned-old'),
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'deleteAll removes protected history as an explicit user action',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-clipboard-delete-all-test-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final ClipboardRepository repository = ClipboardRepository.open(
+        '${directory.path}/clipboard-history.sqlite',
+      );
+      addTearDown(repository.close);
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      repository
+        ..save(_record('ordinary', now))
+        ..save(_record('pinned', now, pinned: true))
+        ..save(
+          _record(
+            'archived',
+            now,
+            tags: const <String>['clipboard', 'text', 'archived'],
+          ),
+        );
+
+      repository.deleteAll();
+
+      expect(
+        repository.list(limit: 5000, includeProtectedBeyondLimit: true),
+        isEmpty,
       );
     },
   );
@@ -345,6 +390,87 @@ void main() {
       expect(
         records.where((ClipboardRecord item) => !item.isArchived),
         hasLength(20),
+      );
+    },
+  );
+
+  test(
+    'image retention deletes expired managed data and preserves archives',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-clipboard-image-retention-test-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final Directory images = Directory('${directory.path}/images')
+        ..createSync();
+      final File expiredImage = File('${images.path}/clipboard-expired.png')
+        ..writeAsBytesSync(<int>[1]);
+      final File archivedImage = File('${images.path}/clipboard-archived.png')
+        ..writeAsBytesSync(<int>[2]);
+      final File orphanImage = File('${images.path}/clipboard-orphan.png')
+        ..writeAsBytesSync(<int>[3]);
+      final ClipboardRepository repository = ClipboardRepository.open(
+        '${directory.path}/clipboard-history.sqlite',
+      );
+      addTearDown(repository.close);
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      repository
+        ..save(
+          ClipboardRecord(
+            id: 'expired-image',
+            group: '',
+            title: 'Expired image',
+            content: expiredImage.path,
+            tags: const <String>['clipboard', 'file', 'file-url', 'image'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(days: 30)),
+            updatedAt: now.subtract(const Duration(days: 30)),
+          ),
+        )
+        ..save(
+          ClipboardRecord(
+            id: 'archived-image',
+            group: 'Archive',
+            title: 'Archived image',
+            content: archivedImage.path,
+            tags: const <String>[
+              'archived',
+              'clipboard',
+              'file',
+              'file-url',
+              'image',
+            ],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(days: 30)),
+            updatedAt: now.subtract(const Duration(days: 30)),
+          ),
+        );
+
+      final List<ClipboardRecord> deleted = repository.trim(
+        maxItems: 20,
+        maxAgeDays: 7,
+        now: now,
+      );
+      for (final ClipboardRecord record in deleted) {
+        deleteManagedClipboardImage(record, images);
+      }
+      pruneUnreferencedManagedClipboardImages(
+        repository.list(limit: 5000, includeProtectedBeyondLimit: true),
+        images,
+      );
+
+      expect(expiredImage.existsSync(), isFalse);
+      expect(orphanImage.existsSync(), isFalse);
+      expect(archivedImage.existsSync(), isTrue);
+      expect(
+        repository
+            .list(limit: 5000, includeProtectedBeyondLimit: true)
+            .map((ClipboardRecord record) => record.id),
+        contains('archived-image'),
       );
     },
   );

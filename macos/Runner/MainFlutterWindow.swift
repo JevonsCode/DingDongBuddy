@@ -31,7 +31,7 @@ class MainFlutterWindow: NSWindow {
     self.isMovable = true
     self.isMovableByWindowBackground = true
     self.level = .statusBar
-    self.collectionBehavior = [.canJoinAllSpaces, .transient]
+    self.collectionBehavior = [.moveToActiveSpace, .transient]
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     registerSystemActions(for: flutterViewController)

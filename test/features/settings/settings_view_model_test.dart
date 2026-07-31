@@ -7,6 +7,7 @@ import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -42,12 +43,14 @@ void main() {
     await model.setClipboardMonitoring(true);
     await model.setThemeMode(AppThemePreference.dark);
     await model.setRetention(maxItems: 2500, maxAgeDays: 45);
+    await model.setAllowAgentClipboardContent(true);
 
     expect(monitoring.startCount, 1);
     expect(backend.values['dingdong.clipboard.monitoring'], isTrue);
     expect(backend.values['dingdong.panel.themeMode'], 'dark');
     expect(backend.values['dingdong.clipboard.maxItems'], 2500);
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 45);
+    expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
   });
 
   test(
@@ -98,6 +101,40 @@ void main() {
       await model.setBackgroundOpacity(0.92);
 
       expect(values, <double>[0.86, 0.92]);
+    },
+  );
+
+  test('rapid setting edits persist the newest value last', () async {
+    final _DelayedOpacityPreferencesBackend backend =
+        _DelayedOpacityPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    await model.load();
+
+    final Future<void> first = model.setBackgroundOpacity(0.83);
+    await Future<void>.delayed(Duration.zero);
+    final Future<void> second = model.setBackgroundOpacity(0.96);
+    await Future.wait(<Future<void>>[first, second]);
+
+    expect(backend.values['dingdong.panel.backgroundOpacity'], 0.96);
+  });
+
+  test(
+    'an in-flight setting save can finish while the window closes',
+    () async {
+      final _DelayedOpacityPreferencesBackend backend =
+          _DelayedOpacityPreferencesBackend();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(backend),
+      );
+      await model.load();
+
+      final Future<void> save = model.setBackgroundOpacity(0.83);
+      model.dispose();
+
+      await expectLater(save, completes);
+      expect(backend.values['dingdong.panel.backgroundOpacity'], 0.83);
     },
   );
 
@@ -218,6 +255,84 @@ void main() {
       'Shortcut could not be registered. It may already be used by another app.',
     );
   });
+
+  test('persists a custom workspace shortcut immediately', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    await model.load();
+
+    const WorkspaceShortcut shortcut = WorkspaceShortcut(
+      key: 'T',
+      secondary: true,
+    );
+    expect(await model.setWorkspaceShortcut(0, shortcut), isTrue);
+
+    expect(model.settings.workspaceShortcuts.today, shortcut);
+    expect(
+      WorkspaceShortcuts.parse(
+        backend.values['dingdong.shortcut.workspaces'],
+        platform: TargetPlatform.macOS,
+      ).today,
+      shortcut,
+    );
+  });
+
+  test('rejects duplicate and reserved workspace shortcuts', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+    await model.load();
+
+    expect(
+      await model.setWorkspaceShortcut(
+        0,
+        const WorkspaceShortcut(key: 'W', secondary: true),
+      ),
+      isFalse,
+    );
+    expect(
+      await model.setWorkspaceShortcut(
+        0,
+        const WorkspaceShortcut(key: 'R', primary: true),
+      ),
+      isFalse,
+    );
+    expect(model.settings.workspaceShortcuts, WorkspaceShortcuts.defaultValue);
+    expect(
+      model.errorMessage,
+      'Shortcut conflicts with another DingDong or system action.',
+    );
+  });
+
+  test(
+    'rejects a workspace shortcut that shadows the global shortcut',
+    () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+      );
+      await model.load();
+
+      expect(
+        await model.setWorkspaceShortcut(
+          0,
+          const WorkspaceShortcut(key: 'V', primary: true, shift: true),
+        ),
+        isFalse,
+      );
+      expect(
+        model.settings.workspaceShortcuts.today,
+        WorkspaceShortcuts.defaultToday,
+      );
+    },
+  );
 
   test('custom notification sound can be selected and cleared', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
@@ -569,5 +684,25 @@ final class _FakeClipboardMonitoring implements ClipboardMonitoring {
   @override
   Future<void> stop() async {
     stopCount += 1;
+  }
+}
+
+final class _DelayedOpacityPreferencesBackend implements PreferencesBackend {
+  final Map<String, Object> values = <String, Object>{};
+
+  @override
+  Future<Object?> read(String key) async => values[key];
+
+  @override
+  Future<void> remove(String key) async {
+    values.remove(key);
+  }
+
+  @override
+  Future<void> write(String key, Object value) async {
+    if (key == 'dingdong.panel.backgroundOpacity' && value == 0.83) {
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+    }
+    values[key] = value;
   }
 }

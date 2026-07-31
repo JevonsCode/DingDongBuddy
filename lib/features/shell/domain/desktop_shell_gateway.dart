@@ -7,6 +7,7 @@ enum DesktopShellCommand {
   toggleClipboard,
   toggleClipboardFilters,
   focusClipboardSearch,
+  showResourceManager,
   showSettings,
   hideDockIcon,
   startClipboardMonitoring,

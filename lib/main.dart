@@ -89,6 +89,10 @@ Future<void> main(List<String> arguments) async {
       DesktopContextMenuController();
   final MultiWindowSettingsLauncher settingsWindowLauncher =
       MultiWindowSettingsLauncher(parentWindowId: windowController.windowId);
+  final MultiWindowResourceManagerLauncher resourceManagerLauncher =
+      MultiWindowResourceManagerLauncher(
+        parentWindowId: windowController.windowId,
+      );
   final SharedPreferencesBackend preferencesBackend =
       SharedPreferencesBackend();
   final ActivityController activityController = ActivityController(
@@ -181,6 +185,10 @@ Future<void> main(List<String> arguments) async {
         settingsViewModel.settings.defaultWorkspace.index,
     onClipboardMonitoringChanged: settingsViewModel.setClipboardMonitoring,
     onClearClipboardHistory: () => _clearClipboardHistory(dependencies),
+    onShowResourceManager: () async {
+      await shellGateway.hide();
+      await resourceManagerLauncher.show();
+    },
     onShowSettings: () async {
       await shellGateway.hide();
       await settingsWindowLauncher.show();
@@ -305,6 +313,7 @@ Future<void> main(List<String> arguments) async {
           ? NativeDesktopContextMenuGateway()
           : null,
       desktopContextMenuController: desktopContextMenuController,
+      clipboardImageStoreDirectory: dependencies.paths.clipboardImagesDirectory,
       clipboardMonitoring: dependencies.clipboardMonitorService,
       clipboardStore: dependencies.clipboardStore,
       clipboardPreviewLauncher: clipboardPreviewLauncher,
@@ -316,9 +325,7 @@ Future<void> main(List<String> arguments) async {
       resourceStore: dependencies.resourceStore,
       issueCenterController: dependencies.issueCenterController,
       triggerGroupStore: dependencies.triggerGroupStore,
-      resourceManagerLauncher: MultiWindowResourceManagerLauncher(
-        parentWindowId: windowController.windowId,
-      ),
+      resourceManagerLauncher: resourceManagerLauncher,
       settingsWindowLauncher: settingsWindowLauncher,
       settingsViewModel: settingsViewModel,
       soundPreviewGateway: notificationGateway,
@@ -340,11 +347,7 @@ bool _usesChineseLabels(AppLanguagePreference language) {
 }
 
 Future<void> _clearClipboardHistory(AppDependencies dependencies) async {
-  for (final ClipboardRecord record in dependencies.clipboardStore.list(
-    limit: 5000,
-  )) {
-    dependencies.clipboardStore.delete(record.id);
-  }
+  dependencies.clipboardStore.deleteAll();
   final Directory imageDirectory = dependencies.paths.clipboardImagesDirectory;
   if (await imageDirectory.exists()) {
     await imageDirectory.delete(recursive: true);
@@ -609,6 +612,7 @@ Future<void> _runResourceManagerWindow(
     gateway: DesktopClipboardGateway(),
     resourceStore: resourceStore,
     revisions: dataRevisions,
+    managedImageDirectory: paths.clipboardImagesDirectory,
     categoryRuleStore: FileClipboardCategoryRuleStore(
       paths.clipboardCategoryRulesFile,
     ),

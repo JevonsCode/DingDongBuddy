@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:flutter/material.dart';
@@ -7,12 +8,12 @@ import 'package:flutter/material.dart';
 /// Persistent local-service status shown at the bottom of the callout.
 class PopupFooter extends StatelessWidget {
   const PopupFooter({
-    required this.apiPort,
+    required this.agentBaseUri,
     required this.globalHotKey,
     super.key,
   });
 
-  final int apiPort;
+  final Uri? agentBaseUri;
   final GlobalHotKey globalHotKey;
 
   @override
@@ -21,6 +22,17 @@ class PopupFooter extends StatelessWidget {
         ? TargetPlatform.windows
         : TargetPlatform.macOS;
     final String shortcut = globalHotKey.label(shortcutPlatform);
+    final Uri? endpoint = agentBaseUri;
+    final String apiStatus = endpoint == null
+        ? context.localized('API status unverified', 'API 状态待确认')
+        : context.localized(
+            'API listening on ${endpoint.host}:${endpoint.port}',
+            'API 正在监听 ${endpoint.host}:${endpoint.port}',
+          );
+    final String shortcutStatus = context.localized(
+      '$shortcut ready',
+      '$shortcut 就绪',
+    );
     return Container(
       height: 39,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -30,7 +42,7 @@ class PopupFooter extends StatelessWidget {
         border: const Border(top: BorderSide(color: PopupStyle.border)),
       ),
       child: Text(
-        'API 正在监听 127.0.0.1:$apiPort   ·   $shortcut 就绪',
+        '$apiStatus   ·   $shortcutStatus',
         maxLines: 1,
         style: const TextStyle(
           color: PopupStyle.textSecondary,

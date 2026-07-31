@@ -1,3 +1,4 @@
+import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
@@ -13,6 +14,154 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'manager source dropdown searches and multi-selects recorded apps',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1100, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 7, 31);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[
+          _record('chrome', now, source: 'Google Chrome · com.google.Chrome'),
+          _record(
+            'notes',
+            now.subtract(const Duration(seconds: 1)),
+            source: 'Notes · com.apple.Notes',
+          ),
+          _record(
+            'generic',
+            now.subtract(const Duration(seconds: 2)),
+            source: 'Clipboard',
+          ),
+        ]),
+      )..load();
+      addTearDown(model.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.desktopPanelLight(),
+          home: ClipboardManagerScreen(viewModel: model),
+        ),
+      );
+
+      final Finder dropdown = find.byKey(
+        const Key('clipboard-manager-source-filter'),
+      );
+      final Finder historySearchSurface = find.byKey(
+        const Key('clipboard-manager-search-surface'),
+      );
+      expect(dropdown, findsOneWidget);
+      expect(find.text('All sources'), findsOneWidget);
+      final Rect dropdownRect = tester.getRect(dropdown);
+      final Rect historySearchRect = tester.getRect(historySearchSurface);
+      expect(dropdownRect.top, historySearchRect.top);
+      expect(dropdownRect.bottom, historySearchRect.bottom);
+
+      await tester.tap(dropdown);
+      await tester.pumpAndSettle();
+
+      final Finder menu = find.byKey(
+        const Key('clipboard-manager-source-menu'),
+      );
+      final Finder sourceSearch = find.byKey(
+        const Key('clipboard-manager-source-search'),
+      );
+      final Finder chrome = find.byKey(
+        const Key('clipboard-manager-source-bundle:com.google.chrome'),
+      );
+      final Finder notes = find.byKey(
+        const Key('clipboard-manager-source-bundle:com.apple.notes'),
+      );
+      expect(tester.getSize(menu).width, 280);
+      expect(
+        tester.getRect(menu).right,
+        closeTo(dropdownRect.right, 0.5),
+        reason: 'The source menu should keep the header right inset.',
+      );
+      expect(
+        tester
+            .getSize(
+              find.byKey(const Key('clipboard-manager-source-search-surface')),
+            )
+            .height,
+        34,
+      );
+      expect(tester.getSize(chrome).height, 30);
+      expect(
+        find.descendant(of: menu, matching: find.byType(SelectionMark)),
+        findsNothing,
+      );
+      final Finder sourceSearchSurface = find.byKey(
+        const Key('clipboard-manager-source-search-surface'),
+      );
+      final Finder sourceSearchIcon = find.byKey(
+        const Key('clipboard-manager-source-search-icon'),
+      );
+      final Finder sourceEditableText = find.descendant(
+        of: sourceSearchSurface,
+        matching: find.byType(EditableText),
+      );
+      expect(
+        tester.getRect(sourceSearchIcon).center.dy,
+        tester.getRect(sourceSearchSurface).center.dy,
+      );
+      expect(
+        tester.getRect(sourceEditableText).center.dy,
+        closeTo(tester.getRect(sourceSearchSurface).center.dy, 0.5),
+      );
+      final Text chromeLabel = tester.widget<Text>(find.text('Google Chrome'));
+      expect(chromeLabel.style?.fontWeight, FontWeight.w400);
+      expect(
+        tester.getRect(find.text('Google Chrome')).center.dy,
+        closeTo(tester.getRect(chrome).center.dy, 0.5),
+      );
+      expect(sourceSearch, findsOneWidget);
+      expect(chrome, findsOneWidget);
+      expect(notes, findsOneWidget);
+      expect(
+        find.byKey(
+          const Key('clipboard-manager-source-bundle:com.apple.mobilenotes'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('clipboard-manager-source-source:clipboard')),
+        findsNothing,
+      );
+
+      await tester.enterText(sourceSearch, 'notes');
+      await tester.pump();
+      expect(chrome, findsNothing);
+      expect(notes, findsOneWidget);
+
+      await tester.tap(notes);
+      await tester.pumpAndSettle();
+      expect(
+        model.visibleRecords.map((ClipboardRecord item) => item.id),
+        <String>['notes'],
+      );
+      expect(sourceSearch, findsOneWidget);
+
+      await tester.enterText(sourceSearch, '');
+      await tester.pump();
+      await tester.tap(chrome);
+      await tester.pumpAndSettle();
+      expect(
+        model.visibleRecords.map((ClipboardRecord item) => item.id).toSet(),
+        <String>{'chrome', 'notes'},
+      );
+      expect(find.text('2 sources'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('clipboard-manager-source-all')));
+      await tester.pumpAndSettle();
+      expect(model.selectedSourceIds, isEmpty);
+      expect(model.visibleRecords, hasLength(3));
+      expect(sourceSearch, findsOneWidget);
+    },
+  );
+
   testWidgets('bulk manager keeps only the explicit archive-to action', (
     WidgetTester tester,
   ) async {
@@ -308,19 +457,24 @@ void main() {
   });
 }
 
-ClipboardRecord _record(String id, DateTime now, {String group = ''}) =>
-    ClipboardRecord(
-      id: id,
-      group: group,
-      title: id,
-      content: '$id content',
-      tags: const <String>['clipboard', 'text'],
-      pinned: false,
-      enabled: true,
-      activation: 'taskMatch',
-      createdAt: now,
-      updatedAt: now,
-    );
+ClipboardRecord _record(
+  String id,
+  DateTime now, {
+  String group = '',
+  String? source,
+}) => ClipboardRecord(
+  id: id,
+  group: group,
+  title: id,
+  content: '$id content',
+  tags: const <String>['clipboard', 'text'],
+  source: source,
+  pinned: false,
+  enabled: true,
+  activation: 'taskMatch',
+  createdAt: now,
+  updatedAt: now,
+);
 
 final class _FakeManagerContextMenuGateway
     implements DesktopContextMenuGateway {

@@ -36,7 +36,11 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
+      expect(gateway.checked, Uri.parse('http://127.0.0.1:2333'));
 
+      await tester.tap(find.byKey(const Key('agent-api-toggle-advanced')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('agent-api-copy-health')));
       await tester.pump();
       expect(
@@ -76,7 +80,7 @@ void main() {
     },
   );
 
-  testWidgets('narrow online page keeps endpoint copy readable', (
+  testWidgets('narrow unverified page keeps advanced endpoints readable', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -93,7 +97,16 @@ void main() {
         home: Scaffold(body: AgentApiScreen(settingsViewModel: model)),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Runtime status unverified'), findsOneWidget);
+    expect(
+      find.byKey(const Key('agent-api-endpoint-description-health')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const Key('agent-api-toggle-advanced')));
+    await tester.pumpAndSettle();
 
     final Finder description = find.byKey(
       const Key('agent-api-endpoint-description-health'),
@@ -102,10 +115,53 @@ void main() {
     expect(tester.getSize(description).width, greaterThan(140));
     expect(find.text('MCP access'), findsOneWidget);
   });
+
+  testWidgets('shows the actual runtime port and discloses fallback', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(
+        MemoryPreferencesBackend(<String, Object>{'dingdong.api.port': 2333}),
+      ),
+    );
+    await model.load();
+    final _AgentApiGateway gateway = _AgentApiGateway();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AgentApiScreen(
+            settingsViewModel: model,
+            baseUri: Uri.parse('http://127.0.0.1:58631'),
+            apiGateway: gateway,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(gateway.checked, Uri.parse('http://127.0.0.1:58631'));
+    expect(find.text('http://127.0.0.1:58631'), findsOneWidget);
+    expect(find.byKey(const Key('agent-api-fallback-port')), findsOneWidget);
+    expect(
+      find.text('Preferred port 2333 was unavailable; using 58631.'),
+      findsOneWidget,
+    );
+  });
 }
 
 final class _AgentApiGateway implements AgentApiGateway {
+  Uri? checked;
   Uri? tested;
+
+  @override
+  Future<void> checkHealth(Uri baseUri) async {
+    checked = baseUri;
+  }
 
   @override
   Future<void> testDing(Uri baseUri) async {

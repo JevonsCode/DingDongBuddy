@@ -82,7 +82,7 @@ final class ClipboardRepository implements ClipboardStore {
         : List<ClipboardRecord>.unmodifiable(records);
   }
 
-  void trim({
+  List<ClipboardRecord> trim({
     required int maxItems,
     required int maxAgeDays,
     required DateTime now,
@@ -96,6 +96,7 @@ final class ClipboardRepository implements ClipboardStore {
         'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC',
       );
       final List<int> primaryKeysToDelete = <int>[];
+      final List<ClipboardRecord> recordsToDelete = <ClipboardRecord>[];
       var ordinaryItemCount = 0;
       for (final Row row in rows) {
         final ClipboardRecord record = _recordFromRow(row);
@@ -106,6 +107,7 @@ final class ClipboardRepository implements ClipboardStore {
         if (record.updatedAt.isBefore(cutoff) ||
             ordinaryItemCount > boundedItems) {
           primaryKeysToDelete.add(row['Z_PK']! as int);
+          recordsToDelete.add(record);
         }
       }
       final PreparedStatement deleteStatement = _database.prepare(
@@ -119,6 +121,7 @@ final class ClipboardRepository implements ClipboardStore {
         deleteStatement.close();
       }
       _database.execute('COMMIT');
+      return List<ClipboardRecord>.unmodifiable(recordsToDelete);
     } on Object {
       _database.execute('ROLLBACK');
       rethrow;
@@ -176,6 +179,10 @@ final class ClipboardRepository implements ClipboardStore {
     _database.execute('DELETE FROM ZCLIPBOARDRECORD WHERE ZID = ?', <Object?>[
       id,
     ]);
+  }
+
+  void deleteAll() {
+    _database.execute('DELETE FROM ZCLIPBOARDRECORD');
   }
 
   void close() => _database.close();

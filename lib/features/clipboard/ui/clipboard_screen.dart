@@ -4,8 +4,8 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
-import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
@@ -37,6 +37,7 @@ class ClipboardScreen extends StatefulWidget {
     this.showShortcutHints = false,
     this.showPlainTextShortcutHints = false,
     this.onPreview,
+    this.onOpenContent,
     this.onDismissPreview,
     this.onShare,
     this.contextMenuGateway,
@@ -44,6 +45,7 @@ class ClipboardScreen extends StatefulWidget {
     this.onToggleFilters,
     this.onShortcutStartIndexChanged,
     this.searchFocusRevision = 0,
+    this.now,
     super.key,
   });
 
@@ -53,6 +55,7 @@ class ClipboardScreen extends StatefulWidget {
   final bool showShortcutHints;
   final bool showPlainTextShortcutHints;
   final Future<void> Function(ClipboardRecord record)? onPreview;
+  final Future<void> Function(ClipboardRecord record)? onOpenContent;
   final Future<void> Function()? onDismissPreview;
   final Future<void> Function(ClipboardRecord record)? onShare;
   final DesktopContextMenuGateway? contextMenuGateway;
@@ -60,6 +63,7 @@ class ClipboardScreen extends StatefulWidget {
   final VoidCallback? onToggleFilters;
   final ValueChanged<int>? onShortcutStartIndexChanged;
   final int searchFocusRevision;
+  final DateTime Function()? now;
 
   @override
   State<ClipboardScreen> createState() => _ClipboardScreenState();
@@ -121,6 +125,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   bool get showPlainTextShortcutHints => widget.showPlainTextShortcutHints;
   Future<void> Function(ClipboardRecord record)? get onPreview =>
       widget.onPreview;
+  Future<void> Function(ClipboardRecord record)? get onOpenContent =>
+      widget.onOpenContent;
   Future<void> Function()? get onDismissPreview => widget.onDismissPreview;
   Future<void> Function(ClipboardRecord record)? get onShare => widget.onShare;
   DesktopContextMenuGateway? get contextMenuGateway =>
@@ -134,6 +140,18 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     } else {
       setState(() => _showFilters = !_showFilters);
     }
+  }
+
+  void _handleFilterShortcut() {
+    if (!filtersExpanded) {
+      _toggleFilters();
+      return;
+    }
+    if (viewModel.hasActiveFilters) {
+      viewModel.clearFilters();
+      return;
+    }
+    _toggleFilters();
   }
 
   void _scheduleSearchFocus() {
@@ -184,7 +202,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
               final HardwareKeyboard keyboard = HardwareKeyboard.instance;
               if (event.logicalKey == LogicalKeyboardKey.keyR &&
                   (keyboard.isMetaPressed || keyboard.isControlPressed)) {
-                _toggleFilters();
+                _handleFilterShortcut();
                 return KeyEventResult.handled;
               }
               if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -239,7 +257,6 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                       viewModel: viewModel,
                       searchFocusNode: _searchFocusNode,
                       searchController: _searchController,
-                      settingsViewModel: settingsViewModel,
                       filtersExpanded: filtersExpanded,
                       showShortcutHint: showShortcutHints,
                       contextMenuGateway: contextMenuGateway,
@@ -283,7 +300,10 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                             ],
                           ),
                           const SizedBox(height: 10),
-                          _ClipboardKindFilters(viewModel: viewModel),
+                          _ClipboardKindFilters(
+                            viewModel: viewModel,
+                            showResetShortcutHint: false,
+                          ),
                           if (viewModel.groups.isNotEmpty) ...<Widget>[
                             const SizedBox(height: 8),
                             _ClipboardGroupFilters(
@@ -310,8 +330,10 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                               onShortcutStartIndexChanged:
                                   _handleShortcutStartIndexChanged,
                               onPreview: onPreview,
+                              onOpenContent: onOpenContent,
                               onDismissPreview: onDismissPreview,
                               contextMenuGateway: contextMenuGateway,
+                              now: widget.now?.call() ?? DateTime.now(),
                               onAction: (_ClipboardAction action) =>
                                   _handleAction(context, action),
                             );

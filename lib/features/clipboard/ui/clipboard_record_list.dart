@@ -9,8 +9,10 @@ class _ClipboardList extends StatefulWidget {
     required this.showPlainTextShortcutHints,
     required this.onShortcutStartIndexChanged,
     required this.onPreview,
+    required this.onOpenContent,
     required this.onDismissPreview,
     required this.contextMenuGateway,
+    required this.now,
     required this.onAction,
   });
 
@@ -21,8 +23,10 @@ class _ClipboardList extends StatefulWidget {
   final bool showPlainTextShortcutHints;
   final ValueChanged<int> onShortcutStartIndexChanged;
   final Future<void> Function(ClipboardRecord record)? onPreview;
+  final Future<void> Function(ClipboardRecord record)? onOpenContent;
   final Future<void> Function()? onDismissPreview;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final DateTime now;
   final ValueChanged<_ClipboardAction> onAction;
 
   @override
@@ -97,6 +101,24 @@ class _ClipboardListState extends State<_ClipboardList> {
     );
   }
 
+  Future<void> _openContent(ClipboardRecord record) async {
+    try {
+      await widget.onOpenContent?.call(record);
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.localized(
+              'This file is no longer available or could not be opened.',
+              '该文件已不存在或无法打开。',
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<ClipboardRecord> records = widget.viewModel.visibleRecords;
@@ -127,6 +149,12 @@ class _ClipboardListState extends State<_ClipboardList> {
                   await widget.viewModel.restoreSelected();
                 }());
               },
+              onOpenContent:
+                  widget.onOpenContent != null &&
+                      (record.kind == ClipboardKind.image ||
+                          record.kind == ClipboardKind.file)
+                  ? () => unawaited(_openContent(record))
+                  : null,
               onSecondaryTapUp: (TapUpDetails details) {
                 widget.viewModel.select(record);
                 unawaited(
@@ -158,6 +186,7 @@ class _ClipboardListState extends State<_ClipboardList> {
               plainTextShortcut:
                   widget.showPlainTextShortcutHints &&
                   record.canPasteAsPlainText,
+              now: widget.now,
             );
           },
         ),

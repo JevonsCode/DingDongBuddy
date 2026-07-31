@@ -116,8 +116,14 @@ class AppDelegate: FlutterAppDelegate {
   private var applicationUpdater: DingDongUpdater?
   private var desktopShellReady = false
   private var pendingApplicationOpen = false
+#if DEBUG
+  private var terminationSignalSource: DispatchSourceSignal?
+#endif
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
+#if DEBUG
+    installDebugTerminationHandler()
+#endif
     let openedInteractively = NSApp.isActive ||
       NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
     if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
@@ -290,7 +296,7 @@ class AppDelegate: FlutterAppDelegate {
         binaryMessenger: controller.engine.binaryMessenger
       )
       self.modifierChannel = modifierChannel
-      modifierMonitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged, .keyDown]) {
+      modifierMonitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged]) {
         [weak self] event in
         guard let self else { return event }
         if event.type == .flagsChanged {
@@ -299,27 +305,6 @@ class AppDelegate: FlutterAppDelegate {
             arguments: event.modifierFlags.contains(.command)
           )
           return event
-        }
-        let shortcutFlags = event.modifierFlags.intersection([
-          .command, .shift, .option, .control
-        ])
-        if event.type == .keyDown,
-           self.mainFlutterWindow?.isKeyWindow == true,
-           shortcutFlags == .command
-        {
-          switch event.charactersIgnoringModifiers?.lowercased() {
-          case "q":
-            self.hotKeyChannel?.invokeMethod("workspaceShortcut", arguments: "today")
-            return nil
-          case "r":
-            self.hotKeyChannel?.invokeMethod("workspaceShortcut", arguments: "filters")
-            return nil
-          case "f":
-            self.hotKeyChannel?.invokeMethod("workspaceShortcut", arguments: "search")
-            return nil
-          default:
-            break
-          }
         }
         return event
       }
@@ -437,12 +422,31 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   override func applicationWillTerminate(_ notification: Notification) {
+#if DEBUG
+    terminationSignalSource?.cancel()
+    terminationSignalSource = nil
+#endif
     if let modifierMonitor {
       NSEvent.removeMonitor(modifierMonitor)
     }
     unregisterClipboardHotKey()
     super.applicationWillTerminate(notification)
   }
+
+#if DEBUG
+  private func installDebugTerminationHandler() {
+    signal(SIGTERM, SIG_IGN)
+    let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+    source.setEventHandler {
+      // Flutter's desktop integration-test runner stops the test host with
+      // SIGTERM. Route that through AppKit so macOS records a normal exit
+      // instead of presenting an "unexpectedly quit" report.
+      NSApp.terminate(nil)
+    }
+    terminationSignalSource = source
+    source.resume()
+  }
+#endif
 
   @objc private func hideDockIconFromDockMenu(_ sender: NSMenuItem) {
     NSApp.setActivationPolicy(.accessory)

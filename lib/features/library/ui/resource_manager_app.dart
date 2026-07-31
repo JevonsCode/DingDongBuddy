@@ -176,52 +176,60 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       home: Builder(
-        builder: (BuildContext context) => Scaffold(
-          key: const Key('resource-manager-shell'),
-          body: AnimatedBuilder(
-            animation: widget.issueCenterController,
-            builder: (BuildContext context, _) => Row(
-              children: <Widget>[
-                _WorkspaceSidebar(
-                  selectedIndex: _selectedIndex,
-                  issueCount: widget.issueCenterController.count,
-                  onSelected: (int value) => _selectDestination(
-                    ResourceManagerDestination.values[value],
+        builder: (BuildContext context) => Semantics(
+          container: true,
+          explicitChildNodes: true,
+          label: context.localized(
+            'DingDong resource manager window',
+            'DingDong 资源管理窗口',
+          ),
+          child: Scaffold(
+            key: const Key('resource-manager-shell'),
+            body: AnimatedBuilder(
+              animation: widget.issueCenterController,
+              builder: (BuildContext context, _) => Row(
+                children: <Widget>[
+                  _WorkspaceSidebar(
+                    selectedIndex: _selectedIndex,
+                    issueCount: widget.issueCenterController.count,
+                    onSelected: (int value) => _selectDestination(
+                      ResourceManagerDestination.values[value],
+                    ),
                   ),
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(
-                  child: switch (ResourceManagerDestination
-                      .values[_selectedIndex]) {
-                    ResourceManagerDestination.resources => LibraryScreen(
-                      viewModel: widget.viewModel,
-                      transferGateway: FileSelectorLibraryTransferGateway(),
-                      contextMenuGateway: widget.desktopContextMenuGateway,
-                      onOpenExternalLink: widget.onOpenExternalLink,
-                    ),
-                    ResourceManagerDestination.clipboard =>
-                      ClipboardManagerScreen(
-                        viewModel: widget.clipboardViewModel,
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: switch (ResourceManagerDestination
+                        .values[_selectedIndex]) {
+                      ResourceManagerDestination.resources => LibraryScreen(
+                        viewModel: widget.viewModel,
+                        transferGateway: FileSelectorLibraryTransferGateway(),
                         contextMenuGateway: widget.desktopContextMenuGateway,
+                        onOpenExternalLink: widget.onOpenExternalLink,
                       ),
-                    ResourceManagerDestination.recentAgents =>
-                      AgentActivityManagerScreen(
-                        controller: widget.activityController,
-                        conversationLauncher: _agentConversationLauncher,
+                      ResourceManagerDestination.clipboard =>
+                        ClipboardManagerScreen(
+                          viewModel: widget.clipboardViewModel,
+                          contextMenuGateway: widget.desktopContextMenuGateway,
+                        ),
+                      ResourceManagerDestination.recentAgents =>
+                        AgentActivityManagerScreen(
+                          controller: widget.activityController,
+                          conversationLauncher: _agentConversationLauncher,
+                        ),
+                      ResourceManagerDestination.agentAdapters =>
+                        widget.agentAdapterController == null
+                            ? const SizedBox.shrink()
+                            : AgentAdapterScreen(
+                                controller: widget.agentAdapterController!,
+                              ),
+                      ResourceManagerDestination.issues => IssueCenterScreen(
+                        controller: widget.issueCenterController,
+                        onOpenResource: _openIssueResource,
                       ),
-                    ResourceManagerDestination.agentAdapters =>
-                      widget.agentAdapterController == null
-                          ? const SizedBox.shrink()
-                          : AgentAdapterScreen(
-                              controller: widget.agentAdapterController!,
-                            ),
-                    ResourceManagerDestination.issues => IssueCenterScreen(
-                      controller: widget.issueCenterController,
-                      onOpenResource: _openIssueResource,
-                    ),
-                  },
-                ),
-              ],
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),

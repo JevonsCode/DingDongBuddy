@@ -154,6 +154,43 @@ void main() {
     },
   );
 
+  test(
+    'window focus reapplies the saved opacity after a Space switch',
+    () async {
+      final List<MethodCall> calls = <MethodCall>[];
+      const MethodChannel channel = MethodChannel('window_manager');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+            calls.add(call);
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+      });
+      final PluginDesktopShellGateway gateway = PluginDesktopShellGateway();
+
+      await gateway.setOpacity(0.96);
+      calls.clear();
+      gateway.onWindowFocus();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        calls,
+        contains(
+          isA<MethodCall>()
+              .having((MethodCall call) => call.method, 'method', 'setOpacity')
+              .having(
+                (MethodCall call) =>
+                    (call.arguments! as Map<Object?, Object?>)['opacity'],
+                'opacity',
+                0.96,
+              ),
+        ),
+      );
+    },
+  );
+
   test('taskbar appearance events reach tray listeners', () async {
     final _RecordingTrayListener listener = _RecordingTrayListener();
     trayManager.addListener(listener);
@@ -183,6 +220,18 @@ void main() {
     expect(gateway, contains('trayManager.popUpContextMenu()'));
     expect(gateway, contains('DesktopShellCommand.showClipboard'));
     expect(gateway, contains('DesktopShellCommand.clearClipboardHistory'));
+    expect(gateway, contains("label: chinese ? '资源管理' : 'Resource Manager'"));
+    expect(gateway, contains("label: chinese ? '设置' : 'Settings'"));
+    expect(gateway, isNot(contains("'资源管理…'")));
+    expect(gateway, isNot(contains("'设置…'")));
+    final int resourceManagerIndex = gateway.indexOf(
+      'DesktopShellCommand.showResourceManager',
+    );
+    final int settingsIndex = gateway.indexOf(
+      'DesktopShellCommand.showSettings',
+    );
+    expect(resourceManagerIndex, greaterThan(-1));
+    expect(resourceManagerIndex, lessThan(settingsIndex));
     expect(gateway, contains('DesktopShellCommand.showSettings'));
     expect(gateway, contains('DesktopShellCommand.quit'));
   });

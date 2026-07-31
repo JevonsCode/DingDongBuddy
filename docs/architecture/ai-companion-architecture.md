@@ -1,132 +1,159 @@
-# DingDong AI Companion Architecture
+# DingDong Runtime Architecture
 
-## Product Direction
+This document describes the current implementation. It replaces the original
+macOS-only proposal and should not be read as a roadmap.
 
-DingDong should become a lightweight macOS AI companion that lives in the menu bar and gives every local AI agent a shared set of desktop capabilities:
+## Product and process boundary
 
-- Delightful completion reminders with a cheerful built-in sound.
-- A shared resource library for prompts, skills repositories, MCP repositories, local knowledge sources, and clipboard records.
-- A loopback-only API so Codex, Claude Code, Cursor agents, scripts, and local MCP tools can call the same desktop service.
-- A compact, visually distinct control panel that feels like a companion utility instead of a generic settings app.
+DingDong is a Flutter desktop application with macOS and Windows platform
+adapters. The main application process owns:
 
-The app should remain fast: no always-on heavy indexing, no network dependency by default, no large resident database process, and no continuous clipboard polling at high frequency.
+- the menu-bar/tray shell and desktop workspaces;
+- clipboard monitoring, capture, history, and quick paste;
+- the Prompt, Skill, MCP, and Knowledge resource library;
+- recent Agent activity and completion notifications;
+- a loopback HTTP server used by the bundled MCP executable and local clients.
 
-## UX Principles
-
-- **Menu bar first:** The app should stay available without a Dock window. The menu bar item opens a compact companion panel.
-- **Quiet until needed:** It should not interrupt except when an agent explicitly calls an API or the user opts into a watcher.
-- **Resource-first UI:** The main panel should show recent agent calls, pinned prompts, clipboard snippets, and quick API examples.
-- **Clear grouping:** Built-in groups should include `Prompts`, `Skills`, `MCP`, `Knowledge`, and `Clipboard`.
-- **Fast capture:** Users and agents should be able to add a prompt, command, path, or clipboard record with a single API call.
-- **Local trust boundary:** API listens on `127.0.0.1` only. Later remote access must require an explicit token and opt-in.
-
-## Visual Direction
-
-- Dark, compact panel with restrained blue and warm yellow brand accents.
-- Use the provided blue/yellow bell-light logo as the app identity.
-- Avoid large marketing-style hero sections; this is an operational desktop utility.
-- Use dense but readable cards: recent alert, API status, pinned groups, quick actions.
-- Future screens:
-  - **Today:** active status, last alerts, pinned resources.
-  - **Library:** searchable resource groups.
-  - **Clipboard:** recent snippets, filters, pinning, source app metadata.
-  - **Agent API:** examples, tokens, route health, recent calls.
-
-## System Architecture
+The bundled MCP executable is a separate short-lived process. It discovers the
+active HTTP port from the application-data `api-port` file and forwards
+JSON-based tool calls to the running desktop application.
 
 ```mermaid
 flowchart LR
-    A["AI agents and scripts"] --> B["Loopback HTTP API"]
-    C["Menu bar UI"] --> D["App model"]
-    B --> D
-    D --> E["Reminder engine"]
-    D --> F["Resource library store"]
-    D --> G["Clipboard capture service"]
-    F --> H["JSON persistence"]
-    G --> H
+    Native["Native clipboard and desktop APIs"] --> Capture["Clipboard capture service"]
+    Capture --> ClipboardDb["Clipboard SQLite"]
+    Capture --> ManagedImages["Managed clipboard images"]
+
+    UI["Flutter desktop UI"] --> Models["View models and controllers"]
+    Models --> ClipboardDb
+    Models --> Library["Resource and policy stores"]
+    Models --> Preferences["Local preferences"]
+
+    Agents["Local Agents and scripts"] --> MCP["Bundled MCP / HTTP client"]
+    MCP --> HTTP["127.0.0.1 HTTP server"]
+    HTTP --> Router["Framework-independent Agent router"]
+    Router --> ClipboardDb
+    Router --> Library
+    Router --> Preferences
 ```
 
-## Core Modules
+## Durable data ownership
 
-- `NotificationServer`: Owns loopback HTTP listener.
-- `NotificationRouter`: Routes API requests and returns JSON responses.
-- `SoundPlayer`: Plays built-in cheerful sound, custom sound, system sound, or muted mode.
-- `StatusController`: Owns menu bar item, panel state, flashing icon, and user actions.
-- `ResourceLibrary`: In-memory model and persistence facade for agent resources.
-- `ResourceStore`: JSON file persistence under Application Support.
-- `ClipboardRecorder`: Low-overhead snapshot capture from `NSPasteboard`; no high-frequency polling by default.
+| Data | Store | Ownership and lifecycle |
+| --- | --- | --- |
+| Clipboard records | `clipboard-history.sqlite` | Bounded by item and age settings; pinned and archived records are exempt |
+| Clipboard image data without a source file | `Clipboard Images/` | DingDong-owned and deleted with its ordinary record |
+| Copied files, including image files | Original source path only | DingDong never duplicates or deletes the source |
+| Prompts, Skills, MCPs, and Knowledge | `resource-library.json` plus managed Skill packages | User-managed; synchronized to supported Agent configurations |
+| Trigger groups | `trigger-groups.json` | User-managed resource scope rules |
+| Recent Agent details | `agent-activity.json` | Controlled by the recent-Agent retention settings |
+| User settings | Platform preferences | Loaded by both the main and dedicated Settings windows |
+| Active API port | `api-port` | Rewritten on each application start |
 
-## Resource Model
+Application-data roots are:
 
-Resource types:
+- macOS: `~/Library/Application Support/DingDong`
+- Windows: `%APPDATA%\DingDong`
 
-- `prompt`: Reusable prompts, system prompts, task templates.
-- `skill`: Local or remote skill repository references.
-- `mcp`: MCP server repository, command, or config reference.
-- `knowledge`: Local files, folders, URLs, notes, and project references.
-- `clipboard`: Captured clipboard snippets.
+Development builds use the corresponding `DingDong DEV` directory.
 
-Resource fields:
+## Clipboard capture and retention
 
-- `id`: UUID string.
-- `type`: one of the resource types.
-- `group`: logical grouping, defaulting by type.
-- `title`: display name.
-- `content`: prompt text, snippet, URL, path, command, or note.
-- `tags`: searchable tags.
-- `source`: optional app name, path, URL, or agent name.
-- `createdAt` and `updatedAt`: ISO 8601 strings.
-- `pinned`: boolean.
+Clipboard payloads have three distinct storage paths:
 
-## API Surface
+1. Text and formatted text are stored in SQLite. HTML and RTF representations
+   are retained when supplied by the platform.
+2. A copied file selection stores newline-separated source paths. An image file
+   is still a source-path record; deleting or moving the source makes it
+   unavailable to preview or restore.
+3. Image data without a file path, such as a screenshot or copied canvas
+   pixels, is written to a DingDong-owned PNG file and the path is stored in
+   SQLite.
 
-Base URL: `http://127.0.0.1:2333`
+Automatic retention applies the configured maximum ordinary-item count and
+maximum age. Pinned and archived records do not count toward either limit.
+When an ordinary managed-image record is trimmed or manually deleted, its owned
+image file is deleted as well. Reconciliation also removes orphaned managed
+files left by interrupted writes or older versions. Source files outside the
+managed directory are never deleted.
 
-Existing:
+**Clear history** is a separate explicit destructive action. It removes all
+clipboard records, including protected records, and clears the managed image
+directory.
 
-- `GET /health`
-- `GET /ding`
-- `POST /ding`
+## Loopback API trust boundary
 
-Planned and now partially implemented:
+The server binds only to `127.0.0.1`. It prefers the configured port, normally
+`2333`, and falls back to another loopback port if needed.
 
-- `GET /library`
-- `POST /library`
-- `GET /library?type=prompt`
-- `PATCH /library/{id}`
-- `DELETE /library/{id}`
-- `POST /clipboard/capture`
-- `GET /knowledge/index?path=/local/docs&limit=20`
-- `GET /knowledge/index?id=RESOURCE_ID`
+Current transport protections are:
 
-Example:
+- `GET /` redirects to the configured DingDong website.
+- `GET /health` remains a minimal public health response.
+- Other requests carrying a browser `Origin` header or cross-site Fetch
+  Metadata are rejected.
+- State-changing routes use `POST`, `PATCH`, or `DELETE`; notification and UI
+  actions are not available through `GET`.
+- Every `POST` and `PATCH` request must use a JSON media type.
+- Request bodies are limited to 8 MiB and the server uses a bounded idle
+  timeout.
 
-```bash
-curl --noproxy 127.0.0.1 -sS -X POST http://127.0.0.1:2333/library \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "type": "prompt",
-    "group": "Prompts",
-    "title": "Release note writer",
-    "content": "Write concise release notes from this diff...",
-    "tags": ["writing", "release"],
-    "source": "Codex"
-  }'
-```
+These controls prevent ordinary browser cross-origin reads, HTML form posts,
+and common accidental calls. They do **not** authenticate another ordinary
+local application running as the same operating-system user. DingDong currently
+does not issue or require a Bearer Token. If the product later needs to defend
+against other local applications or support remote access, that is a different
+trust boundary and requires explicit authentication and migration design.
 
-## Performance Strategy
+## Agent clipboard-content permission
 
-- Store library data in a compact JSON file until the data shape proves SQLite is needed.
-- Keep clipboard capture explicit or low-frequency opt-in. Do not watch every pasteboard change aggressively.
-- Keep knowledge indexing on demand. Return bounded file metadata and short summaries first; defer full-text and vector indexing until there is a clear need.
-- Keep resource payloads bounded. API should reject very large content bodies in a future hardening pass.
-- Avoid embedding models or vector indexing in the menu bar process. If needed later, use a separate opt-in helper.
+`Allow Agents to read clipboard content` is a persisted DingDong setting and is
+off by default.
 
-## Roadmap
+While it is off:
 
-1. **Foundation:** Resource model, JSON store, library API, happier sound.
-2. **Clipboard:** Manual capture API and UI list; then optional low-frequency watcher.
-3. **Library UI:** Groups, pinned prompts, tags, search, copy/insert actions.
-4. **Agent API:** API docs panel, recent calls, optional token auth.
-5. **Knowledge:** Local path registry, lightweight metadata, explicit re-scan command.
-6. **Advanced AI companion:** Agent command palette, runbook templates, MCP config generator, prompt pack export/import.
+- clipboard counts, groups, classifications, titles, timestamps, and other
+  metadata remain available;
+- requests with `includeContent=true` are rejected;
+- API capture, collection, and promotion are rejected because each can expose
+  clipboard content through its response or a newly created resource.
+
+The router reads the persisted setting when a content-bearing request arrives,
+so a change made in the dedicated Settings window takes effect without an
+application restart.
+
+When the setting is on, sensitive records remain protected by the existing
+second gate: the caller must also explicitly set
+`includeSensitiveClipboard=true`. Sensitivity classification is not treated as
+a perfect secret detector; the user-controlled content switch is the primary
+permission boundary.
+
+## Main API groups
+
+Representative routes are:
+
+- Health and discovery: `GET /health`, `GET /agent/manifest`
+- Completion notification: `POST /ding`
+- Resource library: `GET|POST /library`, `PATCH|DELETE /library/{id}`
+- Dynamic delivery: `POST /agent/bridge`, `GET /agent/skills/load`
+- Clipboard metadata: `GET /clipboard/history`, `GET /clipboard/overview`
+- Clipboard actions: `POST /clipboard/capture`,
+  `POST /clipboard/restore/{id}`, `POST /clipboard/promote/{id}`
+- Desktop control: `POST /ui/show`, `POST /clipboard/monitor`
+
+Route behavior is tested independently through `AgentRouter`; socket-level
+rules such as loopback binding, redirect, browser rejection, media type, and
+body limits are tested through `AgentHttpServer`.
+
+## Architectural constraints
+
+- No analytics or behavior-event reporting is built into the app.
+- Knowledge indexing is explicit and bounded; there is no resident vector
+  database or embedded model.
+- The resource library and clipboard history remain separate stores because
+  they have different ownership and retention semantics.
+- Platform code is kept behind gateways so contract and widget tests can run
+  without real clipboard, notification, or window state.
+- Future security work must state which attacker is in scope. Browser-request
+  protection, local-application authentication, and remote access are separate
+  decisions and should not be conflated.

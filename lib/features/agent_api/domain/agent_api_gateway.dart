@@ -3,6 +3,8 @@ import 'dart:io';
 
 /// User-facing operations performed against DingDong's own loopback API.
 abstract interface class AgentApiGateway {
+  Future<void> checkHealth(Uri baseUri);
+
   Future<void> testDing(Uri baseUri);
 }
 
@@ -11,6 +13,25 @@ final class HttpAgentApiGateway implements AgentApiGateway {
   HttpAgentApiGateway({HttpClient? client}) : _client = client ?? HttpClient();
 
   final HttpClient _client;
+
+  void close() {
+    _client.close(force: true);
+  }
+
+  @override
+  Future<void> checkHealth(Uri baseUri) async {
+    final HttpClientRequest request = await _client
+        .getUrl(baseUri.resolve('/health'))
+        .timeout(_timeout);
+    final HttpClientResponse response = await request.close().timeout(_timeout);
+    await response.drain<void>();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException(
+        'Health check returned HTTP ${response.statusCode}',
+        uri: baseUri,
+      );
+    }
+  }
 
   @override
   Future<void> testDing(Uri baseUri) async {

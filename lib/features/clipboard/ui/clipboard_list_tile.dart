@@ -5,6 +5,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -15,10 +16,12 @@ class ClipboardListTile extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     this.onDoubleTap,
+    this.onOpenContent,
     this.onSecondaryTapUp,
     this.callout = false,
     this.shortcutIndex,
     this.plainTextShortcut = false,
+    this.now,
     super.key,
   });
 
@@ -26,10 +29,12 @@ class ClipboardListTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onSelected;
   final VoidCallback? onDoubleTap;
+  final VoidCallback? onOpenContent;
   final GestureTapUpCallback? onSecondaryTapUp;
   final bool callout;
   final int? shortcutIndex;
   final bool plainTextShortcut;
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +46,9 @@ class ClipboardListTile extends StatelessWidget {
         plainTextShortcut: plainTextShortcut,
         onSelected: onSelected,
         onDoubleTap: onDoubleTap,
+        onOpenContent: onOpenContent,
         onSecondaryTapUp: onSecondaryTapUp,
+        now: now,
       );
     }
     return Material(
@@ -56,7 +63,11 @@ class ClipboardListTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           child: Row(
             children: <Widget>[
-              Icon(_iconFor(record.kind), size: 20),
+              _SystemContentAction(
+                record: record,
+                onOpen: onOpenContent,
+                child: Icon(_iconFor(record.kind), size: 20),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -87,9 +98,7 @@ class ClipboardListTile extends StatelessWidget {
               if (record.pinned) const Icon(Icons.push_pin_outlined, size: 16),
               const SizedBox(width: 8),
               Text(
-                TimeOfDay.fromDateTime(
-                  record.createdAt.toLocal(),
-                ).format(context),
+                clipboardTimestampLabel(context, record.createdAt, now: now),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             ],
@@ -108,7 +117,9 @@ class _CalloutClipboardTile extends StatelessWidget {
     required this.plainTextShortcut,
     required this.onSelected,
     required this.onDoubleTap,
+    required this.onOpenContent,
     required this.onSecondaryTapUp,
+    required this.now,
   });
 
   final ClipboardRecord record;
@@ -117,7 +128,9 @@ class _CalloutClipboardTile extends StatelessWidget {
   final bool plainTextShortcut;
   final VoidCallback onSelected;
   final VoidCallback? onDoubleTap;
+  final VoidCallback? onOpenContent;
   final GestureTapUpCallback? onSecondaryTapUp;
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +152,7 @@ class _CalloutClipboardTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
             child: Row(
               children: <Widget>[
-                _RecordLeading(record: record),
+                _RecordLeading(record: record, onOpen: onOpenContent),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -172,12 +185,10 @@ class _CalloutClipboardTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  TimeOfDay.fromDateTime(
-                    record.createdAt.toLocal(),
-                  ).format(context),
+                  clipboardTimestampLabel(context, record.createdAt, now: now),
                   style: const TextStyle(
-                    color: PopupStyle.textTertiary,
-                    fontSize: 8,
+                    color: PopupStyle.textSecondary,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -212,7 +223,7 @@ class _CalloutClipboardTile extends StatelessWidget {
                       context.localized('Plain text', '纯文本'),
                       style: const TextStyle(
                         color: PopupStyle.textSecondary,
-                        fontSize: 9,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -231,8 +242,8 @@ class _CalloutClipboardTile extends StatelessWidget {
       return context.localized('Sensitive content hidden', '敏感内容已隐藏');
     }
     if (record.kind == ClipboardKind.image) {
-      final File file = File(record.content);
-      if (file.existsSync()) {
+      final File? file = _firstExistingFile(record);
+      if (file != null) {
         final int kilobytes = file.lengthSync() ~/ 1024;
         return 'PNG · ${context.localized('Image', '图片')} · $kilobytes KB';
       }
@@ -301,27 +312,29 @@ class _InteractiveInkWellState extends State<_InteractiveInkWell> {
 }
 
 class _RecordLeading extends StatelessWidget {
-  const _RecordLeading({required this.record});
+  const _RecordLeading({required this.record, required this.onOpen});
 
   final ClipboardRecord record;
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
-    final File imageFile = File(record.content);
-    if (record.kind == ClipboardKind.image && imageFile.existsSync()) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(7),
-        child: Image.file(
-          imageFile,
-          width: 46,
-          height: 46,
-          fit: BoxFit.cover,
-          cacheWidth: 92,
-          errorBuilder: (_, _, _) => _iconBox(record),
-        ),
-      );
-    }
-    return _iconBox(record);
+    final File? imageFile = _firstExistingFile(record);
+    final Widget leading =
+        record.kind == ClipboardKind.image && imageFile != null
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(7),
+            child: Image.file(
+              imageFile,
+              width: 46,
+              height: 46,
+              fit: BoxFit.cover,
+              cacheWidth: 92,
+              errorBuilder: (_, _, _) => _iconBox(record),
+            ),
+          )
+        : _iconBox(record);
+    return _SystemContentAction(record: record, onOpen: onOpen, child: leading);
   }
 
   Widget _iconBox(ClipboardRecord record) {
@@ -349,6 +362,59 @@ class _RecordLeading extends StatelessWidget {
     );
   }
 }
+
+class _SystemContentAction extends StatelessWidget {
+  const _SystemContentAction({
+    required this.record,
+    required this.onOpen,
+    required this.child,
+  });
+
+  final ClipboardRecord record;
+  final VoidCallback? onOpen;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (onOpen == null || !_hasExistingPath(record)) {
+      return child;
+    }
+    final String label = record.kind == ClipboardKind.image
+        ? context.localized('Preview image with system app', '使用系统应用预览图片')
+        : context.localized('Open file with system app', '使用系统应用打开文件');
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        label: label,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            key: Key('clipboard-open-content-${record.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onOpen,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+File? _firstExistingFile(ClipboardRecord record) {
+  for (final String path in record.filePaths) {
+    final File file = File(path);
+    if (file.existsSync()) {
+      return file;
+    }
+  }
+  return null;
+}
+
+bool _hasExistingPath(ClipboardRecord record) => record.filePaths.any(
+  (String path) =>
+      FileSystemEntity.typeSync(path) != FileSystemEntityType.notFound,
+);
 
 String _symbolFor(ClipboardKind kind) {
   return switch (kind) {

@@ -10,6 +10,7 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
 import 'package:dingdong/features/agent_api/ui/agent_api_screen.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
@@ -23,6 +24,7 @@ import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
+import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/ui/popup_footer.dart';
 import 'package:dingdong/features/shell/ui/popup_header.dart';
@@ -45,6 +47,7 @@ class ShellScreen extends StatefulWidget {
     this.developmentBuild = false,
     this.clipboardGateway,
     this.desktopContextMenuGateway,
+    this.clipboardContentLauncher,
     this.clipboardPreviewLauncher,
     this.clipboardShareGateway,
     this.libraryTransferGateway,
@@ -70,6 +73,7 @@ class ShellScreen extends StatefulWidget {
   final bool developmentBuild;
   final ClipboardGateway? clipboardGateway;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
+  final ClipboardContentLauncher? clipboardContentLauncher;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
   final ClipboardShareGateway? clipboardShareGateway;
   final LibraryTransferGateway? libraryTransferGateway;
@@ -88,6 +92,7 @@ class ShellScreen extends StatefulWidget {
 
 class _ShellScreenState extends State<ShellScreen> {
   bool _showShortcutHints = false;
+  bool _showWorkspaceShortcutHints = false;
   bool _showPlainTextShortcutHints = false;
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
@@ -202,16 +207,29 @@ class _ShellScreenState extends State<ShellScreen> {
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     final TargetPlatform platform = defaultTargetPlatform;
     final HardwareKeyboard keyboard = HardwareKeyboard.instance;
-    final bool isModifierKey = isPrimaryModifierKey(event.logicalKey, platform);
-    final bool show = isModifierKey
+    final bool isPrimaryKey = isPrimaryModifierKey(event.logicalKey, platform);
+    final bool showPrimary = isPrimaryKey
         ? event is! KeyUpEvent
         : isPrimaryModifierPressed(keyboard, platform);
+    final bool showWorkspace = widget
+        .settingsViewModel
+        .settings
+        .workspaceShortcuts
+        .values
+        .any(
+          (WorkspaceShortcut shortcut) =>
+              shortcut.modifierStateMatches(keyboard, platform),
+        );
     final bool showPlainText =
-        show && usesMetaAsPrimaryModifier(platform) && keyboard.isAltPressed;
-    if (show != _showShortcutHints ||
+        showPrimary &&
+        usesMetaAsPrimaryModifier(platform) &&
+        keyboard.isAltPressed;
+    if (showPrimary != _showShortcutHints ||
+        showWorkspace != _showWorkspaceShortcutHints ||
         showPlainText != _showPlainTextShortcutHints) {
       setState(() {
-        _showShortcutHints = show;
+        _showShortcutHints = showPrimary;
+        _showWorkspaceShortcutHints = showWorkspace;
         _showPlainTextShortcutHints = showPlainText;
       });
     }
@@ -307,6 +325,11 @@ class _ShellScreenState extends State<ShellScreen> {
     await widget.clipboardPreviewLauncher?.hide();
   }
 
+  Future<void> _openClipboardContent(ClipboardRecord record) async {
+    await _hideClipboardPreview();
+    await widget.clipboardContentLauncher?.open(record);
+  }
+
   Future<void> _openSettings({
     SettingsWindowDestination destination = SettingsWindowDestination.top,
   }) async {
@@ -356,42 +379,42 @@ class _ShellScreenState extends State<ShellScreen> {
     unawaited(widget.onHideWindow?.call());
   }
 
+  void _handleClipboardFilterShortcut() {
+    if (widget.controller.selectedIndex != 2) {
+      return;
+    }
+    if (!_clipboardFiltersExpanded) {
+      setState(() => _clipboardFiltersExpanded = true);
+      return;
+    }
+    if (widget.clipboardViewModel.hasActiveFilters) {
+      widget.clipboardViewModel.clearFilters();
+      return;
+    }
+    setState(() => _clipboardFiltersExpanded = false);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool systemOwnsCorners = usesSystemWindowCorners(
-      defaultTargetPlatform,
-    );
+    final TargetPlatform platform = defaultTargetPlatform;
+    final WorkspaceShortcuts workspaceShortcuts =
+        widget.settingsViewModel.settings.workspaceShortcuts;
+    final bool systemOwnsCorners = usesSystemWindowCorners(platform);
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.escape): () {
           _handleEscape();
         },
-        const SingleActivator(LogicalKeyboardKey.keyQ, meta: true): () =>
+        workspaceShortcuts.today.activator(platform): () =>
             widget.controller.open(0),
-        const SingleActivator(LogicalKeyboardKey.keyW, meta: true): () =>
+        workspaceShortcuts.library.activator(platform): () =>
             widget.controller.open(1),
-        const SingleActivator(LogicalKeyboardKey.keyE, meta: true): () =>
+        workspaceShortcuts.clipboard.activator(platform): () =>
             widget.controller.open(2),
-        const SingleActivator(LogicalKeyboardKey.keyQ, control: true): () =>
-            widget.controller.open(0),
-        const SingleActivator(LogicalKeyboardKey.keyW, control: true): () =>
-            widget.controller.open(1),
-        const SingleActivator(LogicalKeyboardKey.keyE, control: true): () =>
-            widget.controller.open(2),
-        const SingleActivator(LogicalKeyboardKey.keyR, meta: true): () {
-          if (widget.controller.selectedIndex == 2) {
-            setState(
-              () => _clipboardFiltersExpanded = !_clipboardFiltersExpanded,
-            );
-          }
-        },
-        const SingleActivator(LogicalKeyboardKey.keyR, control: true): () {
-          if (widget.controller.selectedIndex == 2) {
-            setState(
-              () => _clipboardFiltersExpanded = !_clipboardFiltersExpanded,
-            );
-          }
-        },
+        const SingleActivator(LogicalKeyboardKey.keyR, meta: true):
+            _handleClipboardFilterShortcut,
+        const SingleActivator(LogicalKeyboardKey.keyR, control: true):
+            _handleClipboardFilterShortcut,
         const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () {
           if (widget.controller.selectedIndex == 2) {
             widget.controller.requestClipboardSearchFocus();
@@ -407,9 +430,13 @@ class _ShellScreenState extends State<ShellScreen> {
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
         onFocusChange: (bool focused) {
-          if (!focused && (_showShortcutHints || _showPlainTextShortcutHints)) {
+          if (!focused &&
+              (_showShortcutHints ||
+                  _showWorkspaceShortcutHints ||
+                  _showPlainTextShortcutHints)) {
             setState(() {
               _showShortcutHints = false;
+              _showWorkspaceShortcutHints = false;
               _showPlainTextShortcutHints = false;
             });
           }
@@ -443,7 +470,8 @@ class _ShellScreenState extends State<ShellScreen> {
                             .releaseStatus
                             .isUpdateAvailable ==
                         true,
-                    showShortcutHints: _showShortcutHints,
+                    showShortcutHints: _showWorkspaceShortcutHints,
+                    workspaceShortcuts: workspaceShortcuts,
                     onSelected: widget.controller.open,
                     onIssues: _openIssueCenter,
                     onBrand: () => unawaited(_previewConfiguredSound()),
@@ -463,7 +491,7 @@ class _ShellScreenState extends State<ShellScreen> {
                 ),
                 Expanded(child: _selectedWorkspace()),
                 PopupFooter(
-                  apiPort: widget.settingsViewModel.settings.apiPort,
+                  agentBaseUri: widget.agentBaseUri,
                   globalHotKey: widget.settingsViewModel.settings.globalHotKey,
                 ),
               ],
@@ -487,6 +515,7 @@ class _ShellScreenState extends State<ShellScreen> {
         settingsViewModel: widget.settingsViewModel,
         onOpenWorkspace: widget.controller.open,
         onOpenAgentApi: () => unawaited(_openAgentApi()),
+        agentBaseUri: widget.agentBaseUri,
         onHideWindow: widget.onHideWindow,
         resourceManagerLauncher: _resourceManagerLauncher(),
         contextMenuGateway: widget.desktopContextMenuGateway,
@@ -504,6 +533,9 @@ class _ShellScreenState extends State<ShellScreen> {
         showShortcutHints: _showShortcutHints,
         showPlainTextShortcutHints: _showPlainTextShortcutHints,
         onPreview: _showClipboardPreview,
+        onOpenContent: widget.clipboardContentLauncher == null
+            ? null
+            : _openClipboardContent,
         onDismissPreview: _hideClipboardPreview,
         onShare: widget.clipboardShareGateway?.share,
         contextMenuGateway: widget.desktopContextMenuGateway,
@@ -517,13 +549,18 @@ class _ShellScreenState extends State<ShellScreen> {
           _clipboardShortcutStartIndex = index;
         },
         searchFocusRevision: widget.controller.clipboardSearchFocusRevision,
+        now: widget.now,
       ),
       3 => AgentApiScreen(
         settingsViewModel: widget.settingsViewModel,
         baseUri: widget.agentBaseUri,
         clipboardGateway: widget.clipboardGateway,
+        activityController: widget.activityController,
+        issueCenterController: widget.issueCenterController,
+        resourceManagerLauncher: _resourceManagerLauncher(),
         focusMcpOnOpen: _focusMcpOnOpen,
         onMcpFocusHandled: _handleMcpFocusHandled,
+        onBack: () => widget.controller.open(0),
       ),
       _ => const SizedBox.shrink(),
     };

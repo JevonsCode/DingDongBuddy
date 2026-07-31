@@ -287,6 +287,7 @@ void main() {
       final AgentRouter router = AgentRouter(
         clipboardCaptureService: captureService,
         clipboardStore: clipboardStore,
+        allowAgentClipboardContent: () async => true,
       );
 
       final response = await router.route(
@@ -1916,6 +1917,7 @@ void main() {
         clipboardStore: clipboard,
         clipboardGateway: gateway,
         resourceStore: resources,
+        allowAgentClipboardContent: () async => true,
         idGenerator: () => 'promoted-1',
         now: () => now,
       );
@@ -2171,6 +2173,7 @@ void main() {
           ),
         ]),
         resourceStore: resources,
+        allowAgentClipboardContent: () async => true,
         onClipboardMonitoring: (bool value) => monitoring = value,
         onShowUi: (int index) => shownWorkspace = index,
         idGenerator: () => 'collection-1',
@@ -2201,6 +2204,88 @@ void main() {
       expect(shownWorkspace, 2);
       expect(collected.statusCode, 201);
       expect((await resources.load()).single.id, 'collection-1');
+    },
+  );
+
+  test(
+    'clipboard body access is denied until the DingDong setting allows it',
+    () async {
+      var allowed = false;
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final InMemoryClipboardStore clipboard = InMemoryClipboardStore(
+        <ClipboardRecord>[
+          ClipboardRecord(
+            id: 'clip-1',
+            group: 'Commands',
+            title: 'Build desktop',
+            content: 'flutter build windows',
+            tags: const <String>['clipboard', 'command', 'alias:build'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
+      final AgentRouter router = AgentRouter(
+        clipboardStore: clipboard,
+        resourceStore: InMemoryResourceStore(),
+        clipboardCaptureService: ClipboardCaptureService(
+          gateway: _StaticClipboardGateway(
+            const ClipboardSnapshot(text: 'new content'),
+          ),
+          store: clipboard,
+        ),
+        allowAgentClipboardContent: () async => allowed,
+      );
+
+      final metadata = await router.route(
+        const HttpRequestData(method: 'GET', uri: '/clipboard/history'),
+      );
+      final List<HttpRequestData> bodyRequests = <HttpRequestData>[
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/clipboard/history?includeContent=true',
+        ),
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/clipboard/snippets?includeContent=true',
+        ),
+        const HttpRequestData(method: 'POST', uri: '/clipboard/capture'),
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/clipboard/collect',
+          body: '{"title":"Collection","ids":["clip-1"]}',
+        ),
+        const HttpRequestData(method: 'POST', uri: '/clipboard/promote/clip-1'),
+      ];
+
+      expect(metadata.statusCode, 200);
+      expect(
+        ((metadata.json['items'] as List<Object?>).single
+                as Map<String, Object?>)
+            .containsKey('content'),
+        isFalse,
+      );
+      for (final HttpRequestData request in bodyRequests) {
+        final HttpResponseData response = await router.route(request);
+        expect(response.statusCode, 403, reason: request.uri);
+      }
+
+      allowed = true;
+      final HttpResponseData content = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/clipboard/history?includeContent=true',
+        ),
+      );
+      expect(content.statusCode, 200);
+      expect(
+        ((content.json['items'] as List<Object?>).single
+            as Map<String, Object?>)['content'],
+        'flutter build windows',
+      );
     },
   );
 }

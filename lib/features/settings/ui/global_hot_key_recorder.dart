@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+import 'package:dingdong/features/settings/domain/shortcut_key.dart';
+import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,11 +61,11 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
       _cancelRecording();
       return KeyEventResult.handled;
     }
-    if (_modifierKeys.contains(event.logicalKey)) {
+    if (isShortcutModifierKey(event.logicalKey)) {
       return KeyEventResult.handled;
     }
 
-    final String? key = globalHotKeyKeyForLogicalKey(event.logicalKey);
+    final String? key = shortcutKeyForLogicalKey(event.logicalKey);
     if (key == null) {
       setState(() {
         _validationMessage = context.localized(
@@ -154,98 +156,202 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
   }
 }
 
-String? globalHotKeyKeyForLogicalKey(LogicalKeyboardKey key) {
-  final int letterIndex = _letterKeys.indexOf(key);
-  if (letterIndex >= 0) {
-    return String.fromCharCode('A'.codeUnitAt(0) + letterIndex);
-  }
-  final int digitIndex = _digitKeys.indexOf(key);
-  if (digitIndex >= 0) {
-    return '$digitIndex';
-  }
-  final int functionIndex = _functionKeys.indexOf(key);
-  if (functionIndex >= 0) {
-    return 'F${functionIndex + 1}';
-  }
-  return switch (key) {
-    LogicalKeyboardKey.space => 'SPACE',
-    LogicalKeyboardKey.enter || LogicalKeyboardKey.numpadEnter => 'RETURN',
-    LogicalKeyboardKey.arrowLeft => 'LEFT',
-    LogicalKeyboardKey.arrowRight => 'RIGHT',
-    LogicalKeyboardKey.arrowUp => 'UP',
-    LogicalKeyboardKey.arrowDown => 'DOWN',
-    _ => null,
-  };
+/// Records a shortcut used only while the DingDong panel is focused.
+class WorkspaceShortcutRecorder extends StatefulWidget {
+  const WorkspaceShortcutRecorder({
+    required this.settingId,
+    required this.semanticLabel,
+    required this.value,
+    required this.defaultValue,
+    required this.onChanged,
+    super.key,
+  });
+
+  final String settingId;
+  final String semanticLabel;
+  final WorkspaceShortcut value;
+  final WorkspaceShortcut defaultValue;
+  final Future<bool> Function(WorkspaceShortcut value) onChanged;
+
+  @override
+  State<WorkspaceShortcutRecorder> createState() =>
+      _WorkspaceShortcutRecorderState();
 }
 
-final Set<LogicalKeyboardKey> _modifierKeys = <LogicalKeyboardKey>{
-  LogicalKeyboardKey.meta,
-  LogicalKeyboardKey.metaLeft,
-  LogicalKeyboardKey.metaRight,
-  LogicalKeyboardKey.control,
-  LogicalKeyboardKey.controlLeft,
-  LogicalKeyboardKey.controlRight,
-  LogicalKeyboardKey.alt,
-  LogicalKeyboardKey.altLeft,
-  LogicalKeyboardKey.altRight,
-  LogicalKeyboardKey.shift,
-  LogicalKeyboardKey.shiftLeft,
-  LogicalKeyboardKey.shiftRight,
-};
+class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
+  final FocusNode _focusNode = FocusNode(
+    debugLabel: 'workspace-shortcut-recorder',
+  );
+  bool _recording = false;
+  String? _validationMessage;
 
-const List<LogicalKeyboardKey> _letterKeys = <LogicalKeyboardKey>[
-  LogicalKeyboardKey.keyA,
-  LogicalKeyboardKey.keyB,
-  LogicalKeyboardKey.keyC,
-  LogicalKeyboardKey.keyD,
-  LogicalKeyboardKey.keyE,
-  LogicalKeyboardKey.keyF,
-  LogicalKeyboardKey.keyG,
-  LogicalKeyboardKey.keyH,
-  LogicalKeyboardKey.keyI,
-  LogicalKeyboardKey.keyJ,
-  LogicalKeyboardKey.keyK,
-  LogicalKeyboardKey.keyL,
-  LogicalKeyboardKey.keyM,
-  LogicalKeyboardKey.keyN,
-  LogicalKeyboardKey.keyO,
-  LogicalKeyboardKey.keyP,
-  LogicalKeyboardKey.keyQ,
-  LogicalKeyboardKey.keyR,
-  LogicalKeyboardKey.keyS,
-  LogicalKeyboardKey.keyT,
-  LogicalKeyboardKey.keyU,
-  LogicalKeyboardKey.keyV,
-  LogicalKeyboardKey.keyW,
-  LogicalKeyboardKey.keyX,
-  LogicalKeyboardKey.keyY,
-  LogicalKeyboardKey.keyZ,
-];
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
-const List<LogicalKeyboardKey> _digitKeys = <LogicalKeyboardKey>[
-  LogicalKeyboardKey.digit0,
-  LogicalKeyboardKey.digit1,
-  LogicalKeyboardKey.digit2,
-  LogicalKeyboardKey.digit3,
-  LogicalKeyboardKey.digit4,
-  LogicalKeyboardKey.digit5,
-  LogicalKeyboardKey.digit6,
-  LogicalKeyboardKey.digit7,
-  LogicalKeyboardKey.digit8,
-  LogicalKeyboardKey.digit9,
-];
+  void _startRecording() {
+    setState(() {
+      _recording = true;
+      _validationMessage = null;
+    });
+    _focusNode.requestFocus();
+  }
 
-const List<LogicalKeyboardKey> _functionKeys = <LogicalKeyboardKey>[
-  LogicalKeyboardKey.f1,
-  LogicalKeyboardKey.f2,
-  LogicalKeyboardKey.f3,
-  LogicalKeyboardKey.f4,
-  LogicalKeyboardKey.f5,
-  LogicalKeyboardKey.f6,
-  LogicalKeyboardKey.f7,
-  LogicalKeyboardKey.f8,
-  LogicalKeyboardKey.f9,
-  LogicalKeyboardKey.f10,
-  LogicalKeyboardKey.f11,
-  LogicalKeyboardKey.f12,
-];
+  void _cancelRecording() {
+    setState(() {
+      _recording = false;
+      _validationMessage = null;
+    });
+    _focusNode.unfocus();
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (!_recording) {
+      return KeyEventResult.ignored;
+    }
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      _cancelRecording();
+      return KeyEventResult.handled;
+    }
+    if (isShortcutModifierKey(event.logicalKey)) {
+      return KeyEventResult.handled;
+    }
+    final String? key = shortcutKeyForLogicalKey(event.logicalKey);
+    if (key == null) {
+      setState(() {
+        _validationMessage = context.localized(
+          'Use a letter, number, F1–F12, arrow, Space, or Return.',
+          '请使用字母、数字、F1–F12、方向键、空格或回车。',
+        );
+      });
+      return KeyEventResult.handled;
+    }
+    final HardwareKeyboard keyboard = HardwareKeyboard.instance;
+    final bool macOS = defaultTargetPlatform == TargetPlatform.macOS;
+    final WorkspaceShortcut candidate = WorkspaceShortcut(
+      key: key,
+      primary: macOS ? keyboard.isMetaPressed : keyboard.isControlPressed,
+      shift: keyboard.isShiftPressed,
+      alt: keyboard.isAltPressed,
+      secondary: macOS ? keyboard.isControlPressed : keyboard.isMetaPressed,
+    );
+    if (!candidate.hasModifier) {
+      setState(() {
+        _validationMessage = context.localized(
+          'Include at least one modifier key.',
+          '请至少包含一个修饰键。',
+        );
+      });
+      return KeyEventResult.handled;
+    }
+    setState(() {
+      _recording = false;
+      _validationMessage = null;
+    });
+    _focusNode.unfocus();
+    unawaited(_save(candidate));
+    return KeyEventResult.handled;
+  }
+
+  Future<void> _save(WorkspaceShortcut candidate) async {
+    final bool accepted = await widget.onChanged(candidate);
+    if (!accepted && mounted) {
+      setState(() {
+        _validationMessage = context.localized(
+          'This conflicts with another DingDong or system shortcut.',
+          '这个组合与其他 DingDong 或系统快捷键冲突。',
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TargetPlatform platform = defaultTargetPlatform;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: <Widget>[
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Semantics(
+              button: true,
+              label: _recording
+                  ? context.localized(
+                      '${widget.semanticLabel}, waiting for a shortcut',
+                      '${widget.semanticLabel}，正在等待快捷键',
+                    )
+                  : '${widget.semanticLabel}, ${widget.value.label(platform)}',
+              hint: context.localized(
+                'Press to record a different shortcut',
+                '按下后录制新的快捷键',
+              ),
+              child: ExcludeSemantics(
+                child: Focus(
+                  focusNode: _focusNode,
+                  onKeyEvent: _handleKeyEvent,
+                  child: OutlinedButton(
+                    key: Key('settings-workspace-shortcut-${widget.settingId}'),
+                    onPressed: _recording ? _cancelRecording : _startRecording,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(172, 38),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                    child: Text(
+                      _recording
+                          ? context.localized('Press a shortcut…', '请按下快捷键…')
+                          : widget.value.label(platform),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Semantics(
+              button: true,
+              enabled: widget.value != widget.defaultValue,
+              label: context.localized(
+                'Reset ${widget.semanticLabel}',
+                '恢复${widget.semanticLabel}默认值',
+              ),
+              child: ExcludeSemantics(
+                child: TextButton(
+                  key: Key(
+                    'settings-workspace-shortcut-${widget.settingId}-reset',
+                  ),
+                  onPressed: widget.value == widget.defaultValue
+                      ? null
+                      : () => unawaited(_save(widget.defaultValue)),
+                  child: Text(context.localized('Reset', '恢复默认')),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_validationMessage != null) ...<Widget>[
+          const SizedBox(height: 4),
+          Text(
+            _validationMessage!,
+            key: Key(
+              'settings-workspace-shortcut-${widget.settingId}-validation',
+            ),
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+String? globalHotKeyKeyForLogicalKey(LogicalKeyboardKey key) {
+  return shortcutKeyForLogicalKey(key);
+}
