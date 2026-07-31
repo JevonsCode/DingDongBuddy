@@ -142,8 +142,10 @@ perform this setup in the current local Agent or IDE:
    unsupported. Do not invent a setting. For Kiro versions that expose only a
    project-level Hook, do not modify the project without explicit permission.
 3. Validate every changed TOML or JSON file, then reload the client. For Codex,
-   restart `dingdong` under **Settings → MCP servers**, then review and trust the
-   Hook in `/hooks`. A changed executable path creates a new Hook trust identity.
+   restart `dingdong` under **Settings → MCP servers**, then use **DingDong →
+   Resource Manager → Agent access → Codex → Trust & enable**. If that action is
+   unavailable, review and trust the Hook in `/hooks`. A changed executable path
+   creates a new Hook trust identity.
 4. Keep DingDong's resource semantics distinct after connection:
    - Prompt: every active Prompt is delivered in full and applied automatically
      as a required instruction.

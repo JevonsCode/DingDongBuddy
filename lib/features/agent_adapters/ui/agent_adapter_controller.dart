@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
+import 'package:dingdong/features/agent_adapters/domain/codex_completion_hook.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
@@ -10,11 +11,13 @@ final class AgentAdapterController extends ChangeNotifier {
     required this.repository,
     this.watchExternalChanges = true,
     this.onAdaptersChanged,
+    this.codexCompletionHookGateway,
   });
 
   final AgentAdapterRepository repository;
   final bool watchExternalChanges;
   final Future<void> Function()? onAdaptersChanged;
+  final CodexCompletionHookGateway? codexCompletionHookGateway;
 
   List<AgentAdapterEntry> _entries = const <AgentAdapterEntry>[];
   AgentAdapterEntry? _selectedEntry;
@@ -22,10 +25,14 @@ final class AgentAdapterController extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
   bool _isCreating = false;
+  bool _isCheckingCodexCompletionHook = false;
+  CodexCompletionHookStatus _codexCompletionHookStatus =
+      const CodexCompletionHookStatus.notChecked();
   String? _error;
   StreamSubscription<void>? _watchSubscription;
   Timer? _reloadDebounce;
   bool _disposed = false;
+  int _codexCompletionHookRequest = 0;
 
   List<AgentAdapterEntry> get entries => _entries;
   AgentAdapterEntry? get selectedEntry => _selectedEntry;
@@ -33,6 +40,10 @@ final class AgentAdapterController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   bool get isCreating => _isCreating;
+  bool get supportsCodexCompletionHook => codexCompletionHookGateway != null;
+  bool get isCheckingCodexCompletionHook => _isCheckingCodexCompletionHook;
+  CodexCompletionHookStatus get codexCompletionHookStatus =>
+      _codexCompletionHookStatus;
   String? get error => _error;
   String get userDirectoryPath => repository.userDirectory.path;
 
@@ -57,6 +68,7 @@ final class AgentAdapterController extends ChangeNotifier {
     } finally {
       _isLoading = false;
       _notify();
+      _refreshCodexCompletionHookForSelection();
     }
   }
 
@@ -66,13 +78,54 @@ final class AgentAdapterController extends ChangeNotifier {
     _history = await repository.historyFor(entry);
     _error = null;
     _notify();
+    _refreshCodexCompletionHookForSelection();
   }
 
   void beginCreate() {
     _isCreating = true;
     _selectedEntry = null;
     _history = const <AgentAdapterRevision>[];
+    _clearCodexCompletionHookStatus();
     _error = null;
+    _notify();
+  }
+
+  Future<void> refreshCodexCompletionHook() async {
+    final CodexCompletionHookGateway? gateway = codexCompletionHookGateway;
+    if (gateway == null || _selectedEntry?.id != 'codex') {
+      return;
+    }
+    final int request = ++_codexCompletionHookRequest;
+    _isCheckingCodexCompletionHook = true;
+    _codexCompletionHookStatus = const CodexCompletionHookStatus.notChecked();
+    _notify();
+    final CodexCompletionHookStatus status = await gateway.inspect();
+    if (_disposed || request != _codexCompletionHookRequest) {
+      return;
+    }
+    _isCheckingCodexCompletionHook = false;
+    _codexCompletionHookStatus = status;
+    _notify();
+  }
+
+  Future<void> repairCodexCompletionHook() async {
+    final CodexCompletionHookGateway? gateway = codexCompletionHookGateway;
+    final CodexCompletionHookStatus before = _codexCompletionHookStatus;
+    if (gateway == null || _selectedEntry?.id != 'codex' || !before.canRepair) {
+      return;
+    }
+    final int request = ++_codexCompletionHookRequest;
+    _isCheckingCodexCompletionHook = true;
+    _notify();
+    final CodexCompletionHookStatus status = await gateway.repair(
+      expectedKey: before.key!,
+      expectedHash: before.currentHash!,
+    );
+    if (_disposed || request != _codexCompletionHookRequest) {
+      return;
+    }
+    _isCheckingCodexCompletionHook = false;
+    _codexCompletionHookStatus = status;
     _notify();
   }
 
@@ -205,6 +258,20 @@ mcp:
     return _entries.first;
   }
 
+  void _refreshCodexCompletionHookForSelection() {
+    if (_selectedEntry?.id == 'codex' && codexCompletionHookGateway != null) {
+      unawaited(refreshCodexCompletionHook());
+      return;
+    }
+    _clearCodexCompletionHookStatus();
+  }
+
+  void _clearCodexCompletionHookStatus() {
+    _codexCompletionHookRequest += 1;
+    _isCheckingCodexCompletionHook = false;
+    _codexCompletionHookStatus = const CodexCompletionHookStatus.notChecked();
+  }
+
   void _startWatching() {
     if (!watchExternalChanges) {
       return;
@@ -263,6 +330,7 @@ mcp:
       return;
     }
     _disposed = true;
+    _codexCompletionHookRequest += 1;
     _reloadDebounce?.cancel();
     final StreamSubscription<void>? subscription = _watchSubscription;
     _watchSubscription = null;
@@ -276,6 +344,7 @@ mcp:
       return;
     }
     _disposed = true;
+    _codexCompletionHookRequest += 1;
     _reloadDebounce?.cancel();
     unawaited(_watchSubscription?.cancel());
     _watchSubscription = null;

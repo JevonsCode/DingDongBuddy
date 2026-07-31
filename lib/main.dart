@@ -13,6 +13,7 @@ import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/data/agent_launcher_configuration_store.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
+import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -115,6 +116,7 @@ Future<void> main(List<String> arguments) async {
   dependencies = await AppDependencies.production(
     preferencesBackend: preferencesBackend,
     onResourceLibraryChanged: shellController.requestLibraryRefresh,
+    onCopyDetected: shellController.requestMascotShake,
     onNotification: (request) async {
       activityController.record(
         source: request.source ?? 'Agent',
@@ -560,11 +562,12 @@ Future<void> _runResourceManagerWindow(
     ResourceFileService(paths.resourceLibraryFile),
   );
   final DataRevisionBus dataRevisions = DataRevisionBus();
+  final String homeDirectory =
+      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
   final AgentAdapterRepository agentAdapterRepository = AgentAdapterRepository(
     userDirectory: paths.agentAdaptersDirectory,
     historyDirectory: paths.agentAdapterHistoryDirectory,
-    homeDirectory:
-        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!,
+    homeDirectory: homeDirectory,
     loadBuiltIns: loadBundledAgentAdapterDocuments,
   );
   final AgentResourceSynchronizer resourceSynchronizer =
@@ -593,6 +596,13 @@ Future<void> _runResourceManagerWindow(
   );
   final AgentAdapterController agentAdapterController = AgentAdapterController(
     repository: agentAdapterRepository,
+    codexCompletionHookGateway: CodexAppServerCompletionHookGateway(
+      connectionFactory: NativeCodexAppServerConnectionFactory(
+        homeDirectory: homeDirectory,
+      ),
+      homeDirectory: homeDirectory,
+      dingDongMcpCommandPath: _mcpCommandPath(),
+    ),
     onAdaptersChanged: () async {
       await resourceStore.save(await resourceStore.load());
     },

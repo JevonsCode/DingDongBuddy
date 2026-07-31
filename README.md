@@ -84,7 +84,7 @@ sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.9.3`, using the same version constant as the release UI. A small
+  `v0.9.4`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
@@ -449,7 +449,7 @@ Connect DingDong on this computer to the current agent or IDE.
 3. Add one durable native completion hook, without duplicates, that runs:
    "<DINGDONG_MCP_PATH>" --notify-stop --source "Current client name"
    Use Codex Stop in ~/.codex/config.toml, Claude Code Stop in ~/.claude/settings.json, Cursor afterAgentResponse in ~/.cursor/hooks.json, Gemini CLI AfterAgent in ~/.gemini/settings.json, or a Kiro Stop hook.
-4. Reload the client. For Codex, restart the MCP server and review and trust the hook in /hooks.
+4. Reload the client. For Codex, restart the MCP server, then use DingDong Resource Manager → Agent access → Codex → Trust & enable; use /hooks if that action is unavailable.
 5. Keep resource semantics distinct: call dingdong_bridge at every task start and apply its authoritative full Prompt snapshot; active.skills is the authoritative complete enabled, scope-matched ID/name/description catalog, so match only a returned description before loading by ID or name with dingdong_load_skill and dingdong_read_skill_file; call MCP tools only when the task needs them. Skill candidates and MCP summaries are not Prompt instructions. For an explicit project Skill request, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill.
 6. Pipe {"summary":"DingDong task-completion hook is connected"} to the hook command and confirm the notification arrives.
 7. Confirm dingdong_notify exists, then call it once with message "DingDong MCP is connected" and the current client name as source.
@@ -534,8 +534,22 @@ command = '"/absolute/path/to/dingdong_mcp" --notify-stop --source "Codex"'
 timeout = 10
 ```
 
-After reloading Codex, open `/hooks` and trust the new definition. A later path
-or command change creates a new hash and must be trusted again.
+After reloading Codex, open **DingDong → Resource Manager → Agent access →
+Codex** and choose **Trust & enable**. The button reads the exact current Hook
+definition and hash from Codex, writes only that trust entry, and verifies the
+result. If the button is unavailable in a particular Codex build, use `/hooks`.
+A later path or command change creates a new hash and must be reviewed again.
+
+For a temporary source-checkout helper, the first command is read-only and the
+second applies the same exact-hash write and verification used by the button:
+
+```bash
+dart run scripts/trust_codex_dingdong_hook.dart
+dart run scripts/trust_codex_dingdong_hook.dart --apply
+```
+
+The script defaults to the production macOS app path. On another installation,
+pass its absolute launcher path with `--mcp-path`.
 
 **Claude Code — append to `hooks.Stop` in `~/.claude/settings.json`**
 
@@ -656,22 +670,23 @@ executable.
   or other definition fields. A common example is switching between
   `/Applications/DingDong DEV.app/...` and
   `/Applications/DingDong.app/...`. Codex marks the Hook as new or modified and
-  skips it until the user opens `/hooks` and trusts the current definition.
-  Restarting Codex only reloads the configuration; it does not grant trust.
+  skips it until the user uses DingDong's **Trust & enable** action or `/hooks`
+  to trust the current definition. Restarting Codex only reloads the
+  configuration; it does not grant trust.
 - The `[mcp_servers.dingdong]` entry does not use the Hook trust hash or the
   `/hooks` review flow. After changing its command, restart the MCP server or
   Codex and verify that `dingdong_bridge` or `dingdong_notify` is available.
   An invalid path can make the MCP server fail to start, but that is a
   connection/configuration failure rather than a Hook trust failure.
 - When the DingDong path changes, update both the MCP command and the completion
-  Hook command. Then reload Codex, trust only the changed Hook in `/hooks`, and
-  test the MCP and Hook paths separately. Updating only one side can produce
-  the confusing state where Prompt/MCP tools still work but completion
-  reminders do not, or the reverse.
+  Hook command. Then reload Codex, trust only the changed Hook through
+  DingDong's Codex card or `/hooks`, and test the MCP and Hook paths separately.
+  Updating only one side can produce the confusing state where Prompt/MCP
+  tools still work but completion reminders do not, or the reverse.
 
 For release and updater code, keep the production application path stable and
 avoid rewriting a semantically identical Hook. If a release must change the
-Hook definition, surface an explicit `/hooks` review step instead of assuming a
+Hook definition, surface an explicit trust review step instead of assuming a
 restart will restore notifications.
 
 ### Client mapping

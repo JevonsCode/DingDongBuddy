@@ -19,11 +19,14 @@ final class ClipboardMonitorService implements ClipboardMonitoring {
   ClipboardMonitorService({
     required ClipboardChangeSource source,
     required ClipboardCaptureService captureService,
+    void Function()? onCopyDetected,
   }) : _source = source,
-       _captureService = captureService;
+       _captureService = captureService,
+       _onCopyDetected = onCopyDetected;
 
   final ClipboardChangeSource _source;
   final ClipboardCaptureService _captureService;
+  final void Function()? _onCopyDetected;
   StreamSubscription<void>? _subscription;
   bool _capturing = false;
 
@@ -35,7 +38,10 @@ final class ClipboardMonitorService implements ClipboardMonitoring {
     if (isRunning) {
       return;
     }
-    _subscription = _source.changes.listen((_) => _capture());
+    _subscription = _source.changes.listen((_) {
+      unawaited(_capture());
+      _onCopyDetected?.call();
+    });
     await _source.start();
   }
 

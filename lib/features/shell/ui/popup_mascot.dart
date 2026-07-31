@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Clickable DingDong mascot with a short, center-pivot desktop animation.
 class PopupMascot extends StatefulWidget {
-  const PopupMascot({super.key});
+  const PopupMascot({required this.shakeRevision, super.key});
+
+  final int shakeRevision;
 
   @override
   State<PopupMascot> createState() => _PopupMascotState();
@@ -39,9 +41,21 @@ class _PopupMascotState extends State<PopupMascot>
       ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
   @override
+  void didUpdateWidget(covariant PopupMascot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.shakeRevision != widget.shakeRevision) {
+      _shake();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _shake() {
+    _controller.forward(from: 0);
   }
 
   @override
@@ -49,7 +63,7 @@ class _PopupMascotState extends State<PopupMascot>
     return GestureDetector(
       key: const Key('popup-mascot'),
       behavior: HitTestBehavior.opaque,
-      onTap: () => _controller.forward(from: 0),
+      onTap: _shake,
       child: AnimatedBuilder(
         animation: _rotation,
         builder: (BuildContext context, Widget? child) => Transform.rotate(

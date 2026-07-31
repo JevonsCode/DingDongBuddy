@@ -14,6 +14,7 @@ void main() {
       final _FakeClipboardChangeSource source = _FakeClipboardChangeSource();
       final _MutableClipboardGateway gateway = _MutableClipboardGateway();
       final InMemoryClipboardStore store = InMemoryClipboardStore();
+      int detectedCopies = 0;
       final ClipboardMonitorService monitor = ClipboardMonitorService(
         source: source,
         captureService: ClipboardCaptureService(
@@ -22,6 +23,7 @@ void main() {
           idGenerator: () => 'MONITORED-ID',
           now: () => DateTime.utc(2026, 7, 12),
         ),
+        onCopyDetected: () => detectedCopies += 1,
       );
 
       await monitor.start();
@@ -30,6 +32,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(monitor.isRunning, isTrue);
+      expect(detectedCopies, 1);
       expect(store.list(limit: 10).single.content, 'dart test');
 
       await monitor.stop();
@@ -38,6 +41,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(monitor.isRunning, isFalse);
+      expect(detectedCopies, 1);
       expect(store.list(limit: 10), hasLength(1));
     },
   );

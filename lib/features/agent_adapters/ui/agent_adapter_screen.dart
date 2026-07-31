@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter_diff.dart';
+import 'package:dingdong/features/agent_adapters/domain/codex_completion_hook.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:flutter/material.dart';
 
@@ -353,7 +354,9 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
           ),
         ),
         if (!_showAdvanced && !controller.isCreating)
-          Expanded(child: _AdapterOverview(entry: entry!))
+          Expanded(
+            child: _AdapterOverview(entry: entry!, controller: controller),
+          )
         else ...<Widget>[
           Expanded(
             flex: 3,

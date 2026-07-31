@@ -24,7 +24,7 @@ String defaultMcpSetupPrompt({
    如果不是以上客户端，先查清它是否有原生的本地任务结束 Hook；没有就只接入 MCP，并明确说明不支持自动结束提醒，不能编造配置。
 4. 保留已有 Hook 和无关设置。重复接入时更新已有的 DingDong 项，不要重复添加同一个 MCP Server 或 Hook，也不要修改任何项目内文件。
 5. 校验修改后的 TOML 或 JSON 能被当前客户端解析，再按客户端要求重新加载：
-   - Codex：在 Settings → MCP servers 重启 dingdong，并在 /hooks 审核并信任新增或变化的 Hook
+   - Codex：在 Settings → MCP servers 重启 dingdong，然后到 DingDong 的“资源管理 → Agent 接入 → Codex”点击“信任并启用”；如果该入口不可用，再在 /hooks 审核并信任新增或变化的 Hook
    - Claude Code：用 claude mcp list 和 /hooks 检查
    - Cursor：重新加载窗口并检查 Hooks 配置
    - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
@@ -56,7 +56,7 @@ String defaultMcpSetupPrompt({
    For another client, first verify whether it provides a native local task-completion hook. If it does not, configure MCP only and report that automatic completion alerts are unsupported instead of inventing a setting.
 4. Preserve all existing hooks and unrelated settings. When reconnecting, update the existing DingDong entries instead of duplicating the MCP server or hook. Do not modify project files.
 5. Validate the resulting TOML or JSON, then reload the client as required:
-   - Codex: restart dingdong under Settings → MCP servers, then review and trust the new or changed hook in /hooks
+   - Codex: restart dingdong under Settings → MCP servers, then use DingDong Resource Manager → Agent access → Codex → Trust & enable; if that action is unavailable, review and trust the new or changed hook in /hooks
    - Claude Code: inspect claude mcp list and /hooks
    - Cursor: reload the window and inspect the Hooks configuration
    - Gemini CLI: run /mcp reload and inspect /hooks panel

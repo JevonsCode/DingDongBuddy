@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
+import 'package:dingdong/features/agent_adapters/domain/codex_completion_hook.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_screen.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ void main() {
     addTearDown(() => temp.deleteSync(recursive: true));
     Directory('${temp.path}/home/.codex').createSync(recursive: true);
     final Directory user = Directory('${temp.path}/adapters');
+    final _FakeCodexCompletionHookGateway hookGateway =
+        _FakeCodexCompletionHookGateway();
     final AgentAdapterController controller = AgentAdapterController(
       repository: AgentAdapterRepository(
         userDirectory: user,
@@ -28,6 +31,7 @@ void main() {
         loadBuiltIns: () async => <String, String>{'codex': _codex},
       ),
       watchExternalChanges: false,
+      codexCompletionHookGateway: hookGateway,
     );
     await tester.runAsync(controller.load);
     addTearDown(controller.close);
@@ -53,6 +57,15 @@ void main() {
     );
     expect(find.text('Detected'), findsWidgets);
     expect(find.textContaining('does not verify MCP'), findsOneWidget);
+    expect(find.byKey(const Key('codex-completion-hook-card')), findsOneWidget);
+    expect(find.text('Trust required'), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const Key('codex-completion-hook-repair')),
+    );
+    await tester.tap(find.byKey(const Key('codex-completion-hook-repair')));
+    await tester.pumpAndSettle();
+    expect(find.text('Trusted and enabled'), findsOneWidget);
+    expect(hookGateway.repairCount, 1);
     expect(find.byKey(const Key('agent-adapter-editor')), findsNothing);
 
     await tester.tap(find.byKey(const Key('agent-adapter-toggle-advanced')));
@@ -105,6 +118,36 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+}
+
+final class _FakeCodexCompletionHookGateway
+    implements CodexCompletionHookGateway {
+  int repairCount = 0;
+
+  @override
+  Future<CodexCompletionHookStatus> inspect() async =>
+      const CodexCompletionHookStatus(
+        review: CodexCompletionHookReview.untrusted,
+        enabled: true,
+        key: '/Users/tester/.codex/config.toml:stop:0:0',
+        command: 'dingdong_mcp --notify-stop --source Codex',
+        currentHash: 'sha256:current-hook',
+      );
+
+  @override
+  Future<CodexCompletionHookStatus> repair({
+    required String expectedKey,
+    required String expectedHash,
+  }) async {
+    repairCount += 1;
+    return const CodexCompletionHookStatus(
+      review: CodexCompletionHookReview.trusted,
+      enabled: true,
+      key: '/Users/tester/.codex/config.toml:stop:0:0',
+      command: 'dingdong_mcp --notify-stop --source Codex',
+      currentHash: 'sha256:current-hook',
+    );
+  }
 }
 
 const String _codex = '''

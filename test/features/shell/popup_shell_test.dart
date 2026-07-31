@@ -161,7 +161,8 @@ void main() {
   testWidgets('brand is concise and its mascot shakes without ink ripples', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const DingDongApp());
+    final ShellController controller = ShellController();
+    await tester.pumpWidget(DingDongApp(shellController: controller));
     await tester.pumpAndSettle();
 
     expect(find.text('本地 Agent 工作台'), findsNothing);
@@ -181,6 +182,20 @@ void main() {
     );
 
     await tester.tap(mascot);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 70));
+    expect(
+      tester.widget<Transform>(transform).transform.storage,
+      isNot(equals(Matrix4.identity().storage)),
+    );
+
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<Transform>(transform).transform.storage,
+      equals(Matrix4.identity().storage),
+    );
+
+    controller.requestMascotShake();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 70));
     expect(

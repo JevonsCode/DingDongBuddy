@@ -73,7 +73,7 @@ DingDong 把剪贴板历史、提示词、Skill 和 MCP Server 留在本机，�
 
 ## 当前界面行为
 
-- 页头在 **DingDong** 右侧显示当前应用版本，例如 `v0.9.3`；版本值和应用的
+- 页头在 **DingDong** 右侧显示当前应用版本，例如 `v0.9.4`；版本值和应用的
   发布版本共用同一个常量。检测到新版本时，右侧会出现一个橘红色小圆点。点击版本号
   会打开设置，并直接定位到版本与更新区域。
 - 点击页头 **DingDong** 会试听用户当前配置的提示音；静音配置不会播放。品牌名和
@@ -396,7 +396,7 @@ Windows 的桥接位于应用安装目录下的 `mcp\bundle\bin\dingdong_mcp.exe
 3. 添加且只添加一个持久的原生完成 Hook，执行：
    "<DINGDONG_MCP_PATH>" --notify-stop --source "当前客户端名称"
    Codex 使用 ~/.codex/config.toml 的 Stop，Claude Code 使用 ~/.claude/settings.json 的 Stop，Cursor 使用 ~/.cursor/hooks.json 的 afterAgentResponse，Gemini CLI 使用 ~/.gemini/settings.json 的 AfterAgent，Kiro 使用 Stop Hook。
-4. 重新加载客户端。Codex 需要重启 MCP Server，并在 /hooks 审核和信任 Hook。
+4. 重新加载客户端。Codex 需要重启 MCP Server，然后到 DingDong 的“资源管理 → Agent 接入 → Codex”点击“信任并启用”；如果该入口不可用，再使用 /hooks。
 5. 保持三类资源语义独立：每个任务开始调用 dingdong_bridge，并把返回的 Prompt 当作权威完整快照自动应用；active.skills 是所有有效、已启用、作用域匹配 Skill 的权威完整 ID／名称／描述目录，按已返回的 description 匹配后，再按 ID 或名称用 dingdong_load_skill 和 dingdong_read_skill_file 按需加载；MCP 只在任务需要时调用工具。Skill 候选和 MCP 摘要都不是 Prompt 指令。用户明确要求给项目配置 Skill 时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group、dingdong_bind_resource_scope，并启用 strictProjectSkill。
 6. 把 {"summary":"DingDong 任务结束提醒已接入"} 作为标准输入传给 Hook 命令，确认收到提醒。
 7. 确认 dingdong_notify 存在，再调用一次：message 为“DingDong MCP 已接入”，source 为当前客户端名称。
@@ -481,8 +481,20 @@ command = '"/absolute/path/to/dingdong_mcp" --notify-stop --source "Codex"'
 timeout = 10
 ```
 
-重新加载 Codex 后打开 `/hooks`，信任新增的 Hook。以后路径或命令有变化时，Hook
-哈希也会变化，需要重新信任。
+重新加载 Codex 后，打开 **DingDong → 资源管理 → Agent 接入 → Codex**，点击
+**信任并启用**。这个按钮会从 Codex 读取精确的当前 Hook 定义和哈希，只写入这一条
+信任记录，再回读验证结果。如果某个 Codex 版本不支持该入口，再使用 `/hooks`。
+以后路径或命令有变化时，Hook 哈希也会变化，需要重新审核。
+
+源码工作区还提供一个临时脚本。第一条命令只读检查，第二条命令执行与按钮相同的
+精确哈希写入和回读验证：
+
+```bash
+dart run scripts/trust_codex_dingdong_hook.dart
+dart run scripts/trust_codex_dingdong_hook.dart --apply
+```
+
+脚本默认使用 macOS 正式版应用路径；其他安装位置需通过 `--mcp-path` 传入绝对路径。
 
 **Claude Code — 追加到 `~/.claude/settings.json` 的 `hooks.Stop`**
 
@@ -597,19 +609,19 @@ Codex 会把 DingDong MCP Server 和完成 Hook 当作两套独立配置，尽�
   matcher、timeout 或其他定义字段，仍会触发重新审核。常见例子是从
   `/Applications/DingDong DEV.app/...` 切换到
   `/Applications/DingDong.app/...`，或反向切换。Codex 会把 Hook 标记为新增或
-  已修改，并在用户打开 `/hooks` 信任当前定义之前跳过执行。重启 Codex 只会重新
-  加载配置，不会自动授予信任。
+  已修改，并在用户通过 DingDong 的“信任并启用”按钮或 `/hooks` 信任当前定义之前
+  跳过执行。重启 Codex 只会重新加载配置，不会自动授予信任。
 - `[mcp_servers.dingdong]` 配置不使用 Hook 的信任哈希，也不经过 `/hooks` 审核。
   修改 MCP command 后，重启 MCP Server 或 Codex，再确认 `dingdong_bridge` 或
   `dingdong_notify` 可用即可。路径无效会导致 MCP 启动失败，但这属于连接／配置
   错误，不是 Hook 失信。
 - DingDong 路径变化时，应同时更新 MCP command 和完成 Hook command；然后重新加载
-  Codex，只在 `/hooks` 中信任发生变化的 Hook，并分别测试 MCP 与 Hook。只改其中
-  一边，可能出现 Prompt／MCP 工具仍可用但任务结束不提醒，或提醒可用但 MCP 失效
-  的割裂状态。
+  Codex，只通过 DingDong 的 Codex 卡片或 `/hooks` 信任发生变化的 Hook，并分别测试
+  MCP 与 Hook。只改其中一边，可能出现 Prompt／MCP 工具仍可用但任务结束不提醒，
+  或提醒可用但 MCP 失效的割裂状态。
 
 发布和更新逻辑应尽量保持正式版应用路径稳定，也不要重写语义完全相同的 Hook。
-如果某次版本确实必须修改 Hook 定义，应明确提示用户到 `/hooks` 重新审核，而不能
+如果某次版本确实必须修改 Hook 定义，应明确提示用户重新审核信任，而不能
 假设重启就会恢复提醒。
 
 ### 客户端对应关系

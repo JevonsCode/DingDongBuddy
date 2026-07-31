@@ -1,4 +1,4 @@
-# DingDong 0.9.3 Manual Regression Checklist
+# DingDong 0.9.4 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -225,8 +225,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - A Debug macOS build is named `DingDong DEV`, uses bundle id
   `com.dingdongbuddy.app.dev`, stores data under `DingDong DEV`, shows a DEV
   badge, and does not offer release updates.
-- The macOS release app metadata is version `0.9.3` build `30` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.3.30` and product name `DingDong`.
+- The macOS release app metadata is version `0.9.4` build `31` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.4.31` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

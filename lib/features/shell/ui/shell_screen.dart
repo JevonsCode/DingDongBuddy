@@ -472,6 +472,7 @@ class _ShellScreenState extends State<ShellScreen> {
                         true,
                     showShortcutHints: _showWorkspaceShortcutHints,
                     workspaceShortcuts: workspaceShortcuts,
+                    mascotShakeRevision: widget.controller.mascotShakeRevision,
                     onSelected: widget.controller.open,
                     onIssues: _openIssueCenter,
                     onBrand: () => unawaited(_previewConfiguredSound()),

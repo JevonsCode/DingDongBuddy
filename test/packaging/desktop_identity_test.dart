@@ -67,19 +67,19 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.9.3 from pubspec', () {
+  test('desktop hosts consume application version 0.9.4 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.3+30'));
+    expect(pubspec, contains('version: 0.9.4+31'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync(),
-      contains("const String currentAppBuild = '30';"),
+      contains("const String currentAppBuild = '31';"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
@@ -228,6 +228,10 @@ void main() {
       expect(prompt, contains('dingdong_install_skill'));
       expect(prompt, contains('strict'));
     }
+    expect(english, contains('Trust & enable'));
+    expect(chinese, contains('信任并启用'));
+    expect(englishPrompt, contains('Trust & enable'));
+    expect(chinesePrompt, contains('信任并启用'));
     expect(english, contains('Prompt, Skill, and MCP invocation semantics'));
     expect(chinese, contains('Prompt、Skill 和 MCP 的调用逻辑'));
     expect(englishPrompt, contains('a Skill candidate is not an instruction'));
@@ -338,7 +342,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v0.9.3</span>'));
+    expect(website, contains('<span class="demo-version">v0.9.4</span>'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
@@ -380,14 +384,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.9.3"'));
-    expect(releaseMetadata, contains('"latestBuild": "30"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.9.4"'));
+    expect(releaseMetadata, contains('"latestBuild": "31"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.9.3-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.9.4-windows-x64-beta-Setup.exe'),
     );
   });
 

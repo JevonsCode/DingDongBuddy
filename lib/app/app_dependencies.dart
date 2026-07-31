@@ -51,6 +51,7 @@ final class AppDependencies {
   static Future<AppDependencies> production({
     void Function(int index)? onShowUi,
     void Function()? onResourceLibraryChanged,
+    void Function()? onCopyDetected,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
     PreferencesBackend? preferencesBackend,
@@ -75,6 +76,7 @@ final class AppDependencies {
         ClipboardMonitorService(
           source: NativeClipboardChangeSource(),
           captureService: clipboardCaptureService,
+          onCopyDetected: onCopyDetected,
         );
     final ResourceStore baseResourceStore = ResourceRepository(
       ResourceFileService(paths.resourceLibraryFile),
