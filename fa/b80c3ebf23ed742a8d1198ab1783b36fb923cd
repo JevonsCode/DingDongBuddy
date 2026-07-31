@@ -1,0 +1,19 @@
+lib/features/agent_api/data/agent_http_server.dart
+  s_685abbb39c6047::t_848939063806df 175,179-182,184-186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "fab80c3ebf23ed742a8d1198ab1783b36fb923cd",
+  "prompts": {},
+  "sessions": {
+    "s_685abbb39c6047": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb387-af8a-7583-8280-38cc1a6a0f42",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
