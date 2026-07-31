@@ -97,9 +97,6 @@ final class AgentHttpServer {
         );
         return;
       }
-      if (request.contentLength > maxRequestBodyBytes) {
-        throw const _RequestBodyTooLarge();
-      }
       final String body = await _readBody(
         request,
         maximumBytes: maxRequestBodyBytes,
@@ -175,12 +172,18 @@ Future<String> _readBody(
 }) async {
   final BytesBuilder bytes = BytesBuilder(copy: false);
   var length = 0;
+  var isTooLarge = request.contentLength > maximumBytes;
   await for (final List<int> chunk in request) {
     length += chunk.length;
     if (length > maximumBytes) {
-      throw const _RequestBodyTooLarge();
+      isTooLarge = true;
     }
-    bytes.add(chunk);
+    if (!isTooLarge) {
+      bytes.add(chunk);
+    }
+  }
+  if (isTooLarge) {
+    throw const _RequestBodyTooLarge();
   }
   try {
     return utf8.decode(bytes.takeBytes());
