@@ -1,0 +1,21 @@
+test/features/agent_adapters/codex_completion_hook_gateway_test.dart
+  s_5bb36c637deb01::t_7f5498d3b1f12e 52-56
+  s_5bb36c637deb01::t_4c6809b5d8ba68 9,205-222
+  s_5bb36c637deb01::t_2b2782a1d1c2d1 1-2,6,10-16,21-27,60-66,106,137,167-171,196,200-204,223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "82bbdfae6c535999960e2435ebb8cb4b08831715",
+  "prompts": {},
+  "sessions": {
+    "s_5bb36c637deb01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb76c-64cf-7510-930a-5aecf2693ed1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
