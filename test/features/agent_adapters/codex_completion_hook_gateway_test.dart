@@ -1,18 +1,30 @@
+import 'dart:io';
+
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/domain/codex_completion_hook.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
-  const String home = '/Users/tester';
-  const String mcp =
-      '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
-  const String command = '"$mcp" --notify-stop --source "Codex"';
-  const String key = '$home/.codex/config.toml:stop:0:0';
+  final String home = Platform.isWindows ? r'C:\Users\tester' : '/Users/tester';
+  final String mcp = Platform.isWindows
+      ? r'C:\Program Files\DingDong\dingdong_mcp.exe'
+      : '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
+  final String command =
+      '"${path.normalize(mcp)}" --notify-stop --source "Codex"';
+  final String key =
+      '${path.normalize(path.join(home, '.codex', 'config.toml'))}:stop:0:0';
   const String hash = 'sha256:current-hook';
 
   test('inspects the exact DingDong Stop Hook through hooks/list', () async {
     final _FakeConnection connection = _FakeConnection(<String, Object?>{
-      'data': <Object?>[_hookEntry(command: command, trustStatus: 'untrusted')],
+      'data': <Object?>[
+        _hookEntry(
+          homeDirectory: home,
+          command: command,
+          trustStatus: 'untrusted',
+        ),
+      ],
     });
     final CodexAppServerCompletionHookGateway gateway =
         CodexAppServerCompletionHookGateway(
@@ -37,11 +49,21 @@ void main() {
     final _FakeConnection connection = _FakeConnection(
       <String, Object?>{
         'data': <Object?>[
-          _hookEntry(command: command, trustStatus: 'untrusted'),
+          _hookEntry(
+            homeDirectory: home,
+            command: command,
+            trustStatus: 'untrusted',
+          ),
         ],
       },
       afterWriteHooksResponse: <String, Object?>{
-        'data': <Object?>[_hookEntry(command: command, trustStatus: 'trusted')],
+        'data': <Object?>[
+          _hookEntry(
+            homeDirectory: home,
+            command: command,
+            trustStatus: 'trusted',
+          ),
+        ],
       },
     );
     final CodexAppServerCompletionHookGateway gateway =
@@ -81,6 +103,7 @@ void main() {
       final _FakeConnection connection = _FakeConnection(<String, Object?>{
         'data': <Object?>[
           _hookEntry(
+            homeDirectory: home,
             command: '"/tmp/dingdong_mcp" --notify-stop --source "Codex"',
             trustStatus: 'untrusted',
           ),
@@ -111,6 +134,7 @@ void main() {
     final _FakeConnection connection = _FakeConnection(<String, Object?>{
       'data': <Object?>[
         _hookEntry(
+          homeDirectory: home,
           command: command,
           trustStatus: 'untrusted',
           currentHash: 'sha256:new-hook',
@@ -140,7 +164,11 @@ void main() {
   test('does not repair an unknown future trust state', () async {
     final _FakeConnection connection = _FakeConnection(<String, Object?>{
       'data': <Object?>[
-        _hookEntry(command: command, trustStatus: 'future-status'),
+        _hookEntry(
+          homeDirectory: home,
+          command: command,
+          trustStatus: 'future-status',
+        ),
       ],
     });
     final CodexAppServerCompletionHookGateway gateway =
@@ -165,28 +193,34 @@ void main() {
 }
 
 Map<String, Object?> _hookEntry({
+  required String homeDirectory,
   required String command,
   required String trustStatus,
   String currentHash = 'sha256:current-hook',
-}) => <String, Object?>{
-  'cwd': '/Users/tester',
-  'hooks': <Object?>[
-    <String, Object?>{
-      'key': '/Users/tester/.codex/config.toml:stop:0:0',
-      'eventName': 'stop',
-      'handlerType': 'command',
-      'isManaged': false,
-      'command': command,
-      'sourcePath': '/Users/tester/.codex/config.toml',
-      'source': 'user',
-      'enabled': true,
-      'currentHash': currentHash,
-      'trustStatus': trustStatus,
-    },
-  ],
-  'warnings': <Object?>[],
-  'errors': <Object?>[],
-};
+}) {
+  final String sourcePath = path.normalize(
+    path.join(homeDirectory, '.codex', 'config.toml'),
+  );
+  return <String, Object?>{
+    'cwd': homeDirectory,
+    'hooks': <Object?>[
+      <String, Object?>{
+        'key': '$sourcePath:stop:0:0',
+        'eventName': 'stop',
+        'handlerType': 'command',
+        'isManaged': false,
+        'command': command,
+        'sourcePath': sourcePath,
+        'source': 'user',
+        'enabled': true,
+        'currentHash': currentHash,
+        'trustStatus': trustStatus,
+      },
+    ],
+    'warnings': <Object?>[],
+    'errors': <Object?>[],
+  };
+}
 
 final class _FakeConnectionFactory implements CodexAppServerConnectionFactory {
   const _FakeConnectionFactory(this.connection);
