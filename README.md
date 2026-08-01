@@ -84,7 +84,7 @@ sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.9.4`, using the same version constant as the release UI. A small
+  `v0.9.7`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
@@ -841,7 +841,11 @@ DingDong.
 
 On a reinstall or later installation, macOS may not transfer the previous
 clipboard/quick-paste Accessibility permission to the new application build.
-Open the corresponding permission list in **Privacy & Security**, select the
-old **DingDong** entry and click **−**, then click **+** and add the newly
-installed **DingDong.app** (normally `/Applications/DingDong.app`) before
-enabling the permission again.
+In DingDong, open **Settings → Quick paste permission → Open permission
+helper**. The helper opens the Accessibility list and shows the current app as
+a draggable item beside System Settings. If an old **DingDong** entry exists,
+select it and click **−** first, then drag the current **DingDong.app** into the
+list and enable it. If **−** is disabled, drag the current app once so macOS can
+resolve the stale entry, remove that entry, then drag the current app in again
+and enable it. macOS requires these removal and enable actions to be performed
+by the user.

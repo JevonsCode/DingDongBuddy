@@ -32,6 +32,7 @@ final class SettingsViewModel extends ChangeNotifier
     QuickPastePermissionGateway? quickPastePermissionGateway,
     this.mcpCommandPath = 'dingdong-mcp',
     this.systemUsageSource,
+    this.systemDataCleaner,
   }) : _clipboardMonitoring = clipboardMonitoring,
        _launchAtStartup = launchAtStartup,
        _onWindowOpacityChanged = onWindowOpacityChanged,
@@ -59,6 +60,7 @@ final class SettingsViewModel extends ChangeNotifier
   final QuickPastePermissionGateway? _quickPastePermissionGateway;
   final String mcpCommandPath;
   final SystemUsageSource? systemUsageSource;
+  final SystemDataCleaner? systemDataCleaner;
   AppSettings _settings = const AppSettings();
   bool _loaded = false;
   String? _errorMessage;
@@ -69,7 +71,9 @@ final class SettingsViewModel extends ChangeNotifier
   bool _isPollingApplicationUpdater = false;
   Timer? _applicationUpdatePollTimer;
   bool? _isQuickPastePermissionGranted;
+  bool _isPresentingQuickPastePermissionGrant = false;
   SystemUsageSnapshot? _systemUsage;
+  bool _isClearingSystemData = false;
   int _loadedApiPort = 2333;
   bool _savePending = false;
   Future<void>? _saveInFlight;
@@ -92,6 +96,8 @@ final class SettingsViewModel extends ChangeNotifier
     commandPath: mcpCommandPath,
   );
   SystemUsageSnapshot? get systemUsage => _systemUsage;
+  bool get canClearSystemData => systemDataCleaner != null;
+  bool get isClearingSystemData => _isClearingSystemData;
   bool get requiresRestart => _loaded && _settings.apiPort != _loadedApiPort;
 
   Future<void> load() async {
@@ -422,9 +428,22 @@ final class SettingsViewModel extends ChangeNotifier
 
   @override
   Future<void> refreshQuickPastePermission() async {
+    if (_isPresentingQuickPastePermissionGrant) {
+      return;
+    }
     _isQuickPastePermissionGranted = await _quickPastePermissionGateway
         ?.isGranted();
     notifyListeners();
+  }
+
+  /// Keeps lifecycle refreshes from racing the visible grant animation.
+  void beginQuickPastePermissionGrantPresentation() {
+    _isPresentingQuickPastePermissionGrant = true;
+  }
+
+  Future<void> completeQuickPastePermissionGrantPresentation() async {
+    _isPresentingQuickPastePermissionGrant = false;
+    await refreshQuickPastePermission();
   }
 
   @override
@@ -435,6 +454,30 @@ final class SettingsViewModel extends ChangeNotifier
   Future<void> refreshSystemUsage() async {
     await _loadSystemUsage();
     notifyListeners();
+  }
+
+  Future<bool> clearSystemData(Set<SystemDataCategory> categories) async {
+    final SystemDataCleaner? cleaner = systemDataCleaner;
+    final Set<SystemDataCategory> clearable = categories
+        .where((SystemDataCategory category) => category.canClear)
+        .toSet();
+    if (cleaner == null || clearable.isEmpty || _isClearingSystemData) {
+      return false;
+    }
+    _isClearingSystemData = true;
+    notifyListeners();
+    var cleared = false;
+    try {
+      await cleaner.clear(clearable);
+      await _loadSystemUsage();
+      cleared = true;
+    } on Object {
+      _errorMessage = 'Selected local data could not be cleared.';
+    } finally {
+      _isClearingSystemData = false;
+      notifyListeners();
+    }
+    return cleared;
   }
 
   Future<void> _loadSystemUsage() async {

@@ -35,6 +35,7 @@ import 'package:dingdong/features/settings/data/http_release_metadata_source.dar
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
+import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_service.dart';
@@ -116,7 +117,7 @@ Future<void> main(List<String> arguments) async {
   dependencies = await AppDependencies.production(
     preferencesBackend: preferencesBackend,
     onResourceLibraryChanged: shellController.requestLibraryRefresh,
-    onCopyDetected: shellController.requestMascotShake,
+    onCopyDetected: () => unawaited(shellGateway.shakeTrayIcon()),
     onNotification: (request) async {
       activityController.record(
         source: request.source ?? 'Agent',
@@ -196,6 +197,13 @@ Future<void> main(List<String> arguments) async {
       await settingsWindowLauncher.show();
     },
     onHideDockIcon: () => settingsViewModel.setHideDockIcon(true),
+    onQuickPastePermissionGrantPresentationStarted:
+        settingsViewModel.beginQuickPastePermissionGrantPresentation,
+    onQuickPastePermissionGranted: () async {
+      await WidgetsBinding.instance.endOfFrame;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await settingsViewModel.completeQuickPastePermissionGrantPresentation();
+    },
   );
   await desktopShellService.start();
   Future<Object?> handleChildWindowCall(MethodCall call) async {
@@ -274,6 +282,28 @@ Future<void> main(List<String> arguments) async {
         return (await applicationUpdater.readStatus()).toJson();
       case 'settings_update_install':
         await applicationUpdater.installLatest();
+        return null;
+      case 'settings_system_data_clear':
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        final List<String> requested = (values['categories']! as List)
+            .whereType<String>()
+            .toList(growable: false);
+        final Set<SystemDataCategory> categories = requested
+            .map(systemDataCategoryFromId)
+            .whereType<SystemDataCategory>()
+            .toSet();
+        if (categories.length != requested.length ||
+            categories.any(
+              (SystemDataCategory category) => !category.canClear,
+            )) {
+          throw ArgumentError.value(requested, 'categories');
+        }
+        await _clearSelectedSystemData(
+          categories: categories,
+          dependencies: dependencies,
+          activityController: activityController,
+          shellController: shellController,
+        );
         return null;
       case agentResourceIssuesChangedMethod:
         final List<Object?> values =
@@ -357,6 +387,28 @@ Future<void> _clearClipboardHistory(AppDependencies dependencies) async {
   await imageDirectory.create(recursive: true);
 }
 
+Future<void> _clearSelectedSystemData({
+  required Set<SystemDataCategory> categories,
+  required AppDependencies dependencies,
+  required ActivityController activityController,
+  required ShellController shellController,
+}) async {
+  if (categories.contains(SystemDataCategory.clipboardHistory)) {
+    await _clearClipboardHistory(dependencies);
+    shellController.requestClipboardRefresh();
+  }
+  if (categories.contains(SystemDataCategory.agentActivity)) {
+    activityController.clear();
+  }
+  if (categories.contains(SystemDataCategory.adapterHistory)) {
+    final Directory history = dependencies.paths.agentAdapterHistoryDirectory;
+    if (await history.exists()) {
+      await history.delete(recursive: true);
+    }
+    await history.create(recursive: true);
+  }
+}
+
 Future<void> _runSettingsWindow(
   WindowController windowController,
   Map<String, Object?> arguments,
@@ -386,6 +438,7 @@ Future<void> _runSettingsWindow(
     quickPastePermissionGateway: hostBridge,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(paths.applicationSupportDirectory),
+    systemDataCleaner: hostBridge,
   );
 
   await windowManager.ensureInitialized();

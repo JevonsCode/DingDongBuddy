@@ -62,4 +62,22 @@ void main() {
     expect(restored.activities, isEmpty);
     expect(restored.completionTimes, isEmpty);
   });
+
+  test('file store clear removes history and atomic-write remnants', () {
+    final Directory temporary = Directory.systemTemp.createTempSync(
+      'dingdong-agent-activity-clear-',
+    );
+    addTearDown(() => temporary.deleteSync(recursive: true));
+    final File file = File('${temporary.path}/agent-activity.json')
+      ..writeAsStringSync('{}');
+    final File temporaryFile = File('${file.path}.tmp')
+      ..writeAsStringSync('{}');
+    final File backupFile = File('${file.path}.bak')..writeAsStringSync('{}');
+
+    FileAgentActivityStore(file).clear();
+
+    expect(file.existsSync(), isFalse);
+    expect(temporaryFile.existsSync(), isFalse);
+    expect(backupFile.existsSync(), isFalse);
+  });
 }

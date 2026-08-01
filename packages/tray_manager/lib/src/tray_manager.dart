@@ -176,6 +176,13 @@ class TrayManager {
     await _channel.invokeMethod('setIconPosition', arguments);
   }
 
+  /// Briefly shakes the macOS status-bar icon.
+  ///
+  /// @platforms macos
+  Future<void> shakeIcon() async {
+    await _channel.invokeMethod('shakeIcon');
+  }
+
   /// Sets the hover text for this tray icon.
   ///
   /// Must be called after the icon is set.

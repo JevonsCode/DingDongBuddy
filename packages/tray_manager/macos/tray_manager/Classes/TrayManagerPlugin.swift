@@ -51,6 +51,9 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         case "setIconPosition":
             setIconPosition(call, result: result)
             break
+        case "shakeIcon":
+            shakeIcon(call, result: result)
+            break
         case "setToolTip":
             setToolTip(call, result: result)
             break
@@ -169,6 +172,11 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         
         trayIcon?.setImagePosition(iconPosition)
         
+        result(true)
+    }
+
+    public func shakeIcon(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        trayIcon?.shake()
         result(true)
     }
     

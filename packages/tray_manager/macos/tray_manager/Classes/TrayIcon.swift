@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import QuartzCore
 
 public class TrayIcon: NSView {
     public var onTrayIconMouseDown:(() -> Void)?
@@ -51,6 +52,18 @@ public class TrayIcon: NSView {
     public func removeImage() {
         statusItem?.button?.image = nil
         self.frame = statusItem!.button!.frame
+    }
+
+    public func shake() {
+        guard let button = statusItem?.button else { return }
+
+        button.wantsLayer = true
+        let animation = CAKeyframeAnimation(keyPath: "transform.rotation.z")
+        animation.values = [0.0, -0.13, 0.12, -0.08, 0.05, 0.0]
+        animation.keyTimes = [0.0, 0.18, 0.42, 0.64, 0.82, 1.0]
+        animation.duration = 0.42
+        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        button.layer?.add(animation, forKey: "dingdong-copy-shake")
     }
     
     public func setTitle(

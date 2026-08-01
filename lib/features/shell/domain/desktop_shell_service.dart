@@ -16,6 +16,8 @@ final class DesktopShellService {
     this.onShowResourceManager,
     this.onShowSettings,
     this.onHideDockIcon,
+    this.onQuickPastePermissionGrantPresentationStarted,
+    this.onQuickPastePermissionGranted,
   });
 
   final DesktopShellGateway gateway;
@@ -27,6 +29,8 @@ final class DesktopShellService {
   final Future<void> Function()? onShowResourceManager;
   final Future<void> Function()? onShowSettings;
   final Future<void> Function()? onHideDockIcon;
+  final void Function()? onQuickPastePermissionGrantPresentationStarted;
+  final Future<void> Function()? onQuickPastePermissionGranted;
   StreamSubscription<DesktopShellCommand>? _subscription;
 
   Future<void> start() async {
@@ -64,6 +68,12 @@ final class DesktopShellService {
         controller.open(2);
         _refreshClipboard();
         await gateway.toggleAndFocus();
+      case DesktopShellCommand.quickPastePermissionGranted:
+        onQuickPastePermissionGrantPresentationStarted?.call();
+        await gateway.showAndFocus();
+        controller.open(2);
+        _refreshClipboard();
+        await onQuickPastePermissionGranted?.call();
       case DesktopShellCommand.toggleClipboardFilters:
         controller.requestClipboardFilterToggle();
       case DesktopShellCommand.focusClipboardSearch:

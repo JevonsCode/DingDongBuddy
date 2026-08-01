@@ -171,6 +171,15 @@ final class ActivityController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clear() {
+    _recentCountTimer?.cancel();
+    _activities = const <AgentActivity>[];
+    _completionTimes = const <DateTime>[];
+    _loaded = true;
+    _store.clear();
+    notifyListeners();
+  }
+
   void _replaceWith(AgentActivityHistory history) {
     _activities = List<AgentActivity>.of(history.activities)
       ..sort(

@@ -188,7 +188,8 @@ void main() {
           findsOneWidget,
         );
       }
-      expect(find.byKey(const Key('settings-refresh-usage')), findsOneWidget);
+      expect(find.byKey(const Key('settings-clear-usage')), findsOneWidget);
+      expect(find.byKey(const Key('settings-refresh-usage')), findsNothing);
 
       await tester.tap(find.byKey(const Key('settings-hide-dock-icon')));
       await tester.pumpAndSettle();

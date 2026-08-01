@@ -57,6 +57,54 @@ void main() {
     await service.stop();
   });
 
+  test('permission grant reveals Clipboard and refreshes its state', () async {
+    final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
+    final ShellController controller = ShellController();
+    int permissionRefreshCount = 0;
+    final List<String> eventOrder = <String>[];
+    controller.addListener(() {
+      if (controller.selectedIndex == 2 &&
+          controller.clipboardRefreshRevision == 0) {
+        eventOrder.add('clipboard');
+      } else if (controller.clipboardRefreshRevision == 1 &&
+          !eventOrder.contains('history')) {
+        eventOrder.add('history');
+      }
+    });
+    gateway.onShowAndFocus = () => eventOrder.add('show');
+    final DesktopShellService service = DesktopShellService(
+      gateway: gateway,
+      controller: controller,
+      activityController: ActivityController(),
+      defaultWorkspaceIndex: () => 0,
+      onQuickPastePermissionGrantPresentationStarted: () {
+        eventOrder.add('prepare');
+      },
+      onQuickPastePermissionGranted: () async {
+        permissionRefreshCount += 1;
+        eventOrder.add('permission');
+      },
+    );
+    await service.start();
+
+    gateway.emit(DesktopShellCommand.quickPastePermissionGranted);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(controller.selectedIndex, 2);
+    expect(controller.clipboardRefreshRevision, 1);
+    expect(gateway.showCount, 1);
+    expect(gateway.toggleCount, 0);
+    expect(permissionRefreshCount, 1);
+    expect(eventOrder, <String>[
+      'prepare',
+      'show',
+      'clipboard',
+      'history',
+      'permission',
+    ]);
+    await service.stop();
+  });
+
   test('opening the application shows rather than toggles the panel', () async {
     final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
     final ShellController controller = ShellController(initialIndex: 0);
@@ -222,6 +270,7 @@ final class _FakeDesktopShellGateway implements DesktopShellGateway {
   int showCount = 0;
   int toggleCount = 0;
   bool lastToggleAcknowledgesUnread = false;
+  void Function()? onShowAndFocus;
 
   @override
   Stream<DesktopShellCommand> get commands => _commands.stream;
@@ -234,6 +283,7 @@ final class _FakeDesktopShellGateway implements DesktopShellGateway {
   @override
   Future<void> showAndFocus({bool acknowledgeUnread = false}) async {
     showCount += 1;
+    onShowAndFocus?.call();
   }
 
   @override

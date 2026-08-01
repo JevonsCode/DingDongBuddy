@@ -5,6 +5,7 @@ enum DesktopShellCommand {
   showToday,
   showClipboard,
   toggleClipboard,
+  quickPastePermissionGranted,
   toggleClipboardFilters,
   focusClipboardSearch,
   showResourceManager,

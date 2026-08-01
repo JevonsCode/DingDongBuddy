@@ -68,10 +68,48 @@ class QuickPastePermissionSection extends StatelessWidget {
                       key: const Key('settings-open-accessibility'),
                       onPressed: viewModel.openQuickPastePermissionSettings,
                       icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                      label: Text(context.localized('Open settings', '打开系统设置')),
+                      label: Text(
+                        context.localized('Open permission helper', '打开授权助手'),
+                      ),
                     ),
                 ],
               ),
+              if (granted == false) ...<Widget>[
+                const SizedBox(height: 12),
+                Container(
+                  key: const Key('settings-accessibility-helper-explanation'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Icon(
+                        Icons.drag_indicator_rounded,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.localized(
+                            'The helper opens Accessibility and places a draggable DingDong beside it. If “−” works, remove the old entry before dragging. If “−” is disabled, drag once to make it available, remove the entry, then drag again and turn DingDong on.',
+                            '助手会打开“辅助功能”，并在旁边显示可拖拽的 DingDong。“−”可用时先删除旧条目再拖入；若“−”置灰，先拖一次让它可用，删除旧条目后再拖一次并打开开关。',
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         );

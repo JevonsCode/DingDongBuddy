@@ -839,6 +839,22 @@ void main() {
 
     permission.granted = true;
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 120));
+
+    expect(
+      find.byKey(const Key('clipboard-permission-left-fragment')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('clipboard-permission-right-fragment')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('clipboard-permission-burst-particles')),
+      findsOneWidget,
+    );
+
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('clipboard-permission-banner')), findsNothing);

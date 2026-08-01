@@ -441,6 +441,26 @@ void main() {
     expect(model.isQuickPastePermissionGranted, isTrue);
   });
 
+  test('quick paste grant presentation defers lifecycle refreshes', () async {
+    final _FakeQuickPastePermission permission = _FakeQuickPastePermission();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      quickPastePermissionGateway: permission,
+    );
+
+    await model.load();
+    model.beginQuickPastePermissionGrantPresentation();
+    permission.granted = true;
+
+    await model.refreshQuickPastePermission();
+    expect(model.isQuickPastePermissionGranted, isFalse);
+    expect(permission.inspectCount, 1);
+
+    await model.completeQuickPastePermissionGrantPresentation();
+    expect(model.isQuickPastePermissionGranted, isTrue);
+    expect(permission.inspectCount, 2);
+  });
+
   test(
     'MCP setup prompt always uses the built-in platform-specific instructions',
     () async {
@@ -592,18 +612,60 @@ void main() {
       expect(source.loadCount, 2);
     },
   );
+
+  test('selected system data is cleared and usage is loaded again', () async {
+    final _SystemUsageSource source = _SystemUsageSource();
+    final _SystemDataCleaner cleaner = _SystemDataCleaner(source);
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      systemUsageSource: source,
+      systemDataCleaner: cleaner,
+    );
+    await model.load();
+
+    final bool cleared = await model.clearSystemData(<SystemDataCategory>{
+      SystemDataCategory.clipboardHistory,
+      SystemDataCategory.resourceLibrary,
+    });
+
+    expect(cleared, isTrue);
+    expect(cleaner.categories, <SystemDataCategory>{
+      SystemDataCategory.clipboardHistory,
+    });
+    expect(source.loadCount, 2);
+    expect(model.systemUsage?.storageBytes, 2 * 1024 * 1024);
+    expect(model.isClearingSystemData, isFalse);
+  });
 }
 
 final class _SystemUsageSource implements SystemUsageSource {
   int loadCount = 0;
+  bool cleared = false;
 
   @override
   Future<SystemUsageSnapshot> load() async {
     loadCount += 1;
-    return const SystemUsageSnapshot(
+    return SystemUsageSnapshot(
       residentMemoryBytes: 64 * 1024 * 1024,
-      storageBytes: 12 * 1024 * 1024,
+      storageBytes: (cleared ? 2 : 12) * 1024 * 1024,
+      storageByCategory: <SystemDataCategory, int>{
+        SystemDataCategory.clipboardHistory: (cleared ? 0 : 10) * 1024 * 1024,
+        SystemDataCategory.resourceLibrary: 2 * 1024 * 1024,
+      },
     );
+  }
+}
+
+final class _SystemDataCleaner implements SystemDataCleaner {
+  _SystemDataCleaner(this.source);
+
+  final _SystemUsageSource source;
+  Set<SystemDataCategory> categories = const <SystemDataCategory>{};
+
+  @override
+  Future<void> clear(Set<SystemDataCategory> categories) async {
+    this.categories = Set<SystemDataCategory>.of(categories);
+    source.cleared = true;
   }
 }
 
@@ -631,9 +693,13 @@ final class _FakeApplicationUpdater implements ApplicationUpdater {
 final class _FakeQuickPastePermission implements QuickPastePermissionGateway {
   bool granted = false;
   int openCount = 0;
+  int inspectCount = 0;
 
   @override
-  Future<bool> isGranted() async => granted;
+  Future<bool> isGranted() async {
+    inspectCount += 1;
+    return granted;
+  }
 
   @override
   Future<void> openSettings() async {

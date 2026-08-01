@@ -75,7 +75,7 @@ final class AppTheme {
       scaffoldBackgroundColor: colors.surface,
       dividerColor: colors.outlineVariant,
       dividerTheme: DividerThemeData(color: colors.outlineVariant, space: 1),
-      hoverColor: colors.onSurface.withValues(alpha: 0.045),
+      hoverColor: Colors.transparent,
       textTheme: text.copyWith(
         headlineMedium: text.headlineMedium?.copyWith(fontSize: 22),
         titleLarge: text.titleLarge?.copyWith(fontSize: 17),
@@ -137,11 +137,13 @@ final class AppTheme {
           maximumSize: const Size.square(34),
           padding: const EdgeInsets.all(6),
           shape: controlShape,
+          overlayColor: Colors.transparent,
         ),
       ),
       checkboxTheme: CheckboxThemeData(
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
+        overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         side: BorderSide.none,
         fillColor: WidgetStateProperty.resolveWith<Color?>((states) {
@@ -178,7 +180,7 @@ final class AppTheme {
       splashFactory: NoSplash.splashFactory,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      hoverColor: colors.onSurface.withValues(alpha: 0.035),
+      hoverColor: Colors.transparent,
       scaffoldBackgroundColor: surface,
       dividerTheme: DividerThemeData(color: colors.outlineVariant, space: 1),
       inputDecorationTheme: InputDecorationTheme(
@@ -215,8 +217,18 @@ final class AppTheme {
           ),
         ),
       ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(overlayColor: Colors.transparent),
+      ),
+      checkboxTheme: const CheckboxThemeData(
+        overlayColor: WidgetStatePropertyAll<Color>(Colors.transparent),
+      ),
+      radioTheme: const RadioThemeData(
+        overlayColor: WidgetStatePropertyAll<Color>(Colors.transparent),
+      ),
       switchTheme: const SwitchThemeData(
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        overlayColor: WidgetStatePropertyAll<Color>(Colors.transparent),
       ),
     );
   }

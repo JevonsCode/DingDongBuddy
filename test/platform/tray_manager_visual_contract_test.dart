@@ -68,6 +68,24 @@ void main() {
     },
   );
 
+  test('tray icon shake requests the native status item animation', () async {
+    MethodCall? receivedCall;
+    const MethodChannel channel = MethodChannel('tray_manager');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall call) async {
+          receivedCall = call;
+          return true;
+        });
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    await trayManager.shakeIcon();
+
+    expect(receivedCall?.method, 'shakeIcon');
+  });
+
   test(
     'Windows tray icons carry an alternate attention icon and count',
     () async {
@@ -219,7 +237,8 @@ void main() {
     expect(gateway, contains('void onTrayIconRightMouseDown()'));
     expect(gateway, contains('trayManager.popUpContextMenu()'));
     expect(gateway, contains('DesktopShellCommand.showClipboard'));
-    expect(gateway, contains('DesktopShellCommand.clearClipboardHistory'));
+    expect(gateway, isNot(contains("'清空剪贴板历史'")));
+    expect(gateway, isNot(contains("'Clear Clipboard History'")));
     expect(gateway, contains("label: chinese ? '资源管理' : 'Resource Manager'"));
     expect(gateway, contains("label: chinese ? '设置' : 'Settings'"));
     expect(gateway, isNot(contains("'资源管理…'")));
@@ -244,6 +263,34 @@ void main() {
     expect(source, contains('statusItem?.autosaveName ='));
     expect(source, contains('Bundle.main.bundleIdentifier'));
     expect(source, contains('.primary-status-item'));
+  });
+
+  test('macOS copy feedback shakes the complete status bar button', () {
+    final String trayIcon = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
+    ).readAsStringSync();
+    final String plugin = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift',
+    ).readAsStringSync();
+    final String main = File('lib/main.dart').readAsStringSync();
+
+    expect(trayIcon, contains('public func shake()'));
+    expect(
+      trayIcon,
+      contains('CAKeyframeAnimation(keyPath: "transform.rotation.z")'),
+    );
+    expect(trayIcon, contains('button.layer?.add(animation'));
+    expect(plugin, contains('case "shakeIcon":'));
+    expect(
+      main,
+      contains(
+        'onCopyDetected: () => unawaited(shellGateway.shakeTrayIcon()),',
+      ),
+    );
+    expect(
+      main,
+      isNot(contains('onCopyDetected: shellController.requestMascotShake')),
+    );
   });
 
   test('macOS unread tray uses the selected RGB capsule color', () {

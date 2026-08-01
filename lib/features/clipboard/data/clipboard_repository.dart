@@ -182,7 +182,10 @@ final class ClipboardRepository implements ClipboardStore {
   }
 
   void deleteAll() {
-    _database.execute('DELETE FROM ZCLIPBOARDRECORD');
+    _database
+      ..execute('DELETE FROM ZCLIPBOARDRECORD')
+      ..execute('VACUUM')
+      ..execute('PRAGMA wal_checkpoint(TRUNCATE)');
   }
 
   void close() => _database.close();

@@ -67,14 +67,14 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.9.4 from pubspec', () {
+  test('desktop hosts consume application version 0.9.7 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.4+31'));
+    expect(pubspec, contains('version: 0.9.7+32'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
@@ -342,7 +342,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v0.9.4</span>'));
+    expect(website, contains('<span class="demo-version">v0.9.7</span>'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
@@ -384,14 +384,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.9.4"'));
-    expect(releaseMetadata, contains('"latestBuild": "31"'));
+    expect(releaseMetadata, contains('"latestVersion": "0.9.7"'));
+    expect(releaseMetadata, contains('"latestBuild": "32"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.9.4-windows-x64-beta-Setup.exe'),
+      contains('DingDong-0.9.7-windows-x64-beta-Setup.exe'),
     );
   });
 

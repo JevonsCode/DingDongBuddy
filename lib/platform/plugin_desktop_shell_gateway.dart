@@ -123,6 +123,8 @@ final class PluginDesktopShellGateway
         _commands.add(DesktopShellCommand.hideDockIcon);
       } else if (call.method == 'pressed') {
         _commands.add(DesktopShellCommand.toggleClipboard);
+      } else if (call.method == 'pastePermissionGranted') {
+        _commands.add(DesktopShellCommand.quickPastePermissionGranted);
       } else if (call.method == 'workspaceShortcut' &&
           call.arguments == 'today') {
         _commands.add(DesktopShellCommand.showToday);
@@ -206,6 +208,13 @@ final class PluginDesktopShellGateway
 
   Future<void> markUnread() => _unreadController.markUnread();
 
+  Future<void> shakeTrayIcon() async {
+    if (!Platform.isMacOS) {
+      return;
+    }
+    await trayManager.shakeIcon();
+  }
+
   Future<void> _rebuildContextMenu() async {
     final bool monitoring = _clipboardMonitoringState();
     final bool chinese = _useChineseLabels();
@@ -241,11 +250,6 @@ final class PluginDesktopShellGateway
                   ? DesktopShellCommand.stopClipboardMonitoring
                   : DesktopShellCommand.startClipboardMonitoring,
             ),
-          ),
-          MenuItem(
-            label: chinese ? '清空剪贴板历史' : 'Clear Clipboard History',
-            onClick: (_) =>
-                _commands.add(DesktopShellCommand.clearClipboardHistory),
           ),
           MenuItem.separator(),
           MenuItem(

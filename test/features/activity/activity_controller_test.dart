@@ -129,4 +129,22 @@ void main() {
     expect(restarted.activities, isEmpty);
     expect(restarted.recentCount, 0);
   });
+
+  test('explicit clear removes current and persisted activity history', () {
+    final InMemoryAgentActivityStore store = InMemoryAgentActivityStore();
+    final ActivityController controller = ActivityController(
+      store: store,
+      idGenerator: () => 'activity-1',
+      now: () => DateTime.utc(2026, 7, 21, 10),
+    )..load();
+    controller.record(source: 'Codex', message: 'Build complete');
+
+    controller.clear();
+
+    expect(controller.activities, isEmpty);
+    expect(controller.recentCount, 0);
+    expect(controller.unseenCount, 0);
+    expect(store.history.activities, isEmpty);
+    expect(store.history.completionTimes, isEmpty);
+  });
 }

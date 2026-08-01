@@ -1,32 +1,32 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.9.4",
-  "latestBuild": "31",
-  "publishedAt": "2026-07-31T12:11:18Z",
+  "latestVersion": "0.9.7",
+  "latestBuild": "32",
+  "publishedAt": "2026-08-01T08:27:07Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.4/DingDong-0.9.4-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.7/DingDong-0.9.7-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.4/DingDong-0.9.4-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.7/DingDong-0.9.7-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.4/DingDong-0.9.4-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.7/DingDong-0.9.7-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds a one-click Codex completion-Hook review action under Resource Manager → Agent access, using Codex's current Hook key and hash.",
-    "Re-checks the Hook immediately before trust writes, refuses mismatched commands or changed hashes, and verifies trusted-and-enabled state after the write.",
-    "Includes a read-only-by-default diagnostic script with an explicit --apply mode for temporary recovery.",
-    "Makes the DingDong mascot shake briefly when a new clipboard copy is detected."
+    "Adds a bilingual macOS Accessibility helper with a draggable current-app card and clear stale-entry recovery guidance.",
+    "After real Accessibility authorization succeeds, reveals Clipboard first and then plays a one-shot split-and-particle completion animation.",
+    "Breaks down local storage by data type and can selectively clear clipboard, Agent activity, and Adapter revision history while protecting resources and configuration.",
+    "Removes default circular Material hover halos and shakes the macOS menu-bar icon when a new clipboard copy is detected."
   ]
 }

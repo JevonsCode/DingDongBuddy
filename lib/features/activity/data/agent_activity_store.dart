@@ -105,8 +105,14 @@ final class FileAgentActivityStore implements AgentActivityStore {
 
   @override
   void clear() {
-    if (file.existsSync()) {
-      file.deleteSync();
+    for (final File candidate in <File>[
+      file,
+      File('${file.path}.tmp'),
+      File('${file.path}.bak'),
+    ]) {
+      if (candidate.existsSync()) {
+        candidate.deleteSync();
+      }
     }
   }
 }

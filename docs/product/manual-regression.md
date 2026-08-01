@@ -1,4 +1,4 @@
-# DingDong 0.9.4 Manual Regression Checklist
+# DingDong 0.9.7 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -225,8 +225,21 @@ and macOS golden images; the items below exercise real operating-system state.
 - A Debug macOS build is named `DingDong DEV`, uses bundle id
   `com.dingdongbuddy.app.dev`, stores data under `DingDong DEV`, shows a DEV
   badge, and does not offer release updates.
-- The macOS release app metadata is version `0.9.4` build `31` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.4.31` and product name `DingDong`.
+- With Accessibility permission absent, **Settings → Quick paste permission →
+  Open permission helper** opens the macOS Accessibility list and shows a
+  floating native panel beside it. The current app card can be dragged into the
+  system list, and the panel explains that any stale DingDong entry must first
+  be selected and removed with **−** by the user. If **−** starts disabled,
+  dragging once makes the stale entry removable; after removal, dragging the
+  current app a second time allows the user to enable it.
+- When Accessibility changes from denied to granted while the helper is open,
+  DingDong closes the helper, shows and focuses the main popup first, switches
+  it to Clipboard, waits for that view to render, and only then refreshes the
+  permission state. The visible yellow **Open settings** banner splits into two
+  jagged fragments, emits a short amber particle burst, and then collapses
+  exactly once; reopening Clipboard does not replay the completion animation.
+- The macOS release app metadata is version `0.9.7` build `32` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.7.32` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

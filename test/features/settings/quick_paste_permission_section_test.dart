@@ -21,6 +21,15 @@ void main() {
       MaterialApp(home: QuickPastePermissionSection(viewModel: model)),
     );
     expect(find.text('Permission required'), findsOneWidget);
+    expect(find.text('Open permission helper'), findsOneWidget);
+    expect(
+      find.byKey(const Key('settings-accessibility-helper-explanation')),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('drag once to make it available'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const Key('settings-open-accessibility')));
     await tester.pump();

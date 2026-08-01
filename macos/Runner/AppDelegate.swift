@@ -114,6 +114,8 @@ class AppDelegate: FlutterAppDelegate {
   private var activeNotificationSound: NSSound?
   private var updaterChannel: FlutterMethodChannel?
   private var applicationUpdater: DingDongUpdater?
+  private let accessibilityPermissionAssistant =
+    AccessibilityPermissionAssistant()
   private var desktopShellReady = false
   private var pendingApplicationOpen = false
 #if DEBUG
@@ -279,17 +281,19 @@ class AppDelegate: FlutterAppDelegate {
         case "isApplicationActive":
           result(NSApp.isActive)
         case "openPastePermissionSettings":
-          if let url = URL(
-            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-          ) {
-            NSWorkspace.shared.open(url)
-          }
+          self?.accessibilityPermissionAssistant.show()
           result(nil)
         default:
           result(FlutterMethodNotImplemented)
         }
       }
       self.hotKeyChannel = hotKeyChannel
+      accessibilityPermissionAssistant.onPermissionGranted = { [weak self] in
+        self?.hotKeyChannel?.invokeMethod(
+          "pastePermissionGranted",
+          arguments: nil
+        )
+      }
 
       let modifierChannel = FlutterMethodChannel(
         name: "dingdong/modifier_keys",

@@ -6,6 +6,7 @@ import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/launch_at_startup.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
+import 'package:dingdong/features/settings/domain/system_usage.dart';
 
 /// Proxies settings-only native operations back to the primary Flutter engine.
 final class MultiWindowSettingsHostBridge
@@ -14,7 +15,8 @@ final class MultiWindowSettingsHostBridge
         LaunchAtStartup,
         QuickPastePermissionGateway,
         SoundPreviewGateway,
-        ApplicationUpdater {
+        ApplicationUpdater,
+        SystemDataCleaner {
   MultiWindowSettingsHostBridge(String parentWindowId)
     : _parent = WindowController.fromWindowId(parentWindowId);
 
@@ -93,6 +95,16 @@ final class MultiWindowSettingsHostBridge
 
   Future<void> restartApplication() {
     return _parent.invokeMethod<void>('settings_restart');
+  }
+
+  @override
+  Future<void> clear(Set<SystemDataCategory> categories) {
+    return _parent
+        .invokeMethod<void>('settings_system_data_clear', <String, Object?>{
+          'categories': categories
+              .map((SystemDataCategory category) => category.id)
+              .toList(growable: false),
+        });
   }
 
   @override
