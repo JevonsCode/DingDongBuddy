@@ -1,0 +1,103 @@
+docs/dingdong-release.json
+  s_33c3d16e05cde4::t_529c64e012d82b 3-5,11,15,21,27-29
+docs/release-notes.md
+  s_33c3d16e05cde4::t_529c64e012d82b 1,3-4,6,8-15,17,19-21,27-28,30,32-38,40,42-44
+lib/features/library/domain/trigger_group.dart
+  s_33c3d16e05cde4::t_1d0576e7ef2fcc 95
+  s_33c3d16e05cde4::t_5dfacdacab9eb1 5,7-11,15,21,26,32,172-173
+  s_33c3d16e05cde4::t_218800baa6db0b 20
+docs/index.html
+  s_33c3d16e05cde4::t_529c64e012d82b 62,352,357,359,365,367,373,541,543,545,697,699,701,756,801
+lib/features/library/data/agent_resource_synchronizer.dart
+  s_33c3d16e05cde4::t_f8fdf351f8e0b7 71,82
+  s_33c3d16e05cde4::t_8bd8b44545db12 1066-1118
+  s_33c3d16e05cde4::t_3c789a2494c441 44-45
+  s_33c3d16e05cde4::t_30512e718fdbe2 227
+  s_33c3d16e05cde4::t_9f98eb6a1e266f 10,13,15,52,102,119-120,218-223,228,244-268
+lib/features/agent_api/data/mcp_server.dart
+  s_33c3d16e05cde4::t_c3655f1440050a 168-171,191-193,221-224,263,268-271
+  s_33c3d16e05cde4::t_c7fa5a43b50589 115-119,154,179,205
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 39
+lib/features/agent_api/data/trigger_group_routes.dart
+  s_33c3d16e05cde4::t_0770c56cce62d0 10,69,83-87
+test/features/library/agent_resource_synchronizer_test.dart
+  s_33c3d16e05cde4::t_85e2266ea6ac81 1089
+  s_33c3d16e05cde4::t_ee40c05c8c9403 1063-1088,1090-1093,1095-1113
+  s_33c3d16e05cde4::t_3ced712b9c9ea3 1060
+  s_33c3d16e05cde4::t_769bdd7fb2ea46 11,14,980-1059,1061
+  s_33c3d16e05cde4::t_9d614bd9110303 1094
+pubspec.yaml
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 4
+test/contract/mcp_contract_test.dart
+  s_33c3d16e05cde4::t_4a0c92622920cc 109-115,127
+README.md
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 87
+  s_33c3d16e05cde4::t_c7fa5a43b50589 229-231
+  s_33c3d16e05cde4::t_159a31e7f34af5 224-227
+  s_33c3d16e05cde4::t_3c789a2494c441 407-408
+test/contract/loopback_mcp_tool_executor_test.dart
+  s_33c3d16e05cde4::t_53e986b9e22c95 123,131,149,157,174,182,252,258
+  s_33c3d16e05cde4::t_9e736d5bf63ff3 66-67,69-85
+  s_33c3d16e05cde4::t_5e73a7bcb987c2 94
+  s_33c3d16e05cde4::t_06f8f8296094cf 86-93,95-110
+  s_33c3d16e05cde4::t_30512e718fdbe2 68,315
+test/features/library/trigger_group_test.dart
+  s_33c3d16e05cde4::t_702cc055edbbeb 67
+  s_33c3d16e05cde4::t_82dc0d59cadcbd 45-66,68-69
+README.zh.md
+  s_33c3d16e05cde4::t_159a31e7f34af5 187-189
+  s_33c3d16e05cde4::t_c7fa5a43b50589 190-192
+  s_33c3d16e05cde4::t_3c789a2494c441 357-358
+lib/main.dart
+  s_33c3d16e05cde4::t_aa3389e1171adb 630-632,637,672-676
+test/packaging/desktop_identity_test.dart
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 70,77,82,345,387-388,394
+lib/features/agent_api/data/loopback_mcp_tool_executor.dart
+  s_33c3d16e05cde4::t_30512e718fdbe2 192
+  s_33c3d16e05cde4::t_2c3b221d3d75af 53,60,65
+  s_33c3d16e05cde4::t_dbff8b68b98d87 32,172-174,178-179,193-198,218-230
+  s_33c3d16e05cde4::t_fc44ec85361950 176-177
+  s_33c3d16e05cde4::t_0b6dffd76bed28 157-171,175
+lib/features/agent_api/data/agent_router_resource_handlers.dart
+  s_33c3d16e05cde4::t_c06dc1c27a3112 208-210
+lib/features/agent_api/data/agent_bridge.dart
+  s_33c3d16e05cde4::t_c725c25f1c2358 550,552-565
+  s_33c3d16e05cde4::t_702cc055edbbeb 39-40
+  s_33c3d16e05cde4::t_b4be247dc139d8 41,54,156,160,580
+  s_33c3d16e05cde4::t_30512e718fdbe2 551
+lib/features/library/ui/trigger_group_dialog.dart
+  s_33c3d16e05cde4::t_00199cc1f5c7c4 103-104,684-687,724-728,771-773
+docs/product/manual-regression.md
+  s_33c3d16e05cde4::t_159a31e7f34af5 85-86
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 1,250-251
+test/contract/http_contract_test.dart
+  s_33c3d16e05cde4::t_c2c7eb00deed2d 1370-1392
+  s_33c3d16e05cde4::t_702cc055edbbeb 874-885,889-933,935-948,950-961,963-978
+  s_33c3d16e05cde4::t_c14c36fb18ee05 886-888,934,949,962,979
+skills/dingdong-configure/SKILL.md
+  s_33c3d16e05cde4::t_159a31e7f34af5 10,37
+  s_33c3d16e05cde4::t_c7fa5a43b50589 24
+lib/app/app_dependencies.dart
+  s_33c3d16e05cde4::t_8d9bce5a378112 87-89,115-119
+  s_33c3d16e05cde4::t_30512e718fdbe2 104
+test/app/dingdong_app_test.dart
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 37,43-44
+lib/features/settings/domain/release_update.dart
+  s_33c3d16e05cde4::t_ccbf3ec2901a79 114-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "3f85ce46f543cc867c5ebb70790e8009e2b958a6",
+  "prompts": {},
+  "sessions": {
+    "s_33c3d16e05cde4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc39a-fd8a-7cb0-bdd6-a90740d881d0",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
