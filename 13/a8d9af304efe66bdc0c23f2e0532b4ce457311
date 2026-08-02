@@ -1,0 +1,82 @@
+test/app/dingdong_app_test.dart
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 37,43-44
+  s_e6e0c7549c2469::t_6820e7e20bf2a9 209-243,248-254
+  s_e6e0c7549c2469::t_e88780170fae36 244-247
+docs/dingdong-release.json
+  s_e6e0c7549c2469::t_0137cf9585eacf 3-5,11,15,21,27-30
+lib/app/app_dependencies.dart
+  s_e6e0c7549c2469::t_ab9c87ffd43bdb 143-153
+test/features/activity/agent_activity_store_test.dart
+  s_e6e0c7549c2469::t_6820e7e20bf2a9 28,46,54-78
+lib/features/settings/domain/release_update.dart
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 114-115
+lib/features/activity/domain/agent_activity.dart
+  s_e6e0c7549c2469::t_137aa6dea8357b 54-70
+  s_e6e0c7549c2469::t_ab9c87ffd43bdb 11,22,36,45,49-53,71,79,89,94-99
+test/features/settings/settings_view_model_test.dart
+  s_e6e0c7549c2469::t_76530871e2d424 588,592,596-599
+pubspec.yaml
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 4
+lib/features/activity/ui/activity_controller.dart
+  s_e6e0c7549c2469::t_36df9f39b1d648 21,27-30
+  s_e6e0c7549c2469::t_e88780170fae36 128-133,150-153,190-195,266-267
+  s_e6e0c7549c2469::t_7cf6bc68471551 180-184
+  s_e6e0c7549c2469::t_ab9c87ffd43bdb 137-149,154-160,163-164,178-179,185-187,189,208-238,260-265,268-282
+  s_e6e0c7549c2469::t_f553d176e1f2ae 40,64,96,100-101,105-106,113,134-136,188,196-207
+lib/features/activity/ui/activity_cards.dart
+  s_e6e0c7549c2469::t_ab9c87ffd43bdb 194-215,266-296
+lib/features/settings/ui/settings_view_model.dart
+  s_e6e0c7549c2469::t_f9b88d58dca067 349-354
+README.md
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 87
+docs/product/manual-regression.md
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 1,159-166,249-250
+lib/features/activity/ui/agent_activity_manager_screen.dart
+  s_e6e0c7549c2469::t_ab9c87ffd43bdb 208-230
+lib/features/settings/data/settings_repository.dart
+  s_e6e0c7549c2469::t_0df92c697a4c0f 44,78-80,126-129,159-160
+lib/main.dart
+  s_e6e0c7549c2469::t_9902a684ea7a6a 131,155,263-264,708
+  s_e6e0c7549c2469::t_ab9c87ffd43bdb 132,134
+lib/features/agent_api/data/mcp_server.dart
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 39
+docs/index.html
+  s_e6e0c7549c2469::t_0137cf9585eacf 62,352,357,359,365,367,373,541,543,545,697,699,701,756,801
+lib/features/settings/ui/settings_screen.dart
+  s_e6e0c7549c2469::t_a61b512041b6ee 597-616
+lib/features/settings/domain/app_settings.dart
+  s_e6e0c7549c2469::t_90d917c0f67c05 105,129,154,184,211-212
+test/features/settings/settings_screen_test.dart
+  s_e6e0c7549c2469::t_76530871e2d424 167-168,179
+  s_e6e0c7549c2469::t_2e2f1c4ef97cf0 1
+  s_e6e0c7549c2469::t_faed067782eaa5 174
+  s_e6e0c7549c2469::t_7fff8453933890 169-173,175-178
+docs/release-notes.md
+  s_e6e0c7549c2469::t_0137cf9585eacf 1,3-4,6,8-14,16,18-20,26,28,30-33,35,37-38
+test/features/settings/settings_repository_test.dart
+  s_e6e0c7549c2469::t_76530871e2d424 14,51,85,118,148-151
+test/features/activity/activity_controller_test.dart
+  s_e6e0c7549c2469::t_0badad17f0b048 108-111
+  s_e6e0c7549c2469::t_9a36cea44ffb57 85,88
+  s_e6e0c7549c2469::t_6820e7e20bf2a9 52-83,123,133,144
+  s_e6e0c7549c2469::t_55de30e91ef6d9 84,86-87,89-107,112-114
+  s_e6e0c7549c2469::t_e88780170fae36 115-122,124-132,134-143
+test/packaging/desktop_identity_test.dart
+  s_e6e0c7549c2469::t_9eb1c2436cc13f 70,77,82,345,387-388,394
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "13a8d9af304efe66bdc0c23f2e0532b4ce457311",
+  "prompts": {},
+  "sessions": {
+    "s_e6e0c7549c2469": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc353-2f0e-7853-a7df-84c9a5ac7db4",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
