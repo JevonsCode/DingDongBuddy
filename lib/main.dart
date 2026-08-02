@@ -128,9 +128,10 @@ Future<void> main(List<String> arguments) async {
     },
     onSuppressedNotification: (request) async {
       final target = request.conversationTarget;
-      if (target != null) {
-        activityController.attachConversationTarget(
+      if (target != null || !activityController.groupRepeatedAgentSessions) {
+        activityController.recordRepeat(
           source: request.source ?? 'Agent',
+          message: request.message,
           target: target,
         );
       }
@@ -151,6 +152,7 @@ Future<void> main(List<String> arguments) async {
     rememberAcrossRestarts: startupSettings.rememberAgentActivity,
     maxItems: startupSettings.agentActivityMaxItems,
     countWindowHours: startupSettings.agentActivityCountHours,
+    groupRepeatedAgentSessions: startupSettings.groupRepeatedAgentSessions,
   );
   activityController.load(resetPreviousSession: true);
   await dependencies.start();
@@ -258,6 +260,8 @@ Future<void> main(List<String> arguments) async {
               settingsViewModel.settings.rememberAgentActivity,
           maxItems: settingsViewModel.settings.agentActivityMaxItems,
           countWindowHours: settingsViewModel.settings.agentActivityCountHours,
+          groupRepeatedAgentSessions:
+              settingsViewModel.settings.groupRepeatedAgentSessions,
         );
         return null;
       case 'settings_sound_preview':
@@ -701,6 +705,7 @@ Future<void> _runResourceManagerWindow(
           rememberAcrossRestarts: settings.rememberAgentActivity,
           maxItems: settings.agentActivityMaxItems,
           countWindowHours: settings.agentActivityCountHours,
+          groupRepeatedAgentSessions: settings.groupRepeatedAgentSessions,
         )
         ..load();
 

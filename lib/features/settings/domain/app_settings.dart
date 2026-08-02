@@ -102,6 +102,7 @@ final class AppSettings {
     this.clipboardMaxAgeDays = 120,
     this.allowAgentClipboardContent = false,
     this.rememberAgentActivity = true,
+    this.groupRepeatedAgentSessions = true,
     this.agentActivityMaxItems = 500,
     this.agentActivityCountHours = 24,
     this.selectedSound = 'default',
@@ -125,6 +126,7 @@ final class AppSettings {
   final int clipboardMaxAgeDays;
   final bool allowAgentClipboardContent;
   final bool rememberAgentActivity;
+  final bool groupRepeatedAgentSessions;
   final int agentActivityMaxItems;
   final int agentActivityCountHours;
   final String selectedSound;
@@ -149,6 +151,7 @@ final class AppSettings {
       clipboardMaxAgeDays: clipboardMaxAgeDays.clamp(1, 730),
       allowAgentClipboardContent: allowAgentClipboardContent,
       rememberAgentActivity: rememberAgentActivity,
+      groupRepeatedAgentSessions: groupRepeatedAgentSessions,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
       selectedSound: selectedSound == 'dingWood'
@@ -178,6 +181,7 @@ final class AppSettings {
     int? clipboardMaxAgeDays,
     bool? allowAgentClipboardContent,
     bool? rememberAgentActivity,
+    bool? groupRepeatedAgentSessions,
     int? agentActivityMaxItems,
     int? agentActivityCountHours,
     String? selectedSound,
@@ -204,6 +208,8 @@ final class AppSettings {
           allowAgentClipboardContent ?? this.allowAgentClipboardContent,
       rememberAgentActivity:
           rememberAgentActivity ?? this.rememberAgentActivity,
+      groupRepeatedAgentSessions:
+          groupRepeatedAgentSessions ?? this.groupRepeatedAgentSessions,
       agentActivityMaxItems:
           agentActivityMaxItems ?? this.agentActivityMaxItems,
       agentActivityCountHours:

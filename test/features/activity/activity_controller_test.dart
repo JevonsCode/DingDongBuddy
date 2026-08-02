@@ -49,6 +49,99 @@ void main() {
     expect(controller.recentCount, 1);
   });
 
+  test('same conversation is one recent item with a repeat count', () {
+    DateTime now = DateTime.utc(2026, 7, 12, 10);
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'activity-1',
+      now: () => now,
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'thread-1',
+      workspacePath: '/workspace/dingdong',
+    );
+
+    controller.record(
+      source: 'Codex',
+      message: 'First reminder',
+      conversationTarget: target,
+    );
+    now = now.add(const Duration(seconds: 2));
+    controller.record(
+      source: 'Codex',
+      message: 'Second reminder',
+      conversationTarget: target,
+    );
+
+    expect(controller.activities, hasLength(1));
+    expect(controller.activities.single.id, 'activity-1');
+    expect(controller.activities.single.message, 'Second reminder');
+    expect(controller.activities.single.repeatCount, 2);
+    expect(controller.activities.single.completedAt, now.toUtc());
+    expect(controller.recentCount, 1);
+  });
+
+  test('grouping can be disabled to count repeated sessions separately', () {
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      groupRepeatedAgentSessions: false,
+      idGenerator: () => 'activity-${id++}',
+      now: () => DateTime.utc(2026, 7, 12, 10),
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'thread-1',
+    );
+
+    controller.record(
+      source: 'Codex',
+      message: 'First reminder',
+      conversationTarget: target,
+    );
+    controller.record(
+      source: 'Codex',
+      message: 'Second reminder',
+      conversationTarget: target,
+    );
+
+    expect(controller.activities, hasLength(2));
+    expect(
+      controller.activities.every((item) => item.repeatCount == 1),
+      isTrue,
+    );
+    expect(controller.recentCount, 2);
+  });
+
+  test(
+    'suppressed completion hook repeats an existing item without counting it',
+    () {
+      final ActivityController controller = ActivityController(
+        idGenerator: () => 'activity-1',
+        now: () => DateTime.utc(2026, 7, 12, 10),
+      );
+      controller.record(source: 'Codex', message: 'Primary reminder');
+
+      controller.recordRepeat(
+        source: 'Codex',
+        message: 'Fallback reminder',
+        target: const AgentConversationTarget(
+          client: AgentClient.codex,
+          conversationId: 'thread-1',
+          workspacePath: '/workspace/dingdong',
+        ),
+      );
+
+      expect(controller.activities, hasLength(1));
+      expect(controller.activities.single.repeatCount, 2);
+      expect(controller.activities.single.message, 'Fallback reminder');
+      expect(
+        controller.activities.single.conversationTarget?.conversationId,
+        'thread-1',
+      );
+      expect(controller.recentCount, 1);
+    },
+  );
+
   test('detail retention defaults to 500 without capping the recent count', () {
     var id = 0;
     final DateTime now = DateTime.utc(2026, 7, 21, 10);

@@ -1,32 +1,32 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.9.7",
-  "latestBuild": "32",
-  "publishedAt": "2026-08-01T08:27:07Z",
+  "latestVersion": "0.9.8",
+  "latestBuild": "33",
+  "publishedAt": "2026-08-02T17:13:54Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.7/DingDong-0.9.7-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.8/DingDong-0.9.8-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.7/DingDong-0.9.7-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.8/DingDong-0.9.8-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.7/DingDong-0.9.7-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.8/DingDong-0.9.8-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds a bilingual macOS Accessibility helper with a draggable current-app card and clear stale-entry recovery guidance.",
-    "After real Accessibility authorization succeeds, reveals Clipboard first and then plays a one-shot split-and-particle completion animation.",
-    "Breaks down local storage by data type and can selectively clear clipboard, Agent activity, and Adapter revision history while protecting resources and configuration.",
-    "Removes default circular Material hover halos and shakes the macOS menu-bar icon when a new clipboard copy is detected."
+    "Groups repeated reminders with the same conversation ID, plays each notification sound, and shows a ×N badge without increasing the recent-Agent count.",
+    "Adds a persisted setting to disable repeated-session grouping and keep each reminder as a separate item.",
+    "Truncates long Agent source and message text in Dynamic and Recent Agents views without overflowing the panel.",
+    "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

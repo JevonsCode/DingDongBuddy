@@ -140,8 +140,17 @@ final class AppDependencies {
         );
         await onNotification?.call(resolvedRequest);
       }()),
-      onSuppressedDing: (request) =>
-          unawaited(onSuppressedNotification?.call(request)),
+      onSuppressedDing: (request) => unawaited(() async {
+        final AppSettings settings = await settingsRepository.load();
+        final resolvedRequest = request.sound == DingSound.defaultSound
+            ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
+            : request;
+        await notificationGateway.trigger(
+          resolvedRequest,
+          customSoundPath: settings.customSoundPath,
+        );
+        await onSuppressedNotification?.call(resolvedRequest);
+      }()),
       clipboardCaptureService: clipboardCaptureService,
       clipboardGateway: clipboardGateway,
       clipboardStore: clipboardStore,

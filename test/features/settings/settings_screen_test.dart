@@ -1,3 +1,4 @@
+import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
@@ -161,6 +162,20 @@ void main() {
       expect(
         find.byKey(const Key('settings-agent-activity-remember')),
         findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-agent-activity-group-sessions')),
+        findsOneWidget,
+      );
+      final CompactSwitchListTile groupingSwitch = tester.widget(
+        find.byKey(const Key('settings-agent-activity-group-sessions')),
+      );
+      expect(groupingSwitch.value, isTrue);
+      groupingSwitch.onChanged!(false);
+      await tester.pumpAndSettle();
+      expect(
+        backend.values['dingdong.agentActivity.groupRepeatedSessions'],
+        isFalse,
       );
       expect(
         find.byKey(const Key('settings-agent-activity-items')),

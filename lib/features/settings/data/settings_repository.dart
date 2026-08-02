@@ -41,6 +41,7 @@ final class SettingsRepository {
       _backend.read(_globalHotKeyKey),
       _backend.read(_allowAgentClipboardContentKey),
       _backend.read(_workspaceShortcutsKey),
+      _backend.read(_groupRepeatedAgentSessionsKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -74,6 +75,9 @@ final class SettingsRepository {
         values[20],
         platform: defaultTargetPlatform,
       ),
+      groupRepeatedAgentSessions: values[21] is bool
+          ? values[21]! as bool
+          : true,
     ).sanitized();
   }
 
@@ -119,6 +123,10 @@ final class SettingsRepository {
         _workspaceShortcutsKey,
         settings.workspaceShortcuts.encode(),
       ),
+      _backend.write(
+        _groupRepeatedAgentSessionsKey,
+        settings.groupRepeatedAgentSessions,
+      ),
     ]);
   }
 }
@@ -148,3 +156,5 @@ const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';
 const String _trayNotificationColorKey = 'dingdong.macos.trayNotificationColor';
 const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';
 const String _workspaceShortcutsKey = 'dingdong.shortcut.workspaces';
+const String _groupRepeatedAgentSessionsKey =
+    'dingdong.agentActivity.groupRepeatedSessions';

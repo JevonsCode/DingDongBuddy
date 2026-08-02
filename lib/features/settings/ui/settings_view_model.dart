@@ -346,6 +346,12 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setGroupRepeatedAgentSessions(bool value) async {
+    _settings = _settings.copyWith(groupRepeatedAgentSessions: value);
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setAgentActivityPolicy({
     required int maxItems,
     required int countHours,

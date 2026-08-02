@@ -594,6 +594,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: <Widget>[
                               CompactSwitchListTile(
                                 key: const Key(
+                                  'settings-agent-activity-group-sessions',
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  context.localized(
+                                    'Group repeated sessions',
+                                    '合并同会话提醒',
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  context.localized(
+                                    'Keep the same conversation ID in one item, show ×N, and do not increase the recent count.',
+                                    '相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近 Agent 数量。',
+                                  ),
+                                ),
+                                value: settings.groupRepeatedAgentSessions,
+                                onChanged: widget
+                                    .viewModel
+                                    .setGroupRepeatedAgentSessions,
+                              ),
+                              CompactSwitchListTile(
+                                key: const Key(
                                   'settings-agent-activity-remember',
                                 ),
                                 contentPadding: EdgeInsets.zero,

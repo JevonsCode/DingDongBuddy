@@ -585,12 +585,18 @@ void main() {
     await model.load();
 
     await model.setRememberAgentActivity(false);
+    await model.setGroupRepeatedAgentSessions(false);
     await model.setAgentActivityPolicy(maxItems: 350, countHours: 72);
 
     expect(model.settings.rememberAgentActivity, isFalse);
+    expect(model.settings.groupRepeatedAgentSessions, isFalse);
     expect(model.settings.agentActivityMaxItems, 350);
     expect(model.settings.agentActivityCountHours, 72);
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
+    expect(
+      backend.values['dingdong.agentActivity.groupRepeatedSessions'],
+      isFalse,
+    );
     expect(backend.values['dingdong.agentActivity.maxItems'], 350);
     expect(backend.values['dingdong.agentActivity.countHours'], 72);
   });

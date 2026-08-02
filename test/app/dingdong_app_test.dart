@@ -34,14 +34,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.9.7', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 0.9.8', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.9.7')), findsOneWidget);
-    expect(find.text('v0.9.7'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-0.9.8')), findsOneWidget);
+    expect(find.text('v0.9.8'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -202,6 +202,52 @@ void main() {
     await tester.pump();
 
     expect(launcher.opened?.conversationId, 'thread-1');
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+  });
+
+  testWidgets('Dynamic shows repeat count and contains long activity text', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 540);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'repeated-long-agent',
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'thread-long',
+    );
+    activityController.record(
+      source:
+          'Codex source with a deliberately long name that must remain inside the dynamic card',
+      message:
+          'A deliberately long completion message that should be truncated in the compact Dynamic card instead of pushing the time or open action out of bounds.',
+      conversationTarget: target,
+    );
+    activityController.record(
+      source:
+          'Codex source with a deliberately long name that must remain inside the dynamic card',
+      message:
+          'A second long completion message for the same conversation, represented by the same item.',
+      conversationTarget: target,
+    );
+
+    await tester.pumpWidget(
+      DingDongApp(activityController: activityController),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('activity-repeat-count-repeated-long-agent')),
+      findsOneWidget,
+    );
+    expect(find.text('×2'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
     await tester.pumpWidget(const SizedBox.shrink());
     activityController.dispose();
   });

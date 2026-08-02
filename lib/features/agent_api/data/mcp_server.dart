@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.9.7',
+              'version': '0.9.8',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '

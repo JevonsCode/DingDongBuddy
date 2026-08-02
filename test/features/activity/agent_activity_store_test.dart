@@ -25,6 +25,7 @@ void main() {
             message: 'Finished the task',
             completedAt: completedAt,
             unseen: true,
+            repeatCount: 2,
             conversationTarget: const AgentConversationTarget(
               client: AgentClient.codex,
               conversationId: 'thread-1',
@@ -42,11 +43,39 @@ void main() {
     final AgentActivityHistory restored = store.load();
     expect(restored.activities.single.message, 'Finished the task');
     expect(restored.activities.single.unseen, isTrue);
+    expect(restored.activities.single.repeatCount, 2);
     expect(
       restored.activities.single.conversationTarget?.conversationId,
       'thread-1',
     );
     expect(restored.completionTimes, hasLength(2));
+  });
+
+  test('file store defaults repeat count for older activity records', () {
+    final Directory temporary = Directory.systemTemp.createTempSync(
+      'dingdong-agent-activity-legacy-',
+    );
+    addTearDown(() => temporary.deleteSync(recursive: true));
+    final File file = File('${temporary.path}/agent-activity.json')
+      ..writeAsStringSync('''
+{
+  "version": 1,
+  "activities": [
+    {
+      "id": "activity-1",
+      "source": "Codex",
+      "message": "Finished",
+      "completedAt": "2026-07-21T10:00:00.000Z",
+      "unseen": false
+    }
+  ],
+  "completionTimes": ["2026-07-21T10:00:00.000Z"]
+}
+''');
+
+    final AgentActivityHistory restored = FileAgentActivityStore(file).load();
+
+    expect(restored.activities.single.repeatCount, 1);
   });
 
   test('file store treats malformed history as empty', () {

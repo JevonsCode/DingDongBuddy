@@ -11,6 +11,7 @@ void main() {
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.allowAgentClipboardContent, isFalse);
+    expect(settings.groupRepeatedAgentSessions, isTrue);
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
     expect(settings.hideDockIcon, isFalse);
@@ -47,6 +48,7 @@ void main() {
           'dingdong.onboarding.mcpAccessSeen': true,
           'dingdong.api.port': 70000,
           'dingdong.agentActivity.remember': false,
+          'dingdong.agentActivity.groupRepeatedSessions': false,
           'dingdong.agentActivity.maxItems': 9000,
           'dingdong.agentActivity.countHours': 0,
           'dingdong.macos.hideDockIcon': true,
@@ -80,6 +82,7 @@ void main() {
     expect(settings.mcpAccessSeen, isTrue);
     expect(settings.apiPort, 2333);
     expect(settings.rememberAgentActivity, isFalse);
+    expect(settings.groupRepeatedAgentSessions, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
     expect(settings.agentActivityCountHours, 1);
     expect(settings.hideDockIcon, isTrue);
@@ -112,6 +115,7 @@ void main() {
       clipboardMaxAgeDays: 30,
       allowAgentClipboardContent: true,
       rememberAgentActivity: false,
+      groupRepeatedAgentSessions: false,
       agentActivityMaxItems: 320,
       agentActivityCountHours: 48,
       hideDockIcon: true,
@@ -141,6 +145,10 @@ void main() {
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 30);
     expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
+    expect(
+      backend.values['dingdong.agentActivity.groupRepeatedSessions'],
+      isFalse,
+    );
     expect(backend.values['dingdong.agentActivity.maxItems'], 320);
     expect(backend.values['dingdong.agentActivity.countHours'], 48);
     expect(backend.values['dingdong.macos.hideDockIcon'], isTrue);

@@ -1,4 +1,4 @@
-# DingDong 0.9.7 Manual Regression Checklist
+# DingDong 0.9.8 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -156,6 +156,14 @@ and macOS golden images; the items below exercise real operating-system state.
 ## Recent Agents
 
 - Dynamic shows at most six recent Agent items.
+- Repeated notifications with the same conversation ID are grouped into one
+  item by default, play the notification sound, show a `×N` repeat badge, and
+  do not increase the recent-Agent count.
+- **Settings → Recent Agents → Group repeated sessions** can disable grouping;
+  when disabled, repeated notifications appear as separate items and increase
+  the count. The choice persists after restart.
+- Long Agent source and message text uses ellipsis without overflowing the
+  Dynamic panel or Recent Agents manager.
 - When more than six items exist, the `More` button opens Resource Manager directly at Recent Agents.
 - A resumable Recent Agent item opens its exact conversation from both Dynamic and Resource Manager.
 - Codex thread links, Claude Code, Gemini, and Kiro resume commands reopen the expected session.
@@ -238,8 +246,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `0.9.7` build `32` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.7.32` and product name `DingDong`.
+- The macOS release app metadata is version `0.9.8` build `33` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.8.33` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

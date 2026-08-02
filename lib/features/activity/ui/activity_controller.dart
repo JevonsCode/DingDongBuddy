@@ -18,12 +18,16 @@ final class ActivityController extends ChangeNotifier {
     DateTime Function()? now,
     int maxItems = defaultAgentActivityMaxItems,
     int countWindowHours = defaultAgentActivityCountHours,
+    bool groupRepeatedAgentSessions = true,
     this._rememberAcrossRestarts = true,
   }) : _store = store ?? InMemoryAgentActivityStore(),
        _idGenerator = idGenerator ?? _generateId,
        _now = now ?? DateTime.now,
        _maxItems = _sanitizeMaxItems(maxItems),
-       _countWindowHours = _sanitizeCountHours(countWindowHours);
+       _countWindowHours = _sanitizeCountHours(countWindowHours),
+       _groupRepeatedAgentSessions = true {
+    _groupRepeatedAgentSessions = groupRepeatedAgentSessions;
+  }
 
   final AgentActivityStore _store;
   final String Function() _idGenerator;
@@ -33,6 +37,7 @@ final class ActivityController extends ChangeNotifier {
   int _revealRevision = 0;
   int _maxItems;
   int _countWindowHours;
+  bool _groupRepeatedAgentSessions;
   bool _rememberAcrossRestarts;
   bool _loaded = false;
   Timer? _recentCountTimer;
@@ -56,6 +61,7 @@ final class ActivityController extends ChangeNotifier {
   int get maxItems => _maxItems;
   int get countWindowHours => _countWindowHours;
   bool get rememberAcrossRestarts => _rememberAcrossRestarts;
+  bool get groupRepeatedAgentSessions => _groupRepeatedAgentSessions;
 
   /// Loads the previous session. The primary app passes [resetPreviousSession]
   /// so a user who disabled remembering starts clean after relaunch.
@@ -87,19 +93,24 @@ final class ActivityController extends ChangeNotifier {
     required bool rememberAcrossRestarts,
     required int maxItems,
     required int countWindowHours,
+    bool? groupRepeatedAgentSessions,
   }) {
     final int sanitizedMaxItems = _sanitizeMaxItems(maxItems);
     final int sanitizedCountHours = _sanitizeCountHours(countWindowHours);
+    final bool resolvedGroupRepeatedAgentSessions =
+        groupRepeatedAgentSessions ?? _groupRepeatedAgentSessions;
     final bool changed =
         _rememberAcrossRestarts != rememberAcrossRestarts ||
         _maxItems != sanitizedMaxItems ||
-        _countWindowHours != sanitizedCountHours;
+        _countWindowHours != sanitizedCountHours ||
+        _groupRepeatedAgentSessions != resolvedGroupRepeatedAgentSessions;
     if (!changed) {
       return;
     }
     _rememberAcrossRestarts = rememberAcrossRestarts;
     _maxItems = sanitizedMaxItems;
     _countWindowHours = sanitizedCountHours;
+    _groupRepeatedAgentSessions = resolvedGroupRepeatedAgentSessions;
     _trim();
     if (_loaded) {
       _persist();
@@ -114,10 +125,43 @@ final class ActivityController extends ChangeNotifier {
     AgentConversationTarget? conversationTarget,
   }) {
     final DateTime completedAt = _now().toUtc();
+    final String normalizedSource = source.trim().isEmpty
+        ? 'Agent'
+        : source.trim();
+    final String normalizedMessage = message.trim().isEmpty
+        ? 'Task complete'
+        : message.trim();
+    final int repeatedIndex = _groupRepeatedAgentSessions
+        ? _conversationIndex(conversationTarget)
+        : -1;
+    if (repeatedIndex >= 0) {
+      final AgentActivity previous = _activities[repeatedIndex];
+      final AgentActivity repeated = previous.repeated(
+        source: normalizedSource,
+        message: normalizedMessage,
+        completedAt: completedAt,
+        conversationTarget: conversationTarget,
+      );
+      _activities = <AgentActivity>[
+        repeated,
+        ..._activities
+            .asMap()
+            .entries
+            .where(
+              (MapEntry<int, AgentActivity> entry) =>
+                  entry.key != repeatedIndex,
+            )
+            .map((MapEntry<int, AgentActivity> entry) => entry.value),
+      ];
+      _loaded = true;
+      _persist();
+      notifyListeners();
+      return;
+    }
     final AgentActivity activity = AgentActivity(
       id: _idGenerator(),
-      source: source.trim().isEmpty ? 'Agent' : source.trim(),
-      message: message.trim().isEmpty ? 'Task complete' : message.trim(),
+      source: normalizedSource,
+      message: normalizedMessage,
       completedAt: completedAt,
       unseen: true,
       conversationTarget: conversationTarget,
@@ -128,6 +172,67 @@ final class ActivityController extends ChangeNotifier {
     _loaded = true;
     _persist();
     _scheduleRecentCountRefresh();
+    notifyListeners();
+  }
+
+  /// Records a completion hook that was deduplicated at the transport layer.
+  ///
+  /// When grouping is enabled, it updates the matching conversation item
+  /// without adding a new recent completion timestamp. If the primary
+  /// notification did not have a conversation target yet, the source-only
+  /// item is enriched here. When grouping is disabled, it records an
+  /// independent item instead.
+  void recordRepeat({
+    required String source,
+    required String message,
+    AgentConversationTarget? target,
+  }) {
+    final String normalizedSource = source.trim().isEmpty
+        ? 'Agent'
+        : source.trim();
+    final String normalizedMessage = message.trim().isEmpty
+        ? 'Task complete'
+        : message.trim();
+    if (!_groupRepeatedAgentSessions) {
+      record(
+        source: normalizedSource,
+        message: normalizedMessage,
+        conversationTarget: target,
+      );
+      return;
+    }
+    if (target == null) {
+      return;
+    }
+    final DateTime completedAt = _now().toUtc();
+    int index = _conversationIndex(target);
+    if (index < 0) {
+      final String normalizedSourceKey = normalizedSource.toLowerCase();
+      index = _activities.indexWhere(
+        (AgentActivity item) =>
+            item.conversationTarget == null &&
+            item.source.trim().toLowerCase() == normalizedSourceKey,
+      );
+    }
+    if (index < 0) {
+      return;
+    }
+    final AgentActivity repeated = _activities[index].repeated(
+      source: normalizedSource,
+      message: normalizedMessage,
+      completedAt: completedAt,
+      conversationTarget: target,
+    );
+    _activities = <AgentActivity>[
+      repeated,
+      ..._activities
+          .asMap()
+          .entries
+          .where((MapEntry<int, AgentActivity> entry) => entry.key != index)
+          .map((MapEntry<int, AgentActivity> entry) => entry.value),
+    ];
+    _loaded = true;
+    _persist();
     notifyListeners();
   }
 
@@ -150,6 +255,31 @@ final class ActivityController extends ChangeNotifier {
     _activities = updated;
     _persist();
     notifyListeners();
+  }
+
+  int _conversationIndex(AgentConversationTarget? target) {
+    final String? conversationId = target?.conversationId;
+    if (conversationId == null) {
+      return -1;
+    }
+    return _activities.indexWhere(
+      (AgentActivity item) =>
+          _sameConversation(item.conversationTarget, target),
+    );
+  }
+
+  bool _sameConversation(
+    AgentConversationTarget? left,
+    AgentConversationTarget? right,
+  ) {
+    final String? leftId = left?.conversationId;
+    final String? rightId = right?.conversationId;
+    if (leftId == null || rightId == null || leftId != rightId) {
+      return false;
+    }
+    return left!.client == AgentClient.unknown ||
+        right!.client == AgentClient.unknown ||
+        left.client == right.client;
   }
 
   void requestReveal() {
