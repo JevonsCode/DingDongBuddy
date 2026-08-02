@@ -205,6 +205,9 @@ extension _AgentRouterResourceHandlers on AgentRouter {
             query['repository'] ??
             query['projectUrl'] ??
             '',
+        source: (query['source'] ?? '').trim().isEmpty
+            ? 'Agent'
+            : query['source']!.trim(),
       );
       if (!resource.enabled ||
           !resourceMatchesScope(resource, context, triggerGroupsById)) {

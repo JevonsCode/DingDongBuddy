@@ -8,8 +8,10 @@ import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/agent_skill_catalog.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 
@@ -974,6 +976,140 @@ mcp:
       (kiroServer['headers'] as Map<String, Object?>)['Authorization'],
       r'Bearer ${EXAMPLE_TOKEN}',
     );
+  });
+
+  test('source-scoped MCPs sync only to matching Agent targets', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-source-mcp-sync-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File codex = File('${temp.path}/codex.json');
+    final File claude = File('${temp.path}/claude.json');
+    final File cursor = File('${temp.path}/cursor.json');
+    final DateTime timestamp = DateTime.utc(2026, 7, 17);
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore([
+      TriggerGroup(
+        id: 'codex',
+        name: 'Codex',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.source,
+            operator: TriggerRuleOperator.equals,
+            value: 'Codex',
+          ),
+        ],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      ),
+      TriggerGroup(
+        id: 'cursor',
+        name: 'Cursor',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.source,
+            operator: TriggerRuleOperator.equals,
+            value: 'Cursor',
+          ),
+        ],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      ),
+    ]);
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: const <Directory>[],
+      mcpTargets: <AgentMcpTarget>[
+        AgentMcpTarget(
+          codex,
+          AgentMcpConfigKind.mcpServersJson,
+          clientName: 'Codex',
+        ),
+        AgentMcpTarget(
+          claude,
+          AgentMcpConfigKind.mcpServersJson,
+          clientName: 'Claude Code',
+        ),
+        AgentMcpTarget(
+          cursor,
+          AgentMcpConfigKind.mcpServersJson,
+          clientName: 'Cursor',
+        ),
+      ],
+      triggerGroupStore: groups,
+      managedStateFile: File('${temp.path}/state.json'),
+    );
+    final String content =
+        '{"type":"streamable-http","url":"https://example.com/mcp"}';
+
+    await synchronizer.sync(<Resource>[
+      _resource(
+        id: 'codex-mcp',
+        type: ResourceType.mcp,
+        content: content,
+        triggerGroupIds: const <String>['codex'],
+      ),
+      _resource(
+        id: 'cursor-mcp',
+        type: ResourceType.mcp,
+        content: content,
+        triggerGroupIds: const <String>['cursor'],
+      ),
+    ]);
+
+    expect(_onlyServerCount(codex), 1);
+    expect(claude.existsSync(), isFalse);
+    expect(_onlyServerCount(cursor), 1);
+  });
+
+  test('trigger-group changes resynchronize source-scoped MCPs', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-source-mcp-group-sync-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File codex = File('${temp.path}/codex.json');
+    final DateTime timestamp = DateTime.utc(2026, 7, 17);
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: const <Directory>[],
+      mcpTargets: <AgentMcpTarget>[
+        AgentMcpTarget(
+          codex,
+          AgentMcpConfigKind.mcpServersJson,
+          clientName: 'Codex',
+        ),
+      ],
+      triggerGroupStore: groups,
+      managedStateFile: File('${temp.path}/state.json'),
+    );
+    final ResourceStore resources = InMemoryResourceStore(<Resource>[
+      _resource(
+        id: 'codex-mcp',
+        type: ResourceType.mcp,
+        content: '{"type":"streamable-http","url":"https://example.com/mcp"}',
+        triggerGroupIds: const <String>['codex'],
+      ),
+    ]);
+    final SynchronizedTriggerGroupStore synchronizedGroups =
+        SynchronizedTriggerGroupStore(groups, resources, synchronizer);
+
+    await synchronizedGroups.save(<TriggerGroup>[
+      TriggerGroup(
+        id: 'codex',
+        name: 'Codex',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.source,
+            operator: TriggerRuleOperator.equals,
+            value: 'Codex',
+          ),
+        ],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      ),
+    ]);
+
+    expect(_onlyServerCount(codex), 1);
   });
 }
 

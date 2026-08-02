@@ -29,6 +29,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
   final McpHttpTransport _transport;
   final String Function() _currentDirectory;
   final Future<String?> Function(String directory) _repositoryUrlResolver;
+  String? _lastBridgeSource;
 
   @override
   Future<Map<String, Object?>> execute(
@@ -49,18 +50,19 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
           'mode',
           'includeClipboard',
           'includeSensitiveClipboard',
+          'source',
         ],
         extraQuery: const <String, String>{'trackUsage': 'true'},
       ),
       'dingdong_load_skill' => _contextualGet(
         path: '/agent/skills/load',
         arguments: arguments,
-        keys: const <String>['id', 'name'],
+        keys: const <String>['id', 'name', 'source'],
       ),
       'dingdong_read_skill_file' => _contextualGet(
         path: '/agent/skills/file',
         arguments: arguments,
-        keys: const <String>['id', 'name', 'path'],
+        keys: const <String>['id', 'name', 'path', 'source'],
       ),
       'dingdong_recommend_mcp' => _transport.request(
         method: 'GET',
@@ -152,11 +154,29 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
         body['repositoryUrl'] = repositoryUrl.trim();
       }
     }
-    return _transport.request(
-      method: 'POST',
-      path: '/agent/bridge',
-      body: body,
-    );
+    final Map<String, Object?> response;
+    try {
+      response = await _transport.request(
+        method: 'POST',
+        path: '/agent/bridge',
+        body: body,
+      );
+    } on Object {
+      _lastBridgeSource = null;
+      rethrow;
+    }
+    if (response['status'] != 'ok') {
+      _lastBridgeSource = null;
+      return response;
+    }
+    final String? source = _responseSource(response);
+    if (source != null) {
+      _lastBridgeSource = source;
+    } else {
+      final String requestedSource = (body['source'] as String? ?? '').trim();
+      _lastBridgeSource = requestedSource.isEmpty ? 'Agent' : requestedSource;
+    }
+    return response;
   }
 
   Future<Map<String, Object?>> _contextualGet({
@@ -169,6 +189,13 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       ..._stringQuery(arguments, keys),
       ...extraQuery,
     };
+    final String explicitSource = (arguments['source'] as String? ?? '').trim();
+    if (explicitSource.isNotEmpty) {
+      query['source'] = explicitSource;
+    } else if (_lastBridgeSource case final String source
+        when source.isNotEmpty) {
+      query['source'] = source;
+    }
     final String directory =
         (arguments['workspacePath'] as String? ?? '').trim().isEmpty
         ? _currentDirectory()
@@ -186,6 +213,21 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     }
     return _transport.request(method: 'GET', path: path, query: query);
   }
+}
+
+String? _responseSource(Map<String, Object?> response) {
+  final String topLevel = (response['source'] as String? ?? '').trim();
+  if (topLevel.isNotEmpty) {
+    return topLevel;
+  }
+  final Object? context = response['context'];
+  if (context is Map) {
+    final String nested = (context['source'] as String? ?? '').trim();
+    if (nested.isNotEmpty) {
+      return nested;
+    }
+  }
+  return null;
 }
 
 String _defaultCurrentDirectory() => Directory.current.path;

@@ -36,7 +36,9 @@ final class AgentBridge {
           ? <String, Object?>{}
           : jsonDecode(body) as Map<String, Object?>;
       final String task = (request['task'] as String? ?? '').trim();
-      final String source = (request['source'] as String? ?? 'Agent').trim();
+      final String requestedSource = (request['source'] as String? ?? 'Agent')
+          .trim();
+      final String source = requestedSource.isEmpty ? 'Agent' : requestedSource;
       final String expand = request['expand'] as String? ?? 'prompts';
       final TriggerContext context = TriggerContext(
         projectPath: _firstString(request, const <String>[
@@ -49,6 +51,7 @@ final class AgentBridge {
           'repository',
           'projectUrl',
         ]),
+        source: source,
       );
       final Set<String> terms = task
           .toLowerCase()
@@ -150,10 +153,11 @@ final class AgentBridge {
         json: <String, Object?>{
           'status': 'ok',
           'task': task,
-          'source': source.isEmpty ? 'Agent' : source,
+          'source': source,
           'context': <String, Object?>{
             'workspacePath': context.projectPath,
             'repositoryUrl': context.repositoryUrl,
+            'source': context.source,
             'matchedTriggerGroupIds': matchedTriggerGroupIds.toList(),
           },
           'active': <String, Object?>{
@@ -543,19 +547,22 @@ Map<String, Object?> _skillCandidateJson(_ResolvedSkill skill) =>
       'description': skill.configuration.description,
     };
 
-TriggerContext _contextFromStrings(Map<String, String> values) =>
-    TriggerContext(
-      projectPath: _firstNonEmptyString(values, const <String>[
-        'workspacePath',
-        'projectPath',
-        'cwd',
-      ]),
-      repositoryUrl: _firstNonEmptyString(values, const <String>[
-        'repositoryUrl',
-        'repository',
-        'projectUrl',
-      ]),
-    );
+TriggerContext _contextFromStrings(Map<String, String> values) {
+  final String source = _firstNonEmptyString(values, const <String>['source']);
+  return TriggerContext(
+    projectPath: _firstNonEmptyString(values, const <String>[
+      'workspacePath',
+      'projectPath',
+      'cwd',
+    ]),
+    repositoryUrl: _firstNonEmptyString(values, const <String>[
+      'repositoryUrl',
+      'repository',
+      'projectUrl',
+    ]),
+    source: source.isEmpty ? 'Agent' : source,
+  );
+}
 
 String _firstNonEmptyString(Map<String, String> values, List<String> keys) {
   for (final String key in keys) {
@@ -570,6 +577,7 @@ String _firstNonEmptyString(Map<String, String> values, List<String> keys) {
 Map<String, Object?> _contextJson(TriggerContext context) => <String, Object?>{
   'workspacePath': context.projectPath,
   'repositoryUrl': context.repositoryUrl,
+  'source': context.source,
 };
 
 List<String>? _safeSkillFileSegments(String value) {

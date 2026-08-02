@@ -84,6 +84,9 @@ final class AppDependencies {
     final SkillPackageInstaller skillPackageInstaller =
         GitHubSkillPackageInstaller(paths.skillPackagesDirectory);
     final IssueCenterController issueCenterController = IssueCenterController();
+    final TriggerGroupStore baseTriggerGroupStore = TriggerGroupRepository(
+      TriggerGroupFileService(paths.triggerGroupsFile),
+    );
     final AgentAdapterRepository agentAdapterRepository =
         AgentAdapterRepository(
           userDirectory: paths.agentAdaptersDirectory,
@@ -98,6 +101,7 @@ final class AppDependencies {
           paths.skillPackagesDirectory,
           loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
           skillPackageInstaller: skillPackageInstaller,
+          triggerGroupStore: baseTriggerGroupStore,
         );
     issueCenterController.setInspector(
       () async => resourceSynchronizer.inspect(await baseResourceStore.load()),
@@ -108,8 +112,11 @@ final class AppDependencies {
       issueCenter: issueCenterController,
       onChanged: onResourceLibraryChanged,
     );
-    final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
-      TriggerGroupFileService(paths.triggerGroupsFile),
+    final TriggerGroupStore triggerGroupStore = SynchronizedTriggerGroupStore(
+      baseTriggerGroupStore,
+      resourceStore,
+      resourceSynchronizer,
+      issueCenter: issueCenterController,
     );
     final PreferencesBackend preferences =
         preferencesBackend ?? SharedPreferencesBackend();

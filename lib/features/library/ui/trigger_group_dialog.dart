@@ -100,8 +100,8 @@ final class _TriggerGroupPickerDialogState
                 const SizedBox(height: 5),
                 Text(
                   context.localized(
-                    'Resources are available only when at least one selected group matches the current project.',
-                    '只有当前项目命中至少一个所选触发组时，资源才会生效。',
+                    'Resources are available only when at least one selected group matches the current project or Agent source.',
+                    '只有当前项目或 Agent 来源命中至少一个所选触发组时，资源才会生效。',
                   ),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
@@ -681,6 +681,10 @@ final class _TriggerRuleRow extends StatelessWidget {
                   value: TriggerRuleField.repositoryUrl,
                   label: context.localized('Repository address', '仓库地址'),
                 ),
+                DesktopSelectItem<TriggerRuleField>(
+                  value: TriggerRuleField.source,
+                  label: context.localized('Agent source', 'Agent 来源'),
+                ),
               ],
               onChanged: (TriggerRuleField value) {
                 rule.field = value;
@@ -717,9 +721,11 @@ final class _TriggerRuleRow extends StatelessWidget {
               onChanged: (_) => onChanged(),
               style: const TextStyle(fontFamily: 'monospace'),
               decoration: InputDecoration(
-                hintText: rule.field == TriggerRuleField.projectPath
-                    ? '/workspace/dingdong'
-                    : 'github.com/team/dingdong',
+                hintText: switch (rule.field) {
+                  TriggerRuleField.projectPath => '/workspace/dingdong',
+                  TriggerRuleField.repositoryUrl => 'github.com/team/dingdong',
+                  TriggerRuleField.source => 'Codex, Claude Code, Cursor',
+                },
               ),
             ),
           ),
@@ -761,6 +767,10 @@ String _ruleSummary(BuildContext context, TriggerGroup group) {
           TriggerRuleField.repositoryUrl => context.localized(
             'Repository address',
             '仓库地址',
+          ),
+          TriggerRuleField.source => context.localized(
+            'Agent source',
+            'Agent 来源',
           ),
         };
         final String operator = switch (rule.operator) {

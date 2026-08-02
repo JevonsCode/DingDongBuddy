@@ -2,27 +2,34 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
-/// Project context passed by an Agent when it asks DingDong for resources.
+/// Context passed by an Agent when it asks DingDong for resources.
 final class TriggerContext {
-  const TriggerContext({this.projectPath = '', this.repositoryUrl = ''});
+  const TriggerContext({
+    this.projectPath = '',
+    this.repositoryUrl = '',
+    this.source = '',
+  });
 
   final String projectPath;
   final String repositoryUrl;
+  final String source;
 }
 
 enum TriggerRuleField {
   projectPath,
-  repositoryUrl;
+  repositoryUrl,
+  source;
 
   String valueFrom(TriggerContext context) => switch (this) {
     TriggerRuleField.projectPath => context.projectPath,
     TriggerRuleField.repositoryUrl => context.repositoryUrl,
+    TriggerRuleField.source => context.source,
   };
 }
 
 enum TriggerRuleOperator { equals, contains }
 
-/// One project-aware condition inside a reusable trigger group.
+/// One context-aware condition inside a reusable trigger group.
 final class TriggerRule {
   TriggerRule({
     required this.field,
@@ -85,7 +92,7 @@ final class TriggerRule {
   int get hashCode => Object.hash(field, operator, value);
 }
 
-/// A named collection of OR-ed project conditions.
+/// A named collection of OR-ed Agent-context conditions.
 final class TriggerGroup {
   TriggerGroup({
     required this.id,
@@ -162,7 +169,8 @@ String _normalized(
   required bool resolveExistingProjectPath,
 }) {
   final String trimmed = value.trim();
-  if (field == TriggerRuleField.repositoryUrl) {
+  if (field == TriggerRuleField.repositoryUrl ||
+      field == TriggerRuleField.source) {
     return trimmed.toLowerCase();
   }
   String normalized = trimmed.replaceAll(r'\', '/');

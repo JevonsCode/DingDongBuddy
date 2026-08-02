@@ -106,7 +106,13 @@ void main() {
       ]);
       expect(
         (loadSchema['properties'] as Map<String, Object?>).keys,
-        containsAll(<String>['id', 'name', 'workspacePath', 'repositoryUrl']),
+        containsAll(<String>[
+          'id',
+          'name',
+          'workspacePath',
+          'repositoryUrl',
+          'source',
+        ]),
       );
       expect(
         (toolNamed('dingdong_read_skill_file')['inputSchema']
@@ -118,7 +124,7 @@ void main() {
                     as Map<String, Object?>)['properties']
                 as Map<String, Object?>)
             .keys,
-        containsAll(<String>['workspacePath', 'repositoryUrl']),
+        containsAll(<String>['workspacePath', 'repositoryUrl', 'source']),
       );
       final Map<String, Object?> bindProperties =
           (toolNamed('dingdong_bind_resource_scope')['inputSchema']

@@ -1,32 +1,32 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.9.8",
-  "latestBuild": "33",
-  "publishedAt": "2026-08-02T17:13:54Z",
+  "latestVersion": "0.9.9",
+  "latestBuild": "34",
+  "publishedAt": "2026-08-02T18:30:09Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.8/DingDong-0.9.8-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.9/DingDong-0.9.9-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.8/DingDong-0.9.8-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.9/DingDong-0.9.9-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.8/DingDong-0.9.8-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.9/DingDong-0.9.9-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Groups repeated reminders with the same conversation ID, plays each notification sound, and shows a ×N badge without increasing the recent-Agent count.",
-    "Adds a persisted setting to disable repeated-session grouping and keep each reminder as a separate item.",
-    "Truncates long Agent source and message text in Dynamic and Recent Agents views without overflowing the panel.",
+    "Adds Agent-source trigger rules for Codex, Claude Code, Cursor, and other clients.",
+    "Filters Prompt and Skill delivery, including full Skill loads, by the current Agent source.",
+    "Writes source-scoped MCP servers only to matching native client configurations while preserving global MCP behavior when no source scope is set.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

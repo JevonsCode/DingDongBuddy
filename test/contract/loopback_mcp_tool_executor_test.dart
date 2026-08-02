@@ -63,6 +63,51 @@ void main() {
     );
   });
 
+  test('bridge source is reused by subsequent Skill reads', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    transport.response = <String, Object?>{'status': 'ok', 'source': 'Codex'};
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async => null,
+    );
+
+    await executor.execute('dingdong_bridge', <String, Object?>{
+      'task': 'Review changes',
+      'source': 'Codex',
+    });
+    await executor.execute('dingdong_load_skill', <String, Object?>{
+      'id': 'reviewer-id',
+    });
+
+    expect(transport.query?['source'], 'Codex');
+  });
+
+  test('failed Bridge clears a previously remembered source', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async => null,
+    );
+
+    transport.response = <String, Object?>{'status': 'ok', 'source': 'Codex'};
+    await executor.execute('dingdong_bridge', <String, Object?>{
+      'task': 'Review changes',
+      'source': 'Codex',
+    });
+    transport.response = <String, Object?>{'status': 'error'};
+    await executor.execute('dingdong_bridge', <String, Object?>{
+      'task': 'Unavailable request',
+      'source': 'Cursor',
+    });
+    await executor.execute('dingdong_load_skill', <String, Object?>{
+      'id': 'reviewer-id',
+    });
+
+    expect(transport.query?.containsKey('source'), isFalse);
+  });
+
   test('full asset reads add current workspace context', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
@@ -75,6 +120,7 @@ void main() {
     await executor.execute('dingdong_get_asset', <String, Object?>{
       'id': 'reviewer-id',
       'mode': 'full',
+      'source': 'Codex',
     });
 
     expect(transport.method, 'GET');
@@ -82,6 +128,7 @@ void main() {
     expect(transport.query, <String, String>{
       'mode': 'full',
       'trackUsage': 'true',
+      'source': 'Codex',
       'workspacePath': '/workspace/dingdong',
       'repositoryUrl': 'https://github.com/example/dingdong.git',
     });
@@ -99,6 +146,7 @@ void main() {
     await executor.execute('dingdong_load_skill', <String, Object?>{
       'name': 'reviewer',
       'id': 'reviewer-id',
+      'source': 'Cursor',
     });
 
     expect(transport.method, 'GET');
@@ -106,6 +154,7 @@ void main() {
     expect(transport.query, <String, String>{
       'id': 'reviewer-id',
       'name': 'reviewer',
+      'source': 'Cursor',
       'workspacePath': '/workspace/dingdong',
       'repositoryUrl': 'https://github.com/example/dingdong.git',
     });
@@ -122,6 +171,7 @@ void main() {
     await executor.execute('dingdong_read_skill_file', <String, Object?>{
       'name': 'reviewer',
       'path': 'references/policy.md',
+      'source': 'Claude Code',
     });
 
     expect(transport.method, 'GET');
@@ -129,6 +179,7 @@ void main() {
     expect(transport.query, <String, String>{
       'name': 'reviewer',
       'path': 'references/policy.md',
+      'source': 'Claude Code',
       'workspacePath': '/workspace/dingdong',
     });
   });
@@ -198,11 +249,13 @@ void main() {
       'name': 'Checkout',
       'projectPath': '/work/checkout',
       'repositoryUrl': 'https://github.com/acme/checkout.git',
+      'source': 'Codex',
     });
 
     expect(transport.method, 'POST');
     expect(transport.path, '/library/trigger-groups/upsert');
     expect(transport.body?['projectPath'], '/work/checkout');
+    expect(transport.body?['source'], 'Codex');
   });
 
   test('resource scope binding keeps the resource id in the route', () async {
@@ -259,9 +312,7 @@ final class _InspectingInstallTransport implements McpHttpTransport {
 final class _RecordingMcpHttpTransport implements McpHttpTransport {
   _RecordingMcpHttpTransport();
 
-  static const Map<String, Object?> response = <String, Object?>{
-    'status': 'ok',
-  };
+  Map<String, Object?> response = <String, Object?>{'status': 'ok'};
   String? method;
   String? path;
   Map<String, String>? query;

@@ -627,10 +627,14 @@ Future<void> _runResourceManagerWindow(
     homeDirectory: homeDirectory,
     loadBuiltIns: loadBundledAgentAdapterDocuments,
   );
+  final TriggerGroupStore baseTriggerGroupStore = TriggerGroupRepository(
+    TriggerGroupFileService(paths.triggerGroupsFile),
+  );
   final AgentResourceSynchronizer resourceSynchronizer =
       await AgentResourceSynchronizer.currentUser(
         paths.skillPackagesDirectory,
         loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
+        triggerGroupStore: baseTriggerGroupStore,
       );
   issueCenterController.setInspector(
     () async => resourceSynchronizer.inspect(await baseResourceStore.load()),
@@ -665,8 +669,11 @@ Future<void> _runResourceManagerWindow(
     },
   );
   await agentAdapterController.load();
-  final TriggerGroupStore triggerGroupStore = TriggerGroupRepository(
-    TriggerGroupFileService(paths.triggerGroupsFile),
+  final TriggerGroupStore triggerGroupStore = SynchronizedTriggerGroupStore(
+    baseTriggerGroupStore,
+    resourceStore,
+    resourceSynchronizer,
+    issueCenter: issueCenterController,
   );
   final LibraryViewModel viewModel = createDesktopLibraryViewModel(
     resourceStore,

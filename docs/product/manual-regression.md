@@ -1,4 +1,4 @@
-# DingDong 0.9.8 Manual Regression Checklist
+# DingDong 0.9.9 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -82,7 +82,8 @@ and macOS golden images; the items below exercise real operating-system state.
   content read-only, retain their source URL, and support Open and Update.
 - Local Skills can be edited directly or imported from a local folder.
 - Trigger groups can be named, searched, assigned to multiple resources, and
-  limited by workspace path or repository-address rules.
+  limited by workspace path, repository-address, or Agent-source rules (for
+  example Codex, Claude Code, or Cursor).
 - A Skill with a trigger scope is visibly marked in the Resource Manager list,
   the popup resource library, and the popup Enabled list.
 - Search and type/pinned filters preserve the active editor selection.
@@ -246,8 +247,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `0.9.8` build `33` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.8.33` and product name `DingDong`.
+- The macOS release app metadata is version `0.9.9` build `34` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `0.9.9.34` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

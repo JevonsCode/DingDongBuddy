@@ -42,6 +42,31 @@ void main() {
     );
   });
 
+  test('source rules match Agent clients case-insensitively', () {
+    final TriggerGroup group = TriggerGroup(
+      id: 'codex-cursor',
+      name: 'Codex and Cursor',
+      rules: <TriggerRule>[
+        TriggerRule(
+          field: TriggerRuleField.source,
+          operator: TriggerRuleOperator.equals,
+          value: 'Codex',
+        ),
+        TriggerRule(
+          field: TriggerRuleField.source,
+          operator: TriggerRuleOperator.equals,
+          value: 'Cursor',
+        ),
+      ],
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    );
+
+    expect(group.matches(const TriggerContext(source: 'codex')), isTrue);
+    expect(group.matches(const TriggerContext(source: 'CURSOR')), isTrue);
+    expect(group.matches(const TriggerContext(source: 'Claude Code')), isFalse);
+  });
+
   test('trigger group JSON round-trips without losing rule order', () {
     final TriggerGroup original = TriggerGroup(
       id: 'frontend',

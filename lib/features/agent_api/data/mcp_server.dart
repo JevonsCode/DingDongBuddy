@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '0.9.8',
+              'version': '0.9.9',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
@@ -112,7 +112,11 @@ final class McpServer {
           'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative Skill catalog containing every valid, enabled, scope-matched Skill as id, name, and description only. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions.',
       properties: <String, Object?>{
         'task': _stringProperty(),
-        'source': _stringProperty(),
+        'source': _stringProperty(
+          description:
+              'Current Agent source, such as Codex, Claude Code, or Cursor. '
+              'Use the same source for subsequent scoped resource reads.',
+        ),
         'workspacePath': _stringProperty(
           description:
               'Current project directory. DingDong fills this automatically when omitted.',
@@ -147,7 +151,7 @@ final class McpServer {
       name: 'dingdong_get_asset',
       title: 'Get DingDong Asset',
       description:
-          'Fetch one DingDong resource by id. Summary mode removes full content. Full mode re-checks enabled state and project scope.',
+          'Fetch one DingDong resource by id. Summary mode removes full content. Full mode re-checks enabled state and all configured context scope rules.',
       properties: <String, Object?>{
         'id': _stringProperty(),
         'mode': _enumProperty(<String>['summary', 'full']),
@@ -161,6 +165,10 @@ final class McpServer {
           description:
               'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
         ),
+        'source': _stringProperty(
+          description:
+              'Current Agent source, such as Codex, Claude Code, or Cursor.',
+        ),
       },
       required: <String>['id'],
     ),
@@ -168,7 +176,7 @@ final class McpServer {
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
       description:
-          'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and project scope are checked again on every load.',
+          'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and all configured context scope rules are checked again on every load; preserve the bridge source for this request.',
       properties: <String, Object?>{
         'name': _stringProperty(),
         'id': _stringProperty(),
@@ -180,6 +188,10 @@ final class McpServer {
           description:
               'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
         ),
+        'source': _stringProperty(
+          description:
+              'Current Agent source, such as Codex, Claude Code, or Cursor.',
+        ),
       },
       anyOfRequired: const <List<String>>[
         <String>['name'],
@@ -190,7 +202,7 @@ final class McpServer {
       name: 'dingdong_read_skill_file',
       title: 'Read DingDong Skill File',
       description:
-          'Read one supporting file referenced by a loaded SKILL.md. The Skill enabled state and scope are re-checked, paths cannot escape the package, and files are bounded to 5 MiB.',
+          'Read one supporting file referenced by a loaded SKILL.md. The Skill enabled state and all configured context scope rules are re-checked, paths cannot escape the package, and files are bounded to 5 MiB. Preserve the bridge source for this request.',
       properties: <String, Object?>{
         'name': _stringProperty(),
         'id': _stringProperty(),
@@ -205,6 +217,10 @@ final class McpServer {
         'repositoryUrl': _stringProperty(
           description:
               'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
+        ),
+        'source': _stringProperty(
+          description:
+              'Current Agent source, such as Codex, Claude Code, or Cursor.',
         ),
       },
       required: <String>['path'],
@@ -244,11 +260,15 @@ final class McpServer {
       name: 'dingdong_upsert_trigger_group',
       title: 'Upsert DingDong Trigger Group',
       description:
-          'Create or replace one exact trigger group by name. For strict project Skill loading, provide only an absolute local projectPath; repositoryUrl is for non-strict routing and must not be mixed into that strict group because rules are OR-ed.',
+          'Create or replace one exact trigger group by name. Use projectPath, repositoryUrl, or source (for example Codex, Claude Code, or Cursor) for non-strict routing. For strict project Skill loading, provide only an absolute local projectPath because rules are OR-ed.',
       properties: <String, Object?>{
         'name': _stringProperty(),
         'projectPath': _stringProperty(),
         'repositoryUrl': _stringProperty(),
+        'source': _stringProperty(
+          description:
+              'Agent source that can trigger the group, such as Codex, Claude Code, or Cursor.',
+        ),
       },
       required: <String>['name'],
     ),

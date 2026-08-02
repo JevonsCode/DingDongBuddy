@@ -7,9 +7,12 @@ import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_skill_catalog.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
 
 final class AgentPromptTarget {
@@ -38,13 +41,15 @@ typedef AgentAdapterLoader = Future<List<AgentAdapter>> Function();
 ///
 /// Prompts install a stable Bridge bootstrap, Skills are delivered dynamically
 /// through that Bridge, and MCP resources become real client configuration
-/// entries. Legacy Skill mirrors are removed only when DingDong marked them.
+/// entries filtered by each target Agent's source. Legacy Skill mirrors are
+/// removed only when DingDong marked them.
 final class AgentResourceSynchronizer {
   AgentResourceSynchronizer({
     required this.packageRoot,
     required this.skillRoots,
     this.projectSkillRoots = const <String>[],
     required this.mcpTargets,
+    this.triggerGroupStore,
     this.promptTargets = const <AgentPromptTarget>[],
     this.skillClientNames = const <String, String>{},
     this.projectSkillClientNames = const <String, String>{},
@@ -63,6 +68,7 @@ final class AgentResourceSynchronizer {
     Directory packageRoot, {
     required AgentAdapterLoader loadAdapters,
     SkillPackageInstaller? skillPackageInstaller,
+    TriggerGroupStore? triggerGroupStore,
     String? homeDirectory,
   }) async {
     final String home =
@@ -73,6 +79,7 @@ final class AgentResourceSynchronizer {
       packageRoot: packageRoot,
       skillRoots: const <Directory>[],
       mcpTargets: const <AgentMcpTarget>[],
+      triggerGroupStore: triggerGroupStore,
       adapterLoader: loadAdapters,
       adapterHomeDirectory: home,
       skillPackageInstaller: skillPackageInstaller,
@@ -92,6 +99,7 @@ final class AgentResourceSynchronizer {
   List<String> projectSkillRoots;
   List<AgentPromptTarget> promptTargets;
   List<AgentMcpTarget> mcpTargets;
+  final TriggerGroupStore? triggerGroupStore;
   Map<String, String> skillClientNames;
   Map<String, String> projectSkillClientNames;
   List<AgentSkillCatalog> externalSkillCatalogs;
@@ -108,6 +116,8 @@ final class AgentResourceSynchronizer {
     final List<Resource> mcps = resources
         .where((Resource item) => item.enabled && item.type == ResourceType.mcp)
         .toList(growable: false);
+    final Map<String, TriggerGroup> triggerGroupsById =
+        await _loadTriggerGroups();
     final List<AppIssue> issues = await _inspect(resources);
     final List<AppIssue> blockingIssues = issues
         .where((AppIssue issue) => issue.severity == AppIssueSeverity.error)
@@ -205,12 +215,17 @@ final class AgentResourceSynchronizer {
         managed.remove(mcpPath);
         continue;
       }
-      if (mcps.isEmpty && previousNames.isEmpty) {
+      final List<Resource> targetMcps = _mcpResourcesForTarget(
+        mcps,
+        target,
+        triggerGroupsById,
+      );
+      if (targetMcps.isEmpty && previousNames.isEmpty) {
         managed.remove(mcpPath);
         continue;
       }
-      await _syncMcpTarget(target.file, target.kind, mcps, previousNames);
-      final Set<String> currentNames = mcps.map(_serverName).toSet();
+      await _syncMcpTarget(target.file, target.kind, targetMcps, previousNames);
+      final Set<String> currentNames = targetMcps.map(_serverName).toSet();
       if (currentNames.isEmpty) {
         managed.remove(mcpPath);
       } else {
@@ -224,6 +239,33 @@ final class AgentResourceSynchronizer {
     }
     await _writeManagedMcpState(managed);
     return issues;
+  }
+
+  Future<Map<String, TriggerGroup>> _loadTriggerGroups() async {
+    final TriggerGroupStore? store = triggerGroupStore;
+    if (store == null) {
+      return const <String, TriggerGroup>{};
+    }
+    return <String, TriggerGroup>{
+      for (final TriggerGroup group in await store.load()) group.id: group,
+    };
+  }
+
+  List<Resource> _mcpResourcesForTarget(
+    List<Resource> resources,
+    AgentMcpTarget target,
+    Map<String, TriggerGroup> triggerGroupsById,
+  ) {
+    if (triggerGroupStore == null) {
+      return resources;
+    }
+    final TriggerContext context = TriggerContext(source: target.clientName);
+    return resources
+        .where(
+          (Resource resource) =>
+              resourceMatchesScope(resource, context, triggerGroupsById),
+        )
+        .toList(growable: false);
   }
 
   Future<void> _syncMcpTarget(
@@ -1017,6 +1059,59 @@ final class SynchronizedResourceStore implements ResourceStore {
           await downloaded.delete(recursive: true);
         }
       }
+    }
+  }
+}
+
+/// Keeps native Agent MCP files in sync when a trigger group changes without
+/// requiring an unrelated resource edit to occur first.
+final class SynchronizedTriggerGroupStore implements TriggerGroupStore {
+  SynchronizedTriggerGroupStore(
+    this._delegate,
+    this._resourceStore,
+    this._synchronizer, {
+    this.issueCenter,
+  });
+
+  final TriggerGroupStore _delegate;
+  final ResourceStore _resourceStore;
+  final AgentResourceSynchronizer _synchronizer;
+  final IssueCenterController? issueCenter;
+
+  @override
+  Future<List<TriggerGroup>> load() => _delegate.load();
+
+  @override
+  Future<void> save(List<TriggerGroup> groups) async {
+    final List<TriggerGroup> previous = await _delegate.load();
+    await _delegate.save(groups);
+    try {
+      final List<AppIssue> issues = await _synchronizer.sync(
+        await _resourceStore.load(),
+      );
+      issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
+    } on Object catch (error, stackTrace) {
+      final List<AppIssue> issues = error is AppIssueException
+          ? error.issues
+          : <AppIssue>[
+              AppIssue(
+                id: _issueId(AppIssueKind.syncFailed, null, null),
+                source: agentResourceSyncIssueSource,
+                kind: AppIssueKind.syncFailed,
+                severity: AppIssueSeverity.error,
+                title: 'Agent resource sync failed',
+                detail: error.toString(),
+              ),
+            ];
+      await _delegate.save(previous);
+      try {
+        await _synchronizer.sync(await _resourceStore.load());
+      } on Object {
+        // Preserve the original save failure; the trigger-group file is
+        // rolled back even if native configuration recovery also fails.
+      }
+      issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 }

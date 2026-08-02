@@ -7,7 +7,7 @@ import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 
-/// Public CRUD for reusable project and repository trigger scopes.
+/// Public CRUD for reusable project, repository, and Agent-source scopes.
 final class TriggerGroupRoutes {
   TriggerGroupRoutes({
     required this.store,
@@ -66,6 +66,7 @@ final class TriggerGroupRoutes {
           .trim();
       final String repositoryUrl = (payload['repositoryUrl'] as String? ?? '')
           .trim();
+      final String source = (payload['source'] as String? ?? '').trim();
       final List<TriggerRule> rules = <TriggerRule>[
         if (projectPath.isNotEmpty)
           TriggerRule(
@@ -78,6 +79,12 @@ final class TriggerGroupRoutes {
             field: TriggerRuleField.repositoryUrl,
             operator: TriggerRuleOperator.equals,
             value: repositoryUrl,
+          ),
+        if (source.isNotEmpty)
+          TriggerRule(
+            field: TriggerRuleField.source,
+            operator: TriggerRuleOperator.equals,
+            value: source,
           ),
       ];
       final HttpResponseData? invalid = _validate(name, rules);

@@ -7,7 +7,7 @@ description: Use when a user asks an Agent to configure DingDong resources, proj
 
 ## Overview
 
-Configure DingDong through its loopback Agent API. Translate the user's intent into reusable resources and project-aware trigger groups, then verify the result through the same bridge Agents use at task start.
+Configure DingDong through its loopback Agent API. Translate the user's intent into reusable resources and context-aware trigger groups, then verify the result through the same bridge Agents use at task start.
 
 Canonical source: <https://github.com/JevonsCode/DingDongBuddy/tree/main/skills/dingdong-configure>
 
@@ -21,7 +21,7 @@ Keep the three resource types distinct:
 | Skill | Each successful Bridge response contains the authoritative complete catalog of every valid, enabled, scope-matched Skill as `id`, `name`, and `description` only. Full content stays in DingDong until requested. | Match a returned description first, then call `dingdong_load_skill` with the candidate ID or name and current workspace. Apply the returned full `SKILL.md`; read only referenced package files with `dingdong_read_skill_file`. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope. |
 | MCP | Enabled MCP servers are written into the client's native MCP configuration. The bridge returns only candidate metadata. | Call a configured MCP tool only when the task needs it. MCP availability is not an instruction and does not require a call every turn. |
 
-Enabled state and trigger groups filter the Skill catalog, and every Skill and supporting-file load re-checks them so an old name or ID cannot bypass a disabled or out-of-scope resource. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP servers remain client-global because native MCP configuration is global. DingDong no longer mirrors managed Skills into native Agent Skill directories; Adapter Skill paths remain useful for removing legacy DingDong mirrors and warning about independently installed native Skills with the same name.
+Enabled state and trigger groups filter the Skill catalog, and every Skill and supporting-file load re-checks them so an old name or ID cannot bypass a disabled or out-of-scope resource. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. Unscoped MCP servers are synchronized to every configured client; source-scoped MCP servers are synchronized only to matching native client configurations. DingDong no longer mirrors managed Skills into native Agent Skill directories; Adapter Skill paths remain useful for removing legacy DingDong mirrors and warning about independently installed native Skills with the same name.
 
 ## Workflow
 
@@ -34,7 +34,7 @@ Enabled state and trigger groups filter the Skill catalog, and every Skill and s
    - Model a SKU, service, environment, or team as tags/group metadata; DingDong has no first-class SKU type.
    - Model where a resource applies with a trigger group, then attach its ID through `triggerGroupIds`.
 4. Create or patch the trigger group before attaching it to a resource. Never invent an unknown trigger-group ID.
-5. Verify with `dingdong_bridge` using representative task text, `workspacePath`, and `repositoryUrl`. Check both a matching and non-matching context.
+5. Verify with `dingdong_bridge` using representative task text, `workspacePath`, `repositoryUrl`, and `source` when relevant. Check both a matching and non-matching context.
 
 ## Install a Skill for One Project
 

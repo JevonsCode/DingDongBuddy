@@ -184,8 +184,12 @@ Knowledge 候选摘要。DingDong 不再把托管 Skill 复制到 Agent 原生 S
 | Skill | 每次 Bridge 成功响应都返回所有有效、已启用且作用域匹配 Skill 的权威完整目录，每项只有 `id`、`name` 和 `description`；完整 Package 留在 DingDong | 先判断已返回的 description，匹配后按 ID 或名称调用 `dingdong_load_skill` 并应用完整 `SKILL.md`；只通过 `dingdong_read_skill_file` 读取它引用的文件；候选本身不是指令，未返回即表示当前不可用、已停用、格式无效或不在作用域内 |
 | MCP | 已启用 MCP 写入客户端原生 MCP 配置；Bridge 只返回候选摘要 | 配置只表示工具可用，任务确实需要时才调用对应工具；不要求每轮调用 |
 
-Prompt 的激活方式和触发组控制 Prompt 返回；Skill 候选由启用状态和触发组过滤，
-完整正文与文件加载时会再次校验相同条件。MCP 仍是客户端全局配置。
+Prompt 的激活方式和触发组控制 Prompt 返回；触发组可以按当前工作区目录、仓库地址
+或 Agent 来源（`source`）匹配，例如 `Codex`、`Claude Code`、`Cursor`。同一触发组
+中的多条规则按“任一命中”处理，因此一个资源可以同时给多个 Agent 客户端使用。
+Skill 候选由启用状态和触发组过滤，完整正文与文件加载时会再次校验相同条件。未设置
+来源作用域的 MCP 会同步到每个已配置客户端；设置来源作用域的 MCP 只同步到匹配的
+原生客户端配置。
 
 ### 给一个项目配置 Skill
 
@@ -350,8 +354,8 @@ flowchart TB
 - **使用 Skill**：Agent 匹配 description → `dingdong_load_skill` → 完整
   `SKILL.md` → 需要时再用 `dingdong_read_skill_file` 读取引用文件。
 - **启用资源**：Prompt 状态在下一次 Bridge 调用生效；Skill 状态改变下一次目录和
-  后续每次加载校验；MCP 状态更新原生配置。DingDong 只清理有托管标记的旧版 Skill
-  镜像，保留用户文件。
+  后续每次加载校验；MCP 状态更新匹配的原生客户端配置。DingDong 只清理有托管标记
+  的旧版 Skill 镜像，保留用户文件。
 - **任务结束**：客户端完成 Hook → `--notify-stop` → 本机提取一句结果 →
   `/ding` → 声音和动态记录。
 

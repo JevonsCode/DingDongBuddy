@@ -84,7 +84,7 @@ sync in the PR.
 ## Current interface behavior
 
 - The header shows the current app version beside **DingDong**, for example
-  `v0.9.8`, using the same version constant as the release UI. A small
+  `v0.9.9`, using the same version constant as the release UI. A small
   orange-red dot appears beside it when a newer version is available. Clicking
   the version opens Settings directly at the version and update section.
 - Clicking the **DingDong** wordmark previews the currently configured sound;
@@ -221,9 +221,14 @@ resources become real client MCP entries.
 | Skill | Every successful bridge call returns the authoritative complete catalog of every valid, enabled, scope-matched Skill as `id`, `name`, and `description` only; the full package remains in DingDong | Match a returned description first, call `dingdong_load_skill` with its ID or name, apply the returned complete `SKILL.md`, and read only referenced files with `dingdong_read_skill_file`; a candidate is not an instruction, and an absent Skill is unavailable, disabled, invalid, or out of scope |
 | MCP | Enabled MCP servers are written into native client configuration; the bridge returns candidate summaries only | Configuration means tools are available; call the relevant tool only when the task needs it, never automatically on every turn |
 
-Prompt activation and trigger groups filter Prompt delivery. Skill candidates
+Prompt activation and trigger groups filter Prompt delivery. A trigger group can
+match the current workspace path, repository URL, or Agent source (`source`),
+such as `Codex`, `Claude Code`, or `Cursor`. Multiple rules in one group are
+OR-ed, so one resource can be shared by several Agent clients. Skill candidates
 are filtered by enabled state and trigger groups, and every full-content or file
-load re-checks the same conditions. MCP servers remain client-global.
+load re-checks the same conditions. Unscoped MCP servers are available to every
+configured client; source-scoped MCP servers are written only to matching
+native client configurations.
 
 ### Configure a Skill for one project
 
@@ -399,8 +404,8 @@ The main paths are:
   `dingdong_read_skill_file` only when required.
 - **Resource enable:** Prompt state is read dynamically by the next bridge call;
   Skill state updates the next bridge catalog and every later load check; MCP
-  state updates native configuration. DingDong removes only its marked legacy
-  Skill mirrors and preserves unrelated user files.
+  state updates matching native client configuration. DingDong removes only its
+  marked legacy Skill mirrors and preserves unrelated user files.
 - **Task finish:** native completion hook → `--notify-stop` → local summary →
   `/ding` → sound and activity item.
 

@@ -872,6 +872,112 @@ void main() {
   });
 
   test(
+    'source trigger groups route every resource type and Skill loading',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 16);
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'source-prompt',
+          type: ResourceType.prompt,
+          title: 'Codex prompt',
+          content: 'Use the Codex checklist.',
+          activation: ResourceActivation.always,
+          triggerGroupIds: const <String>['codex-cursor'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'source-skill',
+          type: ResourceType.skill,
+          title: 'Codex skill',
+          content:
+              '---\nname: codex-skill\ndescription: Use from Codex\n---\n\n# Codex',
+          activation: ResourceActivation.manual,
+          triggerGroupIds: const <String>['codex-cursor'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'source-mcp',
+          type: ResourceType.mcp,
+          title: 'Codex MCP',
+          content: '{"type":"stdio","command":"codex-mcp"}',
+          activation: ResourceActivation.always,
+          triggerGroupIds: const <String>['codex-cursor'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: InMemoryTriggerGroupStore(<TriggerGroup>[
+          TriggerGroup(
+            id: 'codex-cursor',
+            name: 'Codex and Cursor',
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.source,
+                operator: TriggerRuleOperator.equals,
+                value: 'Codex',
+              ),
+              TriggerRule(
+                field: TriggerRuleField.source,
+                operator: TriggerRuleOperator.equals,
+                value: 'Cursor',
+              ),
+            ],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      );
+
+      final outside = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"work","source":"Claude Code"}',
+        ),
+      );
+      final inside = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"work","source":"Codex"}',
+        ),
+      );
+
+      List<Object?> active(Map<String, Object?> json, String type) =>
+          (json['active'] as Map<String, Object?>)[type] as List<Object?>;
+      expect(active(outside.json, 'prompts'), isEmpty);
+      expect(active(outside.json, 'skills'), isEmpty);
+      expect(active(outside.json, 'mcps'), isEmpty);
+      expect(active(inside.json, 'prompts'), hasLength(1));
+      expect(active(inside.json, 'skills'), hasLength(1));
+      expect(active(inside.json, 'mcps'), hasLength(1));
+      expect(
+        (inside.json['context'] as Map<String, Object?>)['source'],
+        'Codex',
+      );
+
+      final loadedInside = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/skill?id=source-skill&source=Cursor',
+        ),
+      );
+      final loadedOutside = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/skill?id=source-skill&source=Claude%20Code',
+        ),
+      );
+      expect(loadedInside.statusCode, 200);
+      expect(loadedOutside.statusCode, 404);
+    },
+  );
+
+  test(
     'dynamic Skill catalog and load enforce enabled state and workspace scope',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 28);
@@ -1259,6 +1365,29 @@ void main() {
     expect(group.rules.single.field, TriggerRuleField.projectPath);
     expect(group.rules.single.operator, TriggerRuleOperator.equals);
     expect(group.rules.single.value, '/work/checkout-v2');
+  });
+
+  test('Agent API upserts a source trigger group', () async {
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+    final AgentRouter router = AgentRouter(
+      triggerGroupStore: groups,
+      idGenerator: () => 'codex-scope',
+      now: () => DateTime.utc(2026, 7, 21),
+    );
+
+    final response = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/library/trigger-groups/upsert',
+        body: '{"name":"Codex","source":"Codex"}',
+      ),
+    );
+
+    expect(response.statusCode, 201);
+    final TriggerGroup group = (await groups.load()).single;
+    expect(group.rules.single.field, TriggerRuleField.source);
+    expect(group.rules.single.operator, TriggerRuleOperator.equals);
+    expect(group.rules.single.value, 'Codex');
   });
 
   test('strict Skill scope binds only exact existing project paths', () async {
