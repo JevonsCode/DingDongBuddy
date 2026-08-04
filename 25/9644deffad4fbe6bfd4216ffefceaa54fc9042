@@ -1,0 +1,21 @@
+docs/styles.css
+  s_1667a0cdc5aa50::t_48ddc91073c062 1606-1607,1615
+docs/index.html
+  s_1667a0cdc5aa50::t_48ddc91073c062 9,197,652,845
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "259644deffad4fbe6bfd4216ffefceaa54fc9042",
+  "prompts": {},
+  "sessions": {
+    "s_1667a0cdc5aa50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcd9d-692b-7501-becb-28c153e2900f",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
