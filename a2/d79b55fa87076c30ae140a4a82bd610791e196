@@ -1,0 +1,19 @@
+test/packaging/desktop_identity_test.dart
+  s_cd7547caab1317::t_bf056ab67e7384 242-244,274-280,857-859
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "a2d79b55fa87076c30ae140a4a82bd610791e196",
+  "prompts": {},
+  "sessions": {
+    "s_cd7547caab1317": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc796-d3ab-7de0-b691-bf0101e179bd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
