@@ -251,15 +251,26 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                       ),
                       const SizedBox(width: 5),
                     ],
-                    Text(
-                      TimeOfDay.fromDateTime(
-                        widget.activity.completedAt.toLocal(),
-                      ).format(context),
-                      key: Key('activity-completed-time-${widget.activity.id}'),
-                      style: const TextStyle(
-                        color: PopupStyle.textSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                    SizedBox(
+                      width: 52,
+                      child: Text(
+                        TimeOfDay.fromDateTime(
+                          widget.activity.completedAt.toLocal(),
+                        ).format(context),
+                        key: Key(
+                          'activity-completed-time-${widget.activity.id}',
+                        ),
+                        maxLines: 1,
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.clip,
+                        style: const TextStyle(
+                          color: PopupStyle.textSecondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: <FontFeature>[
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
                       ),
                     ),
                     if (widget.onTap != null) ...<Widget>[

@@ -44,8 +44,9 @@ into one cohesive desktop workflow.
 - The README is reduced to the stable product, installation, compatibility,
   shortcut, privacy, and release contracts; changing procedures link to their
   canonical guides.
-- The website has a refreshed interactive product model, a visual Prompt /
-  Skill / MCP routing guide, and practical examples of ordinary Agent requests.
+- The website presents the product as a clean macOS window with all five menu
+  bar alert colors, plus a visual Prompt / Skill / MCP routing guide and
+  practical examples of ordinary Agent requests.
 
 Intel macOS and Windows packages remain beta.
 
@@ -81,6 +82,7 @@ DingDong 1.0 把剪贴板、Agent 资源库和任务完成提醒整理成一套�
 
 - README 收敛为稳定的产品、安装、兼容性、快捷键、隐私和发布契约；容易变化的步骤统一链接
   到权威指南。
-- 官网更新了可交互产品模型，补充 Prompt / Skill / MCP 分发图例和普通对话示例。
+- 官网以干净的 macOS 窗口展示产品和五种菜单栏提醒颜色，并补充 Prompt / Skill / MCP
+  分发图例和普通对话示例。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

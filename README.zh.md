@@ -9,7 +9,7 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <strong>清晰管理剪贴板列表，统一管理提示词、Skill、MCP，Agent 执行结束后叮咚提醒。</strong>
+  <strong>清晰管理剪贴板列表<br>统一管理提示词、Skill、MCP<br>Agent 执行结束，DingDong 提醒你</strong>
 </p>
 
 DingDong 1.0 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记录清晰可查，

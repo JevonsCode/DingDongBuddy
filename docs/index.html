@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard, Agent resources, and completion alerts</title>
     <meta name="description" content="Manage clipboard history, Prompts, Skills, and MCP servers in one place, then hear a DingDong when your Agent finishes.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260804-v1">
+    <link rel="stylesheet" href="./styles.css?v=20260804-v2">
   </head>
   <body>
     <header class="site-header">
@@ -35,7 +35,11 @@
       <section class="hero" id="product">
         <div class="hero-copy">
           <p class="eyebrow" data-i18n="hero.eyebrow">Clipboard · Agent resources · finish alerts</p>
-          <h1 data-i18n="hero.title">Manage clipboard history and Agent resources clearly. DingDong calls you back when the work is done.</h1>
+          <h1 class="hero-title">
+            <span data-i18n="hero.title.clipboard">Keep clipboard history clear.</span>
+            <span data-i18n="hero.title.resources">Manage Prompts, Skills, and MCP in one place.</span>
+            <span data-i18n="hero.title.alerts">DingDong calls you back when the Agent is done.</span>
+          </h1>
           <p class="lede" data-i18n="hero.lede">
             Keep clipboard history easy to find, manage Prompts, Skills, and MCP servers once, and hear a DingDong when an Agent finishes, gets stuck, or needs a decision.
           </p>
@@ -50,18 +54,26 @@
         </div>
 
         <div class="product-stage" aria-label="DingDong product preview">
-          <div class="product-stage-header">
-            <span data-i18n="demo.model">Interactive product model</span>
-            <div class="menu-chip" aria-label="Unread agent notifications">
-              <img src="./assets/dingdong-alert-icon.png" alt="">
-              <span id="demo-count">3</span>
+          <div class="macos-menu-bar">
+            <span class="macos-menu-label" data-i18n="demo.alertColors">macOS alert colors</span>
+            <div class="macos-alert-palette" aria-label="DingDong macOS menu bar alert color previews">
+              <span class="menu-alert is-orange"><img src="./assets/dingdong-alert-icon.png" alt=""><b>3</b></span>
+              <span class="menu-alert is-pink"><img src="./assets/dingdong-alert-icon.png" alt=""><b>13</b></span>
+              <span class="menu-alert is-blue"><img src="./assets/dingdong-alert-icon.png" alt=""><b>8</b></span>
+              <span class="menu-alert is-green"><img src="./assets/dingdong-alert-icon.png" alt=""><b>2</b></span>
+              <span class="menu-alert is-purple"><img src="./assets/dingdong-alert-icon.png" alt=""><b>99+</b></span>
             </div>
           </div>
 
           <div class="demo-window">
             <div class="demo-title">
-              <img src="./assets/dingdong-icon.png" alt="">
+              <div class="macos-window-controls" aria-hidden="true">
+                <span class="is-close"></span>
+                <span class="is-minimize"></span>
+                <span class="is-zoom"></span>
+              </div>
               <div class="demo-title-copy">
+                <img src="./assets/dingdong-icon.png" alt="">
                 <strong>DingDong</strong>
                 <span class="demo-version">v1.0.0</span>
               </div>
@@ -486,12 +498,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.sounds": "Sounds",
           "nav.download": "Download",
           "hero.eyebrow": "Clipboard · Agent resources · finish alerts",
-          "hero.title": "Manage clipboard history and Agent resources clearly. DingDong calls you back when the work is done.",
+          "hero.title.clipboard": "Keep clipboard history clear.",
+          "hero.title.resources": "Manage Prompts, Skills, and MCP in one place.",
+          "hero.title.alerts": "DingDong calls you back when the Agent is done.",
           "hero.lede": "Keep clipboard history easy to find, manage Prompts, Skills, and MCP servers once, and hear a DingDong when an Agent finishes, gets stuck, or needs a decision.",
           "hero.finish": "Everything close at hand, with a ring when work is ready.",
           "hero.download": "Download latest",
           "hero.connect": "Connect your Agent",
-          "demo.model": "Interactive product model",
+          "demo.alertColors": "macOS alert colors",
           "demo.today": "Dynamic",
           "demo.library": "Library",
           "demo.clipboard": "Clipboard",
@@ -668,12 +682,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.sounds": "声音",
           "nav.download": "下载",
           "hero.eyebrow": "剪贴板 · Agent 资源 · 完成提醒",
-          "hero.title": "清晰管理剪贴板列表，统一管理提示词 skill mcp, Agent 执行结束 DingDong 提醒你",
+          "hero.title.clipboard": "清晰管理剪贴板列表",
+          "hero.title.resources": "统一管理提示词、Skill、MCP",
+          "hero.title.alerts": "Agent 执行结束，DingDong 提醒你",
           "hero.lede": "剪贴板记录清晰可查，Prompt、Skill 和 MCP 只维护一份；Agent 做完、卡住或等你决定时，DingDong 会用声音把你叫回来。",
           "hero.finish": "东西随手能找到，任务有结果也不会错过",
           "hero.download": "下载 DingDong",
           "hero.connect": "查看 MCP 接入",
-          "demo.model": "可交互产品模型",
+          "demo.alertColors": "macOS 提醒颜色",
           "demo.today": "动态",
           "demo.library": "资源库",
           "demo.clipboard": "剪贴板",

@@ -343,14 +343,23 @@ void main() {
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
     expect(website, contains('<span class="demo-version">v1.0.0</span>'));
-    expect(website, contains('class="product-stage-header"'));
+    expect(website, contains('class="macos-menu-bar"'));
+    expect(website, contains('class="macos-window-controls"'));
+    for (final String color in <String>[
+      'is-orange',
+      'is-pink',
+      'is-blue',
+      'is-green',
+      'is-purple',
+    ]) {
+      expect(website, contains(color));
+    }
     expect(website, contains('id="resources"'));
     expect(website, contains('class="resource-map"'));
     expect(website, contains('class="conversation-grid"'));
-    expect(
-      website,
-      contains('清晰管理剪贴板列表，统一管理提示词 skill mcp, Agent 执行结束 DingDong 提醒你'),
-    );
+    expect(website, contains('"hero.title.clipboard": "清晰管理剪贴板列表"'));
+    expect(website, contains('"hero.title.resources": "统一管理提示词、Skill、MCP"'));
+    expect(website, contains('"hero.title.alerts": "Agent 执行结束，DingDong 提醒你"'));
     expect(website, contains('快捷键帮你高效处理内容工作'));
     expect(website, contains('开启电脑声音，需求交给 AI，做完会用声音提醒你'));
     expect(website, contains('你就可以先去摸摸鱼，毕竟在 AI 时代，人的精力才是最大资产 🫣'));
@@ -371,7 +380,8 @@ void main() {
     expect(websiteStyles, contains('.demo-resource-row.type-skill'));
     expect(websiteStyles, contains('.demo-resource-row.type-mcp'));
     expect(websiteStyles, contains('.demo-resource-row.is-disabled'));
-    expect(websiteStyles, contains('.product-stage-header'));
+    expect(websiteStyles, contains('.macos-menu-bar'));
+    expect(websiteStyles, contains('.menu-alert.is-pink'));
     expect(websiteStyles, contains('.resource-map'));
     expect(websiteStyles, contains('.conversation-example'));
     expect(

@@ -9,7 +9,7 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <strong>Clear clipboard history, one library for Prompts, Skills, and MCP, and a DingDong when your Agent is done.</strong>
+  <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>DingDong calls you back when your Agent is done</strong>
 </p>
 
 DingDong 1.0 is a local desktop companion for content-heavy Agent work. It keeps

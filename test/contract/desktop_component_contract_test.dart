@@ -13,12 +13,13 @@ void main() {
       'lib',
     ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      if (entity.path.endsWith('core/widgets/desktop_dialog.dart')) continue;
-      if (entity.path.endsWith('core/widgets/desktop_slider.dart')) continue;
+      final String path = entity.path.replaceAll('\\', '/');
+      if (path.endsWith('core/widgets/desktop_dialog.dart')) continue;
+      if (path.endsWith('core/widgets/desktop_slider.dart')) continue;
       final List<String> lines = entity.readAsLinesSync();
       for (int index = 0; index < lines.length; index++) {
         if (forbidden.hasMatch(lines[index])) {
-          violations.add('${entity.path}:${index + 1}: ${lines[index].trim()}');
+          violations.add('$path:${index + 1}: ${lines[index].trim()}');
         }
       }
     }
@@ -41,10 +42,11 @@ void main() {
       'lib/features',
     ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final String path = entity.path.replaceAll('\\', '/');
       final List<String> lines = entity.readAsLinesSync();
       for (int index = 0; index < lines.length; index++) {
         if (forbidden.hasMatch(lines[index])) {
-          violations.add('${entity.path}:${index + 1}: ${lines[index].trim()}');
+          violations.add('$path:${index + 1}: ${lines[index].trim()}');
         }
       }
     }
@@ -73,11 +75,12 @@ void main() {
       'lib',
     ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      if (allowedFiles.contains(entity.path)) continue;
+      final String path = entity.path.replaceAll('\\', '/');
+      if (allowedFiles.contains(path)) continue;
       final List<String> lines = entity.readAsLinesSync();
       for (int index = 0; index < lines.length; index++) {
         if (forbidden.hasMatch(lines[index])) {
-          violations.add('${entity.path}:${index + 1}: ${lines[index].trim()}');
+          violations.add('$path:${index + 1}: ${lines[index].trim()}');
         }
       }
     }

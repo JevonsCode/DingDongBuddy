@@ -237,10 +237,21 @@ class _ActivityHistoryRow extends StatelessWidget {
                           const SizedBox(width: 6),
                         ] else
                           const SizedBox(width: 12),
-                        Text(
-                          '$date  $time',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: colors.onSurfaceVariant),
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            '$date  $time',
+                            maxLines: 1,
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.clip,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: colors.onSurfaceVariant,
+                                  fontFeatures: const <FontFeature>[
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                          ),
                         ),
                         if (canOpen) ...<Widget>[
                           const SizedBox(width: 9),

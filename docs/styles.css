@@ -149,9 +149,9 @@ nav a:hover,
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.94fr) minmax(460px, 1.06fr);
+  grid-template-columns: minmax(0, 1fr) minmax(440px, 470px);
   align-items: start;
-  gap: clamp(40px, 6vw, 76px);
+  gap: clamp(32px, 3.6vw, 44px);
   min-height: 0;
   padding: 54px 0 72px;
 }
@@ -190,6 +190,10 @@ h1 {
   font-weight: 760;
   line-height: 1.04;
   letter-spacing: -0.035em;
+}
+
+.hero-title span {
+  display: block;
 }
 
 h2 {
@@ -291,47 +295,84 @@ h3 {
 
 .product-stage {
   position: relative;
-  width: 454px;
+  width: 470px;
   max-width: 100%;
   min-width: 0;
-  padding: 13px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: rgba(255, 254, 250, 0.72);
-  box-shadow: var(--shadow);
   justify-self: end;
 }
 
-.product-stage-header {
+.macos-menu-bar {
   display: flex;
-  min-height: 36px;
+  min-height: 40px;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 3px 10px;
+  gap: 10px;
+  margin-bottom: 9px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid rgba(206, 203, 195, 0.88);
+  border-radius: 11px;
   color: var(--muted);
+  background: rgba(255, 254, 250, 0.82);
+  box-shadow: 0 5px 16px rgba(52, 48, 40, 0.06);
+  backdrop-filter: blur(16px);
   font-size: 11px;
   font-weight: 720;
   letter-spacing: 0.02em;
 }
 
-.menu-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 28px;
-  padding: 3px 9px 3px 5px;
-  border: 1px solid #ead1bd;
-  border-radius: 9px;
-  color: #945536;
-  background: #fff5eb;
-  font-size: 12px;
-  font-weight: 780;
+.macos-menu-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
-.menu-chip img {
-  width: 20px;
-  height: 20px;
+.macos-alert-palette {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.menu-alert {
+  display: inline-flex;
+  min-width: 42px;
+  height: 27px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 2px 7px 2px 4px;
+  border-radius: 9px;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.menu-alert img {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-alert.is-orange {
+  background: #db7333;
+}
+
+.menu-alert.is-pink {
+  background: #e85991;
+}
+
+.menu-alert.is-blue {
+  background: #3b7ddd;
+}
+
+.menu-alert.is-green {
+  background: #2f9d68;
+}
+
+.menu-alert.is-purple {
+  min-width: 48px;
+  background: #8c5bd6;
 }
 
 .demo-window {
@@ -364,17 +405,37 @@ h3 {
 
 .demo-title {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: 74px minmax(0, 1fr) 74px;
   align-items: center;
   gap: 10px;
   min-height: 55px;
-  padding: 12px 17px 7px 20px;
+  padding: 10px 14px 7px;
   background: var(--surface);
 }
 
-.demo-title > img {
-  width: 27px;
-  height: 27px;
+.macos-window-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.macos-window-controls span {
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+}
+
+.macos-window-controls .is-close {
+  background: #ff5f57;
+}
+
+.macos-window-controls .is-minimize {
+  background: #febc2e;
+}
+
+.macos-window-controls .is-zoom {
+  background: #28c840;
 }
 
 .demo-title strong {
@@ -388,7 +449,15 @@ h3 {
   display: flex;
   min-width: 0;
   align-items: baseline;
+  justify-content: center;
   gap: 3px;
+}
+
+.demo-title-copy > img {
+  width: 25px;
+  height: 25px;
+  margin-right: 5px;
+  align-self: center;
 }
 
 .demo-version {
@@ -401,6 +470,7 @@ h3 {
 
 .demo-title-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
 }
 
@@ -1326,10 +1396,6 @@ h3 {
   padding: 58px 0 26px;
 }
 
-.resource-system-heading {
-  max-width: 960px;
-}
-
 .resource-map {
   display: grid;
   grid-template-columns: minmax(210px, 0.9fr) minmax(230px, 0.92fr) minmax(240px, 1fr);
@@ -1812,6 +1878,15 @@ html[lang="zh-CN"] .defaults-panel th {
   max-width: 820px;
 }
 
+.section-heading.resource-system-heading {
+  max-width: 1080px;
+}
+
+.resource-system-heading h2 {
+  max-width: 1080px;
+  text-wrap: balance;
+}
+
 .section-heading p {
   max-width: 760px;
   margin: 14px 0 0;
@@ -1842,9 +1917,10 @@ html[lang="zh-CN"] .eyebrow {
 }
 
 html[lang="zh-CN"] .hero h1 {
-  max-width: 620px;
-  font-size: clamp(36px, 3.7vw, 48px);
-  line-height: 1.14;
+  max-width: 100%;
+  font-size: clamp(38px, 3.8vw, 44px);
+  line-height: 1.12;
+  letter-spacing: -0.045em;
   overflow-wrap: normal;
   word-break: keep-all;
 }
@@ -2081,8 +2157,8 @@ footer span {
 
 @media (max-width: 1040px) {
   .hero {
-    grid-template-columns: minmax(0, 0.82fr) minmax(430px, 1.18fr);
-    gap: 38px;
+    grid-template-columns: minmax(0, 1fr) minmax(420px, 440px);
+    gap: 28px;
   }
 
   .feature-grid,
@@ -2124,7 +2200,7 @@ footer span {
   }
 
   .product-stage {
-    width: min(100%, 454px);
+    width: min(100%, 470px);
     margin: 0 auto;
   }
 
@@ -2201,6 +2277,12 @@ footer span {
     line-height: 1.08;
   }
 
+  html[lang="zh-CN"] .hero h1 {
+    font-size: clamp(32px, 9vw, 38px);
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
   .lede {
     font-size: 16px;
   }
@@ -2217,6 +2299,29 @@ footer span {
 
   .demo-window {
     height: 680px;
+  }
+
+  .macos-menu-label {
+    display: none;
+  }
+
+  .macos-menu-bar,
+  .macos-alert-palette {
+    justify-content: center;
+  }
+
+  .macos-alert-palette {
+    width: 100%;
+  }
+
+  .menu-alert {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 58px;
+  }
+
+  .menu-alert.is-purple {
+    min-width: 0;
   }
 
   .demo-title strong {
