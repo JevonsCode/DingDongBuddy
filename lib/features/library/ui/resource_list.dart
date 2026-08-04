@@ -14,14 +14,12 @@ class ResourceList extends StatelessWidget {
     required this.viewModel,
     required this.onDeleteResource,
     this.contextMenuGateway,
-    this.compact = false,
     super.key,
   });
 
   final LibraryViewModel viewModel;
   final ValueChanged<Resource> onDeleteResource;
   final DesktopContextMenuGateway? contextMenuGateway;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +50,7 @@ class ResourceList extends StatelessWidget {
       key: const Key('resource-list'),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       itemCount: resources.length,
-      itemExtent: compact ? 56 : 64,
+      itemExtent: 64,
       itemBuilder: (BuildContext context, int index) {
         final Resource resource = resources[index];
         final bool selected = viewModel.selectedResource?.id == resource.id;

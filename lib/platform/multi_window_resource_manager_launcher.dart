@@ -12,6 +12,22 @@ final class MultiWindowResourceManagerLauncher
 
   final String parentWindowId;
 
+  /// Reloads clipboard history in an already-open resource manager.
+  Future<void> refreshClipboard() async {
+    try {
+      final List<WindowController> windows = await WindowController.getAll();
+      for (final WindowController controller in windows) {
+        final Map<String, Object?> arguments = _decode(controller.arguments);
+        if (arguments['kind'] == resourceManagerWindowKind) {
+          await controller.invokeMethod<void>('clipboard_changed');
+          return;
+        }
+      }
+    } on Object {
+      // The resource manager may be closing while a clipboard capture lands.
+    }
+  }
+
   @override
   Future<void> show({
     String? editingResourceId,

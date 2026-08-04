@@ -291,6 +291,12 @@ void main() {
       main,
       isNot(contains('onCopyDetected: shellController.requestMascotShake')),
     );
+    expect(main, contains('onClipboardCaptured: (_) {'));
+    expect(main, contains('shellController.requestClipboardRefresh();'));
+    expect(
+      main,
+      contains('unawaited(resourceManagerLauncher.refreshClipboard());'),
+    );
   });
 
   test('macOS unread tray uses the selected RGB capsule color', () {

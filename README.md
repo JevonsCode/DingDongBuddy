@@ -55,7 +55,7 @@ flowchart LR
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.0.0.”
+- “Use this project's release workflow, run every check, and prepare version 1.0.1.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with
@@ -132,7 +132,6 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | --- | --- | --- |
 | Theme | Light | System / Light / Dark |
 | Window opacity | 90% | 82%–96% |
-| List density | Comfortable | Comfortable / Compact |
 | Default workspace | Dynamic | Dynamic / Library / Clipboard |
 | Clipboard monitoring | Off | On / off |
 | Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |

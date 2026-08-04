@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
@@ -27,6 +28,31 @@ void main() {
       expect(store.list(limit: 10).single.id, record?.id);
     },
   );
+
+  test('capture notifies observers after the record is durable', () async {
+    final InMemoryClipboardStore store = InMemoryClipboardStore();
+    ClipboardRecord? notifiedRecord;
+    bool recordWasDurableWhenNotified = false;
+    final ClipboardCaptureService service = ClipboardCaptureService(
+      gateway: _FakeClipboardGateway(
+        const ClipboardSnapshot(text: 'new clipboard image'),
+      ),
+      store: store,
+      onCaptured: (ClipboardRecord record) {
+        notifiedRecord = record;
+        recordWasDurableWhenNotified = store
+            .list(limit: 10)
+            .any((ClipboardRecord stored) => stored.id == record.id);
+      },
+      idGenerator: () => 'CAPTURED-ID',
+      now: () => DateTime.utc(2026, 8, 4),
+    );
+
+    final ClipboardRecord? record = await service.capture();
+
+    expect(notifiedRecord?.id, record?.id);
+    expect(recordWasDurableWhenNotified, isTrue);
+  });
 
   test(
     'capture keeps the original text and rich-text representations',

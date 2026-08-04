@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -49,9 +52,9 @@ void main() {
         InMemoryResourceStore(),
       );
       await library.load();
-      final ClipboardViewModel clipboard = ClipboardViewModel(
-        InMemoryClipboardStore(),
-      )..load();
+      final InMemoryClipboardStore clipboardStore = InMemoryClipboardStore();
+      final ClipboardViewModel clipboard = ClipboardViewModel(clipboardStore)
+        ..load();
       final ActivityController activity = ActivityController(
         store: InMemoryAgentActivityStore(
           AgentActivityHistory(
@@ -138,6 +141,30 @@ void main() {
         find.byKey(const Key('agent-activity-manager-open-conversation')),
         findsOneWidget,
       );
+
+      clipboardStore.save(
+        ClipboardRecord(
+          id: 'fresh-copy',
+          group: '',
+          title: 'Fresh copied image',
+          content: '/tmp/fresh-copy.png',
+          tags: const <String>['clipboard', 'file', 'image'],
+          source: 'ChatGPT',
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: DateTime.utc(2026, 8, 4),
+          updatedAt: DateTime.utc(2026, 8, 4),
+        ),
+      );
+      await _sendWindowMethod(
+        messenger,
+        channel: 'mixin.one/window_controller/resource-manager-test',
+        method: 'clipboard_changed',
+      );
+      await tester.pump();
+      expect(clipboard.allRecords.single.title, 'Fresh copied image');
+
       final Rect resumableRepeat = tester.getRect(
         find.byKey(
           const Key('agent-activity-manager-repeat-count-manager-agent'),
@@ -290,6 +317,27 @@ void main() {
     expect(find.text('Claude Code · superpowers'), findsOneWidget);
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
   });
+}
+
+Future<void> _sendWindowMethod(
+  TestDefaultBinaryMessenger messenger, {
+  required String channel,
+  required String method,
+  Object? arguments,
+}) async {
+  final Completer<void> handled = Completer<void>();
+  await messenger.handlePlatformMessage(
+    'mixin.one/desktop_multi_window/channels',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall('methodCall', <String, Object?>{
+        'channel': channel,
+        'method': method,
+        'arguments': arguments,
+      }),
+    ),
+    (_) => handled.complete(),
+  );
+  await handled.future;
 }
 
 final class _FakeAgentConversationLauncher

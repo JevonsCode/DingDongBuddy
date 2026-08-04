@@ -1,33 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.0.0",
-  "latestBuild": "35",
-  "publishedAt": "2026-08-04T05:38:55Z",
+  "latestVersion": "1.0.1",
+  "latestBuild": "36",
+  "publishedAt": "2026-08-04T15:34:14Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.0/DingDong-1.0.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.1/DingDong-1.0.1-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.0/DingDong-1.0.0-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.1/DingDong-1.0.1-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.0/DingDong-1.0.0-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.1/DingDong-1.0.1-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Introduces a cohesive desktop UI foundation for tabs, fields, buttons, choices, sliders, disclosures, and context menus.",
-    "Adds system Open actions and QR Code sharing with a separate resizable viewer for eligible clipboard content.",
-    "Improves repeated Agent activity with aligned ×N watermarks, 99+ capping, and unread-aware color.",
-    "Makes Prompt, Skill, and MCP synchronization safer with duplicate detection, atomic writes, read-back verification, and no usage-only rewrites.",
+    "Refreshes clipboard history immediately after a successful durable capture.",
+    "Keeps an already-open Resource Manager clipboard list synchronized across windows.",
+    "Fixes copied ChatGPT images appearing only after manually reopening Clipboard.",
+    "Removes the ineffective List density setting and its obsolete compact-layout state.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

@@ -429,51 +429,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                               _SettingRow(
                                 label: context.localized(
-                                  'List density',
-                                  '列表密度',
-                                ),
-                                child:
-                                    DesktopSegmentedControl<
-                                      PanelDensityPreference
-                                    >(
-                                      key: const Key('settings-density'),
-                                      value: settings.density,
-                                      segments:
-                                          <
-                                            DesktopSegment<
-                                              PanelDensityPreference
-                                            >
-                                          >[
-                                            DesktopSegment<
-                                              PanelDensityPreference
-                                            >(
-                                              value: PanelDensityPreference
-                                                  .comfortable,
-                                              label: Text(
-                                                context.localized(
-                                                  'Comfortable',
-                                                  '舒展',
-                                                ),
-                                              ),
-                                            ),
-                                            DesktopSegment<
-                                              PanelDensityPreference
-                                            >(
-                                              value: PanelDensityPreference
-                                                  .compact,
-                                              label: Text(
-                                                context.localized(
-                                                  'Compact',
-                                                  '紧凑',
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                      onChanged: widget.viewModel.setDensity,
-                                    ),
-                              ),
-                              _SettingRow(
-                                label: context.localized(
                                   'Default workspace',
                                   '默认页面',
                                 ),

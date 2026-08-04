@@ -36,7 +36,6 @@ void main() {
           'dingdong.language': 'zh',
           'dingdong.panel.themeMode': 'dark',
           'dingdong.panel.backgroundOpacity': 0.75,
-          'dingdong.panel.density': 'compact',
           'dingdong.panel.defaultTab': 'clipboard',
           'dingdong.clipboard.maxItems': 9000,
           'dingdong.clipboard.maxAgeDays': 0,
@@ -70,7 +69,6 @@ void main() {
     expect(settings.language, AppLanguagePreference.chinese);
     expect(settings.themeMode, AppThemePreference.dark);
     expect(settings.backgroundOpacity, 0.82);
-    expect(settings.density, PanelDensityPreference.compact);
     expect(settings.defaultWorkspace, DefaultWorkspace.clipboard);
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 1);
@@ -107,7 +105,6 @@ void main() {
       language: AppLanguagePreference.english,
       themeMode: AppThemePreference.system,
       backgroundOpacity: 0.88,
-      density: PanelDensityPreference.compact,
       defaultWorkspace: DefaultWorkspace.library,
       clipboardMaxItems: 600,
       clipboardMaxAgeDays: 30,
@@ -136,7 +133,6 @@ void main() {
     expect(backend.values['dingdong.language'], 'en');
     expect(backend.values['dingdong.panel.themeMode'], 'system');
     expect(backend.values['dingdong.panel.backgroundOpacity'], 0.88);
-    expect(backend.values['dingdong.panel.density'], 'compact');
     expect(backend.values['dingdong.panel.defaultTab'], 'library');
     expect(backend.values['dingdong.clipboard.maxItems'], 600);
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 30);

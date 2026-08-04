@@ -25,7 +25,6 @@ final class SettingsRepository {
       _backend.read(_themeKey),
       _backend.read(_launchAtStartupKey),
       _backend.read(_opacityKey),
-      _backend.read(_densityKey),
       _backend.read(_defaultWorkspaceKey),
       _backend.read(_maxItemsKey),
       _backend.read(_maxAgeKey),
@@ -51,32 +50,31 @@ final class SettingsRepository {
       backgroundOpacity: values[4] is num
           ? (values[4]! as num).toDouble()
           : 0.90,
-      density: PanelDensityPreference.parse(values[5]),
-      defaultWorkspace: DefaultWorkspace.parse(values[6]),
-      clipboardMaxItems: values[7] is int ? values[7]! as int : 5000,
-      clipboardMaxAgeDays: values[8] is int ? values[8]! as int : 120,
-      selectedSound: values[9] is String ? values[9]! as String : 'default',
-      customSoundPath: values[10] as String?,
-      apiPort: values[11] is int ? values[11]! as int : 2333,
-      mcpAccessSeen: values[12] is bool ? values[12]! as bool : false,
-      rememberAgentActivity: values[13] is bool ? values[13]! as bool : true,
-      agentActivityMaxItems: values[14] is int ? values[14]! as int : 500,
-      agentActivityCountHours: values[15] is int ? values[15]! as int : 24,
-      hideDockIcon: values[16] is bool ? values[16]! as bool : false,
+      defaultWorkspace: DefaultWorkspace.parse(values[5]),
+      clipboardMaxItems: values[6] is int ? values[6]! as int : 5000,
+      clipboardMaxAgeDays: values[7] is int ? values[7]! as int : 120,
+      selectedSound: values[8] is String ? values[8]! as String : 'default',
+      customSoundPath: values[9] as String?,
+      apiPort: values[10] is int ? values[10]! as int : 2333,
+      mcpAccessSeen: values[11] is bool ? values[11]! as bool : false,
+      rememberAgentActivity: values[12] is bool ? values[12]! as bool : true,
+      agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
+      agentActivityCountHours: values[14] is int ? values[14]! as int : 24,
+      hideDockIcon: values[15] is bool ? values[15]! as bool : false,
       trayNotificationColor: TrayNotificationColor.parse(
-        values[17],
+        values[16],
         fallback: defaultTrayNotificationColor,
       ),
-      globalHotKey: GlobalHotKey.parse(values[18]),
-      allowAgentClipboardContent: values[19] is bool
-          ? values[19]! as bool
+      globalHotKey: GlobalHotKey.parse(values[17]),
+      allowAgentClipboardContent: values[18] is bool
+          ? values[18]! as bool
           : false,
       workspaceShortcuts: WorkspaceShortcuts.parse(
-        values[20],
+        values[19],
         platform: defaultTargetPlatform,
       ),
-      groupRepeatedAgentSessions: values[21] is bool
-          ? values[21]! as bool
+      groupRepeatedAgentSessions: values[20] is bool
+          ? values[20]! as bool
           : true,
     ).sanitized();
   }
@@ -91,7 +89,6 @@ final class SettingsRepository {
       _backend.write(_themeKey, settings.themeMode.name),
       _backend.write(_launchAtStartupKey, settings.launchAtStartup),
       _backend.write(_opacityKey, settings.backgroundOpacity),
-      _backend.write(_densityKey, settings.density.name),
       _backend.write(_defaultWorkspaceKey, settings.defaultWorkspace.name),
       _backend.write(_maxItemsKey, settings.clipboardMaxItems),
       _backend.write(_maxAgeKey, settings.clipboardMaxAgeDays),
@@ -134,7 +131,6 @@ const String _languageKey = 'dingdong.language';
 const String _themeKey = 'dingdong.panel.themeMode';
 const String _launchAtStartupKey = 'dingdong.launchAtLogin';
 const String _opacityKey = 'dingdong.panel.backgroundOpacity';
-const String _densityKey = 'dingdong.panel.density';
 const String _defaultWorkspaceKey = 'dingdong.panel.defaultTab';
 const String _maxItemsKey = 'dingdong.clipboard.maxItems';
 const String _maxAgeKey = 'dingdong.clipboard.maxAgeDays';

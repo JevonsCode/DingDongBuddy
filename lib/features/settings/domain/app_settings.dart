@@ -34,19 +34,6 @@ enum AppThemePreference {
   }
 }
 
-/// Row spacing used by long desktop lists.
-enum PanelDensityPreference {
-  comfortable,
-  compact;
-
-  static PanelDensityPreference parse(Object? value) {
-    return values.firstWhere(
-      (PanelDensityPreference item) => item.name == value,
-      orElse: () => PanelDensityPreference.comfortable,
-    );
-  }
-}
-
 /// Workspace opened when DingDong starts.
 enum DefaultWorkspace {
   today,
@@ -96,7 +83,6 @@ final class AppSettings {
     this.globalHotKey = GlobalHotKey.defaultValue,
     this.workspaceShortcuts = WorkspaceShortcuts.defaultValue,
     this.backgroundOpacity = 0.90,
-    this.density = PanelDensityPreference.comfortable,
     this.defaultWorkspace = DefaultWorkspace.today,
     this.clipboardMaxItems = 5000,
     this.clipboardMaxAgeDays = 120,
@@ -120,7 +106,6 @@ final class AppSettings {
   final GlobalHotKey globalHotKey;
   final WorkspaceShortcuts workspaceShortcuts;
   final double backgroundOpacity;
-  final PanelDensityPreference density;
   final DefaultWorkspace defaultWorkspace;
   final int clipboardMaxItems;
   final int clipboardMaxAgeDays;
@@ -145,7 +130,6 @@ final class AppSettings {
       globalHotKey: globalHotKey.sanitized(),
       workspaceShortcuts: workspaceShortcuts.sanitized(defaultTargetPlatform),
       backgroundOpacity: backgroundOpacity.clamp(0.82, 0.96),
-      density: density,
       defaultWorkspace: defaultWorkspace,
       clipboardMaxItems: clipboardMaxItems.clamp(20, 5000),
       clipboardMaxAgeDays: clipboardMaxAgeDays.clamp(1, 730),
@@ -173,7 +157,6 @@ final class AppSettings {
     GlobalHotKey? globalHotKey,
     WorkspaceShortcuts? workspaceShortcuts,
     double? backgroundOpacity,
-    PanelDensityPreference? density,
     DefaultWorkspace? defaultWorkspace,
     int? clipboardMaxItems,
     int? clipboardMaxAgeDays,
@@ -198,7 +181,6 @@ final class AppSettings {
       globalHotKey: globalHotKey ?? this.globalHotKey,
       workspaceShortcuts: workspaceShortcuts ?? this.workspaceShortcuts,
       backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
-      density: density ?? this.density,
       defaultWorkspace: defaultWorkspace ?? this.defaultWorkspace,
       clipboardMaxItems: clipboardMaxItems ?? this.clipboardMaxItems,
       clipboardMaxAgeDays: clipboardMaxAgeDays ?? this.clipboardMaxAgeDays,

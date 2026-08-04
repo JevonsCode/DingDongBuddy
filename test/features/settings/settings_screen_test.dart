@@ -144,7 +144,7 @@ void main() {
         findsNothing,
       );
       expect(find.byKey(const Key('settings-opacity')), findsOneWidget);
-      expect(find.byKey(const Key('settings-density')), findsOneWidget);
+      expect(find.byKey(const Key('settings-density')), findsNothing);
       expect(
         find.byKey(const Key('settings-default-workspace')),
         findsOneWidget,

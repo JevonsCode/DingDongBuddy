@@ -295,12 +295,6 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
-  Future<void> setDensity(PanelDensityPreference value) async {
-    _settings = _settings.copyWith(density: value);
-    notifyListeners();
-    await _save();
-  }
-
   Future<void> setDefaultWorkspace(DefaultWorkspace value) async {
     _settings = _settings.copyWith(defaultWorkspace: value);
     notifyListeners();

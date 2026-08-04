@@ -123,6 +123,10 @@ Future<void> main(List<String> arguments) async {
     preferencesBackend: preferencesBackend,
     onResourceLibraryChanged: shellController.requestLibraryRefresh,
     onCopyDetected: () => unawaited(shellGateway.shakeTrayIcon()),
+    onClipboardCaptured: (_) {
+      shellController.requestClipboardRefresh();
+      unawaited(resourceManagerLauncher.refreshClipboard());
+    },
     onNotification: (request) async {
       activityController.record(
         source: request.source ?? 'Agent',

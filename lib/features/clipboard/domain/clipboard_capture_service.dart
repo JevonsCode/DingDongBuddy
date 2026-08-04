@@ -17,17 +17,20 @@ final class ClipboardCaptureService {
     required ClipboardGateway gateway,
     required ClipboardStore store,
     Directory? imageStoreDirectory,
+    void Function(ClipboardRecord record)? onCaptured,
     String Function()? idGenerator,
     DateTime Function()? now,
   }) : _gateway = gateway,
        _store = store,
        _imageStoreDirectory = imageStoreDirectory,
+       _onCaptured = onCaptured,
        _idGenerator = idGenerator ?? _generateUuid,
        _now = now ?? _utcNow;
 
   final ClipboardGateway _gateway;
   final ClipboardStore _store;
   final Directory? _imageStoreDirectory;
+  final void Function(ClipboardRecord record)? _onCaptured;
   final String Function() _idGenerator;
   final DateTime Function() _now;
   Future<ClipboardRecord?>? _activeCapture;
@@ -40,11 +43,18 @@ final class ClipboardCaptureService {
       return activeCapture;
     }
     late final Future<ClipboardRecord?> operation;
-    operation = _captureOnce().whenComplete(() {
-      if (identical(_activeCapture, operation)) {
-        _activeCapture = null;
-      }
-    });
+    operation = _captureOnce()
+        .then((ClipboardRecord? record) {
+          if (record != null) {
+            _onCaptured?.call(record);
+          }
+          return record;
+        })
+        .whenComplete(() {
+          if (identical(_activeCapture, operation)) {
+            _activeCapture = null;
+          }
+        });
     _activeCapture = operation;
     return operation;
   }

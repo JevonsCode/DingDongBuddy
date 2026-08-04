@@ -1,4 +1,4 @@
-# DingDong 1.0.0 Manual Regression Checklist
+# DingDong 1.0.1 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -8,7 +8,7 @@ and macOS golden images; the items below exercise real operating-system state.
 
 - A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
 - A saved non-default opacity can be restored before the desktop shell starts without a native window crash.
-- DingDong opens the saved default workspace and restores theme, density, and opacity.
+- DingDong opens the saved default workspace and restores theme and opacity.
 - On macOS, switching Spaces and reopening the popup keeps the selected opacity
   instead of falling back to the default appearance.
 - Opening DingDong from Applications, Launchpad, or Spotlight reveals and focuses
@@ -46,6 +46,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - Text, URLs, commands, and file selections appear in history. Copied image
   files retain only their source path; screenshots or copied image pixels
   without a source path remain available from DingDong-managed storage.
+- Keep both the main Clipboard workspace and Resource Manager Clipboard view
+  open, then use ChatGPT's Copy Image action. The new image and item count appear
+  in both lists immediately without leaving the view or pressing refresh.
 - Single-click a text or URL row: its side preview keeps Copy, system Open,
   Share, and QR Code in a balanced action group. QR Code appears only when the
   exact content can be encoded; sensitive text remains eligible, while local
@@ -200,7 +203,7 @@ and macOS golden images; the items below exercise real operating-system state.
 ## Settings and notifications
 
 - Language changes immediately update navigation and feature labels.
-- System/light/dark theme and list density render without clipped controls.
+- System/light/dark theme and window opacity render without clipped controls.
 - Clipboard retention accepts 20–5,000 items and 1–730 days.
 - Agent clipboard-content access defaults to off and persists after restart.
 - Built-in, random, system, muted, and custom notification sounds behave as labeled.
@@ -269,8 +272,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.0.0` build `35` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.0.0.35` and product name `DingDong`.
+- The macOS release app metadata is version `1.0.1` build `36` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.0.1.36` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

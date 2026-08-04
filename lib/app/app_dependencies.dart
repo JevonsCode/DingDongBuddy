@@ -52,6 +52,7 @@ final class AppDependencies {
     void Function(int index)? onShowUi,
     void Function()? onResourceLibraryChanged,
     void Function()? onCopyDetected,
+    void Function(ClipboardRecord record)? onClipboardCaptured,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
     PreferencesBackend? preferencesBackend,
@@ -71,6 +72,7 @@ final class AppDependencies {
           gateway: clipboardGateway,
           store: clipboardStore,
           imageStoreDirectory: paths.clipboardImagesDirectory,
+          onCaptured: onClipboardCaptured,
         );
     final ClipboardMonitorService clipboardMonitorService =
         ClipboardMonitorService(

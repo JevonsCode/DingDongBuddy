@@ -37,7 +37,6 @@ part 'clipboard_record_list.dart';
 class ClipboardScreen extends StatefulWidget {
   const ClipboardScreen({
     required this.viewModel,
-    this.compact = false,
     this.settingsViewModel,
     this.showShortcutHints = false,
     this.showPlainTextShortcutHints = false,
@@ -55,7 +54,6 @@ class ClipboardScreen extends StatefulWidget {
   });
 
   final ClipboardViewModel viewModel;
-  final bool compact;
   final ClipboardSettingsController? settingsViewModel;
   final bool showShortcutHints;
   final bool showPlainTextShortcutHints;
@@ -123,7 +121,6 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   }
 
   ClipboardViewModel get viewModel => widget.viewModel;
-  bool get compact => widget.compact;
   ClipboardSettingsController? get settingsViewModel =>
       widget.settingsViewModel;
   bool get showShortcutHints => widget.showShortcutHints;
@@ -344,7 +341,6 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                           (BuildContext context, BoxConstraints constraints) {
                             final Widget list = _ClipboardList(
                               viewModel: viewModel,
-                              compact: compact,
                               includeShare: onShare != null,
                               showShortcutHints: showShortcutHints,
                               showPlainTextShortcutHints:

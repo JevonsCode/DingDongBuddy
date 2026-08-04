@@ -3,7 +3,6 @@ part of 'clipboard_screen.dart';
 class _ClipboardList extends StatefulWidget {
   const _ClipboardList({
     required this.viewModel,
-    required this.compact,
     required this.includeShare,
     required this.showShortcutHints,
     required this.showPlainTextShortcutHints,
@@ -17,7 +16,6 @@ class _ClipboardList extends StatefulWidget {
   });
 
   final ClipboardViewModel viewModel;
-  final bool compact;
   final bool includeShare;
   final bool showShortcutHints;
   final bool showPlainTextShortcutHints;
@@ -211,7 +209,7 @@ class _ClipboardListState extends State<_ClipboardList> {
 
   double _itemExtent(BuildContext context) {
     final bool callout = MediaQuery.sizeOf(context).width < 600;
-    return callout ? 82 : (widget.compact ? 60 : 72);
+    return callout ? 82 : 72;
   }
 }
 

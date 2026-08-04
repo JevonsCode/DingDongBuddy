@@ -12,7 +12,7 @@ class DesktopSegment<T> {
 ///
 /// Selection changes are intentionally not animated. This prevents the brief
 /// Material ink/transition flash that is especially noticeable when changing
-/// appearance settings such as theme or density.
+/// appearance settings such as the theme.
 class DesktopSegmentedControl<T> extends StatelessWidget {
   const DesktopSegmentedControl({
     required this.value,

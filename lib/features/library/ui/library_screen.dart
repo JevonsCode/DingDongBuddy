@@ -20,7 +20,6 @@ import 'package:flutter/material.dart';
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({
     required this.viewModel,
-    this.compact = false,
     this.transferGateway,
     this.contextMenuGateway,
     this.onOpenExternalLink,
@@ -28,7 +27,6 @@ class LibraryScreen extends StatelessWidget {
   });
 
   final LibraryViewModel viewModel;
-  final bool compact;
   final LibraryTransferGateway? transferGateway;
   final DesktopContextMenuGateway? contextMenuGateway;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
@@ -72,7 +70,6 @@ class LibraryScreen extends StatelessWidget {
                     Expanded(
                       child: ResourceList(
                         viewModel: viewModel,
-                        compact: compact,
                         contextMenuGateway: contextMenuGateway,
                         onDeleteResource: (Resource resource) =>
                             _confirmDeleteResource(context, resource),

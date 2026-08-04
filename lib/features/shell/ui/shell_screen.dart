@@ -504,9 +504,6 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   Widget _selectedWorkspace() {
-    final bool compact =
-        widget.settingsViewModel.settings.density ==
-        PanelDensityPreference.compact;
     return switch (widget.controller.selectedIndex) {
       0 => ActivityScreen(
         activityController: widget.activityController,
@@ -529,7 +526,6 @@ class _ShellScreenState extends State<ShellScreen> {
       ),
       2 => ClipboardScreen(
         viewModel: widget.clipboardViewModel,
-        compact: compact,
         settingsViewModel: widget.settingsViewModel,
         showShortcutHints: _showShortcutHints,
         showPlainTextShortcutHints: _showPlainTextShortcutHints,

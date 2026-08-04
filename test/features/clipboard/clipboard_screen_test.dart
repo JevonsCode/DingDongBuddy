@@ -606,11 +606,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ClipboardScreen(
-            viewModel: model,
-            compact: true,
-            filtersExpanded: true,
-          ),
+          home: ClipboardScreen(viewModel: model, filtersExpanded: true),
         ),
       );
 

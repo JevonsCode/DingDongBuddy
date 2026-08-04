@@ -85,6 +85,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             }
             _selectDestination(destination);
             await windowManager.focus();
+          case 'clipboard_changed':
+            widget.clipboardViewModel.load();
           case 'edit_resource':
             final Object? arguments = call.arguments;
             final String? id = arguments is Map
