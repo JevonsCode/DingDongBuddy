@@ -1,0 +1,24 @@
+docs/styles.css
+  s_cd7547caab1317::t_a40829db2aa7d6 379,409,414,472
+  s_cd7547caab1317::t_80bd891c1540c2 152,298,306,309-311,313,328,334,339,342,348-349,369,404,406,423,2131,2174
+  s_cd7547caab1317::t_cfae11d86c2765 408,415,428-429,437
+docs/index.html
+  s_cd7547caab1317::t_d96bcdb5997e77 60-62
+  s_cd7547caab1317::t_80bd891c1540c2 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "ec7c6bded90c38ccfcf681991211b84f84cc81b9",
+  "prompts": {},
+  "sessions": {
+    "s_cd7547caab1317": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc796-d3ab-7de0-b691-bf0101e179bd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
