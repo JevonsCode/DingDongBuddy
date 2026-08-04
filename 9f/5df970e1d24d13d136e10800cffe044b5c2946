@@ -1,0 +1,89 @@
+docs/index.html
+  s_03b80a59fad42d::t_953330f7e1679b 79,211,471,476,478,484,486,492,655,761,763,765,847,953,955,957,1012,1057
+test/platform/multi_window_resource_manager_launcher_test.dart
+  s_03b80a59fad42d::t_bf5ce84e9040b7 1-45,47-51,57-58
+  s_03b80a59fad42d::t_d60b9ded4329b9 52-56
+  s_03b80a59fad42d::t_8f5c8d89a213b3 46
+lib/main.dart
+  s_03b80a59fad42d::t_9a1b36f94e39c6 126-129
+lib/app/app_dependencies.dart
+  s_03b80a59fad42d::t_9a1b36f94e39c6 55,75
+test/features/settings/release_settings_section_test.dart
+  s_03b80a59fad42d::t_43bd4a350b30c7 25,86,146,158
+test/features/shell/popup_shell_test.dart
+  s_03b80a59fad42d::t_43bd4a350b30c7 730
+test/features/library/resource_manager_app_test.dart
+  s_03b80a59fad42d::t_aba3b9d0fdf7c0 55-57,144-167,322-340
+  s_03b80a59fad42d::t_836712197c6427 1-2
+  s_03b80a59fad42d::t_ce6961190faeb2 4
+test/features/settings/settings_screen_test.dart
+  s_03b80a59fad42d::t_c120d2af0dac0c 147
+docs/release-notes.md
+  s_03b80a59fad42d::t_8abdeb6c6bc7fc 3-4,17-21,32,43,45-46
+  s_03b80a59fad42d::t_34fbcf15afb206 1,6-16,23,25-30,34,36-41,48,50
+README.md
+  s_03b80a59fad42d::t_86c5471b799645 58
+lib/features/agent_api/data/mcp_server.dart
+  s_03b80a59fad42d::t_ff947d3739da8f 39
+docs/product/manual-regression.md
+  s_03b80a59fad42d::t_ff947d3739da8f 1,49-51,275-276
+  s_03b80a59fad42d::t_8abdeb6c6bc7fc 11,206
+test/features/settings/settings_view_model_test.dart
+  s_03b80a59fad42d::t_43bd4a350b30c7 377-378,380,396,400,683
+README.zh.md
+  s_03b80a59fad42d::t_86c5471b799645 57
+windows/runner/Runner.rc
+  s_03b80a59fad42d::t_ff947d3739da8f 72
+lib/features/settings/domain/release_update.dart
+  s_03b80a59fad42d::t_ff947d3739da8f 114-115
+docs/dingdong-release.json
+  s_03b80a59fad42d::t_ff947d3739da8f 3-5,11,15,21,27-29
+  s_03b80a59fad42d::t_8abdeb6c6bc7fc 30
+lib/features/clipboard/domain/clipboard_capture_service.dart
+  s_03b80a59fad42d::t_9a1b36f94e39c6 20,26,33,46-57
+test/features/clipboard/clipboard_capture_service_test.dart
+  s_03b80a59fad42d::t_aba3b9d0fdf7c0 32-56
+  s_03b80a59fad42d::t_ce6961190faeb2 4
+lib/features/library/ui/resource_list.dart
+  s_03b80a59fad42d::t_c120d2af0dac0c 53
+pubspec.yaml
+  s_03b80a59fad42d::t_ff947d3739da8f 4
+test/packaging/desktop_identity_test.dart
+  s_03b80a59fad42d::t_ff947d3739da8f 70,80,398,464-465,471
+  s_03b80a59fad42d::t_6b8a6f19e20c19 76-78,82,84,86-89,92,94,98
+  s_03b80a59fad42d::t_a0a852bfb3e461 83,85
+test/app/dingdong_app_test.dart
+  s_03b80a59fad42d::t_ff947d3739da8f 40,46-47
+lib/features/settings/data/settings_repository.dart
+  s_03b80a59fad42d::t_c120d2af0dac0c 53-63,65,68-70,73,76-77
+lib/features/library/ui/resource_manager_app.dart
+  s_03b80a59fad42d::t_9a1b36f94e39c6 88-89
+test/platform/tray_manager_visual_contract_test.dart
+  s_03b80a59fad42d::t_bf5ce84e9040b7 294-299
+test/features/clipboard/clipboard_screen_test.dart
+  s_03b80a59fad42d::t_baaa1bd29723a2 609
+lib/features/clipboard/ui/clipboard_record_list.dart
+  s_03b80a59fad42d::t_c120d2af0dac0c 212
+lib/platform/multi_window_resource_manager_launcher.dart
+  s_03b80a59fad42d::t_9a1b36f94e39c6 15-30
+lib/features/agent_adapters/data/codex_completion_hook_gateway.dart
+  s_03b80a59fad42d::t_ff947d3739da8f 119
+lib/core/widgets/desktop_segmented_control.dart
+  s_03b80a59fad42d::t_c120d2af0dac0c 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "9f5df970e1d24d13d136e10800cffe044b5c2946",
+  "prompts": {},
+  "sessions": {
+    "s_03b80a59fad42d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcd51-ee83-7bd2-a284-aad1a5ebc292",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
