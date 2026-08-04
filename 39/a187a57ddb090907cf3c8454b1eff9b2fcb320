@@ -1,0 +1,36 @@
+docs/assets/symbols/github.svg
+  s_cd7547caab1317::t_639e96601ccda1 1
+docs/index.html
+  s_cd7547caab1317::t_06e849f5ea421b 741-751,936-946
+  s_cd7547caab1317::t_6d1565f287a4f6 1083-1086,1112,1561-1588,1657,1695
+  s_cd7547caab1317::t_4bef486894d8b8 74-80,608,803,1082,1653-1656,1696-1703
+  s_cd7547caab1317::t_8ff64b318b714b 525-589
+  s_cd7547caab1317::t_639e96601ccda1 9,53-56,606-607,801-802
+  s_cd7547caab1317::t_56b2789594fc4b 386-416
+docs/styles.css
+  s_cd7547caab1317::t_e44bafce3c01a8 257-258,283-285,299-300,306-307,323,335,338
+  s_cd7547caab1317::t_5fce48765d124b 1774,1776-1781
+  s_cd7547caab1317::t_aef9416d2f7f6f 1920-2033,2057-2061,2335-2353
+  s_cd7547caab1317::t_026ec19d543c40 2460-2461
+  s_cd7547caab1317::t_639e96601ccda1 289-298
+  s_cd7547caab1317::t_3e16c2339bc4ad 433,435,438-439,442-475,486-492
+test/packaging/desktop_identity_test.dart
+  s_cd7547caab1317::t_e983c7b79a0c93 378
+  s_cd7547caab1317::t_7f3c2633d437c3 241-271
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "39a187a57ddb090907cf3c8454b1eff9b2fcb320",
+  "prompts": {},
+  "sessions": {
+    "s_cd7547caab1317": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc796-d3ab-7de0-b691-bf0101e179bd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
