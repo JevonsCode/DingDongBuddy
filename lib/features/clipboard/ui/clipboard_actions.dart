@@ -59,14 +59,15 @@ extension _ClipboardActions on _ClipboardScreenState {
               ),
             ),
             actions: <Widget>[
-              TextButton(
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(context.localized('Cancel', '取消')),
+                label: context.localized('Cancel', '取消'),
+                compact: true,
               ),
-              FilledButton(
-                style: DesktopDialogStyle.destructiveButtonStyle(context),
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(context.localized('Delete', '删除')),
+                label: context.localized('Delete', '删除'),
+                tone: DesktopActionTone.danger,
               ),
             ],
           ),
@@ -85,15 +86,17 @@ extension _ClipboardActions on _ClipboardScreenState {
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Add title', '添加标题')),
-        content: TextField(controller: controller, autofocus: true),
+        content: DesktopTextField(controller: controller, autofocus: true),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.localized('Cancel', '取消')),
+            label: context.localized('Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.localized('Save', '保存')),
+            label: context.localized('Save', '保存'),
+            tone: DesktopActionTone.primary,
           ),
         ],
       ),
@@ -117,20 +120,22 @@ extension _ClipboardActions on _ClipboardScreenState {
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Edit text', '编辑文本')),
-        content: TextField(
+        content: DesktopTextField(
           controller: controller,
           autofocus: true,
           minLines: 6,
           maxLines: 12,
         ),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.localized('Cancel', '取消')),
+            label: context.localized('Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.localized('Save', '保存')),
+            label: context.localized('Save', '保存'),
+            tone: DesktopActionTone.primary,
           ),
         ],
       ),

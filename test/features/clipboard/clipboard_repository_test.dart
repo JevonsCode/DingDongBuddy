@@ -148,7 +148,7 @@ void main() {
   });
 
   test(
-    'multiple clipboard groups round-trip through the legacy column',
+    'multiple clipboard groups round-trip through normalized JSON',
     () async {
       final Directory directory = await Directory.systemTemp.createTemp(
         'dingdong-clipboard-groups-test-',
@@ -288,7 +288,7 @@ void main() {
   );
 
   test(
-    'retention excludes legacy and grouped archives from automatic deletion',
+    'retention protects current archive groups but not obsolete archive tags',
     () async {
       final Directory directory = await Directory.systemTemp.createTemp(
         'dingdong-clipboard-archive-retention-test-',
@@ -301,10 +301,17 @@ void main() {
       final DateTime now = DateTime.utc(2026, 7, 12);
       repository.save(
         _record(
-          'legacy-archive',
+          'tag-only-archive',
+          now.subtract(const Duration(days: 30)),
+          group: 'Clipboard',
+          tags: const <String>['clipboard', 'text', 'archived'],
+        ),
+      );
+      repository.save(
+        _record(
+          'archive-group',
           now.subtract(const Duration(days: 30)),
           group: 'Archive',
-          tags: const <String>['clipboard', 'text', 'archived'],
         ),
       );
       repository.save(
@@ -328,7 +335,11 @@ void main() {
       final List<ClipboardRecord> records = repository.list(limit: 5000);
 
       expect(
-        records.any((ClipboardRecord item) => item.id == 'legacy-archive'),
+        records.any((ClipboardRecord item) => item.id == 'tag-only-archive'),
+        isFalse,
+      );
+      expect(
+        records.any((ClipboardRecord item) => item.id == 'archive-group'),
         isTrue,
       );
       expect(
@@ -343,7 +354,7 @@ void main() {
         records
             .where(
               (ClipboardRecord item) =>
-                  !item.tags.contains('archived') &&
+                  item.id != 'archive-group' &&
                   !item.groupNames.contains('项目归档'),
             )
             .length,
@@ -353,7 +364,7 @@ void main() {
   );
 
   test(
-    'protected history remains listable beyond the ordinary limit',
+    'obsolete archive tags no longer escape the ordinary history limit',
     () async {
       final Directory directory = await Directory.systemTemp.createTemp(
         'dingdong-clipboard-protected-list-test-',
@@ -382,10 +393,10 @@ void main() {
         includeProtectedBeyondLimit: true,
       );
 
-      expect(records, hasLength(21));
+      expect(records, hasLength(20));
       expect(
         records.any((ClipboardRecord item) => item.id == 'old-archive'),
-        isTrue,
+        isFalse,
       );
       expect(
         records.where((ClipboardRecord item) => !item.isArchived),
@@ -435,13 +446,7 @@ void main() {
             group: 'Archive',
             title: 'Archived image',
             content: archivedImage.path,
-            tags: const <String>[
-              'archived',
-              'clipboard',
-              'file',
-              'file-url',
-              'image',
-            ],
+            tags: const <String>['clipboard', 'file', 'file-url', 'image'],
             pinned: false,
             enabled: true,
             activation: 'taskMatch',

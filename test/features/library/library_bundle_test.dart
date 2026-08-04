@@ -89,6 +89,17 @@ void main() {
     expect(result.imported.map((Resource item) => item.id), <String>['two']);
   });
 
+  test('rejects bundles from removed schema and service versions', () {
+    expect(
+      () => LibraryBundle.importPayload(<String, Object?>{
+        'service': 'DingDong',
+        'schemaVersion': 1,
+        'items': const <Object?>[],
+      }, existing: const <Resource>[]),
+      throwsFormatException,
+    );
+  });
+
   test('local-path skills export portable text without path metadata', () {
     final Directory directory = Directory.systemTemp.createTempSync(
       'dingdong-portable-skill-',

@@ -1,4 +1,5 @@
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:flutter/material.dart';
@@ -56,16 +57,18 @@ final class _LibraryImportDialogState extends State<LibraryImportDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        DesktopActionButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          label: 'Cancel',
+          compact: true,
         ),
-        FilledButton.icon(
+        DesktopActionButton(
           key: const Key('library-import-choose-folder'),
           onPressed: () =>
               Navigator.pop(context, LibraryImportOptions(type: _type)),
           icon: const Icon(Icons.folder_open_outlined, size: 18),
-          label: const Text('Choose folder'),
+          label: 'Choose folder',
+          tone: DesktopActionTone.primary,
         ),
       ],
     );

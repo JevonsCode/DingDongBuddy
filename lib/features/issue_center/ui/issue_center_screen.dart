@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:flutter/material.dart';
@@ -93,7 +94,7 @@ final class _IssueHeader extends StatelessWidget {
                 ],
               ),
             ),
-            OutlinedButton.icon(
+            DesktopActionButton(
               key: const Key('issue-center-check'),
               onPressed: controller.isChecking
                   ? null
@@ -104,11 +105,8 @@ final class _IssueHeader extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 1.6),
                     )
                   : const Icon(Icons.refresh_rounded, size: 17),
-              label: Text(context.localized('Check', '检测')),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(92, 36),
-                visualDensity: VisualDensity.compact,
-              ),
+              label: context.localized('Check', '检测'),
+              tone: DesktopActionTone.neutral,
             ),
           ],
         ),
@@ -274,12 +272,13 @@ final class _IssueRow extends StatelessWidget {
           ),
           if (issue.resourceId != null) ...<Widget>[
             const SizedBox(width: 18),
-            TextButton.icon(
+            DesktopActionButton(
               key: Key('issue-open-resource-${issue.resourceId}'),
               onPressed: () => onOpenResource(issue.resourceId!),
               icon: const Icon(Icons.arrow_forward_rounded, size: 15),
-              iconAlignment: IconAlignment.end,
-              label: Text(context.localized('View resource', '查看资源')),
+              label: context.localized('View resource', '查看资源'),
+              tone: DesktopActionTone.soft,
+              compact: true,
             ),
           ],
         ],

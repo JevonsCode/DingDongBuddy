@@ -1,4 +1,4 @@
-/// A settings choice; legacy API-only sounds remain parseable elsewhere.
+/// Sounds exposed by the current desktop settings surface.
 final class SoundChoice {
   const SoundChoice(this.value, this.englishLabel, this.chineseLabel);
 

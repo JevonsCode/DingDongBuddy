@@ -29,13 +29,12 @@ void main() {
     expect(settings.trayNotificationColor, TrayNotificationColor.pink);
   });
 
-  test('loads legacy preference keys and sanitizes unsafe limits', () async {
+  test('loads persisted preferences and sanitizes unsafe limits', () async {
     final MemoryPreferencesBackend backend =
         MemoryPreferencesBackend(<String, Object>{
           'dingdong.clipboard.monitoring': true,
           'dingdong.language': 'zh',
           'dingdong.panel.themeMode': 'dark',
-          'dingdong.telemetry.anonymous': true,
           'dingdong.panel.backgroundOpacity': 0.75,
           'dingdong.panel.density': 'compact',
           'dingdong.panel.defaultTab': 'clipboard',
@@ -44,7 +43,6 @@ void main() {
           'dingdong.agentApi.allowClipboardContent': true,
           'dingdong.selectedSound': 'dingBright',
           'dingdong.customSoundPath': '/tmp/chime.wav',
-          'dingdong.mcpSetupPromptOverride': '  custom setup  ',
           'dingdong.onboarding.mcpAccessSeen': true,
           'dingdong.api.port': 70000,
           'dingdong.agentActivity.remember': false,
@@ -137,7 +135,6 @@ void main() {
     expect(backend.values['dingdong.clipboard.monitoring'], isTrue);
     expect(backend.values['dingdong.language'], 'en');
     expect(backend.values['dingdong.panel.themeMode'], 'system');
-    expect(backend.values, isNot(contains('dingdong.telemetry.anonymous')));
     expect(backend.values['dingdong.panel.backgroundOpacity'], 0.88);
     expect(backend.values['dingdong.panel.density'], 'compact');
     expect(backend.values['dingdong.panel.defaultTab'], 'library');
@@ -163,35 +160,7 @@ void main() {
     );
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
-    expect(backend.values, isNot(contains('dingdong.mcpSetupPromptOverride')));
     expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
     expect(backend.values['dingdong.api.port'], 2444);
-  });
-
-  test(
-    'legacy novelty sound preference migrates to classic DingDong',
-    () async {
-      final SettingsRepository repository = SettingsRepository(
-        MemoryPreferencesBackend(<String, Object>{
-          'dingdong.selectedSound': 'candy',
-        }),
-      );
-
-      final AppSettings settings = await repository.load();
-
-      expect(settings.selectedSound, 'default');
-    },
-  );
-
-  test('legacy wood preference becomes the new classic default', () async {
-    final SettingsRepository repository = SettingsRepository(
-      MemoryPreferencesBackend(<String, Object>{
-        'dingdong.selectedSound': 'dingWood',
-      }),
-    );
-
-    final AppSettings settings = await repository.load();
-
-    expect(settings.selectedSound, 'default');
   });
 }

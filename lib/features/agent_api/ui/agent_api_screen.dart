@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/domain/agent_api_gateway.dart';
@@ -256,7 +258,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: <Widget>[
-                          FilledButton.tonalIcon(
+                          DesktopActionButton(
                             key: const Key('agent-api-test-ding'),
                             onPressed: widget.baseUri == null
                                 ? null
@@ -265,15 +267,14 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                               Icons.notifications_none_rounded,
                               size: 17,
                             ),
-                            label: Text(
-                              context.localized(
-                                'Send test notification',
-                                '发送测试通知',
-                              ),
+                            label: context.localized(
+                              'Send test notification',
+                              '发送测试通知',
                             ),
+                            tone: DesktopActionTone.soft,
                           ),
                           if (widget.resourceManagerLauncher != null)
-                            OutlinedButton.icon(
+                            DesktopActionButton(
                               key: const Key('agent-api-manage-agents'),
                               onPressed: () => unawaited(
                                 widget.resourceManagerLauncher!.show(
@@ -282,9 +283,11 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                                 ),
                               ),
                               icon: const Icon(Icons.hub_outlined, size: 17),
-                              label: Text(
-                                context.localized('Manage Agents', '管理 Agent'),
+                              label: context.localized(
+                                'Manage Agents',
+                                '管理 Agent',
                               ),
+                              tone: DesktopActionTone.neutral,
                             ),
                         ],
                       ),

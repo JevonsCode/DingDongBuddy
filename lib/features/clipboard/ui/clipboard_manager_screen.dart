@@ -2,8 +2,11 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
@@ -72,7 +75,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                               ),
                         ),
                         const Spacer(),
-                        TextButton(
+                        DesktopActionButton(
                           key: const Key('clipboard-manager-select-all'),
                           onPressed: () => setState(() {
                             if (_selectedIds.length == records.length) {
@@ -87,12 +90,12 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                                 );
                             }
                           }),
-                          child: Text(
-                            _selectedIds.length == records.length &&
-                                    records.isNotEmpty
-                                ? context.localized('Clear selection', '取消全选')
-                                : context.localized('Select all', '全选'),
-                          ),
+                          label:
+                              _selectedIds.length == records.length &&
+                                  records.isNotEmpty
+                              ? context.localized('Clear selection', '取消全选')
+                              : context.localized('Select all', '全选'),
+                          compact: true,
                         ),
                       ],
                     ),
@@ -189,14 +192,15 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
       builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(context.localized('Delete selected items?', '删除所选条目？')),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(context.localized('Cancel', '取消')),
+            label: context.localized('Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
-            style: DesktopDialogStyle.destructiveButtonStyle(context),
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(context.localized('Delete', '删除')),
+            label: context.localized('Delete', '删除'),
+            tone: DesktopActionTone.danger,
           ),
         ],
       ),
@@ -377,9 +381,10 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
           ),
         ),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.localized('Close', '关闭')),
+            label: context.localized('Close', '关闭'),
+            compact: true,
           ),
         ],
       ),
@@ -401,20 +406,22 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
               ? context.localized('Add title', '添加标题')
               : context.localized('Edit text', '编辑文本'),
         ),
-        content: TextField(
+        content: DesktopTextField(
           controller: controller,
           autofocus: true,
           minLines: titleOnly ? 1 : 6,
           maxLines: titleOnly ? 1 : 12,
         ),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.localized('Cancel', '取消')),
+            label: context.localized('Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.localized('Save', '保存')),
+            label: context.localized('Save', '保存'),
+            tone: DesktopActionTone.primary,
           ),
         ],
       ),
@@ -439,14 +446,15 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
               context.localized('Delete this clipboard item?', '删除此剪贴板条目？'),
             ),
             actions: <Widget>[
-              TextButton(
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(context.localized('Cancel', '取消')),
+                label: context.localized('Cancel', '取消'),
+                compact: true,
               ),
-              FilledButton(
-                style: DesktopDialogStyle.destructiveButtonStyle(context),
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(context.localized('Delete', '删除')),
+                label: context.localized('Delete', '删除'),
+                tone: DesktopActionTone.danger,
               ),
             ],
           ),
@@ -496,52 +504,26 @@ DesktopMenuItem<_ManagerAction> _managerMenuItem(
   destructive: destructive,
 );
 
-class _ManagerSearchField extends StatefulWidget {
+class _ManagerSearchField extends StatelessWidget {
   const _ManagerSearchField({required this.onChanged});
 
   final ValueChanged<String> onChanged;
 
   @override
-  State<_ManagerSearchField> createState() => _ManagerSearchFieldState();
-}
-
-class _ManagerSearchFieldState extends State<_ManagerSearchField> {
-  final FocusNode _focusNode = FocusNode(
-    debugLabel: 'clipboard-manager-search',
-  );
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    return AnimatedBuilder(
-      animation: _focusNode,
-      builder: (BuildContext context, Widget? child) => AnimatedContainer(
-        key: const Key('clipboard-manager-search-surface'),
-        height: _managerSearchControlHeight,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOutCubic,
-        clipBehavior: Clip.antiAlias,
-        decoration: _managerControlDecoration(
-          colors,
-          emphasized: _focusNode.hasFocus,
-        ),
-        child: child,
-      ),
-      child: _CenteredSearchInput(
-        textFieldKey: const Key('clipboard-manager-search'),
-        iconKey: const Key('clipboard-manager-search-icon'),
-        height: _managerSearchControlHeight,
-        leadingWidth: 38,
-        focusNode: _focusNode,
-        onChanged: widget.onChanged,
-        hintText: context.localized('Search clipboard history', '搜索剪贴板历史'),
-      ),
+    return DesktopSearchField(
+      key: const Key('clipboard-manager-search'),
+      surfaceKey: const Key('clipboard-manager-search-surface'),
+      searchIconKey: const Key('clipboard-manager-search-icon'),
+      height: _managerSearchControlHeight,
+      onChanged: onChanged,
+      hintText: context.localized('Search clipboard history', '搜索剪贴板历史'),
+      clearTooltip: context.localized('Clear search', '清除搜索'),
+      backgroundColor: colors.surface,
+      borderColor: colors.outlineVariant,
+      focusBorderColor: colors.outline,
+      borderRadius: 8,
     );
   }
 }
@@ -554,108 +536,8 @@ BoxDecoration _managerControlDecoration(
   border: Border.all(
     color: emphasized ? colors.outline : colors.outlineVariant,
   ),
-  borderRadius: BorderRadius.circular(5),
+  borderRadius: BorderRadius.circular(8),
 );
-
-class _CenteredSearchInput extends StatelessWidget {
-  const _CenteredSearchInput({
-    required this.textFieldKey,
-    required this.iconKey,
-    required this.height,
-    required this.leadingWidth,
-    required this.focusNode,
-    required this.onChanged,
-    required this.hintText,
-    this.controller,
-    this.onClear,
-  });
-
-  final Key textFieldKey;
-  final Key iconKey;
-  final double height;
-  final double leadingWidth;
-  final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
-  final String hintText;
-  final TextEditingController? controller;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colors = theme.colorScheme;
-    final TextStyle? textStyle = theme.textTheme.bodyMedium?.copyWith(
-      height: 1.05,
-      fontWeight: FontWeight.w400,
-    );
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        SizedBox(
-          key: iconKey,
-          width: leadingWidth,
-          height: height,
-          child: Center(
-            child: Icon(
-              Icons.search_rounded,
-              size: height <= 32 ? 16 : 17,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: TextField(
-              key: textFieldKey,
-              controller: controller,
-              focusNode: focusNode,
-              onChanged: onChanged,
-              maxLines: 1,
-              cursorColor: colors.onSurfaceVariant,
-              cursorHeight: height <= 32 ? 16 : 17,
-              cursorWidth: 1.5,
-              style: textStyle,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                filled: false,
-                hintText: hintText,
-                hintStyle: textStyle?.copyWith(color: colors.onSurfaceVariant),
-                contentPadding: EdgeInsets.zero,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-              ),
-            ),
-          ),
-        ),
-        if (onClear != null)
-          Semantics(
-            button: true,
-            label: context.localized('Clear search', '清除搜索'),
-            child: GestureDetector(
-              key: const Key('clipboard-manager-source-search-clear'),
-              behavior: HitTestBehavior.opaque,
-              onTap: onClear,
-              child: SizedBox(
-                width: 28,
-                height: height,
-                child: Center(
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 14,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          )
-        else
-          const SizedBox(width: 8),
-      ],
-    );
-  }
-}
 
 class _SourceFilterDropdown extends StatefulWidget {
   const _SourceFilterDropdown({required this.viewModel});
@@ -750,24 +632,27 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Container(
-                  key: const Key('clipboard-manager-source-search-surface'),
+                DesktopSearchField(
+                  key: const Key('clipboard-manager-source-search'),
+                  surfaceKey: const Key(
+                    'clipboard-manager-source-search-surface',
+                  ),
+                  searchIconKey: const Key(
+                    'clipboard-manager-source-search-icon',
+                  ),
+                  clearButtonKey: const Key(
+                    'clipboard-manager-source-search-clear',
+                  ),
                   height: 34,
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: _CenteredSearchInput(
-                    textFieldKey: const Key('clipboard-manager-source-search'),
-                    iconKey: const Key('clipboard-manager-source-search-icon'),
-                    height: 32,
-                    leadingWidth: 34,
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    onChanged: (String value) => setState(() => _query = value),
-                    hintText: context.localized('Search sources', '搜索来源'),
-                    onClear: _query.isEmpty ? null : _clearSearch,
-                  ),
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  onChanged: (String value) => setState(() => _query = value),
+                  hintText: context.localized('Search sources', '搜索来源'),
+                  clearTooltip: context.localized('Clear search', '清除搜索'),
+                  backgroundColor: colors.surfaceContainerLow,
+                  borderColor: colors.outlineVariant.withValues(alpha: 0.72),
+                  focusBorderColor: colors.outline,
+                  borderRadius: 6,
                 ),
                 const SizedBox(height: 6),
                 _SourceFilterOption(
@@ -846,7 +731,7 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
                   child: Material(
                     type: MaterialType.transparency,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(5),
+                      borderRadius: BorderRadius.circular(8),
                       hoverColor: colors.onSurface.withValues(alpha: 0.035),
                       focusColor: colors.onSurface.withValues(alpha: 0.035),
                       onTap: () {
@@ -937,12 +822,6 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
       _query = '';
       _searchController.clear();
     });
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    setState(() => _query = '');
-    _searchFocusNode.requestFocus();
   }
 }
 
@@ -1055,7 +934,7 @@ class _ManagerFilters extends StatelessWidget {
                   },
                 ),
               ),
-              IconButton(
+              DesktopIconButton(
                 key: const Key('clipboard-manager-categories'),
                 tooltip: context.localized('Manage categories', '管理分类'),
                 onPressed: () => showDialog<void>(
@@ -1210,22 +1089,27 @@ class _BulkToolbar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: <Widget>[
         Text(context.localized('$count selected', '已选择 $count 项')),
-        FilledButton.tonal(
+        DesktopActionButton(
           key: const Key('clipboard-bulk-archive-to'),
           onPressed: onAssignGroup,
-          child: Text(context.localized('Archive to…', '归档到…')),
+          label: context.localized('Archive to…', '归档到…'),
+          tone: DesktopActionTone.soft,
         ),
-        TextButton(
+        DesktopActionButton(
           onPressed: onEnable,
-          child: Text(context.localized('Enable', '启用')),
+          label: context.localized('Enable', '启用'),
+          compact: true,
         ),
-        TextButton(
+        DesktopActionButton(
           onPressed: onDisable,
-          child: Text(context.localized('Disable', '停用')),
+          label: context.localized('Disable', '停用'),
+          compact: true,
         ),
-        TextButton(
+        DesktopActionButton(
           onPressed: onDelete,
-          child: Text(context.localized('Delete', '删除')),
+          label: context.localized('Delete', '删除'),
+          tone: DesktopActionTone.danger,
+          compact: true,
         ),
       ],
     ),

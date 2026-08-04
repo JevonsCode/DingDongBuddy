@@ -1,46 +1,86 @@
-# DingDong 0.9.9
+# DingDong 1.0.0
 
-This release makes the resource manager aware of the Agent client that started
-the task, so shared resources can be targeted without leaking to other clients.
+DingDong 1.0 turns the clipboard, Agent resource library, and completion alerts
+into one cohesive desktop workflow.
 
-## Source-scoped resources
+## Clipboard and sharing
 
-- Trigger groups can match the current workspace path, repository URL, or Agent
-  source, including Codex, Claude Code, and Cursor.
-- Multiple source rules in one group use OR semantics, so a resource can be
-  shared by several Agent clients.
-- Prompt and Skill delivery is filtered by the current source, and full Skill
-  loads re-check the same scope before returning content.
-- Source-scoped MCP servers are written only to matching native client
-  configurations; unscoped MCP servers retain their existing global behavior.
+- Links, files, folders, and images can be opened with the operating system from
+  both their content icon and the redesigned Open action.
+- Eligible clipboard text and links can be shared as a QR Code. Clicking the
+  rendered code opens only the artwork in a separate resizable viewer; Escape
+  returns focus to the detail preview so the next Escape closes it.
+- Clipboard category management, search, filters, group controls, selection
+  actions, and preview buttons now share the same compact desktop visual system.
+- Old legacy archive compatibility is removed; pinned and explicit custom-group
+  archives remain protected from automatic retention.
 
-## Compatibility and administration
+## Agent activity
 
-- Existing workspace- and repository-scoped trigger groups continue to work.
-- Changing trigger groups immediately re-synchronizes native MCP configuration.
-- Resource Manager and the Agent API expose the same source-scope rules.
+- Repeated activity uses a bottom-aligned ×N watermark instead of a tag. Counts
+  cap at 99+, newly revealed unread activity is pale orange, and acknowledged
+  history returns to low-contrast gray.
+- Activity and Resource Manager rows reserve the system-open slot consistently,
+  keeping repeat counts and timestamps aligned.
+- The local Agent connection card now leads with the port number and labels the
+  connection as API | Agent.
+
+## Prompt, Skill, and MCP management
+
+- A shared component foundation replaces raw platform-looking tabs, fields,
+  buttons, choice chips, sliders, disclosures, icon actions, and context menus
+  across the app.
+- Prompt, Skill, and MCP filters, trigger groups, imports, editors, and bulk
+  actions use consistent spacing and interaction states.
+- Native Agent configuration synchronization detects unrelated duplicate
+  entries before writing, removes stale DingDong-managed tables safely, checks
+  for concurrent changes, writes atomically, and verifies the result by reading
+  it back.
+- Usage-count-only resource updates no longer rewrite native Agent
+  configuration. Explicit saves still force synchronization when requested.
+
+## Documentation and website
+
+- The README is reduced to the stable product, installation, compatibility,
+  shortcut, privacy, and release contracts; changing procedures link to their
+  canonical guides.
+- The website has a refreshed interactive product model, a visual Prompt /
+  Skill / MCP routing guide, and practical examples of ordinary Agent requests.
 
 Intel macOS and Windows packages remain beta.
 
 ---
 
-本版本让资源管理器知道发起任务的 Agent 客户端，从而可以按来源分配资源，避免
-资源误发给其他客户端。
+DingDong 1.0 把剪贴板、Agent 资源库和任务完成提醒整理成一套连贯的桌面工作流。
 
-## 按来源管理资源
+## 剪贴板与分享
 
-- 触发组可以按当前工作区目录、仓库地址或 Agent 来源匹配，包括 Codex、Claude Code
-  和 Cursor。
-- 同一个触发组中的多条来源规则按“任一命中”处理，因此一个资源可以共享给多个
-  Agent 客户端。
-- Prompt 和 Skill 会按当前来源过滤，完整 Skill 加载返回正文前会再次校验相同作用域。
-- 设置了来源作用域的 MCP 只写入匹配的原生客户端配置；未设置作用域的 MCP 保持原有
-  的全局行为。
+- 链接、文件、文件夹和图片都可以通过内容图标或重新设计的“打开”操作交给系统打开。
+- 可编码的剪贴板文本和链接可以生成二维码；点击二维码后只会在独立、可缩放的窗口中
+  放大图案。按 Escape 会先回到详情预览，再按一次即可继续关闭详情。
+- 剪贴板分类管理、搜索、筛选、分组、批量选择和详情操作统一使用新的桌面组件样式。
+- 删除旧的历史归档兼容逻辑；置顶和明确加入自定义分组的归档内容仍不会被自动清理。
 
-## 兼容性与管理
+## Agent 动态
 
-- 既有的工作区和仓库作用域触发组继续有效。
-- 触发组变化后会立即重新同步原生 MCP 配置。
-- 资源管理器和 Agent API 使用同一套来源作用域规则。
+- 重复动态改为底部对齐的 ×N 水印，超过 99 次显示 99+；刚显示的未读动态使用淡橙色，
+  确认后恢复为低对比灰色。
+- 动态与资源管理列表会统一预留系统打开图标的位置，重复次数和时间保持竖向对齐。
+- 本地 Agent 连接卡片直接显示端口号，副标题改为“API | Agent 连接”。
+
+## Prompt、Skill 与 MCP 管理
+
+- 新的通用组件统一了全局 Tab、输入框、按钮、选择项、滑块、折叠项、图标操作和右键菜单，
+  不再混用突兀的原生外观。
+- Prompt、Skill、MCP 的筛选、触发组、导入、编辑和批量操作使用一致的间距与交互状态。
+- 原生 Agent 配置同步会在写入前检查无关的重复项，安全移除 DingDong 托管的旧表，
+  检测并发变化，原子写入并回读验证结果。
+- 只有使用次数或最近使用时间变化时不再重写原生 Agent 配置；用户明确保存时仍会强制同步。
+
+## 文档与官网
+
+- README 收敛为稳定的产品、安装、兼容性、快捷键、隐私和发布契约；容易变化的步骤统一链接
+  到权威指南。
+- 官网更新了可交互产品模型，补充 Prompt / Skill / MCP 分发图例和普通对话示例。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

@@ -205,18 +205,12 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                                   ),
                                 ),
                               ),
-                              if (widget.activity.repeatCount > 1) ...<Widget>[
-                                const SizedBox(width: 6),
-                                _ActivityRepeatBadge(
-                                  count: widget.activity.repeatCount,
-                                  activityId: widget.activity.id,
-                                ),
-                              ],
                             ],
                           ),
                           const SizedBox(height: 3),
                           Text(
                             widget.activity.message,
+                            key: Key('activity-message-${widget.activity.id}'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -227,10 +221,41 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                         ],
                       ),
                     ),
+                    if (widget.activity.repeatCount > 1) ...<Widget>[
+                      const SizedBox(width: 5),
+                      SizedBox(
+                        height: 32,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Tooltip(
+                            message: context.localized(
+                              '${widget.activity.repeatCount} notifications for this conversation',
+                              '此会话已提醒 ${widget.activity.repeatCount} 次',
+                            ),
+                            child: ActivityRepeatCount(
+                              key: Key(
+                                'activity-repeat-count-${widget.activity.id}',
+                              ),
+                              count: widget.activity.repeatCount,
+                              foregroundColor: widget.activity.unseen
+                                  ? PopupStyle.activityUnread.withValues(
+                                      alpha: 0.58,
+                                    )
+                                  : PopupStyle.textPrimary.withValues(
+                                      alpha: 0.13,
+                                    ),
+                              verticalOffset: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                    ],
                     Text(
                       TimeOfDay.fromDateTime(
                         widget.activity.completedAt.toLocal(),
                       ).format(context),
+                      key: Key('activity-completed-time-${widget.activity.id}'),
                       style: const TextStyle(
                         color: PopupStyle.textSecondary,
                         fontSize: 10,
@@ -251,7 +276,13 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                           color: PopupStyle.textTertiary,
                         ),
                       ),
-                    ],
+                    ] else
+                      SizedBox(
+                        key: Key(
+                          'activity-open-conversation-placeholder-${widget.activity.id}',
+                        ),
+                        width: 20,
+                      ),
                   ],
                 ),
               ),
@@ -259,41 +290,6 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
           ),
         );
       },
-    );
-  }
-}
-
-class _ActivityRepeatBadge extends StatelessWidget {
-  const _ActivityRepeatBadge({required this.count, required this.activityId});
-
-  final int count;
-  final String activityId;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: context.localized(
-        '$count notifications for this conversation',
-        '此会话已提醒 $count 次',
-      ),
-      child: Container(
-        key: Key('activity-repeat-count-$activityId'),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        decoration: BoxDecoration(
-          color: PopupStyle.accentSoft,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: PopupStyle.accent.withValues(alpha: 0.32)),
-        ),
-        child: Text(
-          '×$count',
-          style: const TextStyle(
-            color: PopupStyle.accent,
-            fontSize: 9,
-            fontWeight: FontWeight.w800,
-            height: 1.15,
-          ),
-        ),
-      ),
     );
   }
 }

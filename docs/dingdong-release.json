@@ -1,32 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "0.9.9",
-  "latestBuild": "34",
-  "publishedAt": "2026-08-02T18:30:09Z",
+  "latestVersion": "1.0.0",
+  "latestBuild": "35",
+  "publishedAt": "2026-08-04T04:46:56Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.9/DingDong-0.9.9-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.0/DingDong-1.0.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.9/DingDong-0.9.9-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.0/DingDong-1.0.0-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v0.9.9/DingDong-0.9.9-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.0.0/DingDong-1.0.0-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds Agent-source trigger rules for Codex, Claude Code, Cursor, and other clients.",
-    "Filters Prompt and Skill delivery, including full Skill loads, by the current Agent source.",
-    "Writes source-scoped MCP servers only to matching native client configurations while preserving global MCP behavior when no source scope is set.",
+    "Introduces a cohesive desktop UI foundation for tabs, fields, buttons, choices, sliders, disclosures, and context menus.",
+    "Adds system Open actions and QR Code sharing with a separate resizable viewer for eligible clipboard content.",
+    "Improves repeated Agent activity with aligned ×N watermarks, 99+ capping, and unread-aware color.",
+    "Makes Prompt, Skill, and MCP synchronization safer with duplicate detection, atomic writes, read-back verification, and no usage-only rewrites.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

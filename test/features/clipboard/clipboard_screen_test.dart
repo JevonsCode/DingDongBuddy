@@ -71,7 +71,7 @@ void main() {
     expect(find.text('2025年6月29日'), findsOneWidget);
   });
 
-  testWidgets('image and file leading items invoke the system content action', (
+  testWidgets('openable leading items invoke the system content action', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -102,8 +102,32 @@ void main() {
       createdAt: DateTime(2026, 7, 29),
       updatedAt: DateTime(2026, 7, 29),
     );
+    final ClipboardRecord link = ClipboardRecord(
+      id: 'link',
+      group: 'URLs',
+      title: 'Link',
+      content: 'https://example.com',
+      tags: const <String>['clipboard', 'url'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: DateTime(2026, 7, 28),
+      updatedAt: DateTime(2026, 7, 28),
+    );
+    final ClipboardRecord path = ClipboardRecord(
+      id: 'path',
+      group: 'Paths',
+      title: 'Path',
+      content: Directory.current.path,
+      tags: const <String>['clipboard', 'path'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: DateTime(2026, 7, 27),
+      updatedAt: DateTime(2026, 7, 27),
+    );
     final ClipboardViewModel model = ClipboardViewModel(
-      InMemoryClipboardStore(<ClipboardRecord>[image, file]),
+      InMemoryClipboardStore(<ClipboardRecord>[image, file, link, path]),
     )..load();
     final List<ClipboardRecord> opened = <ClipboardRecord>[];
     int previewCount = 0;
@@ -126,11 +150,17 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const Key('clipboard-open-content-file')));
     await tester.pump();
+    await tester.tap(find.byKey(const Key('clipboard-open-content-link')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('clipboard-open-content-path')));
+    await tester.pump();
 
-    expect(opened, <ClipboardRecord>[image, file]);
+    expect(opened, <ClipboardRecord>[image, file, link, path]);
     expect(previewCount, 0);
     expect(find.byTooltip('Preview image with system app'), findsOneWidget);
     expect(find.byTooltip('Open file with system app'), findsOneWidget);
+    expect(find.byTooltip('Open link with system browser'), findsOneWidget);
+    expect(find.byTooltip('Open path with system app'), findsOneWidget);
   });
 
   testWidgets('5000 clipboard rows build only the visible window', (
@@ -941,6 +971,45 @@ void main() {
     expect(find.text('Unpin'), findsOneWidget);
   });
 
+  testWidgets('wide preview opens the selected link with the shared action', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 8, 3);
+    final ClipboardRecord link = ClipboardRecord(
+      id: 'preview-link',
+      group: 'URLs',
+      title: 'DingDong link',
+      content: 'https://example.com',
+      tags: const <String>['clipboard', 'url'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[link]),
+    )..load();
+    final List<ClipboardRecord> opened = <ClipboardRecord>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardScreen(
+          viewModel: model,
+          onOpenContent: (ClipboardRecord record) async => opened.add(record),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('clipboard-preview-open')));
+    await tester.pump();
+
+    expect(opened, <ClipboardRecord>[link]);
+  });
+
   testWidgets('Return restores the selected clipboard row', (
     WidgetTester tester,
   ) async {
@@ -1075,7 +1144,7 @@ void main() {
       await tester.tap(find.text(record.title), buttons: kSecondaryButton);
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('windows-context-menu')), findsOneWidget);
+      expect(find.byKey(const Key('desktop-context-menu')), findsOneWidget);
       expect(find.text('Paste'), findsOneWidget);
       expect(find.text('Paste as Plain Text'), findsOneWidget);
       expect(find.text('Details'), findsOneWidget);

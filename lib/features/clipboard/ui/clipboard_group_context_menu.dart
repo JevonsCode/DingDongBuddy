@@ -1,5 +1,6 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -70,15 +71,16 @@ Future<void> showClipboardGroupContextMenu(
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        DesktopActionButton(
           onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(context.localized('Cancel', '取消')),
+          label: context.localized('Cancel', '取消'),
+          compact: true,
         ),
-        FilledButton(
+        DesktopActionButton(
           key: const Key('clipboard-delete-group-confirm'),
-          style: DesktopDialogStyle.destructiveButtonStyle(context),
           onPressed: () => Navigator.pop(dialogContext, true),
-          child: Text(context.localized('Delete group', '删除分组')),
+          label: context.localized('Delete group', '删除分组'),
+          tone: DesktopActionTone.danger,
         ),
       ],
     ),

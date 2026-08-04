@@ -84,7 +84,7 @@ enum TrayNotificationColor {
   }
 }
 
-/// User-editable settings with legacy-compatible defaults and bounds.
+/// User-editable settings with bounded, release-ready defaults.
 final class AppSettings {
   const AppSettings({
     this.clipboardMonitoring = false,
@@ -154,9 +154,7 @@ final class AppSettings {
       groupRepeatedAgentSessions: groupRepeatedAgentSessions,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
-      selectedSound: selectedSound == 'dingWood'
-          ? 'default'
-          : _preferenceSoundValues.contains(selectedSound)
+      selectedSound: _preferenceSoundValues.contains(selectedSound)
           ? selectedSound
           : 'default',
       customSoundPath: _trimmedOrNull(customSoundPath),

@@ -1,5 +1,9 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_context_menu.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:flutter/material.dart';
 
@@ -40,7 +44,7 @@ class ResourceFilterBar extends StatelessWidget {
                         ),
                       ),
                     ),
-                    PopupMenuButton<_LibraryAction>(
+                    DesktopMenuButton<_LibraryAction>(
                       key: const Key('library-actions'),
                       tooltip: context.localized('Resource actions', '资源操作'),
                       onSelected: (_LibraryAction action) {
@@ -55,40 +59,34 @@ class ResourceFilterBar extends StatelessWidget {
                             onExport?.call();
                         }
                       },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<_LibraryAction>>[
-                            PopupMenuItem<_LibraryAction>(
-                              value: _LibraryAction.create,
-                              child: Text(
-                                context.localized('New resource', '新建资源'),
-                              ),
+                      entries: <DesktopMenuEntry<_LibraryAction>>[
+                        DesktopMenuItem<_LibraryAction>(
+                          value: _LibraryAction.create,
+                          label: context.localized('New resource', '新建资源'),
+                          symbol: 'add_title',
+                        ),
+                        if (onImport != null)
+                          DesktopMenuItem<_LibraryAction>(
+                            value: _LibraryAction.import,
+                            label: context.localized('Import folder', '导入文件夹'),
+                            symbol: 'archive_to',
+                          ),
+                        if (onImportJson != null)
+                          DesktopMenuItem<_LibraryAction>(
+                            value: _LibraryAction.importJson,
+                            label: context.localized(
+                              'Import shared JSON',
+                              '导入分享 JSON',
                             ),
-                            if (onImport != null)
-                              PopupMenuItem<_LibraryAction>(
-                                value: _LibraryAction.import,
-                                child: Text(
-                                  context.localized('Import folder', '导入文件夹'),
-                                ),
-                              ),
-                            if (onImportJson != null)
-                              PopupMenuItem<_LibraryAction>(
-                                value: _LibraryAction.importJson,
-                                child: Text(
-                                  context.localized(
-                                    'Import shared JSON',
-                                    '导入分享 JSON',
-                                  ),
-                                ),
-                              ),
-                            if (onExport != null)
-                              PopupMenuItem<_LibraryAction>(
-                                value: _LibraryAction.export,
-                                child: Text(
-                                  context.localized('Export JSON', '导出 JSON'),
-                                ),
-                              ),
-                          ],
-                      icon: const Icon(Icons.more_horiz_rounded),
+                            symbol: 'archive',
+                          ),
+                        if (onExport != null)
+                          DesktopMenuItem<_LibraryAction>(
+                            value: _LibraryAction.export,
+                            label: context.localized('Export JSON', '导出 JSON'),
+                            symbol: 'share',
+                          ),
+                      ],
                     ),
                   ],
                 );
@@ -135,24 +133,25 @@ class ResourceFilterBar extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(width: 10),
-                  FilledButton.icon(
+                  DesktopActionButton(
                     onPressed: viewModel.startCreating,
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text(context.localized('New resource', '新建资源')),
+                    label: context.localized('New resource', '新建资源'),
+                    tone: DesktopActionTone.primary,
                   ),
                 ],
               );
             },
           ),
           const SizedBox(height: 16),
-          TextField(
+          DesktopSearchField(
             key: const Key('resource-search'),
             onChanged: viewModel.setQuery,
-            decoration: InputDecoration(
-              hintText: context.localized('Search name or content', '搜索名称或内容'),
-              prefixIcon: const Icon(Icons.search_rounded, size: 18),
-              prefixIconConstraints: const BoxConstraints(minWidth: 38),
-            ),
+            height: 40,
+            hintText: context.localized('Search name or content', '搜索名称或内容'),
+            clearTooltip: context.localized('Clear search', '清除搜索'),
+            searchIcon: const Icon(Icons.search_rounded, size: 18),
+            borderRadius: 9,
           ),
           const SizedBox(height: 10),
           Row(
@@ -209,27 +208,40 @@ class ResourceFilterBar extends StatelessWidget {
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(width: 3),
-                IconButton(
+                const SizedBox(width: 8),
+                DesktopIconButton(
                   key: const Key('resource-delete-selection'),
                   tooltip: context.localized('Delete selected', '删除所选'),
                   onPressed: onDeleteSelection,
+                  size: 32,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.error.withValues(alpha: 0.07),
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                  borderColor: Theme.of(
+                    context,
+                  ).colorScheme.error.withValues(alpha: 0.22),
                   icon: const Icon(Icons.delete_outline_rounded, size: 17),
                 ),
-                IconButton(
-                  tooltip: context.localized('Clear selection', '清除选择'),
+                const SizedBox(width: 6),
+                DesktopActionButton(
+                  key: const Key('resource-clear-selection'),
                   onPressed: viewModel.clearSelection,
-                  icon: const Icon(Icons.close_rounded, size: 16),
+                  icon: const Icon(Icons.close_rounded, size: 14),
+                  label: context.localized('Clear selection', '清除选择'),
+                  compact: true,
+                  tone: DesktopActionTone.neutral,
                 ),
+                const SizedBox(width: 8),
               ],
-              TextButton(
+              DesktopActionButton(
                 key: const Key('resource-select-all'),
                 onPressed: viewModel.toggleAllVisible,
-                child: Text(
-                  viewModel.allVisibleSelected
-                      ? context.localized('Clear all', '取消全选')
-                      : context.localized('Select all', '全选'),
-                ),
+                label: viewModel.allVisibleSelected
+                    ? context.localized('Clear all', '取消全选')
+                    : context.localized('Select all', '全选'),
+                compact: true,
+                tone: DesktopActionTone.soft,
               ),
             ],
           ),
@@ -294,23 +306,13 @@ class _TransferActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    return IconButton(
+    return DesktopIconButton(
       key: actionKey,
       tooltip: tooltip,
       onPressed: onPressed,
-      style: IconButton.styleFrom(
-        fixedSize: const Size.square(34),
-        minimumSize: const Size.square(34),
-        maximumSize: const Size.square(34),
-        padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        foregroundColor: colors.onSurfaceVariant,
-        disabledForegroundColor: colors.onSurfaceVariant.withValues(
-          alpha: 0.38,
-        ),
-        backgroundColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(),
-      ),
+      size: 34,
+      iconSize: 18,
+      foregroundColor: colors.onSurfaceVariant,
       icon: SizedBox.square(
         dimension: 18,
         child: Center(child: Icon(icon, size: 18)),

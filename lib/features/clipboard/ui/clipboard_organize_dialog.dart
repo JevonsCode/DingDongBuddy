@@ -1,6 +1,8 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:flutter/material.dart';
 
 /// Editable clipboard fields returned by the organization dialog.
@@ -64,7 +66,7 @@ final class _ClipboardOrganizeDialogState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            TextField(
+            DesktopTextField(
               key: const Key('clipboard-edit-title'),
               controller: _title,
               decoration: InputDecoration(
@@ -75,7 +77,7 @@ final class _ClipboardOrganizeDialogState
             Row(
               children: <Widget>[
                 Expanded(
-                  child: TextField(
+                  child: DesktopTextField(
                     key: const Key('clipboard-edit-group'),
                     controller: _group,
                     decoration: InputDecoration(
@@ -85,7 +87,7 @@ final class _ClipboardOrganizeDialogState
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: TextField(
+                  child: DesktopTextField(
                     key: const Key('clipboard-edit-tags'),
                     controller: _tags,
                     decoration: InputDecoration(
@@ -99,7 +101,7 @@ final class _ClipboardOrganizeDialogState
             const SizedBox(height: 12),
             SizedBox(
               height: 180,
-              child: TextField(
+              child: DesktopTextField(
                 key: const Key('clipboard-edit-content'),
                 controller: _content,
                 expands: true,
@@ -115,11 +117,12 @@ final class _ClipboardOrganizeDialogState
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        DesktopActionButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(context.localized('Cancel', '取消')),
+          label: context.localized('Cancel', '取消'),
+          compact: true,
         ),
-        FilledButton(
+        DesktopActionButton(
           key: const Key('clipboard-edit-save'),
           onPressed: () {
             if (_title.text.trim().isEmpty ||
@@ -141,7 +144,8 @@ final class _ClipboardOrganizeDialogState
               ),
             );
           },
-          child: Text(context.localized('Save', '保存')),
+          label: context.localized('Save', '保存'),
+          tone: DesktopActionTone.primary,
         ),
       ],
     );

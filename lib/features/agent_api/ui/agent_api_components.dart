@@ -15,7 +15,7 @@ class _ConnectionHeader extends StatelessWidget {
             button: true,
             label: context.localized('Back to Dynamic', '返回动态'),
             child: ExcludeSemantics(
-              child: IconButton(
+              child: DesktopIconButton(
                 key: const Key('agent-api-back'),
                 tooltip: context.localized('Back to Dynamic', '返回动态'),
                 onPressed: onBack,
@@ -224,7 +224,7 @@ class _ConnectionHealthCard extends StatelessWidget {
                 button: true,
                 label: context.localized('Recheck local service', '重新检查本机服务'),
                 child: ExcludeSemantics(
-                  child: IconButton(
+                  child: DesktopIconButton(
                     key: const Key('agent-api-recheck'),
                     tooltip: context.localized(
                       'Recheck local service',
@@ -570,32 +570,18 @@ class _CommandRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          TextButton.icon(
+          DesktopActionButton(
             key: copyKey,
             onPressed: onCopy,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(0, 30),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              foregroundColor: copied
-                  ? const Color(0xFF426A4B)
-                  : PopupStyle.textSecondary,
-              backgroundColor: copied
-                  ? const Color(0xFFEAF3EC)
-                  : PopupStyle.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5),
-              ),
-            ),
             icon: Icon(
               copied ? Icons.check_rounded : Icons.copy_rounded,
               size: 15,
             ),
-            label: Text(
-              copied
-                  ? context.localized('Copied', '已复制')
-                  : context.localized('Copy', '复制'),
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-            ),
+            label: copied
+                ? context.localized('Copied', '已复制')
+                : context.localized('Copy', '复制'),
+            tone: copied ? DesktopActionTone.soft : DesktopActionTone.neutral,
+            compact: true,
           ),
         ],
       ),

@@ -1,5 +1,7 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:flutter/material.dart';
 
@@ -99,19 +101,14 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
                   ),
                   const SizedBox(height: 6),
                   if (groups.length > 5) ...<Widget>[
-                    TextField(
+                    DesktopSearchField(
                       key: const Key('clipboard-group-search'),
                       controller: _searchController,
                       autofocus: true,
                       onChanged: (String value) =>
                           setState(() => _query = value),
-                      decoration: InputDecoration(
-                        hintText: context.localized('Search groups', '搜索分组'),
-                        prefixIcon: const Icon(Icons.search_rounded, size: 17),
-                        prefixIconConstraints: const BoxConstraints(
-                          minWidth: 36,
-                        ),
-                      ),
+                      hintText: context.localized('Search groups', '搜索分组'),
+                      clearTooltip: context.localized('Clear search', '清除搜索'),
                     ),
                     const SizedBox(height: 7),
                   ],
@@ -208,7 +205,7 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
                   ),
                 ),
                 const SizedBox(height: 7),
-                TextField(
+                DesktopTextField(
                   key: const Key('clipboard-new-group'),
                   controller: _newGroupController,
                   autofocus: groups.isEmpty,
@@ -225,15 +222,17 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    TextButton(
+                    DesktopActionButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(context.localized('Cancel', '取消')),
+                      label: context.localized('Cancel', '取消'),
+                      compact: true,
                     ),
                     const SizedBox(width: 8),
-                    FilledButton(
+                    DesktopActionButton(
                       key: const Key('clipboard-save-groups'),
                       onPressed: _submit,
-                      child: Text(context.localized('Add to groups', '加入分组')),
+                      label: context.localized('Add to groups', '加入分组'),
+                      tone: DesktopActionTone.primary,
                     ),
                   ],
                 ),

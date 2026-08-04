@@ -1,5 +1,10 @@
 import 'dart:async';
 
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
+import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter_diff.dart';
@@ -125,7 +130,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
   Future<void> _confirmReset() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(
           _localized(context, 'Restore built-in version?', '恢复内置版本？'),
         ),
@@ -137,13 +142,15 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
           ),
         ),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(_localized(context, 'Cancel', '取消')),
+            label: _localized(context, 'Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(_localized(context, 'Restore', '恢复')),
+            label: _localized(context, 'Restore', '恢复'),
+            tone: DesktopActionTone.primary,
           ),
         ],
       ),
@@ -156,7 +163,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
   Future<void> _confirmDelete() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(
           _localized(context, 'Delete this Adapter?', '删除这个 Adapter？'),
         ),
@@ -168,13 +175,15 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
           ),
         ),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(_localized(context, 'Cancel', '取消')),
+            label: _localized(context, 'Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(_localized(context, 'Delete', '删除')),
+            label: _localized(context, 'Delete', '删除'),
+            tone: DesktopActionTone.danger,
           ),
         ],
       ),
@@ -307,19 +316,22 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                 ),
               ),
               if (entry?.isCustomized == true)
-                TextButton(
+                DesktopActionButton(
                   key: const Key('agent-adapter-reset'),
                   onPressed: controller.isSaving ? null : _confirmReset,
-                  child: Text(_localized(context, 'Restore', '恢复内置')),
+                  label: _localized(context, 'Restore', '恢复内置'),
+                  compact: true,
                 ),
               if (entry != null && !entry.hasBuiltIn)
-                TextButton(
+                DesktopActionButton(
                   key: const Key('agent-adapter-delete'),
                   onPressed: controller.isSaving ? null : _confirmDelete,
-                  child: Text(_localized(context, 'Delete', '删除')),
+                  label: _localized(context, 'Delete', '删除'),
+                  tone: DesktopActionTone.danger,
+                  compact: true,
                 ),
               const SizedBox(width: 8),
-              OutlinedButton.icon(
+              DesktopActionButton(
                 key: const Key('agent-adapter-toggle-advanced'),
                 onPressed: controller.isCreating
                     ? null
@@ -330,14 +342,13 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                       : Icons.code_rounded,
                   size: 16,
                 ),
-                label: Text(
-                  _showAdvanced
-                      ? _localized(context, 'Status', '状态')
-                      : _localized(context, 'Advanced config', '高级配置'),
-                ),
+                label: _showAdvanced
+                    ? _localized(context, 'Status', '状态')
+                    : _localized(context, 'Advanced config', '高级配置'),
+                tone: DesktopActionTone.neutral,
               ),
               const SizedBox(width: 8),
-              FilledButton.icon(
+              DesktopActionButton(
                 key: const Key('agent-adapter-save'),
                 onPressed: controller.isSaving || !_isDirty
                     ? null
@@ -348,7 +359,8 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined, size: 16),
-                label: Text(_localized(context, 'Save', '保存')),
+                label: _localized(context, 'Save', '保存'),
+                tone: DesktopActionTone.primary,
               ),
             ],
           ),
@@ -362,7 +374,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
             flex: 3,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-              child: TextField(
+              child: DesktopTextField(
                 key: const Key('agent-adapter-editor'),
                 controller: _documentController,
                 expands: true,
@@ -411,42 +423,30 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                       if (maxComparison >= 1)
                         SizedBox(
                           width: 150,
-                          child: DropdownButton<int>(
+                          child: DesktopSelectField<int>(
                             key: const Key('agent-adapter-history-selector'),
                             value: comparison,
-                            isDense: true,
-                            isExpanded: true,
-                            underline: const SizedBox.shrink(),
-                            items: <DropdownMenuItem<int>>[
-                              DropdownMenuItem<int>(
+                            items: <DesktopSelectItem<int>>[
+                              DesktopSelectItem<int>(
                                 value: 1,
-                                child: Text(
-                                  _localized(
-                                    context,
-                                    'Previous version',
-                                    '上一个版本',
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                                label: _localized(
+                                  context,
+                                  'Previous version',
+                                  '上一个版本',
                                 ),
                               ),
                               if (maxComparison >= 2)
-                                DropdownMenuItem<int>(
+                                DesktopSelectItem<int>(
                                   value: 2,
-                                  child: Text(
-                                    _localized(
-                                      context,
-                                      'Two versions ago',
-                                      '上两个版本',
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                                  label: _localized(
+                                    context,
+                                    'Two versions ago',
+                                    '上两个版本',
                                   ),
                                 ),
                             ],
-                            onChanged: (int? value) {
-                              if (value != null) {
-                                setState(() => _comparisonIndex = value);
-                              }
-                            },
+                            onChanged: (int value) =>
+                                setState(() => _comparisonIndex = value),
                           ),
                         ),
                     ],
@@ -531,7 +531,7 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
+            DesktopIconButton(
               key: const Key('agent-adapter-refresh'),
               tooltip:
                   '$directoryPath\n${_localized(context, 'Refresh', '刷新')}',
@@ -544,11 +544,12 @@ class _Header extends StatelessWidget {
                   : const Icon(Icons.refresh_rounded, size: 19),
             ),
             const SizedBox(width: 6),
-            OutlinedButton.icon(
+            DesktopActionButton(
               key: const Key('agent-adapter-new'),
               onPressed: onCreate,
               icon: const Icon(Icons.add, size: 17),
-              label: Text(_localized(context, 'New', '新建')),
+              label: _localized(context, 'New', '新建'),
+              tone: DesktopActionTone.neutral,
             ),
           ],
         ),
@@ -757,9 +758,10 @@ class _ExternalChangeNotice extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
-          TextButton(
+          DesktopActionButton(
             onPressed: onLoadExternal,
-            child: Text(_localized(context, 'Load external', '载入外部版本')),
+            label: _localized(context, 'Load external', '载入外部版本'),
+            compact: true,
           ),
         ],
       ),

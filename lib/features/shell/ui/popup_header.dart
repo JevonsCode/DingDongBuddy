@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
@@ -289,25 +291,14 @@ class _HeaderButton extends StatelessWidget {
       enabled: onPressed != null,
       label: tooltip,
       child: ExcludeSemantics(
-        child: IconButton(
+        child: DesktopIconButton(
           tooltip: tooltip,
           onPressed: onPressed,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-          style: IconButton.styleFrom(
-            fixedSize: const Size.square(32),
-            minimumSize: const Size.square(32),
-            maximumSize: const Size.square(32),
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            backgroundColor: PopupStyle.surface,
-            foregroundColor: PopupStyle.textSecondary,
-            side: const BorderSide(color: PopupStyle.border),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+          size: 32,
+          iconSize: 16,
+          backgroundColor: PopupStyle.surface,
+          foregroundColor: PopupStyle.textSecondary,
+          borderColor: PopupStyle.border,
           icon: PopupSymbolIcon(
             symbol,
             size: 16,
@@ -335,26 +326,15 @@ class _IssueButton extends StatelessWidget {
       button: true,
       label: label,
       child: ExcludeSemantics(
-        child: IconButton(
+        child: DesktopIconButton(
           key: const Key('popup-issues'),
           tooltip: label,
           onPressed: onPressed,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-          style: IconButton.styleFrom(
-            fixedSize: const Size.square(32),
-            minimumSize: const Size.square(32),
-            maximumSize: const Size.square(32),
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            backgroundColor: const Color(0xFFFFF3F1),
-            foregroundColor: const Color(0xFFB93A32),
-            side: const BorderSide(color: Color(0xFFF1C8C3)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+          size: 32,
+          iconSize: 17,
+          backgroundColor: const Color(0xFFFFF3F1),
+          foregroundColor: const Color(0xFFB93A32),
+          borderColor: const Color(0xFFF1C8C3),
           icon: Stack(
             clipBehavior: Clip.none,
             children: <Widget>[
@@ -423,9 +403,9 @@ class _WorkspaceTab extends StatelessWidget {
         selected: selected,
         label: '$label, $shortcut',
         child: ExcludeSemantics(
-          child: OutlinedButton(
+          child: DesktopActionButton(
             onPressed: onPressed,
-            style: OutlinedButton.styleFrom(
+            style: DesktopActionButton.styleFrom(
               minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 9),
               backgroundColor: selected

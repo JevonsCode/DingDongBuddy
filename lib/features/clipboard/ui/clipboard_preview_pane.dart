@@ -5,12 +5,14 @@ class _ClipboardPreview extends StatelessWidget {
     required this.record,
     required this.onRestore,
     required this.onTogglePinned,
+    required this.onOpen,
     required this.onAction,
   });
 
   final ClipboardRecord? record;
   final Future<void> Function() onRestore;
   final VoidCallback onTogglePinned;
+  final Future<void> Function(ClipboardRecord record)? onOpen;
   final ValueChanged<_ClipboardAction> onAction;
 
   @override
@@ -32,65 +34,62 @@ class _ClipboardPreview extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: <Widget>[
-              FilledButton.icon(
-                onPressed: onRestore,
-                icon: const Icon(Icons.keyboard_return_rounded, size: 17),
-                label: Text(context.localized('Restore', '恢复')),
+              DesktopActionButton(
+                onPressed: () => unawaited(onRestore()),
+                icon: Icons.keyboard_return_rounded,
+                label: context.localized('Restore', '恢复'),
+                tone: DesktopActionTone.primary,
               ),
+              if (onOpen != null && canOpenClipboardContent(value)) ...<Widget>[
+                const SizedBox(width: 8),
+                DesktopActionButton(
+                  key: const Key('clipboard-preview-open'),
+                  onPressed: () => unawaited(onOpen!(value)),
+                  icon: Icons.open_in_new_rounded,
+                  label: context.localized('Open', '打开'),
+                  tone: DesktopActionTone.soft,
+                ),
+              ],
               const SizedBox(width: 8),
-              OutlinedButton.icon(
+              DesktopActionButton(
                 onPressed: onTogglePinned,
-                icon: Icon(
-                  value.pinned
-                      ? Icons.push_pin_rounded
-                      : Icons.push_pin_outlined,
-                  size: 17,
-                ),
-                label: Text(
-                  value.pinned
-                      ? context.localized('Unpin', '取消置顶')
-                      : context.localized('Pin', '置顶'),
-                ),
+                icon: value.pinned
+                    ? Icons.push_pin_rounded
+                    : Icons.push_pin_outlined,
+                label: value.pinned
+                    ? context.localized('Unpin', '取消置顶')
+                    : context.localized('Pin', '置顶'),
               ),
               const SizedBox(width: 8),
-              PopupMenuButton<_ClipboardAction>(
+              DesktopMenuButton<_ClipboardAction>(
                 key: const Key('clipboard-more-actions'),
                 tooltip: context.localized('More actions', '更多操作'),
                 onSelected: onAction,
-                itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<_ClipboardAction>>[
-                      _previewMenuItem(
-                        context,
-                        _ClipboardAction.edit,
-                        Icons.edit_outlined,
-                        'Edit and organize',
-                        '编辑与整理',
-                      ),
-                      _previewMenuItem(
-                        context,
-                        _ClipboardAction.archiveTo,
-                        Icons.create_new_folder_outlined,
-                        'Archive to…',
-                        '归档到…',
-                      ),
-                      const PopupMenuDivider(),
-                      _previewMenuItem(
-                        context,
-                        _ClipboardAction.promotePrompt,
-                        Icons.format_quote_outlined,
-                        'Save as prompt',
-                        '保存为提示词',
-                      ),
-                      const PopupMenuDivider(),
-                      _previewMenuItem(
-                        context,
-                        _ClipboardAction.delete,
-                        Icons.delete_outline,
-                        'Delete',
-                        '删除',
-                      ),
-                    ],
-                icon: const Icon(Icons.more_horiz_rounded),
+                entries: <DesktopMenuEntry<_ClipboardAction>>[
+                  DesktopMenuItem<_ClipboardAction>(
+                    value: _ClipboardAction.edit,
+                    label: context.localized('Edit and organize', '编辑与整理'),
+                    symbol: 'edit',
+                  ),
+                  DesktopMenuItem<_ClipboardAction>(
+                    value: _ClipboardAction.archiveTo,
+                    label: context.localized('Archive to…', '归档到…'),
+                    symbol: 'archive_to',
+                  ),
+                  const DesktopMenuDivider<_ClipboardAction>(),
+                  DesktopMenuItem<_ClipboardAction>(
+                    value: _ClipboardAction.promotePrompt,
+                    label: context.localized('Save as prompt', '保存为提示词'),
+                    symbol: 'prompt',
+                  ),
+                  const DesktopMenuDivider<_ClipboardAction>(),
+                  DesktopMenuItem<_ClipboardAction>(
+                    value: _ClipboardAction.delete,
+                    label: context.localized('Delete', '删除'),
+                    symbol: 'delete',
+                    destructive: true,
+                  ),
+                ],
               ),
             ],
           ),
@@ -107,17 +106,3 @@ class _ClipboardPreview extends StatelessWidget {
     );
   }
 }
-
-PopupMenuItem<_ClipboardAction> _previewMenuItem(
-  BuildContext context,
-  _ClipboardAction action,
-  IconData icon,
-  String english,
-  String chinese,
-) => PopupMenuItem<_ClipboardAction>(
-  value: action,
-  child: ListTile(
-    leading: Icon(icon),
-    title: Text(context.localized(english, chinese)),
-  ),
-);

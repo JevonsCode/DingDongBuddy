@@ -2,7 +2,12 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
+import 'package:dingdong/core/widgets/desktop_segmented_control.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
+import 'package:dingdong/core/widgets/desktop_slider.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
@@ -338,39 +343,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: <Widget>[
                               _SettingRow(
                                 label: context.localized('Theme', '主题'),
-                                child: SegmentedButton<AppThemePreference>(
-                                  key: const Key('settings-theme-mode'),
-                                  showSelectedIcon: false,
-                                  segments: <ButtonSegment<AppThemePreference>>[
-                                    ButtonSegment<AppThemePreference>(
-                                      value: AppThemePreference.system,
-                                      label: Text(
-                                        context.localized('System', '跟随系统'),
-                                      ),
+                                child:
+                                    DesktopSegmentedControl<AppThemePreference>(
+                                      key: const Key('settings-theme-mode'),
+                                      value: settings.themeMode,
+                                      segments:
+                                          <DesktopSegment<AppThemePreference>>[
+                                            DesktopSegment<AppThemePreference>(
+                                              value: AppThemePreference.system,
+                                              label: Text(
+                                                context.localized(
+                                                  'System',
+                                                  '跟随系统',
+                                                ),
+                                              ),
+                                            ),
+                                            DesktopSegment<AppThemePreference>(
+                                              value: AppThemePreference.light,
+                                              label: Text(
+                                                context.localized(
+                                                  'Light',
+                                                  '浅色',
+                                                ),
+                                              ),
+                                            ),
+                                            DesktopSegment<AppThemePreference>(
+                                              value: AppThemePreference.dark,
+                                              label: Text(
+                                                context.localized('Dark', '深色'),
+                                              ),
+                                            ),
+                                          ],
+                                      onChanged: widget.viewModel.setThemeMode,
                                     ),
-                                    ButtonSegment<AppThemePreference>(
-                                      value: AppThemePreference.light,
-                                      label: Text(
-                                        context.localized('Light', '浅色'),
-                                      ),
-                                    ),
-                                    ButtonSegment<AppThemePreference>(
-                                      value: AppThemePreference.dark,
-                                      label: Text(
-                                        context.localized('Dark', '深色'),
-                                      ),
-                                    ),
-                                  ],
-                                  selected: <AppThemePreference>{
-                                    settings.themeMode,
-                                  },
-                                  onSelectionChanged:
-                                      (Set<AppThemePreference> value) {
-                                        widget.viewModel.setThemeMode(
-                                          value.single,
-                                        );
-                                      },
-                                ),
                               ),
                               _SettingRow(
                                 label: context.localized('Language', '语言'),
@@ -411,7 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     '${context.localized('Window opacity', '窗口透明度')} · ${(settings.backgroundOpacity * 100).round()}%',
                                 child: SizedBox(
                                   width: 220,
-                                  child: Slider(
+                                  child: DesktopSlider(
                                     key: const Key('settings-opacity'),
                                     value: settings.backgroundOpacity,
                                     min: 0.82,
@@ -427,74 +432,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   'List density',
                                   '列表密度',
                                 ),
-                                child: SegmentedButton<PanelDensityPreference>(
-                                  key: const Key('settings-density'),
-                                  showSelectedIcon: false,
-                                  segments:
-                                      <ButtonSegment<PanelDensityPreference>>[
-                                        ButtonSegment<PanelDensityPreference>(
-                                          value: PanelDensityPreference
-                                              .comfortable,
-                                          label: Text(
-                                            context.localized(
-                                              'Comfortable',
-                                              '舒展',
+                                child:
+                                    DesktopSegmentedControl<
+                                      PanelDensityPreference
+                                    >(
+                                      key: const Key('settings-density'),
+                                      value: settings.density,
+                                      segments:
+                                          <
+                                            DesktopSegment<
+                                              PanelDensityPreference
+                                            >
+                                          >[
+                                            DesktopSegment<
+                                              PanelDensityPreference
+                                            >(
+                                              value: PanelDensityPreference
+                                                  .comfortable,
+                                              label: Text(
+                                                context.localized(
+                                                  'Comfortable',
+                                                  '舒展',
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                        ButtonSegment<PanelDensityPreference>(
-                                          value: PanelDensityPreference.compact,
-                                          label: Text(
-                                            context.localized('Compact', '紧凑'),
-                                          ),
-                                        ),
-                                      ],
-                                  selected: <PanelDensityPreference>{
-                                    settings.density,
-                                  },
-                                  onSelectionChanged:
-                                      (Set<PanelDensityPreference> value) =>
-                                          widget.viewModel.setDensity(
-                                            value.single,
-                                          ),
-                                ),
+                                            DesktopSegment<
+                                              PanelDensityPreference
+                                            >(
+                                              value: PanelDensityPreference
+                                                  .compact,
+                                              label: Text(
+                                                context.localized(
+                                                  'Compact',
+                                                  '紧凑',
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                      onChanged: widget.viewModel.setDensity,
+                                    ),
                               ),
                               _SettingRow(
                                 label: context.localized(
                                   'Default workspace',
                                   '默认页面',
                                 ),
-                                child: SegmentedButton<DefaultWorkspace>(
-                                  key: const Key('settings-default-workspace'),
-                                  showSelectedIcon: false,
-                                  segments: <ButtonSegment<DefaultWorkspace>>[
-                                    ButtonSegment<DefaultWorkspace>(
-                                      value: DefaultWorkspace.today,
-                                      label: Text(
-                                        context.localized('Dynamic', '动态'),
+                                child:
+                                    DesktopSegmentedControl<DefaultWorkspace>(
+                                      key: const Key(
+                                        'settings-default-workspace',
                                       ),
+                                      value: settings.defaultWorkspace,
+                                      segments:
+                                          <DesktopSegment<DefaultWorkspace>>[
+                                            DesktopSegment<DefaultWorkspace>(
+                                              value: DefaultWorkspace.today,
+                                              label: Text(
+                                                context.localized(
+                                                  'Dynamic',
+                                                  '动态',
+                                                ),
+                                              ),
+                                            ),
+                                            DesktopSegment<DefaultWorkspace>(
+                                              value: DefaultWorkspace.library,
+                                              label: Text(
+                                                context.localized(
+                                                  'Library',
+                                                  '资源库',
+                                                ),
+                                              ),
+                                            ),
+                                            DesktopSegment<DefaultWorkspace>(
+                                              value: DefaultWorkspace.clipboard,
+                                              label: Text(
+                                                context.localized(
+                                                  'Clipboard',
+                                                  '剪贴板',
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                      onChanged:
+                                          widget.viewModel.setDefaultWorkspace,
                                     ),
-                                    ButtonSegment<DefaultWorkspace>(
-                                      value: DefaultWorkspace.library,
-                                      label: Text(
-                                        context.localized('Library', '资源库'),
-                                      ),
-                                    ),
-                                    ButtonSegment<DefaultWorkspace>(
-                                      value: DefaultWorkspace.clipboard,
-                                      label: Text(
-                                        context.localized('Clipboard', '剪贴板'),
-                                      ),
-                                    ),
-                                  ],
-                                  selected: <DefaultWorkspace>{
-                                    settings.defaultWorkspace,
-                                  },
-                                  onSelectionChanged:
-                                      (Set<DefaultWorkspace> value) => widget
-                                          .viewModel
-                                          .setDefaultWorkspace(value.single),
-                                ),
                               ),
                             ],
                           ),
@@ -701,7 +722,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         widget.onRestartApplication !=
                                             null) ...<Widget>[
                                       const SizedBox(width: 8),
-                                      FilledButton.tonalIcon(
+                                      DesktopActionButton(
                                         key: const Key('settings-restart'),
                                         onPressed: () =>
                                             widget.onRestartApplication!.call(),
@@ -709,9 +730,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           Icons.restart_alt_rounded,
                                           size: 17,
                                         ),
-                                        label: Text(
-                                          context.localized('Restart', '重启'),
+                                        label: context.localized(
+                                          'Restart',
+                                          '重启',
                                         ),
+                                        tone: DesktopActionTone.soft,
                                       ),
                                     ],
                                   ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/shortcut_key.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
@@ -116,27 +117,26 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
             Focus(
               focusNode: _focusNode,
               onKeyEvent: _handleKeyEvent,
-              child: OutlinedButton(
+              child: DesktopActionButton(
                 key: const Key('settings-global-hot-key'),
                 onPressed: _recording ? _cancelRecording : _startRecording,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(172, 38),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                ),
-                child: Text(
+                label: Text(
                   _recording
                       ? context.localized('Press a shortcut…', '请按下快捷键…')
                       : widget.value.label(platform),
                 ),
+                minWidth: 172,
+                height: 38,
               ),
             ),
             const SizedBox(width: 8),
-            TextButton(
+            DesktopActionButton(
               key: const Key('settings-global-hot-key-reset'),
               onPressed: widget.value == GlobalHotKey.defaultValue
                   ? null
                   : () => widget.onChanged(GlobalHotKey.defaultValue),
-              child: Text(context.localized('Reset', '恢复默认')),
+              label: context.localized('Reset', '恢复默认'),
+              compact: true,
             ),
           ],
         ),
@@ -295,18 +295,16 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
                 child: Focus(
                   focusNode: _focusNode,
                   onKeyEvent: _handleKeyEvent,
-                  child: OutlinedButton(
+                  child: DesktopActionButton(
                     key: Key('settings-workspace-shortcut-${widget.settingId}'),
                     onPressed: _recording ? _cancelRecording : _startRecording,
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(172, 38),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                    ),
-                    child: Text(
+                    label: Text(
                       _recording
                           ? context.localized('Press a shortcut…', '请按下快捷键…')
                           : widget.value.label(platform),
                     ),
+                    minWidth: 172,
+                    height: 38,
                   ),
                 ),
               ),
@@ -320,14 +318,15 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
                 '恢复${widget.semanticLabel}默认值',
               ),
               child: ExcludeSemantics(
-                child: TextButton(
+                child: DesktopActionButton(
                   key: Key(
                     'settings-workspace-shortcut-${widget.settingId}-reset',
                   ),
                   onPressed: widget.value == widget.defaultValue
                       ? null
                       : () => unawaited(_save(widget.defaultValue)),
-                  child: Text(context.localized('Reset', '恢复默认')),
+                  label: context.localized('Reset', '恢复默认'),
+                  compact: true,
                 ),
               ),
             ),

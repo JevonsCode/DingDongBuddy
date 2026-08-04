@@ -1,4 +1,6 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
 
@@ -58,19 +60,21 @@ class QuickPastePermissionSection extends StatelessWidget {
                       ),
                     }),
                   ),
-                  IconButton(
+                  DesktopIconButton(
                     tooltip: context.localized('Refresh status', '刷新状态'),
                     onPressed: viewModel.refreshQuickPastePermission,
                     icon: const Icon(Icons.refresh_rounded),
                   ),
                   if (granted == false)
-                    OutlinedButton.icon(
+                    DesktopActionButton(
                       key: const Key('settings-open-accessibility'),
                       onPressed: viewModel.openQuickPastePermissionSettings,
                       icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                      label: Text(
-                        context.localized('Open permission helper', '打开授权助手'),
+                      label: context.localized(
+                        'Open permission helper',
+                        '打开授权助手',
                       ),
+                      tone: DesktopActionTone.neutral,
                     ),
                 ],
               ),

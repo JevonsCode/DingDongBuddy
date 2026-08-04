@@ -727,7 +727,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '0.10.0'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.0.1'),
       );
       addTearDown(settings.dispose);
       await settings.load();

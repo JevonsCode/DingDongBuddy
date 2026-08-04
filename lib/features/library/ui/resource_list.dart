@@ -2,6 +2,7 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
@@ -276,7 +277,7 @@ class _SelectionButton extends StatelessWidget {
           : context.localized('Select item', '选择此项'),
       child: SizedBox.square(
         dimension: 28,
-        child: IconButton(
+        child: DesktopIconButton(
           onPressed: onPressed,
           padding: EdgeInsets.zero,
           style: ButtonStyle(

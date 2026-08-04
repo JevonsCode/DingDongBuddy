@@ -57,7 +57,7 @@ class _NotificationSettingsSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.outlined(
+              DesktopIconButton(
                 key: const Key('settings-preview-sound'),
                 tooltip: context.localized('Preview sound', '试听声音'),
                 onPressed:
@@ -89,16 +89,17 @@ class _NotificationSettingsSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                OutlinedButton(
+                DesktopActionButton(
                   key: const Key('settings-choose-custom-sound'),
                   onPressed: soundFileGateway == null
                       ? null
                       : _chooseCustomSound,
-                  child: Text(context.localized('Choose', '选择')),
+                  label: context.localized('Choose', '选择'),
+                  tone: DesktopActionTone.neutral,
                 ),
                 if (settings.customSoundPath != null) ...<Widget>[
                   const SizedBox(width: 6),
-                  IconButton(
+                  DesktopIconButton(
                     tooltip: context.localized('Clear custom sound', '清除自定义声音'),
                     onPressed: () => viewModel.setCustomSoundPath(null),
                     icon: const Icon(Icons.close),
@@ -130,58 +131,53 @@ class _TrayNotificationColorPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<TrayNotificationColor>(
+    return DesktopSegmentedControl<TrayNotificationColor>(
       key: const Key('settings-tray-notification-color'),
-      showSelectedIcon: false,
-      style: SegmentedButton.styleFrom(
-        minimumSize: const Size(40, 36),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        visualDensity: VisualDensity.compact,
-      ),
+      value: value,
+      minimumSegmentWidth: 40,
       segments: TrayNotificationColor.values
           .map((TrayNotificationColor color) {
             final bool selected = color == value;
             final String label = _trayNotificationColorLabel(context, color);
-            return ButtonSegment<TrayNotificationColor>(
+            return DesktopSegment<TrayNotificationColor>(
               value: color,
-              tooltip: label,
-              label: Semantics(
-                label: label,
-                selected: selected,
-                child: Container(
-                  key: Key('settings-tray-notification-color-${color.name}'),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF000000 | color.rgbValue),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.72),
-                    ),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.14),
-                        blurRadius: 2,
-                        offset: const Offset(0, 1),
+              label: Tooltip(
+                message: label,
+                child: Semantics(
+                  label: label,
+                  selected: selected,
+                  child: Container(
+                    key: Key('settings-tray-notification-color-${color.name}'),
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF000000 | color.rgbValue),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.72),
                       ),
-                    ],
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.14),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: selected
+                        ? const Icon(
+                            Icons.check_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          )
+                        : null,
                   ),
-                  child: selected
-                      ? const Icon(
-                          Icons.check_rounded,
-                          size: 14,
-                          color: Colors.white,
-                        )
-                      : null,
                 ),
               ),
             );
           })
           .toList(growable: false),
-      selected: <TrayNotificationColor>{value},
-      onSelectionChanged: (Set<TrayNotificationColor> selection) {
-        onChanged(selection.single);
-      },
+      onChanged: onChanged,
     );
   }
 }

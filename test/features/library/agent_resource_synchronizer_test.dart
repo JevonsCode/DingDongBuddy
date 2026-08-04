@@ -978,6 +978,195 @@ mcp:
     );
   });
 
+  test(
+    'Codex sync replaces orphaned and duplicate managed MCP tables',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-codex-mcp-repair-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      const String serverName = 'dingdong-reviewer-abcdef';
+      final File codex = File('${temp.path}/config.toml')
+        ..writeAsStringSync('''
+model = "gpt-5"
+
+[mcp_servers.$serverName]
+url = "https://stale.example.com/mcp"
+enabled = true
+# END DINGDONG MCP
+
+# BEGIN DINGDONG MCP OLD-RESOURCE
+[mcp_servers.$serverName]
+url = "https://duplicate.example.com/mcp"
+enabled = true
+# END DINGDONG MCP
+
+[mcp_servers.personal]
+command = "personal-server"
+''');
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(codex, AgentMcpConfigKind.codexToml),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final Resource resource = _resource(
+        type: ResourceType.mcp,
+        content:
+            '{"type":"streamable-http",'
+            '"url":"https://current.example.com/mcp"}',
+      );
+
+      await synchronizer.sync(<Resource>[resource]);
+
+      final String repaired = codex.readAsStringSync();
+      expect(
+        RegExp(
+          '^\\[mcp_servers\\.${RegExp.escape(serverName)}\\]\$',
+          multiLine: true,
+        ).allMatches(repaired),
+        hasLength(1),
+      );
+      expect(repaired, contains('https://current.example.com/mcp'));
+      expect(repaired, isNot(contains('https://stale.example.com/mcp')));
+      expect(repaired, isNot(contains('https://duplicate.example.com/mcp')));
+      expect(repaired, contains('[mcp_servers.personal]'));
+      expect(repaired, contains('command = "personal-server"'));
+
+      await synchronizer.sync(<Resource>[resource]);
+      expect(codex.readAsStringSync(), repaired);
+    },
+  );
+
+  test(
+    'Codex sync rejects unrelated duplicate tables before writing',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-codex-mcp-invalid-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final File codex = File('${temp.path}/config.toml')
+        ..writeAsStringSync('''
+[mcp_servers.personal]
+command = "first"
+
+[mcp_servers.personal]
+command = "second"
+''');
+      final String original = codex.readAsStringSync();
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(codex, AgentMcpConfigKind.codexToml),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final Resource resource = _resource(
+        type: ResourceType.mcp,
+        content:
+            '{"type":"streamable-http",'
+            '"url":"https://current.example.com/mcp"}',
+      );
+
+      await expectLater(
+        synchronizer.sync(<Resource>[resource]),
+        throwsA(
+          isA<FormatException>().having(
+            (FormatException error) => error.message,
+            'message',
+            contains('mcp_servers.personal'),
+          ),
+        ),
+      );
+      expect(codex.readAsStringSync(), original);
+    },
+  );
+
+  test('usage tracking does not rewrite native Agent configuration', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-usage-metadata-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File codex = File('${temp.path}/config.toml')
+      ..writeAsStringSync('''
+[mcp_servers.personal]
+command = "first"
+
+[mcp_servers.personal]
+command = "second"
+''');
+    final String original = codex.readAsStringSync();
+    final Resource resource = _resource(
+      type: ResourceType.mcp,
+      content:
+          '{"type":"streamable-http",'
+          '"url":"https://current.example.com/mcp"}',
+    );
+    final InMemoryResourceStore base = InMemoryResourceStore(<Resource>[
+      resource,
+    ]);
+    int changeCount = 0;
+    final SynchronizedResourceStore store = SynchronizedResourceStore(
+      base,
+      AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(codex, AgentMcpConfigKind.codexToml),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      ),
+      onChanged: () => changeCount += 1,
+    );
+
+    await store.save(<Resource>[
+      resource.copyWith(usageCount: 1, lastUsedAt: DateTime.utc(2026, 8, 4)),
+    ]);
+
+    expect((await base.load()).single.usageCount, 1);
+    expect(codex.readAsStringSync(), original);
+    expect(changeCount, 1);
+  });
+
+  test('unchanged resource saves still force native synchronization', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-explicit-resync-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File codex = File('${temp.path}/config.toml')
+      ..writeAsStringSync('model = "gpt-5"\n');
+    final Resource resource = _resource(
+      type: ResourceType.mcp,
+      content:
+          '{"type":"streamable-http",'
+          '"url":"https://current.example.com/mcp"}',
+    );
+    final InMemoryResourceStore base = InMemoryResourceStore(<Resource>[
+      resource,
+    ]);
+    final SynchronizedResourceStore store = SynchronizedResourceStore(
+      base,
+      AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(codex, AgentMcpConfigKind.codexToml),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      ),
+    );
+
+    await store.save(<Resource>[resource]);
+
+    expect(
+      codex.readAsStringSync(),
+      contains('[mcp_servers.dingdong-reviewer-abcdef]'),
+    );
+  });
+
   test('source-scoped MCPs sync only to matching Agent targets', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-source-mcp-sync-',

@@ -192,9 +192,7 @@ final class ClipboardRepository implements ClipboardStore {
 
   static ClipboardRecord _recordFromRow(Row row) {
     final List<String> tags = _decodeTags(row['ZTAGSDATA']);
-    final List<String> groups = _decodeGroups(
-      row['ZGROUP'] as String? ?? 'Clipboard',
-    );
+    final List<String> groups = _decodeGroups(row['ZGROUP'] as String? ?? '[]');
     return ClipboardRecord(
       id: row['ZID'] as String? ?? '',
       group: groups.isEmpty ? '' : groups.first,
@@ -256,26 +254,20 @@ final class ClipboardRepository implements ClipboardStore {
     if (trimmed.isEmpty) {
       return const <String>[];
     }
-    if (trimmed.startsWith('[')) {
-      try {
-        final Object? decoded = jsonDecode(trimmed);
-        if (decoded is List<Object?>) {
-          return _uniqueGroups(decoded.whereType<String>());
-        }
-      } on FormatException {
-        // Preserve malformed legacy values as one ordinary group.
+    try {
+      final Object? decoded = jsonDecode(trimmed);
+      if (decoded is List<Object?>) {
+        return _uniqueGroups(decoded.whereType<String>());
       }
+    } on FormatException {
+      return const <String>[];
     }
-    return <String>[trimmed];
+    return const <String>[];
   }
 
   static String _encodeGroups(List<String> values) {
     final List<String> groups = _uniqueGroups(values);
-    return switch (groups.length) {
-      0 => '',
-      1 => groups.single,
-      _ => jsonEncode(groups),
-    };
+    return groups.isEmpty ? '' : jsonEncode(groups);
   }
 
   static void _ensureSchema(Database database) {

@@ -1,5 +1,7 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
@@ -101,16 +103,8 @@ class _SystemUsageSectionState extends State<SystemUsageSection> {
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.centerRight,
-                child: OutlinedButton.icon(
+                child: DesktopActionButton(
                   key: const Key('settings-clear-usage'),
-                  style: canClear
-                      ? OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        )
-                      : null,
                   onPressed: canClear ? _confirmAndClear : null,
                   icon: viewModel.isClearingSystemData
                       ? const SizedBox.square(
@@ -118,7 +112,9 @@ class _SystemUsageSectionState extends State<SystemUsageSection> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.delete_outline_rounded, size: 18),
-                  label: Text(context.localized('Clear selected', '清除所选')),
+                  label: context.localized('Clear selected', '清除所选'),
+                  tone: DesktopActionTone.danger,
+                  filled: false,
                 ),
               ),
             ],
@@ -182,16 +178,17 @@ class _SystemUsageSectionState extends State<SystemUsageSection> {
           ],
         ),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             key: const Key('settings-clear-usage-cancel'),
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(dialogContext.localized('Cancel', '取消')),
+            label: dialogContext.localized('Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
+          DesktopActionButton(
             key: const Key('settings-clear-usage-confirm'),
-            style: DesktopDialogStyle.destructiveButtonStyle(dialogContext),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(dialogContext.localized('Clear', '清除')),
+            label: dialogContext.localized('Clear', '清除'),
+            tone: DesktopActionTone.danger,
           ),
         ],
       ),
@@ -269,13 +266,23 @@ class _StorageCategoryRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           if (category.canClear)
-            Checkbox(
-              key: Key('settings-select-${category.id}'),
-              value: selected,
-              visualDensity: VisualDensity.compact,
-              onChanged: canSelect
-                  ? (bool? value) => onChanged(value ?? false)
-                  : null,
+            SizedBox(
+              width: 40,
+              child: Semantics(
+                checked: selected,
+                enabled: canSelect,
+                child: GestureDetector(
+                  key: Key('settings-select-${category.id}'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: canSelect ? () => onChanged(!selected) : null,
+                  child: Center(
+                    child: Opacity(
+                      opacity: canSelect ? 1 : 0.42,
+                      child: SelectionMark(selected: selected),
+                    ),
+                  ),
+                ),
+              ),
             )
           else
             SizedBox(

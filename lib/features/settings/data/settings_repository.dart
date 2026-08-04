@@ -90,7 +90,6 @@ final class SettingsRepository {
           : _backend.write(_languageKey, settings.language.storageValue!),
       _backend.write(_themeKey, settings.themeMode.name),
       _backend.write(_launchAtStartupKey, settings.launchAtStartup),
-      _backend.remove(_legacyAnonymousTelemetryKey),
       _backend.write(_opacityKey, settings.backgroundOpacity),
       _backend.write(_densityKey, settings.density.name),
       _backend.write(_defaultWorkspaceKey, settings.defaultWorkspace.name),
@@ -104,7 +103,6 @@ final class SettingsRepository {
       settings.customSoundPath == null
           ? _backend.remove(_customSoundPathKey)
           : _backend.write(_customSoundPathKey, settings.customSoundPath!),
-      _backend.remove(_legacyMcpSetupPromptOverrideKey),
       _backend.write(_apiPortKey, settings.apiPort),
       _backend.write(_mcpAccessSeenKey, settings.mcpAccessSeen),
       _backend.write(_rememberAgentActivityKey, settings.rememberAgentActivity),
@@ -135,7 +133,6 @@ const String _monitoringKey = 'dingdong.clipboard.monitoring';
 const String _languageKey = 'dingdong.language';
 const String _themeKey = 'dingdong.panel.themeMode';
 const String _launchAtStartupKey = 'dingdong.launchAtLogin';
-const String _legacyAnonymousTelemetryKey = 'dingdong.telemetry.anonymous';
 const String _opacityKey = 'dingdong.panel.backgroundOpacity';
 const String _densityKey = 'dingdong.panel.density';
 const String _defaultWorkspaceKey = 'dingdong.panel.defaultTab';
@@ -145,8 +142,6 @@ const String _allowAgentClipboardContentKey =
     'dingdong.agentApi.allowClipboardContent';
 const String _selectedSoundKey = 'dingdong.selectedSound';
 const String _customSoundPathKey = 'dingdong.customSoundPath';
-const String _legacyMcpSetupPromptOverrideKey =
-    'dingdong.mcpSetupPromptOverride';
 const String _apiPortKey = 'dingdong.api.port';
 const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';
 const String _rememberAgentActivityKey = 'dingdong.agentActivity.remember';

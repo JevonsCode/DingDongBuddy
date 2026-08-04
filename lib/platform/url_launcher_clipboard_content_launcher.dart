@@ -16,17 +16,11 @@ final class UrlLauncherClipboardContentLauncher
 
   @override
   Future<void> open(ClipboardRecord record) async {
-    final List<String> paths = record.filePaths
-        .where(
-          (String path) =>
-              FileSystemEntity.typeSync(path) != FileSystemEntityType.notFound,
-        )
-        .toList(growable: false);
-    if (paths.isEmpty) {
-      throw StateError('Clipboard file is no longer available.');
+    final List<Uri> targets = _targets(record);
+    if (targets.isEmpty) {
+      throw StateError('Clipboard content is no longer available.');
     }
-    for (final String path in paths) {
-      final Uri uri = Uri.file(path);
+    for (final Uri uri in targets) {
       if (!await _launch(uri)) {
         throw StateError('Could not open $uri');
       }
@@ -35,4 +29,20 @@ final class UrlLauncherClipboardContentLauncher
 
   static Future<bool> _launchExternally(Uri uri) =>
       launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
+List<Uri> _targets(ClipboardRecord record) {
+  final Uri? externalUri = clipboardExternalUri(record);
+  if (externalUri != null) return <Uri>[externalUri];
+
+  final String? path = clipboardExistingPath(record);
+  if (path != null) return <Uri>[Uri.file(path)];
+
+  return record.filePaths
+      .where(
+        (String value) =>
+            FileSystemEntity.typeSync(value) != FileSystemEntityType.notFound,
+      )
+      .map(Uri.file)
+      .toList(growable: false);
 }

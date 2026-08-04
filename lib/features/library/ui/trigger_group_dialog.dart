@@ -1,5 +1,8 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
@@ -109,19 +112,16 @@ final class _TriggerGroupPickerDialogState
                 ),
                 if (_groups.length > 5) ...<Widget>[
                   const SizedBox(height: 14),
-                  TextField(
+                  DesktopSearchField(
                     key: const Key('trigger-group-search'),
                     controller: _searchController,
                     autofocus: true,
                     onChanged: (String value) => setState(() => _query = value),
-                    decoration: InputDecoration(
-                      hintText: context.localized(
-                        'Search names or rules',
-                        '搜索名称或规则',
-                      ),
-                      prefixIcon: const Icon(Icons.search_rounded, size: 17),
-                      prefixIconConstraints: const BoxConstraints(minWidth: 36),
+                    hintText: context.localized(
+                      'Search names or rules',
+                      '搜索名称或规则',
                     ),
+                    clearTooltip: context.localized('Clear search', '清除搜索'),
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -223,7 +223,7 @@ final class _TriggerGroupPickerDialogState
                                             ],
                                           ),
                                         ),
-                                        IconButton(
+                                        DesktopIconButton(
                                           key: ValueKey<String>(
                                             'edit-trigger-group-${group.id}',
                                           ),
@@ -257,25 +257,27 @@ final class _TriggerGroupPickerDialogState
                   spacing: 8,
                   runSpacing: 4,
                   children: <Widget>[
-                    TextButton.icon(
+                    DesktopActionButton(
                       key: const Key('create-trigger-group'),
                       onPressed: _create,
                       icon: const Icon(Icons.add_rounded, size: 17),
-                      label: Text(
-                        context.localized('New trigger group', '新建触发组'),
-                      ),
+                      label: context.localized('New trigger group', '新建触发组'),
+                      tone: DesktopActionTone.soft,
+                      compact: true,
                     ),
-                    TextButton(
+                    DesktopActionButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(context.localized('Cancel', '取消')),
+                      label: context.localized('Cancel', '取消'),
+                      compact: true,
                     ),
-                    FilledButton(
+                    DesktopActionButton(
                       key: const Key('apply-trigger-groups'),
                       onPressed: () => Navigator.pop(
                         context,
                         Set<String>.unmodifiable(_selectedIds),
                       ),
-                      child: Text(context.localized('Apply', '应用')),
+                      label: context.localized('Apply', '应用'),
+                      tone: DesktopActionTone.primary,
                     ),
                   ],
                 ),
@@ -369,14 +371,15 @@ final class _TriggerGroupPickerDialogState
               ),
             ),
             actions: <Widget>[
-              TextButton(
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(context.localized('Cancel', '取消')),
+                label: context.localized('Cancel', '取消'),
+                compact: true,
               ),
-              FilledButton(
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: DesktopDialogStyle.destructiveButtonStyle(context),
-                child: Text(context.localized('Delete', '删除')),
+                label: context.localized('Delete', '删除'),
+                tone: DesktopActionTone.danger,
               ),
             ],
           ),
@@ -471,7 +474,7 @@ final class _TriggerGroupEditorDialogState
                 const SizedBox(height: 16),
                 _DialogLabel(text: context.localized('Group name', '触发组名称')),
                 const SizedBox(height: 7),
-                TextField(
+                DesktopTextField(
                   key: const Key('trigger-group-name'),
                   controller: _nameController,
                   autofocus: true,
@@ -493,11 +496,13 @@ final class _TriggerGroupEditorDialogState
                         ),
                       ),
                     ),
-                    TextButton.icon(
+                    DesktopActionButton(
                       key: const Key('add-trigger-rule'),
                       onPressed: _addRule,
                       icon: const Icon(Icons.add_rounded, size: 16),
-                      label: Text(context.localized('Add rule', '添加规则')),
+                      label: context.localized('Add rule', '添加规则'),
+                      tone: DesktopActionTone.soft,
+                      compact: true,
                     ),
                   ],
                 ),
@@ -539,31 +544,32 @@ final class _TriggerGroupEditorDialogState
                 Row(
                   children: <Widget>[
                     if (widget.group != null)
-                      TextButton.icon(
+                      DesktopActionButton(
                         key: const Key('delete-trigger-group'),
                         onPressed: () => Navigator.pop(
                           context,
                           const TriggerGroupEditResult(delete: true),
                         ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: colors.error,
-                        ),
                         icon: const Icon(
                           Icons.delete_outline_rounded,
                           size: 17,
                         ),
-                        label: Text(context.localized('Delete', '删除')),
+                        label: context.localized('Delete', '删除'),
+                        tone: DesktopActionTone.danger,
+                        compact: true,
                       ),
                     const Spacer(),
-                    TextButton(
+                    DesktopActionButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(context.localized('Cancel', '取消')),
+                      label: context.localized('Cancel', '取消'),
+                      compact: true,
                     ),
                     const SizedBox(width: 8),
-                    FilledButton(
+                    DesktopActionButton(
                       key: const Key('save-trigger-group'),
                       onPressed: _save,
-                      child: Text(context.localized('Save group', '保存触发组')),
+                      label: context.localized('Save group', '保存触发组'),
+                      tone: DesktopActionTone.primary,
                     ),
                   ],
                 ),
@@ -716,7 +722,7 @@ final class _TriggerRuleRow extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             flex: 6,
-            child: TextField(
+            child: DesktopTextField(
               controller: rule.controller,
               onChanged: (_) => onChanged(),
               style: const TextStyle(fontFamily: 'monospace'),
@@ -730,7 +736,7 @@ final class _TriggerRuleRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          IconButton(
+          DesktopIconButton(
             tooltip: context.localized('Remove rule', '删除规则'),
             onPressed: canDelete ? onDelete : null,
             icon: const Icon(Icons.close_rounded, size: 17),

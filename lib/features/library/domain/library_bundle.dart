@@ -51,15 +51,13 @@ final class LibraryBundle {
     required List<Resource> existing,
   }) {
     final Object? schemaVersion = payload['schemaVersion'];
-    if (schemaVersion != null && schemaVersion != 1 && schemaVersion != 2) {
+    if (schemaVersion != 2) {
       throw FormatException(
         'Unsupported library bundle schema: $schemaVersion.',
       );
     }
     final Object? service = payload['service'];
-    if (service != null &&
-        service != 'DingDong' &&
-        service != 'DingDongBuddy') {
+    if (service != null && service != 'DingDongBuddy') {
       throw const FormatException('Library bundle is for another service.');
     }
     final Object? rawItems = payload['items'];

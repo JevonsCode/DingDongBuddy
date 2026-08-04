@@ -1,4 +1,6 @@
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/features/activity/data/agent_activity_store.dart';
+import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -50,18 +52,35 @@ void main() {
       final ClipboardViewModel clipboard = ClipboardViewModel(
         InMemoryClipboardStore(),
       )..load();
-      final ActivityController activity =
-          ActivityController(
-            idGenerator: () => 'manager-agent',
-            now: () => DateTime.utc(2026, 7, 21, 10),
-          )..record(
-            source: 'Codex',
-            message: 'Resumable result',
-            conversationTarget: const AgentConversationTarget(
-              client: AgentClient.codex,
-              conversationId: 'thread-1',
-            ),
-          );
+      final ActivityController activity = ActivityController(
+        store: InMemoryAgentActivityStore(
+          AgentActivityHistory(
+            activities: <AgentActivity>[
+              AgentActivity(
+                id: 'manager-agent',
+                source: 'Codex',
+                message: 'Resumable result',
+                completedAt: DateTime.utc(2026, 7, 21, 10),
+                unseen: false,
+                repeatCount: 2,
+                conversationTarget: const AgentConversationTarget(
+                  client: AgentClient.codex,
+                  conversationId: 'thread-1',
+                ),
+              ),
+              AgentActivity(
+                id: 'manager-static',
+                source: 'Codex',
+                message: 'Static result',
+                completedAt: DateTime.utc(2026, 7, 21, 9),
+                unseen: false,
+                repeatCount: 2,
+              ),
+            ],
+          ),
+        ),
+        now: () => DateTime.utc(2026, 7, 21, 10),
+      )..load();
       final _FakeAgentConversationLauncher conversationLauncher =
           _FakeAgentConversationLauncher();
       final IssueCenterController issues = IssueCenterController();
@@ -118,6 +137,29 @@ void main() {
       expect(
         find.byKey(const Key('agent-activity-manager-open-conversation')),
         findsOneWidget,
+      );
+      final Rect resumableRepeat = tester.getRect(
+        find.byKey(
+          const Key('agent-activity-manager-repeat-count-manager-agent'),
+        ),
+      );
+      final Rect staticRepeat = tester.getRect(
+        find.byKey(
+          const Key('agent-activity-manager-repeat-count-manager-static'),
+        ),
+      );
+      expect(resumableRepeat.left, closeTo(staticRepeat.left, 0.1));
+      expect(
+        tester
+            .getRect(
+              find.byKey(
+                const Key(
+                  'agent-activity-manager-open-placeholder-manager-static',
+                ),
+              ),
+            )
+            .width,
+        25,
       );
 
       await tester.tap(

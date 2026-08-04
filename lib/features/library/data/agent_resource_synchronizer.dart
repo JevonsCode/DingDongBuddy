@@ -274,7 +274,7 @@ final class AgentResourceSynchronizer {
     List<Resource> resources,
     Set<String> previousNames,
   ) => switch (kind) {
-    AgentMcpConfigKind.codexToml => _syncCodex(file, resources),
+    AgentMcpConfigKind.codexToml => _syncCodex(file, resources, previousNames),
     AgentMcpConfigKind.claudeJson ||
     AgentMcpConfigKind.cursorJson ||
     AgentMcpConfigKind.geminiJson ||
@@ -743,18 +743,21 @@ final class AgentResourceSynchronizer {
     );
   }
 
-  Future<void> _syncCodex(File file, List<Resource> resources) async {
+  Future<void> _syncCodex(
+    File file,
+    List<Resource> resources,
+    Set<String> previousNames,
+  ) async {
     final String current = await file.exists() ? await file.readAsString() : '';
-    final String cleaned = current
-        .replaceAll(
-          RegExp(
-            r'^# BEGIN DINGDONG MCP .*?^# END DINGDONG MCP\s*\n?',
-            multiLine: true,
-            dotAll: true,
-          ),
-          '',
-        )
-        .trimRight();
+    final Set<String> managedServerNames = <String>{
+      ...previousNames,
+      ...resources.map(_serverName),
+    };
+    final String cleaned = _removeCodexMcpTables(
+      current.replaceAll(_managedMcpBlockPattern, ''),
+      managedServerNames,
+    ).trimRight();
+    _rejectDuplicateTomlTables(cleaned, file.path);
     final StringBuffer output = StringBuffer(cleaned);
     for (final Resource resource in resources) {
       final McpConfiguration config = McpConfiguration.parse(resource.content);
@@ -793,7 +796,25 @@ final class AgentResourceSynchronizer {
         ..writeln('enabled = true')
         ..writeln('# END DINGDONG MCP');
     }
-    await _writeAtomically(file, '${output.toString().trimRight()}\n');
+    final String next = '${output.toString().trimRight()}\n';
+    _rejectDuplicateTomlTables(next, file.path);
+    if (next == current) {
+      return;
+    }
+    final String latest = await file.exists() ? await file.readAsString() : '';
+    if (latest != current) {
+      throw StateError(
+        'Codex configuration changed during DingDong MCP synchronization; '
+        '${file.path} was not overwritten.',
+      );
+    }
+    await _writeAtomically(file, next);
+    if (await file.readAsString() != next) {
+      throw StateError(
+        'Codex configuration changed immediately after DingDong MCP '
+        'synchronization: ${file.path}.',
+      );
+    }
   }
 
   Future<Map<String, Set<String>>> _readManagedMcpState() async {
@@ -975,6 +996,10 @@ final class SynchronizedResourceStore implements ResourceStore {
   Future<void> save(List<Resource> resources) async {
     final List<Resource> previous = await _delegate.load();
     await _delegate.save(resources);
+    if (_onlyAgentResourceUsageChanged(previous, resources)) {
+      onChanged?.call();
+      return;
+    }
     try {
       final List<AppIssue> issues = await _synchronizer.sync(resources);
       await _cleanupRemovedPackages(previous, resources);
@@ -1306,6 +1331,111 @@ final RegExp _managedPromptsPattern = RegExp(
   '${RegExp.escape(_managedPromptsBegin)}.*?${RegExp.escape(_managedPromptsEnd)}\\s*',
   dotAll: true,
 );
+
+final RegExp _managedMcpBlockPattern = RegExp(
+  r'^# BEGIN DINGDONG MCP .*?^# END DINGDONG MCP\s*\n?',
+  multiLine: true,
+  dotAll: true,
+);
+
+String _removeCodexMcpTables(String contents, Set<String> serverNames) {
+  if (contents.isEmpty || serverNames.isEmpty) {
+    return contents;
+  }
+  final Set<String> targetTables = serverNames
+      .map((String name) => 'mcp_servers.$name')
+      .toSet();
+  final List<String> kept = <String>[];
+  String? removingTable;
+  for (final String line in contents.split('\n')) {
+    final String? table = _tomlTablePath(line);
+    if (table != null) {
+      if (targetTables.contains(table)) {
+        removingTable = table;
+        continue;
+      }
+      final String? activeRemoval = removingTable;
+      if (activeRemoval != null) {
+        if (table.startsWith('$activeRemoval.')) {
+          continue;
+        }
+        removingTable = null;
+      }
+    }
+    if (removingTable == null) {
+      kept.add(line);
+    }
+  }
+  return kept.join('\n');
+}
+
+String? _tomlTablePath(String line) {
+  final String trimmed = line.trim();
+  if (!trimmed.startsWith('[')) {
+    return null;
+  }
+  final bool arrayTable = trimmed.startsWith('[[');
+  final String closing = arrayTable ? ']]' : ']';
+  final int openingLength = arrayTable ? 2 : 1;
+  final int end = trimmed.indexOf(closing, openingLength);
+  if (end < openingLength) {
+    return null;
+  }
+  final String trailing = trimmed.substring(end + closing.length).trimLeft();
+  if (trailing.isNotEmpty && !trailing.startsWith('#')) {
+    return null;
+  }
+  final String table = trimmed.substring(openingLength, end).trim();
+  return table.isEmpty ? null : table;
+}
+
+void _rejectDuplicateTomlTables(String contents, String targetPath) {
+  final Set<String> seen = <String>{};
+  final Set<String> duplicates = <String>{};
+  for (final String line in contents.split('\n')) {
+    if (line.trimLeft().startsWith('[[')) {
+      continue;
+    }
+    final String? table = _tomlTablePath(line);
+    if (table != null && !seen.add(table)) {
+      duplicates.add(table);
+    }
+  }
+  if (duplicates.isEmpty) {
+    return;
+  }
+  final List<String> sorted = duplicates.toList()..sort();
+  throw FormatException(
+    'Codex configuration contains duplicate TOML tables: '
+    '${sorted.join(', ')}. $targetPath was not changed.',
+  );
+}
+
+bool _onlyAgentResourceUsageChanged(
+  List<Resource> previous,
+  List<Resource> current,
+) {
+  if (previous.length != current.length) {
+    return false;
+  }
+  bool usageChanged = false;
+  for (int index = 0; index < previous.length; index += 1) {
+    usageChanged =
+        usageChanged ||
+        previous[index].usageCount != current[index].usageCount ||
+        previous[index].lastUsedAt != current[index].lastUsedAt;
+    final Map<String, Object?> before = previous[index].toJson()
+      ..remove('usageCount')
+      ..remove('lastUsedAt');
+    final Map<String, Object?> after = current[index].toJson()
+      ..remove('usageCount')
+      ..remove('lastUsedAt');
+    if (jsonEncode(before) != jsonEncode(after)) {
+      return false;
+    }
+  }
+  return usageChanged;
+}
 
 String _toml(String value) => value
     .replaceAll(r'\', r'\\')

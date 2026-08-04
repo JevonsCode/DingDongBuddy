@@ -107,6 +107,8 @@ final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           elevation: 0,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
           minimumSize: const Size(0, 34),
           padding: const EdgeInsets.symmetric(horizontal: 13),
           shape: controlShape,
@@ -115,6 +117,8 @@ final class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
           minimumSize: const Size(0, 32),
           padding: const EdgeInsets.symmetric(horizontal: 9),
           shape: controlShape,
@@ -124,6 +128,8 @@ final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           elevation: 0,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
           minimumSize: const Size(0, 34),
           padding: const EdgeInsets.symmetric(horizontal: 13),
           side: BorderSide(color: colors.outline),
@@ -137,6 +143,7 @@ final class AppTheme {
           maximumSize: const Size.square(34),
           padding: const EdgeInsets.all(6),
           shape: controlShape,
+          splashFactory: NoSplash.splashFactory,
           overlayColor: Colors.transparent,
         ),
       ),
@@ -172,6 +179,10 @@ final class AppTheme {
       borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide(color: colors.outlineVariant),
     );
+    final RoundedRectangleBorder controlShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    );
+    final TextTheme baseText = ThemeData(brightness: brightness).textTheme;
     return ThemeData(
       brightness: brightness,
       fontFamily: Platform.isMacOS ? '.AppleSystemUIFont' : 'Segoe UI',
@@ -197,9 +208,48 @@ final class AppTheme {
           vertical: 11,
         ),
       ),
-      dialogTheme: DesktopDialogStyle.theme(
-        colors,
-        ThemeData(brightness: brightness).textTheme,
+      dialogTheme: DesktopDialogStyle.theme(colors, baseText),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          elevation: 0,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
+          minimumSize: const Size(0, 34),
+          padding: const EdgeInsets.symmetric(horizontal: 13),
+          shape: controlShape,
+          textStyle: baseText.labelLarge?.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
+          minimumSize: const Size(0, 32),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          shape: controlShape,
+          textStyle: baseText.labelLarge?.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          elevation: 0,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
+          minimumSize: const Size(0, 34),
+          padding: const EdgeInsets.symmetric(horizontal: 13),
+          side: BorderSide(color: colors.outlineVariant),
+          shape: controlShape,
+          textStyle: baseText.labelLarge?.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: colors.surfaceContainerLowest,
@@ -212,13 +262,61 @@ final class AppTheme {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           visualDensity: VisualDensity.compact,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
           shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(overlayColor: Colors.transparent),
+        style: IconButton.styleFrom(
+          minimumSize: const Size.square(32),
+          maximumSize: const Size.square(36),
+          padding: const EdgeInsets.all(7),
+          shape: controlShape,
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: Colors.transparent,
+        ),
+      ),
+      sliderTheme: SliderThemeData(
+        overlayShape: SliderComponentShape.noOverlay,
+        trackHeight: 3,
+        activeTrackColor: colors.primary,
+        inactiveTrackColor: colors.surfaceContainerHighest,
+        thumbColor: colors.primary,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        elevation: 2,
+        backgroundColor: colors.inverseSurface,
+        contentTextStyle: baseText.bodyMedium?.copyWith(
+          color: colors.onInverseSurface,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.surfaceContainerLowest,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(9),
+          side: BorderSide(color: colors.outlineVariant),
+        ),
+        menuPadding: const EdgeInsets.symmetric(vertical: 5),
+      ),
+      tooltipTheme: TooltipThemeData(
+        waitDuration: const Duration(milliseconds: 450),
+        decoration: BoxDecoration(
+          color: colors.inverseSurface,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        textStyle: baseText.labelSmall?.copyWith(
+          color: colors.onInverseSurface,
+          fontSize: 11,
+        ),
       ),
       checkboxTheme: const CheckboxThemeData(
         overlayColor: WidgetStatePropertyAll<Color>(Colors.transparent),

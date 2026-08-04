@@ -14,8 +14,8 @@ enum ResourceType {
 
   /// Resource kinds currently exposed by the lightweight configuration UI.
   ///
-  /// Knowledge remains parseable for backward compatibility, but is kept out
-  /// of resource management until it has a dedicated product workflow.
+  /// Knowledge remains available to the Agent API and import flows, but is
+  /// kept out of direct resource authoring until it has a dedicated workflow.
   bool get isConfigurableAgentResource =>
       this == ResourceType.prompt ||
       this == ResourceType.skill ||
@@ -170,7 +170,7 @@ final class Resource {
   /// Canonical project roots derived for strict Skill loading.
   ///
   /// Retained in persisted data for exact-scope validation and cleanup of
-  /// legacy DingDong-managed native mirrors.
+  /// DingDong-managed native mirrors.
   final List<String> skillProjectPaths;
   final int? sortOrder;
   final int usageCount;

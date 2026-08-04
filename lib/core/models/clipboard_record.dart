@@ -25,7 +25,7 @@ final class ClipboardRecord {
 
   final String id;
 
-  /// Legacy primary group retained for store and API compatibility.
+  /// Primary display group; [groups] contains the full multi-group selection.
   final String group;
   final List<String> groups;
   final String title;
@@ -63,20 +63,11 @@ final class ClipboardRecord {
         .toList(growable: false);
   }
 
-  /// Whether automatic retention must leave this record untouched.
-  ///
-  /// Older releases marked archives with a tag, while current releases archive
-  /// by assigning a user-created group. Keep both representations readable so
-  /// upgrading cannot make an existing archive disposable.
-  bool get isArchived {
-    if (tags.any((String tag) => tag.trim().toLowerCase() == 'archived')) {
-      return true;
-    }
-    return groupNames.any((String value) {
-      final String normalized = value.trim().toLowerCase();
-      return normalized == 'archive' || !isAutomaticClipboardGroup(value);
-    });
-  }
+  /// Whether automatic retention must leave this grouped record untouched.
+  bool get isArchived => groupNames.any((String value) {
+    final String normalized = value.trim().toLowerCase();
+    return normalized == 'archive' || !isAutomaticClipboardGroup(value);
+  });
 
   /// Every user-defined group this record belongs to, in display order.
   List<String> get groupNames {

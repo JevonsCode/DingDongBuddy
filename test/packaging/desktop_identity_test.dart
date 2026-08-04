@@ -67,19 +67,19 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 0.9.9 from pubspec', () {
+  test('desktop hosts consume application version 1.0.0 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
       'windows/runner/Runner.rc',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 0.9.9+34'));
+    expect(pubspec, contains('version: 1.0.0+35'));
     expect(
       File(
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync(),
-      contains("const String currentAppBuild = '34';"),
+      contains("const String currentAppBuild = '35';"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
@@ -342,7 +342,18 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v0.9.9</span>'));
+    expect(website, contains('<span class="demo-version">v1.0.0</span>'));
+    expect(website, contains('class="product-stage-header"'));
+    expect(website, contains('id="resources"'));
+    expect(website, contains('class="resource-map"'));
+    expect(website, contains('class="conversation-grid"'));
+    expect(
+      website,
+      contains('清晰管理剪贴板列表，统一管理提示词 skill mcp, Agent 执行结束 DingDong 提醒你'),
+    );
+    expect(website, contains('快捷键帮你高效处理内容工作'));
+    expect(website, contains('开启电脑声音，需求交给 AI，做完会用声音提醒你'));
+    expect(website, contains('你就可以先去摸摸鱼，毕竟在 AI 时代，人的精力才是最大资产 🫣'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
@@ -360,6 +371,9 @@ void main() {
     expect(websiteStyles, contains('.demo-resource-row.type-skill'));
     expect(websiteStyles, contains('.demo-resource-row.type-mcp'));
     expect(websiteStyles, contains('.demo-resource-row.is-disabled'));
+    expect(websiteStyles, contains('.product-stage-header'));
+    expect(websiteStyles, contains('.resource-map'));
+    expect(websiteStyles, contains('.conversation-example'));
     expect(
       websiteStyles,
       contains('.demo-resource-action.action-status.is-enabled'),
@@ -384,14 +398,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "0.9.9"'));
-    expect(releaseMetadata, contains('"latestBuild": "34"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.0.0"'));
+    expect(releaseMetadata, contains('"latestBuild": "35"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-0.9.9-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.0.0-windows-x64-beta-Setup.exe'),
     );
   });
 

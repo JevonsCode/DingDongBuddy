@@ -9,7 +9,11 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
 const String clipboardPreviewWindowKind = 'clipboard-preview';
+const String clipboardQrPreviewWindowKind = 'clipboard-qr-preview';
+const String clipboardPreviewFocusWindowMethod = 'focus_window';
 const Size clipboardPreviewWindowSize = Size(304, 420);
+const Size clipboardQrPreviewWindowSize = Size(620, 680);
+const Size clipboardQrPreviewMinimumSize = Size(360, 420);
 
 /// Hosts the original side preview in a dedicated, reusable Flutter window.
 final class MultiWindowClipboardPreviewLauncher
@@ -18,19 +22,24 @@ final class MultiWindowClipboardPreviewLauncher
   Future<void> show(ClipboardRecord record) async {
     final Offset position = await _previewPosition();
     final List<WindowController> windows = await WindowController.getAll();
+    WindowController? previewWindow;
     for (final WindowController controller in windows) {
       final Map<String, Object?> arguments = decodeDesktopWindowArguments(
         controller.arguments,
       );
-      if (arguments['kind'] != clipboardPreviewWindowKind) {
-        continue;
+      if (arguments['kind'] == clipboardQrPreviewWindowKind) {
+        await controller.hide();
+      } else if (arguments['kind'] == clipboardPreviewWindowKind) {
+        previewWindow = controller;
       }
-      await controller.invokeMethod<void>('update_record', <String, Object?>{
+    }
+    if (previewWindow != null) {
+      await previewWindow.invokeMethod<void>('update_record', <String, Object?>{
         'record': clipboardRecordToWindowJson(record),
         'x': position.dx,
         'y': position.dy,
       });
-      await controller.showInactive();
+      await previewWindow.showInactive();
       return;
     }
 
@@ -53,7 +62,8 @@ final class MultiWindowClipboardPreviewLauncher
       final Map<String, Object?> arguments = decodeDesktopWindowArguments(
         controller.arguments,
       );
-      if (arguments['kind'] == clipboardPreviewWindowKind) {
+      if (arguments['kind'] == clipboardPreviewWindowKind ||
+          arguments['kind'] == clipboardQrPreviewWindowKind) {
         await controller.hide();
       }
     }
@@ -92,6 +102,51 @@ final class MultiWindowClipboardPreviewLauncher
         visible.bottom - clipboardPreviewWindowSize.height - gap,
       ),
     );
+  }
+}
+
+/// Presents only the QR artwork in a separate image-viewer-sized window.
+final class MultiWindowClipboardQrPreviewLauncher {
+  const MultiWindowClipboardQrPreviewLauncher();
+
+  Future<void> show(
+    ClipboardRecord record, {
+    required String parentWindowId,
+  }) async {
+    for (final WindowController controller in await WindowController.getAll()) {
+      final Map<String, Object?> arguments = decodeDesktopWindowArguments(
+        controller.arguments,
+      );
+      if (arguments['kind'] != clipboardQrPreviewWindowKind) continue;
+      await controller.invokeMethod<void>('update_record', <String, Object?>{
+        'record': clipboardRecordToWindowJson(record),
+        'parentWindowId': parentWindowId,
+      });
+      await controller.show();
+      return;
+    }
+
+    await WindowController.create(
+      WindowConfiguration(
+        hiddenAtLaunch: true,
+        arguments: jsonEncode(<String, Object?>{
+          'kind': clipboardQrPreviewWindowKind,
+          'record': clipboardRecordToWindowJson(record),
+          'parentWindowId': parentWindowId,
+        }),
+      ),
+    );
+  }
+
+  Future<void> hide() async {
+    for (final WindowController controller in await WindowController.getAll()) {
+      final Map<String, Object?> arguments = decodeDesktopWindowArguments(
+        controller.arguments,
+      );
+      if (arguments['kind'] == clipboardQrPreviewWindowKind) {
+        await controller.hide();
+      }
+    }
   }
 }
 

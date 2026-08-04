@@ -110,8 +110,8 @@ class _ClipboardListState extends State<_ClipboardList> {
         SnackBar(
           content: Text(
             context.localized(
-              'This file is no longer available or could not be opened.',
-              '该文件已不存在或无法打开。',
+              'This content is no longer available or could not be opened.',
+              '该内容已不存在或无法打开。',
             ),
           ),
         ),
@@ -151,8 +151,7 @@ class _ClipboardListState extends State<_ClipboardList> {
               },
               onOpenContent:
                   widget.onOpenContent != null &&
-                      (record.kind == ClipboardKind.image ||
-                          record.kind == ClipboardKind.file)
+                      canOpenClipboardContent(record)
                   ? () => unawaited(_openContent(record))
                   : null,
               onSecondaryTapUp: (TapUpDetails details) {
@@ -194,24 +193,16 @@ class _ClipboardListState extends State<_ClipboardList> {
           Positioned(
             right: 12,
             bottom: 12,
-            child: IconButton(
+            child: DesktopIconButton(
               key: const Key('clipboard-scroll-to-top'),
               tooltip: context.localized('Back to top', '回到顶部'),
               onPressed: _scrollToTop,
               icon: const Icon(Icons.arrow_upward_rounded, size: 16),
-              style: IconButton.styleFrom(
-                fixedSize: const Size.square(30),
-                minimumSize: const Size.square(30),
-                maximumSize: const Size.square(30),
-                padding: EdgeInsets.zero,
-                foregroundColor: PopupStyle.textSecondary,
-                backgroundColor: PopupStyle.background,
-                side: const BorderSide(color: PopupStyle.border),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
+              size: 30,
+              iconSize: 16,
+              foregroundColor: PopupStyle.textSecondary,
+              backgroundColor: PopupStyle.background,
+              borderColor: PopupStyle.border,
             ),
           ),
       ],

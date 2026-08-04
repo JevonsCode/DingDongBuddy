@@ -5,6 +5,10 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_disclosure.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
@@ -279,7 +283,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
                       _skillSourceMode == SkillSourceMode.online)) ...<Widget>[
                     _FieldLabel(text: _titleLabel(context, _draftType)),
                     const SizedBox(height: 7),
-                    TextField(
+                    DesktopTextField(
                       key: const Key('resource-title'),
                       controller: _titleController,
                       onChanged: (_) => setState(() {}),
@@ -419,7 +423,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
         );
       case ResourceType.knowledge:
       case ResourceType.clipboard:
-        return _LegacyContentEditor(controller: _promptController);
+        return _KnowledgeContentEditor(controller: _promptController);
     }
   }
 
@@ -1081,7 +1085,7 @@ class _SkillEditor extends StatelessWidget {
           if (installedOnline) ...<Widget>[
             _FieldLabel(text: context.localized('Skill name', 'Skill 名称')),
             const SizedBox(height: 7),
-            TextField(
+            DesktopTextField(
               key: const Key('resource-skill-name'),
               controller: parsedNameController,
               readOnly: true,
@@ -1089,7 +1093,7 @@ class _SkillEditor extends StatelessWidget {
             const SizedBox(height: 14),
             _FieldLabel(text: context.localized('When to use', '什么时候使用')),
             const SizedBox(height: 7),
-            TextField(
+            DesktopTextField(
               key: const Key('resource-skill-description'),
               controller: parsedDescriptionController,
               readOnly: true,
@@ -1099,7 +1103,7 @@ class _SkillEditor extends StatelessWidget {
             const SizedBox(height: 14),
             _FieldLabel(text: context.localized('My note', '我的备注')),
             const SizedBox(height: 7),
-            TextField(
+            DesktopTextField(
               key: const Key('resource-skill-note'),
               controller: noteController,
               minLines: 2,
@@ -1153,7 +1157,7 @@ class _SkillEditor extends StatelessWidget {
           Row(
             children: <Widget>[
               Expanded(
-                child: TextField(
+                child: DesktopTextField(
                   key: const Key('resource-skill-update-url'),
                   controller: updateUrlController,
                   readOnly: installedOnline,
@@ -1165,7 +1169,7 @@ class _SkillEditor extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 7),
-              IconButton(
+              DesktopIconButton(
                 key: const Key('resource-skill-open-source'),
                 tooltip: context.localized('Open source', '打开来源'),
                 onPressed: onOpenSource,
@@ -1173,7 +1177,7 @@ class _SkillEditor extends StatelessWidget {
               ),
               if (installedOnline) ...<Widget>[
                 const SizedBox(width: 6),
-                OutlinedButton.icon(
+                DesktopActionButton(
                   key: const Key('resource-skill-update'),
                   onPressed: updating ? null : onUpdate,
                   icon: updating
@@ -1248,7 +1252,7 @@ class _SkillEditor extends StatelessWidget {
                   ),
                 ),
                 if (onImport != null)
-                  TextButton.icon(
+                  DesktopActionButton(
                     key: const Key('resource-import-skill-folder'),
                     onPressed: onImport,
                     icon: const Icon(
@@ -1402,7 +1406,7 @@ class _McpStdioFields extends StatelessWidget {
       children: <Widget>[
         _FieldLabel(text: context.localized('Command', '启动命令')),
         const SizedBox(height: 7),
-        TextField(
+        DesktopTextField(
           key: const Key('resource-mcp-command'),
           controller: commandController,
           style: const TextStyle(fontFamily: 'monospace'),
@@ -1472,7 +1476,7 @@ class _McpHttpFields extends StatelessWidget {
       children: <Widget>[
         _FieldLabel(text: context.localized('Server URL', '服务地址')),
         const SizedBox(height: 7),
-        TextField(
+        DesktopTextField(
           key: const Key('resource-mcp-url'),
           controller: urlController,
           style: const TextStyle(fontFamily: 'monospace'),
@@ -1501,7 +1505,7 @@ class _McpHttpFields extends StatelessWidget {
                 text: context.localized('Bearer token env', '令牌环境变量'),
               ),
               const SizedBox(height: 7),
-              TextField(
+              DesktopTextField(
                 key: const Key('resource-mcp-token-env'),
                 controller: tokenController,
                 style: const TextStyle(fontFamily: 'monospace'),
@@ -1515,8 +1519,8 @@ class _McpHttpFields extends StatelessWidget {
   }
 }
 
-class _LegacyContentEditor extends StatelessWidget {
-  const _LegacyContentEditor({required this.controller});
+class _KnowledgeContentEditor extends StatelessWidget {
+  const _KnowledgeContentEditor({required this.controller});
 
   final TextEditingController controller;
 
@@ -1527,8 +1531,8 @@ class _LegacyContentEditor extends StatelessWidget {
       children: <Widget>[
         Text(
           context.localized(
-            'This legacy resource type is kept for compatibility and cannot be newly created.',
-            '此旧类型仅为兼容保留，不能再新建。',
+            'Knowledge is collected from imports and Agent context; it cannot be newly authored here yet.',
+            '知识库内容来自导入和 Agent 上下文，暂时不能在这里直接新建。',
           ),
           style: Theme.of(context).textTheme.bodySmall,
         ),
@@ -1656,20 +1660,17 @@ class _ResourceOptions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        key: const Key('resource-advanced-settings'),
-        tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(top: 8),
-        minTileHeight: 38,
-        leading: const Icon(Icons.tune_rounded, size: 16),
-        title: Text(
-          context.localized('Other settings', '其它设置'),
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-        ),
+    return DesktopDisclosure(
+      key: const Key('resource-advanced-settings'),
+      leading: const Icon(Icons.tune_rounded, size: 16),
+      title: Text(
+        context.localized('Other settings', '其它设置'),
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           if (showUpdateLink) ...<Widget>[
             _FieldLabel(text: context.localized('Update link', '更新链接')),
@@ -1677,7 +1678,7 @@ class _ResourceOptions extends StatelessWidget {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: TextField(
+                  child: DesktopTextField(
                     key: const Key('resource-update-url'),
                     controller: updateUrlController,
                     decoration: const InputDecoration(
@@ -1687,7 +1688,7 @@ class _ResourceOptions extends StatelessWidget {
                 ),
                 if (showSync) ...<Widget>[
                   const SizedBox(width: 8),
-                  IconButton(
+                  DesktopIconButton(
                     key: const Key('resource-sync-update'),
                     tooltip: context.localized(
                       'Fetch latest content',
@@ -1758,19 +1759,19 @@ class _EditorActions extends StatelessWidget {
           return Row(
             children: <Widget>[
               if (existing)
-                IconButton(
+                DesktopIconButton(
                   tooltip: context.localized('Delete', '删除'),
                   onPressed: onDelete,
                   icon: const Icon(Icons.delete_outline_rounded),
                 ),
               const Spacer(),
-              IconButton(
+              DesktopIconButton(
                 tooltip: context.localized('Reset changes', '重置更改'),
                 onPressed: onReset,
                 icon: const Icon(Icons.undo_rounded),
               ),
               const SizedBox(width: 6),
-              FilledButton(
+              DesktopActionButton(
                 key: const Key('resource-save'),
                 onPressed: saving ? null : onSave,
                 child: _SaveButtonLabel(
@@ -1785,18 +1786,18 @@ class _EditorActions extends StatelessWidget {
         return Row(
           children: <Widget>[
             if (existing)
-              TextButton.icon(
+              DesktopActionButton(
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
                 label: Text(context.localized('Delete', '删除')),
               ),
             const Spacer(),
-            TextButton(
+            DesktopActionButton(
               onPressed: onReset,
               child: Text(context.localized('Reset', '重置')),
             ),
             const SizedBox(width: 8),
-            FilledButton(
+            DesktopActionButton(
               key: const Key('resource-save'),
               onPressed: saving ? null : onSave,
               child: _SaveButtonLabel(
@@ -1872,10 +1873,10 @@ class _FlatChoiceRow<T> extends StatelessWidget {
         for (int index = 0; index < choices.length; index++) ...<Widget>[
           if (index > 0) const SizedBox(width: 6),
           Expanded(
-            child: TextButton(
+            child: DesktopActionButton(
               key: Key(choices[index].keyName),
               onPressed: () => onSelected(choices[index].value),
-              style: TextButton.styleFrom(
+              style: DesktopActionButton.styleFrom(
                 minimumSize: const Size(0, 34),
                 foregroundColor: choices[index].value == selected
                     ? colors.primary
@@ -1968,7 +1969,7 @@ class _MultilineField extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      child: TextField(
+      child: DesktopTextField(
         controller: controller,
         readOnly: readOnly,
         expands: true,
@@ -2030,7 +2031,7 @@ String _typeLabel(BuildContext context, ResourceType type) {
     ResourceType.prompt => context.localized('Prompt', '提示词'),
     ResourceType.skill => context.localized('Skill', 'Skill'),
     ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Legacy knowledge', '旧知识库'),
+    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
     ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
   };
 }
@@ -2060,8 +2061,8 @@ String _typeDescription(BuildContext context, ResourceType type) {
       '提供 MCP 工具连接，仅在任务需要时调用。',
     ),
     ResourceType.knowledge => context.localized(
-      'Legacy data retained for compatibility.',
-      '为兼容保留的旧数据。',
+      'Imported knowledge available to Agent context.',
+      '已导入、可供 Agent 使用的知识库内容。',
     ),
     ResourceType.clipboard => context.localized('Clipboard item.', '剪贴板条目。'),
   };

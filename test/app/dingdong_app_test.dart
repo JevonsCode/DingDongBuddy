@@ -2,7 +2,10 @@ import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
+import 'package:dingdong/features/activity/data/agent_activity_store.dart';
+import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -34,18 +37,18 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 0.9.9', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.0.0', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-0.9.9')), findsOneWidget);
-    expect(find.text('v0.9.9'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.0.0')), findsOneWidget);
+    expect(find.text('v1.0.0'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
-    expect(find.text('Agent connections'), findsWidgets);
+    expect(find.text('API | Agent connections'), findsOneWidget);
   });
 
   testWidgets('development build is visibly labeled beside DingDong', (
@@ -150,7 +153,20 @@ void main() {
         idGenerator: () => 'completed-agent',
         now: () => DateTime.utc(2026, 7, 12, 10),
       );
-      activityController.record(source: 'Codex', message: 'Refactor complete');
+      const AgentConversationTarget target = AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-unseen-repeat',
+      );
+      activityController.record(
+        source: 'Codex',
+        message: 'Refactor complete',
+        conversationTarget: target,
+      );
+      activityController.record(
+        source: 'Codex',
+        message: 'Refactor complete again',
+        conversationTarget: target,
+      );
       activityController.requestReveal();
 
       await tester.pumpWidget(
@@ -162,9 +178,19 @@ void main() {
       expect(find.byKey(const Key('recent-agent-count')), findsOneWidget);
       expect(find.text('24 h · 1'), findsOneWidget);
       expect(activityController.unseenCount, 1);
+      Text repeatText = tester.widget<Text>(find.text('×2'));
+      expect(
+        repeatText.style?.color,
+        PopupStyle.activityUnread.withValues(alpha: 0.58),
+      );
 
       await tester.pump(const Duration(milliseconds: 1600));
       expect(activityController.unseenCount, 0);
+      repeatText = tester.widget<Text>(find.text('×2'));
+      expect(
+        repeatText.style?.color,
+        PopupStyle.textPrimary.withValues(alpha: 0.13),
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
       activityController.dispose();
@@ -246,7 +272,84 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('×2'), findsOneWidget);
+    final Rect cardRect = tester.getRect(
+      find.byKey(const Key('activity-repeated-long-agent')),
+    );
+    final Rect repeatRect = tester.getRect(find.text('×2'));
+    final Rect messageRect = tester.getRect(
+      find.byKey(const Key('activity-message-repeated-long-agent')),
+    );
+    expect(messageRect.bottom, closeTo(repeatRect.bottom, 0.1));
+    expect(cardRect.bottom - repeatRect.bottom, greaterThan(8));
     expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+  });
+
+  testWidgets('Dynamic reserves the open action slot across activity rows', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 540);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ActivityController activityController = ActivityController(
+      store: InMemoryAgentActivityStore(
+        AgentActivityHistory(
+          activities: <AgentActivity>[
+            AgentActivity(
+              id: 'repeat-without-open',
+              source: 'Codex',
+              message: 'No conversation target',
+              completedAt: DateTime.utc(2026, 7, 22, 10),
+              unseen: false,
+              repeatCount: 2,
+            ),
+            AgentActivity(
+              id: 'repeat-with-open',
+              source: 'Codex',
+              message: 'Has a conversation target',
+              completedAt: DateTime.utc(2026, 7, 22, 9),
+              unseen: false,
+              repeatCount: 2,
+              conversationTarget: const AgentConversationTarget(
+                client: AgentClient.codex,
+                conversationId: 'thread-aligned-repeat',
+              ),
+            ),
+          ],
+        ),
+      ),
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    )..load();
+
+    await tester.pumpWidget(
+      DingDongApp(activityController: activityController),
+    );
+    await tester.pumpAndSettle();
+
+    final Rect withoutOpenRepeat = tester.getRect(
+      find.byKey(const Key('activity-repeat-count-repeat-without-open')),
+    );
+    final Rect withOpenRepeat = tester.getRect(
+      find.byKey(const Key('activity-repeat-count-repeat-with-open')),
+    );
+    expect(withoutOpenRepeat.left, closeTo(withOpenRepeat.left, 0.1));
+
+    final Rect placeholder = tester.getRect(
+      find.byKey(
+        const Key('activity-open-conversation-placeholder-repeat-without-open'),
+      ),
+    );
+    expect(placeholder.width, 20);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('activity-repeat-with-open')),
+        matching: find.byKey(const Key('activity-open-conversation')),
+      ),
+      findsOneWidget,
+    );
 
     await tester.pumpWidget(const SizedBox.shrink());
     activityController.dispose();
@@ -453,7 +556,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('API 58631'), findsOneWidget);
+    expect(find.text('58631'), findsOneWidget);
+    expect(find.text('API | Agent connections'), findsOneWidget);
     expect(
       find.textContaining('API listening on 127.0.0.1:58631'),
       findsOneWidget,

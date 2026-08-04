@@ -170,24 +170,16 @@ class _ClipboardPermissionSurface extends StatelessWidget {
               ),
             ),
           ),
-          TextButton(
+          DesktopActionButton(
             key: interactive
                 ? const Key('clipboard-open-permission-settings')
                 : null,
             onPressed: interactive
                 ? viewModel.openQuickPastePermissionSettings
                 : null,
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF725214),
-              disabledForegroundColor: const Color(0xFF725214),
-              minimumSize: const Size(0, 28),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              context.localized('Open settings', '前往开启'),
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-            ),
+            label: context.localized('Open settings', '前往开启'),
+            compact: true,
+            tone: DesktopActionTone.soft,
           ),
         ],
       ),

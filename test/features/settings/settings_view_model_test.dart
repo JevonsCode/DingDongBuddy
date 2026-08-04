@@ -374,10 +374,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '0.10.0',
-        latestBuild: '29',
+        latestVersion: '1.0.1',
+        latestBuild: '36',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/0.10.0'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.0.1'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -393,11 +393,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '0.10.0');
+    expect(model.releaseStatus.latestVersion, '1.0.1');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/0.10.0'),
+      Uri.parse('https://example.com/dingdong/releases/1.0.1'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -515,11 +515,6 @@ void main() {
       );
       expect(model.mcpSetupPrompt, contains('remote or cloud agent'));
       expect(model.mcpSetupPrompt, isNot(contains('clipboard content')));
-
-      expect(
-        backend.values,
-        isNot(contains('dingdong.mcpSetupPromptOverride')),
-      );
     },
   );
 
@@ -685,7 +680,7 @@ final class _FakeApplicationUpdater implements ApplicationUpdater {
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.downloading,
       progress: 0.42,
-      targetVersion: '0.10.0',
+      targetVersion: '1.0.1',
     );
   }
 

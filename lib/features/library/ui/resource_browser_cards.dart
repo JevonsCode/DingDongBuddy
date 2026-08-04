@@ -63,14 +63,15 @@ class _ResourceCards extends StatelessWidget {
         title: Text(context.localized('Delete this resource?', '删除这个资源？')),
         content: Text(resource.title),
         actions: <Widget>[
-          TextButton(
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(context.localized('Cancel', '取消')),
+            label: context.localized('Cancel', '取消'),
+            compact: true,
           ),
-          FilledButton(
-            style: DesktopDialogStyle.destructiveButtonStyle(context),
+          DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(context.localized('Delete', '删除')),
+            label: context.localized('Delete', '删除'),
+            tone: DesktopActionTone.danger,
           ),
         ],
       ),
@@ -271,27 +272,14 @@ class _CardAction extends StatelessWidget {
       enabled: onPressed != null,
       label: tooltip,
       child: ExcludeSemantics(
-        child: IconButton(
+        child: DesktopIconButton(
           tooltip: tooltip,
           onPressed: onPressed,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints.tightFor(width: 30, height: 30),
-          style: IconButton.styleFrom(
-            fixedSize: const Size.square(30),
-            minimumSize: const Size.square(30),
-            maximumSize: const Size.square(30),
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            backgroundColor:
-                backgroundColor ?? PopupStyle.field.withValues(alpha: 0.72),
-            foregroundColor: color ?? PopupStyle.textSecondary,
-            disabledForegroundColor: PopupStyle.textTertiary,
-            disabledBackgroundColor: PopupStyle.field.withValues(alpha: 0.45),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
+          size: 30,
+          iconSize: 16,
+          backgroundColor:
+              backgroundColor ?? PopupStyle.field.withValues(alpha: 0.72),
+          foregroundColor: color ?? PopupStyle.textSecondary,
           icon: symbol == 'enabled' || symbol == 'paused'
               ? EnabledStatusIcon(enabled: symbol == 'enabled', size: 16)
               : PopupSymbolIcon(

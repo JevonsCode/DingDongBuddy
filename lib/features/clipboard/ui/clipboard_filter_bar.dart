@@ -46,44 +46,36 @@ class _CompactClipboardToolbar extends StatelessWidget {
       child: Column(
         children: <Widget>[
           Container(
-            height: 54,
-            padding: const EdgeInsets.fromLTRB(10, 9, 9, 9),
+            height: 58,
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
             decoration: PopupStyle.card(radius: 10),
             child: Row(
               children: <Widget>[
                 Expanded(
-                  child: TextField(
+                  child: DesktopSearchField(
                     key: const Key('clipboard-search'),
                     focusNode: searchFocusNode,
                     controller: searchController,
                     onChanged: viewModel.setQuery,
+                    height: 38,
+                    hintText: context.localized('Search clipboard', '搜索剪贴板'),
+                    clearTooltip: context.localized('Clear search', '清除搜索'),
                     style: const TextStyle(fontSize: 12),
-                    decoration: InputDecoration(
-                      hintText: context.localized('Search clipboard', '搜索剪贴板'),
-                      hintStyle: const TextStyle(
-                        color: PopupStyle.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      prefixIcon: const SizedBox(
-                        width: 40,
-                        child: Center(
-                          child: PopupSymbolIcon(
-                            'search',
-                            color: PopupStyle.textSecondary,
-                            size: 19,
-                          ),
-                        ),
-                      ),
-                      prefixIconConstraints: const BoxConstraints.tightFor(
-                        width: 40,
-                      ),
-                      fillColor: PopupStyle.field,
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    hintStyle: const TextStyle(
+                      color: PopupStyle.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
+                    searchIcon: const PopupSymbolIcon(
+                      'search',
+                      color: PopupStyle.textSecondary,
+                      size: 19,
+                    ),
+                    backgroundColor: PopupStyle.field,
+                    borderColor: PopupStyle.border,
+                    focusBorderColor: PopupStyle.accent,
+                    foregroundColor: PopupStyle.textSecondary,
+                    borderRadius: 8,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -200,28 +192,19 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
           child: ScaleTransition(
             key: const Key('clipboard-filter-transition'),
             scale: _scale,
-            child: OutlinedButton(
+            child: DesktopIconButton(
               key: const Key('clipboard-toggle-filters'),
               onPressed: widget.onPressed,
-              style: OutlinedButton.styleFrom(
-                fixedSize: const Size(35, 36),
-                minimumSize: const Size(35, 36),
-                padding: EdgeInsets.zero,
-                foregroundColor: foreground,
-                backgroundColor: background,
-                side: BorderSide(
-                  color: highlighted
-                      ? PopupStyle.accent.withValues(alpha: 0.32)
-                      : PopupStyle.border,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                animationDuration: const Duration(milliseconds: 160),
-              ),
-              child: SizedBox(
-                width: 35,
-                height: 36,
+              size: 38,
+              iconSize: 17,
+              foregroundColor: foreground,
+              backgroundColor: background,
+              borderColor: highlighted
+                  ? PopupStyle.accent.withValues(alpha: 0.32)
+                  : PopupStyle.border,
+              icon: SizedBox(
+                width: 38,
+                height: 38,
                 child: Stack(
                   alignment: Alignment.center,
                   children: <Widget>[
@@ -285,7 +268,7 @@ class _ClipboardKindFilters extends StatelessWidget {
     final List<ClipboardCategoryRule> categories =
         viewModel.availableCategories;
     return SizedBox(
-      height: 30,
+      height: 32,
       child: Row(
         children: <Widget>[
           _categoryChip(context, null),
@@ -300,7 +283,7 @@ class _ClipboardKindFilters extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          IconButton(
+          DesktopIconButton(
             key: const Key('clipboard-manage-categories'),
             tooltip: context.localized('Manage categories', '管理分类'),
             onPressed: () => showDialog<void>(
@@ -333,7 +316,7 @@ class _ClipboardKindFilters extends StatelessWidget {
       textAlign: TextAlign.center,
       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
     );
-    return FilterChip(
+    return DesktopChoiceChip(
       key: Key('clipboard-category-${category?.id ?? 'all'}'),
       label: category == null
           ? SizedBox(
@@ -364,9 +347,13 @@ class _ClipboardKindFilters extends StatelessWidget {
       onSelected: (_) => category == null
           ? viewModel.clearFilters()
           : viewModel.setCategory(category.id),
-      showCheckmark: false,
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      height: 32,
+      foregroundColor: PopupStyle.textSecondary,
+      selectedForegroundColor: PopupStyle.accent,
+      backgroundColor: PopupStyle.surface,
+      selectedBackgroundColor: PopupStyle.accentSoft,
+      borderColor: PopupStyle.border,
+      selectedBorderColor: PopupStyle.accent.withValues(alpha: 0.28),
     );
   }
 }
@@ -383,7 +370,7 @@ class _ClipboardGroupFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 30,
+      height: 32,
       child: ReorderableListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: viewModel.groups.length,
@@ -408,8 +395,8 @@ class _ClipboardGroupFilters extends StatelessWidget {
               ),
               child: ReorderableDragStartListener(
                 index: index,
-                child: FilterChip(
-                  avatar: const Icon(Icons.folder_outlined, size: 13),
+                child: DesktopChoiceChip(
+                  leading: const Icon(Icons.folder_outlined, size: 13),
                   label: Text(
                     group,
                     style: const TextStyle(
@@ -420,10 +407,15 @@ class _ClipboardGroupFilters extends StatelessWidget {
                   selected: viewModel.selectedGroup == group,
                   onSelected: (bool selected) =>
                       viewModel.setGroup(selected ? group : null),
-                  showCheckmark: false,
-                  backgroundColor: Colors.transparent,
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  height: 32,
+                  foregroundColor: PopupStyle.textSecondary,
+                  selectedForegroundColor: PopupStyle.accent,
+                  backgroundColor: PopupStyle.surface,
+                  selectedBackgroundColor: PopupStyle.accentSoft,
+                  borderColor: PopupStyle.border,
+                  selectedBorderColor: PopupStyle.accent.withValues(
+                    alpha: 0.28,
+                  ),
                 ),
               ),
             ),

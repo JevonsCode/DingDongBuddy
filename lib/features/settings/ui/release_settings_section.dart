@@ -1,4 +1,5 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -220,27 +221,14 @@ class _ReleaseActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle style = ButtonStyle(
-      minimumSize: const WidgetStatePropertyAll<Size>(Size(0, 40)),
-      padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
-        EdgeInsets.symmetric(horizontal: 16),
-      ),
+    return DesktopActionButton(
+      key: buttonKey,
+      onPressed: onPressed,
+      icon: icon,
+      label: label,
+      tone: emphasized ? DesktopActionTone.primary : DesktopActionTone.neutral,
+      height: 40,
     );
-    return emphasized
-        ? FilledButton.icon(
-            key: buttonKey,
-            onPressed: onPressed,
-            style: style,
-            icon: icon,
-            label: label,
-          )
-        : OutlinedButton.icon(
-            key: buttonKey,
-            onPressed: onPressed,
-            style: style,
-            icon: icon,
-            label: label,
-          );
   }
 }
 

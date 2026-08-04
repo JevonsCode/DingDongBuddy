@@ -112,9 +112,9 @@ final class _CountingReleaseSource implements ReleaseMetadataSource {
     fetchCount += 1;
     return ReleaseMetadata(
       app: 'DingDong',
-      latestVersion: '0.10.0',
+      latestVersion: '1.0.1',
       website: Uri.parse('https://example.com'),
-      releasePage: Uri.parse('https://example.com/releases/0.10.0'),
+      releasePage: Uri.parse('https://example.com/releases/1.0.1'),
     );
   }
 }

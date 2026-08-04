@@ -14,7 +14,7 @@ class _TypeFilters extends StatelessWidget {
       ResourceType.mcp,
     ];
     return SizedBox(
-      height: 33,
+      height: 35,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
@@ -47,7 +47,7 @@ class _GroupFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<String?> groups = <String?>[null, ...viewModel.groups];
     return SizedBox(
-      height: 30,
+      height: 32,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
@@ -95,26 +95,22 @@ class _FilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 33),
-        padding: EdgeInsets.zero,
-        backgroundColor: selected ? PopupStyle.accentSoft : PopupStyle.surface,
-        foregroundColor: selected
-            ? PopupStyle.accent
-            : PopupStyle.textSecondary,
-        side: BorderSide(
-          color: selected
-              ? PopupStyle.accent.withValues(alpha: 0.25)
-              : PopupStyle.border,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Text(
+    return DesktopChoiceChip(
+      label: Text(
         label,
         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
       ),
+      selected: selected,
+      onSelected: (_) => onPressed(),
+      height: 35,
+      padding: EdgeInsets.zero,
+      foregroundColor: PopupStyle.textSecondary,
+      selectedForegroundColor: PopupStyle.accent,
+      backgroundColor: PopupStyle.surface,
+      selectedBackgroundColor: PopupStyle.accentSoft,
+      borderColor: PopupStyle.border,
+      selectedBorderColor: PopupStyle.accent.withValues(alpha: 0.25),
+      borderRadius: 8,
     );
   }
 }
@@ -134,23 +130,8 @@ class _GroupButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 30),
-        padding: const EdgeInsets.symmetric(horizontal: 9),
-        backgroundColor: selected ? PopupStyle.accentSoft : PopupStyle.surface,
-        foregroundColor: selected
-            ? PopupStyle.accent
-            : PopupStyle.textSecondary,
-        side: BorderSide(
-          color: selected
-              ? PopupStyle.accent.withValues(alpha: 0.25)
-              : PopupStyle.border,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Row(
+    return DesktopChoiceChip(
+      label: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(
@@ -175,6 +156,16 @@ class _GroupButton extends StatelessWidget {
           ),
         ],
       ),
+      selected: selected,
+      onSelected: (_) => onPressed(),
+      height: 32,
+      foregroundColor: PopupStyle.textSecondary,
+      selectedForegroundColor: PopupStyle.accent,
+      backgroundColor: PopupStyle.surface,
+      selectedBackgroundColor: PopupStyle.accentSoft,
+      borderColor: PopupStyle.border,
+      selectedBorderColor: PopupStyle.accent.withValues(alpha: 0.25),
+      borderRadius: 8,
     );
   }
 }

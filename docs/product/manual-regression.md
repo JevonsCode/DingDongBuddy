@@ -1,4 +1,4 @@
-# DingDong 0.9.9 Manual Regression Checklist
+# DingDong 1.0.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -46,6 +46,17 @@ and macOS golden images; the items below exercise real operating-system state.
 - Text, URLs, commands, and file selections appear in history. Copied image
   files retain only their source path; screenshots or copied image pixels
   without a source path remain available from DingDong-managed storage.
+- Single-click a text or URL row: its side preview keeps Copy, system Open,
+  Share, and QR Code in a balanced action group. QR Code appears only when the
+  exact content can be encoded; sensitive text remains eligible, while local
+  file/image records and over-capacity content do not leave an empty action.
+- Click QR Code, then click the rendered code: the first action reveals a
+  scannable code with a white quiet zone. The second keeps the 304 x 420 side
+  preview unchanged and opens only the QR artwork in a separate centered 620 x
+  680 image-viewer window. The large window is edge-resizable and the QR scales
+  with it. Clicking the large artwork, its close control, or pressing Escape
+  closes that large window and focuses the side preview; pressing Escape again
+  then closes the side preview.
 - Search, kind filters, group filters, pinning, organizing, deletion, and promotion persist.
 - `Command-R`/`Control-R` opens filters; when filters are active, the next press
   resets them to All while keeping the bar open, and the following press closes
@@ -66,7 +77,7 @@ and macOS golden images; the items below exercise real operating-system state.
 - macOS requests Accessibility access when quick paste needs it; Settings reflects the latest status.
 - Windows quick paste does not require a separate Accessibility permission.
 - A 5,000-row retained history scrolls smoothly without eagerly building every row.
-- Pinned, legacy-archived, and custom-group archived rows survive item and age
+- Pinned and custom-group archived rows survive item and age
   retention; an old archive remains searchable beyond 5,000 newer ordinary rows.
 - Managed screenshot/image data is deleted with an ordinary row removed by
   retention or manual deletion, while archived and pinned managed images remain.
@@ -87,6 +98,10 @@ and macOS golden images; the items below exercise real operating-system state.
 - A Skill with a trigger scope is visibly marked in the Resource Manager list,
   the popup resource library, and the popup Enabled list.
 - Search and type/pinned filters preserve the active editor selection.
+- Popup and Resource Manager tabs, search fields, filters, group chips, and bulk
+  actions use the shared desktop controls: labels stay vertically centered,
+  adjacent actions retain a visible gap, and changing a segmented choice does
+  not flash a native Material hover, ink, or ripple surface.
 - Creating, enabling, disabling, or deleting resources in the dedicated
   Resource Manager updates the popup resource list, Dynamic resource count,
   and the complete Enabled list without restarting DingDong; reopening the
@@ -125,6 +140,11 @@ and macOS golden images; the items below exercise real operating-system state.
   resources. Changing its paths removes only legacy DingDong-managed Skill
   copies and managed Prompt/MCP content from old targets while preserving
   user-owned content.
+- Native MCP synchronization refuses unrelated duplicate tables instead of
+  overwriting them, removes only DingDong-managed stale tables, detects a file
+  changed after it was read, writes atomically, and verifies the saved result by
+  reading it back. Incrementing only usage count or last-used time does not
+  rewrite the native configuration; explicitly saving the resource still does.
 - An Adapter path that leaves the home directory directly or through a symbolic
   link remains visible as invalid and blocks synchronization.
 - The list remains responsive with 10,000 resources.
@@ -158,8 +178,10 @@ and macOS golden images; the items below exercise real operating-system state.
 
 - Dynamic shows at most six recent Agent items.
 - Repeated notifications with the same conversation ID are grouped into one
-  item by default, play the notification sound, show a `×N` repeat badge, and
-  do not increase the recent-Agent count.
+  item by default, play the notification sound, show a bottom-aligned `×N`
+  watermark, and do not increase the recent-Agent count. A newly revealed
+  unread watermark is pale orange; after acknowledgement it returns to the
+  low-contrast gray used by older items.
 - **Settings → Recent Agents → Group repeated sessions** can disable grouping;
   when disabled, repeated notifications appear as separate items and increase
   the count. The choice persists after restart.
@@ -247,8 +269,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `0.9.9` build `34` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `0.9.9.34` and product name `DingDong`.
+- The macOS release app metadata is version `1.0.0` build `35` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.0.0.35` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

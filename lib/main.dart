@@ -56,6 +56,7 @@ import 'package:dingdong/platform/native_quick_paste_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:dingdong/platform/preferences_tray_unread_store.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
+import 'package:dingdong/platform/url_launcher_clipboard_content_launcher.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -76,6 +77,10 @@ Future<void> main(List<String> arguments) async {
   }
   if (windowArguments['kind'] == clipboardPreviewWindowKind) {
     await _runClipboardPreviewWindow(windowController, windowArguments);
+    return;
+  }
+  if (windowArguments['kind'] == clipboardQrPreviewWindowKind) {
+    await _runClipboardQrPreviewWindow(windowController, windowArguments);
     return;
   }
   if (windowArguments['kind'] == settingsWindowKind) {
@@ -565,10 +570,50 @@ Future<void> _runClipboardPreviewWindow(
       initialRecord: record,
       windowController: windowController,
       clipboardGateway: DesktopClipboardGateway(),
+      contentLauncher: UrlLauncherClipboardContentLauncher(),
       shareGateway: createNativeClipboardShareGateway(defaultTargetPlatform),
     ),
   );
   await windowController.showInactive();
+}
+
+Future<void> _runClipboardQrPreviewWindow(
+  WindowController windowController,
+  Map<String, Object?> arguments,
+) async {
+  final Map<Object?, Object?> recordValues =
+      arguments['record']! as Map<Object?, Object?>;
+  final ClipboardRecord record = clipboardRecordFromWindowJson(recordValues);
+  final String parentWindowId = arguments['parentWindowId']! as String;
+  final AppSettings windowSettings = await SettingsRepository(
+    SharedPreferencesBackend(),
+  ).load();
+  await windowManager.ensureInitialized();
+  final WindowOptions options = WindowOptions(
+    size: clipboardQrPreviewWindowSize,
+    minimumSize: clipboardQrPreviewMinimumSize,
+    skipTaskbar: desktopWindowSkipsTaskbar(
+      defaultTargetPlatform,
+      hideDockIcon: windowSettings.hideDockIcon,
+      fallback: true,
+    ),
+    alwaysOnTop: true,
+    backgroundColor: const Color(0x00000000),
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+  await windowManager.waitUntilReadyToShow(options);
+  await windowManager.setAsFrameless();
+  await windowManager.setResizable(true);
+  await windowManager.center();
+  await windowManager.setHasShadow(true);
+  runApp(
+    ClipboardQrPreviewApp(
+      initialRecord: record,
+      parentWindowId: parentWindowId,
+      windowController: windowController,
+    ),
+  );
+  await windowController.show();
 }
 
 Future<void> _runResourceManagerWindow(

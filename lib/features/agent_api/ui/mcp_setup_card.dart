@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
 
@@ -68,31 +69,18 @@ class _McpSetupCardState extends State<McpSetupCard> {
         const SizedBox(height: 9),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton.icon(
+          child: DesktopActionButton(
             key: const Key('agent-api-copy-setup-prompt'),
             onPressed: widget.clipboardGateway == null ? null : _copyPrompt,
-            style: TextButton.styleFrom(
-              foregroundColor: _copied
-                  ? PopupStyle.success
-                  : PopupStyle.textSecondary,
-              backgroundColor: _copied
-                  ? PopupStyle.success.withValues(alpha: 0.10)
-                  : PopupStyle.field,
-              minimumSize: const Size(0, 32),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
             icon: Icon(
               _copied ? Icons.check_rounded : Icons.copy_rounded,
               size: 16,
             ),
-            label: Text(
-              _copied
-                  ? context.localized('Copied', '已复制')
-                  : context.localized('Copy', '复制'),
-            ),
+            label: _copied
+                ? context.localized('Copied', '已复制')
+                : context.localized('Copy', '复制'),
+            tone: _copied ? DesktopActionTone.soft : DesktopActionTone.neutral,
+            compact: true,
           ),
         ),
       ],

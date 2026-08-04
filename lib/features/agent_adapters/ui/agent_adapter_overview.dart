@@ -268,7 +268,7 @@ class _CodexCompletionHookCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
+              DesktopIconButton(
                 key: const Key('codex-completion-hook-refresh'),
                 tooltip: _localized(context, 'Check again', '重新检查'),
                 onPressed: checking
@@ -321,17 +321,16 @@ class _CodexCompletionHookCard extends StatelessWidget {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: FilledButton.icon(
+              child: DesktopActionButton(
                 key: const Key('codex-completion-hook-repair'),
                 onPressed: checking
                     ? null
                     : controller.repairCodexCompletionHook,
                 icon: const Icon(Icons.security_update_good_outlined, size: 17),
-                label: Text(
-                  status.review == CodexCompletionHookReview.trusted
-                      ? _localized(context, 'Enable', '启用')
-                      : _localized(context, 'Trust & enable', '信任并启用'),
-                ),
+                label: status.review == CodexCompletionHookReview.trusted
+                    ? _localized(context, 'Enable', '启用')
+                    : _localized(context, 'Trust & enable', '信任并启用'),
+                tone: DesktopActionTone.primary,
               ),
             ),
           ],

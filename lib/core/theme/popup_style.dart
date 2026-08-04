@@ -15,6 +15,7 @@ abstract final class PopupStyle {
   static const Color success = Color(0xFF739477);
   static const Color mcp = Color(0xFFD65332);
   static const Color mcpSoft = Color(0xFFFBE9E3);
+  static const Color activityUnread = Color(0xFFD88B4A);
   static const Color warmSurface = Color(0xFFFBF7ED);
   static const Color skillSurface = Color(0xFFF2F5FB);
   static const double radius = 16;

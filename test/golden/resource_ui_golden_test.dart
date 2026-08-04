@@ -25,8 +25,21 @@ void main() {
       tester.view.physicalSize = const Size(760, 220);
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
-      final LibraryViewModel model = LibraryViewModel(InMemoryResourceStore());
+      final DateTime now = DateTime.utc(2026, 8, 4);
+      final LibraryViewModel model = LibraryViewModel(
+        InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'selected-prompt',
+            type: ResourceType.prompt,
+            title: 'Selected prompt',
+            content: 'Selected content',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      );
       await model.load();
+      model.toggleAllVisible();
       addTearDown(model.dispose);
 
       await tester.pumpWidget(
@@ -348,6 +361,27 @@ Apply the user's saved preferences.''',
       });
       await tester.tap(find.text('打开分类'));
       await tester.pumpAndSettle();
+
+      final Rect toolbarRect = tester.getRect(
+        find.byKey(const Key('clipboard-category-priority-toolbar')),
+      );
+      final Rect listRect = tester.getRect(
+        find.byKey(const Key('clipboard-category-list-surface')),
+      );
+      expect(listRect.top - toolbarRect.bottom, closeTo(10, 0.1));
+      final List<Rect> actionRects =
+          <String>['links', 'images', 'files', 'text']
+              .map(
+                (String id) => tester.getRect(
+                  find.byKey(Key('clipboard-category-actions-$id')),
+                ),
+              )
+              .toList(growable: false);
+      for (final Rect actionRect in actionRects) {
+        expect(actionRect.width, closeTo(122, 0.1));
+        expect(actionRect.right, closeTo(actionRects.first.right, 0.1));
+        expect(listRect.contains(actionRect.center), isTrue);
+      }
 
       await expectLater(
         find.byKey(const Key('clipboard-category-rules-dialog')),

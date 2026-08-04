@@ -10,6 +10,7 @@ import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -171,8 +172,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     symbol: 'mcp',
                     value: widget.agentBaseUri == null
                         ? context.localized('Check', '待确认')
-                        : 'API ${widget.agentBaseUri!.port}',
-                    label: context.localized('Agent connections', 'Agent 连接'),
+                        : '${widget.agentBaseUri!.port}',
+                    label: context.localized(
+                      'API | Agent connections',
+                      'API | Agent 连接',
+                    ),
                     showBadge: !widget.settingsViewModel.settings.mcpAccessSeen,
                     onTap: widget.onOpenAgentApi,
                   ),

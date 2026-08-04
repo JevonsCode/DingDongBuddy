@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
@@ -132,14 +134,15 @@ class LibraryScreen extends StatelessWidget {
             title: Text(title),
             content: Text(message),
             actions: <Widget>[
-              TextButton(
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(context.localized('Cancel', '取消')),
+                label: context.localized('Cancel', '取消'),
+                compact: true,
               ),
-              FilledButton(
-                style: DesktopDialogStyle.destructiveButtonStyle(context),
+              DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(context.localized('Delete', '删除')),
+                label: context.localized('Delete', '删除'),
+                tone: DesktopActionTone.danger,
               ),
             ],
           ),
@@ -181,14 +184,15 @@ class LibraryScreen extends StatelessWidget {
             ),
           ),
           actions: <Widget>[
-            TextButton(
+            DesktopActionButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(context.localized('Cancel', '取消')),
+              label: context.localized('Cancel', '取消'),
+              compact: true,
             ),
-            FilledButton(
-              style: DesktopDialogStyle.destructiveButtonStyle(context),
+            DesktopActionButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(context.localized('Delete', '删除')),
+              label: context.localized('Delete', '删除'),
+              tone: DesktopActionTone.danger,
             ),
           ],
         );
@@ -376,23 +380,13 @@ class _LibraryDetailHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: Row(
           children: <Widget>[
-            IconButton(
+            DesktopIconButton(
               key: const Key('library-editor-back'),
               tooltip: context.localized('Back to resources', '返回资源列表'),
               onPressed: onBack,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-              style: IconButton.styleFrom(
-                fixedSize: const Size.square(32),
-                minimumSize: const Size.square(32),
-                maximumSize: const Size.square(32),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                foregroundColor: colors.onSurfaceVariant,
-                backgroundColor: colors.surfaceContainerLow,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
+              size: 32,
+              foregroundColor: colors.onSurfaceVariant,
+              backgroundColor: colors.surfaceContainerLow,
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
             ),
             const SizedBox(width: 8),

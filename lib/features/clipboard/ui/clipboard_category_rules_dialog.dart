@@ -1,7 +1,11 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_choice_chip.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -32,7 +36,7 @@ class _ClipboardCategoryRulesDialogState
             .clamp(320.0, 520.0);
         final int visibleRuleCount = widget.viewModel.categoryRules.length
             .clamp(0, 6);
-        final double listHeight = (150.0 + (visibleRuleCount * 58.0)).clamp(
+        final double listHeight = (158.0 + (visibleRuleCount * 62.0)).clamp(
           320.0,
           maximumHeight,
         );
@@ -41,92 +45,21 @@ class _ClipboardCategoryRulesDialogState
             insetPadding: DesktopDialogStyle.insetPadding,
             backgroundColor: colors.surfaceContainerLowest,
             surfaceTintColor: Colors.transparent,
-            elevation: 3,
+            elevation: 5,
+            shadowColor: Colors.black.withValues(alpha: 0.18),
             clipBehavior: Clip.antiAlias,
             shape: DesktopDialogStyle.shape(colors),
             child: SizedBox(
               key: const Key('clipboard-category-rules-dialog'),
-              width: 580,
+              width: 600,
               height: _editing == null ? listHeight : maximumHeight,
               child: Column(
                 children: <Widget>[
-                  SizedBox(
-                    height: 64,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 8, 10, 8),
-                      child: Row(
-                        children: <Widget>[
-                          if (_editing != null) ...<Widget>[
-                            IconButton(
-                              key: const Key('clipboard-category-back'),
-                              tooltip: context.localized(
-                                'Back to categories',
-                                '返回分类列表',
-                              ),
-                              onPressed: () => setState(() => _editing = null),
-                              icon: const Icon(
-                                Icons.arrow_back_rounded,
-                                size: 16,
-                              ),
-                              style: _headerActionStyle(),
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  _editing == null
-                                      ? context.localized(
-                                          'Clipboard categories',
-                                          '剪贴板分类',
-                                        )
-                                      : context.localized(
-                                          'Category rule',
-                                          '分类规则',
-                                        ),
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: -0.2,
-                                      ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _editing == null
-                                      ? context.localized(
-                                          'Rules run from top to bottom; the first match wins.',
-                                          '规则从上到下匹配，首个命中分类生效。',
-                                        )
-                                      : context.localized(
-                                          'Define what content belongs in this category.',
-                                          '设置进入这个分类的内容条件。',
-                                        ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: colors.onSurfaceVariant,
-                                        fontSize: 11,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: context.localized('Close', '关闭'),
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.close_rounded, size: 16),
-                            style: _headerActionStyle(),
-                          ),
-                        ],
-                      ),
-                    ),
+                  _DialogHeader(
+                    editing: _editing != null,
+                    onBack: () => setState(() => _editing = null),
+                    onClose: () => Navigator.pop(context),
                   ),
-                  const Divider(),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
@@ -162,6 +95,117 @@ class _ClipboardCategoryRulesDialogState
   }
 }
 
+class _DialogHeader extends StatelessWidget {
+  const _DialogHeader({
+    required this.editing,
+    required this.onBack,
+    required this.onClose,
+  });
+
+  final bool editing;
+  final VoidCallback onBack;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final Color controlBackground = colors.surfaceContainerLow.withValues(
+      alpha: 0.82,
+    );
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.fromLTRB(20, 10, 12, 10),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: colors.outlineVariant.withValues(alpha: 0.72),
+          ),
+        ),
+      ),
+      child: Row(
+        children: <Widget>[
+          if (editing)
+            DesktopIconButton(
+              key: const Key('clipboard-category-back'),
+              tooltip: context.localized('Back to categories', '返回分类列表'),
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_rounded, size: 16),
+              size: 32,
+              backgroundColor: controlBackground,
+              borderColor: colors.outlineVariant,
+            )
+          else
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Icon(
+                Icons.category_outlined,
+                size: 17,
+                color: colors.primary,
+              ),
+            ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  editing
+                      ? context.localized('Category rule', '分类规则')
+                      : context.localized('Clipboard categories', '剪贴板分类'),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 17,
+                    height: 1.15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  editing
+                      ? context.localized(
+                          'Define what content belongs in this category.',
+                          '设置进入这个分类的内容条件。',
+                        )
+                      : context.localized(
+                          'Rules run from top to bottom; the first match wins.',
+                          '规则从上到下匹配，首个命中分类生效。',
+                        ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 11,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          DesktopIconButton(
+            tooltip: context.localized('Close', '关闭'),
+            onPressed: onClose,
+            icon: const Icon(Icons.close_rounded, size: 16),
+            size: 32,
+            backgroundColor: controlBackground,
+            borderColor: colors.outlineVariant,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RuleList extends StatelessWidget {
   const _RuleList({
     required this.viewModel,
@@ -179,70 +223,190 @@ class _RuleList extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Column(
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Icon(
-              Icons.drag_indicator_rounded,
-              size: 15,
-              color: colors.onSurfaceVariant.withValues(alpha: 0.72),
+        Container(
+          key: const Key('clipboard-category-priority-toolbar'),
+          height: 46,
+          padding: const EdgeInsets.fromLTRB(8, 6, 7, 6),
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerLow.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: colors.outlineVariant.withValues(alpha: 0.76),
             ),
-            const SizedBox(width: 5),
-            Expanded(
-              child: Text(
-                context.localized('Drag to change priority', '拖动调整优先级'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: colors.outlineVariant.withValues(alpha: 0.8),
+                  ),
+                ),
+                child: Icon(
+                  Icons.sort_rounded,
+                  size: 16,
                   color: colors.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            FilledButton.icon(
-              key: const Key('clipboard-category-add'),
-              onPressed: onCreate,
-              icon: const Icon(Icons.add_rounded, size: 16),
-              label: Text(context.localized('New category', '新建分类')),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 32),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      context.localized('Matching priority', '匹配优先级'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurface,
+                        fontSize: 11.5,
+                        height: 1.15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.localized(
+                        'Drag rows to put the first match on top',
+                        '拖动排序，优先命中的规则放在上方',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 9.5,
+                        height: 1.1,
+                      ),
+                    ),
+                  ],
                 ),
-                textStyle: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              DesktopActionButton(
+                key: const Key('clipboard-category-add'),
+                onPressed: onCreate,
+                icon: const Icon(Icons.add_rounded, size: 15),
+                label: context.localized('New category', '新建分类'),
+                tone: DesktopActionTone.soft,
+                compact: true,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 10),
         Expanded(
-          child: ReorderableListView.builder(
-            padding: EdgeInsets.zero,
-            buildDefaultDragHandles: false,
-            itemCount: rules.length,
-            onReorderItem: viewModel.reorderCategories,
-            itemBuilder: (BuildContext context, int index) {
-              final ClipboardCategoryRule rule = rules[index];
-              return _RuleRow(
-                key: ValueKey<String>('clipboard-category-rule-${rule.id}'),
-                rule: rule,
-                index: index,
-                showDivider: index != rules.length - 1,
-                onEdit: () => onEdit(rule),
-                onEnabledChanged: (bool value) =>
-                    viewModel.saveCategoryRule(rule.copyWith(enabled: value)),
-                onDelete: () => viewModel.deleteCategoryRule(rule.id),
-              );
-            },
+          child: Container(
+            key: const Key('clipboard-category-list-surface'),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(
+                color: colors.outlineVariant.withValues(alpha: 0.88),
+              ),
+            ),
+            child: rules.isEmpty
+                ? _EmptyRuleList(onCreate: onCreate)
+                : ReorderableListView.builder(
+                    padding: EdgeInsets.zero,
+                    buildDefaultDragHandles: false,
+                    itemCount: rules.length,
+                    onReorderItem: viewModel.reorderCategories,
+                    proxyDecorator:
+                        (
+                          Widget child,
+                          int index,
+                          Animation<double> animation,
+                        ) => AnimatedBuilder(
+                          animation: animation,
+                          builder: (BuildContext context, Widget? proxy) {
+                            final double elevation = 5 * animation.value;
+                            return Material(
+                              color: colors.surfaceContainerLowest,
+                              elevation: elevation,
+                              shadowColor: Colors.black.withValues(alpha: 0.22),
+                              borderRadius: BorderRadius.circular(10),
+                              clipBehavior: Clip.antiAlias,
+                              child: proxy,
+                            );
+                          },
+                          child: child,
+                        ),
+                    itemBuilder: (BuildContext context, int index) {
+                      final ClipboardCategoryRule rule = rules[index];
+                      return _RuleRow(
+                        key: ValueKey<String>(
+                          'clipboard-category-rule-${rule.id}',
+                        ),
+                        rule: rule,
+                        index: index,
+                        showDivider: index != rules.length - 1,
+                        onEdit: () => onEdit(rule),
+                        onEnabledChanged: (bool value) => viewModel
+                            .saveCategoryRule(rule.copyWith(enabled: value)),
+                        onDelete: () => viewModel.deleteCategoryRule(rule.id),
+                      );
+                    },
+                  ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _EmptyRuleList extends StatelessWidget {
+  const _EmptyRuleList({required this.onCreate});
+
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(
+            Icons.inbox_outlined,
+            size: 24,
+            color: colors.onSurfaceVariant.withValues(alpha: 0.62),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.localized('No categories yet', '还没有分类'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            context.localized(
+              'Create one to start organizing clipboard items.',
+              '新建分类后即可开始自动整理剪贴板。',
+            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontSize: 10.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          DesktopActionButton(
+            onPressed: onCreate,
+            icon: const Icon(Icons.add_rounded, size: 14),
+            label: context.localized('New category', '新建分类'),
+            tone: DesktopActionTone.soft,
+            compact: true,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -272,110 +436,178 @@ class _RuleRow extends StatelessWidget {
     return Column(
       children: <Widget>[
         Material(
-          color: Colors.transparent,
+          color: rule.enabled
+              ? Colors.transparent
+              : colors.surfaceContainerLow.withValues(alpha: 0.46),
           child: InkWell(
             onTap: onEdit,
-            borderRadius: BorderRadius.circular(7),
+            splashFactory: NoSplash.splashFactory,
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return colors.primary.withValues(alpha: 0.045);
+              }
+              if (states.contains(WidgetState.pressed)) {
+                return colors.primary.withValues(alpha: 0.07);
+              }
+              return Colors.transparent;
+            }),
             child: SizedBox(
-              height: 57,
-              child: Row(
-                children: <Widget>[
-                  Tooltip(
-                    message: context.localized('Reorder', '拖动排序'),
-                    child: ReorderableDragStartListener(
-                      index: index,
-                      child: SizedBox.square(
-                        dimension: 25,
-                        child: Icon(
-                          Icons.drag_indicator_rounded,
-                          size: 15,
-                          color: colors.onSurfaceVariant.withValues(
-                            alpha: 0.64,
+              height: 61,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 9),
+                child: Row(
+                  children: <Widget>[
+                    Tooltip(
+                      message: context.localized('Reorder', '拖动排序'),
+                      child: ReorderableDragStartListener(
+                        index: index,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: colors.surfaceContainerLow.withValues(
+                              alpha: 0.76,
+                            ),
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(
+                              color: colors.outlineVariant.withValues(
+                                alpha: 0.66,
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.drag_indicator_rounded,
+                            size: 15,
+                            color: colors.onSurfaceVariant.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 5),
-                  Container(
-                    key: Key('clipboard-category-icon-${rule.id}'),
-                    width: 30,
-                    height: 30,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(
-                        alpha: Theme.of(context).brightness == Brightness.dark
-                            ? 0.18
-                            : 0.09,
+                    const SizedBox(width: 7),
+                    Container(
+                      key: Key('clipboard-category-icon-${rule.id}'),
+                      width: 34,
+                      height: 34,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.18
+                              : 0.09,
+                        ),
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.12),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(8),
+                      child: PopupSymbolIcon(
+                        _ruleSymbol(rule),
+                        size: 16,
+                        color: accent,
+                      ),
                     ),
-                    child: PopupSymbolIcon(
-                      _ruleSymbol(rule),
-                      size: 15,
-                      color: accent,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          _ruleName(context, rule),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.05,
-                              ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Opacity(
+                        opacity: rule.enabled ? 1 : 0.58,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              _ruleName(context, rule),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontSize: 13,
+                                    height: 1.15,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.05,
+                                  ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _ruleSummary(context, rule),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                    fontSize: 10.5,
+                                    height: 1.1,
+                                  ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _ruleSummary(context, rule),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: colors.onSurfaceVariant,
-                                fontSize: 10.5,
-                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    Container(
+                      key: Key('clipboard-category-actions-${rule.id}'),
+                      width: 122,
+                      height: 34,
+                      padding: const EdgeInsets.fromLTRB(7, 3, 3, 3),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceContainerLow.withValues(
+                          alpha: 0.78,
                         ),
-                      ],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: colors.outlineVariant.withValues(alpha: 0.72),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Tooltip(
+                            message: context.localized('Enabled', '启用'),
+                            child: CompactSwitch(
+                              value: rule.enabled,
+                              onChanged: onEnabledChanged,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 1,
+                            height: 18,
+                            color: colors.outlineVariant,
+                          ),
+                          const SizedBox(width: 3),
+                          DesktopIconButton(
+                            key: Key('clipboard-category-edit-${rule.id}'),
+                            tooltip: context.localized('Edit', '编辑'),
+                            onPressed: onEdit,
+                            size: 27,
+                            icon: PopupSymbolIcon(
+                              'edit',
+                              size: 13.5,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 1),
+                          DesktopIconButton(
+                            key: Key('clipboard-category-delete-${rule.id}'),
+                            tooltip: context.localized('Delete', '删除'),
+                            onPressed: onDelete,
+                            size: 27,
+                            icon: PopupSymbolIcon(
+                              'delete',
+                              size: 13.5,
+                              color: colors.onSurfaceVariant.withValues(
+                                alpha: 0.78,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  CompactSwitch(
-                    value: rule.enabled,
-                    onChanged: onEnabledChanged,
-                  ),
-                  const SizedBox(width: 5),
-                  IconButton(
-                    key: Key('clipboard-category-edit-${rule.id}'),
-                    tooltip: context.localized('Edit', '编辑'),
-                    onPressed: onEdit,
-                    style: _rowActionStyle(),
-                    icon: PopupSymbolIcon(
-                      'edit',
-                      size: 14,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                  IconButton(
-                    key: Key('clipboard-category-delete-${rule.id}'),
-                    tooltip: context.localized('Delete', '删除'),
-                    onPressed: onDelete,
-                    style: _rowActionStyle(),
-                    icon: PopupSymbolIcon(
-                      'delete',
-                      size: 14,
-                      color: colors.onSurfaceVariant.withValues(alpha: 0.78),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -383,29 +615,14 @@ class _RuleRow extends StatelessWidget {
         if (showDivider)
           Divider(
             height: 1,
-            indent: 40,
-            color: colors.outlineVariant.withValues(alpha: 0.82),
+            indent: 12,
+            endIndent: 12,
+            color: colors.outlineVariant.withValues(alpha: 0.72),
           ),
       ],
     );
   }
 }
-
-ButtonStyle _headerActionStyle() => IconButton.styleFrom(
-  minimumSize: const Size.square(32),
-  maximumSize: const Size.square(32),
-  padding: const EdgeInsets.all(7),
-  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-);
-
-ButtonStyle _rowActionStyle() => IconButton.styleFrom(
-  minimumSize: const Size.square(28),
-  maximumSize: const Size.square(28),
-  padding: const EdgeInsets.all(6),
-  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-);
 
 String _ruleSymbol(ClipboardCategoryRule rule) => switch (rule.id) {
   'links' => 'link',
@@ -489,7 +706,7 @@ class _RuleEditorState extends State<_RuleEditor> {
         children: <Widget>[
           _RuleField(
             label: context.localized('Category name', '分类名称'),
-            child: TextField(
+            child: DesktopTextField(
               key: const Key('clipboard-category-name'),
               controller: _name,
               decoration: InputDecoration(
@@ -513,20 +730,21 @@ class _RuleEditorState extends State<_RuleEditor> {
             runSpacing: 5,
             children: <Widget>[
               for (final ClipboardKind kind in ClipboardKind.values)
-                _KindChoice(
+                DesktopChoiceChip(
                   label: Text(_kindLabel(context, kind)),
                   selected: _kinds.contains(kind),
-                  onPressed: () => setState(() {
-                    final bool selected = !_kinds.contains(kind);
+                  onSelected: (bool selected) => setState(() {
                     selected ? _kinds.add(kind) : _kinds.remove(kind);
                   }),
+                  height: 29,
+                  borderRadius: 7,
                 ),
             ],
           ),
           const SizedBox(height: 12),
           _RuleField(
             label: context.localized('Content regular expression', '内容正则'),
-            child: TextField(
+            child: DesktopTextField(
               key: const Key('clipboard-category-content-regex'),
               controller: _contentPattern,
               decoration: const InputDecoration(
@@ -540,7 +758,7 @@ class _RuleEditorState extends State<_RuleEditor> {
               'Source application regular expression',
               '来源应用正则',
             ),
-            child: TextField(
+            child: DesktopTextField(
               key: const Key('clipboard-category-source-regex'),
               controller: _sourcePattern,
               decoration: const InputDecoration(
@@ -554,7 +772,7 @@ class _RuleEditorState extends State<_RuleEditor> {
               Expanded(
                 child: _RuleField(
                   label: context.localized('Minimum characters', '最少字符数'),
-                  child: TextField(
+                  child: DesktopTextField(
                     controller: _minLength,
                     keyboardType: TextInputType.number,
                   ),
@@ -564,7 +782,7 @@ class _RuleEditorState extends State<_RuleEditor> {
               Expanded(
                 child: _RuleField(
                   label: context.localized('Maximum characters', '最多字符数'),
-                  child: TextField(
+                  child: DesktopTextField(
                     controller: _maxLength,
                     keyboardType: TextInputType.number,
                   ),
@@ -606,10 +824,11 @@ class _RuleEditorState extends State<_RuleEditor> {
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(
+            child: DesktopActionButton(
               key: const Key('clipboard-category-save'),
               onPressed: _save,
-              child: Text(context.localized('Save category', '保存分类')),
+              label: context.localized('Save category', '保存分类'),
+              tone: DesktopActionTone.primary,
             ),
           ),
         ],
@@ -661,45 +880,6 @@ class _RuleField extends StatelessWidget {
   );
 }
 
-class _KindChoice extends StatelessWidget {
-  const _KindChoice({
-    required this.label,
-    required this.selected,
-    required this.onPressed,
-  });
-
-  final Widget label;
-  final bool selected;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    return Material(
-      color: selected
-          ? colors.primary.withValues(alpha: 0.11)
-          : colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(5),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(5),
-        child: Container(
-          height: 29,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          alignment: Alignment.center,
-          child: DefaultTextStyle.merge(
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: selected ? colors.primary : colors.onSurfaceVariant,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            ),
-            child: label,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _RuleToggle extends StatelessWidget {
   const _RuleToggle({
     required this.label,
@@ -712,33 +892,47 @@ class _RuleToggle extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surfaceContainerLow,
-    borderRadius: BorderRadius.circular(5),
-    child: InkWell(
-      onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(5),
-      child: SizedBox(
-        height: 40,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Material(
+      color: colors.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: colors.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.focused)) {
+            return colors.primary.withValues(alpha: 0.045);
+          }
+          return Colors.transparent;
+        }),
+        child: SizedBox(
+          height: 40,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              ),
-              CompactSwitch(value: value, onChanged: onChanged),
-            ],
+                CompactSwitch(value: value, onChanged: onChanged),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 String _ruleSummary(BuildContext context, ClipboardCategoryRule rule) {

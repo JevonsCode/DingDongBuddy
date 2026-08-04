@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 
-/// Reads and atomically replaces DingDong's legacy-compatible resource JSON.
+/// Reads and atomically replaces DingDong's resource JSON.
 final class ResourceFileService {
   ResourceFileService(this.file);
 

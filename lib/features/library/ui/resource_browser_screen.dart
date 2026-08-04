@@ -4,7 +4,11 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_choice_chip.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/enabled_status_icon.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
@@ -54,73 +58,48 @@ class ResourceBrowserScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  FilledButton.icon(
+                  DesktopActionButton(
                     key: const Key('resource-manager-open'),
                     onPressed: resourceManagerLauncher == null
                         ? null
                         : () => resourceManagerLauncher!.show(),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(96, 34),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      backgroundColor: PopupStyle.accent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                    ),
                     icon: const PopupSymbolIcon(
                       'manage',
                       size: 17,
                       color: Colors.white,
                     ),
-                    label: Text(
-                      context.localized('Manage', '资源管理'),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    label: context.localized('Manage', '资源管理'),
+                    tone: DesktopActionTone.primary,
                   ),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-              child: SizedBox(
-                height: 36,
-                child: TextField(
-                  key: const Key('resource-search'),
-                  onChanged: viewModel.setQuery,
-                  style: const TextStyle(fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: context.localized(
-                      'Search prompts, skills, and MCP',
-                      '搜索提示词、Skills 和 MCP',
-                    ),
-                    hintStyle: const TextStyle(
-                      color: PopupStyle.textSecondary,
-                      fontSize: 12,
-                    ),
-                    prefixIcon: const SizedBox(
-                      width: 40,
-                      child: Center(
-                        child: PopupSymbolIcon(
-                          'search',
-                          color: PopupStyle.textSecondary,
-                          size: 19,
-                        ),
-                      ),
-                    ),
-                    prefixIconConstraints: const BoxConstraints.tightFor(
-                      width: 40,
-                    ),
-                    fillColor: PopupStyle.surface,
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide.none,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+              child: DesktopSearchField(
+                key: const Key('resource-search'),
+                onChanged: viewModel.setQuery,
+                height: 38,
+                hintText: context.localized(
+                  'Search prompts, skills, and MCP',
+                  '搜索提示词、Skills 和 MCP',
                 ),
+                clearTooltip: context.localized('Clear search', '清除搜索'),
+                style: const TextStyle(fontSize: 12),
+                hintStyle: const TextStyle(
+                  color: PopupStyle.textSecondary,
+                  fontSize: 12,
+                ),
+                searchIcon: const PopupSymbolIcon(
+                  'search',
+                  color: PopupStyle.textSecondary,
+                  size: 19,
+                ),
+                backgroundColor: PopupStyle.surface,
+                borderColor: PopupStyle.border,
+                focusBorderColor: PopupStyle.accent,
+                foregroundColor: PopupStyle.textSecondary,
+                borderRadius: 8,
               ),
             ),
             _TypeFilters(viewModel: viewModel),

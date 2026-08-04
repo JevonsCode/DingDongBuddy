@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-const double _windowsMenuMinWidth = 252;
-const double _windowsMenuMaxWidth = 280;
-const double _windowsMenuItemHeight = 32;
+const double _desktopMenuMinWidth = 252;
+const double _desktopMenuMaxWidth = 280;
+const double _desktopMenuItemHeight = 32;
 
 typedef _DesktopContextMenuDismissal = Future<void> Function();
 
@@ -96,6 +95,48 @@ final class DesktopMenuDivider<T> extends DesktopMenuEntry<T> {
   const DesktopMenuDivider();
 }
 
+/// Compact anchored menu trigger that reuses DingDong's desktop menu surface.
+class DesktopMenuButton<T> extends StatelessWidget {
+  const DesktopMenuButton({
+    required this.tooltip,
+    required this.entries,
+    required this.onSelected,
+    this.icon = const Icon(Icons.more_horiz_rounded),
+    super.key,
+  });
+
+  final String tooltip;
+  final List<DesktopMenuEntry<T>> entries;
+  final ValueChanged<T> onSelected;
+  final Widget icon;
+
+  Future<void> _open(BuildContext anchorContext) async {
+    final RenderBox anchor = anchorContext.findRenderObject()! as RenderBox;
+    final Offset position = anchor.localToGlobal(
+      Offset(0, anchor.size.height + 4),
+    );
+    final T? value = await showDesktopContextMenu<T>(
+      context: anchorContext,
+      globalPosition: position,
+      entries: entries,
+    );
+    if (value != null && anchorContext.mounted) {
+      onSelected(value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (BuildContext anchorContext) => DesktopIconButton(
+        tooltip: tooltip,
+        onPressed: () => unawaited(_open(anchorContext)),
+        icon: icon,
+      ),
+    );
+  }
+}
+
 /// Converts a global pointer coordinate into the overlay coordinate space used
 /// by [showMenu], keeping desktop context menus anchored beside the pointer.
 RelativeRect desktopContextMenuPosition(
@@ -111,14 +152,12 @@ RelativeRect desktopContextMenuPosition(
   );
 }
 
-/// Shows a Flutter-owned context menu, using a Notion-like presentation on
-/// Windows and the existing Material presentation on other platforms.
+/// Shows the same restrained DingDong menu on every desktop platform.
 Future<T?> showDesktopContextMenu<T>({
   required BuildContext context,
   required Offset globalPosition,
   required List<DesktopMenuEntry<T>> entries,
 }) async {
-  final bool windows = defaultTargetPlatform == TargetPlatform.windows;
   final Brightness brightness = Theme.of(context).brightness;
   final bool dark = brightness == Brightness.dark;
   final List<PopupMenuEntry<T>> popupEntries = <PopupMenuEntry<T>>[];
@@ -127,17 +166,11 @@ Future<T?> showDesktopContextMenu<T>({
     switch (entry) {
       case DesktopMenuItem<T>():
         popupEntries.add(
-          windows
-              ? _WindowsPopupMenuItem<T>(item: entry, marksMenuRoot: firstItem)
-              : _materialPopupMenuItem(entry),
+          _DesktopPopupMenuItem<T>(item: entry, marksMenuRoot: firstItem),
         );
         firstItem = false;
       case DesktopMenuDivider<T>():
-        popupEntries.add(
-          windows
-              ? _WindowsPopupMenuDivider<T>(dark: dark)
-              : const PopupMenuDivider(),
-        );
+        popupEntries.add(_DesktopPopupMenuDivider<T>(dark: dark));
     }
   }
 
@@ -161,31 +194,23 @@ Future<T?> showDesktopContextMenu<T>({
     context: context,
     position: desktopContextMenuPosition(context, globalPosition),
     items: trackedEntries,
-    elevation: windows ? 2 : null,
-    shadowColor: windows
-        ? Colors.black.withValues(alpha: dark ? 0.24 : 0.1)
-        : null,
-    surfaceTintColor: windows ? Colors.transparent : null,
-    shape: windows
-        ? RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: dark ? const Color(0xFF3A3A38) : const Color(0x1A000000),
-            ),
-          )
-        : null,
-    menuPadding: windows ? const EdgeInsets.symmetric(vertical: 6) : null,
-    color: windows
-        ? (dark ? const Color(0xFF252523) : const Color(0xFFFCFCFB))
-        : null,
-    constraints: windows
-        ? const BoxConstraints(
-            minWidth: _windowsMenuMinWidth,
-            maxWidth: _windowsMenuMaxWidth,
-          )
-        : null,
-    clipBehavior: windows ? Clip.antiAlias : Clip.none,
-    popUpAnimationStyle: windows && !reduceMotion
+    elevation: 2,
+    shadowColor: Colors.black.withValues(alpha: dark ? 0.24 : 0.1),
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+      side: BorderSide(
+        color: dark ? const Color(0xFF3A3A38) : const Color(0x1A000000),
+      ),
+    ),
+    menuPadding: const EdgeInsets.symmetric(vertical: 6),
+    color: dark ? const Color(0xFF252523) : const Color(0xFFFCFCFB),
+    constraints: const BoxConstraints(
+      minWidth: _desktopMenuMinWidth,
+      maxWidth: _desktopMenuMaxWidth,
+    ),
+    clipBehavior: Clip.antiAlias,
+    popUpAnimationStyle: !reduceMotion
         ? const AnimationStyle(
             duration: Duration(milliseconds: 120),
             reverseDuration: Duration(milliseconds: 90),
@@ -267,27 +292,8 @@ final class _RouteTrackingPopupMenuEntryState<T>
   }
 }
 
-PopupMenuItem<T> _materialPopupMenuItem<T>(DesktopMenuItem<T> item) {
-  return PopupMenuItem<T>(
-    key: item.key,
-    value: item.value,
-    enabled: item.enabled,
-    child: Row(
-      children: <Widget>[
-        PopupSymbolIcon(item.symbol, size: 17, color: PopupStyle.textSecondary),
-        const SizedBox(width: 9),
-        Expanded(child: Text(item.label, overflow: TextOverflow.ellipsis)),
-        if (item.shortcut != null) ...<Widget>[
-          const SizedBox(width: 16),
-          Text(item.shortcut!),
-        ],
-      ],
-    ),
-  );
-}
-
-final class _WindowsPopupMenuItem<T> extends PopupMenuEntry<T> {
-  const _WindowsPopupMenuItem({
+final class _DesktopPopupMenuItem<T> extends PopupMenuEntry<T> {
+  const _DesktopPopupMenuItem({
     required this.item,
     required this.marksMenuRoot,
   });
@@ -296,18 +302,18 @@ final class _WindowsPopupMenuItem<T> extends PopupMenuEntry<T> {
   final bool marksMenuRoot;
 
   @override
-  double get height => _windowsMenuItemHeight;
+  double get height => _desktopMenuItemHeight;
 
   @override
   bool represents(T? value) => item.value == value;
 
   @override
-  State<_WindowsPopupMenuItem<T>> createState() =>
-      _WindowsPopupMenuItemState<T>();
+  State<_DesktopPopupMenuItem<T>> createState() =>
+      _DesktopPopupMenuItemState<T>();
 }
 
-final class _WindowsPopupMenuItemState<T>
-    extends State<_WindowsPopupMenuItem<T>> {
+final class _DesktopPopupMenuItemState<T>
+    extends State<_DesktopPopupMenuItem<T>> {
   void _select() {
     if (widget.item.enabled) {
       Navigator.pop<T>(context, widget.item.value);
@@ -325,13 +331,18 @@ final class _WindowsPopupMenuItemState<T>
         ? const Color(0xFF9B9B98)
         : const Color(0xFF9B9A97);
     final Color disabled = muted.withValues(alpha: 0.55);
-    final Color effectiveForeground = item.enabled ? foreground : disabled;
+    final Color destructive = dark
+        ? const Color(0xFFFF746C)
+        : const Color(0xFFC83B35);
+    final Color effectiveForeground = item.enabled
+        ? (item.destructive ? destructive : foreground)
+        : disabled;
     final Color hover = dark
         ? const Color(0xFF343432)
         : const Color(0x0D000000);
 
     return Padding(
-      key: widget.marksMenuRoot ? const Key('windows-context-menu') : null,
+      key: widget.marksMenuRoot ? const Key('desktop-context-menu') : null,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       child: Semantics(
         button: true,
@@ -349,7 +360,7 @@ final class _WindowsPopupMenuItemState<T>
               ? SystemMouseCursors.click
               : SystemMouseCursors.basic,
           child: SizedBox(
-            height: _windowsMenuItemHeight,
+            height: _desktopMenuItemHeight,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
@@ -394,8 +405,8 @@ final class _WindowsPopupMenuItemState<T>
   }
 }
 
-final class _WindowsPopupMenuDivider<T> extends PopupMenuEntry<T> {
-  const _WindowsPopupMenuDivider({required this.dark});
+final class _DesktopPopupMenuDivider<T> extends PopupMenuEntry<T> {
+  const _DesktopPopupMenuDivider({required this.dark});
 
   final bool dark;
 
@@ -406,12 +417,12 @@ final class _WindowsPopupMenuDivider<T> extends PopupMenuEntry<T> {
   bool represents(T? value) => false;
 
   @override
-  State<_WindowsPopupMenuDivider<T>> createState() =>
-      _WindowsPopupMenuDividerState<T>();
+  State<_DesktopPopupMenuDivider<T>> createState() =>
+      _DesktopPopupMenuDividerState<T>();
 }
 
-final class _WindowsPopupMenuDividerState<T>
-    extends State<_WindowsPopupMenuDivider<T>> {
+final class _DesktopPopupMenuDividerState<T>
+    extends State<_DesktopPopupMenuDivider<T>> {
   @override
   Widget build(BuildContext context) {
     return Padding(

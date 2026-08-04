@@ -6,10 +6,15 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_choice_chip.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
@@ -180,6 +185,27 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     widget.onShortcutStartIndexChanged?.call(index);
   }
 
+  Future<void> _openContent(
+    BuildContext context,
+    ClipboardRecord record,
+  ) async {
+    try {
+      await onOpenContent?.call(record);
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.localized(
+              'This content is no longer available or could not be opened.',
+              '该内容已不存在或无法打开。',
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -270,32 +296,28 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                           Row(
                             children: <Widget>[
                               Expanded(
-                                child: TextField(
+                                child: DesktopSearchField(
                                   key: const Key('clipboard-search'),
                                   focusNode: _searchFocusNode,
                                   controller: _searchController,
                                   onChanged: viewModel.setQuery,
-                                  decoration: InputDecoration(
-                                    hintText: context.localized(
-                                      'Search clipboard history',
-                                      '搜索剪贴板历史',
-                                    ),
-                                    prefixIcon: const Icon(
-                                      Icons.search_rounded,
-                                      size: 20,
-                                    ),
-                                    border: const OutlineInputBorder(),
-                                    isDense: true,
+                                  height: 40,
+                                  hintText: context.localized(
+                                    'Search clipboard history',
+                                    '搜索剪贴板历史',
+                                  ),
+                                  clearTooltip: context.localized(
+                                    'Clear search',
+                                    '清除搜索',
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              FilledButton.icon(
+                              DesktopActionButton(
                                 onPressed: viewModel.captureNow,
                                 icon: const Icon(Icons.add_rounded, size: 18),
-                                label: Text(
-                                  context.localized('Capture now', '立即捕获'),
-                                ),
+                                label: context.localized('Capture now', '立即捕获'),
+                                tone: DesktopActionTone.primary,
                               ),
                             ],
                           ),
@@ -354,6 +376,10 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                                       await viewModel.restoreSelected();
                                     },
                                     onTogglePinned: viewModel.togglePinned,
+                                    onOpen: onOpenContent == null
+                                        ? null
+                                        : (ClipboardRecord record) =>
+                                              _openContent(context, record),
                                     onAction: (_ClipboardAction action) =>
                                         _handleAction(context, action),
                                   ),

@@ -5,6 +5,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -376,12 +377,24 @@ class _SystemContentAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (onOpen == null || !_hasExistingPath(record)) {
+    if (onOpen == null || !canOpenClipboardContent(record)) {
       return child;
     }
-    final String label = record.kind == ClipboardKind.image
-        ? context.localized('Preview image with system app', '使用系统应用预览图片')
-        : context.localized('Open file with system app', '使用系统应用打开文件');
+    final String label = switch (record.kind) {
+      ClipboardKind.image => context.localized(
+        'Preview image with system app',
+        '使用系统应用预览图片',
+      ),
+      ClipboardKind.url => context.localized(
+        'Open link with system browser',
+        '使用系统浏览器打开链接',
+      ),
+      ClipboardKind.path => context.localized(
+        'Open path with system app',
+        '使用系统应用打开路径',
+      ),
+      _ => context.localized('Open file with system app', '使用系统应用打开文件'),
+    };
     return Tooltip(
       message: label,
       child: Semantics(
@@ -410,11 +423,6 @@ File? _firstExistingFile(ClipboardRecord record) {
   }
   return null;
 }
-
-bool _hasExistingPath(ClipboardRecord record) => record.filePaths.any(
-  (String path) =>
-      FileSystemEntity.typeSync(path) != FileSystemEntityType.notFound,
-);
 
 String _symbolFor(ClipboardKind kind) {
   return switch (kind) {

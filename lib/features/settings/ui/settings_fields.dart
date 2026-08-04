@@ -81,7 +81,7 @@ class _NumberField extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 120,
-      child: TextFormField(
+      child: DesktopTextFormField(
         initialValue: initialValue.toString(),
         textAlign: TextAlign.end,
         keyboardType: TextInputType.number,

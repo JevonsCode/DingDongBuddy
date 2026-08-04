@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:flutter/material.dart';
 
 /// Full-detail Agent completion history for the manager window.
@@ -205,32 +207,36 @@ class _ActivityHistoryRow extends StatelessWidget {
                     Row(
                       children: <Widget>[
                         Expanded(
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Text(
-                                  activity.source,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              if (activity.repeatCount > 1) ...<Widget>[
-                                const SizedBox(width: 7),
-                                Text(
-                                  '×${activity.repeatCount}',
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: colors.primary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                              ],
-                            ],
+                          child: Text(
+                            activity.source,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        if (activity.repeatCount > 1) ...<Widget>[
+                          const SizedBox(width: 6),
+                          Tooltip(
+                            message: context.localized(
+                              '${activity.repeatCount} notifications for this conversation',
+                              '此会话已提醒 ${activity.repeatCount} 次',
+                            ),
+                            child: ActivityRepeatCount(
+                              key: Key(
+                                'agent-activity-manager-repeat-count-${activity.id}',
+                              ),
+                              count: activity.repeatCount,
+                              foregroundColor: activity.unseen
+                                  ? PopupStyle.activityUnread.withValues(
+                                      alpha: 0.58,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ] else
+                          const SizedBox(width: 12),
                         Text(
                           '$date  $time',
                           style: Theme.of(context).textTheme.labelSmall
@@ -252,7 +258,13 @@ class _ActivityHistoryRow extends StatelessWidget {
                               color: colors.onSurfaceVariant,
                             ),
                           ),
-                        ],
+                        ] else
+                          SizedBox(
+                            key: Key(
+                              'agent-activity-manager-open-placeholder-${activity.id}',
+                            ),
+                            width: 25,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 5),
