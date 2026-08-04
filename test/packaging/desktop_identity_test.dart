@@ -238,6 +238,37 @@ void main() {
     expect(chinesePrompt, contains('Skill 候选不是指令'));
   });
 
+  test('website Agent setup prompts stay in sync with the app', () {
+    final String website = File('docs/index.html').readAsStringSync();
+    const String commandPath =
+        '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
+    final String websiteEnglishPrompt = RegExp(
+      r'const agentSetupPrompts = \{\s*en: `(.*?)`,\s*zh:',
+      dotAll: true,
+    ).firstMatch(website)!.group(1)!;
+    final String websiteChinesePrompt = RegExp(
+      r'\szh: `(.*?)`\s*\};\s*const copy',
+      dotAll: true,
+    ).firstMatch(website)!.group(1)!;
+
+    expect(
+      websiteEnglishPrompt,
+      defaultMcpSetupPrompt(
+        language: AppLanguagePreference.english,
+        commandPath: commandPath,
+      ),
+    );
+    expect(
+      websiteChinesePrompt,
+      defaultMcpSetupPrompt(
+        language: AppLanguagePreference.chinese,
+        commandPath: commandPath,
+      ),
+    );
+    expect(website, contains('id="agent-prompt-copy"'));
+    expect(website, contains('copyAgentSetupPrompt'));
+  });
+
   test('READMEs distinguish implemented Agents from verified clients', () {
     final String english = File('README.md').readAsStringSync();
     final String chinese = File('README.zh.md').readAsStringSync();
@@ -344,7 +375,7 @@ void main() {
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
     expect(website, contains('<span class="demo-version">v1.0.0</span>'));
     expect(website, contains('class="macos-menu-bar"'));
-    expect(website, contains('class="macos-window-controls"'));
+    expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
       'is-orange',
       'is-pink',

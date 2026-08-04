@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard, Agent resources, and completion alerts</title>
     <meta name="description" content="Manage clipboard history, Prompts, Skills, and MCP servers in one place, then hear a DingDong when your Agent finishes.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260804-v3">
+    <link rel="stylesheet" href="./styles.css?v=20260804-v5">
   </head>
   <body>
     <header class="site-header">
@@ -50,12 +50,15 @@
           <div class="actions">
             <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="hero.download">Download latest</a>
             <a class="secondary" href="#mcp" data-i18n="hero.connect">Connect your Agent</a>
+            <a class="github-star" href="https://github.com/JevonsCode/DingDongBuddy" target="_blank" rel="noopener noreferrer" aria-label="Star DingDongBuddy on GitHub" data-i18n-aria-label="hero.starAria">
+              <img src="./assets/symbols/github.svg" alt="">
+              <span data-i18n="hero.star">Star DingDongBuddy</span>
+            </a>
           </div>
         </div>
 
         <div class="product-stage" aria-label="DingDong product preview">
           <div class="macos-menu-bar">
-            <span class="macos-menu-label" data-i18n="demo.alertColors">macOS alert colors</span>
             <div class="macos-alert-palette" aria-label="DingDong macOS menu bar alert color previews">
               <span class="menu-alert is-orange"><img src="./assets/dingdong-alert-icon.png" alt=""><b>1</b></span>
               <span class="menu-alert is-pink"><img src="./assets/dingdong-alert-icon.png" alt=""><b>7</b></span>
@@ -68,9 +71,13 @@
           <div class="demo-window">
             <div class="demo-title">
               <div class="demo-title-copy">
-                <img src="./assets/dingdong-icon.png" alt="">
-                <strong>DingDong</strong>
-                <span class="demo-version">v1.0.0</span>
+                <button class="demo-mascot" id="demo-mascot" type="button" aria-label="Shake DingDong" data-i18n-aria-label="demo.shakeMascot">
+                  <img src="./assets/dingdong-icon.png" alt="">
+                </button>
+                <div class="demo-title-lockup">
+                  <strong>DingDong</strong>
+                  <span class="demo-version">v1.0.0</span>
+                </div>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
                 <span><img src="./assets/symbols/settings.png" alt=""></span>
@@ -376,6 +383,37 @@
           <p data-i18n="mcp.body">Keep resources in one library. Agents discover enabled Skills dynamically and load them on demand; MCP servers connect through native configuration.</p>
         </div>
 
+        <div class="agent-prompt-card">
+          <div class="agent-prompt-header">
+            <div>
+              <p class="agent-prompt-kicker" data-i18n="mcp.promptEyebrow">Let AI handle the setup</p>
+              <h3 id="agent-setup-prompt-title" data-i18n="mcp.promptTitle">Send this prompt to your current Agent</h3>
+              <p data-i18n="mcp.promptBody">It will preserve your existing settings, connect MCP and completion alerts, then verify both paths.</p>
+            </div>
+            <button
+              class="agent-prompt-copy"
+              id="agent-prompt-copy"
+              type="button"
+              aria-describedby="agent-prompt-copy-status"
+            >
+              <img src="./assets/symbols/copy.png" alt="">
+              <span id="agent-prompt-copy-label" data-i18n="mcp.copyPrompt">Copy setup prompt</span>
+            </button>
+          </div>
+          <pre
+            class="agent-prompt-content"
+            aria-labelledby="agent-setup-prompt-title"
+            tabindex="0"
+          ><code id="agent-setup-prompt" data-i18n="mcp.agentPrompt"></code></pre>
+          <p
+            class="agent-prompt-status"
+            id="agent-prompt-copy-status"
+            role="status"
+            aria-live="polite"
+            data-i18n="mcp.promptReady"
+          >Ready to copy</p>
+        </div>
+
         <div class="setup-card">
           <div>
             <h3 data-i18n="mcp.installTitle">Connect an Agent</h3>
@@ -484,6 +522,71 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
     </footer>
 
     <script>
+      const agentSetupPrompts = {
+        en: `Connect DingDong on this computer to the current agent or IDE and enable durable task-completion alerts:
+1. Confirm that this session is running locally on the computer where DingDong is installed, and verify that this executable exists and can run. A remote or cloud agent cannot use this local path:
+   /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
+2. Find the user-level (global) MCP configuration actually used by the current client. Preserve every existing entry, then add or repair a STDIO MCP server named dingdong:
+   - command must be this complete executable path: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
+   - do not add args, environment variables, or a wrapper shell to the MCP server; a path containing spaces must remain one complete command value
+3. Configure the client's native final-response or task-completion hook as a durable setting. Do not merely promise to notify in this conversation. The hook command must be:
+   "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp" --notify-stop --source "Current client name"
+   Use the matching user-level configuration and event:
+   - Codex: a Stop command hook in ~/.codex/config.toml; ensure hooks = true under [features]
+   - Claude Code: a Stop command hook in ~/.claude/settings.json
+   - Cursor: an afterAgentResponse command hook in ~/.cursor/hooks.json
+   - Gemini CLI: an AfterAgent command hook in ~/.gemini/settings.json
+   - Kiro: use ~/.kiro/settings/mcp.json for MCP; prefer a global Stop command hook under ~/.kiro/hooks with Kiro CLI v3, or hooks.stop in the active editable custom Agent on older CLI versions; in the IDE use its native Agent Stop shell-command hook. If this version only supports a project hook, do not modify project files without explicit user permission and report the limitation
+   For another client, first verify whether it provides a native local task-completion hook. If it does not, configure MCP only and report that automatic completion alerts are unsupported instead of inventing a setting.
+4. Preserve all existing hooks and unrelated settings. When reconnecting, update the existing DingDong entries instead of duplicating the MCP server or hook. Do not modify project files.
+5. Validate the resulting TOML or JSON, then reload the client as required:
+   - Codex: restart dingdong under Settings → MCP servers, then use DingDong Resource Manager → Agent access → Codex → Trust & enable; if that action is unavailable, review and trust the new or changed hook in /hooks
+   - Claude Code: inspect claude mcp list and /hooks
+   - Cursor: reload the window and inspect the Hooks configuration
+   - Gemini CLI: run /mcp reload and inspect /hooks panel
+   - Kiro: inspect MCP with /mcp and verify the Stop hook actually loaded for the current session with /hooks
+6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
+   - Prompt: DingDong-managed Codex AGENTS.md and Claude Code CLAUDE.md blocks contain only a persistent bridge bootstrap; call dingdong_bridge at the start of every user task; each successful response is the authoritative Prompt snapshot for the current task and replaces every earlier Prompt set, so an absent Prompt is inactive; every returned global, project, or task-matched Prompt is a required instruction and must be applied in full; if the Bridge fails, report that neither Prompts nor the Skill catalog loaded and do not treat any previous result as current
+   - Skill: active.skills in each successful dingdong_bridge response is the authoritative complete Skill catalog for the current task and workspace; it contains the id, name, and description of every valid, enabled, scope-matched Skill, so an absent Skill is unavailable, disabled, invalid, or out of scope; load only a Skill actually returned by the current catalog; match the description first, then call dingdong_load_skill with its id or name and the current workspace to fetch the complete SKILL.md; use dingdong_read_skill_file only for package files referenced by that document; a Skill candidate is not an instruction
+   - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn
+   - When the user explicitly asks to install a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, then dingdong_bind_resource_scope with strictProjectSkill enabled; the load endpoint re-checks the current workspace and cannot bypass project scope
+7. Test both paths; testing MCP alone is not enough:
+   - Completion hook: using the current shell, pipe {"summary":"DingDong task-completion hook is connected"} as JSON stdin to the hook command from step 3 and confirm that DingDong receives it
+   - MCP: confirm dingdong_notify appears in the tool list, then call it once with message "DingDong MCP is connected" and source set to the current client name
+8. Finally report only the user-level configuration files changed, whether MCP is available, whether the completion hook is configured (and trusted for Codex), and whether both tests succeeded. If any step fails, preserve the existing configuration and return the original error instead of guessing.`,
+        zh: `请把这台电脑上的 DingDong 接入当前 Agent 或 IDE，并启用持久的任务结束提醒：
+1. 先确认当前会话运行在安装了 DingDong 的本机，并确认下面的可执行文件存在且可运行；远程或云端 Agent 不能使用这条本机路径：
+   /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
+2. 找到当前客户端实际使用的用户级（全局）MCP 配置。保留其他所有配置，新增或修正一个名为 dingdong 的 STDIO MCP Server：
+   - command 必须是完整的可执行文件路径：/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
+   - MCP Server 不要添加 args、环境变量或外层 shell；路径中即使有空格，也必须是一个完整的 command 值
+3. 再使用当前客户端原生的“最终回复/任务结束”Hook 写入持久配置，不要只在当前对话里承诺通知。Hook 命令必须是：
+   "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp" --notify-stop --source "当前客户端名称"
+   按客户端使用下面的用户级配置和事件：
+   - Codex：~/.codex/config.toml 的 Stop command Hook；确保 [features] 下 hooks = true
+   - Claude Code：~/.claude/settings.json 的 Stop command Hook
+   - Cursor：~/.cursor/hooks.json 的 afterAgentResponse command Hook
+   - Gemini CLI：~/.gemini/settings.json 的 AfterAgent command Hook
+   - Kiro：MCP 使用 ~/.kiro/settings/mcp.json；Kiro CLI v3 优先使用 ~/.kiro/hooks 下的全局 Stop command Hook，旧版 CLI 使用当前可编辑自定义 Agent 的 hooks.stop；IDE 使用原生 Agent Stop shell-command Hook。若当前版本只支持项目级 Hook，未经用户明确同意不要修改项目文件，并说明限制
+   如果不是以上客户端，先查清它是否有原生的本地任务结束 Hook；没有就只接入 MCP，并明确说明不支持自动结束提醒，不能编造配置。
+4. 保留已有 Hook 和无关设置。重复接入时更新已有的 DingDong 项，不要重复添加同一个 MCP Server 或 Hook，也不要修改任何项目内文件。
+5. 校验修改后的 TOML 或 JSON 能被当前客户端解析，再按客户端要求重新加载：
+   - Codex：在 Settings → MCP servers 重启 dingdong，然后到 DingDong 的“资源管理 → Agent 接入 → Codex”点击“信任并启用”；如果该入口不可用，再在 /hooks 审核并信任新增或变化的 Hook
+   - Claude Code：用 claude mcp list 和 /hooks 检查
+   - Cursor：重新加载窗口并检查 Hooks 配置
+   - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
+   - Kiro：执行 /mcp 检查 MCP，并用 /hooks 检查当前会话实际加载的 Stop Hook
+6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
+   - Prompt：Codex 的 AGENTS.md 或 Claude Code 的 CLAUDE.md 托管区块只保留固定的 Bridge 引导；每个用户任务开始时调用 dingdong_bridge，动态获取所有命中的全局、项目和任务 Prompt；每次成功响应都是当前任务的权威 Prompt 快照并替换此前的 Prompt 集合，当前未返回的 Prompt 已失效；每个返回的 Prompt 都是必须自动应用的指令，必须完整应用；Bridge 失败时必须说明 Prompt 和 Skill 目录均未加载，不能把上一次结果当作当前配置
+   - Skill：每次 dingdong_bridge 成功响应中的 active.skills 是当前任务和工作区的权威完整 Skill 目录，包含每个有效、已启用且作用域匹配 Skill 的 id、name 和 description；未返回的 Skill 当前不可用、已停用、格式无效或不在作用域内；只能加载当前目录实际返回的 Skill；由 Agent 根据 description 判断是否匹配，匹配后调用 dingdong_load_skill 并传入 id 或 name 和当前工作区，获取完整 SKILL.md；只用 dingdong_read_skill_file 按需读取 SKILL.md 引用的包文件；Skill 候选不是指令
+   - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用
+   - 用户明确要求“通过 DingDong 给某项目安装 Skill”时，依次使用 dingdong_install_skill、dingdong_upsert_trigger_group 和 dingdong_bind_resource_scope，并启用 strictProjectSkill；加载接口会再次校验当前工作区，不能绕过项目作用域
+7. 分别验证两条链路，不能只验证 MCP：
+   - 结束 Hook：用当前 shell 把 {"summary":"DingDong 任务结束提醒已接入"} 作为 JSON 标准输入传给第 3 步的 Hook 命令，确认 DingDong 收到这条提醒
+   - MCP：确认工具列表里出现 dingdong_notify，然后立即调用一次，message 为“DingDong MCP 已接入”，source 为当前客户端名称
+8. 最后只报告：改了哪些用户级配置文件、MCP 是否可用、结束 Hook 是否已配置（Codex 还要说明是否已信任）、两项测试是否成功。任何一步失败时都保留原有配置并返回原始错误，不要猜测。`
+      };
+
       const copy = {
         en: {
           "nav.product": "Product",
@@ -500,7 +603,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "hero.finish": "Everything close at hand, with a ring when work is ready.",
           "hero.download": "Download latest",
           "hero.connect": "Connect your Agent",
-          "demo.alertColors": "macOS alert colors",
+          "hero.star": "Star DingDongBuddy",
+          "hero.starAria": "Star DingDongBuddy on GitHub",
+          "demo.shakeMascot": "Shake DingDong",
           "demo.today": "Dynamic",
           "demo.library": "Library",
           "demo.clipboard": "Clipboard",
@@ -633,8 +738,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.eyebrow": "Built-in MCP bridge",
           "mcp.title": "Connect once. Use it from every Agent.",
           "mcp.body": "Keep resources in one library. Agents discover enabled Skills dynamically and load them on demand; MCP servers connect through native configuration.",
-          "mcp.installTitle": "Connect an Agent",
-          "mcp.installBody": "Install DingDong, then copy one of these snippets into your Agent's MCP settings.",
+          "mcp.promptEyebrow": "Let AI handle the setup",
+          "mcp.promptTitle": "Send this prompt to your current Agent",
+          "mcp.promptBody": "It will preserve your existing settings, connect MCP and completion alerts, then verify both paths.",
+          "mcp.copyPrompt": "Copy setup prompt",
+          "mcp.promptCopied": "Copied",
+          "mcp.promptReady": "Ready to copy",
+          "mcp.promptSuccess": "Setup prompt copied. Paste it into your Agent.",
+          "mcp.promptError": "Could not copy automatically. Select the prompt and copy it manually.",
+          "mcp.agentPrompt": agentSetupPrompts.en,
+          "mcp.installTitle": "Prefer manual setup?",
+          "mcp.installBody": "You can also add one of these snippets directly to the Agent's MCP settings.",
           "mcp.step1": "Install DingDong in /Applications.",
           "mcp.step2": "Point the Agent at DingDong's built-in MCP command.",
           "mcp.step3": "Keep one library instead of making a separate copy for every Agent.",
@@ -684,7 +798,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "hero.finish": "东西随手能找到，任务有结果也不会错过",
           "hero.download": "下载 DingDong",
           "hero.connect": "查看 MCP 接入",
-          "demo.alertColors": "macOS 提醒颜色",
+          "hero.star": "Star DingDongBuddy",
+          "hero.starAria": "在 GitHub 上 Star DingDongBuddy",
+          "demo.shakeMascot": "摇一摇 DingDong",
           "demo.today": "动态",
           "demo.library": "资源库",
           "demo.clipboard": "剪贴板",
@@ -817,8 +933,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.eyebrow": "接入 Agent",
           "mcp.title": "接一次，几个 Agent 都能用",
           "mcp.body": "资源只维护一份；Agent 动态发现启用的 Skill 并按需加载，MCP 则写入原生配置完成接入。",
-          "mcp.installTitle": "接到 Agent",
-          "mcp.installBody": "装好 DingDong，把下面任意一段复制到 Agent 的 MCP 设置里。",
+          "mcp.promptEyebrow": "交给 AI 配置",
+          "mcp.promptTitle": "把这段提示词发给当前 Agent",
+          "mcp.promptBody": "它会保留已有设置，接好 MCP 和任务结束提醒，并分别完成验证。",
+          "mcp.copyPrompt": "复制接入提示词",
+          "mcp.promptCopied": "已复制",
+          "mcp.promptReady": "提示词可直接复制",
+          "mcp.promptSuccess": "接入提示词已复制，粘贴给 Agent 就可以了。",
+          "mcp.promptError": "自动复制失败，请选中提示词手动复制。",
+          "mcp.agentPrompt": agentSetupPrompts.zh,
+          "mcp.installTitle": "想手动配置？",
+          "mcp.installBody": "也可以把下面任意一段直接写进 Agent 的 MCP 设置。",
           "mcp.step1": "DingDong 放在 /Applications",
           "mcp.step2": "让 Agent 指向 DingDong 自带的 MCP 命令",
           "mcp.step3": "资源只维护一份，不用给每个 Agent 再抄一遍",
@@ -954,6 +1079,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoFeedback = document.getElementById("demo-feedback");
       const demoCopyAction = document.getElementById("demo-copy-action");
       const demoCopyValue = document.getElementById("demo-copy-value");
+      const demoMascot = document.getElementById("demo-mascot");
+      const agentSetupPrompt = document.getElementById("agent-setup-prompt");
+      const agentPromptCopy = document.getElementById("agent-prompt-copy");
+      const agentPromptCopyLabel = document.getElementById("agent-prompt-copy-label");
+      const agentPromptCopyStatus = document.getElementById("agent-prompt-copy-status");
       const soundCards = document.querySelectorAll("[data-audio]");
       const soundStatus = document.getElementById("sound-status");
       const downloadActions = document.querySelector(".download-actions");
@@ -979,6 +1109,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         : null;
       let currentSoundAudio = null;
       let currentSoundCard = null;
+      let agentPromptCopyTimer = null;
       let releaseDownloads = null;
       let releaseDownloadsFailed = false;
       const demoState = {
@@ -1427,6 +1558,34 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         input.remove();
       };
 
+      const resetAgentPromptCopy = () => {
+        if (agentPromptCopyTimer) {
+          window.clearTimeout(agentPromptCopyTimer);
+          agentPromptCopyTimer = null;
+        }
+        agentPromptCopy.classList.remove("is-copied", "has-error");
+        agentPromptCopyLabel.textContent = copy[demoState.language]["mcp.copyPrompt"];
+        agentPromptCopyStatus.textContent = copy[demoState.language]["mcp.promptReady"];
+      };
+
+      const copyAgentSetupPrompt = async () => {
+        if (agentPromptCopyTimer) {
+          window.clearTimeout(agentPromptCopyTimer);
+        }
+        try {
+          await writeDemoClipboard(agentSetupPrompt.textContent);
+          agentPromptCopy.classList.remove("has-error");
+          agentPromptCopy.classList.add("is-copied");
+          agentPromptCopyLabel.textContent = copy[demoState.language]["mcp.promptCopied"];
+          agentPromptCopyStatus.textContent = copy[demoState.language]["mcp.promptSuccess"];
+        } catch {
+          agentPromptCopy.classList.remove("is-copied");
+          agentPromptCopy.classList.add("has-error");
+          agentPromptCopyStatus.textContent = copy[demoState.language]["mcp.promptError"];
+        }
+        agentPromptCopyTimer = window.setTimeout(resetAgentPromptCopy, 2200);
+      };
+
       const resetSoundPreview = (statusKey = "sounds.finished") => {
         if (currentSoundCard) {
           currentSoundCard.classList.remove("is-playing");
@@ -1491,6 +1650,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           const value = copy[lang][node.dataset.i18n];
           if (value) node.textContent = value;
         });
+        document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
+          const value = copy[lang][node.dataset.i18nAriaLabel];
+          if (value) node.setAttribute("aria-label", value);
+        });
+        resetAgentPromptCopy();
         buttons.forEach((button) => button.classList.toggle("active", button.dataset.lang === lang));
         if (currentSoundCard) {
           const name = currentSoundCard.querySelector("strong").textContent;
@@ -1528,6 +1692,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       });
 
       demoCopyAction.addEventListener("click", copyDemoSample);
+      agentPromptCopy.addEventListener("click", copyAgentSetupPrompt);
+      demoMascot.addEventListener("click", () => {
+        demoMascot.classList.remove("is-shaking");
+        void demoMascot.offsetWidth;
+        demoMascot.classList.add("is-shaking");
+      });
+      demoMascot.addEventListener("animationend", () => {
+        demoMascot.classList.remove("is-shaking");
+      });
       soundCards.forEach((card) => {
         card.addEventListener("click", () => playSoundPreview(card));
       });
