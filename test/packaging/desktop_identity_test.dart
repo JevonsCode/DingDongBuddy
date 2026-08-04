@@ -239,7 +239,9 @@ void main() {
   });
 
   test('website Agent setup prompts stay in sync with the app', () {
-    final String website = File('docs/index.html').readAsStringSync();
+    final String website = _normalizeLineEndings(
+      File('docs/index.html').readAsStringSync(),
+    );
     const String commandPath =
         '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
     final String websiteEnglishPrompt = RegExp(
@@ -267,6 +269,13 @@ void main() {
     );
     expect(website, contains('id="agent-prompt-copy"'));
     expect(website, contains('copyAgentSetupPrompt'));
+  });
+
+  test('website prompt comparison normalizes desktop line endings', () {
+    expect(
+      _normalizeLineEndings('first\r\nsecond\rthird'),
+      'first\nsecond\nthird',
+    );
   });
 
   test('READMEs distinguish implemented Agents from verified clients', () {
@@ -844,4 +853,8 @@ void main() {
       expect(focusWindow, greaterThan(showWindow));
     },
   );
+}
+
+String _normalizeLineEndings(String value) {
+  return value.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
 }
