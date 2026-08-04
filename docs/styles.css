@@ -1603,7 +1603,8 @@ h3 {
   font-weight: 680;
 }
 
-.agent-strip strong {
+.agent-strip strong,
+.agent-strip-request {
   padding: 5px 8px;
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -1611,6 +1612,7 @@ h3 {
   background: var(--surface);
   font-size: 10px;
   font-weight: 720;
+  text-decoration: none;
 }
 
 .conversation-heading {
