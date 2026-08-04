@@ -149,7 +149,7 @@ nav a:hover,
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(440px, 470px);
+  grid-template-columns: minmax(0, 1fr) 390px;
   align-items: start;
   gap: clamp(32px, 3.6vw, 44px);
   min-height: 0;
@@ -295,7 +295,7 @@ h3 {
 
 .product-stage {
   position: relative;
-  width: 470px;
+  width: 390px;
   max-width: 100%;
   min-width: 0;
   justify-self: end;
@@ -303,19 +303,14 @@ h3 {
 
 .macos-menu-bar {
   display: flex;
-  min-height: 40px;
+  min-height: 28px;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 9px;
-  padding: 6px 8px 6px 12px;
-  border: 1px solid rgba(206, 203, 195, 0.88);
-  border-radius: 11px;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 2px;
   color: var(--muted);
-  background: rgba(255, 254, 250, 0.82);
-  box-shadow: 0 5px 16px rgba(52, 48, 40, 0.06);
-  backdrop-filter: blur(16px);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 720;
   letter-spacing: 0.02em;
 }
@@ -330,28 +325,28 @@ h3 {
   min-width: 0;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: 4px;
 }
 
 .menu-alert {
   display: inline-flex;
   min-width: 42px;
-  height: 27px;
+  height: 24px;
   align-items: center;
   justify-content: center;
   gap: 3px;
   padding: 2px 7px 2px 4px;
-  border-radius: 9px;
+  border-radius: 999px;
   color: #fff;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1;
 }
 
 .menu-alert img {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .menu-alert.is-orange {
@@ -371,7 +366,7 @@ h3 {
 }
 
 .menu-alert.is-purple {
-  min-width: 48px;
+  min-width: 50px;
   background: #8c5bd6;
 }
 
@@ -381,6 +376,7 @@ h3 {
   --soft: #a09f9a;
   --surface: #fffefc;
   --surface-muted: #f8f7f4;
+  --chrome: #eef0ef;
   --field: #f0efec;
   --border: #dcdddc;
   --border-strong: #d2d4d3;
@@ -405,43 +401,18 @@ h3 {
 
 .demo-title {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr) 74px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   min-height: 55px;
-  padding: 10px 14px 7px;
-  background: var(--surface);
-}
-
-.macos-window-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.macos-window-controls span {
-  width: 11px;
-  height: 11px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 50%;
-}
-
-.macos-window-controls .is-close {
-  background: #ff5f57;
-}
-
-.macos-window-controls .is-minimize {
-  background: #febc2e;
-}
-
-.macos-window-controls .is-zoom {
-  background: #28c840;
+  padding: 10px 16px 7px 19px;
+  background: var(--chrome);
 }
 
 .demo-title strong {
   display: block;
-  font-size: 17px;
-  font-weight: 730;
+  font-size: 19px;
+  font-weight: 760;
   line-height: 1;
 }
 
@@ -449,13 +420,13 @@ h3 {
   display: flex;
   min-width: 0;
   align-items: baseline;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 3px;
 }
 
 .demo-title-copy > img {
-  width: 25px;
-  height: 25px;
+  width: 35px;
+  height: 35px;
   margin-right: 5px;
   align-self: center;
 }
@@ -463,7 +434,7 @@ h3 {
 .demo-version {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
 }
@@ -498,7 +469,7 @@ h3 {
   gap: 6px;
   padding: 5px 17px 12px;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--chrome);
 }
 
 .demo-tabs button {
@@ -2157,7 +2128,7 @@ footer span {
 
 @media (max-width: 1040px) {
   .hero {
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 440px);
+    grid-template-columns: minmax(0, 1fr) 390px;
     gap: 28px;
   }
 
@@ -2200,7 +2171,7 @@ footer span {
   }
 
   .product-stage {
-    width: min(100%, 470px);
+    width: min(100%, 390px);
     margin: 0 auto;
   }
 
