@@ -1605,6 +1605,8 @@ h3 {
 
 .agent-strip strong,
 .agent-strip-request {
+  display: inline-flex;
+  align-items: center;
   padding: 5px 8px;
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -1612,6 +1614,8 @@ h3 {
   background: var(--surface);
   font-size: 10px;
   font-weight: 720;
+  line-height: 1.2;
+  white-space: nowrap;
   text-decoration: none;
 }
 
