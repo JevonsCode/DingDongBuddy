@@ -13,12 +13,25 @@ abstract final class PopupStyle {
   static const Color accent = Color(0xFF2B5877);
   static const Color accentSoft = Color(0xFFE7F0F5);
   static const Color success = Color(0xFF739477);
-  static const Color mcp = Color(0xFFD65332);
-  static const Color mcpSoft = Color(0xFFFBE9E3);
+
+  /// The single canonical MCP hue used by every MCP surface in the app.
+  static const Color mcp = Color(0xFF2F7651);
+  static const Color development = Color(0xFFD65332);
+  static const Color developmentSoft = Color(0xFFFBE9E3);
   static const Color activityUnread = Color(0xFFD88B4A);
   static const Color warmSurface = Color(0xFFFBF7ED);
   static const Color skillSurface = Color(0xFFF2F5FB);
   static const double radius = 16;
+
+  static Color mcpAccent(Brightness brightness) => brightness == Brightness.dark
+      ? Color.alphaBlend(Colors.white.withValues(alpha: 0.44), mcp)
+      : mcp;
+
+  static Color mcpSurface(Brightness brightness, {double opacity = 0.10}) =>
+      mcpAccent(brightness).withValues(alpha: opacity);
+
+  static Color mcpBorder(Brightness brightness) =>
+      mcpAccent(brightness).withValues(alpha: 0.22);
 
   static BoxDecoration card({Color? color, double radius = 10}) {
     return BoxDecoration(

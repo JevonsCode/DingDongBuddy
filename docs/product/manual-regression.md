@@ -1,4 +1,4 @@
-# DingDong 1.0.1 Manual Regression Checklist
+# DingDong 1.0.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -67,7 +67,7 @@ and macOS golden images; the items below exercise real operating-system state.
 - The default `Control-Q/W/E` changes workspaces on macOS without replacing
   standard Command-Q/Command-W behavior; the default `Alt-Q/W/E` does the same
   on Windows. All three combinations are individually configurable.
-- Hovering the Clipboard monitoring switch keeps the surface stable, shows a click cursor, and explains whether clicking will turn monitoring on or pause it.
+- The compact Clipboard toolbar shows search and filters only; clipboard monitoring remains available from the tray menu and Settings.
 - Arrow keys change selection and Enter restores it.
 - Textual-row context menus expose both Paste and Paste as Plain Text; file and
   image rows do not expose the plain-text action.
@@ -272,8 +272,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.0.1` build `36` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.0.1.36` and product name `DingDong`.
+- The macOS release app metadata is version `1.0.2` build `37` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.0.2.37` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

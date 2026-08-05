@@ -48,6 +48,7 @@ final class _NoopResourceManagerLauncher implements ResourceManagerLauncher {
   @override
   Future<void> show({
     String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
   }) async {}

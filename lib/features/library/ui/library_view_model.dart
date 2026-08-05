@@ -51,6 +51,8 @@ final class LibraryViewModel extends ChangeNotifier {
   Resource? _selectedResource;
   bool _isCreating = false;
   ResourceType _creatingType = ResourceType.prompt;
+  String _creatingTitle = '';
+  String _creatingContent = '';
   final Set<String> _selectedIds = <String>{};
 
   String get query => _query;
@@ -63,7 +65,10 @@ final class LibraryViewModel extends ChangeNotifier {
     final Map<String, int> typeOrderByGroup = <String, int>{};
     for (final Resource resource in _resources) {
       final String group = resource.group.trim();
-      if (!resource.type.isConfigurableAgentResource || group.isEmpty) {
+      if (!resource.type.isConfigurableAgentResource ||
+          group.isEmpty ||
+          group == resource.type.defaultGroup ||
+          resource.id.startsWith('dingdong.builtin.')) {
         continue;
       }
       final int order = resource.type.index;
@@ -90,6 +95,10 @@ final class LibraryViewModel extends ChangeNotifier {
   bool get isCreating => _isCreating;
 
   ResourceType get creatingType => _creatingType;
+
+  String get creatingTitle => _creatingTitle;
+
+  String get creatingContent => _creatingContent;
 
   List<TriggerGroup> get triggerGroups {
     final List<TriggerGroup> groups = List<TriggerGroup>.of(_triggerGroups);
@@ -221,13 +230,17 @@ final class LibraryViewModel extends ChangeNotifier {
 
   void selectResource(Resource resource) {
     _isCreating = false;
+    _creatingTitle = '';
+    _creatingContent = '';
     _selectedResource = resource;
     notifyListeners();
   }
 
-  void startCreating() {
+  void startCreating({ResourceType? type, String? title, String? content}) {
     _selectedResource = null;
-    _creatingType = _selectedType ?? ResourceType.prompt;
+    _creatingType = type ?? _selectedType ?? ResourceType.prompt;
+    _creatingTitle = title ?? '';
+    _creatingContent = content ?? '';
     _isCreating = true;
     notifyListeners();
   }
@@ -236,6 +249,8 @@ final class LibraryViewModel extends ChangeNotifier {
   void closeEditor() {
     _selectedResource = null;
     _isCreating = false;
+    _creatingTitle = '';
+    _creatingContent = '';
     notifyListeners();
   }
 
@@ -273,6 +288,8 @@ final class LibraryViewModel extends ChangeNotifier {
     );
     await save(resource);
     _isCreating = false;
+    _creatingTitle = '';
+    _creatingContent = '';
   }
 
   Future<void> deleteSelected() async {

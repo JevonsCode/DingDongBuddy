@@ -374,10 +374,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.0.2',
+        latestVersion: '1.0.3',
         latestBuild: '37',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.0.2'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.0.3'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -393,11 +393,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.0.2');
+    expect(model.releaseStatus.latestVersion, '1.0.3');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.0.2'),
+      Uri.parse('https://example.com/dingdong/releases/1.0.3'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -680,7 +680,7 @@ final class _FakeApplicationUpdater implements ApplicationUpdater {
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.downloading,
       progress: 0.42,
-      targetVersion: '1.0.2',
+      targetVersion: '1.0.3',
     );
   }
 

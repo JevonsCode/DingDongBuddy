@@ -332,16 +332,6 @@ Future<void> _showClipboardContextMenu(
   onAction(action);
 }
 
-String _typeLabel(BuildContext context, ResourceType type) {
-  return switch (type) {
-    ResourceType.prompt => context.localized('Prompts', '提示词'),
-    ResourceType.skill => context.localized('Skills', '技能'),
-    ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
-    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
-  };
-}
-
 enum _ClipboardAction {
   paste,
   pastePlainText,

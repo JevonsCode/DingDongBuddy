@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -202,6 +203,24 @@ void main() {
       await tester.tap(find.byKey(const Key('resource-manager-nav-resources')));
       await tester.pump();
       expect(find.byKey(const Key('resource-search')), findsOneWidget);
+
+      final ResourceManagerCreateRequest request =
+          const ResourceManagerCreateRequest(
+            type: ResourceType.prompt,
+            title: 'Clipboard draft',
+            content: 'Review this before saving.',
+          );
+      await _sendWindowMethod(
+        messenger,
+        channel: 'mixin.one/window_controller/resource-manager-test',
+        method: 'create_resource',
+        arguments: request.toJson(),
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('resource-editor')), findsOneWidget);
+      expect(find.text('Clipboard draft'), findsOneWidget);
+      expect(find.text('Review this before saving.'), findsOneWidget);
+      expect(library.allResources, isEmpty);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();

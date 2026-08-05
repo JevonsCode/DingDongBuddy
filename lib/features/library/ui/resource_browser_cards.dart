@@ -105,17 +105,28 @@ class _ResourceCard extends StatelessWidget {
     final List<String> tags = _resourceCardTags(context, resource, display);
     final List<String> visibleTags = tags.take(4).toList(growable: false);
     final int hiddenTagCount = tags.length - visibleTags.length;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isMcp = resource.type == ResourceType.mcp;
     final Color background = switch (resource.type) {
       ResourceType.prompt => PopupStyle.warmSurface,
       ResourceType.skill => PopupStyle.skillSurface,
-      ResourceType.mcp => PopupStyle.mcpSoft,
+      ResourceType.mcp => PopupStyle.mcpSurface(Theme.of(context).brightness),
       _ => PopupStyle.surfaceSoft,
     };
+    final BoxDecoration decoration = isMcp
+        ? BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+              color: PopupStyle.mcpBorder(Theme.of(context).brightness),
+            ),
+          )
+        : PopupStyle.card(color: background, radius: 9);
     return Opacity(
       opacity: resource.enabled ? 1 : 0.58,
       child: Container(
         key: Key('resource-card-${resource.id}'),
-        decoration: PopupStyle.card(color: background, radius: 9),
+        decoration: decoration,
         padding: const EdgeInsets.fromLTRB(14, 12, 11, 10),
         child: Row(
           children: <Widget>[
@@ -125,7 +136,7 @@ class _ResourceCard extends StatelessWidget {
                 _resourceSymbol(resource.type),
                 key: Key('resource-card-type-${resource.id}'),
                 size: 20,
-                color: _resourceColor(resource.type),
+                color: _resourceColor(resource.type, isDark: isDark),
               ),
             ),
             const SizedBox(width: 8),
@@ -307,12 +318,17 @@ class _ResourceTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool usesMcpAccent = type == ResourceType.mcp;
+    final bool emphasized = prominent || usesMcpAccent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: prominent
+        color: emphasized
             ? switch (type) {
-                ResourceType.mcp => PopupStyle.mcpSoft,
+                ResourceType.mcp => PopupStyle.mcpSurface(
+                  Theme.of(context).brightness,
+                  opacity: 0.16,
+                ),
                 ResourceType.skill => const Color(0xFFE9EBF7),
                 _ => const Color(0xFFF0EBDD),
               }
@@ -322,9 +338,11 @@ class _ResourceTag extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          color: prominent
+          color: emphasized
               ? switch (type) {
-                  ResourceType.mcp => PopupStyle.mcp,
+                  ResourceType.mcp => PopupStyle.mcpAccent(
+                    Theme.of(context).brightness,
+                  ),
                   ResourceType.skill => const Color(0xFF4C63A1),
                   _ => const Color(0xFF75684F),
                 }
@@ -398,11 +416,13 @@ String _resourceSymbol(ResourceType type) {
   };
 }
 
-Color _resourceColor(ResourceType type) {
+Color _resourceColor(ResourceType type, {bool isDark = false}) {
   return switch (type) {
     ResourceType.prompt => const Color(0xFFA97822),
     ResourceType.skill => const Color(0xFF4C63A1),
-    ResourceType.mcp => PopupStyle.mcp,
+    ResourceType.mcp => PopupStyle.mcpAccent(
+      isDark ? Brightness.dark : Brightness.light,
+    ),
     ResourceType.knowledge => PopupStyle.accent,
     ResourceType.clipboard => PopupStyle.textSecondary,
   };

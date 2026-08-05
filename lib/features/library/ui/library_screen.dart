@@ -152,6 +152,8 @@ class LibraryScreen extends StatelessWidget {
       resource: viewModel.selectedResource,
       isCreating: viewModel.isCreating,
       initialType: viewModel.creatingType,
+      initialTitle: viewModel.creatingTitle,
+      initialContent: viewModel.creatingContent,
       triggerGroups: viewModel.triggerGroups,
       onCreate: viewModel.create,
       onCreateTriggerGroup: viewModel.createTriggerGroup,

@@ -24,6 +24,8 @@ class ResourceEditor extends StatefulWidget {
     required this.onDelete,
     required this.onSave,
     this.initialType = ResourceType.prompt,
+    this.initialTitle = '',
+    this.initialContent = '',
     this.triggerGroups = const <TriggerGroup>[],
     this.onCreateTriggerGroup,
     this.onUpdateTriggerGroup,
@@ -55,6 +57,8 @@ class ResourceEditor extends StatefulWidget {
   final Future<void> Function()? onDelete;
   final Future<void> Function(Resource resource) onSave;
   final ResourceType initialType;
+  final String initialTitle;
+  final String initialContent;
   final List<TriggerGroup> triggerGroups;
   final CreateTriggerGroup? onCreateTriggerGroup;
   final Future<void> Function(TriggerGroup group)? onUpdateTriggerGroup;
@@ -143,7 +147,9 @@ class _ResourceEditorState extends State<ResourceEditor> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.resource?.id != widget.resource?.id ||
         oldWidget.isCreating != widget.isCreating ||
-        oldWidget.initialType != widget.initialType) {
+        oldWidget.initialType != widget.initialType ||
+        oldWidget.initialTitle != widget.initialTitle ||
+        oldWidget.initialContent != widget.initialContent) {
       _load(widget.resource);
     }
   }
@@ -158,7 +164,9 @@ class _ResourceEditorState extends State<ResourceEditor> {
 
   void _load(Resource? resource) {
     _loading = true;
-    _titleController.text = resource?.title ?? '';
+    final bool creating = resource == null && widget.isCreating;
+    _titleController.text =
+        resource?.title ?? (creating ? widget.initialTitle : '');
     _promptController.clear();
     _skillDocumentController.clear();
     _skillNameController.clear();
@@ -188,7 +196,8 @@ class _ResourceEditorState extends State<ResourceEditor> {
     _skillUpdated = false;
     switch (_draftType) {
       case ResourceType.prompt:
-        _promptController.text = resource?.content ?? '';
+        _promptController.text =
+            resource?.content ?? (creating ? widget.initialContent : '');
       case ResourceType.skill:
         _skillDocumentController.text =
             resource?.content ??
@@ -205,7 +214,8 @@ class _ResourceEditorState extends State<ResourceEditor> {
         _loadMcp(McpConfiguration.parse(resource?.content ?? ''));
       case ResourceType.knowledge:
       case ResourceType.clipboard:
-        _promptController.text = resource?.content ?? '';
+        _promptController.text =
+            resource?.content ?? (creating ? widget.initialContent : '');
     }
     _loading = false;
   }
@@ -904,12 +914,15 @@ class _TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    final Brightness brightness = Theme.of(context).brightness;
     final bool isMcp = type == ResourceType.mcp;
     return Container(
       key: const Key('resource-type-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: isMcp ? PopupStyle.mcpSoft : colors.surfaceContainerLow,
+        color: isMcp
+            ? PopupStyle.mcpSurface(brightness)
+            : colors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
@@ -918,13 +931,17 @@ class _TypeBadge extends StatelessWidget {
           Icon(
             _typeIcon(type),
             size: 14,
-            color: isMcp ? PopupStyle.mcp : colors.onSurfaceVariant,
+            color: isMcp
+                ? PopupStyle.mcpAccent(brightness)
+                : colors.onSurfaceVariant,
           ),
           const SizedBox(width: 6),
           Text(
             _typeLabel(context, type),
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: isMcp ? PopupStyle.mcp : colors.onSurfaceVariant,
+              color: isMcp
+                  ? PopupStyle.mcpAccent(brightness)
+                  : colors.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),

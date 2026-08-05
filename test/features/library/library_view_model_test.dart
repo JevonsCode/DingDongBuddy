@@ -19,7 +19,7 @@ void main() {
           type: ResourceType.prompt,
           title: 'Prompt',
           content: 'Prompt content',
-          group: 'Prompts',
+          group: 'Writing',
           createdAt: now,
           updatedAt: now,
         ),
@@ -28,7 +28,7 @@ void main() {
           type: ResourceType.skill,
           title: 'Skill',
           content: 'Skill content',
-          group: 'Skills',
+          group: 'Engineering',
           createdAt: now,
           updatedAt: now,
         ),
@@ -41,16 +41,63 @@ void main() {
           createdAt: now,
           updatedAt: now,
         ),
+        Resource(
+          id: 'dingdong.builtin.reply-marker-prompt.v1',
+          type: ResourceType.prompt,
+          title: 'Built-in marker',
+          content: 'Built-in content',
+          group: 'DingDong',
+          createdAt: now,
+          updatedAt: now,
+        ),
       ]),
     );
     await model.load();
 
-    model.setGroupFilter('Skills');
+    model.setGroupFilter('Engineering');
 
-    expect(model.groups, <String>['Prompts', 'Skills', 'MCP Servers']);
-    expect(model.selectedGroup, 'Skills');
+    expect(model.groups, <String>['Writing', 'Engineering', 'MCP Servers']);
+    expect(model.selectedGroup, 'Engineering');
     expect(model.visibleResources.single.title, 'Skill');
   });
+
+  test(
+    'default type groups do not appear as duplicate custom groups',
+    () async {
+      final DateTime now = DateTime.utc(2026);
+      final LibraryViewModel model = LibraryViewModel(
+        _FakeResourceStore(<Resource>[
+          Resource(
+            id: 'prompt',
+            type: ResourceType.prompt,
+            title: 'Prompt',
+            content: 'Prompt content',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'skill',
+            type: ResourceType.skill,
+            title: 'Skill',
+            content: 'Skill content',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'mcp',
+            type: ResourceType.mcp,
+            title: 'MCP',
+            content: 'MCP content',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      );
+      await model.load();
+
+      expect(model.groups, isEmpty);
+    },
+  );
 
   test(
     'knowledge stays stored but is hidden from resource management',

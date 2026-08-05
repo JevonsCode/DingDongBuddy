@@ -103,8 +103,10 @@ class ResourceBrowserScreen extends StatelessWidget {
               ),
             ),
             _TypeFilters(viewModel: viewModel),
-            const SizedBox(height: 9),
-            _GroupFilters(viewModel: viewModel),
+            if (viewModel.groups.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 9),
+              _GroupFilters(viewModel: viewModel),
+            ],
             const SizedBox(height: 11),
             Expanded(
               child: _ResourceCards(

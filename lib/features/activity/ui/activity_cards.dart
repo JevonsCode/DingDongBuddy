@@ -90,6 +90,7 @@ class _AgentActivityCard extends StatefulWidget {
     required this.activity,
     required this.animate,
     this.onTap,
+    super.key,
   });
 
   final AgentActivity activity;
@@ -118,13 +119,26 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
     super.didUpdateWidget(oldWidget);
     if (!oldWidget.animate && widget.animate) {
       _startIfNeeded();
+    } else if (oldWidget.animate && !widget.animate) {
+      _resetAnimation();
     }
   }
 
   void _startIfNeeded() {
-    if (widget.animate) {
-      _controller.repeat(reverse: true, count: 4);
+    if (!widget.animate) {
+      _resetAnimation();
+      return;
     }
+    _controller
+      ..stop()
+      ..value = 0;
+    _controller.repeat(reverse: true, count: 4);
+  }
+
+  void _resetAnimation() {
+    _controller
+      ..stop()
+      ..value = 0;
   }
 
   @override
@@ -446,12 +460,13 @@ class _EnabledResourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Brightness brightness = Theme.of(context).brightness;
     final ResourceCardPresentation display =
         ResourceCardPresentation.fromResource(resource);
     final Color background = switch (resource.type) {
       ResourceType.prompt => PopupStyle.warmSurface,
       ResourceType.skill => PopupStyle.skillSurface,
-      ResourceType.mcp => PopupStyle.mcpSoft,
+      ResourceType.mcp => PopupStyle.mcpSurface(brightness),
       ResourceType.knowledge || ResourceType.clipboard => PopupStyle.surface,
     };
     final String symbol = switch (resource.type) {
@@ -464,7 +479,7 @@ class _EnabledResourceCard extends StatelessWidget {
     final Color accent = switch (resource.type) {
       ResourceType.prompt => const Color(0xFFA97822),
       ResourceType.skill => const Color(0xFF4C63A1),
-      ResourceType.mcp => PopupStyle.mcp,
+      ResourceType.mcp => PopupStyle.mcpAccent(brightness),
       ResourceType.knowledge => PopupStyle.accent,
       ResourceType.clipboard => PopupStyle.textSecondary,
     };

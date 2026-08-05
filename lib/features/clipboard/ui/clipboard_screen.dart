@@ -23,6 +23,7 @@ import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_organize_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -45,6 +46,7 @@ class ClipboardScreen extends StatefulWidget {
     this.onDismissPreview,
     this.onShare,
     this.contextMenuGateway,
+    this.resourceManagerLauncher,
     this.filtersExpanded,
     this.onToggleFilters,
     this.onShortcutStartIndexChanged,
@@ -62,6 +64,7 @@ class ClipboardScreen extends StatefulWidget {
   final Future<void> Function()? onDismissPreview;
   final Future<void> Function(ClipboardRecord record)? onShare;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final ResourceManagerLauncher? resourceManagerLauncher;
   final bool? filtersExpanded;
   final VoidCallback? onToggleFilters;
   final ValueChanged<int>? onShortcutStartIndexChanged;
@@ -133,6 +136,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   Future<void> Function(ClipboardRecord record)? get onShare => widget.onShare;
   DesktopContextMenuGateway? get contextMenuGateway =>
       widget.contextMenuGateway;
+  ResourceManagerLauncher? get resourceManagerLauncher =>
+      widget.resourceManagerLauncher;
   bool get filtersExpanded => widget.filtersExpanded ?? _showFilters;
 
   void _toggleFilters() {

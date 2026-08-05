@@ -803,7 +803,6 @@ h3 {
 
 .demo-manage-button,
 .demo-library-filters button,
-.demo-monitor-toggle,
 .demo-filter-button,
 #demo-copy-action {
   border: 1px solid var(--border);
@@ -1100,7 +1099,7 @@ h3 {
 
 .demo-clipboard-toolbar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   padding: 10px;
@@ -1113,12 +1112,18 @@ h3 {
 }
 
 .demo-clipboard-filters {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.demo-clipboard-filters::-webkit-scrollbar {
+  display: none;
 }
 
 .demo-clipboard-filters button {
+  flex: 0 0 auto;
   min-width: 0;
   height: 30px;
   padding: 0 5px;
@@ -1140,42 +1145,9 @@ h3 {
   background: var(--accent-soft);
 }
 
-.demo-monitor-toggle,
 .demo-filter-button {
   min-height: 34px;
   padding: 0 9px;
-}
-
-.demo-monitor-toggle {
-  position: relative;
-  width: 38px;
-  min-width: 38px;
-  height: 22px;
-  min-height: 22px;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: 999px;
-  color: transparent;
-  background: var(--field);
-  text-indent: -999px;
-}
-
-.demo-monitor-toggle::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(34, 38, 41, 0.18);
-  transition: transform 150ms ease;
-}
-
-.demo-monitor-toggle.active::after {
-  transform: translateX(16px);
 }
 
 .demo-filter-button {
@@ -1202,15 +1174,10 @@ h3 {
   background: var(--accent);
 }
 
-.demo-monitor-toggle.active,
 .demo-filter-button.active {
   border-color: var(--accent-border);
   color: var(--accent);
   background: var(--accent-soft);
-}
-
-.demo-monitor-toggle.active {
-  background: #375f74;
 }
 
 .demo-clipboard-list {

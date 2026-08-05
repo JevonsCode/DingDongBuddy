@@ -15,6 +15,7 @@ final class DesktopShellService {
     this.onClearClipboardHistory,
     this.onShowResourceManager,
     this.onShowSettings,
+    this.onShowAbout,
     this.onHideDockIcon,
     this.onQuickPastePermissionGrantPresentationStarted,
     this.onQuickPastePermissionGranted,
@@ -28,6 +29,7 @@ final class DesktopShellService {
   final Future<void> Function()? onClearClipboardHistory;
   final Future<void> Function()? onShowResourceManager;
   final Future<void> Function()? onShowSettings;
+  final Future<void> Function()? onShowAbout;
   final Future<void> Function()? onHideDockIcon;
   final void Function()? onQuickPastePermissionGrantPresentationStarted;
   final Future<void> Function()? onQuickPastePermissionGranted;
@@ -83,6 +85,8 @@ final class DesktopShellService {
         await onShowResourceManager?.call();
       case DesktopShellCommand.showSettings:
         await onShowSettings?.call();
+      case DesktopShellCommand.showAbout:
+        await onShowAbout?.call();
       case DesktopShellCommand.hideDockIcon:
         await onHideDockIcon?.call();
       case DesktopShellCommand.startClipboardMonitoring:

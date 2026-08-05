@@ -37,14 +37,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.0.1', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.0.2', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.0.1')), findsOneWidget);
-    expect(find.text('v1.0.1'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.0.2')), findsOneWidget);
+    expect(find.text('v1.0.2'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -54,10 +54,18 @@ void main() {
   testWidgets('development build is visibly labeled beside DingDong', (
     WidgetTester tester,
   ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
     await tester.pumpWidget(const DingDongApp(developmentBuild: true));
 
     expect(find.byKey(const Key('popup-development-badge')), findsOneWidget);
     expect(find.text('DEV'), findsOneWidget);
+    final Text brand = tester.widget<Text>(find.text('DingDong').first);
+    expect(brand.softWrap, isFalse);
+    expect(brand.style?.height, 1.18);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Dynamic quick actions open a working workspace', (
@@ -196,6 +204,97 @@ void main() {
       activityController.dispose();
     },
   );
+
+  testWidgets('Dynamic acknowledges a new unseen Agent while already visible', (
+    WidgetTester tester,
+  ) async {
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'live-unseen-agent',
+      now: () => DateTime.utc(2026, 7, 12, 10),
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'live-unseen-conversation',
+    );
+
+    await tester.pumpWidget(
+      DingDongApp(activityController: activityController),
+    );
+    await tester.pump();
+
+    activityController.record(
+      source: 'Codex',
+      message: 'First live reminder',
+      conversationTarget: target,
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Second live reminder',
+      conversationTarget: target,
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(activityController.unseenCount, 1);
+    Text repeatText = tester.widget<Text>(find.text('×2'));
+    expect(
+      repeatText.style?.color,
+      PopupStyle.activityUnread.withValues(alpha: 0.58),
+    );
+
+    await tester.pump(const Duration(milliseconds: 1600));
+
+    expect(activityController.unseenCount, 0);
+    repeatText = tester.widget<Text>(find.text('×2'));
+    expect(
+      repeatText.style?.color,
+      PopupStyle.textPrimary.withValues(alpha: 0.13),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    activityController.dispose();
+  });
+
+  testWidgets('Dynamic resets activity highlights when items become seen', (
+    WidgetTester tester,
+  ) async {
+    int nextId = 0;
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'activity-${nextId++}',
+      now: () => DateTime.utc(2026, 7, 12, 10),
+    );
+    activityController.record(source: 'Codex', message: 'First reminder');
+    activityController.requestReveal();
+
+    await tester.pumpWidget(
+      DingDongApp(activityController: activityController),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+
+    BoxDecoration cardDecoration() {
+      final Container card = tester.widget<Container>(
+        find.byKey(const Key('activity-activity-0')),
+      );
+      return card.decoration! as BoxDecoration;
+    }
+
+    expect(cardDecoration().color, isNot(PopupStyle.surface));
+
+    activityController.markAllSeen();
+    await tester.pump();
+    expect(cardDecoration().color, PopupStyle.surface);
+
+    activityController.record(source: 'Codex', message: 'Later reminder');
+    await tester.pump(const Duration(milliseconds: 200));
+    final Container laterCard = tester.widget<Container>(
+      find.byKey(const Key('activity-activity-1')),
+    );
+    expect((laterCard.decoration! as BoxDecoration).color, PopupStyle.surface);
+
+    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+  });
 
   testWidgets('clicking a resumable Agent item opens its conversation', (
     WidgetTester tester,
@@ -642,6 +741,7 @@ final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
   @override
   Future<void> show({
     String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
   }) async {

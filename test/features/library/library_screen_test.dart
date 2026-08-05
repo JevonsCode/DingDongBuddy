@@ -336,7 +336,7 @@ description: Use for the second task.
     await tester.tap(find.byKey(const Key('resource-delete-selection')));
     await tester.pumpAndSettle();
     expect(find.text('Delete selected resources?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete').last);
     await tester.pumpAndSettle();
 
     expect(store.resources, isEmpty);
@@ -374,7 +374,7 @@ description: Use for the second task.
     expect(menuGateway.showCount, 1);
     expect(find.byType(PopupMenuItem), findsNothing);
     expect(find.text('Delete this resource?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete').last);
     await tester.pumpAndSettle();
 
     expect(store.resources, isEmpty);
@@ -780,7 +780,7 @@ Apply the user's saved preferences.
     await tester.pumpAndSettle();
     expect(find.text('Delete this resource?'), findsOneWidget);
     expect(store.resources, hasLength(1));
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete').last);
     await tester.pumpAndSettle();
 
     expect(store.resources, isEmpty);

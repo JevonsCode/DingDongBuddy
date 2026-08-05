@@ -16,6 +16,7 @@ import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:flutter/material.dart';
 
 const double _managerSearchControlHeight = 40;
@@ -26,11 +27,13 @@ class ClipboardManagerScreen extends StatefulWidget {
   const ClipboardManagerScreen({
     required this.viewModel,
     this.contextMenuGateway,
+    this.resourceManagerLauncher,
     super.key,
   });
 
   final ClipboardViewModel viewModel;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final ResourceManagerLauncher? resourceManagerLauncher;
 
   @override
   State<ClipboardManagerScreen> createState() => _ClipboardManagerScreenState();
@@ -258,14 +261,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
           widget.viewModel.addSelectedToGroups(groups);
         }
       case _ManagerAction.savePrompt:
-        await widget.viewModel.promoteSelected(ResourceType.prompt);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.localized('Saved as prompt', '已保存为提示词')),
-            ),
-          );
-        }
+        await _openPromptCreation(record);
       case _ManagerAction.toggleEnabled:
         widget.viewModel.setEnabledMany(<String>{record.id}, !record.enabled);
       case _ManagerAction.delete:
@@ -274,6 +270,20 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
           setState(() => _selectedIds.remove(record.id));
         }
     }
+  }
+
+  Future<void> _openPromptCreation(ClipboardRecord record) async {
+    final ResourceManagerLauncher? launcher = widget.resourceManagerLauncher;
+    if (launcher == null) {
+      return;
+    }
+    await launcher.show(
+      createRequest: ResourceManagerCreateRequest(
+        type: ResourceType.prompt,
+        title: record.title.trim().isEmpty ? null : record.title,
+        content: record.content,
+      ),
+    );
   }
 
   Future<_ManagerAction?> _showMaterialItemMenu(

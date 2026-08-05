@@ -378,7 +378,7 @@ Apply the user's saved preferences.''',
               )
               .toList(growable: false);
       for (final Rect actionRect in actionRects) {
-        expect(actionRect.width, closeTo(122, 0.1));
+        expect(actionRect.width, closeTo(142, 0.1));
         expect(actionRect.right, closeTo(actionRects.first.right, 0.1));
         expect(listRect.contains(actionRect.center), isTrue);
       }

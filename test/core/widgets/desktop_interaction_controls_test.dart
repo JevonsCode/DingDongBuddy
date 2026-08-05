@@ -28,7 +28,7 @@ void main() {
       ),
     );
 
-    final OutlinedButton button = tester.widget<OutlinedButton>(
+    final FilledButton button = tester.widget<FilledButton>(
       find.byKey(const Key('custom-action')),
     );
     expect(

@@ -536,6 +536,7 @@ class _ShellScreenState extends State<ShellScreen> {
         onDismissPreview: _hideClipboardPreview,
         onShare: widget.clipboardShareGateway?.share,
         contextMenuGateway: widget.desktopContextMenuGateway,
+        resourceManagerLauncher: _resourceManagerLauncher(),
         filtersExpanded: _clipboardFiltersExpanded,
         onToggleFilters: () {
           setState(
@@ -603,12 +604,14 @@ final class _CalloutHidingResourceManagerLauncher
   @override
   Future<void> show({
     String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
   }) async {
     await onHideWindow?.call();
     await launcher.show(
       editingResourceId: editingResourceId,
+      createRequest: createRequest,
       destination: destination,
     );
   }

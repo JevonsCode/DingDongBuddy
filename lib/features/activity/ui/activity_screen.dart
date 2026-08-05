@@ -57,6 +57,14 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   int _scheduledRevealRevision = 0;
+  bool _revealRequestScheduled = false;
+  Timer? _seenAcknowledgementTimer;
+
+  @override
+  void dispose() {
+    _seenAcknowledgementTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,74 +83,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
             .where((Resource resource) => resource.enabled)
             .toList(growable: false);
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           children: <Widget>[
-            Container(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 9),
-              decoration: PopupStyle.card(radius: 9),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          widget.settingsViewModel.settings.clipboardMonitoring
-                              ? context.localized(
-                                  'Clipboard monitoring is ready.',
-                                  '剪贴板监听已就绪。',
-                                )
-                              : context.localized(
-                                  'Clipboard monitoring is paused.',
-                                  '剪贴板监听已暂停。',
-                                ),
-                          style: const TextStyle(
-                            color: PopupStyle.textPrimary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: <Widget>[
-                            const Icon(
-                              Icons.schedule_rounded,
-                              size: 12,
-                              color: PopupStyle.textSecondary,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              TimeOfDay.fromDateTime(
-                                (widget.now ?? DateTime.now)(),
-                              ).format(context),
-                              style: const TextStyle(
-                                color: PopupStyle.textSecondary,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.verified_outlined,
-                    size: 16,
-                    color: PopupStyle.textSecondary,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    context.localized('Ready', '就绪'),
-                    style: const TextStyle(
-                      color: PopupStyle.textSecondary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
               children: <Widget>[
                 Expanded(
@@ -228,11 +170,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     (AgentActivity activity) => Padding(
                       padding: const EdgeInsets.only(bottom: 7),
                       child: _AgentActivityCard(
+                        key: ValueKey<String>(activity.id),
                         activity: activity,
                         onTap: _conversationTap(context, activity),
                         animate:
                             activity.unseen &&
-                            widget.activityController.revealRevision > 0,
+                            widget.activityController.revealActive,
                       ),
                     ),
                   ),
@@ -282,14 +225,39 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 
   void _scheduleSeenAcknowledgement() {
-    final int revision = widget.activityController.revealRevision;
+    final ActivityController controller = widget.activityController;
+    if (controller.unseenCount == 0) {
+      return;
+    }
+
+    if (!controller.revealActive) {
+      if (_revealRequestScheduled) {
+        return;
+      }
+      _revealRequestScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _revealRequestScheduled = false;
+        if (!mounted) {
+          return;
+        }
+        final ActivityController current = widget.activityController;
+        if (current.unseenCount > 0 && !current.revealActive) {
+          current.requestReveal();
+        }
+      });
+      return;
+    }
+
+    final int revision = controller.revealRevision;
     if (revision == 0 || revision == _scheduledRevealRevision) {
       return;
     }
     _scheduledRevealRevision = revision;
-    Future<void>.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted && widget.activityController.revealRevision == revision) {
-        widget.activityController.markAllSeen();
+    _seenAcknowledgementTimer?.cancel();
+    _seenAcknowledgementTimer = Timer(const Duration(milliseconds: 1500), () {
+      _seenAcknowledgementTimer = null;
+      if (mounted && controller.revealRevision == revision) {
+        controller.markAllSeen();
       }
     });
   }

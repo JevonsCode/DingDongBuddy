@@ -41,13 +41,13 @@ void main() {
       );
 
       final Finder clearButton = find.byKey(const Key('settings-clear-usage'));
-      expect(tester.widget<OutlinedButton>(clearButton).onPressed, isNull);
+      expect(tester.widget<FilledButton>(clearButton).onPressed, isNull);
 
       await tester.tap(
         find.byKey(const Key('settings-select-clipboard-history')),
       );
       await tester.pump();
-      expect(tester.widget<OutlinedButton>(clearButton).onPressed, isNotNull);
+      expect(tester.widget<FilledButton>(clearButton).onPressed, isNotNull);
 
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
@@ -75,7 +75,7 @@ void main() {
         model.systemUsage?.bytesFor(SystemDataCategory.clipboardHistory),
         0,
       );
-      expect(tester.widget<OutlinedButton>(clearButton).onPressed, isNull);
+      expect(tester.widget<FilledButton>(clearButton).onPressed, isNull);
     },
   );
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -10,6 +11,7 @@ import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
@@ -856,9 +858,26 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Accessibility permission'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const Key('clipboard-open-permission-settings')),
+    final Container permissionSurface = tester.widget<Container>(
+      find.byKey(const Key('clipboard-permission-surface')),
     );
+    final BoxDecoration permissionDecoration =
+        permissionSurface.decoration! as BoxDecoration;
+    expect(permissionDecoration.border, isNull);
+    expect(permissionDecoration.borderRadius, BorderRadius.circular(14));
+    final Finder permissionButton = find.byKey(
+      const Key('clipboard-open-permission-settings'),
+    );
+    expect(
+      tester
+          .widget<FilledButton>(permissionButton)
+          .style
+          ?.side
+          ?.resolve(const <WidgetState>{}),
+      BorderSide.none,
+    );
+    expect(tester.getSize(permissionButton).height, 32);
+    await tester.tap(permissionButton);
     await tester.pump();
 
     expect(permission.openCount, 1);
@@ -1190,6 +1209,40 @@ void main() {
     },
   );
 
+  testWidgetsOnPlatform(
+    'save as prompt hands the clipboard draft to resource manager',
+    TargetPlatform.windows,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ClipboardRecord record = _record();
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[record]),
+      )..load();
+      final _FakeResourceManagerLauncher launcher =
+          _FakeResourceManagerLauncher();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ClipboardScreen(
+            viewModel: model,
+            resourceManagerLauncher: launcher,
+          ),
+        ),
+      );
+      await tester.tap(find.text(record.title), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save as prompt'));
+      await tester.pumpAndSettle();
+
+      expect(launcher.lastCreateRequest?.type, ResourceType.prompt);
+      expect(launcher.lastCreateRequest?.title, record.title);
+      expect(launcher.lastCreateRequest?.content, record.content);
+    },
+  );
+
   testWidgets(
     'archive to selects existing and new groups without a large alert',
     (WidgetTester tester) async {
@@ -1229,11 +1282,14 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.text('项目甲'), findsWidgets);
       final Dialog dialog = tester.widget<Dialog>(
-        find.byKey(const Key('clipboard-group-dialog')),
+        find.ancestor(
+          of: find.byKey(const Key('clipboard-group-dialog')),
+          matching: find.byType(Dialog),
+        ),
       );
       final RoundedRectangleBorder shape =
           dialog.shape! as RoundedRectangleBorder;
-      expect(shape.borderRadius, BorderRadius.circular(14));
+      expect(shape.borderRadius, BorderRadius.circular(18));
       expect(
         find.descendant(
           of: find.byKey(const Key('clipboard-group-dialog')),
@@ -1491,6 +1547,20 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
     showCount += 1;
     lastItems = items;
     return result?.name;
+  }
+}
+
+final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
+  ResourceManagerCreateRequest? lastCreateRequest;
+
+  @override
+  Future<void> show({
+    String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+  }) async {
+    lastCreateRequest = createRequest;
   }
 }
 

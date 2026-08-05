@@ -261,6 +261,10 @@ final class PluginDesktopShellGateway
             label: chinese ? '设置' : 'Settings',
             onClick: (_) => _commands.add(DesktopShellCommand.showSettings),
           ),
+          MenuItem(
+            label: chinese ? '关于' : 'About',
+            onClick: (_) => _commands.add(DesktopShellCommand.showAbout),
+          ),
           MenuItem.separator(),
           MenuItem(
             label: chinese

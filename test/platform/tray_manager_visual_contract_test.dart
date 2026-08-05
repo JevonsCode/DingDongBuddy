@@ -241,6 +241,7 @@ void main() {
     expect(gateway, isNot(contains("'Clear Clipboard History'")));
     expect(gateway, contains("label: chinese ? '资源管理' : 'Resource Manager'"));
     expect(gateway, contains("label: chinese ? '设置' : 'Settings'"));
+    expect(gateway, contains("label: chinese ? '关于' : 'About'"));
     expect(gateway, isNot(contains("'资源管理…'")));
     expect(gateway, isNot(contains("'设置…'")));
     final int resourceManagerIndex = gateway.indexOf(
@@ -249,9 +250,14 @@ void main() {
     final int settingsIndex = gateway.indexOf(
       'DesktopShellCommand.showSettings',
     );
+    final int aboutIndex = gateway.indexOf('DesktopShellCommand.showAbout');
+    final int quitIndex = gateway.indexOf('DesktopShellCommand.quit');
     expect(resourceManagerIndex, greaterThan(-1));
     expect(resourceManagerIndex, lessThan(settingsIndex));
+    expect(settingsIndex, lessThan(aboutIndex));
+    expect(aboutIndex, lessThan(quitIndex));
     expect(gateway, contains('DesktopShellCommand.showSettings'));
+    expect(gateway, contains('DesktopShellCommand.showAbout'));
     expect(gateway, contains('DesktopShellCommand.quit'));
   });
 

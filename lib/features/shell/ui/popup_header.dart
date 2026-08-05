@@ -50,9 +50,7 @@ class PopupHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 108,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: PopupStyle.border)),
-      ),
+      color: PopupStyle.surface,
       child: Column(
         children: <Widget>[
           SizedBox(
@@ -75,7 +73,10 @@ class PopupHeader extends StatelessWidget {
                           Expanded(
                             child: Row(
                               children: <Widget>[
-                                Flexible(
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minWidth: 86,
+                                  ),
                                   child: Semantics(
                                     button: true,
                                     child: GestureDetector(
@@ -85,11 +86,11 @@ class PopupHeader extends StatelessWidget {
                                       child: const Text(
                                         'DingDong',
                                         maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: false,
                                         style: TextStyle(
                                           color: PopupStyle.textPrimary,
                                           fontSize: 17,
-                                          height: 1,
+                                          height: 1.18,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -101,12 +102,9 @@ class PopupHeader extends StatelessWidget {
                                   const _DevelopmentBadge(),
                                 ],
                                 const SizedBox(width: 3),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: _VersionButton(
-                                    updateAvailable: updateAvailable,
-                                    onPressed: onVersion,
-                                  ),
+                                _VersionButton(
+                                  updateAvailable: updateAvailable,
+                                  onPressed: onVersion,
                                 ),
                               ],
                             ),
@@ -115,20 +113,23 @@ class PopupHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox.square(
-                    dimension: 32,
-                    child: issueCount > 0
-                        ? _IssueButton(count: issueCount, onPressed: onIssues)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
+                  if (issueCount > 0) ...<Widget>[
+                    SizedBox.square(
+                      dimension: 30,
+                      child: _IssueButton(
+                        count: issueCount,
+                        onPressed: onIssues,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   _HeaderButton(
                     key: const Key('popup-open-settings'),
                     tooltip: context.localized('Settings', '设置'),
                     symbol: 'settings',
                     onPressed: onSettings,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 5),
                   _HeaderButton(
                     key: const Key('popup-hide'),
                     tooltip: context.localized('Hide', '收起'),
@@ -202,14 +203,13 @@ class _DevelopmentBadge extends StatelessWidget {
       key: const Key('popup-development-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: PopupStyle.mcpSoft,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFFE8A08B)),
+        color: PopupStyle.developmentSoft,
+        borderRadius: BorderRadius.circular(6),
       ),
       child: const Text(
         'DEV',
         style: TextStyle(
-          color: PopupStyle.mcp,
+          color: PopupStyle.development,
           fontSize: 8,
           height: 1,
           fontWeight: FontWeight.w800,
@@ -238,7 +238,7 @@ class _VersionButton extends StatelessWidget {
         onTap: onPressed,
         behavior: HitTestBehavior.opaque,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -259,7 +259,7 @@ class _VersionButton extends StatelessWidget {
                   width: 5,
                   height: 5,
                   decoration: const BoxDecoration(
-                    color: PopupStyle.mcp,
+                    color: PopupStyle.development,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -294,14 +294,13 @@ class _HeaderButton extends StatelessWidget {
         child: DesktopIconButton(
           tooltip: tooltip,
           onPressed: onPressed,
-          size: 32,
-          iconSize: 16,
-          backgroundColor: PopupStyle.surface,
+          size: 30,
+          iconSize: 15,
+          backgroundColor: PopupStyle.surfaceSoft,
           foregroundColor: PopupStyle.textSecondary,
-          borderColor: PopupStyle.border,
           icon: PopupSymbolIcon(
             symbol,
-            size: 16,
+            size: 15,
             color: PopupStyle.textSecondary,
           ),
         ),

@@ -1,52 +1,43 @@
-# DingDong 1.0.1
+# DingDong 1.0.2
 
-DingDong 1.0.1 is a focused fix release for clipboard history refresh and a
-smaller appearance-settings surface.
+DingDong 1.0.2 is a focused fix release for Agent activity reliability and a
+consistent Clipboard experience across the desktop app and release website.
 
-## Clipboard refresh
+## Agent activity
 
-- Images copied with ChatGPT's **Copy Image** action now appear in clipboard
-  history immediately after DingDong stores them.
-- The main Clipboard workspace reloads after every successful durable capture,
-  so its list and item count no longer remain stale until the view is reopened.
-- An already-open Resource Manager receives the same cross-window refresh and
-  keeps its Clipboard list synchronized.
-- Existing duplicate promotion and tray copy feedback continue to work as
-  before.
+- Unavailable background Codex tasks are identified before opening, so a stale
+  task does not lead to a broken conversation view.
+- Newly surfaced Agent activity is acknowledged after it has remained visible
+  long enough to read, keeping the unread indicator useful without requiring a
+  second navigation.
 
-## Settings cleanup
+## Clipboard and website preview
 
-- Removes the ineffective List density choice from Settings.
-- Retires its saved preference and compact-layout branches; Clipboard and
-  Library lists now consistently use the previous Comfortable spacing.
-
-## Reliability
-
-- Adds regression coverage for capture-completion ordering, main-window refresh
-  wiring, and Resource Manager cross-window updates.
+- The compact Clipboard toolbar now stays focused on search and filters;
+  monitoring remains available from the tray menu and Settings.
+- The website Clipboard preview uses the same toolbar shape and category data
+  model as the desktop app, including the corrected `links`, `images`, `files`,
+  and `text` categories.
+- Popup branding and version metadata remain visible across release and
+  development builds.
 
 Intel macOS and Windows packages remain beta.
 
 ---
 
-DingDong 1.0.1 是一个修复剪贴板历史刷新问题并精简外观设置的版本。
+DingDong 1.0.2 是一个修复 Agent 动态可靠性，并统一桌面端与官网剪贴板体验的版本。
 
-## 剪贴板刷新
+## Agent 动态
 
-- 使用 ChatGPT 的 **Copy Image** 后，图片在 DingDong 完成存储时会立即出现在
-  剪贴板历史中。
-- 每次成功持久化捕获后，主窗口的剪贴板列表与数量都会自动重新载入，不再需要离开页面
-  再回来才能看到新内容。
-- 已打开的独立资源管理器也会收到跨窗口刷新，保持其中的剪贴板列表同步。
-- 原有的重复内容提升和托盘复制反馈行为保持不变。
+- 打开前会先识别已经不可用的后台 Codex 任务，避免进入失败的聊天页面。
+- 新出现的 Agent 动态在保持可见一段时间后自动标记为已读，让未读提醒更准确，
+  不需要再次切换页面。
 
-## 设置精简
+## 剪贴板与官网预览
 
-- 从设置中移除没有实际价值的“列表密度”选项。
-- 同步删除对应的持久化状态和紧凑布局分支；剪贴板与资源库列表统一使用原先的舒展间距。
-
-## 稳定性
-
-- 新增捕获完成时序、主窗口刷新接线和资源管理器跨窗口更新的回归测试。
+- 紧凑剪贴板工具栏只保留搜索和筛选；监听入口保留在托盘菜单和设置中。
+- 官网剪贴板预览与桌面端使用相同的工具栏形状和分类数据模型，修正
+  `links`、`images`、`files`、`text` 分类。
+- 发布版和开发版都保持品牌名称与版本信息完整展示。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

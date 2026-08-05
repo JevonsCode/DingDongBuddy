@@ -36,26 +36,38 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    final AlertDialog dialog = tester.widget<AlertDialog>(
-      find.byType(AlertDialog),
-    );
+    final Dialog dialog = tester.widget<Dialog>(find.byType(Dialog));
     final RoundedRectangleBorder shape =
         dialog.shape! as RoundedRectangleBorder;
-    expect(shape.borderRadius, BorderRadius.circular(14));
-    expect(shape.side.style, BorderStyle.solid);
-    expect(dialog.elevation, 3);
-    expect(dialog.constraints?.maxWidth, 460);
-    expect(dialog.titlePadding, const EdgeInsets.fromLTRB(20, 18, 20, 0));
-    expect(dialog.titleTextStyle?.fontSize, 16);
-    expect(dialog.titleTextStyle?.fontWeight, FontWeight.w700);
-    expect(dialog.actionsPadding, const EdgeInsets.fromLTRB(14, 8, 14, 14));
+    expect(shape.borderRadius, BorderRadius.circular(18));
+    expect(shape.side, BorderSide.none);
+    expect(dialog.elevation, 12);
+
+    final ConstrainedBox frame = tester
+        .widgetList<ConstrainedBox>(find.byType(ConstrainedBox))
+        .singleWhere(
+          (ConstrainedBox box) =>
+              box.constraints.minWidth == 420 &&
+              box.constraints.maxWidth == 420,
+        );
+    expect(frame.constraints.maxHeight, greaterThan(240));
+
+    final Size cancelSize = tester.getSize(
+      find.widgetWithText(TextButton, 'Cancel'),
+    );
+    final Size deleteSize = tester.getSize(
+      find.widgetWithText(FilledButton, 'Delete'),
+    );
+    expect(cancelSize.width, closeTo(deleteSize.width, 0.01));
+    expect(cancelSize.height, 38);
+    expect(deleteSize.height, 38);
 
     final FilledButton delete = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Delete'),
     );
     expect(
       delete.style?.backgroundColor?.resolve(<WidgetState>{}),
-      Theme.of(tester.element(find.byType(AlertDialog))).colorScheme.error,
+      Theme.of(tester.element(find.byType(Dialog))).colorScheme.error,
     );
   });
 }

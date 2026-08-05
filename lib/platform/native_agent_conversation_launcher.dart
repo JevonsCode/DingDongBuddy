@@ -13,6 +13,7 @@ typedef AgentProcessStarter =
     });
 typedef AgentLauncherConfigurationLoader =
     Future<AgentLauncherConfiguration> Function();
+typedef CodexConversationOpenability = Future<bool> Function(String threadId);
 
 /// Opens only known Agent clients using identifiers captured from their hooks.
 final class NativeAgentConversationLauncher
@@ -22,6 +23,7 @@ final class NativeAgentConversationLauncher
     AgentUriOpener? uriOpener,
     AgentProcessStarter? processStarter,
     AgentLauncherConfigurationLoader? configurationLoader,
+    this.codexConversationOpenability,
   }) : _operatingSystem = operatingSystem ?? Platform.operatingSystem,
        _uriOpener = uriOpener ?? _openExternalUri,
        _processStarter = processStarter ?? _startDetached,
@@ -32,13 +34,15 @@ final class NativeAgentConversationLauncher
   final AgentUriOpener _uriOpener;
   final AgentProcessStarter _processStarter;
   final AgentLauncherConfigurationLoader _configurationLoader;
+  final CodexConversationOpenability? codexConversationOpenability;
+  final Map<String, bool> _codexOpenabilityCache = <String, bool>{};
 
   @override
   bool canOpen(AgentConversationTarget target) {
     final String? id = _safeConversationId(target.conversationId);
     final String? workspace = _safeWorkspacePath(target.workspacePath);
     return switch (target.client) {
-      AgentClient.codex => id != null,
+      AgentClient.codex => id != null && _codexOpenabilityCache[id] != false,
       AgentClient.claudeCode ||
       AgentClient.geminiCli => id != null && workspace != null,
       AgentClient.cursor =>
@@ -57,6 +61,10 @@ final class NativeAgentConversationLauncher
     final String? workspace = _safeWorkspacePath(target.workspacePath);
     switch (target.client) {
       case AgentClient.codex:
+        if (codexConversationOpenability != null &&
+            !await _isCodexConversationOpenable(id!)) {
+          throw StateError('This Codex thread is not a resumable user thread.');
+        }
         await _openUri(
           Uri(scheme: 'codex', host: 'threads', pathSegments: <String>[id!]),
         );
@@ -101,6 +109,16 @@ final class NativeAgentConversationLauncher
       case AgentClient.unknown:
         throw StateError('Unsupported Agent client.');
     }
+  }
+
+  Future<bool> _isCodexConversationOpenable(String threadId) async {
+    final bool? cached = _codexOpenabilityCache[threadId];
+    if (cached != null) {
+      return cached;
+    }
+    final bool result = await codexConversationOpenability!(threadId);
+    _codexOpenabilityCache[threadId] = result;
+    return result;
   }
 
   Future<void> _openUri(Uri uri) async {

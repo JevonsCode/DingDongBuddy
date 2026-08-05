@@ -67,6 +67,7 @@ void main() {
       expect(records, hasLength(1));
       expect(records.single.title, 'Example image');
       expect(records.single.kind, ClipboardKind.image);
+      expect(records.single.groupNames, <String>['Images']);
       expect(records.single.pinned, isTrue);
       expect(records.single.sensitive, isTrue);
       expect(records.single.createdAt, DateTime.utc(2026));

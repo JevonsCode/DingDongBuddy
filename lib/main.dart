@@ -14,6 +14,7 @@ import 'package:dingdong/features/activity/data/agent_launcher_configuration_sto
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
+import 'package:dingdong/features/agent_adapters/data/codex_thread_inspector.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -89,6 +90,13 @@ Future<void> main(List<String> arguments) async {
   }
 
   final AppDataPaths appDataPaths = AppDataPaths.current();
+  final String homeDirectory =
+      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
+  final CodexThreadInspector codexThreadInspector = CodexThreadInspector(
+    connectionFactory: NativeCodexAppServerConnectionFactory(
+      homeDirectory: homeDirectory,
+    ),
+  );
   final ShellController shellController = ShellController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
       MultiWindowClipboardPreviewLauncher();
@@ -206,6 +214,12 @@ Future<void> main(List<String> arguments) async {
     onShowSettings: () async {
       await shellGateway.hide();
       await settingsWindowLauncher.show();
+    },
+    onShowAbout: () async {
+      await shellGateway.hide();
+      await settingsWindowLauncher.show(
+        destination: SettingsWindowDestination.version,
+      );
     },
     onHideDockIcon: () => settingsViewModel.setHideDockIcon(true),
     onQuickPastePermissionGrantPresentationStarted:
@@ -345,6 +359,7 @@ Future<void> main(List<String> arguments) async {
       activityController: activityController,
       developmentBuild: appDataPaths.development,
       agentConversationLauncher: NativeAgentConversationLauncher(
+        codexConversationOpenability: codexThreadInspector.isOpenable,
         configurationLoader: FileAgentLauncherConfigurationStore(
           dependencies.paths.agentLaunchersFile,
         ).load,
@@ -670,6 +685,11 @@ Future<void> _runResourceManagerWindow(
   final DataRevisionBus dataRevisions = DataRevisionBus();
   final String homeDirectory =
       Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
+  final CodexThreadInspector codexThreadInspector = CodexThreadInspector(
+    connectionFactory: NativeCodexAppServerConnectionFactory(
+      homeDirectory: homeDirectory,
+    ),
+  );
   final AgentAdapterRepository agentAdapterRepository = AgentAdapterRepository(
     userDirectory: paths.agentAdaptersDirectory,
     historyDirectory: paths.agentAdapterHistoryDirectory,
@@ -746,6 +766,8 @@ Future<void> _runResourceManagerWindow(
   final String? editingResourceId = arguments['editingResourceId'] as String?;
   final ResourceManagerDestination initialDestination =
       ResourceManagerDestination.parse(arguments['destination']);
+  final ResourceManagerCreateRequest? createRequest =
+      ResourceManagerCreateRequest.fromJson(arguments['createRequest']);
   if (editingResourceId != null) {
     for (final resource in viewModel.allResources) {
       if (resource.id == editingResourceId) {
@@ -753,6 +775,13 @@ Future<void> _runResourceManagerWindow(
         break;
       }
     }
+  }
+  if (createRequest != null) {
+    viewModel.startCreating(
+      type: createRequest.type,
+      title: createRequest.title,
+      content: createRequest.content,
+    );
   }
   final settings = await SettingsRepository(SharedPreferencesBackend()).load();
   final ActivityController activityController =
@@ -789,7 +818,11 @@ Future<void> _runResourceManagerWindow(
       settings: settings,
       windowController: windowController,
       initialDestination: initialDestination,
+      resourceManagerLauncher: MultiWindowResourceManagerLauncher(
+        parentWindowId: parentWindowId ?? windowController.windowId,
+      ),
       agentConversationLauncher: NativeAgentConversationLauncher(
+        codexConversationOpenability: codexThreadInspector.isOpenable,
         configurationLoader: FileAgentLauncherConfigurationStore(
           paths.agentLaunchersFile,
         ).load,

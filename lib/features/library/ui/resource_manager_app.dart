@@ -35,6 +35,7 @@ class ResourceManagerApp extends StatefulWidget {
     required this.windowController,
     this.agentAdapterController,
     this.initialDestination = ResourceManagerDestination.resources,
+    this.resourceManagerLauncher,
     this.agentConversationLauncher,
     this.desktopContextMenuGateway,
     this.onLoadHostIssues,
@@ -50,6 +51,7 @@ class ResourceManagerApp extends StatefulWidget {
   final AppSettings settings;
   final WindowController windowController;
   final ResourceManagerDestination initialDestination;
+  final ResourceManagerLauncher? resourceManagerLauncher;
   final AgentConversationLauncher? agentConversationLauncher;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final Future<List<AppIssue>> Function()? onLoadHostIssues;
@@ -94,6 +96,18 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
                 : null;
             if (id != null) {
               _selectResource(id);
+            }
+          case 'create_resource':
+            final ResourceManagerCreateRequest? request =
+                ResourceManagerCreateRequest.fromJson(call.arguments);
+            if (request != null) {
+              await widget.viewModel.load();
+              _selectDestination(ResourceManagerDestination.resources);
+              widget.viewModel.startCreating(
+                type: request.type,
+                title: request.title,
+                content: request.content,
+              );
             }
           default:
             return;
@@ -212,6 +226,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
                         ClipboardManagerScreen(
                           viewModel: widget.clipboardViewModel,
                           contextMenuGateway: widget.desktopContextMenuGateway,
+                          resourceManagerLauncher:
+                              widget.resourceManagerLauncher,
                         ),
                       ResourceManagerDestination.recentAgents =>
                         AgentActivityManagerScreen(

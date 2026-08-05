@@ -231,6 +231,12 @@ void main() {
     final Finder brand = find.byKey(const Key('popup-brand-sound'));
     final Finder version = find.byKey(const Key('popup-app-version'));
     expect(
+      tester
+          .getSize(find.descendant(of: brand, matching: find.text('DingDong')))
+          .width,
+      greaterThanOrEqualTo(86),
+    );
+    expect(
       find.descendant(of: brand, matching: find.byType(Tooltip)),
       findsNothing,
     );
@@ -582,7 +588,7 @@ description: Use when product decisions should follow saved preferences.
     expect((card.center.dy - content.center.dy).abs(), lessThanOrEqualTo(1));
   });
 
-  testWidgets('MCP resource cards use the orange-red accent', (
+  testWidgets('MCP resource cards use a calm green surface and accent', (
     WidgetTester tester,
   ) async {
     final ShellController controller = ShellController(initialIndex: 1);
@@ -608,7 +614,16 @@ description: Use when product decisions should follow saved preferences.
     final PopupSymbolIcon icon = tester.widget<PopupSymbolIcon>(
       find.byKey(const Key('resource-card-type-mcp-resource')),
     );
-    expect(icon.color, PopupStyle.mcp);
+    expect(icon.color, PopupStyle.mcpAccent(Brightness.light));
+    final Container card = tester.widget<Container>(
+      find.byKey(const Key('resource-card-mcp-resource')),
+    );
+    final BoxDecoration cardDecoration = card.decoration! as BoxDecoration;
+    expect(cardDecoration.color, PopupStyle.mcpSurface(Brightness.light));
+    expect(
+      cardDecoration.border!.top.color,
+      PopupStyle.mcpBorder(Brightness.light),
+    );
     expect(find.text('STDIO · npx local-mcp'), findsOneWidget);
     final Finder tags = find.byKey(
       const Key('resource-card-tags-mcp-resource'),
@@ -621,6 +636,43 @@ description: Use when product decisions should follow saved preferences.
       find.descendant(of: tags, matching: find.text('STDIO')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('enabled MCP cards reuse the global MCP color token', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 8, 5);
+    await tester.pumpWidget(
+      DingDongApp(
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'enabled-mcp',
+            type: ResourceType.mcp,
+            title: 'Enabled MCP',
+            content: 'npx enabled-mcp',
+            enabled: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Container card = tester.widget<Container>(
+      find.byKey(const Key('today-enabled-enabled-mcp')),
+    );
+    final BoxDecoration decoration = card.decoration! as BoxDecoration;
+    expect(decoration.color, PopupStyle.mcpSurface(Brightness.light));
+    final PopupSymbolIcon icon = tester.widget<PopupSymbolIcon>(
+      find
+          .descendant(
+            of: find.byKey(const Key('today-enabled-enabled-mcp')),
+            matching: find.byType(PopupSymbolIcon),
+          )
+          .first,
+    );
+    expect(icon.color, PopupStyle.mcpAccent(Brightness.light));
   });
 
   testWidgets('enabled resources can be edited or disabled by right click', (
@@ -722,12 +774,23 @@ description: Use when product decisions should follow saved preferences.
     expect(events, <String>['hide', 'settings']);
   });
 
+  testWidgets('about stays out of the compact popup header', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(DingDongApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('popup-open-settings')), findsOneWidget);
+    expect(find.byKey(const Key('popup-open-about')), findsNothing);
+    expect(find.byKey(const Key('popup-hide')), findsOneWidget);
+  });
+
   testWidgets(
     'version shows a restrained dot only when an update is available',
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.0.2'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.0.3'),
       );
       addTearDown(settings.dispose);
       await settings.load();
@@ -746,7 +809,7 @@ description: Use when product decisions should follow saved preferences.
       expect(tester.getSize(updateDot), const Size.square(5));
       final BoxDecoration decoration =
           tester.widget<Container>(updateDot).decoration! as BoxDecoration;
-      expect(decoration.color, PopupStyle.mcp);
+      expect(decoration.color, PopupStyle.development);
       expect(decoration.shape, BoxShape.circle);
     },
   );
@@ -1572,7 +1635,7 @@ description: Use when product decisions should follow saved preferences.
 
     final Finder issueButton = find.byKey(const Key('popup-issues'));
     expect(issueButton, findsOneWidget);
-    expect(tester.getSize(issueButton), const Size.square(32));
+    expect(tester.getSize(issueButton), const Size.square(30));
     expect(find.byKey(const Key('popup-issue-count')), findsOneWidget);
 
     await tester.tap(issueButton);
@@ -1617,6 +1680,7 @@ final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
   @override
   Future<void> show({
     String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
   }) async {

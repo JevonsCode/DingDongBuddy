@@ -10,6 +10,7 @@ enum DesktopShellCommand {
   focusClipboardSearch,
   showResourceManager,
   showSettings,
+  showAbout,
   hideDockIcon,
   startClipboardMonitoring,
   stopClipboardMonitoring,

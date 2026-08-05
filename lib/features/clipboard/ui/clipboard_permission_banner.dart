@@ -141,22 +141,43 @@ class _ClipboardPermissionSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color background = isDark
+        ? const Color(0xFF302A1C)
+        : const Color(0xFFFFF5D9);
+    final Color iconSurface = isDark
+        ? const Color(0xFF463A20)
+        : const Color(0xFFFFE9AF);
+    final Color accent = isDark
+        ? const Color(0xFFF0CA79)
+        : const Color(0xFF8A642A);
+    final Color foreground = isDark
+        ? const Color(0xFFF3E7C9)
+        : const Color(0xFF60481F);
+    final Color actionForeground = isDark
+        ? const Color(0xFF2E2414)
+        : Colors.white;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.fromLTRB(10, 7, 6, 7),
+      key: const Key('clipboard-permission-surface'),
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: const EdgeInsets.fromLTRB(10, 9, 9, 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5DF),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE7C77E)),
+        color: background,
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: <Widget>[
-          const Icon(
-            Icons.lock_outline_rounded,
-            size: 16,
-            color: Color(0xFF8A6420),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: iconSurface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Icons.lock_outline_rounded, size: 16, color: accent),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 9),
           Expanded(
             child: Text(
               context.localized(
@@ -164,12 +185,13 @@ class _ClipboardPermissionSurface extends StatelessWidget {
                 '快捷粘贴需要辅助功能权限。',
               ),
               style: const TextStyle(
-                color: Color(0xFF76571F),
-                fontSize: 10,
+                fontSize: 11.5,
+                height: 1.2,
                 fontWeight: FontWeight.w600,
-              ),
+              ).copyWith(color: foreground),
             ),
           ),
+          const SizedBox(width: 8),
           DesktopActionButton(
             key: interactive
                 ? const Key('clipboard-open-permission-settings')
@@ -179,7 +201,17 @@ class _ClipboardPermissionSurface extends StatelessWidget {
                 : null,
             label: context.localized('Open settings', '前往开启'),
             compact: true,
+            minWidth: 84,
+            height: 32,
             tone: DesktopActionTone.soft,
+            style: DesktopActionButton.styleFrom(
+              foregroundColor: actionForeground,
+              backgroundColor: accent,
+              padding: const EdgeInsets.symmetric(horizontal: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
         ],
       ),

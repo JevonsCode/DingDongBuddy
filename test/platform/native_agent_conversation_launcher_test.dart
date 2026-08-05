@@ -28,6 +28,42 @@ void main() {
     },
   );
 
+  test(
+    'Codex background thread is blocked before opening its deep link',
+    () async {
+      bool opened = false;
+      final NativeAgentConversationLauncher launcher =
+          NativeAgentConversationLauncher(
+            operatingSystem: 'macos',
+            uriOpener: (Uri _) async {
+              opened = true;
+              return true;
+            },
+            codexConversationOpenability: (_) async => false,
+          );
+
+      await expectLater(
+        launcher.open(
+          const AgentConversationTarget(
+            client: AgentClient.codex,
+            conversationId: 'subagent-thread-1',
+          ),
+        ),
+        throwsStateError,
+      );
+      expect(opened, isFalse);
+      expect(
+        launcher.canOpen(
+          const AgentConversationTarget(
+            client: AgentClient.codex,
+            conversationId: 'subagent-thread-1',
+          ),
+        ),
+        isFalse,
+      );
+    },
+  );
+
   test('Kiro session resumes in a terminal from its workspace', () async {
     String? executable;
     List<String>? arguments;

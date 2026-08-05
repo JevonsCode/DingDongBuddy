@@ -254,15 +254,21 @@ final class ClipboardRepository implements ClipboardStore {
     if (trimmed.isEmpty) {
       return const <String>[];
     }
+    // Releases before the multi-group migration stored one group as a plain
+    // string. Keep those records visible instead of treating them as empty.
+    if (!trimmed.startsWith('[')) {
+      return <String>[trimmed];
+    }
     try {
       final Object? decoded = jsonDecode(trimmed);
       if (decoded is List<Object?>) {
         return _uniqueGroups(decoded.whereType<String>());
       }
     } on FormatException {
-      return const <String>[];
+      // Preserve malformed legacy values as one ordinary group.
+      return <String>[trimmed];
     }
-    return const <String>[];
+    return <String>[trimmed];
   }
 
   static String _encodeGroups(List<String> values) {

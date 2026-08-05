@@ -167,18 +167,17 @@ extension _ClipboardActions on _ClipboardScreenState {
   }
 
   Future<void> _promote(BuildContext context, ResourceType type) async {
-    final Resource? resource = await viewModel.promoteSelected(type);
-    if (resource != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.localized(
-              'Saved “${resource.title}” to ${type.defaultGroup}.',
-              '已将“${resource.title}”保存到${_typeLabel(context, type)}。',
-            ),
-          ),
-        ),
-      );
+    final ResourceManagerLauncher? launcher = resourceManagerLauncher;
+    final ClipboardRecord? selected = viewModel.selectedRecord;
+    if (launcher == null || selected == null || !type.isLibraryResource) {
+      return;
     }
+    await launcher.show(
+      createRequest: ResourceManagerCreateRequest(
+        type: type,
+        title: selected.title.trim().isEmpty ? null : selected.title,
+        content: selected.content,
+      ),
+    );
   }
 }

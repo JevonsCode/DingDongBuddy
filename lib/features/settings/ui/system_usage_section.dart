@@ -114,7 +114,6 @@ class _SystemUsageSectionState extends State<SystemUsageSection> {
                       : const Icon(Icons.delete_outline_rounded, size: 18),
                   label: context.localized('Clear selected', '清除所选'),
                   tone: DesktopActionTone.danger,
-                  filled: false,
                 ),
               ),
             ],

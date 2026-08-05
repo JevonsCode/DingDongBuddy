@@ -35,6 +35,7 @@ final class ActivityController extends ChangeNotifier {
   List<AgentActivity> _activities = const <AgentActivity>[];
   List<DateTime> _completionTimes = const <DateTime>[];
   int _revealRevision = 0;
+  bool _revealActive = false;
   int _maxItems;
   int _countWindowHours;
   bool _groupRepeatedAgentSessions;
@@ -58,6 +59,7 @@ final class ActivityController extends ChangeNotifier {
   }
 
   int get revealRevision => _revealRevision;
+  bool get revealActive => _revealActive;
   int get maxItems => _maxItems;
   int get countWindowHours => _countWindowHours;
   bool get rememberAcrossRestarts => _rememberAcrossRestarts;
@@ -287,16 +289,19 @@ final class ActivityController extends ChangeNotifier {
       return;
     }
     _revealRevision += 1;
+    _revealActive = true;
     notifyListeners();
   }
 
   void markAllSeen() {
     if (unseenCount == 0) {
+      _revealActive = false;
       return;
     }
     _activities = _activities
         .map((AgentActivity item) => item.unseen ? item.seen() : item)
         .toList(growable: false);
+    _revealActive = false;
     _persist();
     notifyListeners();
   }
@@ -305,6 +310,7 @@ final class ActivityController extends ChangeNotifier {
     _recentCountTimer?.cancel();
     _activities = const <AgentActivity>[];
     _completionTimes = const <DateTime>[];
+    _revealActive = false;
     _loaded = true;
     _store.clear();
     notifyListeners();

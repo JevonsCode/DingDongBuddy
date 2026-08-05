@@ -18,7 +18,6 @@ class DesktopActionButton extends StatelessWidget {
     this.minWidth = 0,
     this.height,
     this.style,
-    this.filled,
     Key? key,
   }) : _buttonKey = key,
        assert(label != null || child != null),
@@ -35,7 +34,6 @@ class DesktopActionButton extends StatelessWidget {
   final double minWidth;
   final double? height;
   final ButtonStyle? style;
-  final bool? filled;
 
   /// Style helper for custom flat selector rows that still use the shared
   /// button surface and no-halo interaction contract.
@@ -74,27 +72,28 @@ class DesktopActionButton extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final _DesktopActionPalette palette = _palette(colors, tone);
     final bool enabled = onPressed != null;
+    final double resolvedHeight =
+        height ??
+        style?.minimumSize?.resolve(const <WidgetState>{})?.height ??
+        (compact ? 32 : 36);
     final ButtonStyle baseStyle = ButtonStyle(
       animationDuration: Duration.zero,
       splashFactory: NoSplash.splashFactory,
       overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
       elevation: const WidgetStatePropertyAll<double>(0),
-      minimumSize: WidgetStatePropertyAll<Size>(
-        Size(minWidth, height ?? (compact ? 32 : 36)),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.standard,
+      minimumSize: WidgetStatePropertyAll<Size>(Size(minWidth, resolvedHeight)),
+      maximumSize: WidgetStatePropertyAll<Size>(
+        Size(double.infinity, resolvedHeight),
       ),
       padding: WidgetStatePropertyAll<EdgeInsetsGeometry>(
         EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
       ),
       shape: WidgetStatePropertyAll<OutlinedBorder>(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      side: WidgetStatePropertyAll<BorderSide>(
-        BorderSide(
-          color: enabled
-              ? palette.border
-              : palette.border.withValues(alpha: 0.4),
-        ),
-      ),
+      side: const WidgetStatePropertyAll<BorderSide>(BorderSide.none),
       foregroundColor: WidgetStatePropertyAll<Color>(
         enabled ? palette.foreground : palette.disabledForeground,
       ),
@@ -115,8 +114,10 @@ class DesktopActionButton extends StatelessWidget {
       ),
     );
     final Widget labelWidget = switch (label) {
-      final String value => Text(value),
-      final Widget value => value,
+      final String value => Flexible(
+        child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+      final Widget value => Flexible(child: value),
       _ => const SizedBox.shrink(),
     };
     final Widget buttonChild = child == null
@@ -158,22 +159,15 @@ class DesktopActionButton extends StatelessWidget {
     // style must therefore be the receiver, otherwise custom tab/selector
     // surfaces silently lose their foreground, background, border and size.
     final ButtonStyle resolvedStyle = style?.merge(baseStyle) ?? baseStyle;
-    final bool useFilled =
-        filled ??
-        (tone == DesktopActionTone.primary || tone == DesktopActionTone.danger);
-    return useFilled
-        ? FilledButton(
-            key: _buttonKey,
-            onPressed: onPressed,
-            style: resolvedStyle,
-            child: buttonChild,
-          )
-        : OutlinedButton(
-            key: _buttonKey,
-            onPressed: onPressed,
-            style: resolvedStyle,
-            child: buttonChild,
-          );
+    return SizedBox(
+      height: resolvedHeight,
+      child: FilledButton(
+        key: _buttonKey,
+        onPressed: onPressed,
+        style: resolvedStyle,
+        child: buttonChild,
+      ),
+    );
   }
 }
 
@@ -196,7 +190,6 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
         colors.onPrimary.withValues(alpha: 0.14),
         colors.primary,
       ),
-      border: colors.primary,
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
@@ -205,16 +198,14 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
       background: colors.primary.withValues(alpha: 0.1),
       hovered: colors.primary.withValues(alpha: 0.15),
       pressed: colors.primary.withValues(alpha: 0.2),
-      border: colors.primary.withValues(alpha: 0.24),
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
     DesktopActionTone.neutral => _DesktopActionPalette(
       foreground: colors.onSurfaceVariant,
-      background: colors.surfaceContainerLow,
-      hovered: colors.surfaceContainerHigh,
+      background: colors.surfaceContainerHigh.withValues(alpha: 0.74),
+      hovered: colors.surfaceContainerHighest,
       pressed: colors.surfaceContainerHighest,
-      border: colors.outlineVariant,
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
@@ -229,7 +220,6 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
         colors.onError.withValues(alpha: 0.14),
         colors.error,
       ),
-      border: colors.error,
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
@@ -242,7 +232,6 @@ final class _DesktopActionPalette {
     required this.background,
     required this.hovered,
     required this.pressed,
-    required this.border,
     required this.disabledForeground,
     required this.disabledBackground,
   });
@@ -251,7 +240,6 @@ final class _DesktopActionPalette {
   final Color background;
   final Color hovered;
   final Color pressed;
-  final Color border;
   final Color disabledForeground;
   final Color disabledBackground;
 }

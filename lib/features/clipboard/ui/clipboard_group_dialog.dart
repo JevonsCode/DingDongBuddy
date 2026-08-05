@@ -57,189 +57,131 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
               needle.isEmpty || group.toLowerCase().contains(needle),
         )
         .toList(growable: false);
-    return DesktopDialogTheme(
-      child: Dialog(
-        key: const Key('clipboard-group-dialog'),
-        elevation: 3,
-        backgroundColor: colors.surfaceContainerLowest,
-        surfaceTintColor: Colors.transparent,
-        insetPadding: DesktopDialogStyle.insetPadding,
-        clipBehavior: Clip.antiAlias,
-        shape: DesktopDialogStyle.shape(colors),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 19, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  context.localized('Add to groups', '归档到分组'),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  context.localized(
-                    'One clipboard item can belong to several groups.',
-                    '一个剪贴板条目可以同时属于多个分组。',
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                if (groups.isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 16),
-                  Text(
-                    context.localized('Existing groups', '已有分组'),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  if (groups.length > 5) ...<Widget>[
-                    DesktopSearchField(
-                      key: const Key('clipboard-group-search'),
-                      controller: _searchController,
-                      autofocus: true,
-                      onChanged: (String value) =>
-                          setState(() => _query = value),
-                      hintText: context.localized('Search groups', '搜索分组'),
-                      clearTooltip: context.localized('Clear search', '清除搜索'),
-                    ),
-                    const SizedBox(height: 7),
-                  ],
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 190),
-                    child: visibleGroups.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Text(
-                              context.localized(
-                                'No matching groups',
-                                '没有匹配的分组',
-                              ),
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: colors.onSurfaceVariant),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: visibleGroups.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              final String group = visibleGroups[index];
-                              final bool selected = _selected.contains(group);
-                              return Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: index == visibleGroups.length - 1
-                                      ? 0
-                                      : 5,
-                                ),
-                                child: Material(
-                                  key: ValueKey<String>(
-                                    'clipboard-group-$group',
-                                  ),
-                                  color: selected
-                                      ? colors.primary.withValues(alpha: 0.08)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(5),
-                                    onTap: () => setState(() {
-                                      selected
-                                          ? _selected.remove(group)
-                                          : _selected.add(group);
-                                    }),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 9,
-                                      ),
-                                      child: Row(
-                                        children: <Widget>[
-                                          Icon(
-                                            Icons.folder_outlined,
-                                            size: 16,
-                                            color: selected
-                                                ? colors.primary
-                                                : colors.onSurfaceVariant,
-                                          ),
-                                          const SizedBox(width: 9),
-                                          Expanded(
-                                            child: Text(
-                                              group,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight: selected
-                                                        ? FontWeight.w600
-                                                        : FontWeight.w500,
-                                                  ),
-                                            ),
-                                          ),
-                                          SelectionMark(
-                                            selected: selected,
-                                            size: 17,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
-                const SizedBox(height: 15),
-                Text(
-                  context.localized('Create another group', '新建分组'),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                DesktopTextField(
-                  key: const Key('clipboard-new-group'),
-                  controller: _newGroupController,
-                  autofocus: groups.isEmpty,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    hintText: context.localized(
-                      'e.g. Project drafts',
-                      '例如：项目草稿',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    DesktopActionButton(
-                      onPressed: () => Navigator.pop(context),
-                      label: context.localized('Cancel', '取消'),
-                      compact: true,
-                    ),
-                    const SizedBox(width: 8),
-                    DesktopActionButton(
-                      key: const Key('clipboard-save-groups'),
-                      onPressed: _submit,
-                      label: context.localized('Add to groups', '加入分组'),
-                      tone: DesktopActionTone.primary,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+
+    return DesktopDialogFrame(
+      dialogKey: const Key('clipboard-group-dialog'),
+      width: 500,
+      maxHeight: 640,
+      header: DesktopDialogHeader(
+        leading: _DialogSymbol(
+          icon: Icons.folder_open_rounded,
+          color: colors.primary,
+        ),
+        title: Text(context.localized('Archive to groups', '归档到分组')),
+        subtitle: Text(
+          context.localized(
+            'Keep this item easy to find across multiple groups.',
+            '一个条目可以同时归档到多个分组，方便之后查找。',
           ),
         ),
+        closeTooltip: context.localized('Close', '关闭'),
+        onClose: () => Navigator.pop(context),
+      ),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          if (groups.isNotEmpty) ...<Widget>[
+            _DialogSectionLabel(
+              title: context.localized('Groups', '选择分组'),
+              trailing: _selected.isEmpty
+                  ? context.localized('Optional', '可多选')
+                  : context.localized(
+                      '${_selected.length} selected',
+                      '已选 ${_selected.length} 个',
+                    ),
+            ),
+            const SizedBox(height: 8),
+            if (groups.length > 5) ...<Widget>[
+              DesktopSearchField(
+                key: const Key('clipboard-group-search'),
+                controller: _searchController,
+                autofocus: true,
+                height: 36,
+                borderRadius: 8,
+                backgroundColor: colors.surfaceContainerLow,
+                borderColor: colors.outlineVariant,
+                focusBorderColor: colors.primary,
+                onChanged: (String value) => setState(() => _query = value),
+                hintText: context.localized('Search groups', '搜索分组'),
+                clearTooltip: context.localized('Clear search', '清除搜索'),
+              ),
+              const SizedBox(height: 8),
+            ],
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 168),
+              child: visibleGroups.isEmpty
+                  ? _NoMatchingGroups()
+                  : ListView.separated(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: visibleGroups.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 6),
+                      itemBuilder: (BuildContext context, int index) {
+                        final String group = visibleGroups[index];
+                        return _GroupOption(
+                          key: ValueKey<String>('clipboard-group-$group'),
+                          group: group,
+                          selected: _selected.contains(group),
+                          onTap: () => setState(() {
+                            if (_selected.contains(group)) {
+                              _selected.remove(group);
+                            } else {
+                              _selected.add(group);
+                            }
+                          }),
+                        );
+                      },
+                    ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          _DialogSectionLabel(
+            title: context.localized('New group', '新建分组'),
+            trailing: context.localized('Optional', '可选'),
+          ),
+          const SizedBox(height: 8),
+          DesktopTextField(
+            key: const Key('clipboard-new-group'),
+            controller: _newGroupController,
+            autofocus: groups.isEmpty,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              hintText: context.localized('e.g. Project drafts', '例如：项目草稿'),
+              prefixIcon: Icon(
+                Icons.add_rounded,
+                size: 18,
+                color: colors.onSurfaceVariant,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 42,
+                minHeight: 42,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 11,
+              ),
+            ),
+          ),
+        ],
+      ),
+      footer: DesktopDialogFooter(
+        actions: <Widget>[
+          DesktopActionButton(
+            height: 36,
+            onPressed: () => Navigator.pop(context),
+            label: context.localized('Cancel', '取消'),
+            tone: DesktopActionTone.neutral,
+          ),
+          DesktopActionButton(
+            key: const Key('clipboard-save-groups'),
+            height: 36,
+            onPressed: _submit,
+            label: context.localized('Add to groups', '加入分组'),
+            tone: DesktopActionTone.primary,
+          ),
+        ],
       ),
     );
   }
@@ -250,5 +192,152 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
       _selected.add(newGroup);
     }
     Navigator.pop(context, Set<String>.unmodifiable(_selected));
+  }
+}
+
+class _DialogSymbol extends StatelessWidget {
+  const _DialogSymbol({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Icon(icon, size: 18, color: color),
+    );
+  }
+}
+
+class _DialogSectionLabel extends StatelessWidget {
+  const _DialogSectionLabel({required this.title, required this.trailing});
+
+  final String title;
+  final String trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: colors.onSurface,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ),
+        Text(
+          trailing,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: colors.onSurfaceVariant,
+            fontSize: 10.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GroupOption extends StatelessWidget {
+  const _GroupOption({
+    required this.group,
+    required this.selected,
+    required this.onTap,
+    super.key,
+  });
+
+  final String group;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Material(
+      color: selected
+          ? colors.primary.withValues(alpha: 0.11)
+          : colors.surfaceContainerLow.withValues(alpha: 0.72),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.focused)) {
+            return colors.primary.withValues(alpha: 0.055);
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return colors.primary.withValues(alpha: 0.09);
+          }
+          return Colors.transparent;
+        }),
+        child: SizedBox(
+          height: 46,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.folder_outlined,
+                  size: 18,
+                  color: selected ? colors.primary : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    group,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 12.5,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                SelectionMark(selected: selected, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NoMatchingGroups extends StatelessWidget {
+  const _NoMatchingGroups();
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Container(
+      height: 62,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow.withValues(alpha: 0.52),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        context.localized('No matching groups', '没有匹配的分组'),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: colors.onSurfaceVariant,
+          fontSize: 11,
+        ),
+      ),
+    );
   }
 }

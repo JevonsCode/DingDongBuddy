@@ -1,5 +1,6 @@
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
@@ -9,6 +10,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -261,9 +263,43 @@ void main() {
 
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete').last);
     await tester.pumpAndSettle();
     expect(store.list(limit: 100), isEmpty);
+  });
+
+  testWidgets('save as prompt opens the resource editor with a draft', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 7, 16);
+    final ClipboardRecord record = _record('prompt-item', now);
+    final InMemoryClipboardStore store = InMemoryClipboardStore(
+      <ClipboardRecord>[record],
+    );
+    final _FakeResourceManagerLauncher launcher =
+        _FakeResourceManagerLauncher();
+    final ClipboardViewModel model = ClipboardViewModel(store)..load();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardManagerScreen(
+          viewModel: model,
+          resourceManagerLauncher: launcher,
+        ),
+      ),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('clipboard-manager-row-prompt-item')),
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save as prompt'));
+    await tester.pumpAndSettle();
+
+    expect(store.list(limit: 100), hasLength(1));
+    expect(launcher.lastCreateRequest?.type, ResourceType.prompt);
+    expect(launcher.lastCreateRequest?.title, record.title);
+    expect(launcher.lastCreateRequest?.content, record.content);
   });
 
   testWidgets('manager context menu opens beside the mouse pointer', (
@@ -475,6 +511,20 @@ ClipboardRecord _record(
   createdAt: now,
   updatedAt: now,
 );
+
+final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
+  ResourceManagerCreateRequest? lastCreateRequest;
+
+  @override
+  Future<void> show({
+    String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+  }) async {
+    lastCreateRequest = createRequest;
+  }
+}
 
 final class _FakeManagerContextMenuGateway
     implements DesktopContextMenuGateway {

@@ -22,13 +22,13 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1.0.2'), findsOneWidget);
+    expect(find.text('1.0.3'), findsOneWidget);
     expect(find.text('A new version is available'), findsOneWidget);
     expect(find.textContaining('Faster history search'), findsOneWidget);
     expect(find.byKey(const Key('settings-report-problem')), findsOneWidget);
     expect(find.byKey(const Key('settings-request-feature')), findsOneWidget);
-    expect(find.byType(OutlinedButton), findsNWidgets(5));
-    expect(find.byType(FilledButton), findsNothing);
+    expect(find.byType(FilledButton), findsNWidgets(5));
+    expect(find.byType(OutlinedButton), findsNothing);
   });
 
   testWidgets('current release does not repeat its historical notes', (
@@ -83,8 +83,17 @@ void main() {
       find.textContaining('grant DingDong\'s macOS permissions again'),
       findsOneWidget,
     );
-    expect(find.text('Update to 1.0.2'), findsOneWidget);
-    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.text('Update to 1.0.3'), findsOneWidget);
+    expect(find.byType(FilledButton), findsNWidgets(6));
+    final FilledButton installButton = tester.widget<FilledButton>(
+      find.byKey(const Key('settings-install-update')),
+    );
+    expect(
+      installButton.style?.backgroundColor?.resolve(const <WidgetState>{}),
+      Theme.of(tester.element(find.byType(ReleaseSettingsSection)))
+          .colorScheme
+          .primary,
+    );
 
     await tester.tap(find.byKey(const Key('settings-install-update')));
     await tester.pumpAndSettle();
@@ -143,7 +152,7 @@ final class _ApplicationUpdater implements ApplicationUpdater {
 
 final class _ReleaseSource implements ReleaseMetadataSource {
   const _ReleaseSource({
-    this.latestVersion = '1.0.2',
+    this.latestVersion = '1.0.3',
     this.notes = const <String>['Faster history search'],
   });
 
@@ -155,7 +164,7 @@ final class _ReleaseSource implements ReleaseMetadataSource {
     app: 'DingDong',
     latestVersion: latestVersion,
     website: Uri.parse('https://example.com'),
-    releasePage: Uri.parse('https://example.com/releases/1.0.2'),
+    releasePage: Uri.parse('https://example.com/releases/1.0.3'),
     notes: notes,
   );
 }

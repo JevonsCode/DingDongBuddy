@@ -31,11 +31,12 @@ final class MultiWindowResourceManagerLauncher
   @override
   Future<void> show({
     String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
   }) async {
     final ResourceManagerDestination resolvedDestination =
-        editingResourceId == null
+        editingResourceId == null && createRequest == null
         ? destination
         : ResourceManagerDestination.resources;
     final List<WindowController> windows = await WindowController.getAll();
@@ -52,6 +53,12 @@ final class MultiWindowResourceManagerLauncher
             'id': editingResourceId,
           });
         }
+        if (createRequest != null) {
+          await controller.invokeMethod<void>(
+            'create_resource',
+            createRequest.toJson(),
+          );
+        }
         return;
       }
     }
@@ -63,6 +70,9 @@ final class MultiWindowResourceManagerLauncher
     };
     if (editingResourceId != null) {
       arguments['editingResourceId'] = editingResourceId;
+    }
+    if (createRequest != null) {
+      arguments['createRequest'] = createRequest.toJson();
     }
     await WindowController.create(
       WindowConfiguration(
