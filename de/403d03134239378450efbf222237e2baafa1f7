@@ -1,0 +1,154 @@
+test/contract/mcp_contract_test.dart
+  s_205892456ea76b::t_5b22af1a422d9e 33-34,88
+README.zh.md
+  s_bd21fdca5bc16f::t_56653eed42391e 57
+docs/release-notes.md
+  s_bd21fdca5bc16f::t_5101534c920a42 1,3-4,8-15,17,19-22,24-30,34,38-46,48,50-51
+lib/features/activity/domain/agent_conversation_target.dart
+  s_bd21fdca5bc16f::t_5f4934a25b6dd8 91-105,118
+  s_bd21fdca5bc16f::t_f0787ab8404907 1-2,115
+lib/features/activity/ui/agent_activity_manager_screen.dart
+  s_bd21fdca5bc16f::t_266a64f8f6664d 9,177-180,263-275
+  s_bd21fdca5bc16f::t_0490a3f78c565a 291-298
+  s_bd21fdca5bc16f::t_f0787ab8404907 29-32
+test/features/settings/release_settings_section_test.dart
+  s_bd21fdca5bc16f::t_5833b3fbc92662 25,86,155,167
+test/features/shell/popup_shell_test.dart
+  s_bd21fdca5bc16f::t_5833b3fbc92662 793
+test/platform/native_agent_conversation_launcher_test.dart
+  s_bd21fdca5bc16f::t_5d72ca70dc0111 47-56,79-101
+  s_bd21fdca5bc16f::t_3ea0ac45848ba4 118,121,123,128
+  s_bd21fdca5bc16f::t_36281b10630bba 1-2
+  s_bd21fdca5bc16f::t_fbecccf48eb5a5 103-117,119-120,122,124-127
+lib/features/activity/ui/agent_subagent_badge.dart
+  s_bd21fdca5bc16f::t_266a64f8f6664d 1-25,27-57
+  s_bd21fdca5bc16f::t_0490a3f78c565a 58-92
+  s_bd21fdca5bc16f::t_fbecccf48eb5a5 26
+test/features/clipboard/clipboard_view_model_test.dart
+  s_bd21fdca5bc16f::t_9d77a6b8630945 487-502,507-530,534-540
+  s_bd21fdca5bc16f::t_595d9adde70951 503-506,531-533
+test/features/settings/settings_view_model_test.dart
+  s_bd21fdca5bc16f::t_5833b3fbc92662 377,380
+  s_bd21fdca5bc16f::t_56653eed42391e 378
+  s_bd21fdca5bc16f::t_1cbb1fa7fdbcff 396,400,683
+lib/features/clipboard/ui/clipboard_view_model.dart
+  s_bd21fdca5bc16f::t_595d9adde70951 373
+  s_bd21fdca5bc16f::t_050a41fc66530a 125-154,156-160,163,182-184,351,356,363,368,375,386,731
+  s_bd21fdca5bc16f::t_d04cb8755873f7 501-502
+lib/features/agent_api/data/agent_bridge.dart
+  s_205892456ea76b::t_72d708580931c4 134-144
+  s_205892456ea76b::t_8a4d4ae8d8a9bf 145-146,185,191-193,573-585
+  s_205892456ea76b::t_f9ce6c0218acb8 147,186-190
+windows/runner/Runner.rc
+  s_bd21fdca5bc16f::t_56653eed42391e 72
+lib/features/agent_adapters/data/codex_completion_hook_gateway.dart
+  s_bd21fdca5bc16f::t_56653eed42391e 119
+docs/product/manual-regression.md
+  s_bd21fdca5bc16f::t_56653eed42391e 1,275-276
+docs/index.html
+  s_bd21fdca5bc16f::t_c6e3c2387625f7 79,212,472,477,479,485,487,493,657,763,765,767,850,956,958,960,1015,1060
+lib/platform/native_agent_conversation_launcher.dart
+  s_bd21fdca5bc16f::t_a5a51ba5b12752 214
+  s_bd21fdca5bc16f::t_c531c5695c83a6 244-246
+  s_bd21fdca5bc16f::t_dad91b6f2513cd 48,90,155
+  s_bd21fdca5bc16f::t_52c1bbafdbaa9b 21-24,36,49,51,63-64,75-83,91-92,107-125,156-157,239-243,260-269
+  s_bd21fdca5bc16f::t_f0787ab8404907 6,52-53,84-89,93-95,104-105,143-145,212-213,215-228,230-235,248-249
+  s_bd21fdca5bc16f::t_ae40399195bdee 27,60-61,65,96-103
+  s_bd21fdca5bc16f::t_36281b10630bba 1,229
+  s_bd21fdca5bc16f::t_e4d053607d87f2 62
+docs/dingdong-release.json
+  s_bd21fdca5bc16f::t_5101534c920a42 3-5,11,15,21
+test/packaging/desktop_identity_test.dart
+  s_bd21fdca5bc16f::t_56653eed42391e 70,80,83,85,88,94,98,398,470-471,477
+test/features/settings/settings_screen_test.dart
+  s_bd21fdca5bc16f::t_5833b3fbc92662 502,504
+  s_bd21fdca5bc16f::t_1cbb1fa7fdbcff 80
+README.md
+  s_bd21fdca5bc16f::t_56653eed42391e 58
+test/features/library/resource_manager_app_test.dart
+  s_bd21fdca5bc16f::t_a995e8d907db29 176
+  s_bd21fdca5bc16f::t_a530105f20b8b5 399,408-409
+  s_bd21fdca5bc16f::t_0490a3f78c565a 94-104,113,172-175,400-405
+  s_bd21fdca5bc16f::t_f0787ab8404907 396
+  s_bd21fdca5bc16f::t_3ea0ac45848ba4 83-93,112,169-171
+skills/dingdong-configure/SKILL.md
+  s_205892456ea76b::t_8a4d4ae8d8a9bf 27
+  s_205892456ea76b::t_9693ca8bc0e04c 26
+lib/features/settings/domain/release_update.dart
+  s_bd21fdca5bc16f::t_56653eed42391e 114-115
+test/features/agent_adapters/codex_thread_inspector_test.dart
+  s_bd21fdca5bc16f::t_3ea0ac45848ba4 25-30
+  s_bd21fdca5bc16f::t_b24d50475f17d5 1
+test/features/library/agent_resource_synchronizer_test.dart
+  s_205892456ea76b::t_7e6dd1fb484185 789-790
+lib/main.dart
+  s_bd21fdca5bc16f::t_f0787ab8404907 118,147-148,154,186,188-191,199,205,392,822-823,825-829,835,864
+  s_bd21fdca5bc16f::t_4f07d03f09ac95 166-172
+  s_bd21fdca5bc16f::t_ae40399195bdee 149-153,200-204,830-834
+  s_bd21fdca5bc16f::t_57cdc2258476da 14-15
+  s_bd21fdca5bc16f::t_6581e8cf5172a9 187,824
+lib/features/activity/ui/activity_screen.dart
+  s_bd21fdca5bc16f::t_fbecccf48eb5a5 169-186,188-189
+  s_bd21fdca5bc16f::t_f0787ab8404907 75
+  s_bd21fdca5bc16f::t_266a64f8f6664d 14,275-277
+lib/features/agent_adapters/data/codex_thread_inspector.dart
+  s_bd21fdca5bc16f::t_f2acdc83777c23 1,24,28-36,42,50,67-69,76-81,84-87,91-94,98
+  s_bd21fdca5bc16f::t_fbecccf48eb5a5 21-23
+  s_bd21fdca5bc16f::t_0ec52b73e82118 60
+  s_bd21fdca5bc16f::t_515723cfcf3bad 25-27,37-41,43-44,48-49,63-66,70-71,75
+test/features/settings/settings_window_app_test.dart
+  s_bd21fdca5bc16f::t_5833b3fbc92662 115,117
+lib/features/library/ui/resource_manager_app.dart
+  s_bd21fdca5bc16f::t_4f07d03f09ac95 75,84,122-132
+  s_bd21fdca5bc16f::t_2cd4b370288b8d 7
+test/app/dingdong_app_test.dart
+  s_bd21fdca5bc16f::t_aa72ba46bf68c4 1-2,21,337-366,373-378,385-393
+  s_bd21fdca5bc16f::t_f0787ab8404907 848
+  s_bd21fdca5bc16f::t_a530105f20b8b5 856-857
+  s_bd21fdca5bc16f::t_0490a3f78c565a 367,371-372,379,383-384,446-449
+  s_bd21fdca5bc16f::t_a995e8d907db29 368-370
+  s_bd21fdca5bc16f::t_56653eed42391e 43,49-50
+  s_bd21fdca5bc16f::t_3ea0ac45848ba4 396-431,436-445,450-456
+  s_bd21fdca5bc16f::t_be2db0d97a9bd2 380-382,432-435
+lib/features/activity/ui/activity_cards.dart
+  s_bd21fdca5bc16f::t_266a64f8f6664d 92,99,292-298
+  s_bd21fdca5bc16f::t_a995e8d907db29 312-313
+  s_bd21fdca5bc16f::t_0490a3f78c565a 314-320
+lib/features/agent_api/data/mcp_server.dart
+  s_bd21fdca5bc16f::t_56653eed42391e 39
+  s_205892456ea76b::t_9693ca8bc0e04c 50,113
+lib/features/library/data/agent_resource_synchronizer.dart
+  s_205892456ea76b::t_9693ca8bc0e04c 330
+  s_205892456ea76b::t_8a4d4ae8d8a9bf 328-329
+pubspec.yaml
+  s_bd21fdca5bc16f::t_56653eed42391e 4
+test/contract/http_contract_test.dart
+  s_205892456ea76b::t_7041c9b3317919 540,550,561
+  s_205892456ea76b::t_8a4d4ae8d8a9bf 605,613
+  s_205892456ea76b::t_86ad8044032584 608,612
+  s_205892456ea76b::t_fcf023907e9903 606-607,609-611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "de403d03134239378450efbf222237e2baafa1f7",
+  "prompts": {},
+  "sessions": {
+    "s_205892456ea76b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd58d-42d7-7160-9b7d-3eda479c5c4f",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_bd21fdca5bc16f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd258-5d19-76b2-8c4a-79e475f67ebf",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
