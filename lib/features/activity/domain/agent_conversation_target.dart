@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Supported destinations for returning from DingDong to an Agent session.
 enum AgentClient {
   codex('codex'),
@@ -86,6 +88,21 @@ final class AgentConversationTarget {
   };
 }
 
+/// Results from the read-only Agent conversation preflight.
+///
+/// A background Codex worker is intentionally separate from an unknown or
+/// missing conversation: both are non-openable, but only the former should be
+/// labeled as a subagent in the activity UI.
+final class AgentConversationPreflightResult {
+  const AgentConversationPreflightResult({
+    this.openableConversationIds = const <String>{},
+    this.subagentConversationIds = const <String>{},
+  });
+
+  final Set<String> openableConversationIds;
+  final Set<String> subagentConversationIds;
+}
+
 String? _trimmed(Object? value) {
   if (value is! String) {
     return null;
@@ -95,8 +112,10 @@ String? _trimmed(Object? value) {
 }
 
 /// Opens an allow-listed Agent destination on the local desktop.
-abstract interface class AgentConversationLauncher {
+abstract interface class AgentConversationLauncher extends Listenable {
   bool canOpen(AgentConversationTarget target);
+
+  bool isSubagent(AgentConversationTarget target);
 
   Future<void> open(AgentConversationTarget target);
 }

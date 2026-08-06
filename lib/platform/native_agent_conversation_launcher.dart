@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_launcher_configuration.dart';
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef AgentUriOpener = Future<bool> Function(Uri uri);
@@ -14,9 +16,15 @@ typedef AgentProcessStarter =
 typedef AgentLauncherConfigurationLoader =
     Future<AgentLauncherConfiguration> Function();
 typedef CodexConversationOpenability = Future<bool> Function(String threadId);
+typedef CodexConversationOpenabilityBatch =
+    Future<Set<String>> Function(Iterable<String> threadIds);
+typedef CodexConversationPreflightBatch =
+    Future<AgentConversationPreflightResult> Function(
+      Iterable<String> threadIds,
+    );
 
 /// Opens only known Agent clients using identifiers captured from their hooks.
-final class NativeAgentConversationLauncher
+final class NativeAgentConversationLauncher extends ChangeNotifier
     implements AgentConversationLauncher {
   NativeAgentConversationLauncher({
     String? operatingSystem,
@@ -24,6 +32,8 @@ final class NativeAgentConversationLauncher
     AgentProcessStarter? processStarter,
     AgentLauncherConfigurationLoader? configurationLoader,
     this.codexConversationOpenability,
+    this.codexConversationOpenabilityBatch,
+    this.codexConversationPreflightBatch,
   }) : _operatingSystem = operatingSystem ?? Platform.operatingSystem,
        _uriOpener = uriOpener ?? _openExternalUri,
        _processStarter = processStarter ?? _startDetached,
@@ -35,14 +45,24 @@ final class NativeAgentConversationLauncher
   final AgentProcessStarter _processStarter;
   final AgentLauncherConfigurationLoader _configurationLoader;
   final CodexConversationOpenability? codexConversationOpenability;
+  final CodexConversationOpenabilityBatch? codexConversationOpenabilityBatch;
+  final CodexConversationPreflightBatch? codexConversationPreflightBatch;
   final Map<String, bool> _codexOpenabilityCache = <String, bool>{};
+  final Map<String, bool> _codexSubagentCache = <String, bool>{};
+  final Map<String, Future<bool>> _codexOpenabilityRequests =
+      <String, Future<bool>>{};
 
   @override
   bool canOpen(AgentConversationTarget target) {
     final String? id = _safeConversationId(target.conversationId);
     final String? workspace = _safeWorkspacePath(target.workspacePath);
     return switch (target.client) {
-      AgentClient.codex => id != null && _codexOpenabilityCache[id] != false,
+      AgentClient.codex =>
+        id != null &&
+            ((codexConversationOpenability == null &&
+                    codexConversationOpenabilityBatch == null &&
+                    codexConversationPreflightBatch == null) ||
+                _codexOpenabilityCache[id] == true),
       AgentClient.claudeCode ||
       AgentClient.geminiCli => id != null && workspace != null,
       AgentClient.cursor =>
@@ -50,6 +70,77 @@ final class NativeAgentConversationLauncher
       AgentClient.kiro => workspace != null,
       AgentClient.unknown => false,
     };
+  }
+
+  @override
+  bool isSubagent(AgentConversationTarget target) {
+    if (target.client != AgentClient.codex) {
+      return false;
+    }
+    final String? id = _safeConversationId(target.conversationId);
+    return id != null && _codexSubagentCache[id] == true;
+  }
+
+  /// Resolves Codex destinations before the activity UI offers them as links.
+  ///
+  /// The launcher used to perform this check only after the user clicked. That
+  /// made background subagents look resumable until Codex rejected the deep
+  /// link. Unknown Codex targets remain closed until this preflight completes.
+  Future<void> preflight(Iterable<AgentConversationTarget> targets) async {
+    if (codexConversationOpenability == null &&
+        codexConversationOpenabilityBatch == null &&
+        codexConversationPreflightBatch == null) {
+      return;
+    }
+    final Set<String> ids = targets
+        .where(
+          (AgentConversationTarget target) =>
+              target.client == AgentClient.codex,
+        )
+        .map(
+          (AgentConversationTarget target) =>
+              _safeConversationId(target.conversationId),
+        )
+        .whereType<String>()
+        .toSet();
+    if (ids.isEmpty) {
+      return;
+    }
+    if (codexConversationPreflightBatch != null) {
+      final AgentConversationPreflightResult result =
+          await _loadCodexPreflightBatch(ids);
+      bool changed = false;
+      for (final String id in ids) {
+        final bool openable = result.openableConversationIds.contains(id);
+        final bool subagent = result.subagentConversationIds.contains(id);
+        if (_codexOpenabilityCache[id] != openable ||
+            _codexSubagentCache[id] != subagent) {
+          changed = true;
+        }
+        _codexOpenabilityCache[id] = openable;
+        _codexSubagentCache[id] = subagent;
+      }
+      if (changed) {
+        notifyListeners();
+      }
+      return;
+    }
+    if (codexConversationOpenabilityBatch != null) {
+      final Set<String> openable = await _loadCodexOpenabilityBatch(ids);
+      bool changed = false;
+      for (final String id in ids) {
+        final bool result = openable.contains(id);
+        if (_codexOpenabilityCache[id] != result) {
+          changed = true;
+        }
+        _codexOpenabilityCache[id] = result;
+      }
+      if (changed) {
+        notifyListeners();
+      }
+      return;
+    }
+    await Future.wait(ids.map(_isCodexConversationOpenable));
   }
 
   @override
@@ -61,7 +152,9 @@ final class NativeAgentConversationLauncher
     final String? workspace = _safeWorkspacePath(target.workspacePath);
     switch (target.client) {
       case AgentClient.codex:
-        if (codexConversationOpenability != null &&
+        if ((codexConversationOpenability != null ||
+                codexConversationOpenabilityBatch != null ||
+                codexConversationPreflightBatch != null) &&
             !await _isCodexConversationOpenable(id!)) {
           throw StateError('This Codex thread is not a resumable user thread.');
         }
@@ -116,9 +209,65 @@ final class NativeAgentConversationLauncher
     if (cached != null) {
       return cached;
     }
-    final bool result = await codexConversationOpenability!(threadId);
-    _codexOpenabilityCache[threadId] = result;
-    return result;
+    final Future<bool>? pending = _codexOpenabilityRequests[threadId];
+    if (pending != null) {
+      return await pending;
+    }
+
+    final Future<bool> request = _loadCodexOpenability(threadId);
+    _codexOpenabilityRequests[threadId] = request;
+    try {
+      final bool result = await request;
+      final bool? previous = _codexOpenabilityCache[threadId];
+      _codexOpenabilityCache[threadId] = result;
+      if (previous != result) {
+        notifyListeners();
+      }
+      return result;
+    } finally {
+      if (identical(_codexOpenabilityRequests[threadId], request)) {
+        unawaited(_codexOpenabilityRequests.remove(threadId));
+      }
+    }
+  }
+
+  Future<bool> _loadCodexOpenability(String threadId) async {
+    try {
+      if (codexConversationOpenability != null) {
+        return await codexConversationOpenability!(threadId);
+      }
+      if (codexConversationPreflightBatch != null) {
+        final AgentConversationPreflightResult result =
+            await _loadCodexPreflightBatch(<String>[threadId]);
+        return result.openableConversationIds.contains(threadId);
+      }
+      final Set<String> openable = await _loadCodexOpenabilityBatch(<String>[
+        threadId,
+      ]);
+      return openable.contains(threadId);
+    } on Object {
+      return false;
+    }
+  }
+
+  Future<Set<String>> _loadCodexOpenabilityBatch(
+    Iterable<String> threadIds,
+  ) async {
+    try {
+      return await codexConversationOpenabilityBatch!(threadIds);
+    } on Object {
+      return const <String>{};
+    }
+  }
+
+  Future<AgentConversationPreflightResult> _loadCodexPreflightBatch(
+    Iterable<String> threadIds,
+  ) async {
+    try {
+      return await codexConversationPreflightBatch!(threadIds);
+    } on Object {
+      return const AgentConversationPreflightResult();
+    }
   }
 
   Future<void> _openUri(Uri uri) async {

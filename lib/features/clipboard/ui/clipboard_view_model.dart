@@ -122,24 +122,45 @@ final class ClipboardViewModel extends ChangeNotifier {
   String? get selectedGroup => _selectedGroup;
 
   List<String> get groups {
-    final Set<String> values = _records
-        .expand((ClipboardRecord record) => record.groupNames)
-        .map((String group) => group.trim())
-        .where(
-          (String group) =>
-              group.isNotEmpty && !isAutomaticClipboardGroup(group),
-        )
-        .toSet();
-    final List<String> groups = values.toList();
+    // Keep groups from the durable order file even when they currently have
+    // no records. This is important for recovery: a user can select an empty
+    // PageID group and explicitly assign reviewed records to it later.
+    final Map<String, String> valuesByKey = <String, String>{};
+    void addGroup(String value) {
+      final String group = value.trim();
+      if (group.isEmpty || isAutomaticClipboardGroup(group)) {
+        return;
+      }
+      valuesByKey.putIfAbsent(_groupKey(group), () => group);
+    }
+
+    for (final String group in _groupOrder) {
+      addGroup(group);
+    }
+    for (final ClipboardRecord record in _records) {
+      for (final String group in record.groupNames) {
+        addGroup(group);
+      }
+    }
+
+    final Map<String, int> orderByKey = <String, int>{};
+    for (int index = 0; index < _groupOrder.length; index++) {
+      final String group = _groupOrder[index].trim();
+      if (group.isNotEmpty && !isAutomaticClipboardGroup(group)) {
+        orderByKey.putIfAbsent(_groupKey(group), () => index);
+      }
+    }
+
+    final List<String> groups = valuesByKey.values.toList();
     return groups..sort((String left, String right) {
-      final int leftRank = _groupOrder.indexOf(left);
-      final int rightRank = _groupOrder.indexOf(right);
-      if (leftRank >= 0 || rightRank >= 0) {
-        if (leftRank < 0) return 1;
-        if (rightRank < 0) return -1;
+      final int? leftRank = orderByKey[_groupKey(left)];
+      final int? rightRank = orderByKey[_groupKey(right)];
+      if (leftRank != null || rightRank != null) {
+        if (leftRank == null) return 1;
+        if (rightRank == null) return -1;
         return leftRank.compareTo(rightRank);
       }
-      return left.toLowerCase().compareTo(right.toLowerCase());
+      return _groupKey(left).compareTo(_groupKey(right));
     });
   }
 
@@ -158,7 +179,9 @@ final class ClipboardViewModel extends ChangeNotifier {
           return false;
         }
         if (_selectedGroup != null &&
-            !record.groupNames.contains(_selectedGroup)) {
+            !record.groupNames.any(
+              (String group) => _groupKey(group) == _groupKey(_selectedGroup!),
+            )) {
           return false;
         }
         final ClipboardSourceOption? source = clipboardSourceOption(
@@ -325,33 +348,31 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   int groupItemCount(String group) {
-    final String normalized = group.trim().toLowerCase();
+    final String normalized = _groupKey(group);
     if (normalized.isEmpty) return 0;
     return _records
         .where(
           (ClipboardRecord record) => record.groupNames.any(
-            (String value) => value.toLowerCase() == normalized,
+            (String value) => _groupKey(value) == normalized,
           ),
         )
         .length;
   }
 
   void deleteGroup(String group) {
-    final String normalized = group.trim().toLowerCase();
+    final String normalized = _groupKey(group);
     if (normalized.isEmpty) return;
     final Set<String> affectedIds = _records
         .where(
           (ClipboardRecord record) => record.groupNames.any(
-            (String value) => value.toLowerCase() == normalized,
+            (String value) => _groupKey(value) == normalized,
           ),
         )
         .map((ClipboardRecord record) => record.id)
         .toSet();
-    _groupOrder.removeWhere(
-      (String value) => value.toLowerCase() == normalized,
-    );
+    _groupOrder.removeWhere((String value) => _groupKey(value) == normalized);
     _groupOrderStore.save(_groupOrder);
-    if (_selectedGroup?.toLowerCase() == normalized) {
+    if (_selectedGroup != null && _groupKey(_selectedGroup!) == normalized) {
       _selectedGroup = null;
     }
     if (affectedIds.isEmpty) {
@@ -362,7 +383,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       affectedIds,
       (ClipboardRecord record) => record.copyWith(
         groups: record.groupNames
-            .where((String value) => value.toLowerCase() != normalized)
+            .where((String value) => _groupKey(value) != normalized)
             .toList(growable: false),
         updatedAt: _now().toUtc(),
       ),
@@ -477,6 +498,8 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   void addManyToGroups(Set<String> ids, Set<String> groups) {
+    // The caller owns the recovery scope: only these explicit IDs are
+    // changed. Do not infer IDs from title/content/tags here.
     _updateMany(
       ids,
       (ClipboardRecord record) => record.copyWith(
@@ -704,6 +727,8 @@ List<String> _uniqueTags(List<String> tags) {
       .map((String tag) => tag.trim())
       .toList(growable: false);
 }
+
+String _groupKey(String value) => value.trim().toLowerCase();
 
 List<String> _uniqueGroups(Iterable<String> values) {
   final Set<String> seen = <String>{};

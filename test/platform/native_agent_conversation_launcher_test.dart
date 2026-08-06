@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_launcher_configuration.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
@@ -42,6 +44,16 @@ void main() {
             codexConversationOpenability: (_) async => false,
           );
 
+      expect(
+        launcher.canOpen(
+          const AgentConversationTarget(
+            client: AgentClient.codex,
+            conversationId: 'subagent-thread-1',
+          ),
+        ),
+        isFalse,
+      );
+
       await expectLater(
         launcher.open(
           const AgentConversationTarget(
@@ -61,6 +73,56 @@ void main() {
         ),
         isFalse,
       );
+    },
+  );
+
+  test('Codex preflight reveals only resumable threads to the UI', () async {
+    final Completer<bool> result = Completer<bool>();
+    final NativeAgentConversationLauncher launcher =
+        NativeAgentConversationLauncher(
+          operatingSystem: 'macos',
+          codexConversationOpenability: (_) => result.future,
+        );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'thread-pending-check',
+    );
+
+    expect(launcher.canOpen(target), isFalse);
+    final Future<void> preflight = launcher.preflight(<AgentConversationTarget>[
+      target,
+    ]);
+    await Future<void>.delayed(Duration.zero);
+    expect(launcher.canOpen(target), isFalse);
+
+    result.complete(true);
+    await preflight;
+    expect(launcher.canOpen(target), isTrue);
+  });
+
+  test(
+    'Codex preflight marks a recognized subagent without opening it',
+    () async {
+      final NativeAgentConversationLauncher launcher =
+          NativeAgentConversationLauncher(
+            operatingSystem: 'macos',
+            codexConversationPreflightBatch: (_) async =>
+                const AgentConversationPreflightResult(
+                  subagentConversationIds: <String>{'subagent-thread'},
+                ),
+          );
+      const AgentConversationTarget target = AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'subagent-thread',
+      );
+
+      expect(launcher.isSubagent(target), isFalse);
+      expect(launcher.canOpen(target), isFalse);
+
+      await launcher.preflight(<AgentConversationTarget>[target]);
+
+      expect(launcher.isSubagent(target), isTrue);
+      expect(launcher.canOpen(target), isFalse);
     },
   );
 

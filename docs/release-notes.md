@@ -1,43 +1,53 @@
-# DingDong 1.0.2
+# DingDong 1.1.0
 
-DingDong 1.0.2 is a focused fix release for Agent activity reliability and a
-consistent Clipboard experience across the desktop app and release website.
+DingDong 1.1.0 improves Agent activity recovery and makes Codex background
+tasks clearer before they are opened.
 
 ## Agent activity
 
-- Unavailable background Codex tasks are identified before opening, so a stale
-  task does not lead to a broken conversation view.
-- Newly surfaced Agent activity is acknowledged after it has remained visible
-  long enough to read, keeping the unread indicator useful without requiring a
-  second navigation.
+- Codex conversations are preflighted before the activity list offers an open
+  action, avoiding stale links to unavailable threads.
+- Recognized Codex background subagents show a compact `sub` marker and cannot
+  be opened as ordinary user conversations.
+- Unknown or no-longer-resolvable Agent targets show a non-interactive unknown
+  icon instead of a misleading open action.
+- Recent activity and the Resource Manager share the same target resolution
+  state, including subagent and unknown-target indicators.
 
-## Clipboard and website preview
+## Clipboard groups and recovery
 
-- The compact Clipboard toolbar now stays focused on search and filters;
-  monitoring remains available from the tray menu and Settings.
-- The website Clipboard preview uses the same toolbar shape and category data
-  model as the desktop app, including the corrected `links`, `images`, `files`,
-  and `text` categories.
-- Popup branding and version metadata remain visible across release and
-  development builds.
+- Empty groups preserved by the order file remain visible, so groups such as
+  PageID can be recovered and used for explicit reassignment.
+- Group matching is normalized consistently without inferring archive scope
+  from text, titles, or tags.
 
-Intel macOS and Windows packages remain beta.
+## Agent integration
+
+- Codex preflight and native launch behavior now share cached, batch-resolved
+  conversation state.
+- The MCP server and completion hook advertise the 1.1.0 application version.
+
+Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.0.2 是一个修复 Agent 动态可靠性，并统一桌面端与官网剪贴板体验的版本。
+DingDong 1.1.0 改进了 Agent 动态恢复，并在打开前明确区分 Codex 后台任务。
 
 ## Agent 动态
 
-- 打开前会先识别已经不可用的后台 Codex 任务，避免进入失败的聊天页面。
-- 新出现的 Agent 动态在保持可见一段时间后自动标记为已读，让未读提醒更准确，
-  不需要再次切换页面。
+- 动态列表会在展示打开入口前预检查 Codex 对话，避免进入已经失效的聊天链接。
+- 识别出的 Codex 后台 subagent 显示紧凑的 `sub` 标志，不再作为普通用户对话打开。
+- 未知或已经无法解析的 Agent 目标显示非交互的未知图标，不再误显示打开入口。
+- 最近动态和资源管理器共用目标解析状态，包括 subagent 与未知目标标志。
 
-## 剪贴板与官网预览
+## 剪贴板分组与恢复
 
-- 紧凑剪贴板工具栏只保留搜索和筛选；监听入口保留在托盘菜单和设置中。
-- 官网剪贴板预览与桌面端使用相同的工具栏形状和分类数据模型，修正
-  `links`、`images`、`files`、`text` 分类。
-- 发布版和开发版都保持品牌名称与版本信息完整展示。
+- 顺序文件中保留的空分组会继续展示，PageID 等分组可以恢复并用于显式归档。
+- 分组匹配统一规范化，不会根据文本、标题或标签推断归档范围。
+
+## Agent 集成
+
+- Codex 预检查和原生打开逻辑共用缓存的批量会话状态。
+- MCP 服务和完成 Hook 对外声明 1.1.0 版本。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

@@ -537,7 +537,7 @@ void main() {
         Resource(
           id: 'prompt',
           type: ResourceType.prompt,
-          title: 'Flutter release',
+          title: '代码审查与发布流程',
           content: 'Use the release checklist.',
           tags: const <String>['flutter', 'release'],
           pinned: true,
@@ -547,7 +547,7 @@ void main() {
         Resource(
           id: 'skill',
           type: ResourceType.skill,
-          title: 'Flutter skill',
+          title: '部署自动化助手',
           content:
               '---\nname: flutter-skill\ndescription: Build and release Flutter applications\n---\n\nLong skill instructions',
           tags: const <String>['flutter'],
@@ -558,7 +558,7 @@ void main() {
         Resource(
           id: 'mcp',
           type: ResourceType.mcp,
-          title: 'Flutter MCP',
+          title: '生产环境监控连接',
           content: '{"type":"stdio","command":"flutter-mcp"}',
           tags: const <String>['flutter'],
           pinned: true,
@@ -602,6 +602,15 @@ void main() {
         containsPair('description', 'Build and release Flutter applications'),
       );
       expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
+      expect(response.json['conversation'], <String, Object?>{
+        'capsule': <String, Object?>{
+          'label': 'DingDong',
+          'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
+          'visible': true,
+        },
+        'line': 'DingDong · 代码审查与发布流... | 部署自动化助手 | 生产环境监控连接',
+        'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
+      });
       expect(response.json['delivery'], <String, Object?>{
         'prompts': 'full-required-instructions',
         'promptSnapshot': 'authoritative-replace',

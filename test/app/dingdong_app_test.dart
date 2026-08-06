@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
@@ -16,6 +18,7 @@ import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
+import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,14 +40,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.0.2', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.1.0', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.0.2')), findsOneWidget);
-    expect(find.text('v1.0.2'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.1.0')), findsOneWidget);
+    expect(find.text('v1.1.0'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -329,6 +332,126 @@ void main() {
     expect(launcher.opened?.conversationId, 'thread-1');
     await tester.pumpWidget(const SizedBox.shrink());
     activityController.dispose();
+  });
+
+  testWidgets('Dynamic waits for Codex preflight before showing open action', (
+    WidgetTester tester,
+  ) async {
+    final Completer<bool> openability = Completer<bool>();
+    final NativeAgentConversationLauncher launcher =
+        NativeAgentConversationLauncher(
+          codexConversationOpenability: (_) => openability.future,
+        );
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'pending-codex-agent',
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'pending-codex-thread',
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Background task',
+      conversationTarget: target,
+    );
+
+    await tester.pumpWidget(
+      DingDongApp(
+        activityController: activityController,
+        agentConversationLauncher: launcher,
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('activity-open-conversation')), findsNothing);
+    expect(
+      find.byKey(
+        const Key('activity-unknown-conversation-pending-codex-agent'),
+      ),
+      findsOneWidget,
+    );
+
+    final Future<void> preflight = launcher.preflight(<AgentConversationTarget>[
+      target,
+    ]);
+    await tester.pump();
+    expect(find.byKey(const Key('activity-open-conversation')), findsNothing);
+    expect(
+      find.byKey(
+        const Key('activity-unknown-conversation-pending-codex-agent'),
+      ),
+      findsOneWidget,
+    );
+
+    openability.complete(true);
+    await preflight;
+    await tester.pump();
+    expect(find.byKey(const Key('activity-open-conversation')), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+    launcher.dispose();
+  });
+
+  testWidgets('Dynamic marks a recognized Codex subagent with a sub badge', (
+    WidgetTester tester,
+  ) async {
+    final NativeAgentConversationLauncher launcher =
+        NativeAgentConversationLauncher(
+          codexConversationPreflightBatch: (_) async =>
+              const AgentConversationPreflightResult(
+                subagentConversationIds: <String>{'subagent-thread'},
+              ),
+        );
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'subagent-agent',
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'subagent-thread',
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Subagent result',
+      conversationTarget: target,
+    );
+
+    await tester.pumpWidget(
+      DingDongApp(
+        activityController: activityController,
+        agentConversationLauncher: launcher,
+      ),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const Key('activity-subagent-subagent-agent')),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('activity-open-conversation')), findsNothing);
+    expect(
+      find.byKey(const Key('activity-unknown-conversation-subagent-agent')),
+      findsOneWidget,
+    );
+
+    await launcher.preflight(<AgentConversationTarget>[target]);
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('activity-subagent-subagent-agent')),
+      findsOneWidget,
+    );
+    expect(find.text('sub'), findsOneWidget);
+    expect(find.byTooltip('Codex subagent'), findsOneWidget);
+    expect(
+      find.byKey(const Key('activity-unknown-conversation-subagent-agent')),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('activity-open-conversation')), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+    launcher.dispose();
   });
 
   testWidgets('Dynamic shows repeat count and contains long activity text', (
@@ -722,12 +845,15 @@ void main() {
   });
 }
 
-final class _FakeAgentConversationLauncher
+final class _FakeAgentConversationLauncher extends ChangeNotifier
     implements AgentConversationLauncher {
   AgentConversationTarget? opened;
 
   @override
   bool canOpen(AgentConversationTarget target) => target.hasDestination;
+
+  @override
+  bool isSubagent(AgentConversationTarget target) => false;
 
   @override
   Future<void> open(AgentConversationTarget target) async {

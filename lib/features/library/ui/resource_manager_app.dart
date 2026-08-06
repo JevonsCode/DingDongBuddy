@@ -4,6 +4,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
@@ -71,6 +72,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
     _selectedIndex = widget.initialDestination.index;
     _agentConversationLauncher =
         widget.agentConversationLauncher ?? NativeAgentConversationLauncher();
+    _preflightActivityTargets();
     unawaited(_loadHostIssues());
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
@@ -79,6 +81,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             await widget.viewModel.load();
             widget.clipboardViewModel.load();
             widget.activityController.reload();
+            _preflightActivityTargets();
             await widget.agentAdapterController?.load();
             final ResourceManagerDestination destination =
                 ResourceManagerDestination.parse(call.arguments);
@@ -113,6 +116,20 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             return;
         }
       }),
+    );
+  }
+
+  void _preflightActivityTargets() {
+    final AgentConversationLauncher launcher = _agentConversationLauncher;
+    if (launcher is! NativeAgentConversationLauncher) {
+      return;
+    }
+    unawaited(
+      launcher.preflight(
+        widget.activityController.activities
+            .map((AgentActivity activity) => activity.conversationTarget)
+            .whereType<AgentConversationTarget>(),
+      ),
     );
   }
 

@@ -11,6 +11,8 @@ import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/data/agent_launcher_configuration_store.dart';
+import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
@@ -113,6 +115,7 @@ Future<void> main(List<String> arguments) async {
   final ActivityController activityController = ActivityController(
     store: FileAgentActivityStore(appDataPaths.agentActivityFile),
   );
+  late final NativeAgentConversationLauncher agentConversationLauncher;
   late final AppDependencies dependencies;
   late final SettingsViewModel settingsViewModel;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
@@ -141,6 +144,14 @@ Future<void> main(List<String> arguments) async {
         message: request.message,
         conversationTarget: request.conversationTarget,
       );
+      final target = request.conversationTarget;
+      if (target != null) {
+        unawaited(
+          agentConversationLauncher.preflight(<AgentConversationTarget>[
+            target,
+          ]),
+        );
+      }
       await shellGateway.markUnread();
     },
     onSuppressedNotification: (request) async {
@@ -150,6 +161,13 @@ Future<void> main(List<String> arguments) async {
           source: request.source ?? 'Agent',
           message: request.message,
           target: target,
+        );
+      }
+      if (target != null) {
+        unawaited(
+          agentConversationLauncher.preflight(<AgentConversationTarget>[
+            target,
+          ]),
         );
       }
     },
@@ -165,6 +183,12 @@ Future<void> main(List<String> arguments) async {
   );
   final AppSettings startupSettings = await dependencies.settingsRepository
       .load();
+  agentConversationLauncher = NativeAgentConversationLauncher(
+    codexConversationPreflightBatch: codexThreadInspector.inspectThreadIds,
+    configurationLoader: FileAgentLauncherConfigurationStore(
+      dependencies.paths.agentLaunchersFile,
+    ).load,
+  );
   activityController.configure(
     rememberAcrossRestarts: startupSettings.rememberAgentActivity,
     maxItems: startupSettings.agentActivityMaxItems,
@@ -172,6 +196,13 @@ Future<void> main(List<String> arguments) async {
     groupRepeatedAgentSessions: startupSettings.groupRepeatedAgentSessions,
   );
   activityController.load(resetPreviousSession: true);
+  unawaited(
+    agentConversationLauncher.preflight(
+      activityController.activities
+          .map((AgentActivity activity) => activity.conversationTarget)
+          .whereType<AgentConversationTarget>(),
+    ),
+  );
   await dependencies.start();
   shellController.open(dependencies.initialSettings.defaultWorkspace.index);
   final NativeQuickPasteGateway quickPasteGateway = NativeQuickPasteGateway();
@@ -358,12 +389,7 @@ Future<void> main(List<String> arguments) async {
     DingDongApp(
       activityController: activityController,
       developmentBuild: appDataPaths.development,
-      agentConversationLauncher: NativeAgentConversationLauncher(
-        codexConversationOpenability: codexThreadInspector.isOpenable,
-        configurationLoader: FileAgentLauncherConfigurationStore(
-          dependencies.paths.agentLaunchersFile,
-        ).load,
-      ),
+      agentConversationLauncher: agentConversationLauncher,
       agentBaseUri: dependencies.agentHttpServer.baseUri,
       clipboardCaptureService: dependencies.clipboardCaptureService,
       clipboardCategoryRuleStore: dependencies.clipboardCategoryRuleStore,
@@ -793,6 +819,20 @@ Future<void> _runResourceManagerWindow(
           groupRepeatedAgentSessions: settings.groupRepeatedAgentSessions,
         )
         ..load();
+  final NativeAgentConversationLauncher agentConversationLauncher =
+      NativeAgentConversationLauncher(
+        codexConversationPreflightBatch: codexThreadInspector.inspectThreadIds,
+        configurationLoader: FileAgentLauncherConfigurationStore(
+          paths.agentLaunchersFile,
+        ).load,
+      );
+  unawaited(
+    agentConversationLauncher.preflight(
+      activityController.activities
+          .map((AgentActivity activity) => activity.conversationTarget)
+          .whereType<AgentConversationTarget>(),
+    ),
+  );
 
   await windowManager.ensureInitialized();
   final WindowOptions options = WindowOptions(
@@ -821,12 +861,7 @@ Future<void> _runResourceManagerWindow(
       resourceManagerLauncher: MultiWindowResourceManagerLauncher(
         parentWindowId: parentWindowId ?? windowController.windowId,
       ),
-      agentConversationLauncher: NativeAgentConversationLauncher(
-        codexConversationOpenability: codexThreadInspector.isOpenable,
-        configurationLoader: FileAgentLauncherConfigurationStore(
-          paths.agentLaunchersFile,
-        ).load,
-      ),
+      agentConversationLauncher: agentConversationLauncher,
       onLoadHostIssues: parent == null ? null : loadHostIssues,
       desktopContextMenuGateway: Platform.isMacOS
           ? NativeDesktopContextMenuGateway()

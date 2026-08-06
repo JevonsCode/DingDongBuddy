@@ -786,6 +786,8 @@ mcp:
       expect(contents, contains('dingdong_load_skill'));
       expect(contents, contains('dingdong_read_skill_file'));
       expect(contents, contains('Call configured MCP tools only when'));
+      expect(contents, contains('conversation.capsule.visible'));
+      expect(contents, contains('conversation.line'));
       expect(
         contents,
         isNot(contains('Add one star to every complete response.')),

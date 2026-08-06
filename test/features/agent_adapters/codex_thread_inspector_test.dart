@@ -1,3 +1,4 @@
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_thread_inspector.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,12 +22,12 @@ void main() {
       ],
     );
 
-    expect(
-      await CodexThreadInspector(
-        connectionFactory: factory,
-      ).isOpenable('subagent-1'),
-      isFalse,
-    );
+    final AgentConversationPreflightResult result = await CodexThreadInspector(
+      connectionFactory: factory,
+    ).inspectThreadIds(<String>['subagent-1']);
+
+    expect(result.openableConversationIds, isEmpty);
+    expect(result.subagentConversationIds, contains('subagent-1'));
   });
 
   test('allows a persisted user thread', () async {

@@ -80,6 +80,28 @@ void main() {
                 unseen: false,
                 repeatCount: 2,
               ),
+              AgentActivity(
+                id: 'manager-subagent',
+                source: 'Codex',
+                message: 'Subagent result',
+                completedAt: DateTime.utc(2026, 7, 21, 8),
+                unseen: false,
+                conversationTarget: const AgentConversationTarget(
+                  client: AgentClient.codex,
+                  conversationId: 'subagent-thread',
+                ),
+              ),
+              AgentActivity(
+                id: 'manager-unknown',
+                source: 'Codex',
+                message: 'Unknown result',
+                completedAt: DateTime.utc(2026, 7, 21, 7),
+                unseen: false,
+                conversationTarget: const AgentConversationTarget(
+                  client: AgentClient.codex,
+                  conversationId: 'unknown-thread',
+                ),
+              ),
             ],
           ),
         ),
@@ -87,6 +109,8 @@ void main() {
       )..load();
       final _FakeAgentConversationLauncher conversationLauncher =
           _FakeAgentConversationLauncher();
+      conversationLauncher.subagentConversationIds.add('subagent-thread');
+      conversationLauncher.unavailableConversationIds.add('unknown-thread');
       final IssueCenterController issues = IssueCenterController();
       addTearDown(issues.dispose);
 
@@ -140,6 +164,16 @@ void main() {
       expect(find.text('Resumable result'), findsOneWidget);
       expect(
         find.byKey(const Key('agent-activity-manager-open-conversation')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const Key('agent-activity-manager-subagent-manager-subagent'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('agent-activity-manager-unknown-manager-unknown')),
         findsOneWidget,
       );
 
@@ -359,12 +393,20 @@ Future<void> _sendWindowMethod(
   await handled.future;
 }
 
-final class _FakeAgentConversationLauncher
+final class _FakeAgentConversationLauncher extends ChangeNotifier
     implements AgentConversationLauncher {
   AgentConversationTarget? opened;
+  final Set<String> subagentConversationIds = <String>{};
+  final Set<String> unavailableConversationIds = <String>{};
 
   @override
-  bool canOpen(AgentConversationTarget target) => target.hasDestination;
+  bool canOpen(AgentConversationTarget target) =>
+      target.hasDestination &&
+      !unavailableConversationIds.contains(target.conversationId);
+
+  @override
+  bool isSubagent(AgentConversationTarget target) =>
+      subagentConversationIds.contains(target.conversationId);
 
   @override
   Future<void> open(AgentConversationTarget target) async {

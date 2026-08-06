@@ -11,6 +11,7 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
+import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -71,6 +72,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return AnimatedBuilder(
       animation: Listenable.merge(<Listenable>[
         widget.activityController,
+        widget.agentConversationLauncher,
         widget.clipboardViewModel,
         widget.libraryViewModel,
         widget.settingsViewModel,
@@ -164,21 +166,27 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 ),
               )
             else
-              ...widget.activityController.activities
-                  .take(6)
-                  .map(
-                    (AgentActivity activity) => Padding(
-                      padding: const EdgeInsets.only(bottom: 7),
-                      child: _AgentActivityCard(
-                        key: ValueKey<String>(activity.id),
-                        activity: activity,
-                        onTap: _conversationTap(context, activity),
-                        animate:
-                            activity.unseen &&
-                            widget.activityController.revealActive,
-                      ),
-                    ),
+              ...widget.activityController.activities.take(6).map((
+                AgentActivity activity,
+              ) {
+                final AgentConversationTarget? target =
+                    activity.conversationTarget;
+                final bool isSubagent =
+                    target != null &&
+                    widget.agentConversationLauncher.isSubagent(target);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 7),
+                  child: _AgentActivityCard(
+                    key: ValueKey<String>(activity.id),
+                    activity: activity,
+                    isSubagent: isSubagent,
+                    onTap: _conversationTap(context, activity),
+                    animate:
+                        activity.unseen &&
+                        widget.activityController.revealActive,
                   ),
+                );
+              }),
             const SizedBox(height: 28),
             Text(
               context.localized('Enabled', '已启用'),
@@ -264,7 +272,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   VoidCallback? _conversationTap(BuildContext context, AgentActivity activity) {
     final AgentConversationTarget? target = activity.conversationTarget;
-    if (target == null || !widget.agentConversationLauncher.canOpen(target)) {
+    if (target == null ||
+        widget.agentConversationLauncher.isSubagent(target) ||
+        !widget.agentConversationLauncher.canOpen(target)) {
       return null;
     }
     return () => unawaited(_openConversation(context, target));

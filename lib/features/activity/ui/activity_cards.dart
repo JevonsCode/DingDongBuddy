@@ -89,12 +89,14 @@ class _AgentActivityCard extends StatefulWidget {
   const _AgentActivityCard({
     required this.activity,
     required this.animate,
+    required this.isSubagent,
     this.onTap,
     super.key,
   });
 
   final AgentActivity activity;
   final bool animate;
+  final bool isSubagent;
   final VoidCallback? onTap;
 
   @override
@@ -287,7 +289,13 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                         ),
                       ),
                     ),
-                    if (widget.onTap != null) ...<Widget>[
+                    if (widget.isSubagent) ...<Widget>[
+                      const SizedBox(width: 7),
+                      AgentSubagentBadge(
+                        key: Key('activity-subagent-${widget.activity.id}'),
+                        compact: true,
+                      ),
+                    ] else if (widget.onTap != null) ...<Widget>[
                       const SizedBox(width: 7),
                       Tooltip(
                         message: context.localized(
@@ -300,6 +308,15 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                           size: 13,
                           color: PopupStyle.textTertiary,
                         ),
+                      ),
+                    ] else if (widget.activity.conversationTarget !=
+                        null) ...<Widget>[
+                      const SizedBox(width: 7),
+                      AgentUnknownConversationIcon(
+                        key: Key(
+                          'activity-unknown-conversation-${widget.activity.id}',
+                        ),
+                        compact: true,
                       ),
                     ] else
                       SizedBox(

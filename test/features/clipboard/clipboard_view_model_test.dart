@@ -484,6 +484,60 @@ void main() {
     expect(reopened.groups, <String>['Query', 'iDev ID', 'PageID']);
   });
 
+  test('ordered groups remain visible when they have no records', () {
+    final DateTime now = DateTime.utc(2026, 7, 21);
+    final ClipboardRecord query = ClipboardRecord(
+      id: 'query',
+      group: 'Query',
+      title: 'Query',
+      content: 'Query',
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[query]),
+      groupOrderStore: InMemoryClipboardGroupOrderStore(const <String>[
+        'PageID',
+        'Query',
+      ]),
+    )..load();
+
+    expect(model.groups, <String>['PageID', 'Query']);
+
+    model.setGroup('PageID');
+    expect(model.visibleRecords, isEmpty);
+  });
+
+  test('ordered group labels match records case insensitively', () {
+    final DateTime now = DateTime.utc(2026, 7, 21);
+    final ClipboardRecord record = ClipboardRecord(
+      id: 'page-id',
+      group: 'pageid',
+      title: 'PageID note',
+      content: 'PageID note',
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[record]),
+      groupOrderStore: InMemoryClipboardGroupOrderStore(const <String>[
+        'PageID',
+      ]),
+    )..load();
+
+    expect(model.groups, <String>['PageID']);
+    model.setGroup('PageID');
+    expect(model.visibleRecords.single.id, 'page-id');
+  });
+
   test('promoting content publishes a library revision', () async {
     final DataRevisionBus revisions = DataRevisionBus();
     final List<DataCollection> changes = <DataCollection>[];

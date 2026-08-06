@@ -6,6 +6,7 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
+import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
 import 'package:flutter/material.dart';
 
 /// Full-detail Agent completion history for the manager window.
@@ -25,7 +26,10 @@ class AgentActivityManagerScreen extends StatelessWidget {
     return Material(
       color: colors.surface,
       child: AnimatedBuilder(
-        animation: controller,
+        animation: Listenable.merge(<Listenable>[
+          controller,
+          conversationLauncher,
+        ]),
         builder: (BuildContext context, Widget? child) {
           final List<AgentActivity> activities = controller.activities;
           return Column(
@@ -170,7 +174,10 @@ class _ActivityHistoryRow extends StatelessWidget {
     ).formatShortDate(localTime);
     final String time = TimeOfDay.fromDateTime(localTime).format(context);
     final AgentConversationTarget? target = activity.conversationTarget;
-    final bool canOpen = target != null && conversationLauncher.canOpen(target);
+    final bool isSubagent =
+        target != null && conversationLauncher.isSubagent(target);
+    final bool canOpen =
+        !isSubagent && target != null && conversationLauncher.canOpen(target);
     return Material(
       key: Key('agent-activity-row-${activity.id}'),
       color: Colors.transparent,
@@ -253,7 +260,19 @@ class _ActivityHistoryRow extends StatelessWidget {
                                 ),
                           ),
                         ),
-                        if (canOpen) ...<Widget>[
+                        if (isSubagent) ...<Widget>[
+                          const SizedBox(width: 9),
+                          AgentSubagentBadge(
+                            key: Key(
+                              'agent-activity-manager-subagent-${activity.id}',
+                            ),
+                            foregroundColor: colors.primary,
+                            backgroundColor: colors.primary.withValues(
+                              alpha: 0.09,
+                            ),
+                            borderColor: colors.primary.withValues(alpha: 0.22),
+                          ),
+                        ] else if (canOpen) ...<Widget>[
                           const SizedBox(width: 9),
                           Tooltip(
                             message: context.localized(
@@ -268,6 +287,14 @@ class _ActivityHistoryRow extends StatelessWidget {
                               size: 16,
                               color: colors.onSurfaceVariant,
                             ),
+                          ),
+                        ] else if (target != null) ...<Widget>[
+                          const SizedBox(width: 9),
+                          AgentUnknownConversationIcon(
+                            key: Key(
+                              'agent-activity-manager-unknown-${activity.id}',
+                            ),
+                            color: colors.onSurfaceVariant,
                           ),
                         ] else
                           SizedBox(

@@ -131,6 +131,20 @@ final class AgentBridge {
           .where((TriggerGroup group) => group.matches(context))
           .map((TriggerGroup group) => group.id)
           .toSet();
+      final List<String> conversationTitles =
+          <String>[
+                ...prompts.map((Resource resource) => resource.title),
+                ...skillCandidates.map(
+                  (_ResolvedSkill skill) => skill.resource.title,
+                ),
+                ...mcps.map((Resource resource) => resource.title),
+              ]
+              .map(_displayResourceTitle)
+              .where((String title) => title.isNotEmpty)
+              .toList(growable: false);
+      final String conversationLine = conversationTitles.isEmpty
+          ? ''
+          : 'DingDong · ${conversationTitles.join(' | ')}';
 
       List<Map<String, Object?>> items(ResourceType type) {
         return used
@@ -167,6 +181,15 @@ final class AgentBridge {
                 .toList(growable: false),
             'mcps': items(ResourceType.mcp),
             'knowledge': items(ResourceType.knowledge),
+          },
+          'conversation': <String, Object?>{
+            'capsule': <String, Object?>{
+              'label': 'DingDong',
+              'titles': conversationTitles,
+              'visible': conversationTitles.isNotEmpty,
+            },
+            'line': conversationLine,
+            'titles': conversationTitles,
           },
           'delivery': <String, Object?>{
             'prompts': 'full-required-instructions',
@@ -546,6 +569,20 @@ Map<String, Object?> _skillCandidateJson(_ResolvedSkill skill) =>
       'name': skill.configuration.name,
       'description': skill.configuration.description,
     };
+
+const int _maximumConversationTitleCharacters = 8;
+
+String _displayResourceTitle(String value) {
+  final String normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (normalized.isEmpty) {
+    return '';
+  }
+  final List<int> characters = normalized.runes.toList(growable: false);
+  if (characters.length <= _maximumConversationTitleCharacters) {
+    return normalized;
+  }
+  return '${String.fromCharCodes(characters.take(_maximumConversationTitleCharacters))}...';
+}
 
 TriggerContext _contextFromStrings(Map<String, String> values) {
   final String source = _firstNonEmptyString(values, const <String>['source']);

@@ -30,6 +30,8 @@ void main() {
         result['instructions'],
         contains('MCP entries are tool references'),
       );
+      expect(result['instructions'], contains('conversation.capsule.visible'));
+      expect(result['instructions'], contains('conversation.line'));
       expect(result['instructions'], contains('dingdong_install_skill'));
       expect(result['instructions'], contains('strict project scope'));
       expect(result['instructions'], contains('completion hook'));
@@ -83,6 +85,7 @@ void main() {
         bridge['description'],
         contains('Every active, scope-matched MCP'),
       );
+      expect(bridge['description'], contains('native capsule rendering'));
       expect(properties, isNot(contains('limit')));
 
       Map<String, Object?> toolNamed(String name) => tools

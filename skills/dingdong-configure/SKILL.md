@@ -23,6 +23,8 @@ Keep the three resource types distinct:
 
 Enabled state and trigger groups filter the Skill catalog, and every Skill and supporting-file load re-checks them so an old name or ID cannot bypass a disabled or out-of-scope resource. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. Unscoped MCP servers are synchronized to every configured client; source-scoped MCP servers are synchronized only to matching native client configurations. DingDong no longer mirrors managed Skills into native Agent Skill directories; Adapter Skill paths remain useful for removing legacy DingDong mirrors and warning about independently installed native Skills with the same name.
 
+The bridge also returns a compact `conversation.capsule` and a text fallback `conversation.line` when Prompt, Skill, or MCP resources are exposed. Prefer the native capsule when the host supports it; otherwise include the fallback line exactly once in the user-visible response. Both contain only resource titles, already truncated to eight characters with `...`; never expose resource content, descriptions, or IDs in this display.
+
 ## Workflow
 
 1. Prefer the native DingDong MCP tools. If the write tools are unavailable, locate the active loopback port, call `GET /health`, then inspect `GET /agent/capabilities` and use the equivalent HTTP endpoints.
