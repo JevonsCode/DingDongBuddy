@@ -483,6 +483,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('clipboard-category-text')), findsOneWidget);
 
+    await tester.drag(
+      find.byKey(const Key('clipboard-category-list')),
+      const Offset(-240, 0),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('clipboard-category-text')));
     await tester.pumpAndSettle();
     expect(model.selectedCategoryId, 'text');
@@ -769,6 +774,11 @@ void main() {
         findsNothing,
       );
       await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+      await tester.pumpAndSettle();
+      await tester.drag(
+        find.byKey(const Key('clipboard-category-list')),
+        const Offset(-240, 0),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('clipboard-category-text')));
       await tester.pumpAndSettle();

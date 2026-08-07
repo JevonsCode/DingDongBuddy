@@ -1106,6 +1106,11 @@ description: Use when product decisions should follow saved preferences.
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('clipboard-category-all')), findsOneWidget);
 
+      await tester.drag(
+        find.byKey(const Key('clipboard-category-list')),
+        const Offset(-240, 0),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('clipboard-category-text')));
       await tester.pumpAndSettle();
       expect(
@@ -1427,6 +1432,11 @@ description: Use when product decisions should follow saved preferences.
       await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
       await tester.pumpAndSettle();
 
+      await tester.drag(
+        find.byKey(const Key('clipboard-category-list')),
+        const Offset(-240, 0),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('clipboard-category-text')));
       await tester.pumpAndSettle();
       await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);

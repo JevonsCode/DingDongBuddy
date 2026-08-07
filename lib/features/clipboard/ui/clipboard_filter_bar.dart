@@ -281,6 +281,7 @@ class _ClipboardKindFilters extends StatelessWidget {
           if (categories.isNotEmpty) const SizedBox(width: 6),
           Expanded(
             child: ListView.separated(
+              key: const Key('clipboard-category-list'),
               scrollDirection: Axis.horizontal,
               itemCount: categories.length,
               separatorBuilder: (_, _) => const SizedBox(width: 6),

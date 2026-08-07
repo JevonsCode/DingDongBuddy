@@ -5,8 +5,10 @@ import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -407,7 +409,7 @@ void main() {
     expect(gateway.writtenText, 'second value');
   });
 
-  test('available categories come from the editable ordered rule set', () {
+  test('available categories keep enabled filters visible without a match', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final ClipboardViewModel model = ClipboardViewModel(
       InMemoryClipboardStore(<ClipboardRecord>[
@@ -429,8 +431,22 @@ void main() {
 
     expect(model.availableCategories.map((category) => category.id), <String>[
       'links',
+      'images',
+      'files',
       'text',
     ]);
+  });
+
+  test('an empty category store is restored with built-in filters', () {
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(),
+      categoryRuleStore: InMemoryClipboardCategoryRuleStore(
+        const <ClipboardCategoryRule>[],
+      ),
+    )..load();
+
+    expect(model.categoryRules, ClipboardCategoryRule.defaults());
+    expect(model.availableCategories, ClipboardCategoryRule.defaults());
   });
 
   test('category and user group orders move independently', () {

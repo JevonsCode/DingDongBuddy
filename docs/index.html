@@ -979,7 +979,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoContent = {
         en: {
           today: {
-            status: { title: "Clipboard monitoring is ready.", time: "17:17", state: "Ready" },
             metrics: [["3", "Resources"], ["708", "Clipboard"], ["Check", "Agent connections"]],
             agents: [
               { source: "Codex", time: "17:16", body: "Release checks passed. DingDong played the selected alert." },
@@ -1024,7 +1023,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         zh: {
           today: {
-            status: { title: "剪贴板监听已就绪。", time: "17:17", state: "就绪" },
             metrics: [["3", "资源"], ["708", "剪贴板"], ["待确认", "Agent 连接"]],
             agents: [
               { source: "Codex", time: "17:16", body: "发布检查通过，DingDong 已播放提醒声音" },
@@ -1159,15 +1157,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         const section = createDemoElement("section", "demo-today-view");
         section.dataset.demoView = "today";
 
-        const status = createDemoElement("article", "demo-status-card");
-        const statusCopy = createDemoElement("div", "demo-status-copy");
-        statusCopy.append(
-          createDemoElement("b", "", content.today.status.title),
-          createDemoElement("span", "demo-status-time", `◷ ${content.today.status.time}`)
-        );
-        const ready = createDemoElement("span", "demo-ready-state", `✓ ${content.today.status.state}`);
-        status.append(statusCopy, ready);
-
         const metrics = createDemoElement("div", "demo-metrics");
         const metricSymbols = ["library", "clipboard", "mcp"];
         content.today.metrics.forEach(([value, label], index) => {
@@ -1225,7 +1214,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             enabledList.append(row);
           });
 
-        section.append(status, metrics, heading, agents, enabledHeading, enabledList);
+        section.append(metrics, heading, agents, enabledHeading, enabledList);
         return section;
       };
 

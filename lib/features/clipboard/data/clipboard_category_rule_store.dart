@@ -27,13 +27,20 @@ final class FileClipboardCategoryRuleStore
           decoded['rules'] is! List<Object?>) {
         return ClipboardCategoryRule.defaults();
       }
-      return List<ClipboardCategoryRule>.unmodifiable(
-        (decoded['rules']! as List<Object?>).map(
-          (Object? value) => ClipboardCategoryRule.fromJson(
-            Map<String, Object?>.from(value! as Map),
-          ),
-        ),
-      );
+      final List<ClipboardCategoryRule> rules =
+          (decoded['rules']! as List<Object?>)
+              .map(
+                (Object? value) => ClipboardCategoryRule.fromJson(
+                  Map<String, Object?>.from(value! as Map),
+                ),
+              )
+              .toList(growable: false);
+      // An empty persisted rule set is an incomplete configuration rather
+      // than a useful clipboard filter state. Keep the built-in categories
+      // available after an old migration or a damaged local write.
+      return rules.isEmpty
+          ? ClipboardCategoryRule.defaults()
+          : List<ClipboardCategoryRule>.unmodifiable(rules);
     } on Object {
       return ClipboardCategoryRule.defaults();
     }

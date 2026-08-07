@@ -115,14 +115,11 @@ final class ClipboardViewModel extends ChangeNotifier {
   List<ClipboardCategoryRule> get categoryRules =>
       List<ClipboardCategoryRule>.unmodifiable(_categoryRules);
 
+  /// Enabled categories stay visible even when the current history has no
+  /// matching record. Users can then see the available filters and choose one
+  /// before the next matching item arrives.
   List<ClipboardCategoryRule> get availableCategories => _categoryRules
-      .where(
-        (ClipboardCategoryRule rule) =>
-            rule.enabled &&
-            _activeRecords.any(
-              (ClipboardRecord record) => rule.matches(record),
-            ),
-      )
+      .where((ClipboardCategoryRule rule) => rule.enabled)
       .toList(growable: false);
 
   ClipboardCategoryRule? categoryFor(ClipboardRecord record) {
@@ -233,7 +230,11 @@ final class ClipboardViewModel extends ChangeNotifier {
   void load() {
     _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
     _archives = _archiveStore.listArchives();
-    _categoryRules = List<ClipboardCategoryRule>.of(_categoryRuleStore.load());
+    final List<ClipboardCategoryRule> loadedCategories = _categoryRuleStore
+        .load();
+    _categoryRules = loadedCategories.isEmpty
+        ? List<ClipboardCategoryRule>.of(ClipboardCategoryRule.defaults())
+        : List<ClipboardCategoryRule>.of(loadedCategories);
     _groupOrder
       ..clear()
       ..addAll(_groupOrderStore.load());

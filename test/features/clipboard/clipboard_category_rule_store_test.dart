@@ -24,7 +24,7 @@ void main() {
     expect(store.load(), const <ClipboardCategoryRule>[rule]);
   });
 
-  test('missing or malformed files fall back to current defaults', () {
+  test('missing, empty, or malformed files fall back to current defaults', () {
     final Directory directory = Directory.systemTemp.createTempSync(
       'dingdong-category-rules-',
     );
@@ -34,6 +34,8 @@ void main() {
       file,
     );
 
+    expect(store.load(), ClipboardCategoryRule.defaults());
+    file.writeAsStringSync('{"version": 1, "rules": []}');
     expect(store.load(), ClipboardCategoryRule.defaults());
     file.writeAsStringSync('{"legacy": true}');
     expect(store.load(), ClipboardCategoryRule.defaults());

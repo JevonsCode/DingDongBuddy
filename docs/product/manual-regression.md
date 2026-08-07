@@ -64,6 +64,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - `Command-R`/`Control-R` opens filters; when filters are active, the next press
   resets them to All while keeping the bar open, and the following press closes
   the bar. Mouse clicks keep their existing behavior.
+- Expanding the filter bar keeps the enabled built-in categories visible even
+  when the current history has no matching item; an empty persisted category
+  configuration restores Text, Links, Images, and Files.
 - The default `Control-Q/W/E` changes workspaces on macOS without replacing
   standard Command-Q/Command-W behavior; the default `Alt-Q/W/E` does the same
   on Windows. All three combinations are individually configurable.
