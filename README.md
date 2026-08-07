@@ -125,7 +125,11 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | Focus search | `⌘F` | `Ctrl+F` |
 | Open, reset, or hide filters | `⌘R` | `Ctrl+R` |
 | Use visible item 1–9 | `⌘1`–`⌘9` | `Ctrl+1`–`Ctrl+9` |
-| Preview / use selected item | `Space` / `Return` | `Space` / `Enter` |
+| Use visible item 1–9 as plain text | `⌥⌘1`–`⌥⌘9` | — |
+| Select visible Clipboard group 1–5 | `⌃1`–`⌃5` | `Alt+1`–`Alt+5` |
+| Move item / group selection | `↑` / `↓` · `←` / `→` | `↑` / `↓` · `←` / `→` |
+| Preview selected item | `Space` | `Space` |
+| Use selected item | `Return` | `Enter` |
 | Close preview, then hide panel | `Esc` | `Esc` |
 
 | Setting | Default | Options or limits |

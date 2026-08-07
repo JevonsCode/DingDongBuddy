@@ -80,6 +80,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - `Command-1…9` on macOS restores the matching visible row with its original
   rich-text representation when available; `Control-1…9` restores the matching
   row on Windows.
+- Holding Control on macOS or Alt on Windows reveals the first five visible
+  Clipboard groups as 1–5; pressing a number selects that group and expands
+  the filter row when needed.
 - Holding Option changes the macOS row hint to `Option-Command-1…9`, adds the
   Plain text label, and restores only the plain-text representation.
 - Restoring from the global shortcut returns focus and pastes into the previous app.

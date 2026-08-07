@@ -13,6 +13,11 @@ void main() {
       expect(english, contains('`⌘⇧V` (configurable)'));
       expect(english, contains('`Ctrl+Shift+V` (configurable)'));
       expect(english, contains('(individually configurable)'));
+      expect(
+        english,
+        contains('| Select visible Clipboard group 1–5 | `⌃1`–`⌃5` |'),
+      );
+      expect(english, contains('| Use visible item 1–9 as plain text |'));
       expect(english, contains('| Window opacity | 90% | 82%–96% |'));
       expect(
         english,
@@ -22,6 +27,8 @@ void main() {
       expect(chinese, contains('`⌘⇧V`（可配置）'));
       expect(chinese, contains('`Ctrl+Shift+V`（可配置）'));
       expect(chinese, contains('（可分别配置）'));
+      expect(chinese, contains('| 选择当前可见的剪贴板分组 1–5 | `⌃1`–`⌃5` |'));
+      expect(chinese, contains('| 以纯文本使用当前可见的第 1–9 条 |'));
       expect(chinese, contains('| 窗口透明度 | 90% | 82%–96% |'));
       expect(chinese, contains('| 剪贴板保留 | 5000 条、120 天 |'));
     },
@@ -36,6 +43,10 @@ void main() {
     expect(website, contains('设置 → 键盘快捷键'));
     expect(website, contains('<kbd>⌘⇧V</kbd>'));
     expect(website, contains('<kbd>Ctrl+Shift+V</kbd>'));
+    expect(website, contains('shortcuts.groups'));
+    expect(website, contains('<kbd>⌃1–5</kbd>'));
+    expect(website, contains('<kbd>Alt+1–5</kbd>'));
+    expect(website, contains('shortcuts.groupMove'));
     expect(website, contains('settings.retentionDefault'));
     expect(website, contains('settings.apiPortOptions'));
     expect(styles, contains('.defaults-grid'));
