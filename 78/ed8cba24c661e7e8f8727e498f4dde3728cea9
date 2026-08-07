@@ -1,0 +1,28 @@
+README.zh.md
+  s_076a8cec3f8011::t_e06f852f57e5b2 124-128
+docs/index.html
+  s_076a8cec3f8011::t_e06f852f57e5b2 275-280,284-288,675,688-690,870,883-885
+README.md
+  s_076a8cec3f8011::t_e06f852f57e5b2 128-132
+test/packaging/default_shortcuts_documentation_test.dart
+  s_076a8cec3f8011::t_e06f852f57e5b2 16-20,31,46-49
+  s_076a8cec3f8011::t_cce0ffc7add6f7 30
+docs/product/manual-regression.md
+  s_076a8cec3f8011::t_e06f852f57e5b2 83-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "78ed8cba24c661e7e8f8727e498f4dde3728cea9",
+  "prompts": {},
+  "sessions": {
+    "s_076a8cec3f8011": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9ff-56e4-7f01-b625-f05d0b4b2e40",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
