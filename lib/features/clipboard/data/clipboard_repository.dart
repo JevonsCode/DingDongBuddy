@@ -16,13 +16,70 @@ abstract interface class ClipboardStore {
   void delete(String id);
 }
 
+/// A durable snapshot that is independent from its clipboard-history source.
+final class ClipboardArchiveEntry {
+  const ClipboardArchiveEntry({
+    required this.record,
+    required this.sourceClipboardId,
+    required this.archivedAt,
+  });
+
+  final ClipboardRecord record;
+  final String sourceClipboardId;
+  final DateTime archivedAt;
+}
+
+/// Permanent archive storage. Automatic clipboard retention must never call
+/// any mutating method on this interface.
+abstract interface class ClipboardArchiveStore {
+  List<ClipboardArchiveEntry> listArchives();
+
+  void saveArchive(ClipboardArchiveEntry entry);
+
+  void deleteArchive(String id);
+}
+
+/// Volatile archive store used by widget tests and previews.
+final class InMemoryClipboardArchiveStore implements ClipboardArchiveStore {
+  InMemoryClipboardArchiveStore([
+    List<ClipboardArchiveEntry> entries = const <ClipboardArchiveEntry>[],
+  ]) : _entries = List<ClipboardArchiveEntry>.of(entries);
+
+  final List<ClipboardArchiveEntry> _entries;
+
+  @override
+  List<ClipboardArchiveEntry> listArchives() =>
+      List<ClipboardArchiveEntry>.unmodifiable(_entries);
+
+  @override
+  void saveArchive(ClipboardArchiveEntry entry) {
+    _entries.removeWhere(
+      (ClipboardArchiveEntry value) => value.record.id == entry.record.id,
+    );
+    _entries.insert(0, entry);
+  }
+
+  @override
+  void deleteArchive(String id) {
+    _entries.removeWhere(
+      (ClipboardArchiveEntry entry) => entry.record.id == id,
+    );
+  }
+}
+
 /// Volatile clipboard store used by widget tests and previews.
-final class InMemoryClipboardStore implements ClipboardStore {
+final class InMemoryClipboardStore
+    implements ClipboardStore, ClipboardArchiveStore {
   InMemoryClipboardStore([
     List<ClipboardRecord> records = const <ClipboardRecord>[],
-  ]) : _records = List<ClipboardRecord>.of(records);
+  ]) {
+    for (final ClipboardRecord record in records.reversed) {
+      _saveWithArchiveSplit(record);
+    }
+  }
 
-  final List<ClipboardRecord> _records;
+  final List<ClipboardRecord> _records = <ClipboardRecord>[];
+  final List<ClipboardArchiveEntry> _archives = <ClipboardArchiveEntry>[];
 
   @override
   List<ClipboardRecord> list({
@@ -36,24 +93,84 @@ final class InMemoryClipboardStore implements ClipboardStore {
 
   @override
   void save(ClipboardRecord record) {
+    _saveWithArchiveSplit(record);
+  }
+
+  void _saveWithArchiveSplit(ClipboardRecord record) {
+    final List<String> archiveGroups = record.groupNames
+        .where(_isArchiveGroup)
+        .toList(growable: false);
+    final List<String> historyGroups = record.groupNames
+        .where((String group) => !_isArchiveGroup(group))
+        .toList(growable: false);
+    final ClipboardRecord history = archiveGroups.isEmpty
+        ? record
+        : record.copyWith(groups: historyGroups);
     _records.removeWhere((ClipboardRecord value) => value.id == record.id);
-    _records.insert(0, record);
+    _records.insert(0, history);
+    if (archiveGroups.isEmpty) return;
+    final String archiveId = 'ARCHIVE-${record.id}';
+    saveArchive(
+      ClipboardArchiveEntry(
+        record: ClipboardRecord(
+          id: archiveId,
+          group: archiveGroups.first,
+          groups: archiveGroups,
+          title: record.title,
+          content: record.content,
+          htmlData: record.htmlData,
+          rtfData: record.rtfData,
+          tags: record.tags,
+          source: record.source,
+          pinned: record.pinned,
+          enabled: record.enabled,
+          activation: record.activation,
+          sortOrder: record.sortOrder,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+        ),
+        sourceClipboardId: record.id,
+        archivedAt: record.updatedAt,
+      ),
+    );
   }
 
   @override
   void delete(String id) {
     _records.removeWhere((ClipboardRecord record) => record.id == id);
   }
+
+  @override
+  List<ClipboardArchiveEntry> listArchives() =>
+      List<ClipboardArchiveEntry>.unmodifiable(_archives);
+
+  @override
+  void saveArchive(ClipboardArchiveEntry entry) {
+    _archives.removeWhere(
+      (ClipboardArchiveEntry value) => value.record.id == entry.record.id,
+    );
+    _archives.insert(0, entry);
+  }
+
+  @override
+  void deleteArchive(String id) {
+    _archives.removeWhere(
+      (ClipboardArchiveEntry entry) => entry.record.id == id,
+    );
+  }
 }
 
 /// SQLite-backed source of truth compatible with the native Core Data table.
-final class ClipboardRepository implements ClipboardStore {
+final class ClipboardRepository
+    implements ClipboardStore, ClipboardArchiveStore {
   ClipboardRepository._(this._database);
 
   factory ClipboardRepository.open(String path) {
     final Database database = sqlite3.open(path);
     _ensureSchema(database);
-    return ClipboardRepository._(database);
+    final ClipboardRepository repository = ClipboardRepository._(database);
+    repository._migrateLegacyGroupedRecords();
+    return repository;
   }
 
   static final DateTime _appleReferenceDate = DateTime.utc(2001);
@@ -100,7 +217,7 @@ final class ClipboardRepository implements ClipboardStore {
       var ordinaryItemCount = 0;
       for (final Row row in rows) {
         final ClipboardRecord record = _recordFromRow(row);
-        if (record.pinned || record.isArchived) {
+        if (record.pinned) {
           continue;
         }
         ordinaryItemCount += 1;
@@ -130,6 +247,73 @@ final class ClipboardRepository implements ClipboardStore {
 
   @override
   void save(ClipboardRecord record) {
+    final List<String> archiveGroups = record.groupNames
+        .where(_isArchiveGroup)
+        .toList(growable: false);
+    if (archiveGroups.isNotEmpty) {
+      _database.execute('BEGIN IMMEDIATE');
+      try {
+        final List<String> historyGroups = record.groupNames
+            .where((String group) => !_isArchiveGroup(group))
+            .toList(growable: false);
+        _saveSource(record.copyWith(groups: historyGroups));
+        final ResultSet existing = _database.select(
+          'SELECT * FROM ZCLIPBOARDARCHIVE WHERE ZSOURCECLIPBOARDID = ? '
+          'ORDER BY ZARCHIVEDAT ASC LIMIT 1',
+          <Object?>[record.id],
+        );
+        if (existing.isEmpty) {
+          saveArchive(
+            ClipboardArchiveEntry(
+              record: ClipboardRecord(
+                id: 'ARCHIVE-${record.id}',
+                group: archiveGroups.first,
+                groups: archiveGroups,
+                title: record.title,
+                content: record.content,
+                htmlData: record.htmlData,
+                rtfData: record.rtfData,
+                tags: record.tags,
+                source: record.source,
+                pinned: record.pinned,
+                enabled: record.enabled,
+                activation: record.activation,
+                sortOrder: record.sortOrder,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+              ),
+              sourceClipboardId: record.id,
+              archivedAt: record.updatedAt,
+            ),
+          );
+        } else {
+          final Row row = existing.single;
+          final ClipboardRecord archived = _recordFromRow(row);
+          saveArchive(
+            ClipboardArchiveEntry(
+              record: archived.copyWith(
+                groups: _uniqueGroups(<String>[
+                  ...archived.groupNames,
+                  ...archiveGroups,
+                ]),
+                updatedAt: record.updatedAt,
+              ),
+              sourceClipboardId: record.id,
+              archivedAt: _decodeDate(row['ZARCHIVEDAT']),
+            ),
+          );
+        }
+        _database.execute('COMMIT');
+        return;
+      } on Object {
+        _database.execute('ROLLBACK');
+        rethrow;
+      }
+    }
+    _saveSource(record);
+  }
+
+  void _saveSource(ClipboardRecord record) {
     _database.execute(
       '''
       INSERT INTO ZCLIPBOARDRECORD (
@@ -181,6 +365,79 @@ final class ClipboardRepository implements ClipboardStore {
     ]);
   }
 
+  @override
+  List<ClipboardArchiveEntry> listArchives() {
+    final ResultSet rows = _database.select(
+      'SELECT * FROM ZCLIPBOARDARCHIVE ORDER BY ZUPDATEDAT DESC',
+    );
+    return List<ClipboardArchiveEntry>.unmodifiable(
+      rows.map(
+        (Row row) => ClipboardArchiveEntry(
+          record: _recordFromRow(row),
+          sourceClipboardId: row['ZSOURCECLIPBOARDID'] as String? ?? '',
+          archivedAt: _decodeDate(row['ZARCHIVEDAT']),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void saveArchive(ClipboardArchiveEntry entry) {
+    final ClipboardRecord record = entry.record;
+    _database.execute(
+      '''
+      INSERT INTO ZCLIPBOARDARCHIVE (
+        Z_OPT, ZENABLED, ZPINNED, ZSORTORDER,
+        ZCREATEDAT, ZUPDATEDAT, ZARCHIVEDAT, ZACTIVATION, ZCONTENT, ZGROUP,
+        ZID, ZSOURCECLIPBOARDID, ZSOURCE, ZTITLE, ZTAGSDATA, ZHTMLDATA, ZRTFDATA
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(ZID) DO UPDATE SET
+        Z_OPT = Z_OPT + 1,
+        ZENABLED = excluded.ZENABLED,
+        ZPINNED = excluded.ZPINNED,
+        ZSORTORDER = excluded.ZSORTORDER,
+        ZCREATEDAT = excluded.ZCREATEDAT,
+        ZUPDATEDAT = excluded.ZUPDATEDAT,
+        ZARCHIVEDAT = excluded.ZARCHIVEDAT,
+        ZACTIVATION = excluded.ZACTIVATION,
+        ZCONTENT = excluded.ZCONTENT,
+        ZGROUP = excluded.ZGROUP,
+        ZSOURCECLIPBOARDID = excluded.ZSOURCECLIPBOARDID,
+        ZSOURCE = excluded.ZSOURCE,
+        ZTITLE = excluded.ZTITLE,
+        ZTAGSDATA = excluded.ZTAGSDATA,
+        ZHTMLDATA = excluded.ZHTMLDATA,
+        ZRTFDATA = excluded.ZRTFDATA
+      ''',
+      <Object?>[
+        1,
+        record.enabled ? 1 : 0,
+        record.pinned ? 1 : 0,
+        record.sortOrder,
+        _encodeDate(record.createdAt),
+        _encodeDate(record.updatedAt),
+        _encodeDate(entry.archivedAt),
+        record.activation,
+        record.content,
+        _encodeGroups(record.groupNames),
+        record.id,
+        entry.sourceClipboardId,
+        record.source,
+        record.title,
+        Uint8List.fromList(utf8.encode(jsonEncode(record.tags))),
+        record.htmlData,
+        record.rtfData,
+      ],
+    );
+  }
+
+  @override
+  void deleteArchive(String id) {
+    _database.execute('DELETE FROM ZCLIPBOARDARCHIVE WHERE ZID = ?', <Object?>[
+      id,
+    ]);
+  }
+
   void deleteAll() {
     _database
       ..execute('DELETE FROM ZCLIPBOARDRECORD')
@@ -188,7 +445,102 @@ final class ClipboardRepository implements ClipboardStore {
       ..execute('PRAGMA wal_checkpoint(TRUNCATE)');
   }
 
+  /// Deletes only clipboard-history rows of the requested kinds. Permanent
+  /// archive snapshots live in a different table and are never touched.
+  List<ClipboardRecord> deleteHistoryKinds(Set<ClipboardKind> kinds) {
+    if (kinds.isEmpty) return const <ClipboardRecord>[];
+    final List<ClipboardRecord> deleted = <ClipboardRecord>[];
+    _database.execute('BEGIN IMMEDIATE');
+    try {
+      final ResultSet rows = _database.select(
+        'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC',
+      );
+      final PreparedStatement statement = _database.prepare(
+        'DELETE FROM ZCLIPBOARDRECORD WHERE Z_PK = ?',
+      );
+      try {
+        for (final Row row in rows) {
+          final ClipboardRecord record = _recordFromRow(row);
+          if (!kinds.contains(record.kind)) continue;
+          statement.execute(<Object?>[row['Z_PK']]);
+          deleted.add(record);
+        }
+      } finally {
+        statement.close();
+      }
+      _database.execute('COMMIT');
+      return List<ClipboardRecord>.unmodifiable(deleted);
+    } on Object {
+      _database.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void close() => _database.close();
+
+  /// Copies every legacy custom-group record into the permanent archive and
+  /// removes only the custom grouping metadata from clipboard history. Both
+  /// writes share one transaction, so a crash cannot leave half a migration.
+  void _migrateLegacyGroupedRecords() {
+    _database.execute('BEGIN IMMEDIATE');
+    try {
+      final ResultSet rows = _database.select(
+        "SELECT * FROM ZCLIPBOARDRECORD WHERE TRIM(COALESCE(ZGROUP, '')) <> ''",
+      );
+      for (final Row row in rows) {
+        final ClipboardRecord source = _recordFromRow(row);
+        final List<String> archiveGroups = source.groupNames
+            .where(_isArchiveGroup)
+            .toList(growable: false);
+        if (archiveGroups.isEmpty) {
+          continue;
+        }
+        final String archiveId = 'ARCHIVE-${source.id}';
+        final ClipboardRecord snapshot = ClipboardRecord(
+          id: archiveId,
+          group: archiveGroups.first,
+          groups: archiveGroups,
+          title: source.title,
+          content: source.content,
+          htmlData: source.htmlData,
+          rtfData: source.rtfData,
+          tags: source.tags,
+          source: source.source,
+          pinned: source.pinned,
+          enabled: source.enabled,
+          activation: source.activation,
+          sortOrder: source.sortOrder,
+          createdAt: source.createdAt,
+          updatedAt: source.updatedAt,
+        );
+        final bool exists = _database.select(
+          'SELECT 1 FROM ZCLIPBOARDARCHIVE WHERE ZID = ? LIMIT 1',
+          <Object?>[archiveId],
+        ).isNotEmpty;
+        if (!exists) {
+          saveArchive(
+            ClipboardArchiveEntry(
+              record: snapshot,
+              sourceClipboardId: source.id,
+              archivedAt: source.updatedAt,
+            ),
+          );
+        }
+        final List<String> remainingGroups = source.groupNames
+            .where((String group) => !_isArchiveGroup(group))
+            .toList(growable: false);
+        _database.execute(
+          'UPDATE ZCLIPBOARDRECORD SET ZGROUP = ?, Z_OPT = Z_OPT + 1 '
+          'WHERE Z_PK = ?',
+          <Object?>[_encodeGroups(remainingGroups), row['Z_PK']],
+        );
+      }
+      _database.execute('COMMIT');
+    } on Object {
+      _database.execute('ROLLBACK');
+      rethrow;
+    }
+  }
 
   static ClipboardRecord _recordFromRow(Row row) {
     final List<String> tags = _decodeTags(row['ZTAGSDATA']);
@@ -303,6 +655,36 @@ final class ClipboardRepository implements ClipboardStore {
       ..execute(
         'CREATE UNIQUE INDEX IF NOT EXISTS Z_ClipboardRecord_UNIQUE_id '
         'ON ZCLIPBOARDRECORD (ZID COLLATE BINARY ASC)',
+      )
+      ..execute('''
+        CREATE TABLE IF NOT EXISTS ZCLIPBOARDARCHIVE (
+          Z_PK INTEGER PRIMARY KEY AUTOINCREMENT,
+          Z_OPT INTEGER,
+          ZENABLED INTEGER,
+          ZPINNED INTEGER,
+          ZSORTORDER INTEGER,
+          ZCREATEDAT TIMESTAMP,
+          ZUPDATEDAT TIMESTAMP,
+          ZARCHIVEDAT TIMESTAMP,
+          ZACTIVATION VARCHAR,
+          ZCONTENT VARCHAR,
+          ZGROUP VARCHAR,
+          ZID VARCHAR,
+          ZSOURCECLIPBOARDID VARCHAR,
+          ZSOURCE VARCHAR,
+          ZTITLE VARCHAR,
+          ZTAGSDATA BLOB,
+          ZHTMLDATA BLOB,
+          ZRTFDATA BLOB
+        )
+      ''')
+      ..execute(
+        'CREATE UNIQUE INDEX IF NOT EXISTS Z_ClipboardArchive_UNIQUE_id '
+        'ON ZCLIPBOARDARCHIVE (ZID COLLATE BINARY ASC)',
+      )
+      ..execute(
+        'CREATE INDEX IF NOT EXISTS Z_ClipboardArchive_source_id '
+        'ON ZCLIPBOARDARCHIVE (ZSOURCECLIPBOARDID COLLATE BINARY ASC)',
       );
     _ensureColumn(database, 'ZHTMLDATA', 'BLOB');
     _ensureColumn(database, 'ZRTFDATA', 'BLOB');
@@ -330,7 +712,7 @@ List<ClipboardRecord> _boundedHistory(
   final List<ClipboardRecord> result = <ClipboardRecord>[];
   var ordinaryCount = 0;
   for (final ClipboardRecord record in records) {
-    if (record.pinned || record.isArchived) {
+    if (record.pinned) {
       result.add(record);
     } else if (ordinaryCount < boundedLimit) {
       ordinaryCount += 1;
@@ -349,3 +731,7 @@ List<String> _uniqueGroups(Iterable<String> values) {
       )
       .toList(growable: false);
 }
+
+bool _isArchiveGroup(String value) =>
+    value.trim().toLowerCase() == 'archive' ||
+    !isAutomaticClipboardGroup(value);

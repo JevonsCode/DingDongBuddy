@@ -63,7 +63,8 @@ final class ClipboardRecord {
         .toList(growable: false);
   }
 
-  /// Whether automatic retention must leave this grouped record untouched.
+  /// Legacy grouping hint. Permanent archive protection now comes exclusively
+  /// from the separate archive store, never from this history-row property.
   bool get isArchived => groupNames.any((String value) {
     final String normalized = value.trim().toLowerCase();
     return normalized == 'archive' || !isAutomaticClipboardGroup(value);

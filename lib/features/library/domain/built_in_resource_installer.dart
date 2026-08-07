@@ -17,7 +17,7 @@ final class BuiltInResourceInstaller {
        _skillDocumentLoader = skillDocumentLoader;
 
   static const String preferenceKey = 'dingdong.library.builtInResourceVersion';
-  static const int currentVersion = 9;
+  static const int currentVersion = 10;
 
   final ResourceStore _store;
   final PreferencesBackend _preferences;
@@ -69,6 +69,42 @@ final class BuiltInResourceInstaller {
         if (current.content != document) {
           next[index] = current.copyWith(
             content: document,
+            updatedAt: _now().toUtc(),
+          );
+          changed = true;
+        }
+      }
+    }
+    if (installedVersion < 10) {
+      final int skillIndex = next.indexWhere(
+        (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
+      );
+      if (skillIndex >= 0 && !next[skillIndex].hideInAgentConversation) {
+        next[skillIndex] = next[skillIndex].copyWith(
+          hideInAgentConversation: true,
+          updatedAt: _now().toUtc(),
+        );
+        changed = true;
+      }
+
+      final int promptIndex = next.indexWhere(
+        (Resource resource) => resource.id == builtInReplyMarkerPromptId,
+      );
+      if (promptIndex >= 0) {
+        final Resource current = next[promptIndex];
+        final Resource bundled = builtInReplyMarkerPrompt(_now());
+        final bool isPreviousDefault =
+            current.title == '回复末尾添加 👻' ||
+            current.content == '每次完整回复的最后加一个「👻」';
+        final bool isCurrentBundledDefault =
+            current.title == bundled.title &&
+            current.content == bundled.content &&
+            current.agentSessionName == null;
+        if (isPreviousDefault || isCurrentBundledDefault) {
+          next[promptIndex] = current.copyWith(
+            title: bundled.title,
+            content: bundled.content,
+            agentSessionName: bundled.agentSessionName,
             updatedAt: _now().toUtc(),
           );
           changed = true;

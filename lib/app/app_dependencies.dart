@@ -219,13 +219,26 @@ final class AppDependencies {
       maxAgeDays: settings.clipboardMaxAgeDays,
       now: now ?? DateTime.now().toUtc(),
     );
+    final List<ClipboardRecord> archives = clipboardStore
+        .listArchives()
+        .map((ClipboardArchiveEntry entry) => entry.record)
+        .toList(growable: false);
+    final Set<String> archivedImagePaths = archives
+        .where(
+          (ClipboardRecord record) =>
+              record.tags.contains('image') && record.tags.contains('file-url'),
+        )
+        .map((ClipboardRecord record) => record.content)
+        .toSet();
     for (final ClipboardRecord record in deleted) {
-      deleteManagedClipboardImage(record, paths.clipboardImagesDirectory);
+      if (!archivedImagePaths.contains(record.content)) {
+        deleteManagedClipboardImage(record, paths.clipboardImagesDirectory);
+      }
     }
-    pruneUnreferencedManagedClipboardImages(
-      clipboardStore.list(limit: 5000, includeProtectedBeyondLimit: true),
-      paths.clipboardImagesDirectory,
-    );
+    pruneUnreferencedManagedClipboardImages(<ClipboardRecord>[
+      ...clipboardStore.list(limit: 5000, includeProtectedBeyondLimit: true),
+      ...archives,
+    ], paths.clipboardImagesDirectory);
   }
 
   Future<void> start() async {

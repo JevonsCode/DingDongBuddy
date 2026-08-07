@@ -41,6 +41,7 @@ class ClipboardScreen extends StatefulWidget {
     this.settingsViewModel,
     this.showShortcutHints = false,
     this.showPlainTextShortcutHints = false,
+    this.showGroupShortcutHints = false,
     this.onPreview,
     this.onOpenContent,
     this.onDismissPreview,
@@ -50,6 +51,7 @@ class ClipboardScreen extends StatefulWidget {
     this.filtersExpanded,
     this.onToggleFilters,
     this.onShortcutStartIndexChanged,
+    this.onGroupShortcutStartIndexChanged,
     this.searchFocusRevision = 0,
     this.now,
     super.key,
@@ -59,6 +61,7 @@ class ClipboardScreen extends StatefulWidget {
   final ClipboardSettingsController? settingsViewModel;
   final bool showShortcutHints;
   final bool showPlainTextShortcutHints;
+  final bool showGroupShortcutHints;
   final Future<void> Function(ClipboardRecord record)? onPreview;
   final Future<void> Function(ClipboardRecord record)? onOpenContent;
   final Future<void> Function()? onDismissPreview;
@@ -68,6 +71,7 @@ class ClipboardScreen extends StatefulWidget {
   final bool? filtersExpanded;
   final VoidCallback? onToggleFilters;
   final ValueChanged<int>? onShortcutStartIndexChanged;
+  final ValueChanged<int>? onGroupShortcutStartIndexChanged;
   final int searchFocusRevision;
   final DateTime Function()? now;
 
@@ -78,7 +82,9 @@ class ClipboardScreen extends StatefulWidget {
 class _ClipboardScreenState extends State<ClipboardScreen>
     with WidgetsBindingObserver {
   bool _showFilters = false;
+  bool _groupModifierPressed = false;
   int _shortcutStartIndex = 0;
+  int _groupShortcutStartIndex = 0;
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'clipboard-search');
   late final TextEditingController _searchController;
 
@@ -128,6 +134,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
       widget.settingsViewModel;
   bool get showShortcutHints => widget.showShortcutHints;
   bool get showPlainTextShortcutHints => widget.showPlainTextShortcutHints;
+  bool get showGroupShortcutHints =>
+      widget.showGroupShortcutHints || _groupModifierPressed;
   Future<void> Function(ClipboardRecord record)? get onPreview =>
       widget.onPreview;
   Future<void> Function(ClipboardRecord record)? get onOpenContent =>
@@ -187,6 +195,22 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     widget.onShortcutStartIndexChanged?.call(index);
   }
 
+  void _handleGroupShortcutStartIndexChanged(int index) {
+    _groupShortcutStartIndex = index;
+    widget.onGroupShortcutStartIndexChanged?.call(index);
+  }
+
+  void _revealGroups() {
+    if (!filtersExpanded && MediaQuery.sizeOf(context).width < 600) {
+      _toggleFilters();
+    }
+  }
+
+  void _moveGroupSelection(int offset) {
+    _revealGroups();
+    viewModel.moveGroupSelection(offset);
+  }
+
   Future<void> _openContent(
     BuildContext context,
     ClipboardRecord record,
@@ -224,10 +248,32 @@ class _ClipboardScreenState extends State<ClipboardScreen>
           child: Focus(
             autofocus: true,
             onKeyEvent: (FocusNode node, KeyEvent event) {
+              if (_isGroupModifierKey(
+                event.logicalKey,
+                defaultTargetPlatform,
+              )) {
+                final bool pressed = event is! KeyUpEvent;
+                if (_groupModifierPressed != pressed) {
+                  setState(() => _groupModifierPressed = pressed);
+                }
+                if (pressed && viewModel.groups.isNotEmpty) {
+                  _revealGroups();
+                }
+                return KeyEventResult.ignored;
+              }
               if (event is! KeyDownEvent) {
                 return KeyEventResult.ignored;
               }
               final HardwareKeyboard keyboard = HardwareKeyboard.instance;
+              if (_searchFocusNode.hasFocus &&
+                  <LogicalKeyboardKey>{
+                    LogicalKeyboardKey.arrowDown,
+                    LogicalKeyboardKey.arrowUp,
+                    LogicalKeyboardKey.arrowLeft,
+                    LogicalKeyboardKey.arrowRight,
+                  }.contains(event.logicalKey)) {
+                return KeyEventResult.ignored;
+              }
               if (event.logicalKey == LogicalKeyboardKey.keyR &&
                   (keyboard.isMetaPressed || keyboard.isControlPressed)) {
                 _handleFilterShortcut();
@@ -239,6 +285,14 @@ class _ClipboardScreenState extends State<ClipboardScreen>
               }
               if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
                 viewModel.moveSelection(-1);
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                _moveGroupSelection(1);
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                _moveGroupSelection(-1);
                 return KeyEventResult.handled;
               }
               if (event.logicalKey == LogicalKeyboardKey.space) {
@@ -258,6 +312,16 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                 return KeyEventResult.handled;
               }
               final int? shortcutIndex = _numberShortcutIndex(event.logicalKey);
+              if (shortcutIndex != null &&
+                  shortcutIndex < 5 &&
+                  _isGroupModifierPressed(keyboard, defaultTargetPlatform) &&
+                  viewModel.groups.isNotEmpty) {
+                _revealGroups();
+                viewModel.selectGroupAt(
+                  _groupShortcutStartIndex + shortcutIndex,
+                );
+                return KeyEventResult.handled;
+              }
               if (shortcutIndex != null &&
                   (keyboard.isMetaPressed || keyboard.isControlPressed)) {
                 unawaited(
@@ -287,7 +351,10 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                       searchController: _searchController,
                       filtersExpanded: filtersExpanded,
                       showShortcutHint: showShortcutHints,
+                      showGroupShortcutHints: showGroupShortcutHints,
                       contextMenuGateway: contextMenuGateway,
+                      onGroupShortcutStartIndexChanged:
+                          _handleGroupShortcutStartIndexChanged,
                       onToggleFilters: _toggleFilters,
                     )
                   else ...<Widget>[
@@ -333,6 +400,9 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                             _ClipboardGroupFilters(
                               viewModel: viewModel,
                               contextMenuGateway: contextMenuGateway,
+                              showShortcutHints: showGroupShortcutHints,
+                              onShortcutStartIndexChanged:
+                                  _handleGroupShortcutStartIndexChanged,
                             ),
                           ],
                         ],
@@ -413,3 +483,16 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     await viewModel.restoreSelected();
   }
 }
+
+bool _isGroupModifierKey(LogicalKeyboardKey key, TargetPlatform platform) =>
+    usesMetaAsPrimaryModifier(platform)
+    ? key == LogicalKeyboardKey.controlLeft ||
+          key == LogicalKeyboardKey.controlRight
+    : key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight;
+
+bool _isGroupModifierPressed(
+  HardwareKeyboard keyboard,
+  TargetPlatform platform,
+) => usesMetaAsPrimaryModifier(platform)
+    ? keyboard.isControlPressed
+    : keyboard.isAltPressed;

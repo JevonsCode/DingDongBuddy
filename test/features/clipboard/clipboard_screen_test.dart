@@ -343,6 +343,111 @@ void main() {
     expect(model.selectedRecord?.id, 'item-1');
   });
 
+  testWidgets('vertical arrows move rows and horizontal arrows move groups', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(760, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    ClipboardRecord grouped(String id, String group) => ClipboardRecord(
+      id: id,
+      group: group,
+      title: id,
+      content: id,
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        grouped('alpha-1', 'Group A'),
+        grouped('alpha-2', 'Group A'),
+        grouped('beta-1', 'Group B'),
+      ]),
+    )..load();
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardScreen(viewModel: model)),
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    expect(model.selectedRecord?.id, 'alpha-2');
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(model.selectedGroup, 'Group A');
+    expect(model.selectedRecord?.id, 'ARCHIVE-alpha-1');
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    expect(model.selectedRecord?.id, 'ARCHIVE-alpha-2');
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(model.selectedGroup, 'Group B');
+    expect(model.selectedRecord?.id, 'ARCHIVE-beta-1');
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pumpAndSettle();
+    expect(model.selectedGroup, 'Group A');
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    expect(model.selectedGroup, isNull);
+  });
+
+  testWidgetsOnPlatform(
+    'Control reveals five archive shortcuts and selects a visible group',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(760, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 8, 6);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(
+          List<ClipboardRecord>.generate(
+            6,
+            (int index) => ClipboardRecord(
+              id: 'group-$index',
+              group: 'Group ${String.fromCharCode(65 + index)}',
+              title: 'Group $index',
+              content: 'Group $index',
+              tags: const <String>['clipboard', 'text'],
+              pinned: false,
+              enabled: true,
+              activation: 'taskMatch',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ),
+        ),
+      )..load();
+      await tester.pumpWidget(
+        MaterialApp(home: ClipboardScreen(viewModel: model)),
+      );
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      for (int index = 1; index <= 5; index++) {
+        expect(
+          find.byKey(Key('clipboard-group-shortcut-$index')),
+          findsOneWidget,
+        );
+      }
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
+      await tester.pumpAndSettle();
+      expect(model.selectedGroup, 'Group B');
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.byKey(const Key('clipboard-group-shortcut-1')), findsNothing);
+    },
+  );
+
   testWidgets('Command-R opens, resets, then closes clipboard filters', (
     WidgetTester tester,
   ) async {
@@ -1318,15 +1423,22 @@ void main() {
       await tester.tap(find.byKey(const Key('clipboard-save-groups')));
       await tester.pumpAndSettle();
 
-      expect(model.selectedRecord?.groupNames, <String>[
-        'Clipboard',
-        '项目甲',
-        '项目乙',
-      ]);
+      expect(model.selectedRecord?.groupNames, <String>['Clipboard']);
+      expect(
+        store
+            .listArchives()
+            .firstWhere(
+              (ClipboardArchiveEntry entry) =>
+                  entry.sourceClipboardId == target.id,
+            )
+            .record
+            .groupNames,
+        <String>['项目甲', '项目乙'],
+      );
     },
   );
 
-  testWidgets('right-clicking a group deletes only its membership', (
+  testWidgets('right-clicking a group deletes copies but preserves history', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -1379,13 +1491,14 @@ void main() {
     await tester.tap(find.text('Delete group'));
     await tester.pumpAndSettle();
     expect(find.text('Delete “项目甲”?'), findsOneWidget);
-    expect(find.textContaining('2 clipboard items'), findsOneWidget);
+    expect(find.textContaining('2 archived copies'), findsOneWidget);
 
     await tester.tap(find.text('Delete group'));
     await tester.pumpAndSettle();
 
     expect(group, findsNothing);
     expect(store.list(limit: 10), hasLength(2));
+    expect(store.listArchives(), isEmpty);
     expect(
       store
           .list(limit: 10)

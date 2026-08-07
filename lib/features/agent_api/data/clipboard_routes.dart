@@ -7,15 +7,25 @@ import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 /// Clipboard-specific HTTP handlers with privacy-safe defaults.
 final class ClipboardRoutes {
   ClipboardRoutes(this._store, {DateTime Function()? now})
-    : _now = now ?? _utcNow;
+    : _archiveStore = _store is ClipboardArchiveStore
+          ? _store as ClipboardArchiveStore
+          : null,
+      _now = now ?? _utcNow;
 
   final ClipboardStore _store;
+  final ClipboardArchiveStore? _archiveStore;
   final DateTime Function() _now;
 
   ClipboardRecord? findById(String id) {
     for (final ClipboardRecord record in _store.list(limit: 5000)) {
       if (record.id == id) {
         return record;
+      }
+    }
+    for (final ClipboardArchiveEntry entry
+        in _archiveStore?.listArchives() ?? const <ClipboardArchiveEntry>[]) {
+      if (entry.record.id == id) {
+        return entry.record;
       }
     }
     return null;
@@ -65,8 +75,10 @@ final class ClipboardRoutes {
         },
       );
     }
-    final List<ClipboardRecord> matched = _store
-        .list(limit: 5000)
+    final List<ClipboardRecord> candidates = group == null
+        ? _store.list(limit: 5000)
+        : _archiveRecords;
+    final List<ClipboardRecord> matched = candidates
         .where((ClipboardRecord record) => _matches(record, needle))
         .where(
           (ClipboardRecord record) =>
@@ -138,7 +150,7 @@ final class ClipboardRoutes {
   }
 
   HttpResponseData groups() {
-    final List<ClipboardRecord> records = _store.list(limit: 5000);
+    final List<ClipboardRecord> records = _archiveRecords;
     final Map<String, List<ClipboardRecord>> buckets =
         <String, List<ClipboardRecord>>{};
     for (final ClipboardRecord record in records) {
@@ -236,7 +248,18 @@ final class ClipboardRoutes {
         pinned: decoded['pinned'] as bool?,
         updatedAt: _now().toUtc(),
       );
-      _store.save(updated);
+      final ClipboardArchiveEntry? archive = _archiveEntryById(id);
+      if (archive == null) {
+        _store.save(updated);
+      } else {
+        _archiveStore!.saveArchive(
+          ClipboardArchiveEntry(
+            record: updated,
+            sourceClipboardId: archive.sourceClipboardId,
+            archivedAt: archive.archivedAt,
+          ),
+        );
+      }
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{
@@ -253,6 +276,19 @@ final class ClipboardRoutes {
         },
       );
     }
+  }
+
+  List<ClipboardRecord> get _archiveRecords =>
+      (_archiveStore?.listArchives() ?? const <ClipboardArchiveEntry>[])
+          .map((ClipboardArchiveEntry entry) => entry.record)
+          .toList(growable: false);
+
+  ClipboardArchiveEntry? _archiveEntryById(String id) {
+    for (final ClipboardArchiveEntry entry
+        in _archiveStore?.listArchives() ?? const <ClipboardArchiveEntry>[]) {
+      if (entry.record.id == id) return entry;
+    }
+    return null;
   }
 }
 

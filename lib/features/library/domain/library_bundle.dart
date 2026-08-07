@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:path/path.dart' as path;
 
 /// Portable, selective resource bundle with stable-ID and content deduplication.
@@ -35,15 +36,84 @@ final class LibraryBundle {
     };
   }
 
+  /// Returns one share-safe item for API and file exports.
+  ///
+  /// Resources backed by an online source carry only `contentURL`; local
+  /// snapshots are intentionally excluded from the portable representation.
+  static Map<String, Object?> portableItem(Resource resource) {
+    return _portableJson(resource);
+  }
+
   static LibraryBundleImportResult decode(
     String contents, {
     required List<Resource> existing,
   }) {
-    final Object? decoded = jsonDecode(contents);
-    if (decoded is! Map<String, Object?>) {
-      throw const FormatException('Library bundle must be a JSON object.');
+    return importPayload(_decodePayload(contents), existing: existing);
+  }
+
+  /// Decodes a bundle and resolves item-level online links before deduping.
+  ///
+  /// A bundle can contain any number of items. Online items use `contentURL`
+  /// (or the legacy `updateURL`) as the canonical source and never copy that
+  /// URL's body into the exported bundle again.
+  static Future<LibraryBundleImportResult> decodeOnline(
+    String contents, {
+    required List<Resource> existing,
+    required ResourceUpdateFetcher fetcher,
+  }) async {
+    final Map<String, Object?> payload = _decodePayload(contents);
+    final Object? rawItems = payload['items'];
+    if (rawItems is! List<Object?>) {
+      throw const FormatException('Library bundle items must be a list.');
     }
-    return importPayload(decoded, existing: existing);
+    final Set<String>? selectedIds = switch (payload['selectedIds']) {
+      final List<Object?> values => values.whereType<String>().toSet(),
+      _ => null,
+    };
+    final List<Object?> resolvedItems = <Object?>[];
+    final List<Resource> onlineCandidates = <Resource>[];
+    final Set<String> onlineUrls = <String>{};
+    for (final Object? rawItem in rawItems) {
+      if (rawItem is! Map<String, Object?>) {
+        throw const FormatException('Library bundle item must be an object.');
+      }
+      final String? id = rawItem['id'] as String?;
+      if (selectedIds != null && id != null && !selectedIds.contains(id)) {
+        resolvedItems.add(rawItem);
+        continue;
+      }
+      final String? link = _onlineContentUrl(rawItem);
+      if (link == null) {
+        resolvedItems.add(rawItem);
+        continue;
+      }
+      final Uri? uri = Uri.tryParse(link);
+      if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+        throw FormatException('Invalid online resource link: $link');
+      }
+      final String fetched = await fetcher.fetch(uri);
+      final Map<String, Object?> resolved = Map<String, Object?>.of(rawItem)
+        ..['content'] = fetched
+        ..['updateURL'] = link
+        ..remove('contentURL')
+        ..remove('sourceURL');
+      resolvedItems.add(resolved);
+      onlineCandidates.add(Resource.fromJson(resolved));
+      onlineUrls.add(link);
+    }
+    final LibraryBundleImportResult result = importPayload(<String, Object?>{
+      ...payload,
+      'items': resolvedItems,
+    }, existing: existing);
+    return result.copyWith(
+      onlineResources: onlineCandidates
+          .where(
+            (Resource resource) =>
+                resource.updateUrl != null &&
+                onlineUrls.contains(resource.updateUrl),
+          )
+          .toList(growable: false),
+    );
   }
 
   static LibraryBundleImportResult importPayload(
@@ -57,7 +127,9 @@ final class LibraryBundle {
       );
     }
     final Object? service = payload['service'];
-    if (service != null && service != 'DingDongBuddy') {
+    if (service != null &&
+        service != 'DingDongBuddy' &&
+        service != 'DingDong') {
       throw const FormatException('Library bundle is for another service.');
     }
     final Object? rawItems = payload['items'];
@@ -128,11 +200,21 @@ final class LibraryBundle {
 
 Map<String, Object?> _portableJson(Resource resource) {
   final Map<String, Object?> json = Map<String, Object?>.of(resource.toJson());
-  json['content'] = _portableContent(resource);
+  final String? updateUrl = resource.updateUrl;
+  if (updateUrl != null) {
+    // Online resources are shared by reference. The local snapshot remains
+    // available to the current Agent, but it must not leak into a share file.
+    json
+      ..remove('content')
+      ..remove('updateURL')
+      ..remove('packagePath')
+      ..['contentURL'] = updateUrl;
+  } else {
+    json['content'] = _portableContent(resource);
+  }
   // These fields can contain machine-specific paths or private URLs and are
   // intentionally not transferred to another computer.
   json.remove('source');
-  json.remove('updateURL');
   json.remove('packagePath');
   return json;
 }
@@ -238,13 +320,46 @@ final class LibraryBundleImportResult {
     required this.imported,
     required this.duplicateIds,
     required this.conflictIds,
+    this.onlineResources = const <Resource>[],
   });
 
   final List<Resource> imported;
   final List<String> duplicateIds;
   final List<String> conflictIds;
+  final List<Resource> onlineResources;
 
   int get skippedCount => duplicateIds.length + conflictIds.length;
+
+  LibraryBundleImportResult copyWith({List<Resource>? onlineResources}) {
+    return LibraryBundleImportResult(
+      imported: imported,
+      duplicateIds: duplicateIds,
+      conflictIds: conflictIds,
+      onlineResources: onlineResources ?? this.onlineResources,
+    );
+  }
+}
+
+Map<String, Object?> _decodePayload(String contents) {
+  final Object? decoded = jsonDecode(contents);
+  if (decoded is! Map<String, Object?>) {
+    throw const FormatException('Library bundle must be a JSON object.');
+  }
+  return decoded;
+}
+
+String? _onlineContentUrl(Map<String, Object?> item) {
+  for (final String key in const <String>[
+    'contentURL',
+    'sourceURL',
+    'updateURL',
+  ]) {
+    final String? value = item[key] as String?;
+    if (value != null && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+  }
+  return null;
 }
 
 String _contentKey(Resource resource) {

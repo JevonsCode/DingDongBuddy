@@ -55,7 +55,7 @@ flowchart LR
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.1.0.”
+- “Use this project's release workflow, run every check, and prepare version 1.2.0.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with

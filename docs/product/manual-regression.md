@@ -1,4 +1,4 @@
-# DingDong 1.1.0 Manual Regression Checklist
+# DingDong 1.2.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -71,6 +71,9 @@ and macOS golden images; the items below exercise real operating-system state.
 - Arrow keys change selection and Enter restores it.
 - Textual-row context menus expose both Paste and Paste as Plain Text; file and
   image rows do not expose the plain-text action.
+- Promoting a custom Clipboard group creates a permanent archive entry that
+  survives item and age retention; archive images remain available after
+  ordinary history cleanup.
 - `Command-1…9` on macOS restores the matching visible row with its original
   rich-text representation when available; `Control-1…9` restores the matching
   row on Windows.
@@ -94,7 +97,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - Prompt, Skill, and MCP resources use type-specific creation and editing flows.
 - Online Skills parse `name` and `description` from `SKILL.md`, keep upstream
   content read-only, retain their source URL, and support Open and Update.
-- Local Skills can be edited directly or imported from a local folder.
+- Local Skills can be edited directly; exported JSON files and resource links
+  can be imported through the review flow.
 - Trigger groups can be named, searched, assigned to multiple resources, and
   limited by workspace path, repository-address, or Agent-source rules (for
   example Codex, Claude Code, or Cursor).
@@ -109,7 +113,13 @@ and macOS golden images; the items below exercise real operating-system state.
   Resource Manager updates the popup resource list, Dynamic resource count,
   and the complete Enabled list without restarting DingDong; reopening the
   popup also recovers the latest on-disk state if a notification was missed.
-- Folder import reports imported and skipped files; JSON export can be saved and reopened.
+- JSON export can be saved and reopened, with imported and skipped entries
+  reported in the review flow.
+- JSON file and link imports resolve online content before conflict review,
+  retain source links, and add a bounded import-history record.
+- Resource editors limit Agent conversation loading names to seven Unicode
+  characters; the built-in DingDong Configure Skill keeps the hide-in-summary
+  switch enabled while remaining usable by the Agent.
 - GitHub repository, folder, `blob` `SKILL.md`, and raw `SKILL.md` links install
   the complete Skill directory rather than only its entry file.
 - Updating an online Skill replaces the complete local package only after the
@@ -220,6 +230,10 @@ and macOS golden images; the items below exercise real operating-system state.
 - Report a problem and Request a feature open the matching structured GitHub forms.
 - Settings do not expose analytics controls, and release builds contain no analytics SDK or analytics build key.
 - Memory and local storage usage can be refreshed without blocking navigation.
+- Storage usage separates Clipboard images, text, files, and archive entries;
+  category cleanup preserves the archive.
+- macOS Settings and the Dock menu can open the menu-bar recovery assistant,
+  and Command-dragging the status item restores its position.
 - API port accepts 1024–65535 and states that restart is required.
 
 ## Accessibility and readability
@@ -272,8 +286,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.1.0` build `38` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.1.0.38` and product name `DingDong`.
+- The macOS release app metadata is version `1.2.0` build `39` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.2.0.39` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

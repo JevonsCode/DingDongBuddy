@@ -1,53 +1,69 @@
-# DingDong 1.1.0
+# DingDong 1.2.0
 
-DingDong 1.1.0 improves Agent activity recovery and makes Codex background
-tasks clearer before they are opened.
+DingDong 1.2.0 expands resource import and durability, adds clearer Agent
+loading labels, and improves desktop storage and macOS recovery workflows.
 
-## Agent activity
+## Resource library
 
-- Codex conversations are preflighted before the activity list offers an open
-  action, avoiding stale links to unavailable threads.
-- Recognized Codex background subagents show a compact `sub` marker and cannot
-  be opened as ordinary user conversations.
-- Unknown or no-longer-resolvable Agent targets show a non-interactive unknown
-  icon instead of a misleading open action.
-- Recent activity and the Resource Manager share the same target resolution
-  state, including subagent and unknown-target indicators.
+- Resources can define an optional Agent conversation loading name, limited to
+  seven Unicode characters.
+- The built-in reply-marker Prompt uses `🌟`; the built-in DingDong Configure
+  Skill remains loaded but is hidden from the Agent conversation summary.
+- JSON files and links can be imported with conflict review, source-link
+  resolution, and import history.
+- Online resources preserve their source links, while history keeps the latest
+  import records available for review.
 
-## Clipboard groups and recovery
+## Clipboard archive and storage
 
-- Empty groups preserved by the order file remain visible, so groups such as
-  PageID can be recovered and used for explicit reassignment.
-- Group matching is normalized consistently without inferring archive scope
-  from text, titles, or tags.
+- Custom Clipboard groups are promoted into independent permanent archive
+  entries instead of depending on expiring history rows.
+- Retention and cleanup protect archived entries and their managed images.
+- Storage usage now separates Clipboard images, text, files, and archives, with
+  per-category cleanup counts.
 
-## Agent integration
+## Desktop recovery
 
-- Codex preflight and native launch behavior now share cached, batch-resolved
-  conversation state.
-- The MCP server and completion hook advertise the 1.1.0 application version.
+- macOS adds a menu-bar recovery assistant from Settings and the Dock menu.
+- Status-item Command-drag recovery and native menu-bar diagnostics are more
+  explicit and easier to verify.
+
+## Agent API
+
+- Resource JSON and Agent routes persist the new loading-name and hidden-summary
+  fields consistently.
+- Bridge summaries omit resources marked as hidden while still delivering their
+  Prompt, Skill, or MCP behavior.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.1.0 改进了 Agent 动态恢复，并在打开前明确区分 Codex 后台任务。
+DingDong 1.2.0 扩展了资源导入与持久归档能力，新增更清晰的 Agent 加载名称，
+并改进桌面存储统计和 macOS 恢复流程。
 
-## Agent 动态
+## 资源库
 
-- 动态列表会在展示打开入口前预检查 Codex 对话，避免进入已经失效的聊天链接。
-- 识别出的 Codex 后台 subagent 显示紧凑的 `sub` 标志，不再作为普通用户对话打开。
-- 未知或已经无法解析的 Agent 目标显示非交互的未知图标，不再误显示打开入口。
-- 最近动态和资源管理器共用目标解析状态，包括 subagent 与未知目标标志。
+- 资源支持可选的 Agent 会话加载名称，最多 7 个 Unicode 字符。
+- 内置回复标记 Prompt 使用 `🌟`；内置 DingDong Configure Skill 继续加载，
+  但默认不显示在 Agent 会话摘要中。
+- 支持导入 JSON 文件和链接，并提供冲突复核、来源链接解析和导入历史。
+- 在线资源保留来源链接，最近的导入记录可在历史中查看。
 
-## 剪贴板分组与恢复
+## 剪贴板归档与存储
 
-- 顺序文件中保留的空分组会继续展示，PageID 等分组可以恢复并用于显式归档。
-- 分组匹配统一规范化，不会根据文本、标题或标签推断归档范围。
+- 自定义剪贴板分组会提升为独立的永久归档项，不再依赖会过期的历史记录。
+- 保留策略和清理操作会保护归档项及其托管图片。
+- 存储用量现在分别统计剪贴板图片、文本、文件和归档，并显示分类清理数量。
 
-## Agent 集成
+## 桌面恢复
 
-- Codex 预检查和原生打开逻辑共用缓存的批量会话状态。
-- MCP 服务和完成 Hook 对外声明 1.1.0 版本。
+- macOS 在设置和 Dock 菜单中提供菜单栏恢复助手。
+- 状态栏图标的 Command-拖动恢复和原生菜单栏诊断更加明确、易于验证。
+
+## Agent API
+
+- 资源 JSON 和 Agent 路由统一持久化新的加载名称与会话隐藏字段。
+- Bridge 摘要会省略标记为隐藏的资源，但仍会正常提供其 Prompt、Skill 或 MCP 能力。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

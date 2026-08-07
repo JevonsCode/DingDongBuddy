@@ -1,5 +1,9 @@
 enum SystemDataCategory {
   clipboardHistory,
+  clipboardImages,
+  clipboardText,
+  clipboardFiles,
+  clipboardArchive,
   resourceLibrary,
   agentActivity,
   adapterHistory,
@@ -8,6 +12,10 @@ enum SystemDataCategory {
 
   String get id => switch (this) {
     SystemDataCategory.clipboardHistory => 'clipboard-history',
+    SystemDataCategory.clipboardImages => 'clipboard-images',
+    SystemDataCategory.clipboardText => 'clipboard-text',
+    SystemDataCategory.clipboardFiles => 'clipboard-files',
+    SystemDataCategory.clipboardArchive => 'clipboard-archive',
     SystemDataCategory.resourceLibrary => 'resource-library',
     SystemDataCategory.agentActivity => 'agent-activity',
     SystemDataCategory.adapterHistory => 'adapter-history',
@@ -16,9 +24,13 @@ enum SystemDataCategory {
   };
 
   bool get canClear => switch (this) {
-    SystemDataCategory.clipboardHistory ||
+    SystemDataCategory.clipboardImages ||
+    SystemDataCategory.clipboardText ||
+    SystemDataCategory.clipboardFiles ||
     SystemDataCategory.agentActivity ||
     SystemDataCategory.adapterHistory => true,
+    SystemDataCategory.clipboardHistory ||
+    SystemDataCategory.clipboardArchive ||
     SystemDataCategory.resourceLibrary ||
     SystemDataCategory.configuration ||
     SystemDataCategory.other => false,
@@ -40,13 +52,18 @@ final class SystemUsageSnapshot {
     required this.residentMemoryBytes,
     required this.storageBytes,
     this.storageByCategory = const <SystemDataCategory, int>{},
+    this.itemCountByCategory = const <SystemDataCategory, int>{},
   });
 
   final int residentMemoryBytes;
   final int storageBytes;
   final Map<SystemDataCategory, int> storageByCategory;
+  final Map<SystemDataCategory, int> itemCountByCategory;
 
   int bytesFor(SystemDataCategory category) => storageByCategory[category] ?? 0;
+
+  int itemsFor(SystemDataCategory category) =>
+      itemCountByCategory[category] ?? 0;
 }
 
 /// Platform seam for gathering potentially expensive usage information.

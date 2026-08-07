@@ -77,7 +77,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(source.fetchCount, 1);
-    expect(find.text('1.1.1'), findsOneWidget);
+    expect(find.text('1.2.1'), findsOneWidget);
   });
 
   testWidgets('default workspace uses the Dynamic product name', (
@@ -203,7 +203,14 @@ void main() {
           findsOneWidget,
         );
       }
-      expect(find.byKey(const Key('settings-clear-usage')), findsOneWidget);
+      expect(
+        find.byKey(const Key('settings-clear-clipboard-images')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-menu-bar-recovery')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('settings-refresh-usage')), findsNothing);
 
       await tester.tap(find.byKey(const Key('settings-hide-dock-icon')));
@@ -499,9 +506,9 @@ final class _CountingReleaseSource implements ReleaseMetadataSource {
     fetchCount += 1;
     return ReleaseMetadata(
       app: 'DingDong',
-      latestVersion: '1.1.1',
+      latestVersion: '1.2.1',
       website: Uri.parse('https://example.com'),
-      releasePage: Uri.parse('https://example.com/releases/1.1.1'),
+      releasePage: Uri.parse('https://example.com/releases/1.2.1'),
     );
   }
 }

@@ -65,8 +65,8 @@ Future<void> showClipboardGroupContextMenu(
         constraints: const BoxConstraints(maxWidth: 360),
         child: Text(
           context.localized(
-            'This group contains $count clipboard ${count == 1 ? 'item' : 'items'}. The items stay in history; only the group membership is removed.',
-            '这个分组中有 $count 条剪贴板内容。内容会保留在历史记录中，只移除分组归属。',
+            'This group contains $count archived ${count == 1 ? 'copy' : 'copies'}. Copies with no other group are deleted. Clipboard history is never changed.',
+            '这个分组中有 $count 个归档副本。没有其他分组的副本会被删除，剪贴板历史不受影响。',
           ),
         ),
       ),

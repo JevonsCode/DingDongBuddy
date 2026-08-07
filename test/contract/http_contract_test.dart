@@ -13,6 +13,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dar
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -198,7 +199,7 @@ void main() {
         method: 'POST',
         uri: '/library',
         body:
-            '{"type":"prompt","title":" Bug triage ","content":"Find risky changes","tags":["review"],"source":"Codex","pinned":true,"triggerGroupIds":["dingdong"]}',
+            '{"type":"prompt","title":" Bug triage ","content":"Find risky changes","tags":["review"],"source":"Codex","pinned":true,"agentSessionName":"审查","triggerGroupIds":["dingdong"]}',
       ),
     );
     final listed = await router.route(
@@ -213,6 +214,7 @@ void main() {
     expect((items.single as Map<String, Object?>)['title'], 'Bug triage');
     expect((items.single as Map<String, Object?>)['group'], 'Prompts');
     expect((items.single as Map<String, Object?>)['activation'], 'always');
+    expect((items.single as Map<String, Object?>)['agentSessionName'], '审查');
     expect((items.single as Map<String, Object?>)['triggerGroupIds'], <Object?>[
       'dingdong',
     ]);
@@ -695,6 +697,125 @@ void main() {
       'authoritative-replace',
     );
   });
+
+  test('Agent Bridge prefers a configured session name over the title', () async {
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'prompt-session-name',
+          type: ResourceType.prompt,
+          title: 'Prompt title',
+          content: 'Use the prompt.',
+          agentSessionName: '提示词',
+          pinned: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'skill-session-name',
+          type: ResourceType.skill,
+          title: 'Skill title',
+          content:
+              '---\nname: session-skill\ndescription: Use the skill\n---\n\nInstructions',
+          agentSessionName: '技能加载名',
+          pinned: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'mcp-title-fallback',
+          type: ResourceType.mcp,
+          title: 'MCP title',
+          content: '{"type":"stdio","command":"mcp"}',
+          pinned: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+
+    final HttpResponseData response = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"load","source":"Codex"}',
+      ),
+    );
+
+    expect(response.json['conversation'], <String, Object?>{
+      'capsule': <String, Object?>{
+        'label': 'DingDong',
+        'titles': <String>['提示词', '技能加载名', 'MCP titl...'],
+        'visible': true,
+      },
+      'line': 'DingDong · 提示词 | 技能加载名 | MCP titl...',
+      'titles': <String>['提示词', '技能加载名', 'MCP titl...'],
+    });
+  });
+
+  test(
+    'Agent Bridge loads hidden resources without showing their names',
+    () async {
+      final DateTime now = DateTime.utc(2026, 8, 6);
+      final AgentRouter router = AgentRouter(
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'hidden-prompt',
+            type: ResourceType.prompt,
+            title: 'Hidden prompt',
+            content: 'Keep this prompt active.',
+            hideInAgentConversation: true,
+            pinned: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'hidden-skill',
+            type: ResourceType.skill,
+            title: 'Hidden skill',
+            content:
+                '---\nname: hidden-skill\ndescription: Keep it loaded\n---\n\nInstructions',
+            hideInAgentConversation: true,
+            pinned: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'visible-mcp',
+            type: ResourceType.mcp,
+            title: 'Visible MCP',
+            content: '{"type":"stdio","command":"mcp"}',
+            pinned: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      );
+
+      final HttpResponseData response = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"load","source":"Codex"}',
+        ),
+      );
+      final Map<String, Object?> active =
+          response.json['active']! as Map<String, Object?>;
+      final Map<String, Object?> conversation =
+          response.json['conversation']! as Map<String, Object?>;
+
+      expect(active['prompts'], hasLength(1));
+      expect(active['skills'], hasLength(1));
+      expect(active['mcps'], hasLength(1));
+      expect(
+        (active['prompts'] as List<Object?>).single,
+        containsPair('id', 'hidden-prompt'),
+      );
+      expect(conversation['titles'], <String>['Visible ...']);
+      expect(conversation['line'], 'DingDong · Visible ...');
+    },
+  );
 
   test(
     'Skill loading uses catalog id to disambiguate duplicate names',
@@ -1979,6 +2100,55 @@ void main() {
     },
   );
 
+  test('API library export keeps online resources as links', () async {
+    final DateTime now = DateTime.utc(2026, 7, 13);
+    const String link = 'https://example.com/online.md';
+    final InMemoryResourceStore source = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'online-resource',
+        type: ResourceType.skill,
+        title: 'Online resource',
+        content: 'private local snapshot',
+        updateUrl: link,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final AgentRouter sourceRouter = AgentRouter(resourceStore: source);
+    final HttpResponseData exported = await sourceRouter.route(
+      const HttpRequestData(method: 'GET', uri: '/library/export'),
+    );
+    final Map<String, Object?> exportedItem =
+        (exported.json['items'] as List<Object?>).single
+            as Map<String, Object?>;
+
+    expect(exportedItem['content'], isNull);
+    expect(exportedItem['contentURL'], link);
+    expect(
+      jsonEncode(exported.json),
+      isNot(contains('private local snapshot')),
+    );
+
+    final InMemoryResourceStore imported = InMemoryResourceStore();
+    final AgentRouter importedRouter = AgentRouter(
+      resourceStore: imported,
+      updateFetcher: _RoutingUpdateFetcher(<String, String>{
+        link: '# fetched online resource',
+      }),
+    );
+    final HttpResponseData response = await importedRouter.route(
+      HttpRequestData(
+        method: 'POST',
+        uri: '/library/import',
+        body: jsonEncode(exported.json),
+      ),
+    );
+
+    expect(response.json['importedCount'], 1);
+    expect((await imported.load()).single.content, '# fetched online resource');
+    expect((await imported.load()).single.updateUrl, link);
+  });
+
   test(
     'clipboard overview, groups, and organization patch preserve the public contract',
     () async {
@@ -2484,5 +2654,20 @@ final class _StaticSkillInstaller implements SkillPackageInstaller {
       skillDocument: document,
       directoryPath: directory.path,
     );
+  }
+}
+
+final class _RoutingUpdateFetcher implements ResourceUpdateFetcher {
+  _RoutingUpdateFetcher(this.values);
+
+  final Map<String, String> values;
+
+  @override
+  Future<String> fetch(Uri uri) async {
+    final String? value = values[uri.toString()];
+    if (value == null) {
+      throw StateError('Unexpected fetch: $uri');
+    }
+    return value;
   }
 }

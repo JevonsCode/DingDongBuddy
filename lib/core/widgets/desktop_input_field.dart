@@ -1,5 +1,6 @@
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Single-line search field with a stable desktop surface and built-in clear
 /// action. Search icon, placeholder and clear affordance follow familiar
@@ -239,6 +240,9 @@ class DesktopTextField extends StatelessWidget {
     this.expands = false,
     this.keyboardType,
     this.textInputAction,
+    this.inputFormatters,
+    this.maxLength,
+    this.maxLengthEnforcement,
     this.textAlign = TextAlign.start,
     this.textAlignVertical,
     this.style,
@@ -268,6 +272,9 @@ class DesktopTextField extends StatelessWidget {
   final bool expands;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
+  final MaxLengthEnforcement? maxLengthEnforcement;
   final TextAlign textAlign;
   final TextAlignVertical? textAlignVertical;
   final TextStyle? style;
@@ -303,6 +310,9 @@ class DesktopTextField extends StatelessWidget {
       expands: expands,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
+      inputFormatters: inputFormatters,
+      maxLength: maxLength,
+      maxLengthEnforcement: maxLengthEnforcement,
       textAlign: textAlign,
       textAlignVertical: textAlignVertical,
       style: style,

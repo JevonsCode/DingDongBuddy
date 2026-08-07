@@ -30,6 +30,7 @@ void main() {
       );
       expect(prompt.type, ResourceType.prompt);
       expect(prompt.content, '每次完整回复的最后加一个「🌟」');
+      expect(prompt.agentSessionName, '🌟');
       expect(prompt.pinned, isTrue);
       expect(prompt.enabled, isTrue);
       expect(prompt.activation, ResourceActivation.always);
@@ -46,6 +47,7 @@ void main() {
       );
       expect(skill.enabled, isTrue);
       expect(skill.activation, ResourceActivation.manual);
+      expect(skill.hideInAgentConversation, isTrue);
       expect(
         preferences.values[BuiltInResourceInstaller.preferenceKey],
         BuiltInResourceInstaller.currentVersion,
@@ -266,6 +268,57 @@ void main() {
       BuiltInResourceInstaller.currentVersion,
     );
   });
+
+  test(
+    'version ten hides the configure Skill and upgrades the old marker',
+    () async {
+      final DateTime now = DateTime.utc(2026, 8, 1);
+      final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+        builtInReplyMarkerPrompt(
+          now,
+        ).copyWith(title: '回复末尾添加 👻', content: '每次完整回复的最后加一个「👻」'),
+        builtInDingDongConfigureSkill(
+          'old',
+          now,
+        ).copyWith(hideInAgentConversation: false),
+      ]);
+      final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+        ..values[BuiltInResourceInstaller.preferenceKey] = 9;
+      final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+        store,
+        preferences,
+        now: () => DateTime.utc(2026, 8, 7),
+        skillDocumentLoader: _loadConfigureSkill,
+      );
+
+      expect(await installer.install(), isTrue);
+      final List<Resource> resources = await store.load();
+      expect(
+        resources
+            .singleWhere(
+              (Resource item) => item.id == builtInReplyMarkerPromptId,
+            )
+            .content,
+        '每次完整回复的最后加一个「🌟」',
+      );
+      expect(
+        resources
+            .singleWhere(
+              (Resource item) => item.id == builtInReplyMarkerPromptId,
+            )
+            .agentSessionName,
+        '🌟',
+      );
+      expect(
+        resources
+            .singleWhere(
+              (Resource item) => item.id == builtInDingDongConfigureSkillId,
+            )
+            .hideInAgentConversation,
+        isTrue,
+      );
+    },
+  );
 }
 
 Future<String> _loadConfigureSkill() =>

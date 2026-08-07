@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/library_bundle.dart';
+import 'package:dingdong/features/library/domain/library_import_history.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
@@ -268,6 +270,59 @@ void main() {
     expect(targetStore.savedResources, hasLength(1));
   });
 
+  test(
+    'link imports resolve before commit and are written to history',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      final Resource online = Resource(
+        id: 'linked-skill',
+        type: ResourceType.skill,
+        title: 'Linked skill',
+        content: 'local snapshot',
+        updateUrl: 'https://example.com/linked-skill.md',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final String bundle = LibraryBundle.encode(<Resource>[
+        online,
+      ], generatedAt: now);
+      final InMemoryLibraryImportHistoryStore history =
+          InMemoryLibraryImportHistoryStore();
+      final _FakeResourceStore repository = _FakeResourceStore(<Resource>[]);
+      final LibraryViewModel model = LibraryViewModel(
+        repository,
+        updateFetcher: _RoutingUpdateFetcher(<String, String>{
+          'https://example.com/library.json': bundle,
+          online.updateUrl!: '# fetched skill',
+        }),
+        importHistoryStore: history,
+        now: () => now,
+      );
+      await model.load();
+
+      final LibraryBundleImportResult prepared = await model
+          .prepareBundleJsonFromUrl('https://example.com/library.json');
+      expect(repository.savedResources, isEmpty);
+      expect(prepared.onlineResources.single.title, 'Linked skill');
+      expect(prepared.imported.single.content, '# fetched skill');
+
+      await model.commitBundleImport(
+        prepared,
+        source: 'https://example.com/library.json',
+        kind: LibraryImportSourceKind.link,
+      );
+
+      expect(repository.savedResources.single.content, '# fetched skill');
+      expect(model.importHistory, hasLength(1));
+      expect(model.importHistory.single.kind, LibraryImportSourceKind.link);
+      expect(model.importHistory.single.onlineTitles, <String>['Linked skill']);
+      expect(
+        (await history.load()).single.source,
+        'https://example.com/library.json',
+      );
+    },
+  );
+
   test('new resource inherits the active type filter', () async {
     final LibraryViewModel model = LibraryViewModel(
       _FakeResourceStore(<Resource>[]),
@@ -453,6 +508,21 @@ final class _FakeUpdateFetcher implements ResourceUpdateFetcher {
 
   @override
   Future<String> fetch(Uri uri) async => content;
+}
+
+final class _RoutingUpdateFetcher implements ResourceUpdateFetcher {
+  _RoutingUpdateFetcher(this.values);
+
+  final Map<String, String> values;
+
+  @override
+  Future<String> fetch(Uri uri) async {
+    final String? value = values[uri.toString()];
+    if (value == null) {
+      throw StateError('Unexpected fetch: $uri');
+    }
+    return value;
+  }
 }
 
 final class _FakeResourceStore implements ResourceStore {

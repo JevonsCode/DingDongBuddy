@@ -156,6 +156,20 @@ void main() {
     expect(backend.values['dingdong.macos.hideDockIcon'], isFalse);
   });
 
+  test('opens the native menu bar recovery assistant', () async {
+    var openCount = 0;
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      onShowMenuBarRecovery: () async {
+        openCount += 1;
+      },
+    );
+
+    await model.showMenuBarRecovery();
+
+    expect(openCount, 1);
+  });
+
   test('applies and persists the menu bar notification color', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend(
       <String, Object>{'dingdong.macos.trayNotificationColor': 'blue'},
@@ -374,10 +388,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.1.1',
-        latestBuild: '38',
+        latestVersion: '1.2.1',
+        latestBuild: '40',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.1.1'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.2.1'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -393,11 +407,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.1.1');
+    expect(model.releaseStatus.latestVersion, '1.2.1');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.1.1'),
+      Uri.parse('https://example.com/dingdong/releases/1.2.1'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -625,13 +639,13 @@ void main() {
     await model.load();
 
     final bool cleared = await model.clearSystemData(<SystemDataCategory>{
-      SystemDataCategory.clipboardHistory,
+      SystemDataCategory.clipboardText,
       SystemDataCategory.resourceLibrary,
     });
 
     expect(cleared, isTrue);
     expect(cleaner.categories, <SystemDataCategory>{
-      SystemDataCategory.clipboardHistory,
+      SystemDataCategory.clipboardText,
     });
     expect(source.loadCount, 2);
     expect(model.systemUsage?.storageBytes, 2 * 1024 * 1024);
@@ -650,7 +664,7 @@ final class _SystemUsageSource implements SystemUsageSource {
       residentMemoryBytes: 64 * 1024 * 1024,
       storageBytes: (cleared ? 2 : 12) * 1024 * 1024,
       storageByCategory: <SystemDataCategory, int>{
-        SystemDataCategory.clipboardHistory: (cleared ? 0 : 10) * 1024 * 1024,
+        SystemDataCategory.clipboardText: (cleared ? 0 : 10) * 1024 * 1024,
         SystemDataCategory.resourceLibrary: 2 * 1024 * 1024,
       },
     );
@@ -680,7 +694,7 @@ final class _FakeApplicationUpdater implements ApplicationUpdater {
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.downloading,
       progress: 0.42,
-      targetVersion: '1.1.1',
+      targetVersion: '1.2.1',
     );
   }
 

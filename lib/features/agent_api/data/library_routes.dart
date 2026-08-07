@@ -13,6 +13,7 @@ import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
+import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 
@@ -22,6 +23,7 @@ final class LibraryRoutes {
     this._store, {
     TriggerGroupStore? triggerGroupStore,
     SkillPackageInstaller? skillPackageInstaller,
+    ResourceUpdateFetcher? updateFetcher,
     DateTime Function()? now,
     String Function()? idGenerator,
   }) : // Named private initializing formals are not callable cross-library.
@@ -30,6 +32,7 @@ final class LibraryRoutes {
        // Named private initializing formals are not callable cross-library.
        // ignore: prefer_initializing_formals
        _skillPackageInstaller = skillPackageInstaller,
+       _updateFetcher = updateFetcher ?? HttpResourceUpdateFetcher(),
        _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? _utcNow,
        _importer = LibraryImporter(now: now, idGenerator: idGenerator);
@@ -39,6 +42,7 @@ final class LibraryRoutes {
   final ResourceStore _store;
   final TriggerGroupStore? _triggerGroupStore;
   final SkillPackageInstaller? _skillPackageInstaller;
+  final ResourceUpdateFetcher _updateFetcher;
   final String Function() _idGenerator;
   final DateTime Function() _now;
   final LibraryImporter _importer;
@@ -256,10 +260,22 @@ final class LibraryRoutes {
           jsonDecode(body) as Map<String, Object?>;
       final List<Resource> existing = await _store.load();
       if (payload['items'] is List<Object?>) {
-        final LibraryBundleImportResult result = LibraryBundle.importPayload(
-          payload,
-          existing: existing,
-        );
+        final List<Object?> items = payload['items'] as List<Object?>;
+        final bool hasOnlineItems = items.any((Object? item) {
+          if (item is! Map<String, Object?>) {
+            return false;
+          }
+          return item['contentURL'] is String ||
+              item['sourceURL'] is String ||
+              (item['updateURL'] is String && item['content'] == null);
+        });
+        final LibraryBundleImportResult result = hasOnlineItems
+            ? await LibraryBundle.decodeOnline(
+                body,
+                existing: existing,
+                fetcher: _updateFetcher,
+              )
+            : LibraryBundle.importPayload(payload, existing: existing);
         if (result.imported.isNotEmpty) {
           await _store.save(<Resource>[...existing, ...result.imported]);
         }
@@ -496,7 +512,7 @@ final class LibraryRoutes {
           'clipboardContentCharacters': 20000,
         },
         'items': returned
-            .map((Resource resource) => resource.toJson())
+            .map(LibraryBundle.portableItem)
             .toList(growable: false),
       },
     );
@@ -526,6 +542,13 @@ final class LibraryRoutes {
       }
       final String? title = decoded['title'] as String?;
       final String? content = decoded['content'] as String?;
+      final String? agentSessionName = decoded.containsKey('agentSessionName')
+          ? decoded['agentSessionName'] as String? ?? ''
+          : null;
+      final bool? hideInAgentConversation =
+          decoded.containsKey('hideInAgentConversation')
+          ? decoded['hideInAgentConversation'] as bool? ?? false
+          : null;
       if (title != null && title.trim().isEmpty) {
         return _invalidUpdate('title cannot be empty');
       }
@@ -579,6 +602,8 @@ final class LibraryRoutes {
             : null,
         source: decoded['source'] as String?,
         updateUrl: decoded['updateURL'] as String?,
+        agentSessionName: agentSessionName,
+        hideInAgentConversation: hideInAgentConversation,
         pinned: decoded.containsKey('pinned') ? pinned : null,
         enabled: decoded['enabled'] as bool?,
         activation: decoded.containsKey('activation')

@@ -49,6 +49,10 @@ enum ResourceActivation {
   }
 }
 
+/// Maximum number of characters accepted for the name shown while an Agent
+/// loads this resource into a conversation.
+const int maximumAgentSessionNameCharacters = 7;
+
 /// Durable resource data shared by the desktop UI, HTTP API, and MCP bridge.
 final class Resource {
   Resource({
@@ -64,6 +68,8 @@ final class Resource {
     String? updateUrl,
     String? packagePath,
     String? note,
+    String? agentSessionName,
+    this.hideInAgentConversation = false,
     this.pinned = false,
     this.enabled = true,
     ResourceActivation? activation,
@@ -84,6 +90,7 @@ final class Resource {
        updateUrl = _trimmedOrNull(updateUrl),
        packagePath = _trimmedOrNull(packagePath),
        note = _trimmedOrNull(note),
+       agentSessionName = _sanitizeAgentSessionName(agentSessionName),
        triggerGroupIds = List<String>.unmodifiable(
          triggerGroupIds
              .map((String id) => id.trim())
@@ -121,6 +128,9 @@ final class Resource {
       updateUrl: json['updateURL'] as String?,
       packagePath: json['packagePath'] as String?,
       note: json['note'] as String?,
+      agentSessionName: json['agentSessionName'] as String?,
+      hideInAgentConversation:
+          json['hideInAgentConversation'] as bool? ?? false,
       pinned: pinned,
       enabled: json['enabled'] as bool? ?? true,
       activation: ResourceActivation.parse(json['activation'], pinned: pinned),
@@ -154,6 +164,15 @@ final class Resource {
   /// Local root of a complete Agent Skill package (SKILL.md + siblings).
   final String? packagePath;
   final String? note;
+
+  /// Optional short name shown in the Agent conversation loading summary.
+  ///
+  /// When absent, the resource title is used instead.
+  final String? agentSessionName;
+
+  /// Keeps the resource loaded while omitting its name from the user-facing
+  /// Agent conversation loading summary.
+  final bool hideInAgentConversation;
   final bool pinned;
   final bool enabled;
   final ResourceActivation activation;
@@ -190,6 +209,8 @@ final class Resource {
       if (updateUrl != null) 'updateURL': updateUrl,
       if (packagePath != null) 'packagePath': packagePath,
       if (note != null) 'note': note,
+      if (agentSessionName != null) 'agentSessionName': agentSessionName,
+      if (hideInAgentConversation) 'hideInAgentConversation': true,
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation.name,
@@ -219,6 +240,8 @@ final class Resource {
       'triggerGroupIds': triggerGroupIds,
       if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
+      if (agentSessionName != null) 'agentSessionName': agentSessionName,
+      if (hideInAgentConversation) 'hideInAgentConversation': true,
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
@@ -242,6 +265,8 @@ final class Resource {
       'triggerGroupIds': triggerGroupIds,
       if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
+      if (agentSessionName != null) 'agentSessionName': agentSessionName,
+      if (hideInAgentConversation) 'hideInAgentConversation': true,
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
@@ -263,6 +288,8 @@ final class Resource {
     String? updateUrl,
     String? packagePath,
     String? note,
+    String? agentSessionName,
+    bool? hideInAgentConversation,
     bool? pinned,
     bool? enabled,
     ResourceActivation? activation,
@@ -291,6 +318,9 @@ final class Resource {
       updateUrl: updateUrl ?? this.updateUrl,
       packagePath: packagePath ?? this.packagePath,
       note: note ?? this.note,
+      agentSessionName: agentSessionName ?? this.agentSessionName,
+      hideInAgentConversation:
+          hideInAgentConversation ?? this.hideInAgentConversation,
       pinned: resolvedPinned,
       enabled: enabled ?? this.enabled,
       activation: resolvedActivation,
@@ -319,6 +349,8 @@ final class Resource {
             updateUrl == other.updateUrl &&
             packagePath == other.packagePath &&
             note == other.note &&
+            agentSessionName == other.agentSessionName &&
+            hideInAgentConversation == other.hideInAgentConversation &&
             pinned == other.pinned &&
             enabled == other.enabled &&
             activation == other.activation &&
@@ -344,6 +376,8 @@ final class Resource {
     updateUrl,
     packagePath,
     note,
+    agentSessionName,
+    hideInAgentConversation,
     pinned,
     enabled,
     activation,
@@ -369,6 +403,17 @@ String _requiredString(Map<String, Object?> json, String key) {
 String? _trimmedOrNull(String? value) {
   final String? trimmed = value?.trim();
   return trimmed == null || trimmed.isEmpty ? null : trimmed;
+}
+
+String? _sanitizeAgentSessionName(String? value) {
+  final String? trimmed = _trimmedOrNull(value);
+  if (trimmed == null) {
+    return null;
+  }
+  final List<int> characters = trimmed.runes.toList(growable: false);
+  return String.fromCharCodes(
+    characters.take(maximumAgentSessionNameCharacters),
+  );
 }
 
 bool _listEquals(List<String> left, List<String> right) {

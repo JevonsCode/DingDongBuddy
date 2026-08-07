@@ -68,6 +68,7 @@ class DingDongApp extends StatefulWidget {
     this.clipboardImageStoreDirectory,
     this.clipboardMonitoring,
     this.clipboardStore,
+    this.clipboardArchiveStore,
     this.clipboardPreviewLauncher,
     this.clipboardShareGateway,
     this.quickPasteGateway,
@@ -111,6 +112,7 @@ class DingDongApp extends StatefulWidget {
   final Directory? clipboardImageStoreDirectory;
   final ClipboardMonitoring? clipboardMonitoring;
   final ClipboardStore? clipboardStore;
+  final ClipboardArchiveStore? clipboardArchiveStore;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
   final ClipboardShareGateway? clipboardShareGateway;
   final QuickPasteGateway? quickPasteGateway;
@@ -168,6 +170,7 @@ class _DingDongAppState extends State<DingDongApp> {
     _dataRevisions = DataRevisionBus();
     _clipboardViewModel = ClipboardViewModel(
       widget.clipboardStore ?? InMemoryClipboardStore(),
+      archiveStore: widget.clipboardArchiveStore,
       captureService: widget.clipboardCaptureService,
       gateway: widget.clipboardGateway,
       resourceStore: widget.resourceStore,

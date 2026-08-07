@@ -11,16 +11,18 @@ import 'package:flutter/material.dart';
 class ResourceFilterBar extends StatelessWidget {
   const ResourceFilterBar({
     required this.viewModel,
-    this.onImport,
     this.onImportJson,
+    this.onImportLink,
+    this.onImportHistory,
     this.onExport,
     this.onDeleteSelection,
     super.key,
   });
 
   final LibraryViewModel viewModel;
-  final VoidCallback? onImport;
   final VoidCallback? onImportJson;
+  final VoidCallback? onImportLink;
+  final VoidCallback? onImportHistory;
   final VoidCallback? onExport;
   final VoidCallback? onDeleteSelection;
 
@@ -51,10 +53,12 @@ class ResourceFilterBar extends StatelessWidget {
                         switch (action) {
                           case _LibraryAction.create:
                             viewModel.startCreating();
-                          case _LibraryAction.import:
-                            onImport?.call();
                           case _LibraryAction.importJson:
                             onImportJson?.call();
+                          case _LibraryAction.importLink:
+                            onImportLink?.call();
+                          case _LibraryAction.importHistory:
+                            onImportHistory?.call();
                           case _LibraryAction.export:
                             onExport?.call();
                         }
@@ -65,20 +69,29 @@ class ResourceFilterBar extends StatelessWidget {
                           label: context.localized('New resource', '新建资源'),
                           symbol: 'add_title',
                         ),
-                        if (onImport != null)
-                          DesktopMenuItem<_LibraryAction>(
-                            value: _LibraryAction.import,
-                            label: context.localized('Import folder', '导入文件夹'),
-                            symbol: 'archive_to',
-                          ),
                         if (onImportJson != null)
                           DesktopMenuItem<_LibraryAction>(
                             value: _LibraryAction.importJson,
                             label: context.localized(
-                              'Import shared JSON',
-                              '导入分享 JSON',
+                              'Import JSON file',
+                              '导入 JSON 文件',
                             ),
                             symbol: 'archive',
+                          ),
+                        if (onImportLink != null)
+                          DesktopMenuItem<_LibraryAction>(
+                            value: _LibraryAction.importLink,
+                            label: context.localized(
+                              'Import from link',
+                              '从链接导入',
+                            ),
+                            symbol: 'link',
+                          ),
+                        if (onImportHistory != null)
+                          DesktopMenuItem<_LibraryAction>(
+                            value: _LibraryAction.importHistory,
+                            label: context.localized('Import history', '导入历史'),
+                            symbol: 'details',
                           ),
                         if (onExport != null)
                           DesktopMenuItem<_LibraryAction>(
@@ -110,25 +123,31 @@ class ResourceFilterBar extends StatelessWidget {
                   _TransferActionGroup(
                     children: <Widget>[
                       _TransferActionButton(
-                        actionKey: const Key('library-import'),
-                        tooltip: context.localized('Import folder', '导入文件夹'),
-                        onPressed: onImport,
-                        icon: Icons.folder_open_outlined,
-                      ),
-                      _TransferActionButton(
                         actionKey: const Key('library-import-json'),
                         tooltip: context.localized(
-                          'Import shared JSON',
-                          '导入分享 JSON',
+                          'Import JSON file',
+                          '导入 JSON 文件',
                         ),
                         onPressed: onImportJson,
-                        icon: Icons.move_to_inbox_outlined,
+                        icon: Icons.download_outlined,
+                      ),
+                      _TransferActionButton(
+                        actionKey: const Key('library-import-link'),
+                        tooltip: context.localized('Import from link', '从链接导入'),
+                        onPressed: onImportLink,
+                        icon: Icons.link_rounded,
+                      ),
+                      _TransferActionButton(
+                        actionKey: const Key('library-import-history'),
+                        tooltip: context.localized('Import history', '导入历史'),
+                        onPressed: onImportHistory,
+                        icon: Icons.history_rounded,
                       ),
                       _TransferActionButton(
                         actionKey: const Key('library-export'),
                         tooltip: context.localized('Export JSON', '导出 JSON'),
                         onPressed: onExport,
-                        icon: Icons.outbox_outlined,
+                        icon: Icons.upload_outlined,
                       ),
                     ],
                   ),
@@ -251,7 +270,7 @@ class ResourceFilterBar extends StatelessWidget {
   }
 }
 
-enum _LibraryAction { create, import, importJson, export }
+enum _LibraryAction { create, importJson, importLink, importHistory, export }
 
 class _TransferActionGroup extends StatelessWidget {
   const _TransferActionGroup({required this.children});

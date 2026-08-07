@@ -21,6 +21,7 @@ import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dar
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
@@ -54,6 +55,7 @@ import 'package:dingdong/platform/native_application_updater.dart';
 import 'package:dingdong/platform/native_clipboard_share_gateway.dart';
 import 'package:dingdong/platform/native_desktop_context_menu_gateway.dart';
 import 'package:dingdong/platform/native_launch_at_startup.dart';
+import 'package:dingdong/platform/native_menu_bar_recovery_gateway.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/native_quick_paste_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
@@ -217,6 +219,7 @@ Future<void> main(List<String> arguments) async {
     launchAtStartup: launchAtStartup,
     onWindowOpacityChanged: shellGateway.setOpacity,
     onDockIconHiddenChanged: shellGateway.setDockIconHidden,
+    onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
     onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
     releaseMetadataSource: HttpReleaseMetadataSource(),
@@ -402,6 +405,7 @@ Future<void> main(List<String> arguments) async {
       clipboardImageStoreDirectory: dependencies.paths.clipboardImagesDirectory,
       clipboardMonitoring: dependencies.clipboardMonitorService,
       clipboardStore: dependencies.clipboardStore,
+      clipboardArchiveStore: dependencies.clipboardStore,
       clipboardPreviewLauncher: clipboardPreviewLauncher,
       clipboardShareGateway: createNativeClipboardShareGateway(
         defaultTargetPlatform,
@@ -435,10 +439,13 @@ bool _usesChineseLabels(AppLanguagePreference language) {
 Future<void> _clearClipboardHistory(AppDependencies dependencies) async {
   dependencies.clipboardStore.deleteAll();
   final Directory imageDirectory = dependencies.paths.clipboardImagesDirectory;
-  if (await imageDirectory.exists()) {
-    await imageDirectory.delete(recursive: true);
-  }
   await imageDirectory.create(recursive: true);
+  pruneUnreferencedManagedClipboardImages(
+    dependencies.clipboardStore.listArchives().map(
+      (ClipboardArchiveEntry entry) => entry.record,
+    ),
+    imageDirectory,
+  );
 }
 
 Future<void> _clearSelectedSystemData({
@@ -447,8 +454,32 @@ Future<void> _clearSelectedSystemData({
   required ActivityController activityController,
   required ShellController shellController,
 }) async {
-  if (categories.contains(SystemDataCategory.clipboardHistory)) {
-    await _clearClipboardHistory(dependencies);
+  final Set<ClipboardKind> clipboardKinds = <ClipboardKind>{
+    if (categories.contains(SystemDataCategory.clipboardImages))
+      ClipboardKind.image,
+    if (categories.contains(SystemDataCategory.clipboardFiles))
+      ClipboardKind.file,
+    if (categories.contains(SystemDataCategory.clipboardText))
+      ...ClipboardKind.values.where(
+        (ClipboardKind kind) =>
+            kind != ClipboardKind.image && kind != ClipboardKind.file,
+      ),
+  };
+  if (clipboardKinds.isNotEmpty) {
+    dependencies.clipboardStore.deleteHistoryKinds(clipboardKinds);
+    final List<ClipboardRecord> preserved = <ClipboardRecord>[
+      ...dependencies.clipboardStore.list(
+        limit: 5000,
+        includeProtectedBeyondLimit: true,
+      ),
+      ...dependencies.clipboardStore.listArchives().map(
+        (ClipboardArchiveEntry entry) => entry.record,
+      ),
+    ];
+    pruneUnreferencedManagedClipboardImages(
+      preserved,
+      dependencies.paths.clipboardImagesDirectory,
+    );
     shellController.requestClipboardRefresh();
   }
   if (categories.contains(SystemDataCategory.agentActivity)) {
@@ -484,6 +515,7 @@ Future<void> _runSettingsWindow(
     launchAtStartup: hostBridge,
     onWindowOpacityChanged: hostBridge.setOpacity,
     onDockIconHiddenChanged: hostBridge.setDockIconHidden,
+    onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: hostBridge.setTrayNotificationColor,
     onGlobalHotKeyChanged: hostBridge.setGlobalHotKey,
     releaseMetadataSource: HttpReleaseMetadataSource(),
@@ -776,8 +808,12 @@ Future<void> _runResourceManagerWindow(
     revisions: dataRevisions,
   );
   await viewModel.load();
+  final ClipboardRepository clipboardRepository = ClipboardRepository.open(
+    paths.clipboardDatabaseFile.path,
+  );
   final ClipboardViewModel clipboardViewModel = ClipboardViewModel(
-    ClipboardRepository.open(paths.clipboardDatabaseFile.path),
+    clipboardRepository,
+    archiveStore: clipboardRepository,
     gateway: DesktopClipboardGateway(),
     resourceStore: resourceStore,
     revisions: dataRevisions,

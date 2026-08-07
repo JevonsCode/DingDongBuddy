@@ -24,6 +24,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dar
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
+import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 
@@ -40,6 +41,7 @@ final class AgentRouter {
     ResourceStore? resourceStore,
     TriggerGroupStore? triggerGroupStore,
     SkillPackageInstaller? skillPackageInstaller,
+    ResourceUpdateFetcher? updateFetcher,
     String Function()? idGenerator,
     DateTime Function()? now,
     Future<bool> Function()? allowAgentClipboardContent,
@@ -67,6 +69,7 @@ final class AgentRouter {
                resourceStore,
                triggerGroupStore: triggerGroupStore,
                skillPackageInstaller: skillPackageInstaller,
+               updateFetcher: updateFetcher,
                now: now,
                idGenerator: idGenerator,
              ),

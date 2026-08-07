@@ -94,6 +94,9 @@ class MainFlutterWindow: NSWindow {
           useChinese: arguments["useChinese"] as? Bool ?? false,
           entries: entries
         ))
+      case "showMenuBarRecovery":
+        (NSApp.delegate as? AppDelegate)?.showMenuBarRecoveryAssistant()
+        result(nil)
       default:
         result(FlutterMethodNotImplemented)
       }

@@ -237,6 +237,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   value: settings.hideDockIcon,
                                   onChanged: widget.viewModel.setHideDockIcon,
                                 ),
+                              if (defaultTargetPlatform == TargetPlatform.macOS)
+                                _SettingRow(
+                                  label: context.localized(
+                                    'Menu bar icon hidden by the camera housing',
+                                    '菜单栏图标被刘海遮挡',
+                                  ),
+                                  child: DesktopActionButton(
+                                    key: const Key(
+                                      'settings-menu-bar-recovery',
+                                    ),
+                                    onPressed: () => unawaited(
+                                      widget.viewModel.showMenuBarRecovery(),
+                                    ),
+                                    icon: Icons.visibility_rounded,
+                                    label: context.localized(
+                                      'Find icon',
+                                      '找回图标',
+                                    ),
+                                    tone: DesktopActionTone.soft,
+                                  ),
+                                ),
                             ],
                           ),
                           _SettingsSection(

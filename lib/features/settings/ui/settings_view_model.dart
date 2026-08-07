@@ -22,6 +22,7 @@ final class SettingsViewModel extends ChangeNotifier
     LaunchAtStartup? launchAtStartup,
     Future<void> Function(double value)? onWindowOpacityChanged,
     Future<void> Function(bool value)? onDockIconHiddenChanged,
+    Future<void> Function()? onShowMenuBarRecovery,
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
     Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
@@ -37,6 +38,7 @@ final class SettingsViewModel extends ChangeNotifier
        _launchAtStartup = launchAtStartup,
        _onWindowOpacityChanged = onWindowOpacityChanged,
        _onDockIconHiddenChanged = onDockIconHiddenChanged,
+       _onShowMenuBarRecovery = onShowMenuBarRecovery,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
        _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
        _releaseMetadataSource = releaseMetadataSource,
@@ -50,6 +52,7 @@ final class SettingsViewModel extends ChangeNotifier
   final LaunchAtStartup? _launchAtStartup;
   final Future<void> Function(double value)? _onWindowOpacityChanged;
   final Future<void> Function(bool value)? _onDockIconHiddenChanged;
+  final Future<void> Function()? _onShowMenuBarRecovery;
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
   final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
@@ -203,6 +206,15 @@ final class SettingsViewModel extends ChangeNotifier
       await _save();
     } on Object {
       _errorMessage = 'Dock icon visibility could not be updated.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> showMenuBarRecovery() async {
+    try {
+      await _onShowMenuBarRecovery?.call();
+    } on Object {
+      _errorMessage = 'Menu bar recovery could not be opened.';
       notifyListeners();
     }
   }

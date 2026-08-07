@@ -269,7 +269,34 @@ void main() {
     expect(source, contains('statusItem?.autosaveName ='));
     expect(source, contains('Bundle.main.bundleIdentifier'));
     expect(source, contains('.primary-status-item'));
+    expect(source, contains('event.modifierFlags.contains(.command)'));
+    expect(source, contains('button.mouseDown(with: event)'));
   });
+
+  test(
+    'macOS exposes a notch recovery assistant from the Dock and settings',
+    () {
+      final String delegate = File(
+        'macos/Runner/AppDelegate.swift',
+      ).readAsStringSync();
+      final String window = File(
+        'macos/Runner/MainFlutterWindow.swift',
+      ).readAsStringSync();
+      final String settings = File(
+        'lib/features/settings/ui/settings_screen.dart',
+      ).readAsStringSync();
+
+      expect(delegate, contains('找回菜单栏图标…'));
+      expect(delegate, contains('showMenuBarRecoveryAssistant()'));
+      expect(
+        delegate,
+        contains('NSWorkspace.shared.activateFileViewerSelecting'),
+      );
+      expect(delegate, contains('x-apple.systempreferences:'));
+      expect(window, contains('case "showMenuBarRecovery":'));
+      expect(settings, contains("'settings-menu-bar-recovery'"));
+    },
+  );
 
   test('macOS copy feedback shakes the complete status bar button', () {
     final String trayIcon = File(

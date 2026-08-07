@@ -14,6 +14,7 @@ import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Details pane with distinct authoring flows for prompts, skills, and MCP.
 class ResourceEditor extends StatefulWidget {
@@ -27,13 +28,13 @@ class ResourceEditor extends StatefulWidget {
     this.initialTitle = '',
     this.initialContent = '',
     this.triggerGroups = const <TriggerGroup>[],
+    this.onCreateWithAgentSessionName,
     this.onCreateTriggerGroup,
     this.onUpdateTriggerGroup,
     this.onDeleteTriggerGroup,
     this.onSyncUpdate,
     this.onResolveSkillSource,
     this.onOpenExternalLink,
-    this.onImportSkill,
     super.key,
   });
 
@@ -54,6 +55,23 @@ class ResourceEditor extends StatefulWidget {
     List<String>? triggerGroupIds,
   })
   onCreate;
+  final Future<void> Function({
+    required ResourceType type,
+    required String title,
+    required String content,
+    String? group,
+    List<String>? tags,
+    String? updateUrl,
+    String? packagePath,
+    String? note,
+    String? agentSessionName,
+    bool? hideInAgentConversation,
+    bool? pinned,
+    bool? enabled,
+    ResourceActivation? activation,
+    List<String>? triggerGroupIds,
+  })?
+  onCreateWithAgentSessionName;
   final Future<void> Function()? onDelete;
   final Future<void> Function(Resource resource) onSave;
   final ResourceType initialType;
@@ -67,7 +85,6 @@ class ResourceEditor extends StatefulWidget {
   final Future<SkillPackageInstallResult> Function(String updateUrl)?
   onResolveSkillSource;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
-  final Future<void> Function()? onImportSkill;
 
   @override
   State<ResourceEditor> createState() => _ResourceEditorState();
@@ -81,6 +98,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
   late final TextEditingController _skillDescriptionController;
   late final TextEditingController _updateUrlController;
   late final TextEditingController _noteController;
+  late final TextEditingController _agentSessionNameController;
   late final TextEditingController _mcpCommandController;
   late final TextEditingController _mcpArgumentsController;
   late final TextEditingController _mcpEnvironmentController;
@@ -91,6 +109,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
   Set<String> _selectedTriggerGroupIds = <String>{};
   bool _pinned = false;
   bool _enabled = true;
+  bool _hideInAgentConversation = false;
   ResourceActivation _activation = ResourceActivation.taskMatch;
   ResourceType _draftType = ResourceType.prompt;
   SkillSourceMode _skillSourceMode = SkillSourceMode.local;
@@ -110,6 +129,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     _skillDescriptionController,
     _updateUrlController,
     _noteController,
+    _agentSessionNameController,
     _mcpCommandController,
     _mcpArgumentsController,
     _mcpEnvironmentController,
@@ -129,6 +149,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     _skillDescriptionController = TextEditingController();
     _updateUrlController = TextEditingController();
     _noteController = TextEditingController();
+    _agentSessionNameController = TextEditingController();
     _mcpCommandController = TextEditingController();
     _mcpArgumentsController = TextEditingController();
     _mcpEnvironmentController = TextEditingController();
@@ -173,6 +194,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     _skillDescriptionController.clear();
     _updateUrlController.text = resource?.updateUrl ?? '';
     _noteController.text = resource?.note ?? '';
+    _agentSessionNameController.text = resource?.agentSessionName ?? '';
     _mcpCommandController.clear();
     _mcpArgumentsController.clear();
     _mcpEnvironmentController.clear();
@@ -183,6 +205,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     _selectedTriggerGroupIds = <String>{...?resource?.triggerGroupIds};
     _pinned = resource?.pinned ?? false;
     _enabled = resource?.enabled ?? true;
+    _hideInAgentConversation = resource?.hideInAgentConversation ?? false;
     _activation = resource?.activation ?? ResourceActivation.taskMatch;
     _draftType = resource?.type ?? widget.initialType;
     _skillSourceMode = resource?.updateUrl == null
@@ -304,6 +327,19 @@ class _ResourceEditorState extends State<ResourceEditor> {
                     const SizedBox(height: 18),
                   ],
                   _buildPrimaryEditor(context),
+                  if (_draftType.isConfigurableAgentResource) ...<Widget>[
+                    const SizedBox(height: 18),
+                    _AgentSessionNameField(
+                      controller: _agentSessionNameController,
+                      hideInAgentConversation: _hideInAgentConversation,
+                      onHideInAgentConversationChanged: (bool value) {
+                        setState(() {
+                          _hideInAgentConversation = value;
+                          _saved = false;
+                        });
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 18),
                   _TriggerScopeField(
                     groups: widget.triggerGroups,
@@ -414,7 +450,6 @@ class _ResourceEditorState extends State<ResourceEditor> {
           updated: _skillUpdated,
           onOpenSource: _openSkillSource,
           onUpdate: _updateOnlineSkill,
-          onImport: widget.onImportSkill,
         );
       case ResourceType.mcp:
         return _McpEditor(
@@ -468,9 +503,11 @@ class _ResourceEditorState extends State<ResourceEditor> {
       ).encode();
       _updateUrlController.clear();
       _noteController.clear();
+      _agentSessionNameController.clear();
       _selectedTriggerGroupIds.clear();
       _pinned = false;
       _enabled = true;
+      _hideInAgentConversation = false;
       _activation = ResourceActivation.taskMatch;
       _skillSourceMode = SkillSourceMode.local;
       _saveError = null;
@@ -528,18 +565,52 @@ class _ResourceEditorState extends State<ResourceEditor> {
       }
       final String title = onlineConfiguration?.name ?? _titleController.text;
       if (resource == null) {
-        await widget.onCreate(
-          type: _draftType,
-          title: title,
-          content: content,
-          updateUrl: updateUrl,
-          packagePath: packagePath,
-          note: onlineSkill ? _noteController.text : null,
-          pinned: _pinned,
-          enabled: _enabled,
-          activation: _activation,
-          triggerGroupIds: _selectedTriggerGroupIds.toList(growable: false),
-        );
+        final Future<void> Function({
+          required ResourceType type,
+          required String title,
+          required String content,
+          String? group,
+          List<String>? tags,
+          String? updateUrl,
+          String? packagePath,
+          String? note,
+          String? agentSessionName,
+          bool? hideInAgentConversation,
+          bool? pinned,
+          bool? enabled,
+          ResourceActivation? activation,
+          List<String>? triggerGroupIds,
+        })?
+        createWithAgentSessionName = widget.onCreateWithAgentSessionName;
+        if (createWithAgentSessionName != null) {
+          await createWithAgentSessionName(
+            type: _draftType,
+            title: title,
+            content: content,
+            updateUrl: updateUrl,
+            packagePath: packagePath,
+            note: onlineSkill ? _noteController.text : null,
+            agentSessionName: _agentSessionNameController.text,
+            hideInAgentConversation: _hideInAgentConversation,
+            pinned: _pinned,
+            enabled: _enabled,
+            activation: _activation,
+            triggerGroupIds: _selectedTriggerGroupIds.toList(growable: false),
+          );
+        } else {
+          await widget.onCreate(
+            type: _draftType,
+            title: title,
+            content: content,
+            updateUrl: updateUrl,
+            packagePath: packagePath,
+            note: onlineSkill ? _noteController.text : null,
+            pinned: _pinned,
+            enabled: _enabled,
+            activation: _activation,
+            triggerGroupIds: _selectedTriggerGroupIds.toList(growable: false),
+          );
+        }
       } else {
         await widget.onSave(
           resource.copyWith(
@@ -548,6 +619,8 @@ class _ResourceEditorState extends State<ResourceEditor> {
             updateUrl: updateUrl,
             packagePath: packagePath,
             note: onlineSkill ? _noteController.text : resource.note,
+            agentSessionName: _agentSessionNameController.text,
+            hideInAgentConversation: _hideInAgentConversation,
             pinned: _pinned,
             enabled: _enabled,
             activation: _activation,
@@ -951,6 +1024,89 @@ class _TypeBadge extends StatelessWidget {
   }
 }
 
+class _AgentSessionNameField extends StatelessWidget {
+  const _AgentSessionNameField({
+    required this.controller,
+    required this.hideInAgentConversation,
+    required this.onHideInAgentConversationChanged,
+  });
+
+  final TextEditingController controller;
+  final bool hideInAgentConversation;
+  final ValueChanged<bool> onHideInAgentConversationChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _FieldLabel(
+                text: context.localized(
+                  'Agent session loading name',
+                  'Agent 会话加载名称',
+                ),
+              ),
+            ),
+            Tooltip(
+              message: context.localized(
+                'Load this resource without showing its name in the Agent conversation.',
+                '加载这个资源，但不在 Agent 对话中展示它的名称。',
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    context.localized('Hide in conversation', '会话中隐藏'),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CompactSwitch(
+                    key: const Key('resource-hide-in-agent-conversation'),
+                    value: hideInAgentConversation,
+                    onChanged: onHideInAgentConversationChanged,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        DesktopTextField(
+          key: const Key('resource-agent-session-name'),
+          controller: controller,
+          maxLength: maximumAgentSessionNameCharacters,
+          maxLengthEnforcement: MaxLengthEnforcement.enforced,
+          inputFormatters: <TextInputFormatter>[
+            LengthLimitingTextInputFormatter(maximumAgentSessionNameCharacters),
+          ],
+          decoration: InputDecoration(
+            hintText: context.localized(
+              'Leave empty to use the resource title.',
+              '留空时使用资源标题。',
+            ),
+            counterText: '',
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          context.localized(
+            'Up to 7 characters. This name is shown first in the Agent conversation; an empty value falls back to the title.',
+            '最多 7 个字。Agent 会话中优先展示这个名称；留空时回退到资源标题。',
+          ),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PromptEditor extends StatelessWidget {
   const _PromptEditor({
     required this.controller,
@@ -1024,7 +1180,6 @@ class _SkillEditor extends StatelessWidget {
     required this.updated,
     required this.onOpenSource,
     required this.onUpdate,
-    required this.onImport,
   });
 
   final String name;
@@ -1040,7 +1195,6 @@ class _SkillEditor extends StatelessWidget {
   final bool updated;
   final VoidCallback onOpenSource;
   final VoidCallback onUpdate;
-  final Future<void> Function()? onImport;
 
   @override
   Widget build(BuildContext context) {
@@ -1268,16 +1422,6 @@ class _SkillEditor extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (onImport != null)
-                  DesktopActionButton(
-                    key: const Key('resource-import-skill-folder'),
-                    onPressed: onImport,
-                    icon: const Icon(
-                      Icons.drive_folder_upload_outlined,
-                      size: 16,
-                    ),
-                    label: Text(context.localized('Import folder', '导入文件夹')),
-                  ),
               ],
             ),
           ),

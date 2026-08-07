@@ -51,8 +51,9 @@ void main() {
               height: 220,
               child: ResourceFilterBar(
                 viewModel: model,
-                onImport: () {},
                 onImportJson: () {},
+                onImportLink: () {},
+                onImportHistory: () {},
                 onExport: () {},
               ),
             ),

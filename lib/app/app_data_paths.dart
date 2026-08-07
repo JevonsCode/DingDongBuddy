@@ -64,6 +64,10 @@ final class AppDataPaths {
     '${applicationSupportDirectory.path}${_separator}clipboard-group-order.json',
   );
 
+  File get libraryImportHistoryFile => File(
+    '${applicationSupportDirectory.path}${_separator}library-import-history.json',
+  );
+
   File get agentActivityFile => File(
     '${applicationSupportDirectory.path}${_separator}agent-activity.json',
   );

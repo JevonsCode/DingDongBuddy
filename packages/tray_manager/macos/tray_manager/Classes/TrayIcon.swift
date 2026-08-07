@@ -126,6 +126,14 @@ public class TrayIcon: NSView {
     }
     
     public override func mouseDown(with event: NSEvent) {
+        if event.modifierFlags.contains(.command),
+           let button = statusItem?.button
+        {
+            // Let NSStatusBarButton run its native tracking loop so macOS can
+            // rearrange this status item and persist the new autosave slot.
+            button.mouseDown(with: event)
+            return
+        }
         statusItem?.button?.highlight(true)
         self.onTrayIconMouseDown!()
     }

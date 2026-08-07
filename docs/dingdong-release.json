@@ -1,24 +1,24 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.1.0",
-  "latestBuild": "38",
-  "publishedAt": "2026-08-06T07:44:29Z",
+  "latestVersion": "1.2.0",
+  "latestBuild": "39",
+  "publishedAt": "2026-08-07T03:05:39Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.1.0/DingDong-1.1.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.0/DingDong-1.2.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.1.0/DingDong-1.1.0-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.0/DingDong-1.2.0-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.1.0/DingDong-1.1.0-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.0/DingDong-1.2.0-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }

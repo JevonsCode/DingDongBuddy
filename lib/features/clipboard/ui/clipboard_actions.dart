@@ -50,13 +50,23 @@ extension _ClipboardActions on _ClipboardScreenState {
           context: context,
           builder: (BuildContext context) => DesktopAlertDialog(
             title: Text(
-              context.localized('Delete this clipboard item?', '删除此剪贴板条目？'),
+              viewModel.selectedRecordIsArchived
+                  ? context.localized('Delete this archived copy?', '删除这个归档副本？')
+                  : context.localized(
+                      'Delete this clipboard item?',
+                      '删除此剪贴板条目？',
+                    ),
             ),
             content: Text(
-              context.localized(
-                'This removes it from local history.',
-                '此操作会将其从本地历史中移除。',
-              ),
+              viewModel.selectedRecordIsArchived
+                  ? context.localized(
+                      'Clipboard history remains unchanged.',
+                      '剪贴板历史不会受到影响。',
+                    )
+                  : context.localized(
+                      'Archived copies remain unchanged.',
+                      '已有归档副本不会受到影响。',
+                    ),
             ),
             actions: <Widget>[
               DesktopActionButton(

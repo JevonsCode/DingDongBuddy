@@ -26,11 +26,12 @@ void main() {
 
     final Finder group = find.byKey(const Key('library-transfer-actions'));
     expect(group, findsOneWidget);
-    expect(tester.getSize(group), const Size(106, 34));
+    expect(tester.getSize(group), const Size(141, 34));
 
     for (final Key key in const <Key>[
-      Key('library-import'),
       Key('library-import-json'),
+      Key('library-import-link'),
+      Key('library-import-history'),
       Key('library-export'),
     ]) {
       final Finder action = find.byKey(key);
@@ -38,9 +39,10 @@ void main() {
       expect(tester.getSize(action), const Size(34, 32));
     }
 
-    expect(find.byIcon(Icons.folder_open_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.move_to_inbox_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.outbox_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.download_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.link_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.history_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.upload_outlined), findsOneWidget);
   });
 
   testWidgets('compact library drills into the editor and can return', (
@@ -407,12 +409,21 @@ description: Use for the second task.
       find.byKey(const Key('resource-title')),
       'Updated release writer',
     );
+    await tester.enterText(
+      find.byKey(const Key('resource-agent-session-name')),
+      '会话加载名称过长',
+    );
+    await tester.tap(
+      find.byKey(const Key('resource-hide-in-agent-conversation')),
+    );
 
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
     expect(model.selectedResource?.title, 'Updated release writer');
     expect(store.resources.single.title, 'Updated release writer');
+    expect(store.resources.single.agentSessionName, '会话加载名称过');
+    expect(store.resources.single.hideInAgentConversation, isTrue);
     expect(find.text('Saved'), findsOneWidget);
   });
 

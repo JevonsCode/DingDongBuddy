@@ -227,7 +227,7 @@ void main() {
     },
   );
 
-  test('organizing and deleting clipboard history persists both changes', () {
+  test('archiving creates a copy that survives deleting clipboard history', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final InMemoryClipboardStore store = InMemoryClipboardStore(
       <ClipboardRecord>[_record(now)],
@@ -245,10 +245,36 @@ void main() {
       tags: const <String>['alias:build'],
     );
 
-    expect(model.selectedRecord?.group, 'Release');
+    expect(model.selectedRecord?.group, isEmpty);
     expect(model.selectedRecord?.tags, contains('alias:build'));
+    expect(model.archiveRecords.single.groupNames, <String>['Release']);
+    expect(model.archiveRecords.single.content, 'flutter build windows');
     model.deleteSelected();
     expect(store.list(limit: 10), isEmpty);
+    expect(store.listArchives(), hasLength(1));
+    expect(store.listArchives().single.record.groupNames, <String>['Release']);
+  });
+
+  test('deleting an archive copy leaves clipboard history untouched', () {
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    final InMemoryClipboardStore store = InMemoryClipboardStore(
+      <ClipboardRecord>[_record(now)],
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      store,
+      idGenerator: () => 'archive-copy',
+      now: () => now,
+    )..load();
+    model.select(model.visibleRecords.single);
+    model.addSelectedToGroups(<String>{'PageID'});
+    model.setGroup('PageID');
+    model.select(model.visibleRecords.single);
+
+    model.deleteSelected();
+
+    expect(store.listArchives(), isEmpty);
+    expect(store.list(limit: 10).single.id, 'clip');
+    expect(store.list(limit: 10).single.content, 'flutter test');
   });
 
   test(
@@ -307,7 +333,7 @@ void main() {
     },
   );
 
-  test('editing content preserves existing multi-group membership', () {
+  test('editing an archive copy preserves its multi-group membership', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final ClipboardRecord record = _record(now).copyWith(
       groups: const <String>['Clipboard', 'Project alpha', 'Reference'],
@@ -316,17 +342,17 @@ void main() {
       <ClipboardRecord>[record],
     );
     final ClipboardViewModel model = ClipboardViewModel(store)..load();
+    model.setGroup('Project alpha');
     model.select(model.visibleRecords.single);
 
     model.organizeSelected(
       title: 'Updated command',
       content: record.content,
-      group: record.group,
+      group: 'Project alpha',
       tags: const <String>[],
     );
 
     expect(model.selectedRecord?.groupNames, const <String>[
-      'Clipboard',
       'Project alpha',
       'Reference',
     ]);
@@ -535,7 +561,7 @@ void main() {
 
     expect(model.groups, <String>['PageID']);
     model.setGroup('PageID');
-    expect(model.visibleRecords.single.id, 'page-id');
+    expect(model.visibleRecords.single.id, 'ARCHIVE-page-id');
   });
 
   test('promoting content publishes a library revision', () async {
@@ -583,12 +609,18 @@ void main() {
     expect(
       store
           .list(limit: 10)
-          .every((ClipboardRecord item) => item.groupNames.contains('项目归档')),
+          .every(
+            (ClipboardRecord item) =>
+                item.groupNames.every(isAutomaticClipboardGroup),
+          ),
       isTrue,
     );
+    expect(model.archiveRecords, hasLength(2));
     expect(
-      store.list(limit: 10).firstWhere((item) => item.id == 'clip').groupNames,
-      <String>['Clipboard', '项目归档'],
+      model.archiveRecords.every(
+        (ClipboardRecord item) => item.groupNames.contains('项目归档'),
+      ),
+      isTrue,
     );
     expect(
       store
@@ -620,7 +652,7 @@ void main() {
 
     expect(model.groups, <String>['项目乙', '项目甲']);
     model.setGroup('项目乙');
-    expect(model.visibleRecords.single.id, 'multi-group');
+    expect(model.visibleRecords.single.id, 'ARCHIVE-multi-group');
   });
 
   test('clearing filters resets category and group selections together', () {
@@ -781,31 +813,20 @@ void main() {
       ],
     );
     final ClipboardViewModel model = ClipboardViewModel(store)..load();
-    model.select(
-      model.allRecords.firstWhere((ClipboardRecord item) => item.id == 'first'),
-    );
     model.setGroup('项目甲');
+    model.select(model.visibleRecords.first);
 
     expect(model.groupItemCount('项目甲'), 2);
     model.deleteGroup('项目甲');
 
     expect(store.list(limit: 10), hasLength(2));
     expect(model.selectedGroup, isNull);
-    expect(model.selectedRecord?.groupNames, <String>['参考']);
     expect(model.groups, <String>['参考']);
+    expect(model.archiveRecords.single.groupNames, <String>['参考']);
+    expect(store.list(limit: 10), hasLength(2));
     expect(
-      store
-          .list(limit: 10)
-          .firstWhere((ClipboardRecord item) => item.id == 'first')
-          .groupNames,
-      <String>['参考'],
-    );
-    expect(
-      store
-          .list(limit: 10)
-          .firstWhere((ClipboardRecord item) => item.id == 'second')
-          .groupNames,
-      isEmpty,
+      store.list(limit: 10).every((item) => item.groupNames.isEmpty),
+      isTrue,
     );
   });
 }

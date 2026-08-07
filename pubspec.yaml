@@ -1,7 +1,7 @@
 name: dingdong
 description: Cross-platform desktop companion for local AI agents.
 publish_to: none
-version: 1.1.0+38
+version: 1.2.0+39
 
 environment:
   sdk: ^3.12.2

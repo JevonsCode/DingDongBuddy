@@ -94,10 +94,12 @@ class _ShellScreenState extends State<ShellScreen> {
   bool _showShortcutHints = false;
   bool _showWorkspaceShortcutHints = false;
   bool _showPlainTextShortcutHints = false;
+  bool _showGroupShortcutHints = false;
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
   bool _focusMcpOnOpen = false;
   int _clipboardShortcutStartIndex = 0;
+  int _clipboardGroupShortcutStartIndex = 0;
   late int _lastClipboardFilterToggleRevision;
   late int _lastClipboardRefreshRevision;
   late int _lastLibraryRefreshRevision;
@@ -179,6 +181,7 @@ class _ShellScreenState extends State<ShellScreen> {
       if (widget.controller.selectedIndex != 2) {
         _clipboardFiltersExpanded = false;
         _clipboardShortcutStartIndex = 0;
+        _clipboardGroupShortcutStartIndex = 0;
       }
     });
   }
@@ -224,17 +227,35 @@ class _ShellScreenState extends State<ShellScreen> {
         showPrimary &&
         usesMetaAsPrimaryModifier(platform) &&
         keyboard.isAltPressed;
+    final bool showGroups = _groupNavigationModifierPressed(keyboard, platform);
     if (showPrimary != _showShortcutHints ||
         showWorkspace != _showWorkspaceShortcutHints ||
-        showPlainText != _showPlainTextShortcutHints) {
+        showPlainText != _showPlainTextShortcutHints ||
+        showGroups != _showGroupShortcutHints) {
       setState(() {
         _showShortcutHints = showPrimary;
         _showWorkspaceShortcutHints = showWorkspace;
         _showPlainTextShortcutHints = showPlainText;
+        _showGroupShortcutHints = showGroups;
+        if (showGroups &&
+            widget.controller.selectedIndex == 2 &&
+            widget.clipboardViewModel.groups.isNotEmpty) {
+          _clipboardFiltersExpanded = true;
+        }
       });
     }
     if (event is KeyDownEvent && widget.controller.selectedIndex == 2) {
       final int? shortcutIndex = _clipboardShortcutIndex(event.logicalKey);
+      if (shortcutIndex != null &&
+          shortcutIndex < 5 &&
+          showGroups &&
+          widget.clipboardViewModel.groups.isNotEmpty) {
+        setState(() => _clipboardFiltersExpanded = true);
+        widget.clipboardViewModel.selectGroupAt(
+          _clipboardGroupShortcutStartIndex + shortcutIndex,
+        );
+        return KeyEventResult.handled;
+      }
       if (shortcutIndex != null &&
           isPrimaryModifierPressed(keyboard, platform)) {
         unawaited(
@@ -247,12 +268,25 @@ class _ShellScreenState extends State<ShellScreen> {
         );
         return KeyEventResult.handled;
       }
-      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (!_isEditingText() &&
+          event.logicalKey == LogicalKeyboardKey.arrowDown) {
         widget.clipboardViewModel.moveSelection(1);
         return KeyEventResult.handled;
       }
-      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      if (!_isEditingText() && event.logicalKey == LogicalKeyboardKey.arrowUp) {
         widget.clipboardViewModel.moveSelection(-1);
+        return KeyEventResult.handled;
+      }
+      if (!_isEditingText() &&
+          event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        setState(() => _clipboardFiltersExpanded = true);
+        widget.clipboardViewModel.moveGroupSelection(1);
+        return KeyEventResult.handled;
+      }
+      if (!_isEditingText() &&
+          event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        setState(() => _clipboardFiltersExpanded = true);
+        widget.clipboardViewModel.moveGroupSelection(-1);
         return KeyEventResult.handled;
       }
       if (!_isEditingText()) {
@@ -433,11 +467,13 @@ class _ShellScreenState extends State<ShellScreen> {
           if (!focused &&
               (_showShortcutHints ||
                   _showWorkspaceShortcutHints ||
-                  _showPlainTextShortcutHints)) {
+                  _showPlainTextShortcutHints ||
+                  _showGroupShortcutHints)) {
             setState(() {
               _showShortcutHints = false;
               _showWorkspaceShortcutHints = false;
               _showPlainTextShortcutHints = false;
+              _showGroupShortcutHints = false;
             });
           }
         },
@@ -529,6 +565,7 @@ class _ShellScreenState extends State<ShellScreen> {
         settingsViewModel: widget.settingsViewModel,
         showShortcutHints: _showShortcutHints,
         showPlainTextShortcutHints: _showPlainTextShortcutHints,
+        showGroupShortcutHints: _showGroupShortcutHints,
         onPreview: _showClipboardPreview,
         onOpenContent: widget.clipboardContentLauncher == null
             ? null
@@ -545,6 +582,9 @@ class _ShellScreenState extends State<ShellScreen> {
         },
         onShortcutStartIndexChanged: (int index) {
           _clipboardShortcutStartIndex = index;
+        },
+        onGroupShortcutStartIndexChanged: (int index) {
+          _clipboardGroupShortcutStartIndex = index;
         },
         searchFocusRevision: widget.controller.clipboardSearchFocusRevision,
         now: widget.now,
@@ -590,6 +630,13 @@ int? _clipboardShortcutIndex(LogicalKeyboardKey key) {
   ].indexOf(key);
   return index < 0 ? null : index;
 }
+
+bool _groupNavigationModifierPressed(
+  HardwareKeyboard keyboard,
+  TargetPlatform platform,
+) => usesMetaAsPrimaryModifier(platform)
+    ? keyboard.isControlPressed
+    : keyboard.isAltPressed;
 
 final class _CalloutHidingResourceManagerLauncher
     implements ResourceManagerLauncher {

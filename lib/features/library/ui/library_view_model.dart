@@ -6,6 +6,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
+import 'package:dingdong/features/library/domain/library_import_history.dart';
 import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
@@ -23,10 +24,13 @@ final class LibraryViewModel extends ChangeNotifier {
     this.updateFetcher,
     this.skillPackageInstaller,
     TriggerGroupStore? triggerGroupStore,
+    LibraryImportHistoryStore? importHistoryStore,
     DataRevisionBus? revisions,
   }) : _idGenerator = idGenerator ?? _generateUuid,
        _now = now ?? _utcNow,
        _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
+       _importHistoryStore =
+           importHistoryStore ?? InMemoryLibraryImportHistoryStore(),
        _importer =
            importer ?? LibraryImporter(idGenerator: idGenerator, now: now) {
     _revisionSubscription = revisions?.changes
@@ -41,9 +45,12 @@ final class LibraryViewModel extends ChangeNotifier {
   final ResourceUpdateFetcher? updateFetcher;
   final SkillPackageInstaller? skillPackageInstaller;
   final TriggerGroupStore _triggerGroupStore;
+  final LibraryImportHistoryStore _importHistoryStore;
   StreamSubscription<DataCollection>? _revisionSubscription;
   List<Resource> _resources = const <Resource>[];
   List<TriggerGroup> _triggerGroups = const <TriggerGroup>[];
+  List<LibraryImportHistoryEntry> _importHistory =
+      const <LibraryImportHistoryEntry>[];
   String _query = '';
   ResourceType? _selectedType;
   String? _selectedGroup;
@@ -109,6 +116,9 @@ final class LibraryViewModel extends ChangeNotifier {
     return List<TriggerGroup>.unmodifiable(groups);
   }
 
+  List<LibraryImportHistoryEntry> get importHistory =>
+      List<LibraryImportHistoryEntry>.unmodifiable(_importHistory);
+
   int get selectionCount => _selectedIds.length;
 
   bool isSelected(String id) => _selectedIds.contains(id);
@@ -171,6 +181,13 @@ final class LibraryViewModel extends ChangeNotifier {
   Future<void> load() async {
     _resources = await _repository.load();
     _triggerGroups = await _triggerGroupStore.load();
+    try {
+      _importHistory = await _importHistoryStore.load();
+    } on Object {
+      // A damaged history file must not prevent the resource library from
+      // opening. The next successful import will rebuild it.
+      _importHistory = const <LibraryImportHistoryEntry>[];
+    }
     _selectedIds.removeWhere(
       (String id) => !_resources.any((Resource resource) => resource.id == id),
     );
@@ -263,6 +280,8 @@ final class LibraryViewModel extends ChangeNotifier {
     String? updateUrl,
     String? packagePath,
     String? note,
+    String? agentSessionName,
+    bool? hideInAgentConversation,
     bool? pinned,
     bool? enabled,
     ResourceActivation? activation,
@@ -279,6 +298,8 @@ final class LibraryViewModel extends ChangeNotifier {
       updateUrl: updateUrl,
       packagePath: packagePath,
       note: note,
+      agentSessionName: agentSessionName,
+      hideInAgentConversation: hideInAgentConversation ?? false,
       pinned: pinned ?? false,
       enabled: enabled ?? true,
       activation: activation,
@@ -567,18 +588,93 @@ final class LibraryViewModel extends ChangeNotifier {
   }
 
   Future<LibraryBundleImportResult> importBundleJson(String contents) async {
-    final LibraryBundleImportResult result = LibraryBundle.decode(
+    final LibraryBundleImportResult result = await prepareBundleJson(contents);
+    await commitBundleImport(
+      result,
+      source: 'JSON file',
+      kind: LibraryImportSourceKind.file,
+    );
+    return result;
+  }
+
+  /// Parses a JSON bundle without mutating the library.
+  ///
+  /// When [resolveOnline] is true, every `contentURL`/`sourceURL`/legacy
+  /// `updateURL` entry is fetched before duplicate checking. This lets the UI
+  /// show the online sources and ask for a final confirmation first.
+  Future<LibraryBundleImportResult> prepareBundleJson(
+    String contents, {
+    bool resolveOnline = false,
+  }) {
+    if (!resolveOnline) {
+      return Future<LibraryBundleImportResult>.value(
+        LibraryBundle.decode(contents, existing: _resources),
+      );
+    }
+    final ResourceUpdateFetcher? fetcher = updateFetcher;
+    if (fetcher == null) {
+      return Future<LibraryBundleImportResult>.error(
+        StateError('Online resource import is unavailable.'),
+      );
+    }
+    return LibraryBundle.decodeOnline(
       contents,
       existing: _resources,
+      fetcher: fetcher,
     );
+  }
+
+  /// Fetches and prepares a bundle from one remote JSON link.
+  Future<LibraryBundleImportResult> prepareBundleJsonFromUrl(
+    String value,
+  ) async {
+    final ResourceUpdateFetcher? fetcher = updateFetcher;
+    final String link = value.trim();
+    final Uri? uri = Uri.tryParse(link);
+    if (fetcher == null) {
+      throw StateError('Online resource import is unavailable.');
+    }
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      throw FormatException('Invalid online resource link: $link');
+    }
+    final String contents = await fetcher.fetch(uri);
+    return prepareBundleJson(contents, resolveOnline: true);
+  }
+
+  /// Commits a prepared import after the user has reviewed any online items.
+  Future<void> commitBundleImport(
+    LibraryBundleImportResult result, {
+    required String source,
+    required LibraryImportSourceKind kind,
+  }) async {
     if (result.imported.isNotEmpty) {
       _resources = <Resource>[..._resources, ...result.imported];
       await _repository.save(_resources);
       _selectedResource = result.imported.first;
       _isCreating = false;
-      notifyListeners();
     }
-    return result;
+    final LibraryImportHistoryEntry entry = LibraryImportHistoryEntry(
+      source: source,
+      kind: kind,
+      importedCount: result.imported.length,
+      duplicateIds: result.duplicateIds,
+      conflictIds: result.conflictIds,
+      onlineTitles: result.onlineResources
+          .map((Resource resource) => resource.title)
+          .toList(growable: false),
+      createdAt: _now().toUtc(),
+    );
+    _importHistory = <LibraryImportHistoryEntry>[
+      entry,
+      ..._importHistory,
+    ].take(InMemoryLibraryImportHistoryStore.maximumEntries).toList();
+    try {
+      await _importHistoryStore.record(entry);
+    } on Object {
+      // The import itself is already durable; a history write should not make
+      // a successful resource import look like a failure.
+    }
+    notifyListeners();
   }
 
   String exportJson() {

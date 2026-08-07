@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
+import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -124,9 +125,100 @@ void main() {
     final Map<String, Object?> item =
         (payload['items'] as List<Object?>).single as Map<String, Object?>;
 
-    expect(item['content'], '# Portable skill');
+    expect(item['content'], isNull);
+    expect(item['contentURL'], 'https://private.example/token');
     expect(item, isNot(contains('source')));
     expect(item, isNot(contains('updateURL')));
     expect(jsonEncode(payload), isNot(contains(directory.path)));
   });
+
+  test(
+    'online resources export a link and resolve it before importing',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      final Resource online = Resource(
+        id: 'online-review',
+        type: ResourceType.skill,
+        title: 'Online review',
+        content: 'private snapshot',
+        updateUrl: 'https://example.com/review.md',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final String encoded = LibraryBundle.encode(<Resource>[
+        online,
+      ], generatedAt: now);
+      final Map<String, Object?> item =
+          ((jsonDecode(encoded) as Map<String, Object?>)['items']
+                      as List<Object?>)
+                  .single
+              as Map<String, Object?>;
+
+      expect(item['content'], isNull);
+      expect(item['contentURL'], online.updateUrl);
+      expect(encoded, isNot(contains('private snapshot')));
+
+      final LibraryBundleImportResult result = await LibraryBundle.decodeOnline(
+        encoded,
+        existing: const <Resource>[],
+        fetcher: _MapUpdateFetcher(<String, String>{
+          online.updateUrl!: '# fetched review',
+        }),
+      );
+
+      expect(result.imported.single.content, '# fetched review');
+      expect(result.imported.single.updateUrl, online.updateUrl);
+      expect(result.onlineResources.single.title, 'Online review');
+    },
+  );
+
+  test(
+    'online duplicate checks use fetched content before committing',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      final Resource existing = Resource(
+        id: 'existing-review',
+        type: ResourceType.skill,
+        title: 'Existing review',
+        content: '# fetched review',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final Resource online = Resource(
+        id: 'online-review',
+        type: ResourceType.skill,
+        title: 'Online review',
+        content: 'private snapshot',
+        updateUrl: 'https://example.com/review.md',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final LibraryBundleImportResult result = await LibraryBundle.decodeOnline(
+        LibraryBundle.encode(<Resource>[online], generatedAt: now),
+        existing: <Resource>[existing],
+        fetcher: _MapUpdateFetcher(<String, String>{
+          online.updateUrl!: '# fetched review',
+        }),
+      );
+
+      expect(result.imported, isEmpty);
+      expect(result.duplicateIds, <String>['online-review']);
+      expect(result.onlineResources.single.title, 'Online review');
+    },
+  );
+}
+
+final class _MapUpdateFetcher implements ResourceUpdateFetcher {
+  _MapUpdateFetcher(this.values);
+
+  final Map<String, String> values;
+
+  @override
+  Future<String> fetch(Uri uri) async {
+    final String? value = values[uri.toString()];
+    if (value == null) {
+      throw StateError('Unexpected fetch: $uri');
+    }
+    return value;
+  }
 }

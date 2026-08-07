@@ -407,6 +407,14 @@ class AppDelegate: FlutterAppDelegate {
     let usesChinese = Locale.preferredLanguages.first?
       .lowercased()
       .hasPrefix("zh") == true
+    let recoveryItem = NSMenuItem(
+      title: usesChinese ? "找回菜单栏图标…" : "Find Menu Bar Icon…",
+      action: #selector(showMenuBarRecoveryFromDockMenu(_:)),
+      keyEquivalent: ""
+    )
+    recoveryItem.target = self
+    menu.addItem(recoveryItem)
+    menu.addItem(.separator())
     let item = NSMenuItem(
       title: usesChinese ? "隐藏 Dock 图标" : "Hide Dock Icon",
       action: #selector(hideDockIconFromDockMenu(_:)),
@@ -455,6 +463,38 @@ class AppDelegate: FlutterAppDelegate {
   @objc private func hideDockIconFromDockMenu(_ sender: NSMenuItem) {
     NSApp.setActivationPolicy(.accessory)
     hotKeyChannel?.invokeMethod("hideDockIcon", arguments: nil)
+  }
+
+  @objc private func showMenuBarRecoveryFromDockMenu(_ sender: NSMenuItem) {
+    showMenuBarRecoveryAssistant()
+  }
+
+  func showMenuBarRecoveryAssistant() {
+    let usesChinese = Locale.preferredLanguages.first?
+      .lowercased()
+      .hasPrefix("zh") == true
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.alertStyle = .informational
+    alert.messageText = usesChinese
+      ? "找回 DingDong 菜单栏图标"
+      : "Find the DingDong menu bar icon"
+    alert.informativeText = usesChinese
+      ? "如果图标被刘海遮挡，请在 Finder 中选中 DingDong，按 ⌘I，勾选“缩放以适合内建摄像头下方”，然后重新打开 DingDong。图标出现后，按住 ⌘ 拖到右侧；macOS 会记住位置。"
+      : "If the icon is hidden behind the camera housing, reveal DingDong in Finder, press ⌘I, enable “Scale to fit below built-in camera,” then reopen DingDong. Once visible, hold ⌘ and drag it to the right; macOS remembers the position."
+    alert.addButton(withTitle: usesChinese ? "在 Finder 中显示" : "Show in Finder")
+    alert.addButton(withTitle: usesChinese ? "打开系统设置" : "Open System Settings")
+    alert.addButton(withTitle: usesChinese ? "取消" : "Cancel")
+    switch alert.runModal() {
+    case .alertFirstButtonReturn:
+      NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+    case .alertSecondButtonReturn:
+      if let url = URL(string: "x-apple.systempreferences:") {
+        NSWorkspace.shared.open(url)
+      }
+    default:
+      break
+    }
   }
 
   private func playNotificationSound(_ arguments: [String: Any]) {

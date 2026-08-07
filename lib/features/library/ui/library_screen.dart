@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
@@ -7,9 +5,11 @@ import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
-import 'package:dingdong/features/library/domain/library_importer.dart';
+import 'package:dingdong/features/library/domain/library_import_history.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
-import 'package:dingdong/features/library/ui/library_import_dialog.dart';
+import 'package:dingdong/features/library/ui/library_import_history_dialog.dart';
+import 'package:dingdong/features/library/ui/library_import_review_dialog.dart';
+import 'package:dingdong/features/library/ui/library_link_import_dialog.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
 import 'package:dingdong/features/library/ui/resource_filter_bar.dart';
@@ -55,12 +55,13 @@ class LibraryScreen extends StatelessWidget {
                   children: <Widget>[
                     ResourceFilterBar(
                       viewModel: viewModel,
-                      onImport: transferGateway == null
-                          ? null
-                          : () => _import(context),
                       onImportJson: transferGateway == null
                           ? null
                           : () => _importJson(context),
+                      onImportLink: viewModel.updateFetcher == null
+                          ? null
+                          : () => _importLink(context),
+                      onImportHistory: () => _showImportHistory(context),
                       onExport: transferGateway == null
                           ? null
                           : () => _export(context),
@@ -156,6 +157,7 @@ class LibraryScreen extends StatelessWidget {
       initialContent: viewModel.creatingContent,
       triggerGroups: viewModel.triggerGroups,
       onCreate: viewModel.create,
+      onCreateWithAgentSessionName: viewModel.create,
       onCreateTriggerGroup: viewModel.createTriggerGroup,
       onUpdateTriggerGroup: viewModel.updateTriggerGroup,
       onDeleteTriggerGroup: viewModel.deleteTriggerGroup,
@@ -164,9 +166,6 @@ class LibraryScreen extends StatelessWidget {
       onSyncUpdate: (String updateUrl) => _syncUpdate(context, updateUrl),
       onResolveSkillSource: viewModel.installSkillPackage,
       onOpenExternalLink: onOpenExternalLink,
-      onImportSkill: transferGateway == null
-          ? null
-          : () => _import(context, fixedType: ResourceType.skill),
     );
   }
 
@@ -199,57 +198,6 @@ class LibraryScreen extends StatelessWidget {
     );
     if (confirmed ?? false) {
       await viewModel.deleteSelected();
-    }
-  }
-
-  Future<void> _import(BuildContext context, {ResourceType? fixedType}) async {
-    final LibraryTransferGateway? gateway = transferGateway;
-    if (gateway == null) {
-      return;
-    }
-    final LibraryImportOptions? options = fixedType == null
-        ? await showDialog<LibraryImportOptions>(
-            context: context,
-            builder: (BuildContext context) => const LibraryImportDialog(),
-          )
-        : LibraryImportOptions(type: fixedType);
-    if (options == null) {
-      return;
-    }
-    final String? directory = await gateway.chooseImportDirectory();
-    if (directory == null) {
-      return;
-    }
-    try {
-      final LibraryImportResult result = await viewModel.importDirectory(
-        type: options.type,
-        path: directory,
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.localized(
-                'Imported ${result.imported.length}; skipped ${result.skippedCount}.',
-                '已导入 ${result.imported.length} 项，跳过 ${result.skippedCount} 项。',
-              ),
-            ),
-          ),
-        );
-      }
-    } on FileSystemException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.localized(
-                'The selected folder could not be read.',
-                '无法读取所选文件夹。',
-              ),
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -291,36 +239,124 @@ class LibraryScreen extends StatelessWidget {
     if (contents == null) {
       return;
     }
-    try {
-      final LibraryBundleImportResult result = await viewModel.importBundleJson(
-        contents,
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.localized(
-                'Imported ${result.imported.length}; skipped ${result.skippedCount}.',
-                '已导入 ${result.imported.length} 项，跳过 ${result.skippedCount} 项。',
-              ),
-            ),
-          ),
+    if (!context.mounted) {
+      return;
+    }
+    await _prepareAndCommitImport(
+      context,
+      prepare: () => viewModel.prepareBundleJson(contents, resolveOnline: true),
+      source: 'JSON file',
+      kind: LibraryImportSourceKind.file,
+    );
+  }
+
+  Future<void> _importLink(BuildContext context) async {
+    final LibraryLinkImportOptions? options =
+        await showDialog<LibraryLinkImportOptions>(
+          context: context,
+          builder: (BuildContext context) => const LibraryLinkImportDialog(),
         );
+    if (options == null) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    await _prepareAndCommitImport(
+      context,
+      prepare: () => viewModel.prepareBundleJsonFromUrl(options.url),
+      source: options.url,
+      kind: LibraryImportSourceKind.link,
+    );
+  }
+
+  Future<void> _prepareAndCommitImport(
+    BuildContext context, {
+    required Future<LibraryBundleImportResult> Function() prepare,
+    required String source,
+    required LibraryImportSourceKind kind,
+  }) async {
+    try {
+      final LibraryBundleImportResult result = await prepare();
+      if (!context.mounted) {
+        return;
       }
-    } on FormatException {
+      final bool confirmed = await showLibraryImportReviewDialog(
+        context,
+        result,
+        onOpenExternalLink: onOpenExternalLink,
+      );
+      if (!confirmed || !context.mounted) {
+        return;
+      }
+      await viewModel.commitBundleImport(result, source: source, kind: kind);
+      if (context.mounted) {
+        _showImportFeedback(context, result);
+      }
+    } on Object catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               context.localized(
-                'The selected JSON is not a DingDongBuddy resource bundle.',
-                '所选 JSON 不是有效的 DingDongBuddy 资源包。',
+                'Could not import this resource bundle: $error',
+                '无法导入这个资源包：$error',
               ),
             ),
           ),
         );
       }
     }
+  }
+
+  void _showImportFeedback(
+    BuildContext context,
+    LibraryBundleImportResult result,
+  ) {
+    final List<String> details = <String>[];
+    if (result.duplicateIds.isNotEmpty) {
+      details.add(
+        context.localized(
+          '${result.duplicateIds.length} duplicates',
+          '${result.duplicateIds.length} 项重复',
+        ),
+      );
+    }
+    if (result.conflictIds.isNotEmpty) {
+      details.add(
+        context.localized(
+          '${result.conflictIds.length} ID conflicts',
+          '${result.conflictIds.length} 项 ID 冲突',
+        ),
+      );
+    }
+    if (result.onlineResources.isNotEmpty) {
+      details.add(
+        context.localized(
+          '${result.onlineResources.length} online sources checked',
+          '已检查 ${result.onlineResources.length} 个在线来源',
+        ),
+      );
+    }
+    final String suffix = details.isEmpty ? '' : ' · ${details.join(' · ')}';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.localized(
+            'Imported ${result.imported.length}; skipped ${result.skippedCount}.$suffix',
+            '已导入 ${result.imported.length} 项；跳过 ${result.skippedCount} 项。$suffix',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showImportHistory(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) =>
+          LibraryImportHistoryDialog(entries: viewModel.importHistory),
+    );
   }
 
   Future<void> _syncUpdate(BuildContext context, String updateUrl) async {

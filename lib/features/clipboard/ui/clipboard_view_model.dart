@@ -24,7 +24,8 @@ enum ClipboardPasteMode { original, plainText }
 /// Observable filters and selection for clipboard history.
 final class ClipboardViewModel extends ChangeNotifier {
   ClipboardViewModel(
-    this._store, {
+    ClipboardStore store, {
+    ClipboardArchiveStore? archiveStore,
     ClipboardCaptureService? captureService,
     ClipboardGateway? gateway,
     ResourceStore? resourceStore,
@@ -35,7 +36,13 @@ final class ClipboardViewModel extends ChangeNotifier {
     ClipboardCategoryRuleStore? categoryRuleStore,
     ClipboardGroupOrderStore? groupOrderStore,
     Directory? managedImageDirectory,
-  }) : _captureService = captureService,
+  }) : _store = store,
+       _archiveStore =
+           archiveStore ??
+           (store is ClipboardArchiveStore
+               ? store as ClipboardArchiveStore
+               : InMemoryClipboardArchiveStore()),
+       _captureService = captureService,
        _gateway = gateway,
        _resourceStore = resourceStore,
        _idGenerator = idGenerator ?? _generateUuid,
@@ -48,6 +55,7 @@ final class ClipboardViewModel extends ChangeNotifier {
        _groupOrderStore = groupOrderStore ?? InMemoryClipboardGroupOrderStore();
 
   final ClipboardStore _store;
+  final ClipboardArchiveStore _archiveStore;
   final ClipboardCaptureService? _captureService;
   final ClipboardGateway? _gateway;
   final ResourceStore? _resourceStore;
@@ -59,6 +67,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   final ClipboardCategoryRuleStore _categoryRuleStore;
   final ClipboardGroupOrderStore _groupOrderStore;
   List<ClipboardRecord> _records = const <ClipboardRecord>[];
+  List<ClipboardArchiveEntry> _archives = const <ClipboardArchiveEntry>[];
   List<ClipboardCategoryRule> _categoryRules = const <ClipboardCategoryRule>[];
   final List<String> _groupOrder = <String>[];
   String _query = '';
@@ -69,6 +78,10 @@ final class ClipboardViewModel extends ChangeNotifier {
   ClipboardRecord? _selectedRecord;
 
   ClipboardRecord? get selectedRecord => _selectedRecord;
+
+  bool get selectedRecordIsArchived =>
+      _selectedRecord != null &&
+      _archiveEntryForId(_selectedRecord!.id) != null;
 
   String get query => _query;
 
@@ -88,7 +101,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   List<ClipboardSourceOption> get sourceOptions {
     final Map<String, ClipboardSourceOption> options =
         <String, ClipboardSourceOption>{};
-    for (final ClipboardRecord record in _records) {
+    for (final ClipboardRecord record in _activeRecords) {
       final ClipboardSourceOption? option = clipboardSourceOption(
         record.source,
       );
@@ -106,7 +119,9 @@ final class ClipboardViewModel extends ChangeNotifier {
       .where(
         (ClipboardCategoryRule rule) =>
             rule.enabled &&
-            _records.any((ClipboardRecord record) => rule.matches(record)),
+            _activeRecords.any(
+              (ClipboardRecord record) => rule.matches(record),
+            ),
       )
       .toList(growable: false);
 
@@ -137,8 +152,8 @@ final class ClipboardViewModel extends ChangeNotifier {
     for (final String group in _groupOrder) {
       addGroup(group);
     }
-    for (final ClipboardRecord record in _records) {
-      for (final String group in record.groupNames) {
+    for (final ClipboardArchiveEntry entry in _archives) {
+      for (final String group in entry.record.groupNames) {
         addGroup(group);
       }
     }
@@ -165,12 +180,24 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   List<ClipboardRecord> get allRecords =>
-      List<ClipboardRecord>.unmodifiable(_records);
+      List<ClipboardRecord>.unmodifiable(<ClipboardRecord>[
+        ..._records,
+        ..._archives.map((ClipboardArchiveEntry entry) => entry.record),
+      ]);
+
+  List<ClipboardRecord> get archiveRecords =>
+      List<ClipboardRecord>.unmodifiable(
+        _archives.map((ClipboardArchiveEntry entry) => entry.record),
+      );
+
+  List<ClipboardRecord> get _activeRecords => _selectedGroup == null
+      ? _records
+      : _archives.map((ClipboardArchiveEntry entry) => entry.record).toList();
 
   List<ClipboardRecord> get visibleRecords {
     final String needle = _query.trim().toLowerCase();
     return List<ClipboardRecord>.unmodifiable(
-      _records.where((ClipboardRecord record) {
+      _activeRecords.where((ClipboardRecord record) {
         if (_selectedKind != null && record.kind != _selectedKind) {
           return false;
         }
@@ -205,6 +232,7 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void load() {
     _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
+    _archives = _archiveStore.listArchives();
     _categoryRules = List<ClipboardCategoryRule>.of(_categoryRuleStore.load());
     _groupOrder
       ..clear()
@@ -312,6 +340,28 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void moveGroupSelection(int offset) {
+    if (offset == 0 || groups.isEmpty) return;
+    final List<String?> destinations = <String?>[null, ...groups];
+    final int current = _selectedGroup == null
+        ? 0
+        : destinations.indexWhere(
+            (String? group) =>
+                group != null && _groupKey(group) == _groupKey(_selectedGroup!),
+          );
+    final int next = ((current < 0 ? 0 : current) + offset).clamp(
+      0,
+      destinations.length - 1,
+    );
+    setGroup(destinations[next]);
+  }
+
+  void selectGroupAt(int index) {
+    final List<String> available = groups;
+    if (index < 0 || index >= available.length) return;
+    setGroup(available[index]);
+  }
+
   void toggleSource(String id) {
     final bool available = sourceOptions.any(
       (ClipboardSourceOption option) => option.id == id,
@@ -350,9 +400,9 @@ final class ClipboardViewModel extends ChangeNotifier {
   int groupItemCount(String group) {
     final String normalized = _groupKey(group);
     if (normalized.isEmpty) return 0;
-    return _records
+    return _archives
         .where(
-          (ClipboardRecord record) => record.groupNames.any(
+          (ClipboardArchiveEntry entry) => entry.record.groupNames.any(
             (String value) => _groupKey(value) == normalized,
           ),
         )
@@ -362,13 +412,13 @@ final class ClipboardViewModel extends ChangeNotifier {
   void deleteGroup(String group) {
     final String normalized = _groupKey(group);
     if (normalized.isEmpty) return;
-    final Set<String> affectedIds = _records
+    final Set<String> affectedIds = _archives
         .where(
-          (ClipboardRecord record) => record.groupNames.any(
+          (ClipboardArchiveEntry entry) => entry.record.groupNames.any(
             (String value) => _groupKey(value) == normalized,
           ),
         )
-        .map((ClipboardRecord record) => record.id)
+        .map((ClipboardArchiveEntry entry) => entry.record.id)
         .toSet();
     _groupOrder.removeWhere((String value) => _groupKey(value) == normalized);
     _groupOrderStore.save(_groupOrder);
@@ -379,15 +429,32 @@ final class ClipboardViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    _updateMany(
-      affectedIds,
-      (ClipboardRecord record) => record.copyWith(
-        groups: record.groupNames
-            .where((String value) => _groupKey(value) != normalized)
-            .toList(growable: false),
-        updatedAt: _now().toUtc(),
-      ),
-    );
+    final DateTime timestamp = _now().toUtc();
+    for (final String id in affectedIds) {
+      final ClipboardArchiveEntry? entry = _archiveEntryForId(id);
+      if (entry == null) continue;
+      final List<String> remaining = entry.record.groupNames
+          .where((String value) => _groupKey(value) != normalized)
+          .toList(growable: false);
+      if (remaining.isEmpty) {
+        _archiveStore.deleteArchive(id);
+      } else {
+        _archiveStore.saveArchive(
+          ClipboardArchiveEntry(
+            record: entry.record.copyWith(
+              groups: remaining,
+              updatedAt: timestamp,
+            ),
+            sourceClipboardId: entry.sourceClipboardId,
+            archivedAt: entry.archivedAt,
+          ),
+        );
+      }
+    }
+    _archives = _archiveStore.listArchives();
+    _ensureSelectionVisible();
+    _revisions?.changed(DataCollection.clipboard);
+    notifyListeners();
   }
 
   void select(ClipboardRecord record) {
@@ -436,12 +503,9 @@ final class ClipboardViewModel extends ChangeNotifier {
       activation: pinned ? 'always' : 'taskMatch',
       updatedAt: _now().toUtc(),
     );
-    _store.save(updated);
+    _saveSelectedRecord(updated);
     _revisions?.changed(DataCollection.clipboard);
-    _records = <ClipboardRecord>[
-      updated,
-      ..._records.where((ClipboardRecord record) => record.id != updated.id),
-    ];
+    _reloadRecords();
     _selectedRecord = updated;
     notifyListeners();
   }
@@ -458,23 +522,26 @@ final class ClipboardViewModel extends ChangeNotifier {
     }
     final String requestedGroup = group.trim();
     final bool contentChanged = content != selected.content;
+    final bool archived = _archiveEntryForId(selected.id) != null;
     final ClipboardRecord updated = selected.copyWith(
       title: title.trim(),
       content: content,
       replaceFormattedText: contentChanged,
-      groups: requestedGroup == selected.group
+      groups: archived && requestedGroup == selected.group
           ? selected.groupNames
-          : <String>[requestedGroup],
+          : archived && requestedGroup.isNotEmpty
+          ? <String>[requestedGroup]
+          : const <String>[],
       tags: _uniqueTags(<String>[...selected.tags, ...tags]),
       updatedAt: _now().toUtc(),
     );
-    _store.save(updated);
+    _saveSelectedRecord(updated);
     _revisions?.changed(DataCollection.clipboard);
-    _records = <ClipboardRecord>[
-      updated,
-      ..._records.where((ClipboardRecord record) => record.id != updated.id),
-    ];
+    _reloadRecords();
     _selectedRecord = updated;
+    if (!archived && requestedGroup.isNotEmpty) {
+      _archiveSource(updated, <String>{requestedGroup});
+    }
     notifyListeners();
   }
 
@@ -483,30 +550,58 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (selected == null) {
       return;
     }
-    final ClipboardRecord updated = selected.copyWith(
-      groups: _uniqueGroups(<String>[...selected.groupNames, ...groups]),
-      updatedAt: _now().toUtc(),
-    );
-    _store.save(updated);
+    final ClipboardArchiveEntry? archive = _archiveEntryForId(selected.id);
+    if (archive == null) {
+      _archiveSource(selected, groups);
+    } else {
+      final ClipboardRecord updated = selected.copyWith(
+        groups: _uniqueGroups(<String>[...selected.groupNames, ...groups]),
+        updatedAt: _now().toUtc(),
+      );
+      _archiveStore.saveArchive(
+        ClipboardArchiveEntry(
+          record: updated,
+          sourceClipboardId: archive.sourceClipboardId,
+          archivedAt: archive.archivedAt,
+        ),
+      );
+      _reloadRecords();
+      _selectedRecord = updated;
+    }
     _revisions?.changed(DataCollection.clipboard);
-    _records = <ClipboardRecord>[
-      updated,
-      ..._records.where((ClipboardRecord record) => record.id != updated.id),
-    ];
-    _selectedRecord = updated;
     notifyListeners();
   }
 
   void addManyToGroups(Set<String> ids, Set<String> groups) {
     // The caller owns the recovery scope: only these explicit IDs are
     // changed. Do not infer IDs from title/content/tags here.
-    _updateMany(
-      ids,
-      (ClipboardRecord record) => record.copyWith(
-        groups: _uniqueGroups(<String>[...record.groupNames, ...groups]),
-        updatedAt: _now().toUtc(),
-      ),
-    );
+    for (final String id in ids) {
+      final ClipboardArchiveEntry? archive = _archiveEntryForId(id);
+      if (archive != null) {
+        _archiveStore.saveArchive(
+          ClipboardArchiveEntry(
+            record: archive.record.copyWith(
+              groups: _uniqueGroups(<String>[
+                ...archive.record.groupNames,
+                ...groups,
+              ]),
+              updatedAt: _now().toUtc(),
+            ),
+            sourceClipboardId: archive.sourceClipboardId,
+            archivedAt: archive.archivedAt,
+          ),
+        );
+        continue;
+      }
+      final ClipboardRecord? source = _recordForId(id);
+      if (source != null) {
+        _archiveSource(source, groups, reload: false);
+      }
+    }
+    _reloadRecords();
+    _ensureSelectionVisible();
+    _revisions?.changed(DataCollection.clipboard);
+    notifyListeners();
   }
 
   void setEnabledMany(Set<String> ids, bool enabled) {
@@ -518,20 +613,22 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   void deleteMany(Set<String> ids) {
-    final Map<String, ClipboardRecord> recordsById = <String, ClipboardRecord>{
-      for (final ClipboardRecord record in _records) record.id: record,
-    };
+    final List<ClipboardRecord> deleted = <ClipboardRecord>[];
     for (final String id in ids) {
-      _store.delete(id);
-      final ClipboardRecord? record = recordsById[id];
-      final Directory? directory = _managedImageDirectory;
-      if (record != null && directory != null) {
-        deleteManagedClipboardImage(record, directory);
+      final ClipboardArchiveEntry? archive = _archiveEntryForId(id);
+      if (archive != null) {
+        _archiveStore.deleteArchive(id);
+        deleted.add(archive.record);
+      } else {
+        final ClipboardRecord? source = _recordForId(id);
+        _store.delete(id);
+        if (source != null) deleted.add(source);
       }
     }
-    _records = _records
-        .where((ClipboardRecord record) => !ids.contains(record.id))
-        .toList(growable: false);
+    _reloadRecords();
+    for (final ClipboardRecord record in deleted) {
+      _deleteManagedImageIfUnreferenced(record);
+    }
     _pruneSelectedSources();
     if (ids.contains(_selectedRecord?.id)) _selectedRecord = null;
     _ensureSelectionVisible();
@@ -544,19 +641,27 @@ final class ClipboardViewModel extends ChangeNotifier {
     ClipboardRecord Function(ClipboardRecord record) update,
   ) {
     final String? selectedId = _selectedRecord?.id;
-    _records = _records
-        .map((ClipboardRecord record) {
-          if (!ids.contains(record.id)) return record;
-          final ClipboardRecord updated = update(record);
-          _store.save(updated);
-          return updated;
-        })
-        .toList(growable: false);
+    for (final String id in ids) {
+      final ClipboardArchiveEntry? archive = _archiveEntryForId(id);
+      if (archive != null) {
+        _archiveStore.saveArchive(
+          ClipboardArchiveEntry(
+            record: update(archive.record),
+            sourceClipboardId: archive.sourceClipboardId,
+            archivedAt: archive.archivedAt,
+          ),
+        );
+      } else {
+        final ClipboardRecord? source = _recordForId(id);
+        if (source != null) _store.save(update(source));
+      }
+    }
+    _reloadRecords();
     if (selectedId != null) {
-      final int selectedIndex = _records.indexWhere(
+      final int selectedIndex = allRecords.indexWhere(
         (ClipboardRecord record) => record.id == selectedId,
       );
-      _selectedRecord = selectedIndex < 0 ? null : _records[selectedIndex];
+      _selectedRecord = selectedIndex < 0 ? null : allRecords[selectedIndex];
     }
     _ensureSelectionVisible();
     _revisions?.changed(DataCollection.clipboard);
@@ -568,15 +673,15 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (selected == null) {
       return;
     }
-    _store.delete(selected.id);
-    final Directory? directory = _managedImageDirectory;
-    if (directory != null) {
-      deleteManagedClipboardImage(selected, directory);
+    final ClipboardArchiveEntry? archive = _archiveEntryForId(selected.id);
+    if (archive != null) {
+      _archiveStore.deleteArchive(selected.id);
+    } else {
+      _store.delete(selected.id);
     }
     _revisions?.changed(DataCollection.clipboard);
-    _records = _records
-        .where((ClipboardRecord record) => record.id != selected.id)
-        .toList(growable: false);
+    _reloadRecords();
+    _deleteManagedImageIfUnreferenced(selected);
     _pruneSelectedSources();
     _selectedRecord = null;
     _ensureSelectionVisible();
@@ -672,6 +777,112 @@ final class ClipboardViewModel extends ChangeNotifier {
     return true;
   }
 
+  void _archiveSource(
+    ClipboardRecord source,
+    Set<String> groups, {
+    bool reload = true,
+  }) {
+    final List<String> requestedGroups = _uniqueGroups(groups);
+    if (requestedGroups.isEmpty) return;
+    final DateTime timestamp = _now().toUtc();
+    ClipboardArchiveEntry? entry;
+    for (final ClipboardArchiveEntry candidate in _archives) {
+      if (candidate.sourceClipboardId == source.id) {
+        entry = candidate;
+        break;
+      }
+    }
+    if (entry != null) {
+      _archiveStore.saveArchive(
+        ClipboardArchiveEntry(
+          record: entry.record.copyWith(
+            groups: _uniqueGroups(<String>[
+              ...entry.record.groupNames,
+              ...requestedGroups,
+            ]),
+            updatedAt: timestamp,
+          ),
+          sourceClipboardId: entry.sourceClipboardId,
+          archivedAt: entry.archivedAt,
+        ),
+      );
+    } else {
+      final ClipboardRecord snapshot = ClipboardRecord(
+        id: _idGenerator(),
+        group: requestedGroups.first,
+        groups: requestedGroups,
+        title: source.title,
+        content: source.content,
+        htmlData: source.htmlData,
+        rtfData: source.rtfData,
+        tags: List<String>.of(source.tags),
+        source: source.source,
+        pinned: source.pinned,
+        enabled: source.enabled,
+        activation: source.activation,
+        sortOrder: source.sortOrder,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      );
+      _archiveStore.saveArchive(
+        ClipboardArchiveEntry(
+          record: snapshot,
+          sourceClipboardId: source.id,
+          archivedAt: timestamp,
+        ),
+      );
+    }
+    if (reload) _reloadRecords();
+  }
+
+  void _saveSelectedRecord(ClipboardRecord record) {
+    final ClipboardArchiveEntry? archive = _archiveEntryForId(record.id);
+    if (archive == null) {
+      _store.save(record);
+      return;
+    }
+    _archiveStore.saveArchive(
+      ClipboardArchiveEntry(
+        record: record,
+        sourceClipboardId: archive.sourceClipboardId,
+        archivedAt: archive.archivedAt,
+      ),
+    );
+  }
+
+  ClipboardRecord? _recordForId(String id) {
+    for (final ClipboardRecord record in _records) {
+      if (record.id == id) return record;
+    }
+    return null;
+  }
+
+  ClipboardArchiveEntry? _archiveEntryForId(String id) {
+    for (final ClipboardArchiveEntry entry in _archives) {
+      if (entry.record.id == id) return entry;
+    }
+    return null;
+  }
+
+  void _reloadRecords() {
+    _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
+    _archives = _archiveStore.listArchives();
+  }
+
+  void _deleteManagedImageIfUnreferenced(ClipboardRecord deleted) {
+    final Directory? directory = _managedImageDirectory;
+    if (directory == null ||
+        allRecords.any(
+          (ClipboardRecord record) =>
+              record.content == deleted.content &&
+              record.tags.contains('image') &&
+              record.tags.contains('file-url'),
+        )) {
+      return;
+    }
+    deleteManagedClipboardImage(deleted, directory);
+  }
+
   Future<void> captureNow() async {
     final ClipboardCaptureService? service = _captureService;
     if (service == null) {
@@ -681,7 +892,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (captured == null) {
       return;
     }
-    _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
+    _reloadRecords();
     _pruneSelectedSources();
     _selectedRecord = captured;
     notifyListeners();

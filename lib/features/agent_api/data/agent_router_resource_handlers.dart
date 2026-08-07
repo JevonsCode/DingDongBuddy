@@ -78,6 +78,9 @@ extension _AgentRouterResourceHandlers on AgentRouter {
             .toList(growable: false),
         source: json['source'] as String?,
         updateUrl: json['updateURL'] as String?,
+        agentSessionName: json['agentSessionName'] as String?,
+        hideInAgentConversation:
+            json['hideInAgentConversation'] as bool? ?? false,
         pinned: pinned,
         enabled: json['enabled'] as bool? ?? true,
         activation: ResourceActivation.parse(

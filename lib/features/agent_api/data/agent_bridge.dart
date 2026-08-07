@@ -131,17 +131,21 @@ final class AgentBridge {
           .where((TriggerGroup group) => group.matches(context))
           .map((TriggerGroup group) => group.id)
           .toSet();
-      final List<String> conversationTitles =
-          <String>[
-                ...prompts.map((Resource resource) => resource.title),
-                ...skillCandidates.map(
-                  (_ResolvedSkill skill) => skill.resource.title,
-                ),
-                ...mcps.map((Resource resource) => resource.title),
-              ]
-              .map(_displayResourceTitle)
-              .where((String title) => title.isNotEmpty)
-              .toList(growable: false);
+      final List<Resource> conversationResources = <Resource>[
+        ...prompts.where(_isVisibleInAgentConversation),
+        ...skillCandidates
+            .where(
+              (_ResolvedSkill skill) =>
+                  _isVisibleInAgentConversation(skill.resource),
+            )
+            .map((_ResolvedSkill skill) => skill.resource),
+        ...mcps.where(_isVisibleInAgentConversation),
+      ];
+      final List<String> conversationTitles = conversationResources
+          .map(_conversationResourceName)
+          .map(_displayResourceTitle)
+          .where((String title) => title.isNotEmpty)
+          .toList(growable: false);
       final String conversationLine = conversationTitles.isEmpty
           ? ''
           : 'DingDong · ${conversationTitles.join(' | ')}';
@@ -571,6 +575,12 @@ Map<String, Object?> _skillCandidateJson(_ResolvedSkill skill) =>
     };
 
 const int _maximumConversationTitleCharacters = 8;
+
+String _conversationResourceName(Resource resource) =>
+    resource.agentSessionName ?? resource.title;
+
+bool _isVisibleInAgentConversation(Resource resource) =>
+    !resource.hideInAgentConversation;
 
 String _displayResourceTitle(String value) {
   final String normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');

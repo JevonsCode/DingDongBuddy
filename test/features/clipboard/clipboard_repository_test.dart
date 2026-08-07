@@ -148,47 +148,125 @@ void main() {
     expect(stored.hasFormattedText, isTrue);
   });
 
+  test('custom groups create an independent archive copy', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-clipboard-groups-test-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final String path = '${directory.path}/clipboard-history.sqlite';
+    final ClipboardRepository first = ClipboardRepository.open(path);
+    first.save(
+      ClipboardRecord(
+        id: 'multi-group',
+        group: '项目甲',
+        groups: const <String>['项目甲', '项目乙'],
+        title: 'Shared note',
+        content: 'Shared note',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 7, 12),
+        updatedAt: DateTime.utc(2026, 7, 12),
+      ),
+    );
+    first.close();
+
+    final Database raw = sqlite3.open(path);
+    final String historyGroups =
+        raw.select('SELECT ZGROUP FROM ZCLIPBOARDRECORD').single['ZGROUP']
+            as String;
+    final String encoded =
+        raw.select('SELECT ZGROUP FROM ZCLIPBOARDARCHIVE').single['ZGROUP']
+            as String;
+    raw.close();
+    expect(historyGroups, isEmpty);
+    expect(jsonDecode(encoded), <Object?>['项目甲', '项目乙']);
+
+    final ClipboardRepository reopened = ClipboardRepository.open(path);
+    addTearDown(reopened.close);
+    expect(reopened.list(limit: 10).single.groupNames, isEmpty);
+    expect(reopened.listArchives().single.record.groupNames, <String>[
+      '项目甲',
+      '项目乙',
+    ]);
+    expect(reopened.listArchives().single.sourceClipboardId, 'multi-group');
+  });
+
   test(
-    'multiple clipboard groups round-trip through normalized JSON',
+    'clipboard and archive deletion are isolated in both directions',
     () async {
       final Directory directory = await Directory.systemTemp.createTemp(
-        'dingdong-clipboard-groups-test-',
+        'dingdong-clipboard-delete-isolation-test-',
       );
       addTearDown(() => directory.delete(recursive: true));
-      final String path = '${directory.path}/clipboard-history.sqlite';
-      final ClipboardRepository first = ClipboardRepository.open(path);
-      first.save(
-        ClipboardRecord(
-          id: 'multi-group',
-          group: '项目甲',
-          groups: const <String>['项目甲', '项目乙'],
-          title: 'Shared note',
-          content: 'Shared note',
-          tags: const <String>['clipboard', 'text'],
-          pinned: false,
-          enabled: true,
-          activation: 'taskMatch',
-          createdAt: DateTime.utc(2026, 7, 12),
-          updatedAt: DateTime.utc(2026, 7, 12),
-        ),
+      final ClipboardRepository repository = ClipboardRepository.open(
+        '${directory.path}/clipboard-history.sqlite',
       );
-      first.close();
+      addTearDown(repository.close);
+      final DateTime now = DateTime.utc(2026, 8, 6);
 
-      final Database raw = sqlite3.open(path);
-      final String encoded =
-          raw.select('SELECT ZGROUP FROM ZCLIPBOARDRECORD').single['ZGROUP']
-              as String;
-      raw.close();
-      expect(jsonDecode(encoded), <Object?>['项目甲', '项目乙']);
+      repository.save(_record('source-a', now, group: 'PageID'));
+      final ClipboardArchiveEntry archiveA = repository.listArchives().single;
+      repository.delete('source-a');
+      expect(repository.list(limit: 10), isEmpty);
+      expect(repository.listArchives().single.record.id, archiveA.record.id);
 
-      final ClipboardRepository reopened = ClipboardRepository.open(path);
-      addTearDown(reopened.close);
-      expect(reopened.list(limit: 10).single.groupNames, <String>[
-        '项目甲',
-        '项目乙',
-      ]);
+      repository.save(_record('source-b', now, group: 'iDev ID'));
+      final ClipboardArchiveEntry archiveB = repository
+          .listArchives()
+          .firstWhere(
+            (ClipboardArchiveEntry entry) =>
+                entry.sourceClipboardId == 'source-b',
+          );
+      repository.deleteArchive(archiveB.record.id);
+      expect(
+        repository.list(limit: 10).map((ClipboardRecord record) => record.id),
+        contains('source-b'),
+      );
+      expect(
+        repository.listArchives().map(
+          (ClipboardArchiveEntry entry) => entry.record.id,
+        ),
+        isNot(contains(archiveB.record.id)),
+      );
     },
   );
+
+  test('legacy grouped rows migrate atomically and idempotently', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-clipboard-legacy-archive-test-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final String path = '${directory.path}/clipboard-history.sqlite';
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    final ClipboardRepository initial = ClipboardRepository.open(path);
+    initial
+      ..save(_record('legacy-source', now))
+      ..close();
+    final Database raw = sqlite3.open(path);
+    raw
+      ..execute(
+        'UPDATE ZCLIPBOARDRECORD SET ZGROUP = ? WHERE ZID = ?',
+        <Object?>['["Clipboard","PageID","iDev ID"]', 'legacy-source'],
+      )
+      ..close();
+
+    final ClipboardRepository migrated = ClipboardRepository.open(path);
+    expect(migrated.list(limit: 10).single.groupNames, <String>['Clipboard']);
+    expect(migrated.listArchives(), hasLength(1));
+    expect(migrated.listArchives().single.record.groupNames, <String>[
+      'PageID',
+      'iDev ID',
+    ]);
+    expect(migrated.listArchives().single.record.content, 'legacy-source');
+    migrated.close();
+
+    final ClipboardRepository reopened = ClipboardRepository.open(path);
+    addTearDown(reopened.close);
+    expect(reopened.listArchives(), hasLength(1));
+    expect(reopened.listArchives().single.sourceClipboardId, 'legacy-source');
+  });
 
   test(
     'retention keeps pinned history and the newest bounded unpinned rows',
@@ -339,28 +417,26 @@ void main() {
         records.any((ClipboardRecord item) => item.id == 'tag-only-archive'),
         isFalse,
       );
+      final List<ClipboardArchiveEntry> archives = repository.listArchives();
       expect(
-        records.any((ClipboardRecord item) => item.id == 'archive-group'),
+        archives.any(
+          (ClipboardArchiveEntry item) =>
+              item.sourceClipboardId == 'archive-group',
+        ),
         isTrue,
       );
       expect(
-        records.any((ClipboardRecord item) => item.id == 'grouped-archive'),
+        archives.any(
+          (ClipboardArchiveEntry item) =>
+              item.sourceClipboardId == 'grouped-archive',
+        ),
         isTrue,
       );
       expect(
         records.any((ClipboardRecord item) => item.id == 'expired'),
         isFalse,
       );
-      expect(
-        records
-            .where(
-              (ClipboardRecord item) =>
-                  item.id != 'archive-group' &&
-                  !item.groupNames.contains('项目归档'),
-            )
-            .length,
-        20,
-      );
+      expect(records, hasLength(20));
     },
   );
 
@@ -461,25 +537,80 @@ void main() {
         maxAgeDays: 7,
         now: now,
       );
+      final List<ClipboardRecord> archives = repository
+          .listArchives()
+          .map((ClipboardArchiveEntry entry) => entry.record)
+          .toList(growable: false);
       for (final ClipboardRecord record in deleted) {
-        deleteManagedClipboardImage(record, images);
+        if (!archives.any(
+          (ClipboardRecord archive) => archive.content == record.content,
+        )) {
+          deleteManagedClipboardImage(record, images);
+        }
       }
-      pruneUnreferencedManagedClipboardImages(
-        repository.list(limit: 5000, includeProtectedBeyondLimit: true),
-        images,
-      );
+      pruneUnreferencedManagedClipboardImages(<ClipboardRecord>[
+        ...repository.list(limit: 5000, includeProtectedBeyondLimit: true),
+        ...archives,
+      ], images);
 
       expect(expiredImage.existsSync(), isFalse);
       expect(orphanImage.existsSync(), isFalse);
       expect(archivedImage.existsSync(), isTrue);
       expect(
-        repository
-            .list(limit: 5000, includeProtectedBeyondLimit: true)
-            .map((ClipboardRecord record) => record.id),
+        repository.listArchives().map(
+          (ClipboardArchiveEntry entry) => entry.sourceClipboardId,
+        ),
         contains('archived-image'),
       );
     },
   );
+
+  test('history kind cleanup never deletes archive snapshots', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-clipboard-kind-cleanup-test-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final ClipboardRepository repository = ClipboardRepository.open(
+      '${directory.path}/clipboard-history.sqlite',
+    );
+    addTearDown(repository.close);
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    repository
+      ..save(
+        _record(
+          'archived-image',
+          now,
+          group: 'Project Alpha',
+          tags: const <String>['clipboard', 'file', 'file-url', 'image'],
+        ),
+      )
+      ..save(_record('plain-text', now))
+      ..save(
+        _record(
+          'plain-file',
+          now,
+          tags: const <String>['clipboard', 'file', 'file-url'],
+        ),
+      );
+
+    final List<ClipboardRecord> deleted = repository.deleteHistoryKinds(
+      <ClipboardKind>{ClipboardKind.image, ClipboardKind.text},
+    );
+
+    expect(
+      deleted.map((ClipboardRecord record) => record.id),
+      containsAll(<String>['archived-image', 'plain-text']),
+    );
+    expect(
+      repository.list(limit: 20).map((ClipboardRecord record) => record.id),
+      <String>['plain-file'],
+    );
+    expect(repository.listArchives(), hasLength(1));
+    expect(
+      repository.listArchives().single.sourceClipboardId,
+      'archived-image',
+    );
+  });
 }
 
 ClipboardRecord _record(

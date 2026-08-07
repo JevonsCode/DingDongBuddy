@@ -22,7 +22,9 @@ class _CompactClipboardToolbar extends StatelessWidget {
     required this.searchController,
     required this.filtersExpanded,
     required this.showShortcutHint,
+    required this.showGroupShortcutHints,
     required this.contextMenuGateway,
+    required this.onGroupShortcutStartIndexChanged,
     required this.onToggleFilters,
   });
 
@@ -31,7 +33,9 @@ class _CompactClipboardToolbar extends StatelessWidget {
   final TextEditingController searchController;
   final bool filtersExpanded;
   final bool showShortcutHint;
+  final bool showGroupShortcutHints;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final ValueChanged<int> onGroupShortcutStartIndexChanged;
   final VoidCallback onToggleFilters;
 
   @override
@@ -99,6 +103,8 @@ class _CompactClipboardToolbar extends StatelessWidget {
               _ClipboardGroupFilters(
                 viewModel: viewModel,
                 contextMenuGateway: contextMenuGateway,
+                showShortcutHints: showGroupShortcutHints,
+                onShortcutStartIndexChanged: onGroupShortcutStartIndexChanged,
               ),
             ],
           ],
@@ -358,63 +364,180 @@ class _ClipboardKindFilters extends StatelessWidget {
   }
 }
 
-class _ClipboardGroupFilters extends StatelessWidget {
+class _ClipboardGroupFilters extends StatefulWidget {
   const _ClipboardGroupFilters({
     required this.viewModel,
     required this.contextMenuGateway,
+    required this.showShortcutHints,
+    required this.onShortcutStartIndexChanged,
   });
 
   final ClipboardViewModel viewModel;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final bool showShortcutHints;
+  final ValueChanged<int> onShortcutStartIndexChanged;
+
+  @override
+  State<_ClipboardGroupFilters> createState() => _ClipboardGroupFiltersState();
+}
+
+class _ClipboardGroupFiltersState extends State<_ClipboardGroupFilters> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _viewportKey = GlobalKey();
+  final Map<String, GlobalKey> _itemKeys = <String, GlobalKey>{};
+  int _shortcutStartIndex = 0;
+  String? _lastSelectedGroup;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scheduleVisibleRangeUpdate);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onShortcutStartIndexChanged(0);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_scheduleVisibleRangeUpdate)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _scheduleVisibleRangeUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateVisibleRange();
+    });
+  }
+
+  void _updateVisibleRange() {
+    final RenderBox? viewport =
+        _viewportKey.currentContext?.findRenderObject() as RenderBox?;
+    if (viewport == null || !viewport.hasSize) return;
+    final Offset viewportOrigin = viewport.localToGlobal(Offset.zero);
+    final Rect viewportRect = viewportOrigin & viewport.size;
+    final List<String> groups = widget.viewModel.groups;
+    var next = 0;
+    for (int index = 0; index < groups.length; index++) {
+      final RenderBox? item =
+          _itemKeys[groups[index]]?.currentContext?.findRenderObject()
+              as RenderBox?;
+      if (item == null || !item.hasSize) continue;
+      final Rect itemRect = item.localToGlobal(Offset.zero) & item.size;
+      if (itemRect.right > viewportRect.left + 1 &&
+          itemRect.left < viewportRect.right - 1) {
+        next = index;
+        break;
+      }
+    }
+    if (next == _shortcutStartIndex) return;
+    setState(() => _shortcutStartIndex = next);
+    widget.onShortcutStartIndexChanged(next);
+  }
+
+  void _ensureSelectedVisible(String group) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final BuildContext? itemContext = _itemKeys[group]?.currentContext;
+      if (itemContext == null) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          itemContext,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        ).then((_) => _updateVisibleRange()),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<String> groups = widget.viewModel.groups;
+    _itemKeys.removeWhere((String group, _) => !groups.contains(group));
+    final String? selectedGroup = widget.viewModel.selectedGroup;
+    if (selectedGroup != null && selectedGroup != _lastSelectedGroup) {
+      _lastSelectedGroup = selectedGroup;
+      _ensureSelectedVisible(selectedGroup);
+    } else if (selectedGroup == null) {
+      _lastSelectedGroup = null;
+    }
     return SizedBox(
+      key: _viewportKey,
       height: 32,
       child: ReorderableListView.builder(
+        scrollController: _scrollController,
         scrollDirection: Axis.horizontal,
-        itemCount: viewModel.groups.length,
-        onReorderItem: viewModel.reorderGroups,
+        itemCount: groups.length,
+        onReorderItem: widget.viewModel.reorderGroups,
         buildDefaultDragHandles: false,
         proxyDecorator: _clipboardGroupDragProxy,
         itemBuilder: (BuildContext context, int index) {
-          final String group = viewModel.groups[index];
+          final String group = groups[index];
+          final int shortcutIndex = index - _shortcutStartIndex + 1;
+          final bool showShortcut =
+              widget.showShortcutHints &&
+              shortcutIndex >= 1 &&
+              shortcutIndex <= 5;
           return Padding(
             key: ValueKey<String>('clipboard-group-$group'),
             padding: const EdgeInsets.only(right: 6),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onSecondaryTapUp: (TapUpDetails details) => unawaited(
-                showClipboardGroupContextMenu(
-                  context,
-                  globalPosition: details.globalPosition,
-                  group: group,
-                  viewModel: viewModel,
-                  gateway: contextMenuGateway,
-                ),
-              ),
-              child: ReorderableDragStartListener(
-                index: index,
-                child: DesktopChoiceChip(
-                  leading: const Icon(Icons.folder_outlined, size: 13),
-                  label: Text(
-                    group,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
+            child: SizedBox(
+              key: _itemKeys.putIfAbsent(group, GlobalKey.new),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onSecondaryTapUp: (TapUpDetails details) => unawaited(
+                  showClipboardGroupContextMenu(
+                    context,
+                    globalPosition: details.globalPosition,
+                    group: group,
+                    viewModel: widget.viewModel,
+                    gateway: widget.contextMenuGateway,
                   ),
-                  selected: viewModel.selectedGroup == group,
-                  onSelected: (bool selected) =>
-                      viewModel.setGroup(selected ? group : null),
-                  height: 32,
-                  foregroundColor: PopupStyle.textSecondary,
-                  selectedForegroundColor: PopupStyle.accent,
-                  backgroundColor: PopupStyle.surface,
-                  selectedBackgroundColor: PopupStyle.accentSoft,
-                  borderColor: PopupStyle.border,
-                  selectedBorderColor: PopupStyle.accent.withValues(
-                    alpha: 0.28,
+                ),
+                child: ReorderableDragStartListener(
+                  index: index,
+                  child: DesktopChoiceChip(
+                    leading: showShortcut
+                        ? Container(
+                            key: Key('clipboard-group-shortcut-$shortcutIndex'),
+                            width: 18,
+                            height: 18,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: PopupStyle.accent.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '$shortcutIndex',
+                              style: const TextStyle(
+                                color: PopupStyle.accent,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          )
+                        : const Icon(Icons.folder_outlined, size: 13),
+                    label: Text(
+                      group,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    selected: widget.viewModel.selectedGroup == group,
+                    onSelected: (bool selected) =>
+                        widget.viewModel.setGroup(selected ? group : null),
+                    height: 32,
+                    foregroundColor: PopupStyle.textSecondary,
+                    selectedForegroundColor: PopupStyle.accent,
+                    backgroundColor: PopupStyle.surface,
+                    selectedBackgroundColor: PopupStyle.accentSoft,
+                    borderColor: PopupStyle.border,
+                    selectedBorderColor: PopupStyle.accent.withValues(
+                      alpha: 0.28,
+                    ),
                   ),
                 ),
               ),

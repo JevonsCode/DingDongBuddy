@@ -49,4 +49,41 @@ void main() {
     expect(resource.strictProjectSkill, isTrue);
     expect(resource.toJson()['strictProjectSkill'], isTrue);
   });
+
+  test('agent session names are persisted and limited to seven characters', () {
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    final Resource resource = Resource(
+      id: 'session-name',
+      type: ResourceType.prompt,
+      title: 'Long title fallback',
+      content: 'Prompt body',
+      agentSessionName: '一二三四五六七八',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    expect(resource.agentSessionName, '一二三四五六七');
+    expect(resource.toJson()['agentSessionName'], '一二三四五六七');
+    expect(Resource.fromJson(resource.toJson()).agentSessionName, '一二三四五六七');
+  });
+
+  test('conversation visibility is persisted and can be turned back on', () {
+    final DateTime now = DateTime.utc(2026, 8, 6);
+    final Resource hidden = Resource(
+      id: 'hidden-resource',
+      type: ResourceType.skill,
+      title: 'Hidden skill',
+      content: '---\nname: hidden\ndescription: Hidden\n---\n\nUse it.',
+      hideInAgentConversation: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    expect(hidden.toJson()['hideInAgentConversation'], isTrue);
+    expect(Resource.fromJson(hidden.toJson()).hideInAgentConversation, isTrue);
+    expect(
+      hidden.copyWith(hideInAgentConversation: false).hideInAgentConversation,
+      isFalse,
+    );
+  });
 }
