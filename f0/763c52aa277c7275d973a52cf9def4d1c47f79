@@ -1,0 +1,38 @@
+docs/product/manual-regression.md
+  s_076a8cec3f8011::t_7bd4f66deb805e 67-69
+lib/features/clipboard/ui/clipboard_view_model.dart
+  s_076a8cec3f8011::t_924756d69344f9 233-234
+  s_076a8cec3f8011::t_763f88f07d73f4 118-120,122,235-237
+test/features/clipboard/clipboard_category_rule_store_test.dart
+  s_076a8cec3f8011::t_763f88f07d73f4 27,37-38
+test/features/clipboard/clipboard_screen_test.dart
+  s_076a8cec3f8011::t_021a5873a4466a 486-488,490,778-780,782
+  s_076a8cec3f8011::t_ef1925ff0e07fd 489,781
+lib/features/clipboard/data/clipboard_category_rule_store.dart
+  s_076a8cec3f8011::t_763f88f07d73f4 30-43
+lib/features/clipboard/ui/clipboard_filter_bar.dart
+  s_076a8cec3f8011::t_021a5873a4466a 284
+test/features/clipboard/clipboard_view_model_test.dart
+  s_076a8cec3f8011::t_f262aaa0b0620c 8,11
+  s_076a8cec3f8011::t_763f88f07d73f4 412,434-435,440-449
+docs/index.html
+  s_076a8cec3f8011::t_763f88f07d73f4 1217
+test/features/shell/popup_shell_test.dart
+  s_076a8cec3f8011::t_56247ef9f031d6 1109-1113,1435-1439
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "f0763c52aa277c7275d973a52cf9def4d1c47f79",
+  "prompts": {},
+  "sessions": {
+    "s_076a8cec3f8011": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd9ff-56e4-7f01-b625-f05d0b4b2e40",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
