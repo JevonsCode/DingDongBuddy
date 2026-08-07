@@ -164,7 +164,90 @@ void main() {
     },
   );
 
-  testWidgets('bulk manager keeps only the explicit archive-to action', (
+  testWidgets('manager shows copy counts and sorts by frequency', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1100, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 8, 7);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record('newest', now),
+        _record(
+          'frequent',
+          now.subtract(const Duration(seconds: 3)),
+          copyCount: 7,
+        ),
+        _record(
+          'middle',
+          now.subtract(const Duration(seconds: 2)),
+          copyCount: 3,
+        ),
+      ]),
+    )..load();
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardManagerScreen(viewModel: model)),
+    );
+
+    expect(
+      find.byKey(const Key('clipboard-copy-count-frequent')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('clipboard-manager-sort')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-manager-sort')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('clipboard-manager-sort-copy-count')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(model.visibleRecords.map((record) => record.id), <String>[
+      'frequent',
+      'middle',
+      'newest',
+    ]);
+    expect(find.text('Copy count'), findsOneWidget);
+  });
+
+  testWidgets('details reveal every source collected for one item', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 8, 7);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record(
+          'multi-source',
+          now,
+          sources: const <String>['Terminal', 'Google Chrome'],
+          copyCount: 3,
+        ),
+      ]),
+    )..load();
+    addTearDown(model.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardManagerScreen(viewModel: model)),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('clipboard-manager-row-multi-source')),
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Details'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sources'), findsOneWidget);
+    expect(find.text('Terminal'), findsOneWidget);
+    expect(find.text('Google Chrome'), findsOneWidget);
+    expect(find.text('3 copies'), findsOneWidget);
+  });
+
+  testWidgets('bulk manager keeps archive and dedicated delete actions', (
     WidgetTester tester,
   ) async {
     final DateTime now = DateTime.utc(2026, 7, 12);
@@ -194,8 +277,84 @@ void main() {
     );
     expect(find.byKey(const Key('clipboard-bulk-archive')), findsNothing);
     expect(find.byKey(const Key('clipboard-bulk-archive-to')), findsOneWidget);
+    expect(find.byKey(const Key('clipboard-bulk-delete')), findsOneWidget);
+    expect(find.text('Enable'), findsNothing);
+    expect(find.text('Disable'), findsNothing);
     expect(find.text('Archive'), findsNothing);
     expect(find.text('Archive to…'), findsOneWidget);
+  });
+
+  testWidgets('ordinary clipboard rows do not expose drag handles', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record('first', now),
+        _record('second', now.subtract(const Duration(seconds: 1))),
+      ]),
+    )..load();
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardManagerScreen(viewModel: model)),
+    );
+
+    expect(find.byType(ReorderableListView), findsNothing);
+    expect(find.byType(ReorderableDragStartListener), findsNothing);
+  });
+
+  testWidgets('archived clipboard rows expose drag handles and pin markers', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record('first', now, group: 'Project'),
+        _record(
+          'second',
+          now.subtract(const Duration(seconds: 1)),
+          group: 'Project',
+        ),
+      ]),
+    )..load();
+    model.setGroup('Project');
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardManagerScreen(viewModel: model)),
+    );
+
+    expect(find.byType(ReorderableListView), findsOneWidget);
+    expect(find.byType(ReorderableDragStartListener), findsNWidgets(2));
+
+    final String firstArchiveId = model.visibleRecords.first.id;
+    final _FakeManagerContextMenuGateway menuGateway =
+        _FakeManagerContextMenuGateway(
+          itemAction: ClipboardContextAction.togglePinned,
+        );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardManagerScreen(
+          viewModel: model,
+          contextMenuGateway: menuGateway,
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byKey(ValueKey<String>('clipboard-manager-row-$firstArchiveId')),
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      menuGateway.lastItems.where((item) => item.id == 'togglePinned'),
+      isNotEmpty,
+    );
+    expect(
+      find.byKey(Key('clipboard-manager-pinned-indicator-$firstArchiveId')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('archive group picker becomes searchable after five groups', (
@@ -337,14 +496,13 @@ void main() {
   ) async {
     final DateTime now = DateTime.utc(2026, 7, 16);
     final _FakeManagerContextMenuGateway menuGateway =
-        _FakeManagerContextMenuGateway(
-          itemAction: ClipboardContextAction.toggleEnabled,
-        );
+        _FakeManagerContextMenuGateway();
     final ClipboardViewModel model = ClipboardViewModel(
       InMemoryClipboardStore(<ClipboardRecord>[_record('native-item', now)]),
     )..load();
     await tester.pumpWidget(
       MaterialApp(
+        theme: AppTheme.desktopPanelLight(),
         home: ClipboardManagerScreen(
           viewModel: model,
           contextMenuGateway: menuGateway,
@@ -359,10 +517,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(menuGateway.itemShowCount, 1);
+    expect(menuGateway.lastIsDark, isFalse);
     expect(menuGateway.lastIncludeShare, isFalse);
-    expect(menuGateway.lastEnabled, isTrue);
-    expect(model.allRecords.single.enabled, isFalse);
-    expect(find.text('Details'), findsNothing);
+    expect(
+      menuGateway.lastItems.map((DesktopContextMenuItem item) => item.id),
+      containsAll(<String>['details', 'copy', 'delete']),
+    );
+    expect(
+      menuGateway.lastItems.where((item) => item.id == 'togglePinned'),
+      isEmpty,
+    );
+    expect(
+      menuGateway.lastItems.where((item) => item.id == 'toggleEnabled'),
+      isEmpty,
+    );
+    expect(
+      menuGateway.lastItems.any((item) => item.englishLabel == 'Enable'),
+      isFalse,
+    );
+    expect(
+      menuGateway.lastItems.any((item) => item.englishLabel == 'Disable'),
+      isFalse,
+    );
+    expect(find.byKey(const Key('desktop-context-menu')), findsNothing);
   });
 
   testWidgets('manager groups can be deleted from their context menu', (
@@ -498,6 +675,8 @@ ClipboardRecord _record(
   DateTime now, {
   String group = '',
   String? source,
+  List<String> sources = const <String>[],
+  int copyCount = 1,
 }) => ClipboardRecord(
   id: id,
   group: group,
@@ -505,6 +684,8 @@ ClipboardRecord _record(
   content: '$id content',
   tags: const <String>['clipboard', 'text'],
   source: source,
+  sources: sources,
+  copyCount: copyCount,
   pinned: false,
   enabled: true,
   activation: 'taskMatch',
@@ -534,27 +715,27 @@ final class _FakeManagerContextMenuGateway
   final String? groupAction;
   int itemShowCount = 0;
   int groupShowCount = 0;
+  bool? lastIsDark;
   bool? lastIncludeShare;
-  bool? lastEnabled;
+  List<DesktopContextMenuItem> lastItems = const <DesktopContextMenuItem>[];
 
   @override
   Future<String?> show({
     required double x,
     required double y,
     required bool useChinese,
+    required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {
+    lastIsDark = isDark;
     if (items.length == 1 && items.single.englishLabel == 'Delete group') {
       groupShowCount += 1;
       return groupAction;
     }
     itemShowCount += 1;
+    lastItems = items;
     lastIncludeShare = items.any(
       (DesktopContextMenuItem item) => item.id == 'share',
-    );
-    lastEnabled = items.any(
-      (DesktopContextMenuItem item) =>
-          item.id == 'toggleEnabled' && item.englishLabel == 'Disable',
     );
     return itemAction?.name;
   }

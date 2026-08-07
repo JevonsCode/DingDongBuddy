@@ -446,7 +446,10 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                                     onRestore: () async {
                                       await viewModel.restoreSelected();
                                     },
-                                    onTogglePinned: viewModel.togglePinned,
+                                    onTogglePinned:
+                                        viewModel.showingArchivedRecords
+                                        ? viewModel.togglePinned
+                                        : null,
                                     onOpen: onOpenContent == null
                                         ? null
                                         : (ClipboardRecord record) =>

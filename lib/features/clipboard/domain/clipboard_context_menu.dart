@@ -6,12 +6,12 @@ enum ClipboardContextAction {
   pastePlainText,
   details,
   copy,
+  togglePinned,
   addTitle,
   editText,
   saveAsPrompt,
   archiveTo,
   share,
-  toggleEnabled,
   delete,
 }
 
@@ -19,7 +19,9 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
   bool includePaste = false,
   bool canPasteAsPlainText = false,
   bool includeShare = true,
-  bool? enabled,
+  bool includePin = true,
+  bool pinned = false,
+  bool hasTitle = false,
 }) => <DesktopContextMenuItem>[
   if (includePaste)
     const DesktopContextMenuItem(
@@ -44,11 +46,17 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
     englishLabel: 'Copy',
     chineseLabel: '复制',
   ),
+  if (includePin)
+    DesktopContextMenuItem(
+      id: 'togglePinned',
+      englishLabel: pinned ? 'Unpin' : 'Pin',
+      chineseLabel: pinned ? '取消置顶' : '置顶',
+    ),
   const DesktopContextMenuItem.separator(),
-  const DesktopContextMenuItem(
+  DesktopContextMenuItem(
     id: 'addTitle',
-    englishLabel: 'Add title',
-    chineseLabel: '添加标题',
+    englishLabel: hasTitle ? 'Edit title' : 'Add title',
+    chineseLabel: hasTitle ? '修改标题' : '添加标题',
   ),
   const DesktopContextMenuItem(
     id: 'editText',
@@ -70,12 +78,6 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
       id: 'share',
       englishLabel: 'Share',
       chineseLabel: '分享',
-    ),
-  if (enabled != null)
-    DesktopContextMenuItem(
-      id: 'toggleEnabled',
-      englishLabel: enabled ? 'Disable' : 'Enable',
-      chineseLabel: enabled ? '停用' : '启用',
     ),
   const DesktopContextMenuItem.separator(),
   const DesktopContextMenuItem(

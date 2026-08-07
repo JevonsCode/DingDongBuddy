@@ -5,7 +5,7 @@ enum ClipboardKind { text, url, command, code, json, path, email, file, image }
 
 /// One durable clipboard history entry.
 final class ClipboardRecord {
-  const ClipboardRecord({
+  ClipboardRecord({
     required this.id,
     required this.group,
     this.groups = const <String>[],
@@ -19,9 +19,12 @@ final class ClipboardRecord {
     required this.activation,
     required this.createdAt,
     required this.updatedAt,
-    this.source,
+    String? source,
+    List<String> sources = const <String>[],
+    int copyCount = 1,
     this.sortOrder,
-  });
+  }) : sources = _normalizedSources(<String>[...sources, ?source]),
+       copyCount = copyCount < 1 ? 1 : copyCount;
 
   final String id;
 
@@ -33,13 +36,24 @@ final class ClipboardRecord {
   final Uint8List? htmlData;
   final Uint8List? rtfData;
   final List<String> tags;
-  final String? source;
+
+  /// Every application observed while capturing this content, in first-seen
+  /// order. Repeated captures from the same application remain represented by
+  /// [copyCount] without duplicating the source label.
+  final List<String> sources;
+
+  /// Total number of captures folded into this record.
+  final int copyCount;
   final bool pinned;
   final bool enabled;
   final String activation;
   final int? sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Most recently added distinct source, kept for callers that still consume
+  /// the legacy singular API.
+  String? get source => sources.isEmpty ? null : sources.last;
 
   bool get sensitive => tags.contains('sensitive');
 
@@ -116,6 +130,9 @@ final class ClipboardRecord {
     bool? enabled,
     String? activation,
     int? sortOrder,
+    String? source,
+    List<String>? sources,
+    int? copyCount,
     DateTime? updatedAt,
   }) {
     final List<String>? resolvedGroups = groups == null
@@ -132,7 +149,10 @@ final class ClipboardRecord {
       htmlData: replaceFormattedText ? htmlData : htmlData ?? this.htmlData,
       rtfData: replaceFormattedText ? rtfData : rtfData ?? this.rtfData,
       tags: tags ?? this.tags,
-      source: source,
+      sources:
+          sources ??
+          (source == null ? this.sources : <String>[...this.sources, source]),
+      copyCount: copyCount ?? this.copyCount,
       pinned: pinned ?? this.pinned,
       enabled: enabled ?? this.enabled,
       activation: activation ?? this.activation,
@@ -155,6 +175,8 @@ final class ClipboardRecord {
       'activation': activation,
       'sensitive': sensitive,
       'contentCharacterCount': content.length,
+      'copyCount': copyCount,
+      'sources': sources,
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
       if (source != null) 'source': source,
@@ -174,11 +196,54 @@ final class ClipboardRecord {
       'pinned': pinned,
       'enabled': enabled,
       'activation': activation,
+      'copyCount': copyCount,
+      'sources': sources,
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
       if (source != null) 'source': source,
     };
   }
+}
+
+/// Sorts clipboard records for both the history and permanent archive lists.
+///
+/// Pinned items always stay above ordinary items. Within the pinned section,
+/// an explicitly stored order wins; ordinary records without an order remain
+/// newest-first until the user starts arranging them manually.
+int compareClipboardRecords(ClipboardRecord left, ClipboardRecord right) {
+  if (left.pinned != right.pinned) {
+    return left.pinned ? -1 : 1;
+  }
+
+  final int? leftOrder = left.sortOrder;
+  final int? rightOrder = right.sortOrder;
+  if (left.pinned) {
+    if (leftOrder != null && rightOrder != null && leftOrder != rightOrder) {
+      return leftOrder.compareTo(rightOrder);
+    }
+    if (leftOrder != null && rightOrder == null) {
+      return -1;
+    }
+    if (leftOrder == null && rightOrder != null) {
+      return 1;
+    }
+  } else {
+    if (leftOrder == null && rightOrder != null) {
+      return -1;
+    }
+    if (leftOrder != null && rightOrder == null) {
+      return 1;
+    }
+    if (leftOrder != null && rightOrder != null && leftOrder != rightOrder) {
+      return leftOrder.compareTo(rightOrder);
+    }
+  }
+
+  final int updatedComparison = right.updatedAt.compareTo(left.updatedAt);
+  if (updatedComparison != 0) {
+    return updatedComparison;
+  }
+  return left.id.compareTo(right.id);
 }
 
 bool isAutomaticClipboardGroup(String value) =>
@@ -206,4 +271,15 @@ List<String> _normalizedGroups(Iterable<String> values) {
         (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
       )
       .toList(growable: false);
+}
+
+List<String> _normalizedSources(Iterable<String> values) {
+  final Set<String> seen = <String>{};
+  return List<String>.unmodifiable(
+    values
+        .map((String value) => value.trim())
+        .where(
+          (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
+        ),
+  );
 }

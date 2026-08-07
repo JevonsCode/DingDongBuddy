@@ -92,6 +92,34 @@ void main() {
     expect(transport.body?['message'], '已经完成资源同步并安装到本机');
   });
 
+  test('DingDong bridge line is skipped in the recent Agent summary', () async {
+    final _RecordingTransport transport = _RecordingTransport();
+
+    await CompletionHookNotifier(transport).notify(
+      jsonEncode(<String, Object?>{
+        'last_assistant_message': 'DingDong · 🌟\n已经完成剪贴板次数排序。\n测试通过。',
+      }),
+    );
+
+    expect(transport.body?['message'], '已经完成剪贴板次数排序。');
+  });
+
+  test('FULI marker lines are skipped in the recent Agent summary', () async {
+    final _RecordingTransport transport = _RecordingTransport();
+
+    await CompletionHookNotifier(transport).notify(
+      jsonEncode(<String, Object?>{
+        'last_assistant_message':
+            '**[◇ FULI · 已检索，未命中](http://127.0.0.1:2727/)**\n'
+            'DingDong · 🌟\n'
+            '已经完成 DEV 测试面板。\n'
+            '测试通过。',
+      }),
+    );
+
+    expect(transport.body?['message'], '已经完成 DEV 测试面板。');
+  });
+
   test(
     'Codex Stop hook extracts the final answer from its transcript',
     () async {

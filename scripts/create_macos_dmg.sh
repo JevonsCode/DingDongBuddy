@@ -12,7 +12,7 @@ script_directory="$(CDPATH= cd -- "$(/usr/bin/dirname -- "$0")" && pwd)"
 repository_root="$(/usr/bin/dirname "$script_directory")"
 background_template="$repository_root/Assets/installer/dmg-background.svg"
 guide_path="$repository_root/Assets/installer/安装与权限说明.txt"
-logo_path="$repository_root/Assets/AgentToolIcon.png"
+logo_path="$repository_root/Assets/DingDongIP/AgentToolIcon.png"
 settings_path="$script_directory/dmg_settings.py"
 
 if [ ! -d "$app_path" ]; then

@@ -35,6 +35,7 @@ abstract interface class DesktopContextMenuGateway {
     required double x,
     required double y,
     required bool useChinese,
+    required bool isDark,
     required List<DesktopContextMenuItem> items,
   });
 }

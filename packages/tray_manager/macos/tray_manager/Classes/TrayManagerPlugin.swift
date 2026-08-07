@@ -54,6 +54,9 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         case "shakeIcon":
             shakeIcon(call, result: result)
             break
+        case "nudgeIcon":
+            nudgeIcon(call, result: result)
+            break
         case "setToolTip":
             setToolTip(call, result: result)
             break
@@ -179,7 +182,12 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         trayIcon?.shake()
         result(true)
     }
-    
+
+    public func nudgeIcon(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        trayIcon?.nudge()
+        result(true)
+    }
+
     public func setToolTip(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let toolTip: String =  args["toolTip"] as! String;

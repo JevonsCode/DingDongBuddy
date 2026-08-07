@@ -175,6 +175,7 @@ void main() {
       int resourceManagerCount = 0;
       int settingsCount = 0;
       int aboutCount = 0;
+      int testPanelCount = 0;
       int hideDockIconCount = 0;
       final DesktopShellService service = DesktopShellService(
         gateway: gateway,
@@ -196,6 +197,9 @@ void main() {
         onShowAbout: () async {
           aboutCount += 1;
         },
+        onShowTestPanel: () async {
+          testPanelCount += 1;
+        },
         onHideDockIcon: () async {
           hideDockIconCount += 1;
         },
@@ -208,6 +212,7 @@ void main() {
       gateway.emit(DesktopShellCommand.showResourceManager);
       gateway.emit(DesktopShellCommand.showSettings);
       gateway.emit(DesktopShellCommand.showAbout);
+      gateway.emit(DesktopShellCommand.showTestPanel);
       gateway.emit(DesktopShellCommand.hideDockIcon);
       gateway.emit(DesktopShellCommand.focusClipboardSearch);
       await Future<void>.delayed(Duration.zero);
@@ -217,6 +222,7 @@ void main() {
       expect(resourceManagerCount, 1);
       expect(settingsCount, 1);
       expect(aboutCount, 1);
+      expect(testPanelCount, 1);
       expect(hideDockIconCount, 1);
       expect(controller.selectedIndex, 2);
       expect(controller.clipboardSearchFocusRevision, 1);

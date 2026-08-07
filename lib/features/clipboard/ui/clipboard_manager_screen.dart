@@ -12,8 +12,10 @@ import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart'
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_source.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_copy_count.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_pinned_indicator.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -50,6 +52,9 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         animation: widget.viewModel,
         builder: (BuildContext context, Widget? child) {
           final List<ClipboardRecord> records = widget.viewModel.visibleRecords;
+          final bool archiveWorkspace = widget.viewModel.showingArchivedRecords;
+          final bool canReorder =
+              widget.viewModel.canReorderVisibleRecords && records.length > 1;
           _selectedIds.removeWhere(
             (String id) =>
                 !records.any((ClipboardRecord item) => item.id == id),
@@ -123,6 +128,14 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                             ),
                           ),
                         ],
+                        const SizedBox(width: 10),
+                        SizedBox(
+                          width: 170,
+                          height: _managerSearchControlHeight,
+                          child: _ClipboardSortDropdown(
+                            viewModel: widget.viewModel,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -137,36 +150,63 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                 _BulkToolbar(
                   count: _selectedIds.length,
                   onAssignGroup: _assignGroup,
-                  onEnable: () =>
-                      widget.viewModel.setEnabledMany(_selectedIds, true),
-                  onDisable: () =>
-                      widget.viewModel.setEnabledMany(_selectedIds, false),
                   onDelete: _deleteSelected,
                 ),
               Expanded(
-                child: ListView.builder(
-                  key: const Key('clipboard-manager-list'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  itemExtent: 60,
-                  itemCount: records.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final ClipboardRecord record = records[index];
-                    return _ManagerRow(
-                      record: record,
-                      categoryLabel:
-                          widget.viewModel.categoryFor(record)?.name ??
-                          context.localized('Uncategorized', '未分类'),
-                      selected: _selectedIds.contains(record.id),
-                      onChanged: (bool selected) => setState(() {
-                        selected
-                            ? _selectedIds.add(record.id)
-                            : _selectedIds.remove(record.id);
-                      }),
-                      onSecondaryTapUp: (TapUpDetails details) =>
-                          _showItemMenu(record, details.globalPosition),
+                child: Builder(
+                  builder: (BuildContext context) {
+                    Widget buildRow(BuildContext context, int index) {
+                      final ClipboardRecord record = records[index];
+                      return _ManagerRow(
+                        key: ValueKey<String>(
+                          'clipboard-manager-row-${record.id}',
+                        ),
+                        record: record,
+                        categoryLabel:
+                            widget.viewModel.categoryFor(record)?.name ??
+                            context.localized('Uncategorized', '未分类'),
+                        selected: _selectedIds.contains(record.id),
+                        showReorderHandle: canReorder,
+                        showPinnedIndicator: archiveWorkspace,
+                        reorderIndex: index,
+                        onChanged: (bool selected) => setState(() {
+                          selected
+                              ? _selectedIds.add(record.id)
+                              : _selectedIds.remove(record.id);
+                        }),
+                        onSecondaryTapUp: (TapUpDetails details) =>
+                            _showItemMenu(record, details.globalPosition),
+                      );
+                    }
+
+                    if (canReorder) {
+                      return ReorderableListView.builder(
+                        key: const Key('clipboard-manager-list'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        itemExtent: 60,
+                        itemCount: records.length,
+                        buildDefaultDragHandles: false,
+                        onReorderItem: (int oldIndex, int newIndex) =>
+                            widget.viewModel.reorderVisibleRecords(
+                              oldIndex,
+                              newIndex,
+                              newIndexAlreadyAdjusted: true,
+                            ),
+                        itemBuilder: buildRow,
+                      );
+                    }
+                    return ListView.builder(
+                      key: const Key('clipboard-manager-list'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      itemExtent: 60,
+                      itemCount: records.length,
+                      itemBuilder: buildRow,
                     );
                   },
                 ),
@@ -225,9 +265,12 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                 y: position.dy,
                 useChinese:
                     Localizations.localeOf(context).languageCode == 'zh',
+                isDark: Theme.of(context).brightness == Brightness.dark,
                 items: clipboardContextMenuItems(
                   includeShare: false,
-                  enabled: record.enabled,
+                  includePin: widget.viewModel.showingArchivedRecords,
+                  pinned: record.pinned,
+                  hasTitle: record.title.trim().isNotEmpty,
                 ),
               ),
             ),
@@ -245,6 +288,8 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
             SnackBar(content: Text(context.localized('Copied', '已复制'))),
           );
         }
+      case _ManagerAction.togglePinned:
+        widget.viewModel.togglePinned();
       case _ManagerAction.addTitle:
         await _editRecord(record, titleOnly: true);
       case _ManagerAction.editText:
@@ -262,8 +307,6 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         }
       case _ManagerAction.savePrompt:
         await _openPromptCreation(record);
-      case _ManagerAction.toggleEnabled:
-        widget.viewModel.setEnabledMany(<String>{record.id}, !record.enabled);
       case _ManagerAction.delete:
         if (await _confirmSingleDelete()) {
           widget.viewModel.deleteMany(<String>{record.id});
@@ -301,13 +344,21 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         '查看详情',
       ),
       _managerMenuItem(context, _ManagerAction.copy, 'copy', 'Copy', '复制'),
+      if (widget.viewModel.showingArchivedRecords)
+        _managerMenuItem(
+          context,
+          _ManagerAction.togglePinned,
+          'archive',
+          record.pinned ? 'Unpin' : 'Pin',
+          record.pinned ? '取消置顶' : '置顶',
+        ),
       const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
         context,
         _ManagerAction.addTitle,
         'add_title',
-        'Add title',
-        '添加标题',
+        record.title.trim().isEmpty ? 'Add title' : 'Edit title',
+        record.title.trim().isEmpty ? '添加标题' : '修改标题',
       ),
       _managerMenuItem(
         context,
@@ -329,13 +380,6 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         'prompt',
         'Save as prompt',
         '保存为提示词',
-      ),
-      _managerMenuItem(
-        context,
-        _ManagerAction.toggleEnabled,
-        record.enabled ? 'paused' : 'enabled',
-        record.enabled ? 'Disable' : 'Enable',
-        record.enabled ? '停用' : '启用',
       ),
       const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
@@ -371,18 +415,30 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                         context.localized('Uncategorized', '未分类'),
                   ),
                   _MetaChip(label: record.kind.name),
+                  if (record.copyCount > 1)
+                    _MetaChip(
+                      label: context.localized(
+                        '${record.copyCount} copies',
+                        '复制 ${record.copyCount} 次',
+                      ),
+                    ),
                   for (final String group in record.groupNames)
                     _MetaChip(label: group),
                 ],
               ),
-              if (record.source?.isNotEmpty ?? false) ...<Widget>[
+              if (record.sources.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 12),
                 Text(
-                  context.localized(
-                    'Source: ${record.source}',
-                    '来源：${record.source}',
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
+                  context.localized('Sources', '来源'),
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                const SizedBox(height: 7),
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 7,
+                  children: record.sources
+                      .map((String source) => _MetaChip(label: source))
+                      .toList(growable: false),
                 ),
               ],
               const SizedBox(height: 14),
@@ -413,7 +469,10 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
       builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(
           titleOnly
-              ? context.localized('Add title', '添加标题')
+              ? context.localized(
+                  record.title.trim().isEmpty ? 'Add title' : 'Edit title',
+                  record.title.trim().isEmpty ? '添加标题' : '修改标题',
+                )
               : context.localized('Edit text', '编辑文本'),
         ),
         content: DesktopTextField(
@@ -476,11 +535,11 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
 enum _ManagerAction {
   details,
   copy,
+  togglePinned,
   addTitle,
   editText,
   archiveTo,
   savePrompt,
-  toggleEnabled,
   delete,
 }
 
@@ -490,11 +549,11 @@ _ManagerAction? _managerActionFromNative(ClipboardContextAction? action) =>
       ClipboardContextAction.pastePlainText => null,
       ClipboardContextAction.details => _ManagerAction.details,
       ClipboardContextAction.copy => _ManagerAction.copy,
+      ClipboardContextAction.togglePinned => _ManagerAction.togglePinned,
       ClipboardContextAction.addTitle => _ManagerAction.addTitle,
       ClipboardContextAction.editText => _ManagerAction.editText,
       ClipboardContextAction.saveAsPrompt => _ManagerAction.savePrompt,
       ClipboardContextAction.archiveTo => _ManagerAction.archiveTo,
-      ClipboardContextAction.toggleEnabled => _ManagerAction.toggleEnabled,
       ClipboardContextAction.delete => _ManagerAction.delete,
       ClipboardContextAction.share || null => null,
     };
@@ -548,6 +607,98 @@ BoxDecoration _managerControlDecoration(
   ),
   borderRadius: BorderRadius.circular(8),
 );
+
+class _ClipboardSortDropdown extends StatelessWidget {
+  const _ClipboardSortDropdown({required this.viewModel});
+
+  final ClipboardViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ClipboardSortMode selected = viewModel.sortMode;
+    final String label = switch (selected) {
+      ClipboardSortMode.defaultOrder => context.localized(
+        'Default order',
+        '默认排序',
+      ),
+      ClipboardSortMode.copyCount => context.localized('Copy count', '按次数排序'),
+    };
+    return MenuAnchor(
+      menuChildren: <Widget>[
+        MenuItemButton(
+          key: const Key('clipboard-manager-sort-default'),
+          leadingIcon: SelectionMark(
+            selected: selected == ClipboardSortMode.defaultOrder,
+          ),
+          onPressed: () =>
+              viewModel.setSortMode(ClipboardSortMode.defaultOrder),
+          child: Text(context.localized('Default order', '默认排序')),
+        ),
+        MenuItemButton(
+          key: const Key('clipboard-manager-sort-copy-count'),
+          leadingIcon: SelectionMark(
+            selected: selected == ClipboardSortMode.copyCount,
+          ),
+          onPressed: () => viewModel.setSortMode(ClipboardSortMode.copyCount),
+          child: Text(context.localized('Copy count', '按次数排序')),
+        ),
+      ],
+      builder:
+          (BuildContext context, MenuController controller, Widget? child) =>
+              Semantics(
+                button: true,
+                label: context.localized(
+                  'Clipboard sort: $label',
+                  '剪贴板排序：$label',
+                ),
+                child: Container(
+                  key: const Key('clipboard-manager-sort'),
+                  decoration: _managerControlDecoration(
+                    colors,
+                    emphasized: selected == ClipboardSortMode.copyCount,
+                  ),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      hoverColor: colors.onSurface.withValues(alpha: 0.035),
+                      focusColor: colors.onSurface.withValues(alpha: 0.035),
+                      onTap: () => controller.isOpen
+                          ? controller.close()
+                          : controller.open(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 11),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.sort_rounded,
+                              size: 16,
+                              color: colors.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 17,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+    );
+  }
+}
 
 class _SourceFilterDropdown extends StatefulWidget {
   const _SourceFilterDropdown({required this.viewModel});
@@ -1079,51 +1230,50 @@ class _BulkToolbar extends StatelessWidget {
   const _BulkToolbar({
     required this.count,
     required this.onAssignGroup,
-    required this.onEnable,
-    required this.onDisable,
     required this.onDelete,
   });
 
   final int count;
   final VoidCallback onAssignGroup;
-  final VoidCallback onEnable;
-  final VoidCallback onDisable;
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) => Container(
-    key: const Key('clipboard-bulk-toolbar'),
-    padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-    child: Wrap(
-      spacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: <Widget>[
-        Text(context.localized('$count selected', '已选择 $count 项')),
-        DesktopActionButton(
-          key: const Key('clipboard-bulk-archive-to'),
-          onPressed: onAssignGroup,
-          label: context.localized('Archive to…', '归档到…'),
-          tone: DesktopActionTone.soft,
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('clipboard-bulk-toolbar'),
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        border: Border.symmetric(
+          horizontal: BorderSide(color: colors.outlineVariant),
         ),
-        DesktopActionButton(
-          onPressed: onEnable,
-          label: context.localized('Enable', '启用'),
-          compact: true,
-        ),
-        DesktopActionButton(
-          onPressed: onDisable,
-          label: context.localized('Disable', '停用'),
-          compact: true,
-        ),
-        DesktopActionButton(
-          onPressed: onDelete,
-          label: context.localized('Delete', '删除'),
-          tone: DesktopActionTone.danger,
-          compact: true,
-        ),
-      ],
-    ),
-  );
+      ),
+      child: Row(
+        children: <Widget>[
+          Text(context.localized('$count selected', '已选择 $count 项')),
+          const SizedBox(width: 12),
+          DesktopActionButton(
+            key: const Key('clipboard-bulk-archive-to'),
+            onPressed: onAssignGroup,
+            label: context.localized('Archive to…', '归档到…'),
+            tone: DesktopActionTone.soft,
+          ),
+          const Spacer(),
+          Container(height: 24, width: 1, color: colors.outlineVariant),
+          const SizedBox(width: 12),
+          DesktopActionButton(
+            key: const Key('clipboard-bulk-delete'),
+            onPressed: onDelete,
+            label: context.localized('Delete', '删除'),
+            tone: DesktopActionTone.danger,
+            compact: true,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ManagerRow extends StatelessWidget {
@@ -1133,6 +1283,10 @@ class _ManagerRow extends StatelessWidget {
     required this.selected,
     required this.onChanged,
     required this.onSecondaryTapUp,
+    required this.showReorderHandle,
+    required this.showPinnedIndicator,
+    required this.reorderIndex,
+    super.key,
   });
 
   final ClipboardRecord record;
@@ -1140,110 +1294,149 @@ class _ManagerRow extends StatelessWidget {
   final bool selected;
   final ValueChanged<bool> onChanged;
   final GestureTapUpCallback onSecondaryTapUp;
+  final bool showReorderHandle;
+  final bool showPinnedIndicator;
+  final int reorderIndex;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Material(
-        key: ValueKey<String>('clipboard-manager-row-${record.id}'),
-        color: selected
-            ? colors.primary.withValues(alpha: 0.075)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(5),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onSecondaryTapUp: onSecondaryTapUp,
-          child: InkWell(
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Material(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.075)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(5),
-            onTap: () => onChanged(!selected),
-            child: Row(
-              children: <Widget>[
-                const SizedBox(width: 5),
-                Semantics(
-                  selected: selected,
-                  button: true,
-                  child: SizedBox.square(
-                    key: Key('clipboard-manager-select-${record.id}'),
-                    dimension: 32,
-                    child: Center(child: SelectionMark(selected: selected)),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        record.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onSecondaryTapUp: onSecondaryTapUp,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(5),
+                onTap: () => onChanged(!selected),
+                child: Row(
+                  children: <Widget>[
+                    const SizedBox(width: 5),
+                    Semantics(
+                      selected: selected,
+                      button: true,
+                      child: SizedBox.square(
+                        key: Key('clipboard-manager-select-${record.id}'),
+                        dimension: 32,
+                        child: Center(child: SelectionMark(selected: selected)),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    if (showReorderHandle)
+                      ReorderableDragStartListener(
+                        index: reorderIndex,
+                        child: Tooltip(
+                          message: context.localized('Reorder', '调整顺序'),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            child: Icon(
+                              Icons.drag_indicator_rounded,
+                              size: 17,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        record.content.replaceAll('\n', ' '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            record.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            record.content.replaceAll('\n', ' '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (record.groupNames.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          record.groupNames.join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      color: colors.surfaceContainerLow,
+                      child: Text(
+                        categoryLabel,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      record.kind.name,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (record.copyCount > 1) ...<Widget>[
+                      ClipboardCopyCount(
+                        recordId: record.id,
+                        count: record.copyCount,
+                      ),
+                      const SizedBox(width: 8),
                     ],
-                  ),
-                ),
-                if (record.groupNames.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
+                    Text(
+                      clipboardTimestampLabel(context, record.updatedAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: colors.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: Text(
-                      record.groupNames.join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  color: colors.surfaceContainerLow,
-                  child: Text(
-                    categoryLabel,
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
+                    const SizedBox(width: 14),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  record.kind.name,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  clipboardTimestampLabel(context, record.createdAt),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 14),
-              ],
+              ),
             ),
           ),
-        ),
+          if (showPinnedIndicator && record.pinned)
+            Positioned(
+              top: -7,
+              right: -2,
+              child: ClipboardPinnedIndicator(
+                recordId: record.id,
+                keyPrefix: 'clipboard-manager-pinned-indicator',
+                color: colors.primary,
+                size: 18,
+              ),
+            ),
+        ],
       ),
     );
   }

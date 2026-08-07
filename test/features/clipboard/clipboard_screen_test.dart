@@ -4,6 +4,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
@@ -49,7 +50,10 @@ void main() {
     final DateTime now = DateTime(2026, 7, 30, 12);
     final ClipboardViewModel model = ClipboardViewModel(
       InMemoryClipboardStore(<ClipboardRecord>[
-        _datedRecord('today', DateTime(2026, 7, 30, 10, 37)),
+        _datedRecord(
+          'today',
+          DateTime(2026, 7, 20, 9),
+        ).copyWith(copyCount: 3, updatedAt: DateTime(2026, 7, 30, 10, 37)),
         _datedRecord('this-year', DateTime(2026, 6, 29, 10, 37)),
         _datedRecord('last-year', DateTime(2025, 6, 29, 10, 37)),
       ]),
@@ -69,6 +73,11 @@ void main() {
     );
 
     expect(find.textContaining('10:37'), findsOneWidget);
+    expect(find.byKey(const Key('clipboard-copy-count-today')), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.text('×3')).style?.fontSize,
+      activityRepeatCountFontSize,
+    );
     expect(find.text('6月29日'), findsOneWidget);
     expect(find.text('2025年6月29日'), findsOneWidget);
   });
@@ -84,7 +93,7 @@ void main() {
       id: 'image',
       group: 'Images',
       title: 'Image',
-      content: File('Assets/AgentToolIcon.png').absolute.path,
+      content: File('Assets/DingDongIP/AgentToolIcon.png').absolute.path,
       tags: const <String>['clipboard', 'image'],
       pinned: false,
       enabled: true,
@@ -1067,7 +1076,7 @@ void main() {
     expect(previewed?.id, first.id);
   });
 
-  testWidgets('preview actions pin the selected clipboard row', (
+  testWidgets('ordinary clipboard preview has no pin action', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -1094,11 +1103,50 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: ClipboardScreen(viewModel: model)),
     );
+
+    expect(find.text('Pin'), findsNothing);
+    expect(find.text('Unpin'), findsNothing);
+  });
+
+  testWidgets('archive preview can pin and shows the pinned indicator', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    final ClipboardRecord record = ClipboardRecord(
+      id: 'archive-preview-source',
+      group: 'Project',
+      title: 'Archived clipboard item',
+      content: 'Value',
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[record]),
+    )..load();
+    model.setGroup('Project');
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardScreen(viewModel: model)),
+    );
+
     await tester.tap(find.text('Pin'));
     await tester.pump();
 
     expect(model.selectedRecord?.pinned, isTrue);
     expect(find.text('Unpin'), findsOneWidget);
+    expect(
+      find.byKey(
+        const Key('clipboard-pinned-indicator-ARCHIVE-archive-preview-source'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('wide preview opens the selected link with the shared action', (
@@ -1279,13 +1327,15 @@ void main() {
       expect(find.text('Paste as Plain Text'), findsOneWidget);
       expect(find.text('Details'), findsOneWidget);
       expect(find.text('Copy'), findsOneWidget);
-      expect(find.text('Add title'), findsOneWidget);
+      expect(find.text('Edit title'), findsOneWidget);
       expect(find.text('Edit text'), findsOneWidget);
       expect(find.text('Save as prompt'), findsOneWidget);
       expect(find.text('Save as knowledge'), findsNothing);
       expect(find.text('Archive'), findsNothing);
       expect(find.text('Archive to…'), findsOneWidget);
       expect(find.text('Share'), findsNothing);
+      expect(find.text('Pin'), findsNothing);
+      expect(find.text('Unpin'), findsNothing);
       expect(find.text('Delete'), findsOneWidget);
     },
   );
@@ -1517,7 +1567,7 @@ void main() {
     );
   });
 
-  testWidgets('secondary click delegates to the native desktop context menu', (
+  testWidgets('secondary click delegates clipboard items to the native menu', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -1525,13 +1575,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     final ClipboardRecord record = _record();
-    final _RecordingGateway clipboardGateway = _RecordingGateway();
     final _FakeContextMenuGateway menuGateway = _FakeContextMenuGateway(
       ClipboardContextAction.copy,
     );
     final ClipboardViewModel model = ClipboardViewModel(
       InMemoryClipboardStore(<ClipboardRecord>[record]),
-      gateway: clipboardGateway,
     )..load();
 
     await tester.pumpWidget(
@@ -1546,12 +1594,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(menuGateway.showCount, 1);
+    expect(menuGateway.lastIsDark, isFalse);
     expect(
       menuGateway.lastItems.map((DesktopContextMenuItem item) => item.id),
       containsAll(<String>['paste', 'pastePlainText']),
     );
-    expect(clipboardGateway.writtenText, record.content);
-    expect(find.text('Details'), findsNothing);
+    expect(
+      menuGateway.lastItems.where((item) => item.id == 'togglePinned'),
+      isEmpty,
+    );
+    expect(
+      menuGateway.lastItems.where((item) => item.id == 'toggleEnabled'),
+      isEmpty,
+    );
+    expect(
+      menuGateway.lastItems.any((item) => item.englishLabel == 'Enable'),
+      isFalse,
+    );
+    expect(
+      menuGateway.lastItems.any((item) => item.englishLabel == 'Disable'),
+      isFalse,
+    );
+    expect(find.byKey(const Key('desktop-context-menu')), findsNothing);
   });
 
   testWidgets('Capture now adds the current platform clipboard text', (
@@ -1658,6 +1722,7 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
 
   final ClipboardContextAction? result;
   int showCount = 0;
+  bool? lastIsDark;
   List<DesktopContextMenuItem> lastItems = const <DesktopContextMenuItem>[];
 
   @override
@@ -1665,9 +1730,11 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
     required double x,
     required double y,
     required bool useChinese,
+    required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {
     showCount += 1;
+    lastIsDark = isDark;
     lastItems = items;
     return result?.name;
   }

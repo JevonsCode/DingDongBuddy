@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
+import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -68,6 +70,29 @@ void main() {
     },
   );
 
+  test('macOS tray maps every buddy state to the new white artwork', () {
+    expect(
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.normal),
+      'Assets/DingDongIP/AgentToolIcon-w.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.reminder),
+      'Assets/DingDongIP/ding-w.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.resting),
+      'Assets/DingDongIP/rest-w.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.sleeping),
+      'Assets/DingDongIP/sleeping-w.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(hot: true, state: TrayBuddyState.sleeping),
+      'Assets/DingDongIP/ding-w.png',
+    );
+  });
+
   test('tray icon shake requests the native status item animation', () async {
     MethodCall? receivedCall;
     const MethodChannel channel = MethodChannel('tray_manager');
@@ -84,6 +109,24 @@ void main() {
     await trayManager.shakeIcon();
 
     expect(receivedCall?.method, 'shakeIcon');
+  });
+
+  test('tray reminder nudge requests a distinct native animation', () async {
+    MethodCall? receivedCall;
+    const MethodChannel channel = MethodChannel('tray_manager');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall call) async {
+          receivedCall = call;
+          return true;
+        });
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    await trayManager.nudgeIcon();
+
+    expect(receivedCall?.method, 'nudgeIcon');
   });
 
   test(
@@ -261,6 +304,34 @@ void main() {
     expect(gateway, contains('DesktopShellCommand.quit'));
   });
 
+  test('test panel appears directly below Clipboard only in DEV', () {
+    final List<DesktopShellCommand> commands = <DesktopShellCommand>[];
+    final List<MenuItem> developmentItems = desktopTrayContextMenuItems(
+      monitoring: true,
+      chinese: true,
+      developmentBuild: true,
+      onCommand: commands.add,
+    );
+    final List<MenuItem> releaseItems = desktopTrayContextMenuItems(
+      monitoring: true,
+      chinese: true,
+      developmentBuild: false,
+      onCommand: commands.add,
+    );
+
+    expect(
+      developmentItems.take(3).map((MenuItem item) => item.label),
+      <String?>['打开剪贴板', '测试面板', null],
+    );
+    expect(
+      releaseItems.map((MenuItem item) => item.label),
+      isNot(contains('测试面板')),
+    );
+
+    developmentItems[1].onClick!(developmentItems[1]);
+    expect(commands, <DesktopShellCommand>[DesktopShellCommand.showTestPanel]);
+  });
+
   test('macOS tray persists the user-arranged status item position', () {
     final String source = File(
       'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
@@ -298,7 +369,7 @@ void main() {
     },
   );
 
-  test('macOS copy feedback shakes the complete status bar button', () {
+  test('macOS keeps copy shake and overdue-reminder nudge distinct', () {
     final String trayIcon = File(
       'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
     ).readAsStringSync();
@@ -312,8 +383,16 @@ void main() {
       trayIcon,
       contains('CAKeyframeAnimation(keyPath: "transform.rotation.z")'),
     );
+    expect(
+      trayIcon,
+      contains('CAKeyframeAnimation(keyPath: "transform.translation.x")'),
+    );
+    expect(trayIcon, contains('dingdong-reminder-nudge'));
+    expect(trayIcon, isNot(contains('Double.pi * 2')));
     expect(trayIcon, contains('button.layer?.add(animation'));
     expect(plugin, contains('case "shakeIcon":'));
+    expect(plugin, contains('case "nudgeIcon":'));
+    expect(plugin, isNot(contains('case "spinIcon":')));
     expect(
       main,
       contains(
@@ -324,7 +403,13 @@ void main() {
       main,
       isNot(contains('onCopyDetected: shellController.requestMascotShake')),
     );
-    expect(main, contains('onClipboardCaptured: (_) {'));
+    expect(main, contains('onClipboardCaptured: (ClipboardRecord record) {'));
+    expect(
+      main,
+      contains(
+        'trayBuddyController.recordClipboardActivity(record.updatedAt);',
+      ),
+    );
     expect(main, contains('shellController.requestClipboardRefresh();'));
     expect(
       main,

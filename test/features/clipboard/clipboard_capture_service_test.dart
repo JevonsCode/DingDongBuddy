@@ -151,20 +151,34 @@ void main() {
     final InMemoryClipboardStore store = InMemoryClipboardStore();
     int clock = 0;
     int identifier = 0;
+    final _FakeClipboardGateway gateway = _FakeClipboardGateway(
+      const ClipboardSnapshot(text: 'same clipboard value', source: 'Terminal'),
+    );
     final ClipboardCaptureService service = ClipboardCaptureService(
-      gateway: _FakeClipboardGateway(
-        const ClipboardSnapshot(text: 'same clipboard value'),
-      ),
+      gateway: gateway,
       store: store,
       idGenerator: () => 'TEXT-${identifier++}',
       now: () => DateTime.utc(2026, 7, 13, 10, clock++),
     );
 
     final first = await service.capture();
+    gateway.snapshot = const ClipboardSnapshot(
+      text: 'same clipboard value',
+      source: 'Browser',
+    );
     final second = await service.capture();
+    gateway.snapshot = const ClipboardSnapshot(
+      text: 'same clipboard value',
+      source: 'Terminal',
+    );
+    final third = await service.capture();
 
     expect(second?.id, first?.id);
-    expect(second?.updatedAt, DateTime.utc(2026, 7, 13, 10, 1));
+    expect(third?.id, first?.id);
+    expect(third?.createdAt, DateTime.utc(2026, 7, 13, 10));
+    expect(third?.updatedAt, DateTime.utc(2026, 7, 13, 10, 2));
+    expect(third?.copyCount, 3);
+    expect(third?.sources, <String>['Terminal', 'Browser']);
     expect(store.list(limit: 10), hasLength(1));
   });
 
@@ -188,6 +202,7 @@ void main() {
     final second = await service.capture();
 
     expect(second?.id, first?.id);
+    expect(second?.copyCount, 2);
     expect(store.list(limit: 10), hasLength(1));
     expect(directory.listSync().whereType<File>(), hasLength(1));
   });
@@ -196,7 +211,7 @@ void main() {
 final class _FakeClipboardGateway implements ClipboardGateway {
   _FakeClipboardGateway(this.snapshot);
 
-  final ClipboardSnapshot snapshot;
+  ClipboardSnapshot snapshot;
 
   @override
   Future<ClipboardSnapshot> read() async => snapshot;

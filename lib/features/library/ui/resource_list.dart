@@ -199,6 +199,7 @@ class ResourceList extends StatelessWidget {
             x: position.dx,
             y: position.dy,
             useChinese: Localizations.localeOf(context).languageCode == 'zh',
+            isDark: Theme.of(context).brightness == Brightness.dark,
             items: const <DesktopContextMenuItem>[
               DesktopContextMenuItem(
                 id: 'delete',

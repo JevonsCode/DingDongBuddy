@@ -6,6 +6,8 @@ import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_copy_count.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_pinned_indicator.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,7 @@ class ClipboardListTile extends StatelessWidget {
     this.callout = false,
     this.shortcutIndex,
     this.plainTextShortcut = false,
+    this.showPinnedIndicator = false,
     this.now,
     super.key,
   });
@@ -35,6 +38,7 @@ class ClipboardListTile extends StatelessWidget {
   final bool callout;
   final int? shortcutIndex;
   final bool plainTextShortcut;
+  final bool showPinnedIndicator;
   final DateTime? now;
 
   @override
@@ -49,63 +53,97 @@ class ClipboardListTile extends StatelessWidget {
         onDoubleTap: onDoubleTap,
         onOpenContent: onOpenContent,
         onSecondaryTapUp: onSecondaryTapUp,
+        showPinnedIndicator: showPinnedIndicator,
         now: now,
       );
     }
-    return Material(
-      color: selected
-          ? Theme.of(context).colorScheme.secondaryContainer
-          : Colors.transparent,
-      child: _InteractiveInkWell(
-        onTap: onSelected,
-        onDoubleTap: onDoubleTap,
-        onSecondaryTapUp: onSecondaryTapUp,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          child: Row(
-            children: <Widget>[
-              _SystemContentAction(
-                record: record,
-                onOpen: onOpenContent,
-                child: Icon(_iconFor(record.kind), size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      record.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall,
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: <Widget>[
+        Material(
+          color: selected
+              ? Theme.of(context).colorScheme.secondaryContainer
+              : Colors.transparent,
+          child: _InteractiveInkWell(
+            onTap: onSelected,
+            onDoubleTap: onDoubleTap,
+            onSecondaryTapUp: onSecondaryTapUp,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              child: Row(
+                children: <Widget>[
+                  _SystemContentAction(
+                    record: record,
+                    onOpen: onOpenContent,
+                    child: Icon(_iconFor(record.kind), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          record.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                record.sensitive
+                                    ? context.localized(
+                                        'Sensitive content hidden',
+                                        '敏感内容已隐藏',
+                                      )
+                                    : record.content.replaceAll('\n', ' '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                            if (record.copyCount > 1) ...<Widget>[
+                              const SizedBox(width: 7),
+                              ClipboardCopyCount(
+                                recordId: record.id,
+                                count: record.copyCount,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      record.sensitive
-                          ? context.localized(
-                              'Sensitive content hidden',
-                              '敏感内容已隐藏',
-                            )
-                          : record.content.replaceAll('\n', ' '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    clipboardTimestampLabel(
+                      context,
+                      record.updatedAt,
+                      now: now,
                     ),
-                  ],
-                ),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
               ),
-              if (record.pinned) const Icon(Icons.push_pin_outlined, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                clipboardTimestampLabel(context, record.createdAt, now: now),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        if (showPinnedIndicator && record.pinned)
+          Positioned(
+            top: -6,
+            right: -2,
+            child: ClipboardPinnedIndicator(
+              recordId: record.id,
+              keyPrefix: 'clipboard-pinned-indicator',
+              color: Theme.of(context).colorScheme.primary,
+              size: 18,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -120,6 +158,7 @@ class _CalloutClipboardTile extends StatelessWidget {
     required this.onDoubleTap,
     required this.onOpenContent,
     required this.onSecondaryTapUp,
+    required this.showPinnedIndicator,
     required this.now,
   });
 
@@ -131,6 +170,7 @@ class _CalloutClipboardTile extends StatelessWidget {
   final VoidCallback? onDoubleTap;
   final VoidCallback? onOpenContent;
   final GestureTapUpCallback? onSecondaryTapUp;
+  final bool showPinnedIndicator;
   final DateTime? now;
 
   @override
@@ -138,102 +178,142 @@ class _CalloutClipboardTile extends StatelessWidget {
     final platform = Theme.of(context).platform;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: Material(
-        color: selected ? PopupStyle.accentSoft : PopupStyle.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(9),
-          side: const BorderSide(color: PopupStyle.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: _InteractiveInkWell(
-          onTap: onSelected,
-          onDoubleTap: onDoubleTap,
-          onSecondaryTapUp: onSecondaryTapUp,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-            child: Row(
-              children: <Widget>[
-                _RecordLeading(record: record, onOpen: onOpenContent),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        record.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: PopupStyle.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _subtitle(context),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: PopupStyle.textSecondary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          Material(
+            color: selected ? PopupStyle.accentSoft : PopupStyle.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(9),
+              side: const BorderSide(color: PopupStyle.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: _InteractiveInkWell(
+              onTap: onSelected,
+              onDoubleTap: onDoubleTap,
+              onSecondaryTapUp: onSecondaryTapUp,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 10,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  clipboardTimestampLabel(context, record.createdAt, now: now),
-                  style: const TextStyle(
-                    color: PopupStyle.textSecondary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (shortcutIndex != null) ...<Widget>[
-                  const SizedBox(width: 10),
-                  Container(
-                    width: plainTextShortcut
-                        ? 52
-                        : usesMetaAsPrimaryModifier(platform)
-                        ? 38
-                        : 44,
-                    height: 29,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: PopupStyle.accent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      plainTextShortcut
-                          ? '⌥⌘ $shortcutIndex'
-                          : primaryShortcutLabel('$shortcutIndex', platform),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
+                child: Row(
+                  children: <Widget>[
+                    _RecordLeading(record: record, onOpen: onOpenContent),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            record.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: PopupStyle.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  _subtitle(context),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: PopupStyle.textSecondary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              if (record.copyCount > 1) ...<Widget>[
+                                const SizedBox(width: 7),
+                                ClipboardCopyCount(
+                                  recordId: record.id,
+                                  count: record.copyCount,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  if (plainTextShortcut) ...<Widget>[
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
-                      context.localized('Plain text', '纯文本'),
+                      clipboardTimestampLabel(
+                        context,
+                        record.updatedAt,
+                        now: now,
+                      ),
                       style: const TextStyle(
                         color: PopupStyle.textSecondary,
                         fontSize: 10,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (shortcutIndex != null) ...<Widget>[
+                      const SizedBox(width: 10),
+                      Container(
+                        width: plainTextShortcut
+                            ? 52
+                            : usesMetaAsPrimaryModifier(platform)
+                            ? 38
+                            : 44,
+                        height: 29,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: PopupStyle.accent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          plainTextShortcut
+                              ? '⌥⌘ $shortcutIndex'
+                              : primaryShortcutLabel(
+                                  '$shortcutIndex',
+                                  platform,
+                                ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      if (plainTextShortcut) ...<Widget>[
+                        const SizedBox(width: 6),
+                        Text(
+                          context.localized('Plain text', '纯文本'),
+                          style: const TextStyle(
+                            color: PopupStyle.textSecondary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
-                ],
-              ],
+                ),
+              ),
             ),
           ),
-        ),
+          if (showPinnedIndicator && record.pinned)
+            Positioned(
+              top: -7,
+              right: -2,
+              child: ClipboardPinnedIndicator(
+                recordId: record.id,
+                keyPrefix: 'clipboard-pinned-indicator',
+                color: PopupStyle.accent,
+                size: 17,
+              ),
+            ),
+        ],
       ),
     );
   }

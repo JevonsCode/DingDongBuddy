@@ -77,7 +77,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(source.fetchCount, 1);
-    expect(find.text('1.2.1'), findsOneWidget);
+    expect(find.text('1.2.8'), findsOneWidget);
   });
 
   testWidgets('default workspace uses the Dynamic product name', (
@@ -506,9 +506,9 @@ final class _CountingReleaseSource implements ReleaseMetadataSource {
     fetchCount += 1;
     return ReleaseMetadata(
       app: 'DingDong',
-      latestVersion: '1.2.1',
+      latestVersion: '1.2.8',
       website: Uri.parse('https://example.com'),
-      releasePage: Uri.parse('https://example.com/releases/1.2.1'),
+      releasePage: Uri.parse('https://example.com/releases/1.2.8'),
     );
   }
 }

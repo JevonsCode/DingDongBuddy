@@ -49,7 +49,12 @@ final class InMemoryClipboardArchiveStore implements ClipboardArchiveStore {
 
   @override
   List<ClipboardArchiveEntry> listArchives() =>
-      List<ClipboardArchiveEntry>.unmodifiable(_entries);
+      List<ClipboardArchiveEntry>.unmodifiable(
+        _entries..sort(
+          (ClipboardArchiveEntry left, ClipboardArchiveEntry right) =>
+              compareClipboardRecords(left.record, right.record),
+        ),
+      );
 
   @override
   void saveArchive(ClipboardArchiveEntry entry) {
@@ -85,11 +90,15 @@ final class InMemoryClipboardStore
   List<ClipboardRecord> list({
     required int limit,
     bool includeProtectedBeyondLimit = false,
-  }) => _boundedHistory(
-    _records,
-    limit: limit,
-    includeProtectedBeyondLimit: includeProtectedBeyondLimit,
-  );
+  }) {
+    final List<ClipboardRecord> sorted = List<ClipboardRecord>.of(_records)
+      ..sort(compareClipboardRecords);
+    return _boundedHistory(
+      sorted,
+      limit: limit,
+      includeProtectedBeyondLimit: includeProtectedBeyondLimit,
+    );
+  }
 
   @override
   void save(ClipboardRecord record) {
@@ -121,7 +130,8 @@ final class InMemoryClipboardStore
           htmlData: record.htmlData,
           rtfData: record.rtfData,
           tags: record.tags,
-          source: record.source,
+          sources: record.sources,
+          copyCount: record.copyCount,
           pinned: record.pinned,
           enabled: record.enabled,
           activation: record.activation,
@@ -142,7 +152,12 @@ final class InMemoryClipboardStore
 
   @override
   List<ClipboardArchiveEntry> listArchives() =>
-      List<ClipboardArchiveEntry>.unmodifiable(_archives);
+      List<ClipboardArchiveEntry>.unmodifiable(
+        List<ClipboardArchiveEntry>.of(_archives)..sort(
+          (ClipboardArchiveEntry left, ClipboardArchiveEntry right) =>
+              compareClipboardRecords(left.record, right.record),
+        ),
+      );
 
   @override
   void saveArchive(ClipboardArchiveEntry entry) {
@@ -183,10 +198,25 @@ final class ClipboardRepository
     bool includeProtectedBeyondLimit = false,
   }) {
     final int boundedLimit = limit.clamp(0, 5000);
+    const String orderBy = '''
+      ORDER BY ZPINNED DESC,
+        CASE
+          WHEN ZPINNED = 1 AND ZSORTORDER IS NULL THEN 1
+          ELSE 0
+        END ASC,
+        CASE
+          WHEN ZPINNED = 0 AND ZSORTORDER IS NULL THEN 0
+          WHEN ZPINNED = 0 THEN 1
+          ELSE 0
+        END ASC,
+        CASE WHEN ZSORTORDER IS NULL THEN 0 ELSE ZSORTORDER END ASC,
+        ZUPDATEDAT DESC,
+        ZID ASC
+    ''';
     final ResultSet rows = _database.select(
       includeProtectedBeyondLimit
-          ? 'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC'
-          : 'SELECT * FROM ZCLIPBOARDRECORD ORDER BY ZUPDATEDAT DESC LIMIT ?',
+          ? 'SELECT * FROM ZCLIPBOARDRECORD $orderBy'
+          : 'SELECT * FROM ZCLIPBOARDRECORD $orderBy LIMIT ?',
       includeProtectedBeyondLimit ? const <Object?>[] : <Object?>[boundedLimit],
     );
     final Iterable<ClipboardRecord> records = rows.map(_recordFromRow);
@@ -274,7 +304,8 @@ final class ClipboardRepository
                 htmlData: record.htmlData,
                 rtfData: record.rtfData,
                 tags: record.tags,
-                source: record.source,
+                sources: record.sources,
+                copyCount: record.copyCount,
                 pinned: record.pinned,
                 enabled: record.enabled,
                 activation: record.activation,
@@ -317,15 +348,16 @@ final class ClipboardRepository
     _database.execute(
       '''
       INSERT INTO ZCLIPBOARDRECORD (
-        Z_ENT, Z_OPT, ZENABLED, ZPINNED, ZSORTORDER,
+        Z_ENT, Z_OPT, ZENABLED, ZPINNED, ZSORTORDER, ZCOPYCOUNT,
         ZCREATEDAT, ZUPDATEDAT, ZACTIVATION, ZCONTENT, ZGROUP,
         ZID, ZSOURCE, ZTITLE, ZTAGSDATA, ZHTMLDATA, ZRTFDATA
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(ZID) DO UPDATE SET
         Z_OPT = Z_OPT + 1,
         ZENABLED = excluded.ZENABLED,
         ZPINNED = excluded.ZPINNED,
         ZSORTORDER = excluded.ZSORTORDER,
+        ZCOPYCOUNT = excluded.ZCOPYCOUNT,
         ZCREATEDAT = excluded.ZCREATEDAT,
         ZUPDATEDAT = excluded.ZUPDATEDAT,
         ZACTIVATION = excluded.ZACTIVATION,
@@ -343,13 +375,14 @@ final class ClipboardRepository
         record.enabled ? 1 : 0,
         record.pinned ? 1 : 0,
         record.sortOrder,
+        record.copyCount,
         _encodeDate(record.createdAt),
         _encodeDate(record.updatedAt),
         record.activation,
         record.content,
         _encodeGroups(record.groupNames),
         record.id,
-        record.source,
+        _encodeSources(record.sources),
         record.title,
         Uint8List.fromList(utf8.encode(jsonEncode(record.tags))),
         record.htmlData,
@@ -367,9 +400,22 @@ final class ClipboardRepository
 
   @override
   List<ClipboardArchiveEntry> listArchives() {
-    final ResultSet rows = _database.select(
-      'SELECT * FROM ZCLIPBOARDARCHIVE ORDER BY ZUPDATEDAT DESC',
-    );
+    final ResultSet rows = _database.select('''
+      SELECT * FROM ZCLIPBOARDARCHIVE
+      ORDER BY ZPINNED DESC,
+        CASE
+          WHEN ZPINNED = 1 AND ZSORTORDER IS NULL THEN 1
+          ELSE 0
+        END ASC,
+        CASE
+          WHEN ZPINNED = 0 AND ZSORTORDER IS NULL THEN 0
+          WHEN ZPINNED = 0 THEN 1
+          ELSE 0
+        END ASC,
+        CASE WHEN ZSORTORDER IS NULL THEN 0 ELSE ZSORTORDER END ASC,
+        ZUPDATEDAT DESC,
+        ZID ASC
+      ''');
     return List<ClipboardArchiveEntry>.unmodifiable(
       rows.map(
         (Row row) => ClipboardArchiveEntry(
@@ -387,15 +433,16 @@ final class ClipboardRepository
     _database.execute(
       '''
       INSERT INTO ZCLIPBOARDARCHIVE (
-        Z_OPT, ZENABLED, ZPINNED, ZSORTORDER,
+        Z_OPT, ZENABLED, ZPINNED, ZSORTORDER, ZCOPYCOUNT,
         ZCREATEDAT, ZUPDATEDAT, ZARCHIVEDAT, ZACTIVATION, ZCONTENT, ZGROUP,
         ZID, ZSOURCECLIPBOARDID, ZSOURCE, ZTITLE, ZTAGSDATA, ZHTMLDATA, ZRTFDATA
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(ZID) DO UPDATE SET
         Z_OPT = Z_OPT + 1,
         ZENABLED = excluded.ZENABLED,
         ZPINNED = excluded.ZPINNED,
         ZSORTORDER = excluded.ZSORTORDER,
+        ZCOPYCOUNT = excluded.ZCOPYCOUNT,
         ZCREATEDAT = excluded.ZCREATEDAT,
         ZUPDATEDAT = excluded.ZUPDATEDAT,
         ZARCHIVEDAT = excluded.ZARCHIVEDAT,
@@ -414,6 +461,7 @@ final class ClipboardRepository
         record.enabled ? 1 : 0,
         record.pinned ? 1 : 0,
         record.sortOrder,
+        record.copyCount,
         _encodeDate(record.createdAt),
         _encodeDate(record.updatedAt),
         _encodeDate(entry.archivedAt),
@@ -422,7 +470,7 @@ final class ClipboardRepository
         _encodeGroups(record.groupNames),
         record.id,
         entry.sourceClipboardId,
-        record.source,
+        _encodeSources(record.sources),
         record.title,
         Uint8List.fromList(utf8.encode(jsonEncode(record.tags))),
         record.htmlData,
@@ -505,7 +553,8 @@ final class ClipboardRepository
           htmlData: source.htmlData,
           rtfData: source.rtfData,
           tags: source.tags,
-          source: source.source,
+          sources: source.sources,
+          copyCount: source.copyCount,
           pinned: source.pinned,
           enabled: source.enabled,
           activation: source.activation,
@@ -554,7 +603,8 @@ final class ClipboardRepository
       htmlData: _decodeOptionalBytes(row['ZHTMLDATA']),
       rtfData: _decodeOptionalBytes(row['ZRTFDATA']),
       tags: tags,
-      source: row['ZSOURCE'] as String?,
+      sources: _decodeSources(row['ZSOURCE']),
+      copyCount: _decodeCopyCount(row['ZCOPYCOUNT']),
       pinned: (row['ZPINNED'] as int? ?? 0) != 0,
       enabled: (row['ZENABLED'] as int? ?? 1) != 0,
       activation: row['ZACTIVATION'] as String? ?? 'taskMatch',
@@ -628,6 +678,35 @@ final class ClipboardRepository
     return groups.isEmpty ? '' : jsonEncode(groups);
   }
 
+  static List<String> _decodeSources(Object? value) {
+    final String trimmed = (value as String? ?? '').trim();
+    if (trimmed.isEmpty) {
+      return const <String>[];
+    }
+    if (!trimmed.startsWith('[')) {
+      return <String>[trimmed];
+    }
+    try {
+      final Object? decoded = jsonDecode(trimmed);
+      if (decoded is List<Object?>) {
+        return _uniqueSources(decoded.whereType<String>());
+      }
+    } on FormatException {
+      // A malformed legacy value still represents one useful source label.
+    }
+    return <String>[trimmed];
+  }
+
+  static String _encodeSources(List<String> values) {
+    final List<String> sources = _uniqueSources(values);
+    return sources.isEmpty ? '' : jsonEncode(sources);
+  }
+
+  static int _decodeCopyCount(Object? value) {
+    final int count = value as int? ?? 1;
+    return count < 1 ? 1 : count;
+  }
+
   static void _ensureSchema(Database database) {
     database
       ..execute('PRAGMA journal_mode = WAL')
@@ -639,6 +718,7 @@ final class ClipboardRepository
           ZENABLED INTEGER,
           ZPINNED INTEGER,
           ZSORTORDER INTEGER,
+          ZCOPYCOUNT INTEGER DEFAULT 1,
           ZCREATEDAT TIMESTAMP,
           ZUPDATEDAT TIMESTAMP,
           ZACTIVATION VARCHAR,
@@ -663,6 +743,7 @@ final class ClipboardRepository
           ZENABLED INTEGER,
           ZPINNED INTEGER,
           ZSORTORDER INTEGER,
+          ZCOPYCOUNT INTEGER DEFAULT 1,
           ZCREATEDAT TIMESTAMP,
           ZUPDATEDAT TIMESTAMP,
           ZARCHIVEDAT TIMESTAMP,
@@ -686,16 +767,35 @@ final class ClipboardRepository
         'CREATE INDEX IF NOT EXISTS Z_ClipboardArchive_source_id '
         'ON ZCLIPBOARDARCHIVE (ZSOURCECLIPBOARDID COLLATE BINARY ASC)',
       );
-    _ensureColumn(database, 'ZHTMLDATA', 'BLOB');
-    _ensureColumn(database, 'ZRTFDATA', 'BLOB');
+    _ensureColumn(database, 'ZCLIPBOARDRECORD', 'ZHTMLDATA', 'BLOB');
+    _ensureColumn(database, 'ZCLIPBOARDRECORD', 'ZRTFDATA', 'BLOB');
+    _ensureColumn(
+      database,
+      'ZCLIPBOARDRECORD',
+      'ZCOPYCOUNT',
+      'INTEGER DEFAULT 1',
+    );
+    _ensureColumn(database, 'ZCLIPBOARDARCHIVE', 'ZHTMLDATA', 'BLOB');
+    _ensureColumn(database, 'ZCLIPBOARDARCHIVE', 'ZRTFDATA', 'BLOB');
+    _ensureColumn(
+      database,
+      'ZCLIPBOARDARCHIVE',
+      'ZCOPYCOUNT',
+      'INTEGER DEFAULT 1',
+    );
   }
 
-  static void _ensureColumn(Database database, String name, String type) {
+  static void _ensureColumn(
+    Database database,
+    String table,
+    String name,
+    String type,
+  ) {
     final bool exists = database
-        .select('PRAGMA table_info(ZCLIPBOARDRECORD)')
+        .select('PRAGMA table_info($table)')
         .any((Row row) => row['name'] == name);
     if (!exists) {
-      database.execute('ALTER TABLE ZCLIPBOARDRECORD ADD COLUMN $name $type');
+      database.execute('ALTER TABLE $table ADD COLUMN $name $type');
     }
   }
 }
@@ -723,6 +823,16 @@ List<ClipboardRecord> _boundedHistory(
 }
 
 List<String> _uniqueGroups(Iterable<String> values) {
+  final Set<String> seen = <String>{};
+  return values
+      .map((String value) => value.trim())
+      .where(
+        (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
+      )
+      .toList(growable: false);
+}
+
+List<String> _uniqueSources(Iterable<String> values) {
   final Set<String> seen = <String>{};
   return values
       .map((String value) => value.trim())

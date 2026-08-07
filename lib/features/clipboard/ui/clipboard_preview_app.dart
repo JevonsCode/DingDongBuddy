@@ -360,8 +360,8 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                 _PreviewMeta(label: record.kind.name),
                 for (final String group in record.groupNames)
                   _PreviewMeta(label: group),
-                if (record.source?.trim().isNotEmpty ?? false)
-                  _PreviewMeta(label: record.source!.trim()),
+                for (final String source in record.sources)
+                  _PreviewMeta(label: source),
               ],
             ),
             const SizedBox(height: 12),

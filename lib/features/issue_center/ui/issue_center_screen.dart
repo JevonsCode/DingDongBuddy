@@ -328,18 +328,12 @@ final class _EmptyIssueState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.check_circle_outline_rounded,
-                  size: 24,
-                  color: colors.primary,
-                ),
+              Image.asset(
+                'Assets/DingDongIP/rest.png',
+                key: const Key('issue-center-empty-mascot'),
+                width: 82,
+                height: 82,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 14),
               Text(

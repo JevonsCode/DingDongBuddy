@@ -7,6 +7,7 @@ import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
+import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/features/shell/ui/popup_mascot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class PopupHeader extends StatelessWidget {
     required this.showShortcutHints,
     required this.workspaceShortcuts,
     required this.mascotShakeRevision,
+    required this.mascotState,
     required this.onSelected,
     required this.onIssues,
     required this.onBrand,
@@ -37,6 +39,7 @@ class PopupHeader extends StatelessWidget {
   final bool showShortcutHints;
   final WorkspaceShortcuts workspaceShortcuts;
   final int mascotShakeRevision;
+  final TrayBuddyState mascotState;
   final bool developmentBuild;
   final ValueChanged<int> onSelected;
   final VoidCallback onIssues;
@@ -68,7 +71,10 @@ class PopupHeader extends StatelessWidget {
                           : (_) => unawaited(onStartDragging!()),
                       child: Row(
                         children: <Widget>[
-                          PopupMascot(shakeRevision: mascotShakeRevision),
+                          PopupMascot(
+                            shakeRevision: mascotShakeRevision,
+                            state: mascotState,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Row(

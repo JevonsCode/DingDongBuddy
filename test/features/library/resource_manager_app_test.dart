@@ -345,6 +345,14 @@ void main() {
 
     expect(find.byKey(const Key('issue-center-screen')), findsOneWidget);
     expect(find.text('没有发现问题'), findsOneWidget);
+    expect(find.byKey(const Key('issue-center-empty-mascot')), findsOneWidget);
+    final Image mascot = tester.widget<Image>(
+      find.byKey(const Key('issue-center-empty-mascot')),
+    );
+    expect(
+      (mascot.image as AssetImage).assetName,
+      'Assets/DingDongIP/rest.png',
+    );
     expect(find.text('集中查看资源同步、Agent 配置及其他需要处理的问题。'), findsOneWidget);
     expect(find.byKey(const Key('issue-center-check')), findsOneWidget);
     expect(find.byKey(const Key('issue-center-empty-check')), findsNothing);

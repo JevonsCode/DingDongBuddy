@@ -71,6 +71,8 @@ void main() {
       expect(records.single.pinned, isTrue);
       expect(records.single.sensitive, isTrue);
       expect(records.single.createdAt, DateTime.utc(2026));
+      expect(records.single.sources, <String>['Finder']);
+      expect(records.single.copyCount, 1);
     },
   );
 
@@ -88,7 +90,8 @@ void main() {
         title: 'Run tests',
         content: 'flutter test',
         tags: const <String>['clipboard', 'command'],
-        source: 'Terminal',
+        sources: const <String>['Terminal', 'Browser'],
+        copyCount: 3,
         pinned: false,
         enabled: true,
         activation: 'taskMatch',
@@ -107,9 +110,78 @@ void main() {
       expect(stored.id, record.id);
       expect(stored.content, 'flutter test');
       expect(stored.kind, ClipboardKind.command);
-      expect(stored.source, 'Terminal');
+      expect(stored.source, 'Browser');
+      expect(stored.sources, <String>['Terminal', 'Browser']);
+      expect(stored.copyCount, 3);
     },
   );
+
+  test('repository orders pinned and manually sorted clipboard rows', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-clipboard-order-test-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final String path = '${directory.path}/clipboard-history.sqlite';
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    ClipboardRecord record(
+      String id, {
+      required bool pinned,
+      int? sortOrder,
+      String group = 'Clipboard',
+    }) => ClipboardRecord(
+      id: id,
+      group: group,
+      title: id,
+      content: id,
+      tags: const <String>['clipboard', 'text'],
+      pinned: pinned,
+      enabled: true,
+      activation: pinned ? 'always' : 'taskMatch',
+      sortOrder: sortOrder,
+      createdAt: now,
+      updatedAt: now.subtract(Duration(seconds: id.hashCode.abs() % 10)),
+    );
+    final ClipboardRepository repository = ClipboardRepository.open(path);
+    addTearDown(repository.close);
+    repository
+      ..save(record('newest', pinned: false))
+      ..save(record('manual', pinned: false, sortOrder: 1))
+      ..save(record('pinned', pinned: true, sortOrder: 9))
+      ..saveArchive(
+        ClipboardArchiveEntry(
+          record: record(
+            'archived',
+            pinned: false,
+            sortOrder: 1,
+            group: 'Saved',
+          ),
+          sourceClipboardId: 'source-archived',
+          archivedAt: now,
+        ),
+      )
+      ..saveArchive(
+        ClipboardArchiveEntry(
+          record: record(
+            'archived-pinned',
+            pinned: true,
+            sortOrder: 9,
+            group: 'Saved',
+          ),
+          sourceClipboardId: 'source-archived-pinned',
+          archivedAt: now,
+        ),
+      );
+
+    expect(repository.list(limit: 10).map((item) => item.id), <String>[
+      'pinned',
+      'newest',
+      'manual',
+    ]);
+    expect(repository.listArchives().map((entry) => entry.record.id), <String>[
+      'archived-pinned',
+      'archived',
+    ]);
+  });
 
   test('rich-text representations persist across repository reopen', () async {
     final Directory directory = await Directory.systemTemp.createTemp(
@@ -163,6 +235,8 @@ void main() {
         title: 'Shared note',
         content: 'Shared note',
         tags: const <String>['clipboard', 'text'],
+        sources: const <String>['Terminal', 'Browser'],
+        copyCount: 4,
         pinned: false,
         enabled: true,
         activation: 'taskMatch',
@@ -191,6 +265,11 @@ void main() {
       '项目乙',
     ]);
     expect(reopened.listArchives().single.sourceClipboardId, 'multi-group');
+    expect(reopened.listArchives().single.record.sources, <String>[
+      'Terminal',
+      'Browser',
+    ]);
+    expect(reopened.listArchives().single.record.copyCount, 4);
   });
 
   test(

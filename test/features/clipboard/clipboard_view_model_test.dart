@@ -39,7 +39,7 @@ void main() {
     expect(model.selectedRecord?.id, first.id);
   });
 
-  test('pinning the selected row persists and keeps it selected', () {
+  test('pinning an ordinary clipboard row is ignored', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final InMemoryClipboardStore store = InMemoryClipboardStore(
       <ClipboardRecord>[
@@ -62,9 +62,144 @@ void main() {
 
     model.togglePinned();
 
-    expect(model.selectedRecord?.pinned, isTrue);
-    expect(store.list(limit: 10).single.pinned, isTrue);
-    expect(store.list(limit: 10).single.activation, 'always');
+    expect(model.selectedRecord?.pinned, isFalse);
+    expect(store.list(limit: 10).single.pinned, isFalse);
+    expect(store.list(limit: 10).single.activation, 'taskMatch');
+  });
+
+  test('pinning an archived row moves it to the top of the archive list', () {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    ClipboardRecord archived(String id, Duration age) => ClipboardRecord(
+      id: id,
+      group: 'Saved',
+      title: id,
+      content: id,
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now.subtract(age),
+      updatedAt: now.subtract(age),
+    );
+    final InMemoryClipboardArchiveStore archives =
+        InMemoryClipboardArchiveStore(<ClipboardArchiveEntry>[
+          ClipboardArchiveEntry(
+            record: archived('older', const Duration(minutes: 1)),
+            sourceClipboardId: 'older-source',
+            archivedAt: now.subtract(const Duration(minutes: 1)),
+          ),
+          ClipboardArchiveEntry(
+            record: archived('newer', Duration.zero),
+            sourceClipboardId: 'newer-source',
+            archivedAt: now,
+          ),
+        ]);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(),
+      archiveStore: archives,
+      now: () => now.add(const Duration(seconds: 1)),
+    )..load();
+    model.setGroup('Saved');
+    model.select(model.visibleRecords.firstWhere((item) => item.id == 'older'));
+
+    model.togglePinned();
+
+    expect(model.visibleRecords.map((item) => item.id), <String>[
+      'older',
+      'newer',
+    ]);
+    expect(archives.listArchives().first.record.pinned, isTrue);
+  });
+
+  test('ordinary clipboard order does not change through reorder requests', () {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    ClipboardRecord item(String id, int secondsAgo) => ClipboardRecord(
+      id: id,
+      group: 'Clipboard',
+      title: id,
+      content: id,
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now.subtract(Duration(seconds: secondsAgo)),
+      updatedAt: now.subtract(Duration(seconds: secondsAgo)),
+    );
+    final InMemoryClipboardStore store = InMemoryClipboardStore(
+      <ClipboardRecord>[item('first', 0), item('second', 1), item('third', 2)],
+    );
+    final ClipboardViewModel model = ClipboardViewModel(store)..load();
+
+    model.reorderVisibleRecords(2, 0);
+
+    expect(model.visibleRecords.map((item) => item.id), <String>[
+      'first',
+      'second',
+      'third',
+    ]);
+    final ClipboardViewModel reopened = ClipboardViewModel(store)..load();
+    expect(reopened.visibleRecords.map((item) => item.id), <String>[
+      'first',
+      'second',
+      'third',
+    ]);
+  });
+
+  test('manual archive order persists across view-model reloads', () {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    ClipboardRecord item(String id, int secondsAgo) => ClipboardRecord(
+      id: id,
+      group: 'Saved',
+      title: id,
+      content: id,
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now.subtract(Duration(seconds: secondsAgo)),
+      updatedAt: now.subtract(Duration(seconds: secondsAgo)),
+    );
+    final InMemoryClipboardArchiveStore archives =
+        InMemoryClipboardArchiveStore(<ClipboardArchiveEntry>[
+          ClipboardArchiveEntry(
+            record: item('first', 0),
+            sourceClipboardId: 'source-first',
+            archivedAt: now,
+          ),
+          ClipboardArchiveEntry(
+            record: item('second', 1),
+            sourceClipboardId: 'source-second',
+            archivedAt: now.subtract(const Duration(seconds: 1)),
+          ),
+          ClipboardArchiveEntry(
+            record: item('third', 2),
+            sourceClipboardId: 'source-third',
+            archivedAt: now.subtract(const Duration(seconds: 2)),
+          ),
+        ]);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(),
+      archiveStore: archives,
+    )..load();
+    model.setGroup('Saved');
+
+    model.reorderVisibleRecords(2, 0);
+
+    expect(model.visibleRecords.map((item) => item.id), <String>[
+      'third',
+      'first',
+      'second',
+    ]);
+    final ClipboardViewModel reopened = ClipboardViewModel(
+      InMemoryClipboardStore(),
+      archiveStore: archives,
+    )..load();
+    reopened.setGroup('Saved');
+    expect(reopened.visibleRecords.map((item) => item.id), <String>[
+      'third',
+      'first',
+      'second',
+    ]);
   });
 
   test(
@@ -768,6 +903,69 @@ void main() {
     },
   );
 
+  test('source filters match every source collected for one record', () {
+    final DateTime now = DateTime.utc(2026, 8, 7);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record(
+          now,
+          sources: const <String>[
+            'Terminal · com.apple.Terminal',
+            'Google Chrome · com.google.Chrome',
+          ],
+        ),
+      ]),
+    )..load();
+
+    expect(model.sourceOptions.map((option) => option.id), <String>[
+      'bundle:com.apple.terminal',
+      'bundle:com.google.chrome',
+    ]);
+
+    model.toggleSource('bundle:com.google.chrome');
+
+    expect(model.visibleRecords.single.id, 'clip');
+  });
+
+  test('copy-count sorting keeps pinned items first and ranks the rest', () {
+    final DateTime now = DateTime.utc(2026, 8, 7);
+    ClipboardRecord record(
+      String id, {
+      required int copyCount,
+      bool pinned = false,
+      int ageSeconds = 0,
+    }) => ClipboardRecord(
+      id: id,
+      group: 'Clipboard',
+      title: id,
+      content: id,
+      tags: const <String>['clipboard', 'text'],
+      copyCount: copyCount,
+      pinned: pinned,
+      enabled: true,
+      activation: pinned ? 'always' : 'taskMatch',
+      createdAt: now.subtract(Duration(seconds: ageSeconds)),
+      updatedAt: now.subtract(Duration(seconds: ageSeconds)),
+    );
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        record('newest', copyCount: 1),
+        record('most-copied', copyCount: 8, ageSeconds: 3),
+        record('middle', copyCount: 4, ageSeconds: 2),
+        record('pinned', copyCount: 1, pinned: true, ageSeconds: 10),
+      ]),
+    )..load();
+
+    model.setSortMode(ClipboardSortMode.copyCount);
+
+    expect(model.visibleRecords.map((item) => item.id), <String>[
+      'pinned',
+      'most-copied',
+      'middle',
+      'newest',
+    ]);
+  });
+
   test(
     'Windows source metadata groups changing window titles by executable',
     () {
@@ -847,7 +1045,11 @@ void main() {
   });
 }
 
-ClipboardRecord _record(DateTime now, {String? source}) {
+ClipboardRecord _record(
+  DateTime now, {
+  String? source,
+  List<String> sources = const <String>[],
+}) {
   return ClipboardRecord(
     id: 'clip',
     group: 'Clipboard',
@@ -855,6 +1057,7 @@ ClipboardRecord _record(DateTime now, {String? source}) {
     content: 'flutter test',
     tags: const <String>['clipboard', 'command'],
     source: source,
+    sources: sources,
     pinned: false,
     enabled: true,
     activation: 'taskMatch',

@@ -1,34 +1,34 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.2.0",
-  "latestBuild": "39",
-  "publishedAt": "2026-08-07T03:05:39Z",
+  "latestVersion": "1.2.7",
+  "latestBuild": "40",
+  "publishedAt": "2026-08-07T15:58:01Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.0/DingDong-1.2.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.7/DingDong-1.2.7-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.0/DingDong-1.2.0-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.7/DingDong-1.2.7-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.0/DingDong-1.2.0-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.7/DingDong-1.2.7-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Prevents unavailable background Codex tasks from opening as broken conversations.",
-    "Acknowledges newly surfaced Agent activity after it has been visible long enough to read.",
-    "Keeps the compact Clipboard toolbar focused on search and filters; monitoring stays in the tray menu and Settings.",
-    "Aligns the website Clipboard preview with the desktop toolbar and category data model.",
-    "Keeps popup branding and version metadata visible across release and development builds.",
+    "Adds stateful DingDong artwork for normal, reminder, resting, and sleeping states.",
+    "Nudges overdue Agent reminders every minute after five minutes until they are acknowledged.",
+    "Consolidates repeated Clipboard copies into the latest row with a count and source history.",
+    "Adds Clipboard count sorting plus archive pinning and manual ordering.",
+    "Uses the thinking mascot on every third popup-mascot click and the resting mascot for a clean Resource Manager check.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

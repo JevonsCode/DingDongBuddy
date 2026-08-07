@@ -24,6 +24,7 @@ Future<void> showClipboardGroupContextMenu(
           x: globalPosition.dx,
           y: globalPosition.dy,
           useChinese: Localizations.localeOf(context).languageCode == 'zh',
+          isDark: Theme.of(context).brightness == Brightness.dark,
           items: const <DesktopContextMenuItem>[
             DesktopContextMenuItem(
               id: 'delete',

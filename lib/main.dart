@@ -43,10 +43,13 @@ import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_service.dart';
+import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
+import 'package:dingdong/features/shell/ui/development_test_panel_app.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
+import 'package:dingdong/platform/multi_window_development_test_panel_launcher.dart';
 import 'package:dingdong/platform/multi_window_resource_manager_launcher.dart';
 import 'package:dingdong/platform/multi_window_settings_host_bridge.dart';
 import 'package:dingdong/platform/multi_window_settings_launcher.dart';
@@ -92,6 +95,10 @@ Future<void> main(List<String> arguments) async {
     await _runSettingsWindow(windowController, windowArguments);
     return;
   }
+  if (windowArguments['kind'] == developmentTestPanelWindowKind) {
+    await _runDevelopmentTestPanelWindow(windowController, windowArguments);
+    return;
+  }
 
   final AppDataPaths appDataPaths = AppDataPaths.current();
   final String homeDirectory =
@@ -112,6 +119,10 @@ Future<void> main(List<String> arguments) async {
       MultiWindowResourceManagerLauncher(
         parentWindowId: windowController.windowId,
       );
+  final MultiWindowDevelopmentTestPanelLauncher testPanelLauncher =
+      MultiWindowDevelopmentTestPanelLauncher(
+        parentWindowId: windowController.windowId,
+      );
   final SharedPreferencesBackend preferencesBackend =
       SharedPreferencesBackend();
   final ActivityController activityController = ActivityController(
@@ -120,6 +131,7 @@ Future<void> main(List<String> arguments) async {
   late final NativeAgentConversationLauncher agentConversationLauncher;
   late final AppDependencies dependencies;
   late final SettingsViewModel settingsViewModel;
+  late final TrayBuddyController trayBuddyController;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
     onHideAuxiliaryWindows: () async {
       await desktopContextMenuController.dismissActiveMenu();
@@ -136,7 +148,8 @@ Future<void> main(List<String> arguments) async {
     preferencesBackend: preferencesBackend,
     onResourceLibraryChanged: shellController.requestLibraryRefresh,
     onCopyDetected: () => unawaited(shellGateway.shakeTrayIcon()),
-    onClipboardCaptured: (_) {
+    onClipboardCaptured: (ClipboardRecord record) {
+      trayBuddyController.recordClipboardActivity(record.updatedAt);
       shellController.requestClipboardRefresh();
       unawaited(resourceManagerLauncher.refreshClipboard());
     },
@@ -198,6 +211,14 @@ Future<void> main(List<String> arguments) async {
     groupRepeatedAgentSessions: startupSettings.groupRepeatedAgentSessions,
   );
   activityController.load(resetPreviousSession: true);
+  trayBuddyController = TrayBuddyController(
+    activityController: activityController,
+    onStateChanged: (TrayBuddyState state) async {
+      shellController.setMascotState(state);
+      await shellGateway.setTrayBuddyState(state);
+    },
+    onReminderNudge: shellGateway.nudgeTrayIcon,
+  );
   unawaited(
     agentConversationLauncher.preflight(
       activityController.activities
@@ -255,6 +276,12 @@ Future<void> main(List<String> arguments) async {
         destination: SettingsWindowDestination.version,
       );
     },
+    onShowTestPanel: appDataPaths.development
+        ? () async {
+            await shellGateway.hide();
+            await testPanelLauncher.show();
+          }
+        : null,
     onHideDockIcon: () => settingsViewModel.setHideDockIcon(true),
     onQuickPastePermissionGrantPresentationStarted:
         settingsViewModel.beginQuickPastePermissionGrantPresentation,
@@ -265,6 +292,9 @@ Future<void> main(List<String> arguments) async {
     },
   );
   await desktopShellService.start();
+  trayBuddyController.start(
+    lastClipboardActivity: _latestClipboardCapture(dependencies.clipboardStore),
+  );
   Future<Object?> handleChildWindowCall(MethodCall call) async {
     switch (call.method) {
       case 'settings_launch_is_enabled':
@@ -343,6 +373,18 @@ Future<void> main(List<String> arguments) async {
         return (await applicationUpdater.readStatus()).toJson();
       case 'settings_update_install':
         await applicationUpdater.installLatest();
+        return null;
+      case developmentTestTraySleepingMethod:
+        if (!appDataPaths.development) {
+          throw UnsupportedError('DEV test panel is unavailable.');
+        }
+        await shellGateway.previewTrayBuddyState(TrayBuddyState.sleeping);
+        return null;
+      case developmentTestTrayNudgeMethod:
+        if (!appDataPaths.development) {
+          throw UnsupportedError('DEV test panel is unavailable.');
+        }
+        await shellGateway.nudgeTrayIcon();
         return null;
       case 'settings_system_data_clear':
         final Map<Object?, Object?> values = call.arguments! as Map;
@@ -434,6 +476,19 @@ bool _usesChineseLabels(AppLanguagePreference language) {
     AppLanguagePreference.system =>
       Platform.localeName.toLowerCase().startsWith('zh'),
   };
+}
+
+DateTime? _latestClipboardCapture(ClipboardStore store) {
+  DateTime? latest;
+  for (final ClipboardRecord record in store.list(
+    limit: 5000,
+    includeProtectedBeyondLimit: true,
+  )) {
+    if (latest == null || record.updatedAt.isAfter(latest)) {
+      latest = record.updatedAt;
+    }
+  }
+  return latest;
 }
 
 Future<void> _clearClipboardHistory(AppDependencies dependencies) async {
@@ -557,6 +612,54 @@ Future<void> _runSettingsWindow(
       onRestartApplication: hostBridge.restartApplication,
     ),
   );
+}
+
+Future<void> _runDevelopmentTestPanelWindow(
+  WindowController windowController,
+  Map<String, Object?> arguments,
+) async {
+  final AppDataPaths paths = AppDataPaths.current();
+  await windowManager.ensureInitialized();
+  if (!paths.development) {
+    await windowManager.destroy();
+    return;
+  }
+
+  final String parentWindowId = arguments['parentWindowId']! as String;
+  final WindowController parent = WindowController.fromWindowId(parentWindowId);
+  final AppSettings settings = await SettingsRepository(
+    SharedPreferencesBackend(),
+    defaultTrayNotificationColor: TrayNotificationColor.pink,
+  ).load();
+  final bool chinese = _usesChineseLabels(settings.language);
+  const Size size = Size(520, 390);
+  final WindowOptions options = WindowOptions(
+    size: size,
+    minimumSize: size,
+    maximumSize: size,
+    center: true,
+    skipTaskbar: desktopWindowSkipsTaskbar(
+      defaultTargetPlatform,
+      hideDockIcon: settings.hideDockIcon,
+      fallback: false,
+    ),
+    title: chinese ? 'DingDong DEV · 测试面板' : 'DingDong DEV · Test Panel',
+    titleBarStyle: TitleBarStyle.normal,
+  );
+  await windowManager.waitUntilReadyToShow(options);
+  runApp(
+    DevelopmentTestPanelApp(
+      settings: settings,
+      animationsSupported: Platform.isMacOS,
+      onSleeping: () =>
+          parent.invokeMethod<void>(developmentTestTraySleepingMethod),
+      onNudge: () => parent.invokeMethod<void>(developmentTestTrayNudgeMethod),
+      windowController: windowController,
+    ),
+  );
+  await WidgetsBinding.instance.endOfFrame;
+  await windowManager.show();
+  await windowManager.focus();
 }
 
 Future<void> _restartApplication({

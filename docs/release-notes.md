@@ -1,69 +1,72 @@
-# DingDong 1.2.0
+# DingDong 1.2.7
 
-DingDong 1.2.0 expands resource import and durability, adds clearer Agent
-loading labels, and improves desktop storage and macOS recovery workflows.
+DingDong 1.2.7 gives the desktop companion a clearer set of visual states and
+makes repeated Clipboard content easier to understand and organize.
 
-## Resource library
+## Stateful DingDong companion
 
-- Resources can define an optional Agent conversation loading name, limited to
-  seven Unicode characters.
-- The built-in reply-marker Prompt uses `🌟`; the built-in DingDong Configure
-  Skill remains loaded but is hidden from the Agent conversation summary.
-- JSON files and links can be imported with conflict review, source-link
-  resolution, and import history.
-- Online resources preserve their source links, while history keeps the latest
-  import records available for review.
+- The popup mascot and desktop status icon now use the new normal, reminder,
+  resting, and sleeping artwork.
+- An unseen Agent reminder uses the DingDong bell artwork immediately. After
+  five minutes, the status icon nudges horizontally once per minute until the
+  reminder is acknowledged.
+- Five minutes without Agent activity switches the mascot to resting. Extended
+  Clipboard inactivity switches it to sleeping and takes priority when both
+  idle conditions apply.
+- Every third click on the popup mascot briefly reveals the thinking pose.
+- The former idle turn animation and its superseded icon assets have been
+  removed. The DEV test panel can preview sleeping and reminder-nudge behavior.
 
-## Clipboard archive and storage
+## Clipboard organization
 
-- Custom Clipboard groups are promoted into independent permanent archive
-  entries instead of depending on expiring history rows.
-- Retention and cleanup protect archived entries and their managed images.
-- Storage usage now separates Clipboard images, text, files, and archives, with
-  per-category cleanup counts.
+- Copying identical content consolidates it into the newest row, updates its
+  timestamp, increments a visible count, and preserves every observed source.
+- Resource Manager can sort Clipboard records by copy count.
+- Archived Clipboard records can be pinned from their context menu, with the
+  pin shown at the upper-right edge of the row.
+- Archived records support persistent manual ordering in Resource Manager.
+- The title action now says Add title only for untitled records and Edit title
+  when a title already exists.
 
-## Desktop recovery
+## Agent and resource polish
 
-- macOS adds a menu-bar recovery assistant from Settings and the Dock menu.
-- Status-item Command-drag recovery and native menu-bar diagnostics are more
-  explicit and easier to verify.
-
-## Agent API
-
-- Resource JSON and Agent routes persist the new loading-name and hidden-summary
-  fields consistently.
-- Bridge summaries omit resources marked as hidden while still delivering their
-  Prompt, Skill, or MCP behavior.
+- Recent Agent summaries skip a leading DingDong or FULI marker and use the
+  following content line as their description.
+- Resource Manager uses the resting mascot when its issue check finds nothing.
+- Website, README, macOS, and Windows packages now use the refreshed DingDong
+  artwork consistently.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.2.0 扩展了资源导入与持久归档能力，新增更清晰的 Agent 加载名称，
-并改进桌面存储统计和 macOS 恢复流程。
+DingDong 1.2.7 为桌面伙伴增加了更清晰的状态表达，也让重复剪贴板内容更容易
+识别、排序和整理。
 
-## 资源库
+## 有状态的 DingDong 伙伴
 
-- 资源支持可选的 Agent 会话加载名称，最多 7 个 Unicode 字符。
-- 内置回复标记 Prompt 使用 `🌟`；内置 DingDong Configure Skill 继续加载，
-  但默认不显示在 Agent 会话摘要中。
-- 支持导入 JSON 文件和链接，并提供冲突复核、来源链接解析和导入历史。
-- 在线资源保留来源链接，最近的导入记录可在历史中查看。
+- 唤起面板小人和桌面状态图标统一使用新的正常、提醒、休息和睡眠图。
+- Agent 出现未读提醒后立即显示铃铛 DingDong；超过五分钟仍未点击时，每分钟
+  左右摇动一次，直到提醒被处理。
+- 五分钟没有 Agent 动态时切换为休息状态；剪贴板长时间未使用时切换为睡眠
+  状态，同时满足两种空闲条件时以睡眠状态优先。
+- 点击唤起面板小人时，每第三次会短暂切换为思考状态。
+- 已移除原来的空闲转身动画和旧图标资源；DEV 测试面板可直接预览睡眠状态与
+  提醒摇动。
 
-## 剪贴板归档与存储
+## 剪贴板整理
 
-- 自定义剪贴板分组会提升为独立的永久归档项，不再依赖会过期的历史记录。
-- 保留策略和清理操作会保护归档项及其托管图片。
-- 存储用量现在分别统计剪贴板图片、文本、文件和归档，并显示分类清理数量。
+- 重复复制相同内容时会归并到最新一条，更新时间、增加可见次数，并保留所有
+  出现过的来源。
+- 资源管理中的剪贴板支持按复制次数排序。
+- 已归档剪贴板内容可通过右键置顶，置顶标识显示在条目右上边缘。
+- 归档内容可在资源管理中持久化手动排序。
+- 没有标题时显示“添加标题”，已有标题时自动改为“修改标题”。
 
-## 桌面恢复
+## Agent 与资源细节
 
-- macOS 在设置和 Dock 菜单中提供菜单栏恢复助手。
-- 状态栏图标的 Command-拖动恢复和原生菜单栏诊断更加明确、易于验证。
-
-## Agent API
-
-- 资源 JSON 和 Agent 路由统一持久化新的加载名称与会话隐藏字段。
-- Bridge 摘要会省略标记为隐藏的资源，但仍会正常提供其 Prompt、Skill 或 MCP 能力。
+- 最近 Agent 描述遇到首行 DingDong 或 FULI 标记时，会使用后续正文行。
+- 资源管理检测未发现问题时改用休息状态小人。
+- 官网、README、macOS 与 Windows 安装包统一更新为新的 DingDong 图标。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

@@ -225,15 +225,22 @@ String? _oneLineSummary(Object? rawMessage) {
   if (rawMessage is! String || rawMessage.trim().isEmpty) {
     return null;
   }
-  final Iterable<String> candidates = rawMessage
+  final List<String> candidates = rawMessage
       .replaceAll('\r', '')
       .split('\n')
       .map(_cleanMarkdownLine)
-      .where((String line) => line.isNotEmpty && !_genericHeading(line));
-  final String? first = candidates.firstOrNull;
-  if (first == null) {
+      .where((String line) => line.isNotEmpty && !_genericHeading(line))
+      .toList(growable: false);
+  if (candidates.isEmpty) {
     return null;
   }
+  final int firstContentIndex = candidates.indexWhere(
+    (String line) => !_isAgentBridgeMarkerLine(line),
+  );
+  if (firstContentIndex < 0) {
+    return null;
+  }
+  final String first = candidates[firstContentIndex];
   final String sentence = _firstSentence(
     first,
   ).replaceFirst(RegExp(r'[:：]\s*$'), '');
@@ -272,6 +279,11 @@ bool _genericHeading(String line) {
     caseSensitive: false,
   ).hasMatch(line);
 }
+
+bool _isAgentBridgeMarkerLine(String line) => RegExp(
+  r'^(?:[◇◆◈]\s*)?(?:DingDong|FULI)(?:\s*(?:[·•|｜:：—-].*)?)$',
+  caseSensitive: false,
+).hasMatch(line);
 
 String _firstSentence(String line) {
   final Match? match = RegExp(r'^(.{8,}?[。！？!?])(?:\s|$)').firstMatch(line);

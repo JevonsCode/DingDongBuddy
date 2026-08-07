@@ -119,7 +119,10 @@ final class ClipboardCategoryRule {
     if (!_matchesPattern(contentPattern, record.content)) {
       return false;
     }
-    if (!_matchesPattern(sourcePattern, record.source ?? '')) {
+    if (sourcePattern.trim().isNotEmpty &&
+        !record.sources.any(
+          (String source) => _matchesPattern(sourcePattern, source),
+        )) {
       return false;
     }
     return true;

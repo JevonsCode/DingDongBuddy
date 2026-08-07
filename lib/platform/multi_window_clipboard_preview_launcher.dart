@@ -158,6 +158,8 @@ Map<String, Object?> clipboardRecordToWindowJson(ClipboardRecord record) =>
       'content': record.content,
       'tags': record.tags,
       'source': record.source,
+      'sources': record.sources,
+      'copyCount': record.copyCount,
       'pinned': record.pinned,
       'enabled': record.enabled,
       'activation': record.activation,
@@ -174,6 +176,10 @@ ClipboardRecord clipboardRecordFromWindowJson(Map<Object?, Object?> json) =>
       content: json['content']! as String,
       tags: (json['tags']! as List<Object?>).cast<String>(),
       source: json['source'] as String?,
+      sources: (json['sources'] as List<Object?>? ?? const <Object?>[])
+          .whereType<String>()
+          .toList(growable: false),
+      copyCount: json['copyCount'] as int? ?? 1,
       pinned: json['pinned']! as bool,
       enabled: json['enabled']! as bool,
       activation: json['activation']! as String,

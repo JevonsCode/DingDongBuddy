@@ -37,6 +37,8 @@ extension _ClipboardActions on _ClipboardScreenState {
         await _archiveTo(context, selected);
       case _ClipboardAction.copy:
         await viewModel.copySelected();
+      case _ClipboardAction.togglePinned:
+        viewModel.togglePinned();
       case _ClipboardAction.addTitle:
         await _editTitle(context, selected);
       case _ClipboardAction.editText:
@@ -95,7 +97,12 @@ extension _ClipboardActions on _ClipboardScreenState {
     final String? title = await showDialog<String>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(context.localized('Add title', '添加标题')),
+        title: Text(
+          context.localized(
+            record.title.trim().isEmpty ? 'Add title' : 'Edit title',
+            record.title.trim().isEmpty ? '添加标题' : '修改标题',
+          ),
+        ),
         content: DesktopTextField(controller: controller, autofocus: true),
         actions: <Widget>[
           DesktopActionButton(

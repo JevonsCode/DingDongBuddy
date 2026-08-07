@@ -4,6 +4,7 @@ enum DesktopShellCommand {
   openTray,
   showToday,
   showClipboard,
+  showTestPanel,
   toggleClipboard,
   quickPastePermissionGranted,
   toggleClipboardFilters,

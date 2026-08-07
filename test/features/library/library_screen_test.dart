@@ -1033,6 +1033,7 @@ final class _RecordingContextMenuGateway implements DesktopContextMenuGateway {
     required double x,
     required double y,
     required bool useChinese,
+    required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {
     showCount += 1;

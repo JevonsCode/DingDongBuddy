@@ -92,6 +92,7 @@ class MainFlutterWindow: NSWindow {
         result(self.showContextMenu(
           in: view,
           useChinese: arguments["useChinese"] as? Bool ?? false,
+          isDark: arguments["isDark"] as? Bool ?? false,
           entries: entries
         ))
       case "showMenuBarRecovery":
@@ -107,9 +108,13 @@ class MainFlutterWindow: NSWindow {
   private func showContextMenu(
     in view: NSView,
     useChinese: Bool,
+    isDark: Bool,
     entries: [[String: Any]]
   ) -> String? {
     let menu = NSMenu()
+    menu.appearance = NSAppearance(
+      named: isDark ? .darkAqua : .aqua
+    )
     menu.autoenablesItems = false
     let target = DesktopContextMenuTarget()
 

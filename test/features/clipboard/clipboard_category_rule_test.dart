@@ -47,6 +47,24 @@ void main() {
     expect(rule.matches(_record(content: 'anything')), isFalse);
   });
 
+  test('a source rule matches any source folded into the record', () {
+    const ClipboardCategoryRule rule = ClipboardCategoryRule(
+      id: 'browser',
+      name: 'Browser',
+      sourcePattern: r'Chrome',
+    );
+
+    expect(
+      rule.matches(
+        _record(
+          content: 'repeated content',
+          sources: const <String>['Terminal', 'Google Chrome'],
+        ),
+      ),
+      isTrue,
+    );
+  });
+
   test('default rules classify links images files and remaining text', () {
     final List<ClipboardCategoryRule> rules = ClipboardCategoryRule.defaults();
 
@@ -81,6 +99,7 @@ ClipboardRecord _record({
   required String content,
   List<String> tags = const <String>['clipboard', 'text'],
   String? source,
+  List<String> sources = const <String>[],
 }) {
   final DateTime now = DateTime.utc(2026, 7, 16);
   return ClipboardRecord(
@@ -90,6 +109,7 @@ ClipboardRecord _record({
     content: content,
     tags: tags,
     source: source,
+    sources: sources,
     pinned: false,
     enabled: true,
     activation: 'taskMatch',

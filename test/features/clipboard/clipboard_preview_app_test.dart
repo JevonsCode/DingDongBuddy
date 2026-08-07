@@ -27,7 +27,7 @@ void main() {
               pinned: false,
               enabled: true,
               activation: 'taskMatch',
-              source: 'Cursor',
+              sources: const <String>['Cursor', 'Google Chrome'],
               createdAt: now,
               updatedAt: now,
             ),
@@ -47,6 +47,7 @@ void main() {
     expect(find.text('Clipboard'), findsOneWidget);
     expect(find.text('Project'), findsOneWidget);
     expect(find.text('Cursor'), findsOneWidget);
+    expect(find.text('Google Chrome'), findsOneWidget);
     expect(find.text('分享'), findsOneWidget);
   });
 

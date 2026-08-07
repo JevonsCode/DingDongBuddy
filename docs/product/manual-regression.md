@@ -1,4 +1,4 @@
-# DingDong 1.2.0 Manual Regression Checklist
+# DingDong 1.2.7 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -17,6 +17,15 @@ and macOS golden images; the items below exercise real operating-system state.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
 - After Command-dragging the macOS status item, its position is restored across
   application restarts.
+- The normal macOS status item uses `AgentToolIcon-w`; an unseen Agent reminder
+  uses `ding-w`, switches to `rest-w` after five minutes without Agent activity,
+  and switches to `sleeping-w` after extended Clipboard inactivity.
+- If Agent and Clipboard inactivity overlap, sleeping wins. Clipboard capture
+  restores the appropriate active state without playing a turn animation.
+- Leave an Agent reminder unopened for five minutes: the status item nudges
+  horizontally once per minute until the reminder is acknowledged.
+- Click the popup mascot three times within five seconds: it uses `thinking`
+  for two seconds, then returns to the state that is currently active.
 - Right-click tray actions open Clipboard, toggle monitoring, clear history, open Settings, and quit the complete process.
 - Launch at startup reads and updates the current-user OS setting.
 - Change clipboard retention to 5,000 items and 190 days without pressing
@@ -42,6 +51,10 @@ and macOS golden images; the items below exercise real operating-system state.
 - Choosing a shortcut already owned by another application keeps the previous
   working shortcut and shows an actionable error.
 - Every Clipboard reveal performs a fallback system read and places the latest non-duplicate item first.
+- Copy the same content from multiple applications: DingDong keeps one newest
+  row, updates its timestamp on every copy, increments its pale-blue count, and
+  retains each observed source without auto-archiving the item.
+- Resource Manager can sort Clipboard rows by copy count.
 - `Command-F` focuses Clipboard search on macOS; `Control-F` does the same on Windows.
 - Text, URLs, commands, and file selections appear in history. Copied image
   files retain only their source path; screenshots or copied image pixels
@@ -77,6 +90,11 @@ and macOS golden images; the items below exercise real operating-system state.
 - Promoting a custom Clipboard group creates a permanent archive entry that
   survives item and age retention; archive images remain available after
   ordinary history cleanup.
+- Archived Clipboard rows can be pinned from either Clipboard view. The angled
+  pin peeks from the upper-right edge, pinned rows lead the archive, and manual
+  drag ordering in Resource Manager persists after reopening.
+- An untitled row offers Add title; after saving a title the same action reads
+  Edit title and updates the existing title.
 - `Command-1…9` on macOS restores the matching visible row with its original
   rich-text representation when available; `Control-1…9` restores the matching
   row on Windows.
@@ -145,7 +163,8 @@ and macOS golden images; the items below exercise real operating-system state.
   synchronization; user-owned native Skills are preserved and appear as
   warnings in Resource Manager's first-level Issues page.
 - The Issues page stays available when empty, has one manual detection action,
-  and can open the affected resource when one is recorded.
+  uses the `rest.png` mascot when no issue is found, and can open the affected
+  resource when one is recorded.
 - An enabled Claude Code plugin with the same Skill name produces a warning
   rather than blocking synchronization.
 - Agent access shows the five bundled Adapters and defaults to an evidence
@@ -206,6 +225,8 @@ and macOS golden images; the items below exercise real operating-system state.
   the count. The choice persists after restart.
 - Long Agent source and message text uses ellipsis without overflowing the
   Dynamic panel or Recent Agents manager.
+- When a recent Agent message starts with a DingDong or FULI marker line, its
+  description uses the next meaningful content line.
 - When more than six items exist, the `More` button opens Resource Manager directly at Recent Agents.
 - A resumable Recent Agent item opens its exact conversation from both Dynamic and Resource Manager.
 - Codex thread links, Claude Code, Gemini, and Kiro resume commands reopen the expected session.
@@ -292,8 +313,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.2.0` build `39` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.2.0.39` and product name `DingDong`.
+- The macOS release app metadata is version `1.2.7` build `40` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.2.7.40` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

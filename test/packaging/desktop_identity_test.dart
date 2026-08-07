@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.2.0 from pubspec', () {
+  test('desktop hosts consume application version 1.2.7 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,29 +77,29 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.2.0+39'));
+    expect(pubspec, contains('version: 1.2.7+40'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.2.0';"),
+      contains("const String currentAppVersion = '1.2.7';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '39';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '40';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.2.0'"),
+      contains("'version': '1.2.7'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.2.0'"),
+      contains("'version': '1.2.7'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.2.0"'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.2.7"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
-    final File canonicalLogo = File('Assets/AgentToolIcon.png');
+    final File canonicalLogo = File('Assets/DingDongIP/AgentToolIcon.png');
     final File macAppIcon = File(
       'macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png',
     );
@@ -185,6 +185,9 @@ void main() {
         .toString();
 
     expect(File('Assets/AgentToolMenuBarDarkIcon.png').existsSync(), isFalse);
+    expect(File('Assets/AgentToolIcon.png').existsSync(), isFalse);
+    expect(File('Assets/AgentToolMenuBarIcon.png').existsSync(), isFalse);
+    expect(File('Assets/AgentToolMenuBarHotIcon.png').existsSync(), isFalse);
     expect(File('Assets/Symbols/close.png').existsSync(), isFalse);
     expect(File('docs/assets/sounds/ding-classic.wav').existsSync(), isFalse);
     expect(website, isNot(contains('ding-classic.wav')));
@@ -395,7 +398,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.2.0</span>'));
+    expect(website, contains('<span class="demo-version">v1.2.7</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -467,14 +470,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.2.0"'));
-    expect(releaseMetadata, contains('"latestBuild": "39"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.2.7"'));
+    expect(releaseMetadata, contains('"latestBuild": "40"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.2.0-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.2.7-windows-x64-beta-Setup.exe'),
     );
   });
 
@@ -617,7 +620,7 @@ void main() {
       'scripts/dmg_settings.py',
     ).readAsStringSync();
     expect(workflow, contains('dmgbuild==1.6.7'));
-    expect(dmgBuilder, contains('Assets/AgentToolIcon.png'));
+    expect(dmgBuilder, contains('Assets/DingDongIP/AgentToolIcon.png'));
     expect(dmgBuilder, contains('安装与权限说明.txt'));
     expect(dmgBuilder, contains('dmg-background.svg'));
     expect(dmgSettings, contains('"Applications": "/Applications"'));

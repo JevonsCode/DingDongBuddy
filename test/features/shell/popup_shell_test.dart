@@ -18,6 +18,7 @@ import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -208,6 +209,59 @@ void main() {
       tester.widget<Transform>(transform).transform.storage,
       equals(Matrix4.identity().storage),
     );
+  });
+
+  testWidgets('popup mascot follows buddy state artwork', (
+    WidgetTester tester,
+  ) async {
+    final ShellController controller = ShellController();
+    await tester.pumpWidget(DingDongApp(shellController: controller));
+    await tester.pumpAndSettle();
+
+    final Map<TrayBuddyState, String> expected = <TrayBuddyState, String>{
+      TrayBuddyState.normal: 'Assets/DingDongIP/AgentToolIcon.png',
+      TrayBuddyState.reminder: 'Assets/DingDongIP/ding.png',
+      TrayBuddyState.resting: 'Assets/DingDongIP/rest.png',
+      TrayBuddyState.sleeping: 'Assets/DingDongIP/sleeping.png',
+    };
+    for (final MapEntry<TrayBuddyState, String> entry in expected.entries) {
+      controller.setMascotState(entry.key);
+      await tester.pump();
+      final Image image = tester.widget<Image>(
+        find.byKey(const Key('popup-mascot-image')),
+      );
+      expect((image.image as AssetImage).assetName, entry.value);
+    }
+  });
+
+  testWidgets('third mascot click shows thinking for two seconds', (
+    WidgetTester tester,
+  ) async {
+    final ShellController controller = ShellController();
+    await tester.pumpWidget(DingDongApp(shellController: controller));
+    await tester.pumpAndSettle();
+
+    final Finder mascot = find.byKey(const Key('popup-mascot'));
+    for (var index = 0; index < 3; index += 1) {
+      await tester.tap(mascot);
+      await tester.pump();
+    }
+
+    Image image = tester.widget<Image>(
+      find.byKey(const Key('popup-mascot-image')),
+    );
+    expect(
+      (image.image as AssetImage).assetName,
+      'Assets/DingDongIP/thinking.png',
+    );
+
+    await tester.pump(const Duration(seconds: 2));
+    image = tester.widget<Image>(find.byKey(const Key('popup-mascot-image')));
+    expect(
+      (image.image as AssetImage).assetName,
+      'Assets/DingDongIP/AgentToolIcon.png',
+    );
+    await tester.pumpAndSettle();
   });
 
   testWidgets('brand plays the configured sound without hover decoration', (
@@ -790,7 +844,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.2.1'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.2.8'),
       );
       addTearDown(settings.dispose);
       await settings.load();
@@ -1672,6 +1726,7 @@ final class _QueuedContextMenuGateway implements DesktopContextMenuGateway {
     required double x,
     required double y,
     required bool useChinese,
+    required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {
     final int index = showCount++;

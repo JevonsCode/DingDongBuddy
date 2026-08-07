@@ -121,6 +121,7 @@ class _ClipboardListState extends State<_ClipboardList> {
   Widget build(BuildContext context) {
     final List<ClipboardRecord> records = widget.viewModel.visibleRecords;
     final bool callout = MediaQuery.sizeOf(context).width < 600;
+    final bool showArchiveControls = widget.viewModel.showingArchivedRecords;
     final double itemExtent = _itemExtent(context);
     return Stack(
       children: <Widget>[
@@ -135,6 +136,7 @@ class _ClipboardListState extends State<_ClipboardList> {
             final int shortcutIndex = index - _shortcutStartIndex + 1;
             return ClipboardListTile(
               record: record,
+              showPinnedIndicator: showArchiveControls,
               selected: widget.viewModel.selectedRecord?.id == record.id,
               onSelected: () {
                 widget.viewModel.select(record);
@@ -161,6 +163,7 @@ class _ClipboardListState extends State<_ClipboardList> {
                           details.globalPosition,
                           record,
                           widget.includeShare,
+                          showArchiveControls,
                           widget.onAction,
                         )
                       : _showNativeClipboardContextMenu(
@@ -169,6 +172,7 @@ class _ClipboardListState extends State<_ClipboardList> {
                           widget.contextMenuGateway!,
                           record,
                           widget.includeShare,
+                          showArchiveControls,
                           widget.onAction,
                         ),
                 );
@@ -219,6 +223,7 @@ Future<void> _showNativeClipboardContextMenu(
   DesktopContextMenuGateway gateway,
   ClipboardRecord record,
   bool includeShare,
+  bool includePin,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
   final ClipboardContextAction? action = clipboardActionFromId(
@@ -226,19 +231,20 @@ Future<void> _showNativeClipboardContextMenu(
       x: position.dx,
       y: position.dy,
       useChinese: Localizations.localeOf(context).languageCode == 'zh',
+      isDark: Theme.of(context).brightness == Brightness.dark,
       items: clipboardContextMenuItems(
         includePaste: true,
         canPasteAsPlainText: record.canPasteAsPlainText,
         includeShare: includeShare,
+        includePin: includePin,
+        pinned: record.pinned,
+        hasTitle: record.title.trim().isNotEmpty,
       ),
     ),
   );
-  if (action != null) {
-    final _ClipboardAction? mapped = _actionFromNative(action);
-    if (mapped != null) {
-      onAction(mapped);
-    }
-  }
+  if (action == null) return;
+  final _ClipboardAction? mapped = _actionFromNative(action);
+  if (mapped != null) onAction(mapped);
 }
 
 _ClipboardAction? _actionFromNative(ClipboardContextAction action) =>
@@ -247,12 +253,12 @@ _ClipboardAction? _actionFromNative(ClipboardContextAction action) =>
       ClipboardContextAction.pastePlainText => _ClipboardAction.pastePlainText,
       ClipboardContextAction.details => _ClipboardAction.details,
       ClipboardContextAction.copy => _ClipboardAction.copy,
+      ClipboardContextAction.togglePinned => _ClipboardAction.togglePinned,
       ClipboardContextAction.addTitle => _ClipboardAction.addTitle,
       ClipboardContextAction.editText => _ClipboardAction.editText,
       ClipboardContextAction.saveAsPrompt => _ClipboardAction.promotePrompt,
       ClipboardContextAction.archiveTo => _ClipboardAction.archiveTo,
       ClipboardContextAction.share => _ClipboardAction.share,
-      ClipboardContextAction.toggleEnabled => null,
       ClipboardContextAction.delete => _ClipboardAction.delete,
     };
 
@@ -261,6 +267,7 @@ Future<void> _showClipboardContextMenu(
   Offset position,
   ClipboardRecord record,
   bool includeShare,
+  bool includePin,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
   final _ClipboardAction? action =
@@ -290,11 +297,23 @@ Future<void> _showClipboardContextMenu(
             symbol: 'copy',
             label: context.localized('Copy', '复制'),
           ),
+          if (includePin)
+            DesktopMenuItem<_ClipboardAction>(
+              value: _ClipboardAction.togglePinned,
+              symbol: 'archive',
+              label: context.localized(
+                record.pinned ? 'Unpin' : 'Pin',
+                record.pinned ? '取消置顶' : '置顶',
+              ),
+            ),
           const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.addTitle,
             symbol: 'add_title',
-            label: context.localized('Add title', '添加标题'),
+            label: context.localized(
+              record.title.trim().isEmpty ? 'Add title' : 'Edit title',
+              record.title.trim().isEmpty ? '添加标题' : '修改标题',
+            ),
           ),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.editText,
@@ -337,6 +356,7 @@ enum _ClipboardAction {
   pastePlainText,
   details,
   copy,
+  togglePinned,
   addTitle,
   editText,
   edit,

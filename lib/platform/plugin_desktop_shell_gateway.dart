@@ -8,6 +8,7 @@ import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
+import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 import 'package:flutter/foundation.dart';
@@ -57,12 +58,15 @@ final class PluginDesktopShellGateway
     store: unreadStore,
   );
   Timer? _unreadAcknowledgementTimer;
+  Timer? _trayBuddyPreviewTimer;
   bool _started = false;
   bool _methodHandlersInstalled = false;
   bool _taskbarIsLight = false;
   bool _hideDockIcon = false;
   double _windowOpacity = 0.90;
   TrayNotificationColor _trayNotificationColor;
+  TrayBuddyState _trayBuddyState = TrayBuddyState.normal;
+  TrayBuddyState? _trayBuddyPreviewState;
   GlobalHotKey _globalHotKey = GlobalHotKey.defaultValue;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
 
@@ -215,68 +219,52 @@ final class PluginDesktopShellGateway
     await trayManager.shakeIcon();
   }
 
+  Future<void> nudgeTrayIcon() async {
+    if (!Platform.isMacOS) {
+      return;
+    }
+    await trayManager.nudgeIcon();
+  }
+
+  Future<void> setTrayBuddyState(TrayBuddyState value) async {
+    if (_trayBuddyState == value) {
+      return;
+    }
+    _trayBuddyState = value;
+    if (_started && Platform.isMacOS && _trayBuddyPreviewState == null) {
+      await _unreadController.refresh();
+    }
+  }
+
+  Future<void> previewTrayBuddyState(
+    TrayBuddyState value, {
+    Duration duration = const Duration(seconds: 2),
+  }) async {
+    if (!Platform.isMacOS) {
+      return;
+    }
+    _trayBuddyPreviewTimer?.cancel();
+    _trayBuddyPreviewState = value;
+    await _unreadController.refresh();
+    _trayBuddyPreviewTimer = Timer(duration, () {
+      _trayBuddyPreviewState = null;
+      if (_started) {
+        unawaited(_unreadController.refresh());
+      }
+    });
+  }
+
   Future<void> _rebuildContextMenu() async {
     final bool monitoring = _clipboardMonitoringState();
     final bool chinese = _useChineseLabels();
     await trayManager.setContextMenu(
       Menu(
-        items: <MenuItem>[
-          MenuItem(
-            label: chinese ? '打开剪贴板' : 'Open Clipboard',
-            onClick: (_) => _commands.add(DesktopShellCommand.showClipboard),
-          ),
-          MenuItem.separator(),
-          MenuItem.checkbox(
-            label: chinese
-                ? monitoring
-                      ? '正在监听剪贴板'
-                      : '剪贴板监听已暂停'
-                : monitoring
-                ? 'Clipboard Monitoring On'
-                : 'Clipboard Monitoring Paused',
-            checked: monitoring,
-            disabled: true,
-          ),
-          MenuItem(
-            label: chinese
-                ? monitoring
-                      ? '停止监听'
-                      : '开始监听'
-                : monitoring
-                ? 'Stop Monitoring'
-                : 'Start Monitoring',
-            onClick: (_) => _commands.add(
-              monitoring
-                  ? DesktopShellCommand.stopClipboardMonitoring
-                  : DesktopShellCommand.startClipboardMonitoring,
-            ),
-          ),
-          MenuItem.separator(),
-          MenuItem(
-            label: chinese ? '资源管理' : 'Resource Manager',
-            onClick: (_) =>
-                _commands.add(DesktopShellCommand.showResourceManager),
-          ),
-          MenuItem(
-            label: chinese ? '设置' : 'Settings',
-            onClick: (_) => _commands.add(DesktopShellCommand.showSettings),
-          ),
-          MenuItem(
-            label: chinese ? '关于' : 'About',
-            onClick: (_) => _commands.add(DesktopShellCommand.showAbout),
-          ),
-          MenuItem.separator(),
-          MenuItem(
-            label: chinese
-                ? _developmentBuild
-                      ? '退出 DingDong DEV'
-                      : '退出 DingDong'
-                : _developmentBuild
-                ? 'Quit DingDong DEV'
-                : 'Quit DingDong',
-            onClick: (_) => _commands.add(DesktopShellCommand.quit),
-          ),
-        ],
+        items: desktopTrayContextMenuItems(
+          monitoring: monitoring,
+          chinese: chinese,
+          developmentBuild: _developmentBuild,
+          onCommand: _commands.add,
+        ),
       ),
     );
   }
@@ -288,13 +276,13 @@ final class PluginDesktopShellGateway
     required int unreadCount,
   }) async {
     final bool windows = Platform.isWindows;
+    final TrayBuddyState mascotState =
+        _trayBuddyPreviewState ?? _trayBuddyState;
     await trayManager.setIcon(
       windows
           ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: false)
-          : hot
-          ? 'Assets/AgentToolMenuBarHotIcon.png'
-          : 'Assets/AgentToolMenuBarIcon.png',
-      isTemplate: Platform.isMacOS && !hot,
+          : macOSTrayBuddyIconPath(hot: hot, state: mascotState),
+      isTemplate: false,
       iconSize: iconSize,
       attentionIconPath: windows
           ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: true)
@@ -320,6 +308,8 @@ final class PluginDesktopShellGateway
 
   Future<void> hide() async {
     _unreadAcknowledgementTimer?.cancel();
+    _trayBuddyPreviewTimer?.cancel();
+    _trayBuddyPreviewState = null;
     await onHideAuxiliaryWindows?.call();
     await windowManager.hide();
   }
@@ -385,6 +375,8 @@ final class PluginDesktopShellGateway
       return;
     }
     _unreadAcknowledgementTimer?.cancel();
+    _trayBuddyPreviewTimer?.cancel();
+    _trayBuddyPreviewState = null;
     await _hotKeyChannel.invokeMethod<void>('unregister');
     _hotKeyChannel.setMethodCallHandler(null);
     _modifierChannel.setMethodCallHandler(null);
@@ -473,3 +465,87 @@ final class PluginDesktopShellGateway
 @visibleForTesting
 TrayTitleStyle macOSTrayTitleStyle({required bool hot}) =>
     hot ? TrayTitleStyle.unreadBadge : TrayTitleStyle.plain;
+
+@visibleForTesting
+String macOSTrayBuddyIconPath({
+  required bool hot,
+  required TrayBuddyState state,
+}) {
+  if (hot || state == TrayBuddyState.reminder) {
+    return 'Assets/DingDongIP/ding-w.png';
+  }
+  return switch (state) {
+    TrayBuddyState.normal => 'Assets/DingDongIP/AgentToolIcon-w.png',
+    TrayBuddyState.resting => 'Assets/DingDongIP/rest-w.png',
+    TrayBuddyState.sleeping => 'Assets/DingDongIP/sleeping-w.png',
+    TrayBuddyState.reminder => 'Assets/DingDongIP/ding-w.png',
+  };
+}
+
+@visibleForTesting
+List<MenuItem> desktopTrayContextMenuItems({
+  required bool monitoring,
+  required bool chinese,
+  required bool developmentBuild,
+  required void Function(DesktopShellCommand command) onCommand,
+}) => <MenuItem>[
+  MenuItem(
+    label: chinese ? '打开剪贴板' : 'Open Clipboard',
+    onClick: (_) => onCommand(DesktopShellCommand.showClipboard),
+  ),
+  if (developmentBuild)
+    MenuItem(
+      label: chinese ? '测试面板' : 'Test Panel',
+      onClick: (_) => onCommand(DesktopShellCommand.showTestPanel),
+    ),
+  MenuItem.separator(),
+  MenuItem.checkbox(
+    label: chinese
+        ? monitoring
+              ? '正在监听剪贴板'
+              : '剪贴板监听已暂停'
+        : monitoring
+        ? 'Clipboard Monitoring On'
+        : 'Clipboard Monitoring Paused',
+    checked: monitoring,
+    disabled: true,
+  ),
+  MenuItem(
+    label: chinese
+        ? monitoring
+              ? '停止监听'
+              : '开始监听'
+        : monitoring
+        ? 'Stop Monitoring'
+        : 'Start Monitoring',
+    onClick: (_) => onCommand(
+      monitoring
+          ? DesktopShellCommand.stopClipboardMonitoring
+          : DesktopShellCommand.startClipboardMonitoring,
+    ),
+  ),
+  MenuItem.separator(),
+  MenuItem(
+    label: chinese ? '资源管理' : 'Resource Manager',
+    onClick: (_) => onCommand(DesktopShellCommand.showResourceManager),
+  ),
+  MenuItem(
+    label: chinese ? '设置' : 'Settings',
+    onClick: (_) => onCommand(DesktopShellCommand.showSettings),
+  ),
+  MenuItem(
+    label: chinese ? '关于' : 'About',
+    onClick: (_) => onCommand(DesktopShellCommand.showAbout),
+  ),
+  MenuItem.separator(),
+  MenuItem(
+    label: chinese
+        ? developmentBuild
+              ? '退出 DingDong DEV'
+              : '退出 DingDong'
+        : developmentBuild
+        ? 'Quit DingDong DEV'
+        : 'Quit DingDong',
+    onClick: (_) => onCommand(DesktopShellCommand.quit),
+  ),
+];

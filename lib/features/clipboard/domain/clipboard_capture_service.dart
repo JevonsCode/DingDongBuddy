@@ -72,7 +72,7 @@ final class ClipboardCaptureService {
         _ClipboardPayload.file,
       );
       if (duplicate != null) {
-        return _promoteDuplicate(duplicate);
+        return _promoteDuplicate(duplicate, source: snapshot.source);
       }
       return _storeFileRecord(filePaths, snapshot.source);
     }
@@ -99,6 +99,7 @@ final class ClipboardCaptureService {
     if (duplicate != null) {
       return _promoteDuplicate(
         duplicate,
+        source: snapshot.source,
         htmlData: snapshot.htmlData,
         rtfData: snapshot.rtfData,
         replaceFormattedText: true,
@@ -166,7 +167,7 @@ final class ClipboardCaptureService {
   ) async {
     final ClipboardRecord? duplicate = await _findDuplicateImage(bytes);
     if (duplicate != null) {
-      return _promoteDuplicate(duplicate);
+      return _promoteDuplicate(duplicate, source: source);
     }
     final Directory? directory = _imageStoreDirectory;
     if (directory == null) {
@@ -262,6 +263,7 @@ final class ClipboardCaptureService {
 
   ClipboardRecord _promoteDuplicate(
     ClipboardRecord record, {
+    required String source,
     Uint8List? htmlData,
     Uint8List? rtfData,
     bool replaceFormattedText = false,
@@ -270,6 +272,8 @@ final class ClipboardCaptureService {
       htmlData: htmlData,
       rtfData: rtfData,
       replaceFormattedText: replaceFormattedText,
+      source: source,
+      copyCount: record.copyCount + 1,
       updatedAt: _now().toUtc(),
     );
     _store.save(updated);

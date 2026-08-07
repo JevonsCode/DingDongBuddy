@@ -65,7 +65,19 @@ public class TrayIcon: NSView {
         animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
         button.layer?.add(animation, forKey: "dingdong-copy-shake")
     }
-    
+
+    public func nudge() {
+        guard let button = statusItem?.button else { return }
+
+        button.wantsLayer = true
+        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
+        animation.values = [0.0, -4.0, 4.0, -3.0, 3.0, -1.5, 0.0]
+        animation.keyTimes = [0.0, 0.16, 0.32, 0.50, 0.68, 0.84, 1.0]
+        animation.duration = 0.56
+        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        button.layer?.add(animation, forKey: "dingdong-reminder-nudge")
+    }
+
     public func setTitle(
         _ title: String,
         _ style: String,

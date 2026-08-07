@@ -1,3 +1,4 @@
+import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:flutter/foundation.dart';
 
 /// Navigation state shared by UI, tray commands, and global shortcuts.
@@ -11,6 +12,7 @@ final class ShellController extends ChangeNotifier {
   int _clipboardSearchFocusRevision = 0;
   int _libraryRefreshRevision = 0;
   int _mascotShakeRevision = 0;
+  TrayBuddyState _mascotState = TrayBuddyState.normal;
 
   int get selectedIndex => _selectedIndex;
   int get clipboardFilterToggleRevision => _clipboardFilterToggleRevision;
@@ -18,6 +20,7 @@ final class ShellController extends ChangeNotifier {
   int get clipboardSearchFocusRevision => _clipboardSearchFocusRevision;
   int get libraryRefreshRevision => _libraryRefreshRevision;
   int get mascotShakeRevision => _mascotShakeRevision;
+  TrayBuddyState get mascotState => _mascotState;
 
   void open(int index) {
     final int next = index.clamp(0, 3);
@@ -50,6 +53,14 @@ final class ShellController extends ChangeNotifier {
 
   void requestMascotShake() {
     _mascotShakeRevision += 1;
+    notifyListeners();
+  }
+
+  void setMascotState(TrayBuddyState value) {
+    if (_mascotState == value) {
+      return;
+    }
+    _mascotState = value;
     notifyListeners();
   }
 }

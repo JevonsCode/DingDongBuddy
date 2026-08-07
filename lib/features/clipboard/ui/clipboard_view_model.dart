@@ -21,6 +21,9 @@ import 'package:flutter/foundation.dart';
 
 enum ClipboardPasteMode { original, plainText }
 
+/// Ordering available in the dedicated clipboard resource manager.
+enum ClipboardSortMode { defaultOrder, copyCount }
+
 /// Observable filters and selection for clipboard history.
 final class ClipboardViewModel extends ChangeNotifier {
   ClipboardViewModel(
@@ -75,6 +78,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   String? _selectedCategoryId;
   String? _selectedGroup;
   final Set<String> _selectedSourceIds = <String>{};
+  ClipboardSortMode _sortMode = ClipboardSortMode.defaultOrder;
   ClipboardRecord? _selectedRecord;
 
   ClipboardRecord? get selectedRecord => _selectedRecord;
@@ -89,6 +93,19 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   String? get selectedCategoryId => _selectedCategoryId;
 
+  ClipboardSortMode get sortMode => _sortMode;
+
+  /// Most recent real clipboard capture, excluding archive edits.
+  DateTime? get lastClipboardUsedAt {
+    DateTime? latest;
+    for (final ClipboardRecord record in _records) {
+      if (latest == null || record.updatedAt.isAfter(latest)) {
+        latest = record.updatedAt;
+      }
+    }
+    return latest;
+  }
+
   bool get hasActiveFilters =>
       _selectedKind != null ||
       _selectedCategoryId != null ||
@@ -102,11 +119,11 @@ final class ClipboardViewModel extends ChangeNotifier {
     final Map<String, ClipboardSourceOption> options =
         <String, ClipboardSourceOption>{};
     for (final ClipboardRecord record in _activeRecords) {
-      final ClipboardSourceOption? option = clipboardSourceOption(
-        record.source,
-      );
-      if (option != null) {
-        options.putIfAbsent(option.id, () => option);
+      for (final String source in record.sources) {
+        final ClipboardSourceOption? option = clipboardSourceOption(source);
+        if (option != null) {
+          options.putIfAbsent(option.id, () => option);
+        }
       }
     }
     return List<ClipboardSourceOption>.unmodifiable(options.values);
@@ -132,6 +149,10 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   String? get selectedGroup => _selectedGroup;
+
+  /// Archive groups switch the active workspace from live clipboard history
+  /// to durable archive snapshots.
+  bool get showingArchivedRecords => _selectedGroup != null;
 
   List<String> get groups {
     // Keep groups from the durable order file even when they currently have
@@ -176,55 +197,85 @@ final class ClipboardViewModel extends ChangeNotifier {
     });
   }
 
-  List<ClipboardRecord> get allRecords =>
-      List<ClipboardRecord>.unmodifiable(<ClipboardRecord>[
-        ..._records,
-        ..._archives.map((ClipboardArchiveEntry entry) => entry.record),
-      ]);
+  List<ClipboardRecord> get allRecords {
+    final List<ClipboardRecord> records = <ClipboardRecord>[
+      ..._records,
+      ..._archives.map((ClipboardArchiveEntry entry) => entry.record),
+    ]..sort(compareClipboardRecords);
+    return List<ClipboardRecord>.unmodifiable(records);
+  }
 
-  List<ClipboardRecord> get archiveRecords =>
-      List<ClipboardRecord>.unmodifiable(
-        _archives.map((ClipboardArchiveEntry entry) => entry.record),
-      );
+  List<ClipboardRecord> get archiveRecords {
+    final List<ClipboardRecord> records =
+        _archives.map((ClipboardArchiveEntry entry) => entry.record).toList()
+          ..sort(compareClipboardRecords);
+    return List<ClipboardRecord>.unmodifiable(records);
+  }
 
-  List<ClipboardRecord> get _activeRecords => _selectedGroup == null
-      ? _records
-      : _archives.map((ClipboardArchiveEntry entry) => entry.record).toList();
+  List<ClipboardRecord> get _activeRecords {
+    final List<ClipboardRecord> records = _selectedGroup == null
+        ? List<ClipboardRecord>.of(_records)
+        : _archives.map((ClipboardArchiveEntry entry) => entry.record).toList();
+    records.sort(compareClipboardRecords);
+    return records;
+  }
+
+  /// Manual drag sorting is only unambiguous when the complete active list is
+  /// visible. Only a selected archive group is reorderable; live clipboard
+  /// history keeps its capture order and never exposes drag handles.
+  bool get canReorderVisibleRecords =>
+      showingArchivedRecords &&
+      _query.trim().isEmpty &&
+      _selectedKind == null &&
+      _selectedCategoryId == null &&
+      _selectedSourceIds.isEmpty &&
+      _sortMode == ClipboardSortMode.defaultOrder;
 
   List<ClipboardRecord> get visibleRecords {
     final String needle = _query.trim().toLowerCase();
-    return List<ClipboardRecord>.unmodifiable(
-      _activeRecords.where((ClipboardRecord record) {
-        if (_selectedKind != null && record.kind != _selectedKind) {
-          return false;
-        }
-        if (_selectedCategoryId != null &&
-            categoryFor(record)?.id != _selectedCategoryId) {
-          return false;
-        }
-        if (_selectedGroup != null &&
-            !record.groupNames.any(
-              (String group) => _groupKey(group) == _groupKey(_selectedGroup!),
-            )) {
-          return false;
-        }
-        final ClipboardSourceOption? source = clipboardSourceOption(
-          record.source,
-        );
-        if (_selectedSourceIds.isNotEmpty &&
-            (source == null || !_selectedSourceIds.contains(source.id))) {
-          return false;
-        }
-        return needle.isEmpty ||
-            record.title.toLowerCase().contains(needle) ||
-            record.content.toLowerCase().contains(needle) ||
-            (record.source?.toLowerCase().contains(needle) ?? false) ||
-            record.groupNames.any(
-              (String group) => group.toLowerCase().contains(needle),
-            ) ||
-            record.tags.any((String tag) => tag.toLowerCase().contains(needle));
-      }),
-    );
+    final List<ClipboardRecord> records = _activeRecords
+        .where((ClipboardRecord record) {
+          if (_selectedKind != null && record.kind != _selectedKind) {
+            return false;
+          }
+          if (_selectedCategoryId != null &&
+              categoryFor(record)?.id != _selectedCategoryId) {
+            return false;
+          }
+          if (_selectedGroup != null &&
+              !record.groupNames.any(
+                (String group) =>
+                    _groupKey(group) == _groupKey(_selectedGroup!),
+              )) {
+            return false;
+          }
+          final Set<String> sourceIds = record.sources
+              .map(clipboardSourceOption)
+              .whereType<ClipboardSourceOption>()
+              .map((ClipboardSourceOption source) => source.id)
+              .toSet();
+          if (_selectedSourceIds.isNotEmpty &&
+              sourceIds.intersection(_selectedSourceIds).isEmpty) {
+            return false;
+          }
+          return needle.isEmpty ||
+              record.title.toLowerCase().contains(needle) ||
+              record.content.toLowerCase().contains(needle) ||
+              record.sources.any(
+                (String source) => source.toLowerCase().contains(needle),
+              ) ||
+              record.groupNames.any(
+                (String group) => group.toLowerCase().contains(needle),
+              ) ||
+              record.tags.any(
+                (String tag) => tag.toLowerCase().contains(needle),
+              );
+        })
+        .toList(growable: false);
+    if (_sortMode == ClipboardSortMode.copyCount) {
+      records.sort(_compareClipboardCopyCounts);
+    }
+    return List<ClipboardRecord>.unmodifiable(records);
   }
 
   void load() {
@@ -266,6 +317,15 @@ final class ClipboardViewModel extends ChangeNotifier {
   void setCategory(String? value) {
     _selectedCategoryId = value;
     _selectedKind = null;
+    _ensureSelectionVisible();
+    notifyListeners();
+  }
+
+  void setSortMode(ClipboardSortMode value) {
+    if (_sortMode == value) {
+      return;
+    }
+    _sortMode = value;
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -332,6 +392,50 @@ final class ClipboardViewModel extends ChangeNotifier {
       ..clear()
       ..addAll(visible);
     _groupOrderStore.save(_groupOrder);
+    notifyListeners();
+  }
+
+  /// Persists a drag reorder from the currently visible clipboard workspace.
+  ///
+  /// Filters are intentionally excluded from this operation so a drag always
+  /// represents a real position in the active list. When an archive group is
+  /// selected, records from other groups keep their existing slots while the
+  /// selected group's visible records are reordered.
+  void reorderVisibleRecords(
+    int oldIndex,
+    int newIndex, {
+    bool newIndexAlreadyAdjusted = false,
+  }) {
+    if (!canReorderVisibleRecords) return;
+    final List<ClipboardRecord> visible = visibleRecords.toList();
+    if (oldIndex < 0 || oldIndex >= visible.length) return;
+    final int adjustedNewIndex = newIndexAlreadyAdjusted
+        ? newIndex
+        : newIndex > oldIndex
+        ? newIndex - 1
+        : newIndex;
+    if (adjustedNewIndex < 0 || adjustedNewIndex >= visible.length) return;
+
+    // Pinning defines a hard section boundary. Reject a drag that would move
+    // an item across that boundary; the context-menu action is the explicit
+    // way to change sections.
+    if (visible[oldIndex].pinned != visible[adjustedNewIndex].pinned) {
+      return;
+    }
+
+    final ClipboardRecord moved = visible.removeAt(oldIndex);
+    visible.insert(adjustedNewIndex, moved);
+    final Set<String> visibleIds = visible.map((record) => record.id).toSet();
+    final List<ClipboardRecord> active = _activeRecords;
+    var visibleIndex = 0;
+    final List<ClipboardRecord> ordered = active.map((ClipboardRecord record) {
+      if (!visibleIds.contains(record.id)) return record;
+      return visible[visibleIndex++];
+    }).toList();
+    _saveActiveOrder(ordered);
+    _reloadRecords();
+    _restoreSelectedRecord(_selectedRecord?.id);
+    _revisions?.changed(DataCollection.clipboard);
     notifyListeners();
   }
 
@@ -495,9 +599,13 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void togglePinned() {
     final ClipboardRecord? selected = _selectedRecord;
-    if (selected == null) {
+    if (selected == null || !showingArchivedRecords) {
       return;
     }
+    if (_archiveEntryForId(selected.id) == null) {
+      return;
+    }
+    final String selectedId = selected.id;
     final bool pinned = !selected.pinned;
     final ClipboardRecord updated = selected.copyWith(
       pinned: pinned,
@@ -505,9 +613,21 @@ final class ClipboardViewModel extends ChangeNotifier {
       updatedAt: _now().toUtc(),
     );
     _saveSelectedRecord(updated);
-    _revisions?.changed(DataCollection.clipboard);
     _reloadRecords();
-    _selectedRecord = updated;
+    if (pinned) {
+      final List<ClipboardRecord> active = _activeRecords;
+      final int selectedIndex = active.indexWhere(
+        (ClipboardRecord record) => record.id == selectedId,
+      );
+      if (selectedIndex >= 0) {
+        final ClipboardRecord pinnedRecord = active.removeAt(selectedIndex);
+        active.insert(0, pinnedRecord);
+        _saveActiveOrder(active);
+        _reloadRecords();
+      }
+    }
+    _revisions?.changed(DataCollection.clipboard);
+    _restoreSelectedRecord(selectedId);
     notifyListeners();
   }
 
@@ -817,7 +937,8 @@ final class ClipboardViewModel extends ChangeNotifier {
         htmlData: source.htmlData,
         rtfData: source.rtfData,
         tags: List<String>.of(source.tags),
-        source: source.source,
+        sources: source.sources,
+        copyCount: source.copyCount,
         pinned: source.pinned,
         enabled: source.enabled,
         activation: source.activation,
@@ -849,6 +970,35 @@ final class ClipboardViewModel extends ChangeNotifier {
         archivedAt: archive.archivedAt,
       ),
     );
+  }
+
+  void _saveActiveOrder(List<ClipboardRecord> ordered) {
+    for (int index = 0; index < ordered.length; index++) {
+      final ClipboardRecord record = ordered[index];
+      final ClipboardRecord withOrder = record.copyWith(sortOrder: index);
+      final ClipboardArchiveEntry? archive = _archiveEntryForId(record.id);
+      if (archive == null) {
+        _store.save(withOrder);
+      } else {
+        _archiveStore.saveArchive(
+          ClipboardArchiveEntry(
+            record: withOrder,
+            sourceClipboardId: archive.sourceClipboardId,
+            archivedAt: archive.archivedAt,
+          ),
+        );
+      }
+    }
+  }
+
+  void _restoreSelectedRecord(String? id) {
+    if (id == null) return;
+    for (final ClipboardRecord record in allRecords) {
+      if (record.id == id) {
+        _selectedRecord = record;
+        return;
+      }
+    }
   }
 
   ClipboardRecord? _recordForId(String id) {
@@ -941,6 +1091,21 @@ List<String> _uniqueTags(List<String> tags) {
 }
 
 String _groupKey(String value) => value.trim().toLowerCase();
+
+int _compareClipboardCopyCounts(ClipboardRecord left, ClipboardRecord right) {
+  if (left.pinned != right.pinned) {
+    return left.pinned ? -1 : 1;
+  }
+  final int countComparison = right.copyCount.compareTo(left.copyCount);
+  if (countComparison != 0) {
+    return countComparison;
+  }
+  final int updatedComparison = right.updatedAt.compareTo(left.updatedAt);
+  if (updatedComparison != 0) {
+    return updatedComparison;
+  }
+  return left.id.compareTo(right.id);
+}
 
 List<String> _uniqueGroups(Iterable<String> values) {
   final Set<String> seen = <String>{};

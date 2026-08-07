@@ -183,6 +183,13 @@ class TrayManager {
     await _channel.invokeMethod('shakeIcon');
   }
 
+  /// Briefly moves the macOS status-bar icon from side to side.
+  ///
+  /// @platforms macos
+  Future<void> nudgeIcon() async {
+    await _channel.invokeMethod('nudgeIcon');
+  }
+
   /// Sets the hover text for this tray icon.
   ///
   /// Must be called after the icon is set.

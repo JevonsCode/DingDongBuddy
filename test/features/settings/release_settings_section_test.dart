@@ -22,7 +22,7 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1.2.1'), findsOneWidget);
+    expect(find.text('1.2.8'), findsOneWidget);
     expect(find.text('A new version is available'), findsOneWidget);
     expect(find.textContaining('Faster history search'), findsOneWidget);
     expect(find.byKey(const Key('settings-report-problem')), findsOneWidget);
@@ -83,7 +83,7 @@ void main() {
       find.textContaining('grant DingDong\'s macOS permissions again'),
       findsOneWidget,
     );
-    expect(find.text('Update to 1.2.1'), findsOneWidget);
+    expect(find.text('Update to 1.2.8'), findsOneWidget);
     expect(find.byType(FilledButton), findsNWidgets(6));
     final FilledButton installButton = tester.widget<FilledButton>(
       find.byKey(const Key('settings-install-update')),
@@ -152,7 +152,7 @@ final class _ApplicationUpdater implements ApplicationUpdater {
 
 final class _ReleaseSource implements ReleaseMetadataSource {
   const _ReleaseSource({
-    this.latestVersion = '1.2.1',
+    this.latestVersion = '1.2.8',
     this.notes = const <String>['Faster history search'],
   });
 
@@ -164,7 +164,7 @@ final class _ReleaseSource implements ReleaseMetadataSource {
     app: 'DingDong',
     latestVersion: latestVersion,
     website: Uri.parse('https://example.com'),
-    releasePage: Uri.parse('https://example.com/releases/1.2.1'),
+    releasePage: Uri.parse('https://example.com/releases/1.2.8'),
     notes: notes,
   );
 }

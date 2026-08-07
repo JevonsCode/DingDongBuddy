@@ -4,14 +4,14 @@ class _ClipboardPreview extends StatelessWidget {
   const _ClipboardPreview({
     required this.record,
     required this.onRestore,
-    required this.onTogglePinned,
+    this.onTogglePinned,
     required this.onOpen,
     required this.onAction,
   });
 
   final ClipboardRecord? record;
   final Future<void> Function() onRestore;
-  final VoidCallback onTogglePinned;
+  final VoidCallback? onTogglePinned;
   final Future<void> Function(ClipboardRecord record)? onOpen;
   final ValueChanged<_ClipboardAction> onAction;
 
@@ -50,16 +50,18 @@ class _ClipboardPreview extends StatelessWidget {
                   tone: DesktopActionTone.soft,
                 ),
               ],
-              const SizedBox(width: 8),
-              DesktopActionButton(
-                onPressed: onTogglePinned,
-                icon: value.pinned
-                    ? Icons.push_pin_rounded
-                    : Icons.push_pin_outlined,
-                label: value.pinned
-                    ? context.localized('Unpin', '取消置顶')
-                    : context.localized('Pin', '置顶'),
-              ),
+              if (onTogglePinned != null) ...<Widget>[
+                const SizedBox(width: 8),
+                DesktopActionButton(
+                  onPressed: onTogglePinned,
+                  icon: value.pinned
+                      ? Icons.push_pin_rounded
+                      : Icons.push_pin_outlined,
+                  label: value.pinned
+                      ? context.localized('Unpin', '取消置顶')
+                      : context.localized('Pin', '置顶'),
+                ),
+              ],
               const SizedBox(width: 8),
               DesktopMenuButton<_ClipboardAction>(
                 key: const Key('clipboard-more-actions'),
