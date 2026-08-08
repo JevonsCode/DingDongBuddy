@@ -1,0 +1,79 @@
+packages/tray_manager/windows/tray_manager_plugin.cpp
+  s_c420456ca811f2::t_ad7573b615f3a3 27
+lib/features/agent_adapters/data/codex_completion_hook_gateway.dart
+  s_c420456ca811f2::t_7ce8ace5dffc3b 119
+pubspec.yaml
+  s_c420456ca811f2::t_7ce8ace5dffc3b 4
+  s_c420456ca811f2::t_dfa68ad3254556 50-53,55,57-60,62
+docs/styles.css
+  s_c420456ca811f2::t_ba84f8abdfdbbf 238-276,395,1889,2151-2176
+  s_c420456ca811f2::t_3e5dc4d1f7835b 1153-1154
+test/platform/tray_manager_visual_contract_test.dart
+  s_c420456ca811f2::t_e9c89c214df400 537-552
+  s_c420456ca811f2::t_d9851029f6eb06 94-141,484,513
+lib/features/settings/domain/release_update.dart
+  s_c420456ca811f2::t_7ce8ace5dffc3b 114-115
+README.md
+  s_c420456ca811f2::t_a7520cbc1c43d8 58
+test/features/shell/tray_buddy_controller_test.dart
+  s_c420456ca811f2::t_8f419761e73ed5 8-12,116,120,133,135
+  s_c420456ca811f2::t_4bccf60abb8709 86,92-93,102-104,106,108-112,115,121-123,132,134,137-170
+lib/features/agent_api/data/mcp_server.dart
+  s_c420456ca811f2::t_7ce8ace5dffc3b 39
+lib/features/shell/domain/tray_buddy_controller.dart
+  s_c420456ca811f2::t_538da99247aa19 92-94
+  s_c420456ca811f2::t_8c43d09d622e20 8-9,57,59,76-82,84-87,91,95,97,103,109,111-112,115-120,122,127,179-180,185-193,196,198-201,207,210,212,240
+packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift
+  s_c420456ca811f2::t_57f6eac7e7c74a 97-98
+docs/dingdong-release.json
+  s_c420456ca811f2::t_617532ebf79826 3-5,11,15,21,27-31
+docs/release-notes.md
+  s_c420456ca811f2::t_a596932de3eeda 1-34,40-41,43,45-51,53,55-58,60,62-65
+docs/product/manual-regression.md
+  s_c420456ca811f2::t_11262dfe3aa56b 1,20-31,127-135,333-334
+  s_c420456ca811f2::t_62d1878177a4dd 32
+test/features/shell/popup_shell_test.dart
+  s_c420456ca811f2::t_bc44a4b129b5cd 847
+test/features/settings/release_settings_section_test.dart
+  s_c420456ca811f2::t_bc44a4b129b5cd 25,86,155,167
+README.zh.md
+  s_c420456ca811f2::t_a7520cbc1c43d8 57
+test/app/dingdong_app_test.dart
+  s_c420456ca811f2::t_46785a8547d722 43,49-50
+lib/core/platform/windows_tray_icon_selector.dart
+  s_c420456ca811f2::t_8fd9e62f068427 1-2,7-8,11-21
+lib/platform/plugin_desktop_shell_gateway.dart
+  s_c420456ca811f2::t_d48dbb1a261a0f 72,291-296,326-328,350-356,359,367,385
+  s_c420456ca811f2::t_911246eb547020 62,71,73,238-240,249,287-290,297-300,303-313,315-321,323-325,329,357-358,360-366,368-384,386-388,459
+  s_c420456ca811f2::t_ce4df6293a51fe 551-558,561-583,588,590-594
+  s_c420456ca811f2::t_4bccf60abb8709 559-560,596-607
+test/core/platform/windows_tray_icon_selector_test.dart
+  s_c420456ca811f2::t_e914d62f54640f 22-47
+docs/index.html
+  s_c420456ca811f2::t_8652220fd8b3b7 47-50,66-70,383-386,469,1029-1031,1073-1075,1134
+  s_c420456ca811f2::t_36934f88bc90d0 82,215,488,493,495,501,503,509,673,781,783,785,868,976,978,980,1034,1078
+windows/runner/Runner.rc
+  s_c420456ca811f2::t_7ce8ace5dffc3b 66,72
+test/packaging/desktop_identity_test.dart
+  s_c420456ca811f2::t_cd3fa1c8d18071 434-440,442-452
+  s_c420456ca811f2::t_fc98aa844a07b4 441
+  s_c420456ca811f2::t_46785a8547d722 70,80,83,85,88,94,98,401,492-493,499
+test/features/settings/settings_view_model_test.dart
+  s_c420456ca811f2::t_bc44a4b129b5cd 391-392,394,410,414
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "8d669b2f9e7e37b9b0443ff887d2c7ec4c055a50",
+  "prompts": {},
+  "sessions": {
+    "s_c420456ca811f2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fdb59-afae-7162-8bc3-b79a5f33ba60",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
