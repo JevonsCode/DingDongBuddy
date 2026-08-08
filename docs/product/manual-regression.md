@@ -1,4 +1,4 @@
-# DingDong 1.2.7 Manual Regression Checklist
+# DingDong 1.2.8 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -17,11 +17,19 @@ and macOS golden images; the items below exercise real operating-system state.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
 - After Command-dragging the macOS status item, its position is restored across
   application restarts.
-- The normal macOS status item uses `AgentToolIcon-w`; an unseen Agent reminder
-  uses `ding-w`, switches to `rest-w` after five minutes without Agent activity,
-  and switches to `sleeping-w` after extended Clipboard inactivity.
-- If Agent and Clipboard inactivity overlap, sleeping wins. Clipboard capture
-  restores the appropriate active state without playing a turn animation.
+- A fresh launch starts in normal state with `AgentToolIcon-w`. With no Agent
+  reminder or Clipboard capture, it switches to `rest-w` after three minutes
+  and `sleeping-w` after five minutes.
+- A new Agent reminder shows `ding-w`. A Clipboard capture or acknowledging the
+  reminder restores normal and restarts both idle thresholds; there is no turn
+  animation.
+- On macOS, `ding-w` alternates with `ding-w2` every 0.7 seconds. `rest-w` and
+  `sleeping-w` alternate with their second frames every 1.2 seconds; resting is
+  rendered 2px smaller in both dimensions.
+- On Windows light and dark taskbars, normal, reminder, resting, and sleeping
+  use their matching artwork and the same 0.7/1.2-second frame timing.
+- With an unread macOS reminder, the count is visually centered inside the
+  capsule and sits about 2px lower than before.
 - Leave an Agent reminder unopened for five minutes: the status item nudges
   horizontally once per minute until the reminder is acknowledged.
 - Click the popup mascot three times within five seconds: it uses `thinking`
@@ -115,6 +123,15 @@ and macOS golden images; the items below exercise real operating-system state.
 - Search text remains visible after leaving and returning to Clipboard, and
   clearing it restores the complete visible history.
 - Sensitive rows stay hidden from default Agent API responses.
+
+## Website
+
+- The five colored menu-bar previews use white `ding-w` and `ding-w2`, changing
+  frames every 0.7 seconds.
+- The hero finish note uses animated rest, the custom sound card uses animated
+  sleeping, and the local API title includes thinking.
+- Open the Clipboard website demo: All, Images, Text, Links, and Files are
+  visible by default in that order.
 
 ## Resource library
 
@@ -313,8 +330,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.2.7` build `40` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.2.7.40` and product name `DingDong`.
+- The macOS release app metadata is version `1.2.8` build `41` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.2.8.41` and product name `DingDong`.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

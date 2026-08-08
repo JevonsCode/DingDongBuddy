@@ -24,7 +24,7 @@
 #define WM_MYMESSAGE (WM_USER + 1)
 
 constexpr UINT_PTR kAttentionFlashTimerId = 0xD1D0;
-constexpr UINT kAttentionFlashIntervalMs = 550;
+constexpr UINT kAttentionFlashIntervalMs = 700;
 
 namespace {
 

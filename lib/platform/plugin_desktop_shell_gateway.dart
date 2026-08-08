@@ -59,6 +59,7 @@ final class PluginDesktopShellGateway
   );
   Timer? _unreadAcknowledgementTimer;
   Timer? _trayBuddyPreviewTimer;
+  Timer? _trayBuddyFrameTimer;
   bool _started = false;
   bool _methodHandlersInstalled = false;
   bool _taskbarIsLight = false;
@@ -67,6 +68,9 @@ final class PluginDesktopShellGateway
   TrayNotificationColor _trayNotificationColor;
   TrayBuddyState _trayBuddyState = TrayBuddyState.normal;
   TrayBuddyState? _trayBuddyPreviewState;
+  TrayBuddyState? _animatedTrayBuddyState;
+  bool _animatedTrayBuddyUsesNativeAttention = false;
+  bool _trayBuddyAlternateFrame = false;
   GlobalHotKey _globalHotKey = GlobalHotKey.defaultValue;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
 
@@ -231,7 +235,9 @@ final class PluginDesktopShellGateway
       return;
     }
     _trayBuddyState = value;
-    if (_started && Platform.isMacOS && _trayBuddyPreviewState == null) {
+    if (_started &&
+        (Platform.isMacOS || Platform.isWindows) &&
+        _trayBuddyPreviewState == null) {
       await _unreadController.refresh();
     }
   }
@@ -240,7 +246,7 @@ final class PluginDesktopShellGateway
     TrayBuddyState value, {
     Duration duration = const Duration(seconds: 2),
   }) async {
-    if (!Platform.isMacOS) {
+    if (!Platform.isMacOS && !Platform.isWindows) {
       return;
     }
     _trayBuddyPreviewTimer?.cancel();
@@ -278,14 +284,49 @@ final class PluginDesktopShellGateway
     final bool windows = Platform.isWindows;
     final TrayBuddyState mascotState =
         _trayBuddyPreviewState ?? _trayBuddyState;
+    final TrayBuddyState visualState = trayBuddyVisualState(
+      hot: hot,
+      state: mascotState,
+    );
+    final bool useNativeAttentionAnimation =
+        windows && hot && visualState == TrayBuddyState.reminder;
+    _updateTrayBuddyFrameAnimation(
+      visualState,
+      useNativeAttention: useNativeAttentionAnimation,
+    );
+    final bool alternateFrame = _trayBuddyAlternateFrame;
+    final WindowsTrayIconState windowsState = windowsTrayBuddyIconState(
+      visualState,
+    );
     await trayManager.setIcon(
       windows
-          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: false)
-          : macOSTrayBuddyIconPath(hot: hot, state: mascotState),
+          ? windowsTrayIconPath(
+              taskbarIsLight: _taskbarIsLight,
+              unread: false,
+              state: windowsState,
+              alternateFrame: alternateFrame,
+            )
+          : macOSTrayBuddyIconPath(
+              hot: hot,
+              state: mascotState,
+              alternateFrame: alternateFrame,
+            ),
       isTemplate: false,
-      iconSize: iconSize,
+      iconSize: windows
+          ? iconSize
+          : macOSTrayBuddyIconSize(
+              baseSize: iconSize,
+              hot: hot,
+              state: mascotState,
+            ),
       attentionIconPath: windows
-          ? windowsTrayIconPath(taskbarIsLight: _taskbarIsLight, unread: true)
+          ? windowsTrayIconPath(
+              taskbarIsLight: _taskbarIsLight,
+              unread: true,
+              alternateFrame: useNativeAttentionAnimation
+                  ? true
+                  : alternateFrame,
+            )
           : null,
       unreadCount: windows ? unreadCount : 0,
     );
@@ -304,6 +345,45 @@ final class PluginDesktopShellGateway
         badgeColorRgb: _trayNotificationColor.rgbValue,
       );
     }
+  }
+
+  void _updateTrayBuddyFrameAnimation(
+    TrayBuddyState visualState, {
+    required bool useNativeAttention,
+  }) {
+    final Duration? interval = useNativeAttention
+        ? null
+        : trayBuddyFrameInterval(visualState);
+    final bool animationAlreadyMatches =
+        _animatedTrayBuddyState == visualState &&
+        _animatedTrayBuddyUsesNativeAttention == useNativeAttention &&
+        (_trayBuddyFrameTimer != null) == (interval != null);
+    if (animationAlreadyMatches) {
+      return;
+    }
+    _trayBuddyFrameTimer?.cancel();
+    _trayBuddyFrameTimer = null;
+    _animatedTrayBuddyState = visualState;
+    _animatedTrayBuddyUsesNativeAttention = useNativeAttention;
+    _trayBuddyAlternateFrame = false;
+    if (interval == null) {
+      return;
+    }
+    _trayBuddyFrameTimer = Timer.periodic(interval, (_) {
+      if (!_started) {
+        return;
+      }
+      _trayBuddyAlternateFrame = !_trayBuddyAlternateFrame;
+      unawaited(_unreadController.refresh());
+    });
+  }
+
+  void _stopTrayBuddyFrameAnimation() {
+    _trayBuddyFrameTimer?.cancel();
+    _trayBuddyFrameTimer = null;
+    _animatedTrayBuddyState = null;
+    _animatedTrayBuddyUsesNativeAttention = false;
+    _trayBuddyAlternateFrame = false;
   }
 
   Future<void> hide() async {
@@ -376,6 +456,7 @@ final class PluginDesktopShellGateway
     }
     _unreadAcknowledgementTimer?.cancel();
     _trayBuddyPreviewTimer?.cancel();
+    _stopTrayBuddyFrameAnimation();
     _trayBuddyPreviewState = null;
     await _hotKeyChannel.invokeMethod<void>('unregister');
     _hotKeyChannel.setMethodCallHandler(null);
@@ -467,18 +548,63 @@ TrayTitleStyle macOSTrayTitleStyle({required bool hot}) =>
     hot ? TrayTitleStyle.unreadBadge : TrayTitleStyle.plain;
 
 @visibleForTesting
+TrayBuddyState trayBuddyVisualState({
+  required bool hot,
+  required TrayBuddyState state,
+}) => hot ? TrayBuddyState.reminder : state;
+
+@visibleForTesting
+Duration? trayBuddyFrameInterval(TrayBuddyState state) => switch (state) {
+  TrayBuddyState.reminder => const Duration(milliseconds: 700),
+  TrayBuddyState.resting ||
+  TrayBuddyState.sleeping => const Duration(milliseconds: 1200),
+  TrayBuddyState.normal => null,
+};
+
+@visibleForTesting
+WindowsTrayIconState windowsTrayBuddyIconState(TrayBuddyState state) =>
+    switch (state) {
+      TrayBuddyState.normal => WindowsTrayIconState.normal,
+      TrayBuddyState.reminder => WindowsTrayIconState.reminder,
+      TrayBuddyState.resting => WindowsTrayIconState.resting,
+      TrayBuddyState.sleeping => WindowsTrayIconState.sleeping,
+    };
+
+@visibleForTesting
+int macOSTrayBuddyIconSize({
+  required int baseSize,
+  required bool hot,
+  required TrayBuddyState state,
+}) => trayBuddyVisualState(hot: hot, state: state) == TrayBuddyState.resting
+    ? baseSize > 2
+          ? baseSize - 2
+          : baseSize
+    : baseSize;
+
+@visibleForTesting
 String macOSTrayBuddyIconPath({
   required bool hot,
   required TrayBuddyState state,
+  bool alternateFrame = false,
 }) {
-  if (hot || state == TrayBuddyState.reminder) {
-    return 'Assets/DingDongIP/ding-w.png';
-  }
-  return switch (state) {
+  final TrayBuddyState visualState = trayBuddyVisualState(
+    hot: hot,
+    state: state,
+  );
+  return switch (visualState) {
     TrayBuddyState.normal => 'Assets/DingDongIP/AgentToolIcon-w.png',
-    TrayBuddyState.resting => 'Assets/DingDongIP/rest-w.png',
-    TrayBuddyState.sleeping => 'Assets/DingDongIP/sleeping-w.png',
-    TrayBuddyState.reminder => 'Assets/DingDongIP/ding-w.png',
+    TrayBuddyState.resting =>
+      alternateFrame
+          ? 'Assets/DingDongIP/rest-w2.png'
+          : 'Assets/DingDongIP/rest-w.png',
+    TrayBuddyState.sleeping =>
+      alternateFrame
+          ? 'Assets/DingDongIP/sleeping-w2.png'
+          : 'Assets/DingDongIP/sleeping-w.png',
+    TrayBuddyState.reminder =>
+      alternateFrame
+          ? 'Assets/DingDongIP/ding-w2.png'
+          : 'Assets/DingDongIP/ding-w.png',
   };
 }
 

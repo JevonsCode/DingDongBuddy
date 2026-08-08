@@ -1,34 +1,34 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.2.7",
-  "latestBuild": "40",
-  "publishedAt": "2026-08-07T15:58:01Z",
+  "latestVersion": "1.2.8",
+  "latestBuild": "41",
+  "publishedAt": "2026-08-08T03:59:28Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.7/DingDong-1.2.7-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.8/DingDong-1.2.8-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.7/DingDong-1.2.7-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.8/DingDong-1.2.8-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.7/DingDong-1.2.7-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.8/DingDong-1.2.8-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds stateful DingDong artwork for normal, reminder, resting, and sleeping states.",
-    "Nudges overdue Agent reminders every minute after five minutes until they are acknowledged.",
-    "Consolidates repeated Clipboard copies into the latest row with a count and source history.",
-    "Adds Clipboard count sorting plus archive pinning and manual ordering.",
-    "Uses the thinking mascot on every third popup-mascot click and the resting mascot for a clean Resource Manager check.",
+    "Starts in normal state, rests after three idle minutes, and sleeps after five minutes without Agent or Clipboard activity.",
+    "Returns to normal and restarts idle timing after Clipboard activity or acknowledging an Agent reminder.",
+    "Animates ding every 0.7 seconds and rest or sleeping every 1.2 seconds on macOS and Windows.",
+    "Centers the macOS unread count and renders the resting menu-bar mascot two pixels smaller.",
+    "Updates the website with animated state artwork and visible default Clipboard categories.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

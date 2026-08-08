@@ -91,6 +91,54 @@ void main() {
       macOSTrayBuddyIconPath(hot: true, state: TrayBuddyState.sleeping),
       'Assets/DingDongIP/ding-w.png',
     );
+    expect(
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.resting,
+        alternateFrame: true,
+      ),
+      'Assets/DingDongIP/rest-w2.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(
+        hot: true,
+        state: TrayBuddyState.normal,
+        alternateFrame: true,
+      ),
+      'Assets/DingDongIP/ding-w2.png',
+    );
+  });
+
+  test('tray buddy animation timing and macOS rest sizing match the spec', () {
+    expect(
+      trayBuddyFrameInterval(TrayBuddyState.reminder),
+      const Duration(milliseconds: 700),
+    );
+    expect(
+      trayBuddyFrameInterval(TrayBuddyState.resting),
+      const Duration(milliseconds: 1200),
+    );
+    expect(
+      trayBuddyFrameInterval(TrayBuddyState.sleeping),
+      const Duration(milliseconds: 1200),
+    );
+    expect(trayBuddyFrameInterval(TrayBuddyState.normal), isNull);
+    expect(
+      macOSTrayBuddyIconSize(
+        baseSize: 22,
+        hot: false,
+        state: TrayBuddyState.resting,
+      ),
+      20,
+    );
+    expect(
+      macOSTrayBuddyIconSize(
+        baseSize: 22,
+        hot: true,
+        state: TrayBuddyState.resting,
+      ),
+      22,
+    );
   });
 
   test('tray icon shake requests the native status item animation', () async {
@@ -433,6 +481,7 @@ void main() {
     expect(gateway, contains('await trayManager.setTitle(\n        title,'));
     expect(plugin, contains('args["badgeColorRgb"] as? NSNumber'));
     expect(source, contains('style == "unreadBadge" && !countText.isEmpty'));
+    expect(source, contains('.baselineOffset: -2.0'));
     expect(source, contains('let value = rgb ?? 0xDB7333'));
     expect(source, contains('let red = CGFloat((value >> 16) & 0xFF) / 255'));
     expect(source, contains('button.layer?.backgroundColor = nil'));
@@ -461,7 +510,7 @@ void main() {
     expect(source, contains('if (replacement_icon == nullptr)'));
     expect(source, contains('ValueOrNull(args, "unreadCount")'));
     expect(source, contains('ValueOrNull(args, "attentionIconPath")'));
-    expect(source, contains('kAttentionFlashIntervalMs = 550'));
+    expect(source, contains('kAttentionFlashIntervalMs = 700'));
     expect(source, contains('StartAttentionFlash'));
     expect(source, contains('AdvanceAttentionFlash'));
     expect(source, contains('CancelAttentionFlash'));
@@ -485,6 +534,22 @@ void main() {
     expect(source, contains('SetTimer'));
     expect(source, contains('KillTimer'));
     expect(source, contains('tray_manager::CreateTrayIcon'));
+    for (final String surface in <String>['dark', 'light']) {
+      for (final String suffix in <String>[
+        'rest',
+        'rest2',
+        'sleeping',
+        'sleeping2',
+        'unread2',
+      ]) {
+        expect(
+          File(
+            'windows/runner/resources/tray_icon_on_${surface}_$suffix.ico',
+          ).existsSync(),
+          isTrue,
+        );
+      }
+    }
   });
 }
 

@@ -1,7 +1,7 @@
 name: dingdong
 description: Cross-platform desktop companion for local AI agents.
 publish_to: none
-version: 1.2.7+40
+version: 1.2.8+41
 
 environment:
   sdk: ^3.12.2
@@ -47,6 +47,16 @@ flutter:
     - skills/dingdong-configure/
     - windows/runner/resources/app_icon.ico
     - windows/runner/resources/tray_icon_on_dark.ico
+    - windows/runner/resources/tray_icon_on_dark_rest.ico
+    - windows/runner/resources/tray_icon_on_dark_rest2.ico
+    - windows/runner/resources/tray_icon_on_dark_sleeping.ico
+    - windows/runner/resources/tray_icon_on_dark_sleeping2.ico
     - windows/runner/resources/tray_icon_on_dark_unread.ico
+    - windows/runner/resources/tray_icon_on_dark_unread2.ico
     - windows/runner/resources/tray_icon_on_light.ico
+    - windows/runner/resources/tray_icon_on_light_rest.ico
+    - windows/runner/resources/tray_icon_on_light_rest2.ico
+    - windows/runner/resources/tray_icon_on_light_sleeping.ico
+    - windows/runner/resources/tray_icon_on_light_sleeping2.ico
     - windows/runner/resources/tray_icon_on_light_unread.ico
+    - windows/runner/resources/tray_icon_on_light_unread2.ico

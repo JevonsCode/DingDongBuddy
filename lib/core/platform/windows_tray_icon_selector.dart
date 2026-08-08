@@ -1,11 +1,24 @@
+enum WindowsTrayIconState { normal, reminder, resting, sleeping }
+
 /// Returns the Windows tray icon that contrasts with the sampled taskbar.
 String windowsTrayIconPath({
   required bool taskbarIsLight,
   required bool unread,
+  WindowsTrayIconState state = WindowsTrayIconState.normal,
+  bool alternateFrame = false,
 }) {
   final String surface = taskbarIsLight ? 'light' : 'dark';
-  final String state = unread ? '_unread' : '';
-  return 'windows/runner/resources/tray_icon_on_$surface$state.ico';
+  final WindowsTrayIconState visualState = unread
+      ? WindowsTrayIconState.reminder
+      : state;
+  final String frame = alternateFrame ? '2' : '';
+  final String suffix = switch (visualState) {
+    WindowsTrayIconState.normal => '',
+    WindowsTrayIconState.reminder => '_unread$frame',
+    WindowsTrayIconState.resting => '_rest$frame',
+    WindowsTrayIconState.sleeping => '_sleeping$frame',
+  };
+  return 'windows/runner/resources/tray_icon_on_$surface$suffix.ico';
 }
 
 /// Returns the localized Windows notification-area hover text.

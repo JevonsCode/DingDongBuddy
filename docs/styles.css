@@ -235,10 +235,47 @@ h3 {
   line-height: 1.5;
 }
 
-.hero-finish-note img {
+.mascot-swap {
+  --mascot-frame-cycle: 2.4s;
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.mascot-swap-ding {
+  --mascot-frame-cycle: 1.4s;
+}
+
+.mascot-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mascot-frame-one {
+  animation: mascot-frame-one var(--mascot-frame-cycle) steps(1, end) infinite;
+}
+
+.mascot-frame-two {
+  animation: mascot-frame-two var(--mascot-frame-cycle) steps(1, end) infinite;
+}
+
+@keyframes mascot-frame-one {
+  0%, 49.999% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes mascot-frame-two {
+  0%, 49.999% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+
+.hero-finish-mascot {
   width: 24px;
   height: 24px;
-  flex: 0 0 auto;
 }
 
 .hero-finish-note p {
@@ -355,7 +392,7 @@ h3 {
   line-height: 1;
 }
 
-.menu-alert img {
+.menu-alert-mascot {
   width: 16px;
   height: 16px;
 }
@@ -1113,6 +1150,8 @@ h3 {
 
 .demo-clipboard-filters {
   display: flex;
+  min-height: 30px;
+  flex: 0 0 30px;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -1847,7 +1886,7 @@ html[lang="zh-CN"] .defaults-panel th {
   background: var(--paper);
 }
 
-.sound-custom > img {
+.sound-custom-mascot {
   width: 42px;
   height: 42px;
 }
@@ -2107,6 +2146,34 @@ pre {
   margin-top: 28px;
   padding: 24px;
   border-radius: var(--radius-large);
+}
+
+.api-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.api-title img {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-frame-one,
+  .mascot-frame-two {
+    animation: none;
+  }
+
+  .mascot-frame-one {
+    opacity: 1;
+  }
+
+  .mascot-frame-two {
+    opacity: 0;
+  }
 }
 
 .endpoint-list {

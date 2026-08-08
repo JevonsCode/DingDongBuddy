@@ -1,72 +1,67 @@
-# DingDong 1.2.7
+# DingDong 1.2.8
 
-DingDong 1.2.7 gives the desktop companion a clearer set of visual states and
-makes repeated Clipboard content easier to understand and organize.
+DingDong 1.2.8 makes the desktop companion's idle states predictable and gives
+the new mascot artwork a small two-frame animation on both macOS and Windows.
 
-## Stateful DingDong companion
+## Companion state timing
 
-- The popup mascot and desktop status icon now use the new normal, reminder,
-  resting, and sleeping artwork.
-- An unseen Agent reminder uses the DingDong bell artwork immediately. After
-  five minutes, the status icon nudges horizontally once per minute until the
-  reminder is acknowledged.
-- Five minutes without Agent activity switches the mascot to resting. Extended
-  Clipboard inactivity switches it to sleeping and takes priority when both
-  idle conditions apply.
-- Every third click on the popup mascot briefly reveals the thinking pose.
-- The former idle turn animation and its superseded icon assets have been
-  removed. The DEV test panel can preview sleeping and reminder-nudge behavior.
+- DingDong now opens in the normal state with `AgentToolIcon` instead of
+  inheriting an old idle timestamp from the previous session.
+- After three minutes without Agent or Clipboard activity, the companion moves
+  to the resting state. After five minutes without either activity, it moves to
+  sleeping.
+- A new Agent reminder shows `ding` immediately. A Clipboard capture or an
+  acknowledged reminder wakes the companion and restarts both idle thresholds.
+- An Agent reminder left unopened for five minutes still nudges horizontally
+  once per minute until it is acknowledged.
 
-## Clipboard organization
+## Animated desktop artwork
 
-- Copying identical content consolidates it into the newest row, updates its
-  timestamp, increments a visible count, and preserves every observed source.
-- Resource Manager can sort Clipboard records by copy count.
-- Archived Clipboard records can be pinned from their context menu, with the
-  pin shown at the upper-right edge of the row.
-- Archived records support persistent manual ordering in Resource Manager.
-- The title action now says Add title only for untitled records and Edit title
-  when a title already exists.
+- Reminder artwork alternates between `ding` and `ding2` every 0.7 seconds.
+- Resting and sleeping artwork alternates between its two frames every 1.2
+  seconds.
+- Windows now follows the same normal, reminder, resting, and sleeping states,
+  with light and dark taskbar artwork.
+- The macOS resting mascot renders two pixels smaller in each dimension, and
+  the unread count is lowered by two points for visual centering.
 
-## Agent and resource polish
+## Website polish
 
-- Recent Agent summaries skip a leading DingDong or FULI marker and use the
-  following content line as their description.
-- Resource Manager uses the resting mascot when its issue check finds nothing.
-- Website, README, macOS, and Windows packages now use the refreshed DingDong
-  artwork consistently.
+- Menu-bar notification previews now use the animated white `ding` artwork.
+- The "everything close at hand" note uses the resting mascot, the custom sound
+  card uses sleeping, and the local API heading now includes thinking.
+- The Clipboard demo opens with All, Images, Text, Links, and Files visible in
+  their default order.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.2.7 为桌面伙伴增加了更清晰的状态表达，也让重复剪贴板内容更容易
-识别、排序和整理。
+DingDong 1.2.8 重新梳理了桌面伙伴的空闲状态，并让 macOS 与 Windows 都能
+使用新的双帧小人动画。
 
-## 有状态的 DingDong 伙伴
+## 伙伴状态计时
 
-- 唤起面板小人和桌面状态图标统一使用新的正常、提醒、休息和睡眠图。
-- Agent 出现未读提醒后立即显示铃铛 DingDong；超过五分钟仍未点击时，每分钟
-  左右摇动一次，直到提醒被处理。
-- 五分钟没有 Agent 动态时切换为休息状态；剪贴板长时间未使用时切换为睡眠
-  状态，同时满足两种空闲条件时以睡眠状态优先。
-- 点击唤起面板小人时，每第三次会短暂切换为思考状态。
-- 已移除原来的空闲转身动画和旧图标资源；DEV 测试面板可直接预览睡眠状态与
-  提醒摇动。
+- DingDong 每次启动都从正常状态开始，显示 `AgentToolIcon`，不会沿用上次会话
+  的旧空闲时间。
+- 连续三分钟没有 Agent 或剪贴板活动时进入休息状态；连续五分钟两种活动都
+  没有时进入睡眠状态。
+- 新的 Agent 提醒会立即显示 `ding`；发生复制粘贴，或用户查看并处理提醒后，
+  都会恢复正常状态并重新计算两段空闲时间。
+- Agent 提醒五分钟仍未处理时，继续每分钟左右摇动一次，直到提醒被处理。
 
-## 剪贴板整理
+## 桌面双帧动画
 
-- 重复复制相同内容时会归并到最新一条，更新时间、增加可见次数，并保留所有
-  出现过的来源。
-- 资源管理中的剪贴板支持按复制次数排序。
-- 已归档剪贴板内容可通过右键置顶，置顶标识显示在条目右上边缘。
-- 归档内容可在资源管理中持久化手动排序。
-- 没有标题时显示“添加标题”，已有标题时自动改为“修改标题”。
+- 提醒状态每 0.7 秒在 `ding` 与 `ding2` 之间切换。
+- 休息与睡眠状态每 1.2 秒切换一次对应的第二帧。
+- Windows 现在也支持正常、提醒、休息、睡眠四种状态，并分别适配深浅任务栏。
+- macOS 状态栏的休息小人宽高各缩小 2px，未读数字下移 2pt 后更居中。
 
-## Agent 与资源细节
+## 官网细节
 
-- 最近 Agent 描述遇到首行 DingDong 或 FULI 标记时，会使用后续正文行。
-- 资源管理检测未发现问题时改用休息状态小人。
-- 官网、README、macOS 与 Windows 安装包统一更新为新的 DingDong 图标。
+- 状态栏提醒预览改为白色 `ding` 双帧动画。
+- “东西随手能找到”使用休息小人，“提示声由你决定”使用睡眠小人，“喜欢写
+  脚本”标题左侧增加思考小人。
+- 官网剪贴板预览默认展示“全部、图片、文本、链接、文件”分类。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.2.7 from pubspec', () {
+  test('desktop hosts consume application version 1.2.8 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,25 +77,25 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.2.7+40'));
+    expect(pubspec, contains('version: 1.2.8+41'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.2.7';"),
+      contains("const String currentAppVersion = '1.2.8';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '40';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '41';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.2.7'"),
+      contains("'version': '1.2.8'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.2.7'"),
+      contains("'version': '1.2.8'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.2.7"'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.2.8"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -398,7 +398,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.2.7</span>'));
+    expect(website, contains('<span class="demo-version">v1.2.8</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -431,6 +431,25 @@ void main() {
     expect(website, contains('{ id: "links", label: "Links" }'));
     expect(website, contains('{ id: "images", label: "Images" }'));
     expect(website, contains('{ id: "files", label: "Files" }'));
+    expect(website, contains('clipboardFilter: true'));
+    expect(website, contains('./assets/dingdong-alert-icon-2.png'));
+    expect(website, contains('./assets/dingdong-rest-icon-2.png'));
+    expect(website, contains('./assets/dingdong-sleeping-icon-2.png'));
+    expect(website, contains('./assets/dingdong-thinking-icon.png'));
+    expect(websiteStyles, contains('--mascot-frame-cycle: 1.4s'));
+    expect(websiteStyles, contains('--mascot-frame-cycle: 2.4s'));
+    expect(websiteStyles, contains('flex: 0 0 30px'));
+    for (final String mascot in <String>[
+      'dingdong-alert-icon.png',
+      'dingdong-alert-icon-2.png',
+      'dingdong-rest-icon.png',
+      'dingdong-rest-icon-2.png',
+      'dingdong-sleeping-icon.png',
+      'dingdong-sleeping-icon-2.png',
+      'dingdong-thinking-icon.png',
+    ]) {
+      expect(File('docs/assets/$mascot').existsSync(), isTrue);
+    }
     expect(
       website,
       isNot(contains('createDemoElement("b", "", content.labels.library)')),
@@ -470,14 +489,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.2.7"'));
-    expect(releaseMetadata, contains('"latestBuild": "40"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.2.8"'));
+    expect(releaseMetadata, contains('"latestBuild": "41"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.2.7-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.2.8-windows-x64-beta-Setup.exe'),
     );
   });
 

@@ -94,7 +94,8 @@ public class TrayIcon: NSView {
                 string: " \(countText)\u{2009}",
                 attributes: [
                     .foregroundColor: NSColor.white,
-                    .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold),
+                    .baselineOffset: -2.0
                 ]
             )
             button.imagePosition = .imageLeading

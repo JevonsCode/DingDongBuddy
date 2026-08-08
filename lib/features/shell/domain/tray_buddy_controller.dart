@@ -5,8 +5,8 @@ import 'package:dingdong/features/activity/ui/activity_controller.dart';
 
 const Duration trayBuddyReminderDelay = Duration(minutes: 5);
 const Duration trayBuddyReminderRepeatInterval = Duration(minutes: 1);
-const Duration trayBuddyAgentRestDelay = Duration(minutes: 5);
-const Duration trayBuddyClipboardIdleDelay = Duration(minutes: 30);
+const Duration trayBuddyAgentRestDelay = Duration(minutes: 3);
+const Duration trayBuddyClipboardIdleDelay = Duration(minutes: 5);
 
 /// Visual states shared by the popup mascot and the macOS menu-bar mascot.
 enum TrayBuddyState { normal, reminder, resting, sleeping }
@@ -54,10 +54,9 @@ final class TrayBuddyController {
   final Duration _clipboardIdleDelay;
 
   Timer? _reminderNudgeTimer;
-  Timer? _agentRestTimer;
-  Timer? _clipboardIdleTimer;
+  Timer? _idleStateTimer;
   DateTime? _latestAgentActivity;
-  DateTime? _latestClipboardActivity;
+  DateTime? _latestWakeActivity;
   DateTime? _lastReminderNudgeAt;
   TrayBuddyState? _announcedState;
   bool _hasUnseenReminder = false;
@@ -74,44 +73,58 @@ final class TrayBuddyController {
       return;
     }
     _started = true;
-    _latestClipboardActivity = lastClipboardActivity?.toUtc() ?? now;
-    _latestAgentActivity = _latestActivityAt() ?? now;
+    // Every launch starts awake. Historical clipboard and Agent timestamps
+    // must not make a freshly opened app appear to be resting or sleeping.
+    _latestWakeActivity = now;
+    _latestAgentActivity = _latestActivityAt();
+    _hasUnseenReminder = _activityController.activities.any(
+      (AgentActivity activity) => activity.unseen,
+    );
     _activityController.addListener(_syncAgentState);
-    _syncAgentState();
-    _scheduleClipboardIdleState();
+    if (_hasUnseenReminder) {
+      _scheduleReminderNudge();
+    }
+    _scheduleIdleState();
     _refreshState();
   }
 
-  /// Resets clipboard inactivity after every successful capture.
-  void recordClipboardActivity(DateTime capturedAt) {
-    final DateTime value = capturedAt.toUtc();
-    if (_latestClipboardActivity == null ||
-        value.isAfter(_latestClipboardActivity!)) {
-      _latestClipboardActivity = value;
-    }
+  /// Wakes the mascot and restarts both idle thresholds after every capture.
+  void recordClipboardActivity(DateTime _) {
+    // The durable record keeps its own timestamp; the wake baseline uses the
+    // moment this process receives the successful-capture callback.
+    _latestWakeActivity = _now().toUtc();
     if (_started) {
-      _scheduleClipboardIdleState();
+      _scheduleIdleState();
       _refreshState();
     }
   }
 
   void _syncAgentState() {
+    final DateTime now = _now().toUtc();
     final DateTime? latest = _latestActivityAt();
     if (latest != null &&
         (_latestAgentActivity == null ||
             latest.isAfter(_latestAgentActivity!))) {
       _latestAgentActivity = latest;
+      _latestWakeActivity = now;
     }
-    _hasUnseenReminder = _activityController.activities.any(
+    final bool hadUnseenReminder = _hasUnseenReminder;
+    final bool hasUnseenReminder = _activityController.activities.any(
       (AgentActivity activity) => activity.unseen,
     );
+    if (hadUnseenReminder && !hasUnseenReminder) {
+      // Clicking through an Agent reminder is a fresh interaction, even
+      // though the completion's persisted timestamp itself is unchanged.
+      _latestWakeActivity = now;
+    }
+    _hasUnseenReminder = hasUnseenReminder;
     if (_hasUnseenReminder) {
-      _agentRestTimer?.cancel();
+      _idleStateTimer?.cancel();
       _scheduleReminderNudge();
     } else {
       _reminderNudgeTimer?.cancel();
       _lastReminderNudgeAt = null;
-      _scheduleAgentRestState();
+      _scheduleIdleState();
     }
     _refreshState();
   }
@@ -163,46 +176,40 @@ final class TrayBuddyController {
     _reminderNudgeTimer = Timer(_reminderRepeatInterval, _syncAgentState);
   }
 
-  void _scheduleAgentRestState() {
-    _agentRestTimer?.cancel();
+  void _scheduleIdleState() {
+    _idleStateTimer?.cancel();
     if (_hasUnseenReminder) {
       return;
     }
     final DateTime now = _now().toUtc();
-    final DateTime lastActivity = _latestAgentActivity ?? now;
-    final DateTime deadline = lastActivity.add(_agentRestDelay);
-    if (!deadline.isAfter(now)) {
+    final DateTime lastActivity = _latestWakeActivity ?? now;
+    final DateTime restDeadline = lastActivity.add(_agentRestDelay);
+    final DateTime sleepDeadline = lastActivity.add(_clipboardIdleDelay);
+    final DateTime? deadline = restDeadline.isAfter(now)
+        ? restDeadline
+        : sleepDeadline.isAfter(now)
+        ? sleepDeadline
+        : null;
+    if (deadline == null) {
       return;
     }
-    _agentRestTimer = Timer(
+    _idleStateTimer = Timer(
       deadline.difference(now) + const Duration(milliseconds: 1),
-      _refreshState,
-    );
-  }
-
-  void _scheduleClipboardIdleState() {
-    _clipboardIdleTimer?.cancel();
-    final DateTime now = _now().toUtc();
-    final DateTime lastActivity = _latestClipboardActivity ?? now;
-    final DateTime deadline = lastActivity.add(_clipboardIdleDelay);
-    if (!deadline.isAfter(now)) {
-      return;
-    }
-    _clipboardIdleTimer = Timer(
-      deadline.difference(now) + const Duration(milliseconds: 1),
-      _refreshState,
+      () {
+        _refreshState();
+        _scheduleIdleState();
+      },
     );
   }
 
   void _refreshState() {
     final DateTime now = _now().toUtc();
-    final DateTime clipboardActivity = _latestClipboardActivity ?? now;
-    final DateTime agentActivity = _latestAgentActivity ?? now;
+    final DateTime lastActivity = _latestWakeActivity ?? now;
     final TrayBuddyState next = _hasUnseenReminder
         ? TrayBuddyState.reminder
-        : !clipboardActivity.add(_clipboardIdleDelay).isAfter(now)
+        : !lastActivity.add(_clipboardIdleDelay).isAfter(now)
         ? TrayBuddyState.sleeping
-        : !agentActivity.add(_agentRestDelay).isAfter(now)
+        : !lastActivity.add(_agentRestDelay).isAfter(now)
         ? TrayBuddyState.resting
         : TrayBuddyState.normal;
     if (_announcedState == next) {
@@ -230,8 +237,7 @@ final class TrayBuddyController {
 
   void dispose() {
     _reminderNudgeTimer?.cancel();
-    _agentRestTimer?.cancel();
-    _clipboardIdleTimer?.cancel();
+    _idleStateTimer?.cancel();
     if (_started) {
       _activityController.removeListener(_syncAgentState);
     }

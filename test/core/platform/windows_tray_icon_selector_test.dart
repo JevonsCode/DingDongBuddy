@@ -19,6 +19,32 @@ void main() {
       windowsTrayIconPath(taskbarIsLight: true, unread: true),
       'windows/runner/resources/tray_icon_on_light_unread.ico',
     );
+    expect(
+      windowsTrayIconPath(
+        taskbarIsLight: false,
+        unread: false,
+        state: WindowsTrayIconState.resting,
+        alternateFrame: true,
+      ),
+      'windows/runner/resources/tray_icon_on_dark_rest2.ico',
+    );
+    expect(
+      windowsTrayIconPath(
+        taskbarIsLight: true,
+        unread: false,
+        state: WindowsTrayIconState.sleeping,
+      ),
+      'windows/runner/resources/tray_icon_on_light_sleeping.ico',
+    );
+    expect(
+      windowsTrayIconPath(
+        taskbarIsLight: true,
+        unread: true,
+        state: WindowsTrayIconState.sleeping,
+        alternateFrame: true,
+      ),
+      'windows/runner/resources/tray_icon_on_light_unread2.ico',
+    );
   });
 
   test('formats the Windows unread count for the hover tooltip', () {
