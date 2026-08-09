@@ -147,7 +147,11 @@ body limits are tested through `AgentHttpServer`.
 
 ## Architectural constraints
 
-- No analytics or behavior-event reporting is built into the app.
+- Remote measurement is limited to two opt-in lifecycle events: a successful
+  first launch and the first successful launch after a version change. There
+  are no sessions, heartbeats, active-user signals, or behavior events. The
+  Cloudflare Worker HMACs the random installation identifier before D1 storage
+  and does not persist the source IP.
 - Knowledge indexing is explicit and bounded; there is no resident vector
   database or embedded model.
 - The resource library and clipboard history remain separate stores because

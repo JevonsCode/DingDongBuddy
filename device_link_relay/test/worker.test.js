@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createECDH, randomBytes } from "node:crypto";
+import { createECDH, createHmac, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -271,6 +271,105 @@ test("connection rate limits expire and do not grow storage forever", async () =
   assert.equal(values.size, 0);
 });
 
+test("lifecycle telemetry stores only a keyed installation hash", async () => {
+  const { env, batches, rateKinds } = telemetryEnvironment();
+  const event = lifecycleEvent();
+  const response = await worker.fetch(
+    lifecycleRequest(event),
+    env,
+  );
+
+  assert.equal(response.status, 202);
+  assert.deepEqual(await response.json(), { accepted: true });
+  assert.deepEqual(rateKinds, ["telemetry"]);
+  assert.equal(batches.length, 1);
+  assert.equal(batches[0].length, 2);
+  const expectedHash = createHmac(
+    "sha256",
+    env.TELEMETRY_HASH_SECRET,
+  )
+    .update(event.installationId)
+    .digest("hex");
+  assert.equal(batches[0][0].values[0], expectedHash);
+  assert.equal(batches[0][1].values[1], expectedHash);
+  assert.doesNotMatch(JSON.stringify(batches), new RegExp(event.installationId));
+  assert.match(batches[0][0].sql, /WHERE NOT EXISTS/);
+  assert.match(batches[0][0].sql, /ON CONFLICT\(installation_hash\)/);
+  assert.match(batches[0][1].sql, /INSERT OR IGNORE/);
+
+  const duplicate = await worker.fetch(lifecycleRequest(event), env);
+  assert.equal(duplicate.status, 202);
+  assert.equal(batches[1][0].values.at(-1), event.eventId);
+  assert.equal(batches[1][1].values[0], event.eventId);
+  assert.equal(batches[1][1].values[1], expectedHash);
+});
+
+test("lifecycle telemetry rejects unbounded or behavior-bearing payloads", async () => {
+  const { env, batches } = telemetryEnvironment();
+  for (const event of [
+    { ...lifecycleEvent(), clipboardContent: "private" },
+    { ...lifecycleEvent(), platform: "linux" },
+    { ...lifecycleEvent(), currentVersion: 130 },
+    {
+      ...lifecycleEvent(),
+      event: "install",
+      previousVersion: "1.2.0",
+    },
+  ]) {
+    const response = await worker.fetch(lifecycleRequest(event), env);
+    assert.equal(response.status, 400);
+  }
+  assert.equal(batches.length, 0);
+
+  const oversized = await worker.fetch(
+    new Request("https://relay.example/v1/telemetry/lifecycle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ padding: "x".repeat(5000) }),
+    }),
+    env,
+  );
+  assert.equal(oversized.status, 413);
+});
+
+test("lifecycle telemetry fails closed when D1 or the hash secret is absent", async () => {
+  const configured = telemetryEnvironment();
+  const missingDatabase = {
+    ...configured.env,
+    TELEMETRY_DB: undefined,
+  };
+  const missingSecret = {
+    ...configured.env,
+    TELEMETRY_HASH_SECRET: undefined,
+  };
+
+  assert.equal(
+    (await worker.fetch(lifecycleRequest(lifecycleEvent()), missingDatabase))
+      .status,
+    503,
+  );
+  assert.equal(
+    (await worker.fetch(lifecycleRequest(lifecycleEvent()), missingSecret))
+      .status,
+    503,
+  );
+  assert.equal(
+    (
+      await worker.fetch(
+        new Request("https://relay.example/v1/telemetry/lifecycle"),
+        configured.env,
+      )
+    ).status,
+    405,
+  );
+
+  const config = await worker.fetch(
+    new Request("https://relay.example/v1/config"),
+    configured.env,
+  );
+  assert.equal((await config.json()).lifecycleTelemetryAvailable, true);
+});
+
 test("PWA asset responses include strict browser security headers", async () => {
   const response = secureAssetResponse(
     new Response("ok", {
@@ -353,3 +452,71 @@ test("an expired subscription keeps its room token authority", async () => {
   );
   assert.equal(oversized.status, 413);
 });
+
+function lifecycleEvent() {
+  return {
+    schemaVersion: 1,
+    eventId: "11111111-1111-4111-8111-111111111111",
+    installationId: "22222222-2222-4222-8222-222222222222",
+    event: "upgrade",
+    currentVersion: "1.3.0",
+    currentBuild: "42",
+    previousVersion: "1.2.0",
+    previousBuild: "37",
+    platform: "macos",
+    architecture: "arm64",
+    occurredAt: "2026-08-09T03:04:05.000Z",
+  };
+}
+
+function lifecycleRequest(event) {
+  return new Request("https://relay.example/v1/telemetry/lifecycle", {
+    method: "POST",
+    headers: {
+      "CF-Connecting-IP": "203.0.113.20",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(event),
+  });
+}
+
+function telemetryEnvironment() {
+  const batches = [];
+  const rateKinds = [];
+  const database = {
+    prepare(sql) {
+      return {
+        bind(...values) {
+          return { sql, values };
+        },
+      };
+    },
+    async batch(statements) {
+      batches.push(statements);
+      return statements.map(() => ({ success: true }));
+    },
+  };
+  const env = {
+    TELEMETRY_DB: database,
+    TELEMETRY_HASH_SECRET: "dingdong-test-hmac-secret-with-32-bytes",
+    RELAY_ROOMS: {
+      idFromName(name) {
+        return name;
+      },
+      get() {
+        return {
+          async fetch(request) {
+            rateKinds.push(request.headers.get("x-dingdong-rate-kind"));
+            return new Response(null, { status: 204 });
+          },
+        };
+      },
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error("Telemetry must not reach the asset binding");
+      },
+    },
+  };
+  return { env, batches, rateKinds };
+}

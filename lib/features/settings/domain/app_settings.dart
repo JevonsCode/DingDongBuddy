@@ -48,6 +48,20 @@ enum DefaultWorkspace {
   }
 }
 
+/// Explicit consent for the two bounded lifecycle events DingDong can send.
+enum LifecycleTelemetryConsent {
+  undecided,
+  enabled,
+  disabled;
+
+  static LifecycleTelemetryConsent parse(Object? value) {
+    return values.firstWhere(
+      (LifecycleTelemetryConsent item) => item.name == value,
+      orElse: () => LifecycleTelemetryConsent.undecided,
+    );
+  }
+}
+
 /// Preset background colors used by the macOS unread notification capsule.
 enum TrayNotificationColor {
   orange(0xDB7333),
@@ -87,6 +101,7 @@ final class AppSettings {
     this.clipboardMaxItems = 5000,
     this.clipboardMaxAgeDays = 120,
     this.allowAgentClipboardContent = false,
+    this.lifecycleTelemetryConsent = LifecycleTelemetryConsent.undecided,
     this.rememberAgentActivity = true,
     this.groupRepeatedAgentSessions = true,
     this.agentActivityMaxItems = 500,
@@ -110,6 +125,7 @@ final class AppSettings {
   final int clipboardMaxItems;
   final int clipboardMaxAgeDays;
   final bool allowAgentClipboardContent;
+  final LifecycleTelemetryConsent lifecycleTelemetryConsent;
   final bool rememberAgentActivity;
   final bool groupRepeatedAgentSessions;
   final int agentActivityMaxItems;
@@ -134,6 +150,7 @@ final class AppSettings {
       clipboardMaxItems: clipboardMaxItems.clamp(20, 5000),
       clipboardMaxAgeDays: clipboardMaxAgeDays.clamp(1, 730),
       allowAgentClipboardContent: allowAgentClipboardContent,
+      lifecycleTelemetryConsent: lifecycleTelemetryConsent,
       rememberAgentActivity: rememberAgentActivity,
       groupRepeatedAgentSessions: groupRepeatedAgentSessions,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
@@ -161,6 +178,7 @@ final class AppSettings {
     int? clipboardMaxItems,
     int? clipboardMaxAgeDays,
     bool? allowAgentClipboardContent,
+    LifecycleTelemetryConsent? lifecycleTelemetryConsent,
     bool? rememberAgentActivity,
     bool? groupRepeatedAgentSessions,
     int? agentActivityMaxItems,
@@ -186,6 +204,8 @@ final class AppSettings {
       clipboardMaxAgeDays: clipboardMaxAgeDays ?? this.clipboardMaxAgeDays,
       allowAgentClipboardContent:
           allowAgentClipboardContent ?? this.allowAgentClipboardContent,
+      lifecycleTelemetryConsent:
+          lifecycleTelemetryConsent ?? this.lifecycleTelemetryConsent,
       rememberAgentActivity:
           rememberAgentActivity ?? this.rememberAgentActivity,
       groupRepeatedAgentSessions:

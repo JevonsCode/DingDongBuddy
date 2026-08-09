@@ -141,8 +141,15 @@ void main() {
       expect(find.byKey(const Key('settings-hide-dock-icon')), findsOneWidget);
       expect(
         find.byKey(const Key('settings-anonymous-telemetry')),
-        findsNothing,
+        findsOneWidget,
       );
+      final CompactSwitchListTile telemetrySwitch = tester.widget(
+        find.byKey(const Key('settings-anonymous-telemetry')),
+      );
+      expect(telemetrySwitch.value, isFalse);
+      telemetrySwitch.onChanged!(true);
+      await tester.pumpAndSettle();
+      expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'enabled');
       expect(find.byKey(const Key('settings-opacity')), findsOneWidget);
       expect(find.byKey(const Key('settings-density')), findsNothing);
       expect(

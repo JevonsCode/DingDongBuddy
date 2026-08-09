@@ -15,6 +15,14 @@
     "binding": "ASSETS",
     "run_worker_first": ["/v1/*"]
   },
+  "d1_databases": [
+    {
+      "binding": "TELEMETRY_DB",
+      "database_name": "dingdong-lifecycle-telemetry",
+      "database_id": "da226343-848d-4469-9600-6085163b86fa",
+      "migrations_dir": "migrations"
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {

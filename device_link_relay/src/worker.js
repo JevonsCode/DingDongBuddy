@@ -2,6 +2,7 @@ import webPush from "web-push";
 
 const serviceVersion = "1.3.0";
 const maximumFrameBytes = 256 * 1024;
+const maximumLifecycleTelemetryBytes = 4 * 1024;
 // Web Push providers only guarantee a 4 KiB encrypted message. Keeping the
 // already-encrypted DingDong envelope below this limit leaves room for the
 // Web Push record header and its small JSON wrapper.
@@ -51,7 +52,26 @@ export default {
           env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY,
         ),
         vapidPublicKey: env.VAPID_PUBLIC_KEY || null,
+        lifecycleTelemetryAvailable: hasLifecycleTelemetryConfiguration(env),
       });
+    }
+    if (url.pathname === "/v1/telemetry/lifecycle") {
+      if (request.method !== "POST") {
+        return jsonResponse({ error: "Method not allowed" }, 405);
+      }
+      if (!hasLifecycleTelemetryConfiguration(env)) {
+        return jsonResponse(
+          { error: "Lifecycle statistics are unavailable" },
+          503,
+        );
+      }
+      const rateLimitResponse = await enforceGlobalRateLimit(
+        request,
+        env,
+        "telemetry",
+      );
+      if (rateLimitResponse) return rateLimitResponse;
+      return recordLifecycleTelemetry(request, env);
     }
     const route = relayRoute(url.pathname);
     if (route) {
@@ -550,6 +570,202 @@ export function isValidPushRegistration(body) {
     isAllowedPushEndpoint(subscription?.endpoint) &&
     isValidPushKey(subscription?.keys?.p256dh, 65, true) &&
     isValidPushKey(subscription?.keys?.auth, 16, false)
+  );
+}
+
+export async function recordLifecycleTelemetry(request, env) {
+  if (
+    !request.headers
+      .get("Content-Type")
+      ?.toLowerCase()
+      .startsWith("application/json")
+  ) {
+    return jsonResponse({ error: "JSON content type required" }, 415);
+  }
+  const body = await readJsonBody(request, maximumLifecycleTelemetryBytes);
+  if (body === requestBodyTooLarge) {
+    return jsonResponse({ error: "Request body too large" }, 413);
+  }
+  const event = validatedLifecycleTelemetryEvent(body);
+  if (!event) {
+    return jsonResponse({ error: "Invalid lifecycle event" }, 400);
+  }
+
+  const installationHash = await hmacSha256Hex(
+    env.TELEMETRY_HASH_SECRET,
+    event.installationId,
+  );
+  const receivedAt = new Date().toISOString();
+  try {
+    await env.TELEMETRY_DB.batch([
+      env.TELEMETRY_DB.prepare(
+        `INSERT INTO lifecycle_installations (
+          installation_hash, first_seen_at, last_seen_at, first_event_at,
+          last_event_at, first_version, current_version, current_build,
+          platform, architecture
+        ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE NOT EXISTS (
+          SELECT 1 FROM lifecycle_events WHERE event_id = ?
+        )
+        ON CONFLICT(installation_hash) DO UPDATE SET
+          last_seen_at = CASE
+            WHEN excluded.last_event_at >= lifecycle_installations.last_event_at
+              THEN excluded.last_seen_at
+            ELSE lifecycle_installations.last_seen_at
+          END,
+          last_event_at = CASE
+            WHEN excluded.last_event_at >= lifecycle_installations.last_event_at
+              THEN excluded.last_event_at
+            ELSE lifecycle_installations.last_event_at
+          END,
+          current_version = CASE
+            WHEN excluded.last_event_at >= lifecycle_installations.last_event_at
+              THEN excluded.current_version
+            ELSE lifecycle_installations.current_version
+          END,
+          current_build = CASE
+            WHEN excluded.last_event_at >= lifecycle_installations.last_event_at
+              THEN excluded.current_build
+            ELSE lifecycle_installations.current_build
+          END,
+          platform = CASE
+            WHEN excluded.last_event_at >= lifecycle_installations.last_event_at
+              THEN excluded.platform
+            ELSE lifecycle_installations.platform
+          END,
+          architecture = CASE
+            WHEN excluded.last_event_at >= lifecycle_installations.last_event_at
+              THEN excluded.architecture
+            ELSE lifecycle_installations.architecture
+          END`,
+      ).bind(
+        installationHash,
+        receivedAt,
+        receivedAt,
+        event.occurredAt,
+        event.occurredAt,
+        event.currentVersion,
+        event.currentVersion,
+        event.currentBuild,
+        event.platform,
+        event.architecture,
+        event.eventId,
+      ),
+      env.TELEMETRY_DB.prepare(
+        `INSERT OR IGNORE INTO lifecycle_events (
+          event_id, installation_hash, event_type, current_version,
+          current_build, previous_version, previous_build, platform,
+          architecture, occurred_at, received_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(
+        event.eventId,
+        installationHash,
+        event.event,
+        event.currentVersion,
+        event.currentBuild,
+        event.previousVersion,
+        event.previousBuild,
+        event.platform,
+        event.architecture,
+        event.occurredAt,
+        receivedAt,
+      ),
+    ]);
+  } catch {
+    return jsonResponse(
+      { error: "Lifecycle statistics are temporarily unavailable" },
+      503,
+    );
+  }
+  return jsonResponse({ accepted: true }, 202);
+}
+
+function validatedLifecycleTelemetryEvent(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  const allowedKeys = new Set([
+    "schemaVersion",
+    "eventId",
+    "installationId",
+    "event",
+    "currentVersion",
+    "currentBuild",
+    "previousVersion",
+    "previousBuild",
+    "platform",
+    "architecture",
+    "occurredAt",
+  ]);
+  if (Object.keys(body).some((key) => !allowedKeys.has(key))) return null;
+  const uuidV4 =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const version = /^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$/;
+  const build = /^[0-9A-Za-z][0-9A-Za-z._+-]{0,31}$/;
+  const nullableVersion =
+    body.previousVersion == null ||
+    (typeof body.previousVersion === "string" &&
+      version.test(body.previousVersion));
+  const nullableBuild =
+    body.previousBuild == null ||
+    (typeof body.previousBuild === "string" && build.test(body.previousBuild));
+  const occurredAt =
+    typeof body.occurredAt === "string" && body.occurredAt.length <= 35
+      ? Date.parse(body.occurredAt)
+      : Number.NaN;
+  if (
+    body.schemaVersion !== 1 ||
+    !uuidV4.test(body.eventId) ||
+    !uuidV4.test(body.installationId) ||
+    !["install", "upgrade"].includes(body.event) ||
+    typeof body.currentVersion !== "string" ||
+    !version.test(body.currentVersion) ||
+    typeof body.currentBuild !== "string" ||
+    !build.test(body.currentBuild) ||
+    !nullableVersion ||
+    !nullableBuild ||
+    !["macos", "windows"].includes(body.platform) ||
+    !["arm64", "x64", "x86", "other"].includes(body.architecture) ||
+    !Number.isFinite(occurredAt) ||
+    occurredAt < Date.UTC(2020, 0, 1) ||
+    occurredAt > Date.now() + 24 * 60 * 60 * 1000 ||
+    (body.event === "install" &&
+      (body.previousVersion != null || body.previousBuild != null))
+  ) {
+    return null;
+  }
+  return {
+    eventId: body.eventId.toLowerCase(),
+    installationId: body.installationId.toLowerCase(),
+    event: body.event,
+    currentVersion: body.currentVersion,
+    currentBuild: body.currentBuild,
+    previousVersion: body.previousVersion || null,
+    previousBuild: body.previousBuild || null,
+    platform: body.platform,
+    architecture: body.architecture,
+    occurredAt: new Date(occurredAt).toISOString(),
+  };
+}
+
+async function hmacSha256Hex(secret, value) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const digest = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+function hasLifecycleTelemetryConfiguration(env) {
+  return Boolean(
+    env.TELEMETRY_DB &&
+      typeof env.TELEMETRY_HASH_SECRET === "string" &&
+      env.TELEMETRY_HASH_SECRET.length >= 32,
   );
 }
 

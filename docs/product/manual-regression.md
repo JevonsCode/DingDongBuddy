@@ -324,7 +324,19 @@ and macOS golden images; the items below exercise real operating-system state.
 - A newer release adds a small orange-red dot beside the popup version; current,
   unknown, checking, and failed states do not show the dot.
 - Report a problem and Request a feature open the matching structured GitHub forms.
-- Settings do not expose analytics controls, and release builds contain no analytics SDK or analytics build key.
+- A release build with no saved lifecycle-statistics choice shows a
+  non-dismissible explanation with equally available **Don't send** and
+  **Allow** actions. **Don't send** creates no installation identifier or
+  request. **Settings → Privacy** can change the saved choice.
+- With consent enabled, a fresh successful launch sends exactly one `install`
+  event, and the first successful launch after each version/build change sends
+  exactly one `upgrade` event. Ordinary launches and feature use send nothing.
+  An offline failure is retried with the same event ID on a later launch.
+- Lifecycle requests contain only the documented random ID, version/build,
+  platform, architecture, event type, and time. They contain no clipboard,
+  file, Agent, activity, session, or feature-use data; the Worker stores only
+  the HMAC installation hash in D1. No third-party analytics SDK or analytics
+  build key is present.
 - Memory and local storage usage can be refreshed without blocking navigation.
 - Storage usage separates Clipboard images, text, files, and archive entries;
   category cleanup preserves the archive.

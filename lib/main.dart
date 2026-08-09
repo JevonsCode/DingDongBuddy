@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi' as ffi;
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -44,6 +45,7 @@ import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -53,6 +55,8 @@ import 'package:dingdong/features/shell/domain/development_test_action.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/features/shell/ui/development_test_panel_app.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
+import 'package:dingdong/features/telemetry/data/http_lifecycle_telemetry_gateway.dart';
+import 'package:dingdong/features/telemetry/data/lifecycle_telemetry_controller.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
@@ -112,6 +116,9 @@ Future<void> main(List<String> arguments) async {
   }
 
   final AppDataPaths appDataPaths = AppDataPaths.current();
+  final bool hadExistingApplicationData = appDataPaths
+      .applicationSupportDirectory
+      .existsSync();
   final String homeDirectory =
       Platform.environment['HOME'] ?? Platform.environment['USERPROFILE']!;
   final CodexThreadInspector codexThreadInspector = CodexThreadInspector(
@@ -243,6 +250,17 @@ Future<void> main(List<String> arguments) async {
   });
   final AppSettings startupSettings = await dependencies.settingsRepository
       .load();
+  final LifecycleTelemetryController lifecycleTelemetryController =
+      LifecycleTelemetryController(
+        preferences: preferencesBackend,
+        gateway: HttpLifecycleTelemetryGateway(),
+        currentVersion: currentAppVersion,
+        currentBuild: currentAppBuild,
+        platform: Platform.isMacOS ? 'macos' : 'windows',
+        architecture: _lifecycleTelemetryArchitecture(),
+        hadExistingApplicationData: hadExistingApplicationData,
+        disabled: appDataPaths.development,
+      );
   agentConversationLauncher = NativeAgentConversationLauncher(
     codexConversationPreflightBatch: codexThreadInspector.inspectThreadIds,
     configurationLoader: FileAgentLauncherConfigurationStore(
@@ -288,6 +306,8 @@ Future<void> main(List<String> arguments) async {
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
     onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
+    onLifecycleTelemetryConsentChanged:
+        lifecycleTelemetryController.applyConsent,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: applicationUpdater,
@@ -393,6 +413,11 @@ Future<void> main(List<String> arguments) async {
         );
       case 'settings_changed':
         await settingsViewModel.reload();
+        unawaited(
+          lifecycleTelemetryController.applyConsent(
+            settingsViewModel.settings.lifecycleTelemetryConsent,
+          ),
+        );
         dependencies.applyClipboardRetention(settingsViewModel.settings);
         activityController.configure(
           rememberAcrossRestarts:
@@ -518,6 +543,10 @@ Future<void> main(List<String> arguments) async {
     DingDongApp(
       activityController: activityController,
       developmentBuild: appDataPaths.development,
+      showLifecycleTelemetryConsentPrompt:
+          !appDataPaths.development &&
+          startupSettings.lifecycleTelemetryConsent ==
+              LifecycleTelemetryConsent.undecided,
       agentConversationLauncher: agentConversationLauncher,
       agentBaseUri: dependencies.agentHttpServer.baseUri,
       clipboardCaptureService: dependencies.clipboardCaptureService,
@@ -551,6 +580,18 @@ Future<void> main(List<String> arguments) async {
       shellController: shellController,
     ),
   );
+  await WidgetsBinding.instance.endOfFrame;
+  if (!appDataPaths.development &&
+      startupSettings.lifecycleTelemetryConsent ==
+          LifecycleTelemetryConsent.undecided) {
+    await shellGateway.showAndFocus();
+  } else {
+    unawaited(
+      lifecycleTelemetryController.applyConsent(
+        startupSettings.lifecycleTelemetryConsent,
+      ),
+    );
+  }
 }
 
 bool _usesChineseLabels(AppLanguagePreference language) {
@@ -567,6 +608,14 @@ Uri? _configuredUri(String value) {
   if (trimmed.isEmpty) return null;
   final Uri? uri = Uri.tryParse(trimmed);
   return uri != null && uri.hasScheme && uri.host.isNotEmpty ? uri : null;
+}
+
+String _lifecycleTelemetryArchitecture() {
+  final String abi = ffi.Abi.current().toString().toLowerCase();
+  if (abi.contains('arm64')) return 'arm64';
+  if (abi.contains('x64')) return 'x64';
+  if (abi.contains('ia32')) return 'x86';
+  return 'other';
 }
 
 DateTime? _latestClipboardCapture(ClipboardStore store) {

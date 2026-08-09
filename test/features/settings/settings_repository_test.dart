@@ -12,6 +12,10 @@ void main() {
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.allowAgentClipboardContent, isFalse);
     expect(settings.groupRepeatedAgentSessions, isTrue);
+    expect(
+      settings.lifecycleTelemetryConsent,
+      LifecycleTelemetryConsent.undecided,
+    );
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
     expect(settings.hideDockIcon, isFalse);
@@ -48,6 +52,7 @@ void main() {
           'dingdong.agentActivity.groupRepeatedSessions': false,
           'dingdong.agentActivity.maxItems': 9000,
           'dingdong.agentActivity.countHours': 0,
+          'dingdong.telemetry.lifecycleConsent': 'enabled',
           'dingdong.macos.hideDockIcon': true,
           'dingdong.macos.trayNotificationColor': 'purple',
           'dingdong.shortcut.openClipboard': const GlobalHotKey(
@@ -81,6 +86,10 @@ void main() {
     expect(settings.groupRepeatedAgentSessions, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
     expect(settings.agentActivityCountHours, 1);
+    expect(
+      settings.lifecycleTelemetryConsent,
+      LifecycleTelemetryConsent.enabled,
+    );
     expect(settings.hideDockIcon, isTrue);
     expect(settings.trayNotificationColor, TrayNotificationColor.purple);
     expect(
@@ -109,6 +118,7 @@ void main() {
       clipboardMaxItems: 600,
       clipboardMaxAgeDays: 30,
       allowAgentClipboardContent: true,
+      lifecycleTelemetryConsent: LifecycleTelemetryConsent.disabled,
       rememberAgentActivity: false,
       groupRepeatedAgentSessions: false,
       agentActivityMaxItems: 320,
@@ -137,6 +147,7 @@ void main() {
     expect(backend.values['dingdong.clipboard.maxItems'], 600);
     expect(backend.values['dingdong.clipboard.maxAgeDays'], 30);
     expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
+    expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'disabled');
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
     expect(
       backend.values['dingdong.agentActivity.groupRepeatedSessions'],

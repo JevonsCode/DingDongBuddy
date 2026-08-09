@@ -169,6 +169,7 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | Default workspace | Dynamic | Dynamic / Library / Clipboard |
 | Clipboard monitoring | Off | On / off |
 | Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |
+| Anonymous lifecycle statistics | Ask once | Install and upgrade events only; can be disabled anytime |
 | Completion sound | DingDong Classic | Built-in, custom, system, or muted |
 | Local Agent API port | `2333` | `1024`–`65535`; restart required |
 
@@ -176,7 +177,14 @@ The global panel shortcut and all workspace shortcuts are configurable in
 
 - Clipboard history, resources, settings, and Agent activity are local by default.
 - The loopback API listens only on localhost.
-- DingDong does not include analytics or telemetry.
+- Anonymous lifecycle statistics are opt-in. When allowed, DingDong sends one
+  event after a successful first launch or version upgrade containing only a
+  random installation ID, app/build version, operating system, architecture,
+  and event time.
+- DingDong sends no sessions, heartbeats, activity, feature usage, clipboard
+  content, files, or Agent messages. The Cloudflare service stores only a
+  secret-keyed hash of the random installation ID and does not persist client
+  IP addresses.
 - Clipboard content access for Agents is off by default; metadata remains available.
 - Device-link payloads are end-to-end encrypted; the connection relay does not store clipboard or file content.
 - The phone PWA never reads the phone's clipboard and sends content only after an explicit **Send** action.

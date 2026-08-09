@@ -21,6 +21,7 @@ import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -69,6 +70,54 @@ void main() {
     expect(brand.softWrap, isFalse);
     expect(brand.style?.height, 1.18);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('lifecycle statistics prompt requires an explicit choice', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(520, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: SettingsRepository(backend),
+        showLifecycleTelemetryConsentPrompt: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('lifecycle-telemetry-consent-dialog')),
+      findsOneWidget,
+    );
+    await tester.tapAt(const Offset(8, 8));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('lifecycle-telemetry-consent-dialog')),
+      findsOneWidget,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('lifecycle-telemetry-consent-dialog')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('lifecycle-telemetry-decline')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('lifecycle-telemetry-consent-dialog')),
+      findsNothing,
+    );
+    expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'disabled');
+    expect(
+      backend.values.containsKey('dingdong.telemetry.installationId'),
+      isFalse,
+    );
   });
 
   testWidgets('Dynamic quick actions open a working workspace', (

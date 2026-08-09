@@ -41,6 +41,7 @@ final class SettingsRepository {
       _backend.read(_allowAgentClipboardContentKey),
       _backend.read(_workspaceShortcutsKey),
       _backend.read(_groupRepeatedAgentSessionsKey),
+      _backend.read(_lifecycleTelemetryConsentKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -76,6 +77,7 @@ final class SettingsRepository {
       groupRepeatedAgentSessions: values[20] is bool
           ? values[20]! as bool
           : true,
+      lifecycleTelemetryConsent: LifecycleTelemetryConsent.parse(values[21]),
     ).sanitized();
   }
 
@@ -122,6 +124,10 @@ final class SettingsRepository {
         _groupRepeatedAgentSessionsKey,
         settings.groupRepeatedAgentSessions,
       ),
+      _backend.write(
+        _lifecycleTelemetryConsentKey,
+        settings.lifecycleTelemetryConsent.name,
+      ),
     ]);
   }
 }
@@ -149,3 +155,5 @@ const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';
 const String _workspaceShortcutsKey = 'dingdong.shortcut.workspaces';
 const String _groupRepeatedAgentSessionsKey =
     'dingdong.agentActivity.groupRepeatedSessions';
+const String _lifecycleTelemetryConsentKey =
+    'dingdong.telemetry.lifecycleConsent';

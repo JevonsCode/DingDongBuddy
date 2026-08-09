@@ -21,6 +21,9 @@ This checklist keeps the first session focused on the product's core loop: manag
 
 ## Privacy Baseline
 
+- First launch asks whether to share anonymous install and upgrade statistics.
+  Declining creates no telemetry identifier and sends no request; the choice
+  can be changed later in Settings.
 - Clipboard history is local-only by default. Copied image files retain only
   their source paths, while screenshots without a source path use managed local
   storage and follow clipboard retention.

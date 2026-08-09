@@ -804,30 +804,56 @@ void main() {
     expect(signer, contains('CODE_SIGN_IDENTITY'));
   });
 
-  test('release builds contain no dormant analytics wiring', () {
-    final String pubspec = File('pubspec.yaml').readAsStringSync();
-    final String main = File('lib/main.dart').readAsStringSync();
-    final String releaseMetadata = File(
-      'docs/dingdong-release.json',
-    ).readAsStringSync();
-    final String manualRegression = File(
-      'docs/product/manual-regression.md',
-    ).readAsStringSync();
-    final String workflow = File(
-      '.github/workflows/release.yml',
-    ).readAsStringSync();
+  test(
+    'release builds limit remote statistics to consented lifecycle events',
+    () {
+      final String pubspec = File('pubspec.yaml').readAsStringSync();
+      final String main = File('lib/main.dart').readAsStringSync();
+      final String telemetryDomain = File(
+        'lib/features/telemetry/domain/lifecycle_telemetry.dart',
+      ).readAsStringSync();
+      final String telemetryController = File(
+        'lib/features/telemetry/data/lifecycle_telemetry_controller.dart',
+      ).readAsStringSync();
+      final String worker = File(
+        'device_link_relay/src/worker.js',
+      ).readAsStringSync();
+      final String migration = File(
+        'device_link_relay/migrations/0001_lifecycle_telemetry.sql',
+      ).readAsStringSync();
+      final String releaseMetadata = File(
+        'docs/dingdong-release.json',
+      ).readAsStringSync();
+      final String manualRegression = File(
+        'docs/product/manual-regression.md',
+      ).readAsStringSync();
+      final String workflow = File(
+        '.github/workflows/release.yml',
+      ).readAsStringSync();
 
-    expect(
-      File('lib/platform/privacy_preserving_telemetry.dart').existsSync(),
-      isFalse,
-    );
-    expect(pubspec, isNot(contains('aptabase')));
-    expect(main, isNot(contains('Telemetry')));
-    expect(main, isNot(contains('telemetry.track')));
-    expect(workflow, isNot(contains('APTABASE_APP_KEY')));
-    expect(releaseMetadata.toLowerCase(), isNot(contains('aptabase')));
-    expect(manualRegression.toLowerCase(), isNot(contains('aptabase')));
-  });
+      expect(
+        File('lib/platform/privacy_preserving_telemetry.dart').existsSync(),
+        isFalse,
+      );
+      expect(pubspec, isNot(contains('aptabase')));
+      expect(pubspec, isNot(contains('posthog')));
+      expect(main, contains('LifecycleTelemetryController'));
+      expect(main, contains('disabled: appDataPaths.development'));
+      expect(main, isNot(contains('telemetry.track')));
+      expect(
+        telemetryDomain,
+        contains('enum LifecycleTelemetryEventKind { install, upgrade }'),
+      );
+      expect(telemetryController, isNot(contains('Timer.periodic')));
+      expect(worker, contains('crypto.subtle.sign("HMAC"'));
+      expect(migration, contains('installation_hash TEXT'));
+      expect(migration, isNot(matches(RegExp(r'\n\s+installation_id\s'))));
+      expect(migration, isNot(contains('ip_address')));
+      expect(workflow, isNot(contains('APTABASE_APP_KEY')));
+      expect(releaseMetadata.toLowerCase(), isNot(contains('aptabase')));
+      expect(manualRegression.toLowerCase(), isNot(contains('aptabase')));
+    },
+  );
 
   test('GitHub feedback forms require a privacy check', () {
     final String bugForm = File(

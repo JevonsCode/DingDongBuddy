@@ -26,6 +26,8 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
     Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
+    Future<void> Function(LifecycleTelemetryConsent value)?
+    onLifecycleTelemetryConsentChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
     ApplicationUpdater? applicationUpdater,
@@ -41,6 +43,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onShowMenuBarRecovery = onShowMenuBarRecovery,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
        _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
+       _onLifecycleTelemetryConsentChanged = onLifecycleTelemetryConsentChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
        _applicationUpdater = applicationUpdater,
@@ -56,6 +59,8 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
   final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
+  final Future<void> Function(LifecycleTelemetryConsent value)?
+  _onLifecycleTelemetryConsentChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
   final ApplicationUpdater? _applicationUpdater;
@@ -344,6 +349,20 @@ final class SettingsViewModel extends ChangeNotifier
     _settings = _settings.copyWith(allowAgentClipboardContent: value);
     notifyListeners();
     await _save();
+  }
+
+  Future<void> setLifecycleTelemetryConsent(
+    LifecycleTelemetryConsent value,
+  ) async {
+    _settings = _settings.copyWith(lifecycleTelemetryConsent: value);
+    notifyListeners();
+    await _save();
+    try {
+      await _onLifecycleTelemetryConsentChanged?.call(value);
+    } on Object {
+      _errorMessage = 'Anonymous lifecycle statistics could not be updated.';
+      notifyListeners();
+    }
   }
 
   Future<void> setRememberAgentActivity(bool value) async {

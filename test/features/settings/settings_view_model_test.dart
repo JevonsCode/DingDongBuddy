@@ -53,6 +53,29 @@ void main() {
     expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
   });
 
+  test('lifecycle statistics require an explicit persisted choice', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final List<LifecycleTelemetryConsent> applied =
+        <LifecycleTelemetryConsent>[];
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      onLifecycleTelemetryConsentChanged:
+          (LifecycleTelemetryConsent value) async => applied.add(value),
+    );
+    await model.load();
+
+    expect(
+      model.settings.lifecycleTelemetryConsent,
+      LifecycleTelemetryConsent.undecided,
+    );
+    await model.setLifecycleTelemetryConsent(LifecycleTelemetryConsent.enabled);
+
+    expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'enabled');
+    expect(applied, <LifecycleTelemetryConsent>[
+      LifecycleTelemetryConsent.enabled,
+    ]);
+  });
+
   test(
     'reload applies settings saved by the dedicated settings window',
     () async {
