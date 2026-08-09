@@ -53,7 +53,7 @@ jobs:
           trap 'rm -f "$temporary_file"' EXIT
           while IFS= read -r repo_path; do
             remote_path="${repo_path#docs}"
-            curl --fail --silent --show-error "$origin$remote_path" -o "$temporary_file"
+            curl --fail --silent --show-error --location "$origin$remote_path" -o "$temporary_file"
             expected_hash="$(sha256sum "$repo_path" | awk '{print $1}')"
             actual_hash="$(sha256sum "$temporary_file" | awk '{print $1}')"
             test "$actual_hash" = "$expected_hash"
