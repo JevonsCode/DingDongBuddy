@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
     inputs:
       tag:
@@ -12,6 +9,7 @@ on:
         type: string
 
 permissions:
+  actions: write
   contents: write
 
 env:
@@ -24,12 +22,71 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ env.RELEASE_TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: device_link_relay/package-lock.json
       - name: Verify tag matches application version
         shell: bash
         run: |
           tag_version="${RELEASE_TAG#v}"
           app_version="$(sed -n 's/^version: \([^+]*\).*/\1/p' pubspec.yaml)"
           test "$tag_version" = "$app_version"
+      - name: Verify the tag was tested and its web release is deployed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag_sha="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          gh api \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/flutter-desktop.yml/runs?branch=main&head_sha=$tag_sha&status=success&per_page=100" \
+            | jq -e --arg sha "$tag_sha" \
+              '.workflow_runs | any(.head_sha == $sha and .head_branch == "main" and .conclusion == "success")' \
+              >/dev/null
+
+          device_link_origin="https://dingdong.xn--m8txu.com"
+          health="$(curl --fail --silent --show-error "$device_link_origin/v1/health")"
+          config="$(curl --fail --silent --show-error "$device_link_origin/v1/config")"
+          deployed_version="$(printf '%s' "$health" | node -e 'let body=""; process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => process.stdout.write(JSON.parse(body).serviceVersion || ""));')"
+          deployed_sha="$(printf '%s' "$health" | node -e 'let body=""; process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => process.stdout.write(JSON.parse(body).releaseSha || ""));')"
+          push_available="$(printf '%s' "$config" | node -e 'let body=""; process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => process.stdout.write(String(JSON.parse(body).pushAvailable === true)));')"
+          test "$deployed_version" = "${RELEASE_TAG#v}"
+          test "$deployed_sha" = "$tag_sha"
+          test "$push_available" = "true"
+
+          remote_file="$(mktemp)"
+          trap 'rm -f "$remote_file"' EXIT
+          while IFS= read -r repo_path; do
+            remote_path="${repo_path#docs}"
+            curl --fail --silent --show-error --location "$device_link_origin$remote_path" -o "$remote_file"
+            expected_hash="$(sha256sum "$repo_path" | awk '{print $1}')"
+            actual_hash="$(sha256sum "$remote_file" | awk '{print $1}')"
+            test "$actual_hash" = "$expected_hash"
+          done < <(
+            {
+              git ls-files docs/app/
+              sed -n 's|^!/|docs/|p' docs/.assetsignore | while IFS= read -r candidate; do
+                if [ -f "$candidate" ]; then
+                  printf '%s\n' "$candidate"
+                fi
+              done
+            } | sort -u
+          )
+
+          curl --fail --silent --show-error \
+            --dump-header "$remote_file" \
+            --output /dev/null \
+            "$device_link_origin/app/"
+          grep -qi '^content-security-policy:' "$remote_file"
+          grep -qi '^strict-transport-security:' "$remote_file"
+          grep -qi '^x-content-type-options: *nosniff' "$remote_file"
+      - name: Recheck the PWA and relay release bundle
+        working-directory: device_link_relay
+        run: |
+          npm ci
+          npm run check
+          npx wrangler deploy --dry-run
 
   macos-mcp:
     needs: validate
@@ -300,3 +357,7 @@ jobs:
               --title "DingDong ${RELEASE_TAG#v}" \
               --notes-file docs/release-notes.md
           fi
+
+          gh workflow run pages.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$RELEASE_TAG"
