@@ -1,0 +1,23 @@
+.github/workflows/release-after-ci.yml
+  s_cb013adddd7d1f::t_8d3734861886f8 60
+.github/workflows/release.yml
+  s_cb013adddd7d1f::t_8d3734861886f8 62
+.github/workflows/device-link-cloudflare.yml
+  s_cb013adddd7d1f::t_8d3734861886f8 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "e3b55ad0d7a157be042dff56100f29f4c41342b6",
+  "prompts": {},
+  "sessions": {
+    "s_cb013adddd7d1f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fdfc6-62a3-7810-9158-9d38cae32585",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
