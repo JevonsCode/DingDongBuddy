@@ -1,0 +1,92 @@
+docs/release-notes.md
+  s_cb013adddd7d1f::t_acf8270b16fbcd 17-18,38-40,58-62,82-83,100-101,115-118
+docs/app/content-navigation.js
+  s_cb013adddd7d1f::t_886debad1b0f8a 33-38
+  s_cb013adddd7d1f::t_13fb8da8854b1d 1-32,39-47
+lib/features/agent_api/data/completion_hook_notifier.dart
+  s_cb013adddd7d1f::t_d142ca183e6713 308
+test/contract/completion_hook_notifier_test.dart
+  s_cb013adddd7d1f::t_90a17f33a4da28 124-139
+docs/dingdong-release.json
+  s_cb013adddd7d1f::t_acf8270b16fbcd 5,31,33-34
+README.md
+  s_cb013adddd7d1f::t_acf8270b16fbcd 85-87
+docs/app/service-worker.js
+  s_cb013adddd7d1f::t_3fa08cff614d08 628-633,640
+  s_cb013adddd7d1f::t_a1faf7c4415a5d 710
+  s_cb013adddd7d1f::t_88ce38b9f68f09 5,639,653,679-681,684
+  s_cb013adddd7d1f::t_7fc875b76e0245 602,624
+  s_cb013adddd7d1f::t_6d3d41e5099a12 1,24,406-407,587-592,594,596,599-601,603-619,621-623,625,650,652,654,723
+  s_cb013adddd7d1f::t_fb9d5424bc3a30 620,626,638,691-694,698-709,711-722
+  s_cb013adddd7d1f::t_a1b664bd48b990 644-646,656-657,659,661-662,671
+  s_cb013adddd7d1f::t_ede1801e27f84f 647,649,695-697
+  s_cb013adddd7d1f::t_7e5bf596776307 627,634-637,641-643,648,651,655,658,660,663-670,672-678
+  s_cb013adddd7d1f::t_98a4bc15906baf 682-683,685-690
+docs/app/app.js
+  s_cb013adddd7d1f::t_fb9d5424bc3a30 192-197,540,550
+  s_cb013adddd7d1f::t_df01903a97055d 16-17,19-23,43,68,125-126,157-160
+  s_cb013adddd7d1f::t_886debad1b0f8a 18,444-448
+  s_9ceb9700471088::t_3671374ae4d8ee 355-364,379-380,382-385,411,413-418,436-443,450-461,469-471,474,478-479,486-539,546-549,551-552
+  s_cb013adddd7d1f::t_bab10b64b71023 386-390,404-410,412
+  s_cb013adddd7d1f::t_efef11a23145ea 1390,1455-1465
+  s_cb013adddd7d1f::t_98a4bc15906baf 2174,2181-2187
+  s_cb013adddd7d1f::t_d2d88255c52ce3 191,198-199,260,330,332,334
+  s_cb013adddd7d1f::t_a10f9661b96381 480-485,1475,1537
+  s_cb013adddd7d1f::t_ecad2f4f75e6a8 541-545
+  s_cb013adddd7d1f::t_88ce38b9f68f09 41-42,222,2165-2173,2175-2180
+  s_cb013adddd7d1f::t_793cbb0515a8a4 163,381,391-403,472-473,475-477
+  s_cb013adddd7d1f::t_861dc170bbe600 161,365-368,370-371,373-374,376-378,420-423,426-429,432-435,462-468
+  s_cb013adddd7d1f::t_57d2de5f9767ea 162,369,372,375,419,424-425,430-431
+  s_cb013adddd7d1f::t_b34d83775010a5 449
+README.zh.md
+  s_cb013adddd7d1f::t_acf8270b16fbcd 78-79
+test/packaging/desktop_identity_test.dart
+  s_cb013adddd7d1f::t_acf8270b16fbcd 428-429,507-508
+docs/app/index.html
+  s_cb013adddd7d1f::t_0b9e192b837f75 90-100,105-114,121-134,136-142,144-156,158-165
+device_link_relay/test/pwa-contract.test.js
+  s_cb013adddd7d1f::t_7e5bf596776307 312,316-321,327-330
+  s_cb013adddd7d1f::t_56b2a17b781926 467
+  s_cb013adddd7d1f::t_886debad1b0f8a 18,227-229,251
+  s_cb013adddd7d1f::t_ecad2f4f75e6a8 295-298,300-301,303-305,307
+  s_cb013adddd7d1f::t_a1faf7c4415a5d 315
+  s_cb013adddd7d1f::t_7fc875b76e0245 302,306
+  s_cb013adddd7d1f::t_15e003baaee7f3 219-226,230-245,247,258-291,294,299,308-311,338-339
+  s_cb013adddd7d1f::t_a986123b909eac 246,255-257,313,331-334,337
+  s_cb013adddd7d1f::t_a4c97bc2b6c32b 326
+  s_cb013adddd7d1f::t_98a4bc15906baf 335-336
+  s_cb013adddd7d1f::t_a1b664bd48b990 322-325
+  s_cb013adddd7d1f::t_57d2de5f9767ea 248-250
+  s_cb013adddd7d1f::t_da6c21c15ef47c 252-254,292-293,314
+  s_cb013adddd7d1f::t_b968338b037f4d 17,19-21,191
+docs/app/styles.css
+  s_cb013adddd7d1f::t_ef85391b4f88d5 408,424-428,435,453-480
+docs/product/manual-regression.md
+  s_cb013adddd7d1f::t_acf8270b16fbcd 160-167,306-307
+docs/index.html
+  s_cb013adddd7d1f::t_f7bf372336e186 160,225,726,753,952,979
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "5d8e15b9e5e66c456bd7fc176930d7a31073deff",
+  "prompts": {},
+  "sessions": {
+    "s_9ceb9700471088": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fe66e-d063-7c72-aed3-87626bf60fc8",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    },
+    "s_cb013adddd7d1f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fdfc6-62a3-7810-9158-9d38cae32585",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
