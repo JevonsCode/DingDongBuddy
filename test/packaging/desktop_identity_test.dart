@@ -695,9 +695,12 @@ void main() {
     expect(workflow, contains('releaseSha'));
     expect(workflow, contains('docs/.assetsignore'));
     expect(workflow, contains('gh workflow run pages.yml'));
-    expect(workflow, contains(r'--ref "$RELEASE_TAG"'));
+    expect(workflow, contains('--ref main'));
+    expect(workflow, contains(r'source_ref="$RELEASE_TAG"'));
     expect(releaseGate, contains(r'--ref "$tag"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
+    expect(pagesWorkflow, contains('source_ref:'));
+    expect(pagesWorkflow, contains(r'ref: ${{ inputs.source_ref }}'));
     expect(pagesWorkflow, isNot(contains('push:')));
     expect(deviceLinkDeployWorkflow, contains('workflow_dispatch:'));
     expect(deviceLinkDeployWorkflow, contains('device-link-production'));
