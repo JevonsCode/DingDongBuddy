@@ -1,0 +1,23 @@
+.github/workflows/pages.yml
+  s_cb013adddd7d1f::t_6f40cf7975e26a 5-9,29-30
+.github/workflows/release.yml
+  s_cb013adddd7d1f::t_6f40cf7975e26a 363-364
+test/packaging/desktop_identity_test.dart
+  s_cb013adddd7d1f::t_6f40cf7975e26a 698-699,702-703
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "0f65bd5b6bff52af07e5d83ff3c0b7891974038f",
+  "prompts": {},
+  "sessions": {
+    "s_cb013adddd7d1f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fdfc6-62a3-7810-9158-9d38cae32585",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
