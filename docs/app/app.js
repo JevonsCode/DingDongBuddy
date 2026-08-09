@@ -13,6 +13,14 @@ import {
   wantsAgentNotifications,
 } from "./notification-policy.js";
 import { isStoredPairing, pairingsMatch } from "./pairing-state.js";
+import {
+  adjacentContentTab,
+  contentScrollIsSnapped,
+  contentTabAtScrollPosition,
+  contentTabs,
+  isContentTab,
+  parseContentTabLaunch,
+} from "./content-navigation.js";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -30,6 +38,9 @@ const maximumEncodedFileChunkLength = Math.ceil(fileChunkBytes / 3) * 4 + 4;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
 const directVibrationPattern = [300, 100, 300, 100, 600];
+const agentLaunchIntentKey = "agent-launch-intent";
+const agentLaunchIntentTtlMs = 5 * 60 * 1000;
+const initialContentTab = consumeContentTabLaunch() || "clipboard";
 
 const state = {
   identity: loadIdentity(),
@@ -54,7 +65,7 @@ const state = {
   downloads: new Map(),
   outgoingRequests: new Set(),
   selectedFile: null,
-  activeTab: "clipboard",
+  activeTab: initialContentTab,
   reconnectTimer: null,
   toastTimer: null,
   serviceWorkerRegistration: null,
@@ -111,6 +122,8 @@ const elements = Object.fromEntries(
     "notification-help-steps",
     "notification-help-note",
     "notification-recheck",
+    "content-tabs",
+    "feed-pager",
     "clipboard-panel",
     "agent-panel",
     "clipboard-count",
@@ -141,6 +154,14 @@ const elements = Object.fromEntries(
   ].map((id) => [id, document.getElementById(id)]),
 );
 
+const contentTabButtons = Array.from(document.querySelectorAll(".tab"));
+let feedPagerScrollTimer = null;
+let feedPagerScrolling = false;
+let feedPagerWidth = 0;
+let feedPagerSupportsScrollEnd = false;
+let feedPagerTouchActive = false;
+const feedPanelHeights = new Map();
+
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   state.installPrompt = event;
@@ -167,6 +188,15 @@ async function boot(scannedPair) {
     state.serviceWorkerRegistration = registration;
   });
   navigator.serviceWorker?.addEventListener("message", (event) => {
+    if (event.data?.type === "content-tab.open") {
+      if (handleContentTabOpen(event.data)) {
+        event.ports?.[0]?.postMessage({
+          type: "content-tab.opened",
+          tab: event.data.tab,
+        });
+      }
+      return;
+    }
     if (event.data?.type === "agent.completed") {
       receiveAgentEvent(event.data.message, { requestNotification: false });
     }
@@ -189,6 +219,7 @@ async function boot(scannedPair) {
   });
   await upgradeDefaultIdentityName();
   await restorePairFromWorker();
+  await restoreAgentLaunchIntent();
   await restorePushHealthFromWorker();
   if (applyAgentNotificationDefault(state.pair)) {
     savePair();
@@ -226,6 +257,7 @@ async function boot(scannedPair) {
 }
 
 function wireInteractions() {
+  initializeFeedPager();
   elements["install-app-button"].addEventListener("click", installApp);
   elements["notification-recheck"].addEventListener(
     "click",
@@ -295,11 +327,11 @@ function wireInteractions() {
     render();
   });
   elements["delete-device"].addEventListener("click", deleteDevice);
-  document.querySelectorAll(".tab").forEach((button) => {
+  contentTabButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      state.activeTab = button.dataset.tab;
-      renderTabs();
+      selectContentTab(button.dataset.tab, { animate: true });
     });
+    button.addEventListener("keydown", handleContentTabKeydown);
   });
   elements["message-input"].addEventListener("input", () => {
     resizeComposerInput();
@@ -318,6 +350,204 @@ function wireInteractions() {
   });
   elements["clear-file"].addEventListener("click", clearSelectedFile);
   elements["send-button"].addEventListener("click", sendComposerContent);
+}
+
+function consumeContentTabLaunch() {
+  const launch = parseContentTabLaunch(location.href, location.origin);
+  if (!launch) return null;
+  history.replaceState(null, "", launch.cleanPath);
+  return launch.tab;
+}
+
+function initializeFeedPager() {
+  const pager = elements["feed-pager"];
+  pager.addEventListener("scroll", handleFeedPagerScroll, { passive: true });
+  feedPagerSupportsScrollEnd = "onscrollend" in pager;
+  if (feedPagerSupportsScrollEnd) {
+    pager.addEventListener("scrollend", finishFeedPagerScroll);
+  } else {
+    pager.addEventListener("touchstart", handleFeedPagerTouchStart, {
+      passive: true,
+    });
+    pager.addEventListener("touchend", handleFeedPagerTouchEnd, {
+      passive: true,
+    });
+    pager.addEventListener("touchcancel", handleFeedPagerTouchEnd, {
+      passive: true,
+    });
+  }
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(handleFeedPagerResize);
+    observer.observe(pager);
+    observer.observe(elements["clipboard-panel"]);
+    observer.observe(elements["agent-panel"]);
+  } else {
+    window.addEventListener("resize", refreshFeedPagerLayout);
+  }
+  requestAnimationFrame(refreshFeedPagerLayout);
+}
+
+function handleFeedPagerResize(entries) {
+  for (const entry of entries) {
+    const tab = entry.target.id?.replace(/-panel$/, "");
+    if (!isContentTab(tab)) continue;
+    const box = Array.isArray(entry.borderBoxSize)
+      ? entry.borderBoxSize[0]
+      : entry.borderBoxSize;
+    const height = box?.blockSize || entry.contentRect.height;
+    if (height > 0) feedPanelHeights.set(tab, height);
+  }
+  refreshFeedPagerLayout();
+}
+
+function refreshFeedPagerLayout() {
+  const pager = elements["feed-pager"];
+  const width = pager.clientWidth;
+  const widthChanged = width > 0 && Math.abs(width - feedPagerWidth) > 0.5;
+  if (widthChanged) {
+    feedPagerWidth = width;
+    if (!feedPagerScrolling) alignFeedPager(state.activeTab, false);
+  }
+  if (!feedPagerScrolling) syncFeedPagerHeight();
+}
+
+function handleFeedPagerScroll() {
+  feedPagerScrolling = true;
+  elements["feed-pager"].classList.add("is-scrolling");
+  syncFeedPagerHeight();
+  if (!feedPagerSupportsScrollEnd && !feedPagerTouchActive) {
+    scheduleFeedPagerFinish();
+  }
+}
+
+function handleFeedPagerTouchStart() {
+  feedPagerTouchActive = true;
+  clearTimeout(feedPagerScrollTimer);
+  feedPagerScrollTimer = null;
+}
+
+function handleFeedPagerTouchEnd() {
+  feedPagerTouchActive = false;
+  if (feedPagerScrolling) scheduleFeedPagerFinish();
+}
+
+function scheduleFeedPagerFinish() {
+  clearTimeout(feedPagerScrollTimer);
+  feedPagerScrollTimer = setTimeout(finishFeedPagerScroll, 120);
+}
+
+function finishFeedPagerScroll() {
+  clearTimeout(feedPagerScrollTimer);
+  feedPagerScrollTimer = null;
+  const pager = elements["feed-pager"];
+  if (
+    !feedPagerSupportsScrollEnd &&
+    !contentScrollIsSnapped(pager.scrollLeft, pager.clientWidth)
+  ) {
+    return;
+  }
+  const tab = contentTabAtScrollPosition(pager.scrollLeft, pager.clientWidth);
+  feedPagerScrolling = false;
+  pager.classList.remove("is-scrolling");
+  if (tab !== state.activeTab) {
+    state.activeTab = tab;
+    renderTabs();
+  }
+  syncFeedPagerHeight();
+}
+
+function syncFeedPagerHeight() {
+  const pager = elements["feed-pager"];
+  const height = feedPagerScrolling
+    ? Math.max(...contentTabs.map(contentPanelHeight))
+    : contentPanelHeight(state.activeTab);
+  const nextHeight = `${Math.ceil(height)}px`;
+  if (height > 0 && pager.style.height !== nextHeight) {
+    pager.style.height = nextHeight;
+  }
+}
+
+function contentPanelHeight(tab) {
+  const cached = feedPanelHeights.get(tab);
+  if (cached > 0) return cached;
+  const panel = elements[`${tab}-panel`];
+  const height = Math.max(panel.scrollHeight, panel.offsetHeight);
+  if (height > 0) feedPanelHeights.set(tab, height);
+  return height;
+}
+
+function invalidateFallbackFeedPanelHeight(tab) {
+  if ("ResizeObserver" in window) return;
+  feedPanelHeights.delete(tab);
+  requestAnimationFrame(refreshFeedPagerLayout);
+}
+
+function alignFeedPager(tab, animate) {
+  const pager = elements["feed-pager"];
+  const width = pager.clientWidth;
+  const index = contentTabs.indexOf(tab);
+  if (width <= 0 || index < 0) return;
+  const left = index * width;
+  const behavior =
+    animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "smooth"
+      : "auto";
+  pager.scrollTo({ left, behavior });
+  if (behavior === "auto") syncFeedPagerHeight();
+}
+
+function selectContentTab(
+  tab,
+  { animate = false, focusTab = false, reveal = false } = {},
+) {
+  if (!isContentTab(tab)) return;
+  state.activeTab = tab;
+  renderTabs();
+  if (focusTab) {
+    contentTabButtons.find((button) => button.dataset.tab === tab)?.focus();
+  }
+  requestAnimationFrame(() => {
+    alignFeedPager(tab, animate);
+    if (reveal) {
+      elements["content-tabs"].scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+    }
+  });
+}
+
+function handleContentTabKeydown(event) {
+  let tab = null;
+  if (event.key === "ArrowLeft") {
+    tab = adjacentContentTab(state.activeTab, -1);
+  } else if (event.key === "ArrowRight") {
+    tab = adjacentContentTab(state.activeTab, 1);
+  } else if (event.key === "Home") {
+    tab = contentTabs[0];
+  } else if (event.key === "End") {
+    tab = contentTabs.at(-1);
+  }
+  if (!tab) return;
+  event.preventDefault();
+  selectContentTab(tab, { animate: true, focusTab: true });
+}
+
+function handleContentTabOpen(message) {
+  if (!isContentTab(message.tab)) return false;
+  if (
+    typeof message.room === "string" &&
+    message.room === state.pair?.room &&
+    message.message
+  ) {
+    receiveAgentEvent(message.message, { requestNotification: false });
+  }
+  document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
+  selectContentTab(message.tab, { animate: true, reveal: true });
+  return true;
 }
 
 function testDeviceVibration() {
@@ -1157,6 +1387,7 @@ function render() {
     renderAgentEvents();
     renderSelectedFile();
     updateSendButton();
+    requestAnimationFrame(refreshFeedPagerLayout);
     const notificationsActive = agentNotificationsActive();
     elements["notification-onboarding"].hidden =
       notificationsActive && state.notificationDeliveryHealthy !== false;
@@ -1221,11 +1452,18 @@ function renderConnectionState() {
 }
 
 function renderTabs() {
-  document.querySelectorAll(".tab").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.tab === state.activeTab);
+  contentTabButtons.forEach((button) => {
+    const active = button.dataset.tab === state.activeTab;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
   });
-  elements["clipboard-panel"].hidden = state.activeTab !== "clipboard";
-  elements["agent-panel"].hidden = state.activeTab !== "agent";
+  contentTabs.forEach((tab) => {
+    const panel = elements[`${tab}-panel`];
+    const active = tab === state.activeTab;
+    panel.setAttribute("aria-hidden", String(!active));
+    panel.inert = !active;
+  });
 }
 
 function renderClipboard() {
@@ -1234,6 +1472,7 @@ function renderClipboard() {
     ...state.items.map(createClipboardCard),
   );
   elements["clipboard-empty"].hidden = state.items.length > 0;
+  invalidateFallbackFeedPanelHeight("clipboard");
 }
 
 function createClipboardCard(item) {
@@ -1295,6 +1534,7 @@ function renderAgentEvents() {
     ...state.agentEvents.map(createAgentCard),
   );
   elements["agent-empty"].hidden = state.agentEvents.length > 0;
+  invalidateFallbackFeedPanelHeight("agent");
 }
 
 function createAgentCard(event) {
@@ -1919,6 +2159,31 @@ async function restorePairFromWorker() {
     localStorage.setItem(storageKeys.pair, JSON.stringify(persisted));
   } catch {
     state.pair = null;
+  }
+}
+
+async function restoreAgentLaunchIntent() {
+  let intent;
+  try {
+    intent = await idbGet(agentLaunchIntentKey);
+    await idbDelete(agentLaunchIntentKey);
+  } catch {
+    return;
+  }
+  if (
+    intent?.tab !== "agent" ||
+    !Number.isFinite(intent.createdAt) ||
+    Date.now() - intent.createdAt > agentLaunchIntentTtlMs
+  ) {
+    return;
+  }
+  state.activeTab = "agent";
+  if (
+    typeof intent.room === "string" &&
+    intent.room === state.pair?.room &&
+    typeof intent.message?.id === "string"
+  ) {
+    receiveAgentEvent(intent.message, { requestNotification: false });
   }
 }
 

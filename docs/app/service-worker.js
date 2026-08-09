@@ -1,7 +1,8 @@
-const cacheName = "dingdong-app-shell-v18";
+const cacheName = "dingdong-app-shell-v19";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const notificationVibrationPattern = [250, 100, 250, 100, 450];
+const agentLaunchIntentKey = "agent-launch-intent";
 
 self.addEventListener("install", (event) => {
   const scope = new URL(self.registration.scope);
@@ -20,6 +21,7 @@ self.addEventListener("install", (event) => {
           `${base}notification-policy.js`,
           `${base}device-name.js`,
           `${base}pairing-state.js`,
+          `${base}content-navigation.js`,
           `${base}manifest.webmanifest`,
           `${assets}dingdong-icon.png`,
           `${assets}dingdong-pwa-192.png`,
@@ -401,7 +403,8 @@ async function showAgentCompletionNotification(message, pair) {
       data: {
         type: "agent.completed",
         message,
-        url: self.registration.scope,
+        room: pair.room,
+        url: agentCompletionLaunchUrl(),
       },
     };
     if (!workerPairMatches(pair, await idbGet("pair"))) return "stale";
@@ -581,17 +584,143 @@ async function pushFailureContextStillCurrent(failedPair) {
   }
 }
 
+function agentCompletionLaunchUrl() {
+  const url = new URL(self.registration.scope);
+  url.searchParams.set("tab", "agent");
+  return url.href;
+}
+
 self.addEventListener("notificationclick", (event) => {
+  const data = event.notification.data || {};
   event.notification.close();
-  event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      for (const client of clients) {
-        if ("focus" in client) return client.focus();
-      }
-      return self.clients.openWindow(event.notification.data?.url || self.registration.scope);
-    }),
-  );
+  event.waitUntil(openAgentCompletion(data));
 });
+
+async function openAgentCompletion(data) {
+  const scope = new URL(self.registration.scope);
+  const targetUrl = agentCompletionLaunchUrl();
+  const hasPairingRoom = typeof data.room === "string";
+  const clients = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+  const appClients = clients.filter((client) => {
+    try {
+      const url = new URL(client.url);
+      return url.origin === scope.origin && url.pathname.startsWith(scope.pathname);
+    } catch {
+      return false;
+    }
+  });
+  const client =
+    appClients.find((value) => value.focused) ||
+    appClients.find((value) => value.visibilityState === "visible") ||
+    appClients[0];
+  if (client) {
+    const navigationMessage = {
+      type: "content-tab.open",
+      tab: "agent",
+      room: data.room,
+      message: hasPairingRoom ? data.message : undefined,
+      reason: "notification-click",
+    };
+    const focusedClient = await focusWindowClient(client);
+    const activeClient = focusedClient || client;
+    const acknowledged = await requestContentTabOpen(
+      activeClient,
+      navigationMessage,
+    );
+    if (acknowledged) {
+      const refocusedClient = focusedClient
+        ? focusedClient
+        : await focusWindowClient(activeClient);
+      return refocusedClient || activeClient;
+    }
+    await storeAgentLaunchIntent(data);
+    if ("navigate" in activeClient) {
+      const navigatedClient = await runClientOperationWithTimeout(
+        () => activeClient.navigate(targetUrl),
+      );
+      if (navigatedClient === clientOperationTimedOut) {
+        return activeClient;
+      }
+      if (navigatedClient) {
+        return (await focusWindowClient(navigatedClient)) || navigatedClient;
+      }
+    }
+    return self.clients.openWindow(targetUrl);
+  }
+  await storeAgentLaunchIntent(data);
+  return self.clients.openWindow(targetUrl);
+}
+
+const clientOperationTimedOut = Symbol("client-operation-timed-out");
+
+async function focusWindowClient(client) {
+  if (typeof client?.focus !== "function") return Promise.resolve(null);
+  const result = await runClientOperationWithTimeout(() => client.focus());
+  return result === clientOperationTimedOut ? null : result;
+}
+
+async function runClientOperationWithTimeout(operation, timeoutMs = 1200) {
+  let timer;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(operation),
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve(clientOperationTimedOut), timeoutMs);
+      }),
+    ]);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function storeAgentLaunchIntent(data) {
+  const intent = {
+    tab: "agent",
+    createdAt: Date.now(),
+  };
+  if (typeof data.room === "string" && typeof data.message?.id === "string") {
+    intent.room = data.room;
+    intent.message = data.message;
+  }
+  await idbSet(agentLaunchIntentKey, intent).catch(() => {});
+}
+
+function requestContentTabOpen(client, message) {
+  if (typeof MessageChannel !== "function") {
+    try {
+      client.postMessage(message);
+    } catch {}
+    return Promise.resolve(false);
+  }
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    let settled = false;
+    const finish = (acknowledged) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      channel.port1.close();
+      resolve(acknowledged);
+    };
+    const timer = setTimeout(() => finish(false), 1200);
+    channel.port1.onmessage = (event) => {
+      finish(
+        event.data?.type === "content-tab.opened" &&
+          event.data.tab === message.tab,
+      );
+    };
+    try {
+      client.postMessage(message, [channel.port2]);
+    } catch {
+      finish(false);
+    }
+  });
+}
 
 async function openEnvelope(envelope, key) {
   const value = base64UrlDecode(envelope);

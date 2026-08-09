@@ -2,7 +2,7 @@
   "app": "DingDong",
   "latestVersion": "1.3.0",
   "latestBuild": "42",
-  "publishedAt": "2026-08-09T12:21:19Z",
+  "publishedAt": "2026-08-09T14:10:36Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
@@ -28,7 +28,10 @@
     "Sends only new post-pairing Clipboard captures automatically, while existing history requires Send to Device.",
     "Keeps the phone clipboard private and sends phone text or files only after an explicit Send action.",
     "Delivers richer Agent completion reminders through background Web Push with optional vibration and diagnostics.",
+    "Lets mobile users swipe between Computer Clipboard and Agent reminders, and opens Agent reminders directly from a notification.",
     "Uses encrypted WebRTC or relay transport without storing clipboard or file content in the relay.",
+    "Skips DingDong and FULI marker lines when building recent Agent summaries, including the current knowledge-enhancement marker.",
+    "Adds opt-in, privacy-preserving install and upgrade statistics without activity or feature tracking.",
     "Expands the DEV test panel and hardens connection replacement, Web Push, request bounds, and stale-pairing behavior.",
     "Implements the iPhone and iPad Home Screen Web Push flow; recorded real-device verification is still pending.",
     "Keeps Intel macOS and Windows packages marked as beta."

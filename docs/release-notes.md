@@ -14,6 +14,8 @@ reminders between devices you trust.
   a fallback. The relay stores no clipboard or file content.
 - A superseded browser tab stops reconnecting, avoiding the repeated
   connect/disconnect loop caused by two pages competing for the same pairing.
+- Computer Clipboard and Agent reminders form a native swipe pager on mobile;
+  users can switch them with either the tabs or a horizontal gesture.
 
 ## Deliberate Clipboard and file delivery
 
@@ -33,6 +35,9 @@ reminders between devices you trust.
   the Web Push subscription are ready.
 - Mobile cards show a longer task description, source, and completion time, and
   the PWA can receive them while it is in the background.
+- Tapping a completion notification opens Agent reminders directly. A running
+  PWA is reused without reloading, while cold starts and older pages use a
+  one-time, pairing-safe fallback.
 - Vibration is optional per device. The notification diagnostics now distinguish
   browser subscription, provider acceptance, and notification creation, and
   include a direct user-initiated vibration test. Android and iOS can still
@@ -50,6 +55,11 @@ reminders between devices you trust.
   and safer stale-pairing handling.
 - The public relay limits request sizes, provider hosts, and request rates, and
   keeps registration authority when a provider expires a subscription.
+- Recent Agent summaries skip current DingDong and FULI marker lines, including
+  the `🌠 FULI · 知识增强` form, and use the next meaningful line.
+- Optional lifecycle statistics send only one install or upgrade event after
+  explicit consent; no clipboard, file, Agent, activity, session, heartbeat, or
+  feature-use data is collected.
 
 Intel macOS and Windows packages remain marked as beta. PWA installation is
 optional on Android; iPhone and iPad require a Home Screen web app for Web Push.
@@ -69,6 +79,8 @@ DingDong 1.3.0 新增“连接设备”：通过独立的桌面管理窗口与�
   正文。
 - 被新页面替代的旧浏览器标签不会继续抢占连接，避免两个页面互相踢下线造成反复
   连接、断开。
+- 手机端的“电脑剪贴板”和“Agent 提醒”组成原生横向分页，可以点击标签，也可以
+  左右滑动切换。
 
 ## 主动传递剪贴板与文件
 
@@ -85,6 +97,8 @@ DingDong 1.3.0 新增“连接设备”：通过独立的桌面管理窗口与�
 
 - 在通知权限和 Web Push 订阅准备好后，完成提醒会默认开启。
 - 手机卡片展示更完整的任务说明、来源和完成时间；PWA 在后台时也可以收到系统通知。
+- 点击完成通知会直接进入“Agent 提醒”。已经运行的 PWA 不会因此重载；冷启动与
+  旧页面通过一次性、严格绑定当前配对的回退路径进入对应页面。
 - 每台设备可单独开关震动。通知诊断会区分浏览器订阅、推送服务接受和浏览器创建
   通知，并提供一次由用户点击触发的直接震动测试。Android 与 iOS 的系统通知设置
   仍可能覆盖震动效果。
@@ -98,6 +112,10 @@ DingDong 1.3.0 新增“连接设备”：通过独立的桌面管理窗口与�
   鉴权、分阶段回执和旧配对隔离。
 - 公网中继限制请求体、推送服务域名和请求频率；推送服务清理过期订阅后，房间鉴权
   仍会保留。
+- 最近 Agent 摘要会跳过当前 DingDong 与 FULI 标识行，包括
+  `🌠 FULI · 知识增强`，并从下一条有效文本开始展示。
+- 匿名生命周期统计只有在用户明确同意后才会发送一次安装或升级事件；不会收集
+  剪贴板、文件、Agent、动态、会话、心跳或功能使用数据。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。Android 不安装 PWA 也可使用；
 iPhone 与 iPad 需要先添加到主屏幕，才能使用 Web Push；iOS 流程已经实现，

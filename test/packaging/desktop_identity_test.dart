@@ -425,6 +425,8 @@ void main() {
     expect(website, contains('"devices.phonePrivateTitle": "手机剪贴板保持私密"'));
     expect(website, contains('"devices.illustration": "界面示意"'));
     expect(website, contains('Android 不安装也能直接使用网页'));
+    expect(website, contains('then swipe between them on mobile'));
+    expect(website, contains('点击通知会直接进入 Agent 提醒'));
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
     expect(website, contains('快捷键帮你高效处理内容工作'));
@@ -502,6 +504,8 @@ void main() {
     }
     expect(releaseMetadata, contains('"latestVersion": "1.3.0"'));
     expect(releaseMetadata, contains('"latestBuild": "42"'));
+    expect(releaseMetadata, contains('swipe between Computer Clipboard'));
+    expect(releaseMetadata, contains('privacy-preserving install and upgrade'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));

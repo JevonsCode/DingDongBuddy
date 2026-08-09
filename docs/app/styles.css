@@ -405,6 +405,7 @@ main {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface-soft);
+  scroll-margin-top: 92px;
 }
 
 .tab {
@@ -420,12 +421,18 @@ main {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 750;
+  transition:
+    color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
 }
 
 .tab.is-active {
   background: var(--surface);
   color: var(--accent);
   box-shadow: 0 2px 8px rgb(31 38 43 / 8%);
+  transform: translateY(-1px);
 }
 
 .tab img {
@@ -441,6 +448,36 @@ main {
   border-radius: 6px;
   background: var(--field);
   font-size: 10px;
+}
+
+.feed-pager {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  transition: height 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-overflow-scrolling: touch;
+}
+
+.feed-pager::-webkit-scrollbar {
+  display: none;
+}
+
+.feed-pager.is-scrolling {
+  transition: none;
+}
+
+.feed-panel {
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .section-heading {

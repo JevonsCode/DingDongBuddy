@@ -121,6 +121,22 @@ void main() {
     expect(transport.body?['message'], '已经完成 DEV 测试面板。');
   });
 
+  test('FULI knowledge marker uses the following line as summary', () async {
+    final _RecordingTransport transport = _RecordingTransport();
+
+    await CompletionHookNotifier(transport).notify(
+      jsonEncode(<String, Object?>{
+        'last_assistant_message':
+            '**[🌠 FULI · 知识增强](http://127.0.0.1:2727/knowledge/personal/example)**\n'
+            '已经完成最近 Agent 描述修复。\n'
+            '测试通过。',
+      }),
+    );
+
+    expect(transport.body?['message'], '已经完成最近 Agent 描述修复。');
+    expect(transport.body?['detail'], isNot(contains('FULI · 知识增强')));
+  });
+
   test(
     'Codex Stop hook extracts the final answer from its transcript',
     () async {

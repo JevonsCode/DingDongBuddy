@@ -14,6 +14,12 @@ import {
   pairingsMatch,
 } from "../../docs/app/pairing-state.js";
 import {
+  adjacentContentTab,
+  contentScrollIsSnapped,
+  contentTabAtScrollPosition,
+  parseContentTabLaunch,
+} from "../../docs/app/content-navigation.js";
+import {
   relayConnectionWasReplaced,
   shouldReconnectRelay,
 } from "../../docs/app/connection-policy.js";
@@ -182,7 +188,7 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v18/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v19/);
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
@@ -208,6 +214,127 @@ test("a superseded PWA page stops reconnecting instead of stealing the room back
   assert.match(appSource, /state\.relayGeneration \+= 1/);
   assert.match(appSource, /连接已转移到另一个页面/);
   assert.match(desktopSessionSource, /deviceLinkConnectionWasReplaced/);
+});
+
+test("mobile content tabs use native swipe paging and stay accessible", () => {
+  assert.equal(contentTabAtScrollPosition(0, 390), "clipboard");
+  assert.equal(contentTabAtScrollPosition(230, 390), "agent");
+  assert.equal(contentTabAtScrollPosition(390, 390), "agent");
+  assert.equal(adjacentContentTab("clipboard", 1), "agent");
+  assert.equal(adjacentContentTab("agent", -1), "clipboard");
+  assert.equal(adjacentContentTab("clipboard", -1), "clipboard");
+  assert.equal(adjacentContentTab("agent", 1), "agent");
+  assert.equal(contentScrollIsSnapped(0, 390), true);
+  assert.equal(contentScrollIsSnapped(390, 390), true);
+  assert.equal(contentScrollIsSnapped(210, 390), false);
+
+  assert.match(pageSource, /id="content-tabs"[^>]*role="tablist"/);
+  assert.match(pageSource, /id="clipboard-tab"[\s\S]*?role="tab"[\s\S]*?aria-controls="clipboard-panel"/);
+  assert.match(pageSource, /id="agent-tab"[\s\S]*?role="tab"[\s\S]*?aria-controls="agent-panel"/);
+  assert.match(pageSource, /id="feed-pager" class="feed-pager"/);
+  assert.match(pageSource, /id="clipboard-panel"[\s\S]*?role="tabpanel"/);
+  assert.match(pageSource, /id="agent-panel"[\s\S]*?role="tabpanel"/);
+  assert.doesNotMatch(pageSource, /id="agent-panel"[^>]*\shidden(?:\s|>)/);
+
+  assert.match(stylesSource, /\.feed-pager\s*{[\s\S]*overflow-x: auto/);
+  assert.match(stylesSource, /scroll-snap-type: x mandatory/);
+  assert.match(stylesSource, /overscroll-behavior-inline: contain/);
+  assert.match(stylesSource, /-webkit-overflow-scrolling: touch/);
+  assert.match(stylesSource, /\.feed-panel\s*{[\s\S]*flex: 0 0 100%/);
+  assert.match(stylesSource, /scroll-snap-align: start/);
+  assert.match(appSource, /pager\.addEventListener\("scroll", handleFeedPagerScroll/);
+  assert.match(appSource, /feedPagerSupportsScrollEnd = "onscrollend" in pager/);
+  assert.match(appSource, /pager\.addEventListener\("scrollend", finishFeedPagerScroll\)/);
+  assert.match(appSource, /touchstart", handleFeedPagerTouchStart/);
+  assert.match(appSource, /touchend", handleFeedPagerTouchEnd/);
+  assert.match(appSource, /if \(!feedPagerSupportsScrollEnd && !feedPagerTouchActive\)/);
+  assert.match(appSource, /!contentScrollIsSnapped\(pager\.scrollLeft, pager\.clientWidth\)/);
+  assert.match(appSource, /new ResizeObserver\(handleFeedPagerResize\)/);
+  assert.match(appSource, /const feedPanelHeights = new Map\(\)/);
+  assert.match(appSource, /feedPanelHeights\.get\(tab\)/);
+  assert.match(appSource, /Math\.max\(\.\.\.contentTabs\.map\(contentPanelHeight\)\)/);
+  assert.match(appSource, /invalidateFallbackFeedPanelHeight\("clipboard"\)/);
+  assert.match(appSource, /invalidateFallbackFeedPanelHeight\("agent"\)/);
+  assert.match(appSource, /syncFeedPagerHeight\(\)/);
+  assert.match(appSource, /panel\.inert = !active/);
+  assert.match(appSource, /event\.key === "ArrowLeft"/);
+  assert.match(appSource, /event\.key === "ArrowRight"/);
+  assert.match(appSource, /prefers-reduced-motion: reduce/);
+});
+
+test("agent notifications open the Agent tab without reloading a live PWA", () => {
+  const launch = parseContentTabLaunch(
+    "https://dingdong.example/app/?source=push&tab=agent#pair=secret",
+    "https://dingdong.example",
+  );
+  assert.deepEqual(launch, {
+    tab: "agent",
+    cleanPath: "/app/?source=push#pair=secret",
+  });
+  assert.equal(
+    parseContentTabLaunch(
+      "https://dingdong.example/app/?tab=unknown#pair=secret",
+      "https://dingdong.example",
+    ),
+    null,
+  );
+  assert.equal(
+    parseContentTabLaunch(
+      "https://attacker.example/app/?tab=agent",
+      "https://dingdong.example",
+    ),
+    null,
+  );
+
+  assert.match(appSource, /const initialContentTab = consumeContentTabLaunch\(\) \|\| "clipboard"/);
+  assert.match(appSource, /history\.replaceState\(null, "", launch\.cleanPath\)/);
+  assert.match(appSource, /event\.data\?\.type === "content-tab\.open"/);
+  assert.match(appSource, /type: "content-tab\.opened"/);
+  assert.match(appSource, /event\.ports\?\.\[0\]\?\.postMessage/);
+  assert.match(appSource, /selectContentTab\(message\.tab, \{ animate: true, reveal: true \}\)/);
+  assert.match(
+    appSource,
+    /typeof message\.room === "string"[\s\S]*message\.room === state\.pair\?\.room[\s\S]*message\.message/,
+  );
+  assert.match(serviceWorkerSource, /url\.searchParams\.set\("tab", "agent"\)/);
+  assert.match(
+    serviceWorkerSource,
+    /const hasPairingRoom = typeof data\.room === "string"/,
+  );
+  assert.match(
+    serviceWorkerSource,
+    /message: hasPairingRoom \? data\.message : undefined/,
+  );
+  assert.match(serviceWorkerSource, /type: "content-tab\.open"/);
+  assert.match(serviceWorkerSource, /appClients\.find\(\(value\) => value\.focused\)/);
+  assert.match(serviceWorkerSource, /value\.visibilityState === "visible"/);
+  assert.match(serviceWorkerSource, /client\.postMessage\(/);
+  assert.match(serviceWorkerSource, /const focusedClient = await focusWindowClient\(client\)/);
+  assert.match(serviceWorkerSource, /const acknowledged = await requestContentTabOpen/);
+  assert.match(serviceWorkerSource, /new MessageChannel\(\)/);
+  assert.match(serviceWorkerSource, /setTimeout\(\(\) => finish\(false\), 1200\)/);
+  assert.match(
+    serviceWorkerSource,
+    /if \(acknowledged\) \{[\s\S]*return refocusedClient \|\| activeClient;\s*\}/,
+  );
+  assert.match(serviceWorkerSource, /function runClientOperationWithTimeout/);
+  assert.match(serviceWorkerSource, /Promise\.race\(/);
+  assert.match(
+    serviceWorkerSource,
+    /navigatedClient === clientOperationTimedOut[\s\S]*return activeClient/,
+  );
+  assert.match(serviceWorkerSource, /activeClient[\s\S]*\.navigate\(targetUrl\)/);
+  assert.match(
+    serviceWorkerSource,
+    /if \("navigate" in activeClient\)[\s\S]*return self\.clients\.openWindow\(targetUrl\)/,
+  );
+  assert.match(serviceWorkerSource, /await storeAgentLaunchIntent\(data\)/);
+  assert.match(serviceWorkerSource, /idbSet\(agentLaunchIntentKey/);
+  assert.match(appSource, /await restorePairFromWorker\(\);\s*await restoreAgentLaunchIntent\(\)/);
+  assert.match(appSource, /await idbDelete\(agentLaunchIntentKey\)/);
+  assert.match(appSource, /intent\?\.tab !== "agent"/);
+  assert.match(appSource, /intent\.room === state\.pair\?\.room/);
+  assert.match(appSource, /Date\.now\(\) - intent\.createdAt > agentLaunchIntentTtlMs/);
 });
 
 test("stale socket and data-channel callbacks cannot mutate a newer connection", () => {
@@ -337,6 +464,7 @@ test("a saved pairing survives refresh and a stale matching QR fragment", () => 
     /clearPairingFragment\(\);\s*clearPendingPairingLaunch\(\);\s*savePair\(\)/,
   );
   assert.match(serviceWorkerSource, /pairing-state\.js/);
+  assert.match(serviceWorkerSource, /content-navigation\.js/);
   assert.doesNotMatch(serviceWorkerSource, /client\.navigate\(client\.url\)/);
 });
 

@@ -305,7 +305,7 @@ bool _genericHeading(String line) {
 }
 
 bool _isAgentBridgeMarkerLine(String line) => RegExp(
-  r'^(?:[◇◆◈]\s*)?(?:DingDong|FULI)(?:\s*(?:[·•|｜:：—-].*)?)$',
+  r'^[^A-Za-z0-9\u3400-\u9FFF]*(?:DingDong|FULI)(?:\s*(?:[·•|｜:：—-].*)?)$',
   caseSensitive: false,
 ).hasMatch(line);
 

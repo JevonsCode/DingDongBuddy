@@ -87,49 +87,82 @@
             <button id="enable-notifications" class="small-button accent" type="button">开启</button>
           </div>
 
-          <nav class="segmented-tabs" aria-label="内容类型">
-            <button class="tab is-active" data-tab="clipboard" type="button">
+          <nav id="content-tabs" class="segmented-tabs" aria-label="内容类型" role="tablist">
+            <button
+              id="clipboard-tab"
+              class="tab is-active"
+              data-tab="clipboard"
+              type="button"
+              role="tab"
+              aria-controls="clipboard-panel"
+              aria-selected="true"
+              tabindex="0"
+            >
               <img src="../assets/symbols/clipboard.png" alt="" />
               电脑剪贴板
               <span id="clipboard-count">0</span>
             </button>
-            <button class="tab" data-tab="agent" type="button">
+            <button
+              id="agent-tab"
+              class="tab"
+              data-tab="agent"
+              type="button"
+              role="tab"
+              aria-controls="agent-panel"
+              aria-selected="false"
+              tabindex="-1"
+            >
               <img src="../assets/dingdong-mobile-alert-icon.png" alt="" />
               Agent 提醒
               <span id="agent-count">0</span>
             </button>
           </nav>
 
-          <section id="clipboard-panel" class="feed-panel">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">来自电脑</p>
-                <h2>剪贴板列表</h2>
+          <div id="feed-pager" class="feed-pager">
+            <section
+              id="clipboard-panel"
+              class="feed-panel"
+              role="tabpanel"
+              aria-labelledby="clipboard-tab"
+              aria-hidden="false"
+            >
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">来自电脑</p>
+                  <h2>剪贴板列表</h2>
+                </div>
+                <span id="last-sync-label">尚未同步</span>
               </div>
-              <span id="last-sync-label">尚未同步</span>
-            </div>
-            <div id="clipboard-list" class="content-list"></div>
-            <div id="clipboard-empty" class="list-empty">
-              <img src="../assets/symbols/clipboard.png" alt="" />
-              <strong>列表还是空的</strong>
-              <span>只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里。</span>
-            </div>
-          </section>
+              <div id="clipboard-list" class="content-list"></div>
+              <div id="clipboard-empty" class="list-empty">
+                <img src="../assets/symbols/clipboard.png" alt="" />
+                <strong>列表还是空的</strong>
+                <span>只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里。</span>
+              </div>
+            </section>
 
-          <section id="agent-panel" class="feed-panel" hidden>
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">工作完成</p>
-                <h2>Agent 完成提醒</h2>
+            <section
+              id="agent-panel"
+              class="feed-panel"
+              role="tabpanel"
+              aria-labelledby="agent-tab"
+              aria-hidden="true"
+              inert
+            >
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">工作完成</p>
+                  <h2>Agent 完成提醒</h2>
+                </div>
               </div>
-            </div>
-            <div id="agent-list" class="content-list"></div>
-            <div id="agent-empty" class="list-empty">
-              <img src="../assets/dingdong-rest-icon.png" alt="" />
-              <strong>暂时没有新提醒</strong>
-              <span>Agent 完成任务后，会在这里留下更完整的结果。</span>
-            </div>
-          </section>
+              <div id="agent-list" class="content-list"></div>
+              <div id="agent-empty" class="list-empty">
+                <img src="../assets/dingdong-rest-icon.png" alt="" />
+                <strong>暂时没有新提醒</strong>
+                <span>Agent 完成任务后，会在这里留下更完整的结果。</span>
+              </div>
+            </section>
+          </div>
         </section>
       </main>
 

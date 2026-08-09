@@ -82,6 +82,9 @@ each device can be disconnected, reconnected, or deleted independently.
   and completion time. Background Web Push and vibration can be enabled per
   device; the operating system still controls whether a notification actually
   vibrates.
+- **Mobile navigation:** tap the tabs or swipe horizontally between Computer
+  Clipboard and Agent reminders. Tapping a system notification opens Agent
+  reminders directly without reloading an already running PWA.
 
 DingDong attempts a direct WebRTC connection and falls back to its encrypted
 relay when necessary. The relay forwards encrypted frames and Web Push payloads

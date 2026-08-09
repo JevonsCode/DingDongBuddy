@@ -157,6 +157,14 @@ and macOS golden images; the items below exercise real operating-system state.
 - Trigger a rich Agent completion while the PWA is visible, in the background,
   and with the phone locked. Each event appears once with description, source,
   and completion time; background delivery does not require reopening the PWA.
+- Tap the Clipboard and Agent tabs, then swipe both directions between them.
+  The selected tab, accessibility state, horizontal snap position, and panel
+  height remain synchronized without a vertical jump or mid-gesture lockout.
+- Tap a completion notification with the PWA visible, backgrounded, and fully
+  closed. Each path opens Agent reminders directly. A running page is not
+  reloaded, an older page cannot create a competing connection, and a
+  notification from an earlier pairing never injects content into the current
+  pairing.
 - Turn vibration off and on per device. Run the direct vibration diagnostic and
   a test Push. Record separately whether the browser accepted vibration and
   whether the operating system vibrated; system notification-channel policy may
@@ -295,7 +303,8 @@ and macOS golden images; the items below exercise real operating-system state.
 - Long Agent source and message text uses ellipsis without overflowing the
   Dynamic panel or Recent Agents manager.
 - When a recent Agent message starts with a DingDong or FULI marker line, its
-  description uses the next meaningful content line.
+  description uses the next meaningful content line. Verify both the legacy
+  `◇ FULI` form and the current `🌠 FULI · 知识增强` form.
 - When more than six items exist, the `More` button opens Resource Manager directly at Recent Agents.
 - A resumable Recent Agent item opens its exact conversation from both Dynamic and Resource Manager.
 - Codex thread links, Claude Code, Gemini, and Kiro resume commands reopen the expected session.
