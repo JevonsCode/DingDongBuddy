@@ -282,8 +282,8 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
         _PreviewAction(
           key: const Key('clipboard-preview-share'),
           onPressed: widget.onShare!,
-          icon: Icons.share_outlined,
-          label: '分享',
+          icon: Icons.send_to_mobile_rounded,
+          label: '发送到设备',
         ),
       if (qrData != null)
         _PreviewAction(

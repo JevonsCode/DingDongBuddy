@@ -76,8 +76,8 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
   if (includeShare)
     const DesktopContextMenuItem(
       id: 'share',
-      englishLabel: 'Share',
-      chineseLabel: '分享',
+      englishLabel: 'Send to Device',
+      chineseLabel: '发送到设备',
     ),
   const DesktopContextMenuItem.separator(),
   const DesktopContextMenuItem(

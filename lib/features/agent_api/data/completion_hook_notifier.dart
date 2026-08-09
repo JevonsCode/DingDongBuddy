@@ -16,7 +16,9 @@ final class CompletionHookNotifier {
   }) async {
     final Map<String, Object?> input = _decodeInput(hookInput);
     final String source = _source(input, sourceOverride: sourceOverride);
-    final String? summary = await _completionSummary(input);
+    final String? completionMessage = await _completionMessage(input);
+    final String? summary = _oneLineSummary(completionMessage);
+    final String? detail = _notificationDetail(completionMessage);
     final String? conversationId = _firstText(input, const <String>[
       'session_id',
       'sessionId',
@@ -37,6 +39,7 @@ final class CompletionHookNotifier {
       path: '/ding',
       body: <String, Object?>{
         'message': summary ?? '$source 已完成本轮任务',
+        if (detail != null && detail != summary) 'detail': detail,
         'source': source,
         'flashCount': 4,
         'fallback': true,
@@ -70,7 +73,7 @@ String _source(Map<String, Object?> input, {String? sourceOverride}) {
   return 'Codex';
 }
 
-Future<String?> _completionSummary(Map<String, Object?> input) async {
+Future<String?> _completionMessage(Map<String, Object?> input) async {
   for (final String key in const <String>[
     'summary',
     'last_assistant_message',
@@ -81,9 +84,9 @@ Future<String?> _completionSummary(Map<String, Object?> input) async {
     'assistant_response',
     'text',
   ]) {
-    final String? summary = _oneLineSummary(input[key]);
-    if (summary != null) {
-      return summary;
+    final Object? value = input[key];
+    if (value is String && value.trim().isNotEmpty) {
+      return value;
     }
   }
 
@@ -93,8 +96,7 @@ Future<String?> _completionSummary(Map<String, Object?> input) async {
     return null;
   }
   try {
-    final String? message = await _lastAssistantMessage(File(transcriptPath));
-    return _oneLineSummary(message);
+    return await _lastAssistantMessage(File(transcriptPath));
   } on Object {
     return null;
   }
@@ -250,6 +252,28 @@ String? _oneLineSummary(Object? rawMessage) {
     return sentence;
   }
   return '${String.fromCharCodes(runes.take(maximumRunes))}…';
+}
+
+String? _notificationDetail(Object? rawMessage) {
+  if (rawMessage is! String || rawMessage.trim().isEmpty) return null;
+  final List<String> lines = rawMessage
+      .replaceAll('\r', '')
+      .split('\n')
+      .map(_cleanMarkdownLine)
+      .where(
+        (String line) =>
+            line.isNotEmpty &&
+            !_genericHeading(line) &&
+            !_isAgentBridgeMarkerLine(line),
+      )
+      .toList(growable: false);
+  if (lines.isEmpty) return null;
+  final String detail = lines.join('\n');
+  const int maximumRunes = 720;
+  final List<int> runes = detail.runes.toList(growable: false);
+  return runes.length <= maximumRunes
+      ? detail
+      : '${String.fromCharCodes(runes.take(maximumRunes))}…';
 }
 
 String _cleanMarkdownLine(String rawLine) {

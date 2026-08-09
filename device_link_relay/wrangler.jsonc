@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dingdong-device-link-dev",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-08-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    {
+      "pattern": "dingdong.xn--m8txu.com",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "../docs",
+    "binding": "ASSETS",
+    "run_worker_first": ["/v1/*"]
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RELAY_ROOMS",
+        "class_name": "RelayRoom"
+      }
+    ]
+  },
+  "exports": {
+    "RelayRoom": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  }
+}

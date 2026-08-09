@@ -9,13 +9,13 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>DingDong calls you back when your Agent is done</strong>
+  <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>Send clipboard items and Agent alerts to your trusted devices</strong>
 </p>
 
-DingDong 1.0 is a local desktop companion for content-heavy Agent work. It keeps
+DingDong is a local desktop companion for content-heavy Agent work. It keeps
 clipboard history searchable, manages reusable Agent resources in one place,
-connects them to supported clients, and plays a completion sound when an Agent
-finishes, gets stuck, or needs a decision.
+connects them to supported clients, and brings completion alerts and selected
+clipboard items to a trusted phone through the mobile PWA.
 
 ## What DingDong manages
 
@@ -26,8 +26,10 @@ finishes, gets stuck, or needs a decision.
 | Skill | Complete packages with `SKILL.md`, scripts, references, and assets; summary-first discovery and on-demand loading |
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
+| Connected devices | QR pairing, per-device one-way Clipboard delivery, explicit text and file transfer, and rich Agent completion reminders in the mobile PWA |
 
-Clipboard and resource data stay on this computer by default.
+Clipboard and resource data stay on this computer by default. The lightweight
+connection relay stores no clipboard or file content.
 
 ## Unified Prompt, Skill, and MCP management
 
@@ -55,12 +57,40 @@ flowchart LR
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.2.8.”
+- “Use this project's release workflow, run every check, and prepare version 1.3.0.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with
 `dingdong_install_skill`, `dingdong_upsert_trigger_group`, and
 `dingdong_bind_resource_scope`.
+
+## Connected devices and mobile PWA
+
+Open **Connected Devices** from the DingDong header or tray menu, show the QR
+code, and scan it with a phone. The pairing is retained across page refreshes;
+each device can be disconnected, reconnected, or deleted independently.
+
+- **Computer → phone:** enable automatic delivery per device to send only new
+  clipboard items copied after pairing. Existing history is sent only when you
+  choose **Send to Device**.
+- **Phone → computer:** the PWA never reads or watches the phone's system
+  clipboard. It sends only text you enter or paste, or a file you select, after
+  you tap **Send**.
+- **Files:** transfers are limited to 25 MB. Computer-hosted items remain
+  available only while the source computer and receiving device are connected.
+- **Agent reminders:** completion cards include a longer description, source,
+  and completion time. Background Web Push and vibration can be enabled per
+  device; the operating system still controls whether a notification actually
+  vibrates.
+
+DingDong attempts a direct WebRTC connection and falls back to its encrypted
+relay when necessary. The relay forwards encrypted frames and Web Push payloads
+without storing clipboard or file content. Installing the PWA is optional on
+Android; on iPhone and iPad, add it to the Home Screen before enabling Web Push.
+
+The Android Chrome path, including background notification delivery, has been
+tested end to end. The iPhone/iPad flow follows WebKit's Home Screen Web App
+requirements but still needs a recorded real-device release pass.
 
 ## Install with an Agent
 
@@ -148,6 +178,8 @@ The global panel shortcut and all workspace shortcuts are configurable in
 - The loopback API listens only on localhost.
 - DingDong does not include analytics or telemetry.
 - Clipboard content access for Agents is off by default; metadata remains available.
+- Device-link payloads are end-to-end encrypted; the connection relay does not store clipboard or file content.
+- The phone PWA never reads the phone's clipboard and sends content only after an explicit **Send** action.
 - Existing client configuration unrelated to DingDong is preserved during sync.
 - Issue templates require a privacy check before submission.
 
@@ -167,8 +199,11 @@ Important paths:
 
 - `lib/features/activity/` — Agent activity and unread state
 - `lib/features/clipboard/` — capture, classification, search, preview, and sharing
+- `lib/features/device_link/` — trusted-device pairing, encrypted transport, Clipboard and file transfer, and Agent delivery
 - `lib/features/library/` — Prompt, Skill, MCP, scopes, imports, and native sync
 - `lib/features/agent_api/` — loopback API, MCP bridge, and completion Hook
+- `device_link_relay/` — lightweight Cloudflare relay and Web Push service
+- `docs/app/` — installable mobile PWA
 - `docs/` — website, update metadata, release notes, and product documentation
 
 Architecture details live in
@@ -180,8 +215,13 @@ Architecture details live in
 must synchronize the app version, build number, MCP server info, website,
 `docs/dingdong-release.json`, release notes, regression checklist, and
 version-contract tests. After the Flutter desktop workflow passes for the latest
-`main` SHA, automation creates `v<version>` and publishes the
-signed macOS, Windows beta, MCP, and update-feed assets.
+`main` SHA, the release gate also requires the PWA/relay deployed from that exact
+commit. Deploy it either through **Device link Cloudflare** after configuring
+its protected `device-link-production` environment, or from that clean tested
+checkout with authenticated Wrangler and the exact release SHA. Automation then
+creates `v<version>` and publishes the signed macOS, Windows
+beta, MCP, and update-feed assets. The website is deployed from that release tag
+only after its downloadable packages exist.
 
 See [release notes](docs/release-notes.md) and the
 [manual regression checklist](docs/product/manual-regression.md).

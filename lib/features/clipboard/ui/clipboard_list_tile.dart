@@ -76,7 +76,7 @@ class ClipboardListTile extends StatelessWidget {
                   _SystemContentAction(
                     record: record,
                     onOpen: onOpenContent,
-                    child: Icon(_iconFor(record.kind), size: 20),
+                    child: Icon(_iconForRecord(record), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -420,6 +420,7 @@ class _RecordLeading extends StatelessWidget {
 
   Widget _iconBox(ClipboardRecord record) {
     final ClipboardKind kind = record.kind;
+    final bool fromDevice = _isFromLinkedDevice(record);
     return Container(
       width: 30,
       height: 30,
@@ -428,17 +429,23 @@ class _RecordLeading extends StatelessWidget {
         borderRadius: BorderRadius.circular(7),
       ),
       child: Center(
-        child: PopupSymbolIcon(
-          record.sensitive ? 'sensitive' : _symbolFor(kind),
-          size: 17,
-          color: record.sensitive
-              ? const Color(0xFFC65A55)
-              : kind == ClipboardKind.command
-              ? const Color(0xFF22C55E)
-              : kind == ClipboardKind.url
-              ? PopupStyle.accent
-              : PopupStyle.textSecondary,
-        ),
+        child: fromDevice
+            ? const Icon(
+                Icons.phone_iphone_rounded,
+                size: 17,
+                color: PopupStyle.accent,
+              )
+            : PopupSymbolIcon(
+                record.sensitive ? 'sensitive' : _symbolFor(kind),
+                size: 17,
+                color: record.sensitive
+                    ? const Color(0xFFC65A55)
+                    : kind == ClipboardKind.command
+                    ? const Color(0xFF22C55E)
+                    : kind == ClipboardKind.url
+                    ? PopupStyle.accent
+                    : PopupStyle.textSecondary,
+              ),
       ),
     );
   }
@@ -529,3 +536,11 @@ IconData _iconFor(ClipboardKind kind) {
     ClipboardKind.image => Icons.image_outlined,
   };
 }
+
+IconData _iconForRecord(ClipboardRecord record) => _isFromLinkedDevice(record)
+    ? Icons.phone_iphone_rounded
+    : _iconFor(record.kind);
+
+bool _isFromLinkedDevice(ClipboardRecord record) =>
+    record.tags.any((String value) => value.startsWith('device-origin:')) ||
+    record.sources.any((String value) => value.startsWith('来自 '));

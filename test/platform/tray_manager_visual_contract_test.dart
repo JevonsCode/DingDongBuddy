@@ -328,6 +328,8 @@ void main() {
     expect(gateway, contains('void onTrayIconRightMouseDown()'));
     expect(gateway, contains('trayManager.popUpContextMenu()'));
     expect(gateway, contains('DesktopShellCommand.showClipboard'));
+    expect(gateway, contains('DesktopShellCommand.showDeviceLinks'));
+    expect(gateway, contains("label: chinese ? '打开连接设备'"));
     expect(gateway, isNot(contains("'清空剪贴板历史'")));
     expect(gateway, isNot(contains("'Clear Clipboard History'")));
     expect(gateway, contains("label: chinese ? '资源管理' : 'Resource Manager'"));
@@ -352,7 +354,7 @@ void main() {
     expect(gateway, contains('DesktopShellCommand.quit'));
   });
 
-  test('test panel appears directly below Clipboard only in DEV', () {
+  test('device links follows Clipboard and test panel remains DEV-only', () {
     final List<DesktopShellCommand> commands = <DesktopShellCommand>[];
     final List<MenuItem> developmentItems = desktopTrayContextMenuItems(
       monitoring: true,
@@ -368,16 +370,25 @@ void main() {
     );
 
     expect(
-      developmentItems.take(3).map((MenuItem item) => item.label),
-      <String?>['打开剪贴板', '测试面板', null],
+      developmentItems.take(4).map((MenuItem item) => item.label),
+      <String?>['打开剪贴板', '打开连接设备', '测试面板', null],
     );
+    expect(releaseItems.take(3).map((MenuItem item) => item.label), <String?>[
+      '打开剪贴板',
+      '打开连接设备',
+      null,
+    ]);
     expect(
       releaseItems.map((MenuItem item) => item.label),
       isNot(contains('测试面板')),
     );
 
     developmentItems[1].onClick!(developmentItems[1]);
-    expect(commands, <DesktopShellCommand>[DesktopShellCommand.showTestPanel]);
+    developmentItems[2].onClick!(developmentItems[2]);
+    expect(commands, <DesktopShellCommand>[
+      DesktopShellCommand.showDeviceLinks,
+      DesktopShellCommand.showTestPanel,
+    ]);
   });
 
   test('macOS tray persists the user-arranged status item position', () {
@@ -481,7 +492,7 @@ void main() {
     expect(gateway, contains('await trayManager.setTitle(\n        title,'));
     expect(plugin, contains('args["badgeColorRgb"] as? NSNumber'));
     expect(source, contains('style == "unreadBadge" && !countText.isEmpty'));
-    expect(source, contains('.baselineOffset: -2.0'));
+    expect(source, contains('.baselineOffset: -1.0'));
     expect(source, contains('let value = rgb ?? 0xDB7333'));
     expect(source, contains('let red = CGFloat((value >> 16) & 0xFF) / 255'));
     expect(source, contains('button.layer?.backgroundColor = nil'));

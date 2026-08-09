@@ -1,4 +1,4 @@
-# DingDong 1.2.8 Manual Regression Checklist
+# DingDong 1.3.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -124,6 +124,54 @@ and macOS golden images; the items below exercise real operating-system state.
   clearing it restores the complete visible history.
 - Sensitive rows stay hidden from default Agent API responses.
 
+## Connected Devices and mobile PWA
+
+- Open Connected Devices from both the popup header and tray menu. It opens as
+  one dedicated resizable window rather than crowding the compact popup.
+- Show a fresh QR code on the computer, scan it with Android Chrome, confirm the
+  pairing, refresh the page, and reopen the installed PWA if present. The saved
+  pairing reconnects without scanning again.
+- Open the same pairing in a second browser tab. The newer page takes over once;
+  the replaced page stops reconnecting and the devices do not enter a repeating
+  connect/disconnect loop.
+- Leave automatic Clipboard delivery off. The phone receives no Clipboard
+  history and no newly copied content. Turn it on for only one device: only
+  Clipboard items captured after pairing arrive there; content from before the
+  connection does not backfill.
+- Use **Send to Device** on one existing text item and one existing supported
+  file. Only the selected online device receives them; the operating-system
+  native share sheet is not opened.
+- On the phone, verify that DingDong never requests or reads the system
+  clipboard. Paste text into the composer and select a file: neither leaves the
+  phone until **Send** is tapped, and each then appears in the computer's
+  Clipboard list with the phone name as its source.
+- Send text at the 128 KiB UTF-8 boundary and one byte beyond it. The boundary
+  item arrives without closing the relay; the oversized item is rejected with
+  a clear message suggesting a file instead.
+- Transfer a file immediately below 25 MB. A file above 25 MB is rejected.
+  Disconnect before downloading a computer-hosted file and confirm it is no
+  longer available; reconnecting does not expose unsent history.
+- Verify a same-network connection can establish WebRTC. Then block or fail the
+  direct channel and confirm encrypted relay fallback remains connected without
+  duplicating Clipboard items.
+- Trigger a rich Agent completion while the PWA is visible, in the background,
+  and with the phone locked. Each event appears once with description, source,
+  and completion time; background delivery does not require reopening the PWA.
+- Turn vibration off and on per device. Run the direct vibration diagnostic and
+  a test Push. Record separately whether the browser accepted vibration and
+  whether the operating system vibrated; system notification-channel policy may
+  override the requested pattern.
+- Disable Agent reminders and trigger another completion: no system notification
+  or foreground fallback appears. Re-enable them and verify the Push
+  subscription is rebuilt and the diagnostics reach browser-created status.
+- Disconnect and reconnect one saved device, then delete it. Manual disconnect
+  remains stable until reconnect; delete removes the desktop record, PWA
+  pairing, relay subscription, and future delivery.
+- On iPhone/iPad Safari, add DingDong to the Home Screen, open that Home Screen
+  web app, pair again if Safari did not transfer the pairing, and verify
+  permission plus background Web Push. Record this separately from Android;
+  browser-tab Safari alone is not a valid iOS Web Push test.
+
 ## Website
 
 - The five colored menu-bar previews use white `ding-w` and `ding-w2`, changing
@@ -132,6 +180,10 @@ and macOS golden images; the items below exercise real operating-system state.
   sleeping, and the local API title includes thinking.
 - Open the Clipboard website demo: All, Images, Text, Links, and Files are
   visible by default in that order.
+- The 1.3 Connected Devices section is visible in English and Chinese, labels
+  its composed product preview as an illustration, and accurately states the
+  new-item-only, explicit phone Send, 25 MB, disconnect, and system-vibration
+  boundaries.
 
 ## Resource library
 
@@ -330,8 +382,20 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.2.8` build `41` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.2.8.41` and product name `DingDong`.
+- The macOS release app metadata is version `1.3.0` build `42` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.3.0.42` and product name `DingDong`.
+- Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
+  and relay before the desktop workflow can authorize a release.
+- Deploy the device-link Worker from the tested `main` commit either through a
+  configured, protected `device-link-production` environment or with an
+  authenticated Wrangler session that supplies the exact release SHA. Finish
+  before the desktop CI gate completes, or rerun the failed gate after
+  deployment. Production
+  `/v1/health` must report version `1.3.0` and that exact commit SHA; every
+  allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
+- GitHub Pages remains unchanged while packages build. After the GitHub Release
+  assets exist, the release workflow deploys the website from the exact release
+  tag so versioned download links never point at missing files.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

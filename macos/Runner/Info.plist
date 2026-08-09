@@ -24,6 +24,8 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DingDong connects directly to your trusted devices on the local network to transfer clipboard items and files.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>DingDong needs access to install complete local Agent Skill packages from your Documents folder.</string>
 	<key>NSDesktopFolderUsageDescription</key>

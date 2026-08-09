@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -21,9 +22,14 @@ import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dar
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/device_link/data/device_link_store.dart';
+import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
+import 'package:dingdong/features/device_link/ui/device_link_manager_app.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
@@ -43,6 +49,7 @@ import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_service.dart';
+import 'package:dingdong/features/shell/domain/development_test_action.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/features/shell/ui/development_test_panel_app.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
@@ -50,12 +57,12 @@ import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:dingdong/platform/multi_window_development_test_panel_launcher.dart';
+import 'package:dingdong/platform/multi_window_device_link_manager.dart';
 import 'package:dingdong/platform/multi_window_resource_manager_launcher.dart';
 import 'package:dingdong/platform/multi_window_settings_host_bridge.dart';
 import 'package:dingdong/platform/multi_window_settings_launcher.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:dingdong/platform/native_application_updater.dart';
-import 'package:dingdong/platform/native_clipboard_share_gateway.dart';
 import 'package:dingdong/platform/native_desktop_context_menu_gateway.dart';
 import 'package:dingdong/platform/native_launch_at_startup.dart';
 import 'package:dingdong/platform/native_menu_bar_recovery_gateway.dart';
@@ -79,6 +86,10 @@ Future<void> main(List<String> arguments) async {
   final Map<String, Object?> windowArguments = decodeDesktopWindowArguments(
     windowController.arguments,
   );
+  if (windowArguments['kind'] == deviceLinkManagerWindowKind) {
+    await _runDeviceLinkManagerWindow(windowController, windowArguments);
+    return;
+  }
   if (windowArguments['kind'] == resourceManagerWindowKind) {
     await _runResourceManagerWindow(windowController, windowArguments);
     return;
@@ -110,13 +121,19 @@ Future<void> main(List<String> arguments) async {
   );
   final ShellController shellController = ShellController();
   final MultiWindowClipboardPreviewLauncher clipboardPreviewLauncher =
-      MultiWindowClipboardPreviewLauncher();
+      MultiWindowClipboardPreviewLauncher(
+        parentWindowId: windowController.windowId,
+      );
   final DesktopContextMenuController desktopContextMenuController =
       DesktopContextMenuController();
   final MultiWindowSettingsLauncher settingsWindowLauncher =
       MultiWindowSettingsLauncher(parentWindowId: windowController.windowId);
   final MultiWindowResourceManagerLauncher resourceManagerLauncher =
       MultiWindowResourceManagerLauncher(
+        parentWindowId: windowController.windowId,
+      );
+  final MultiWindowDeviceLinkManagerLauncher deviceLinkManagerLauncher =
+      MultiWindowDeviceLinkManagerLauncher(
         parentWindowId: windowController.windowId,
       );
   final MultiWindowDevelopmentTestPanelLauncher testPanelLauncher =
@@ -132,6 +149,7 @@ Future<void> main(List<String> arguments) async {
   late final AppDependencies dependencies;
   late final SettingsViewModel settingsViewModel;
   late final TrayBuddyController trayBuddyController;
+  late final DeviceLinkController deviceLinkController;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
     onHideAuxiliaryWindows: () async {
       await desktopContextMenuController.dismissActiveMenu();
@@ -152,6 +170,7 @@ Future<void> main(List<String> arguments) async {
       trayBuddyController.recordClipboardActivity(record.updatedAt);
       shellController.requestClipboardRefresh();
       unawaited(resourceManagerLauncher.refreshClipboard());
+      unawaited(deviceLinkController.handleLocalClipboard(record));
     },
     onNotification: (request) async {
       activityController.record(
@@ -168,6 +187,7 @@ Future<void> main(List<String> arguments) async {
         );
       }
       await shellGateway.markUnread();
+      await deviceLinkController.sendAgentCompleted(request);
     },
     onSuppressedNotification: (request) async {
       final target = request.conversationTarget;
@@ -196,6 +216,31 @@ Future<void> main(List<String> arguments) async {
       unawaited(shellGateway.showAndFocus());
     },
   );
+  deviceLinkController = DeviceLinkController(
+    store: FileDeviceLinkStore(appDataPaths.deviceLinksFile),
+    clipboardStore: dependencies.clipboardStore,
+    transferDirectory: appDataPaths.deviceTransferDirectory,
+    pwaBaseUrl: _configuredUri(
+      const String.fromEnvironment(
+        'DINGDONG_PWA_BASE_URL',
+        defaultValue: 'https://dingdong.xn--m8txu.com/app/',
+      ),
+    ),
+    relayBaseUrl: _configuredUri(
+      const String.fromEnvironment(
+        'DINGDONG_RELAY_URL',
+        defaultValue: 'https://dingdong.xn--m8txu.com',
+      ),
+    ),
+    onClipboardReceived: () {
+      shellController.requestClipboardRefresh();
+      unawaited(resourceManagerLauncher.refreshClipboard());
+    },
+  );
+  await deviceLinkController.start();
+  deviceLinkController.addListener(() {
+    unawaited(deviceLinkManagerLauncher.refresh());
+  });
   final AppSettings startupSettings = await dependencies.settingsRepository
       .load();
   agentConversationLauncher = NativeAgentConversationLauncher(
@@ -276,6 +321,10 @@ Future<void> main(List<String> arguments) async {
         destination: SettingsWindowDestination.version,
       );
     },
+    onShowDeviceLinks: () async {
+      await shellGateway.hide();
+      await deviceLinkManagerLauncher.show();
+    },
     onShowTestPanel: appDataPaths.development
         ? () async {
             await shellGateway.hide();
@@ -296,6 +345,9 @@ Future<void> main(List<String> arguments) async {
     lastClipboardActivity: _latestClipboardCapture(dependencies.clipboardStore),
   );
   Future<Object?> handleChildWindowCall(MethodCall call) async {
+    if (isDeviceLinkManagerHostMethod(call.method)) {
+      return handleDeviceLinkManagerHostCall(deviceLinkController, call);
+    }
     switch (call.method) {
       case 'settings_launch_is_enabled':
         return await launchAtStartup.isEnabled();
@@ -374,6 +426,28 @@ Future<void> main(List<String> arguments) async {
       case 'settings_update_install':
         await applicationUpdater.installLatest();
         return null;
+      case developmentTestRunMethod:
+        if (!appDataPaths.development) {
+          throw UnsupportedError('DEV test panel is unavailable.');
+        }
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        final DevelopmentTestAction? action = DevelopmentTestAction.fromId(
+          values['action'],
+        );
+        if (action == null) {
+          throw ArgumentError.value(values['action'], 'action');
+        }
+        await _runDevelopmentTestAction(
+          action: action,
+          dependencies: dependencies,
+          shellGateway: shellGateway,
+          shellController: shellController,
+          trayBuddyController: trayBuddyController,
+          deviceLinkController: deviceLinkController,
+          deviceLinkManagerLauncher: deviceLinkManagerLauncher,
+          resourceManagerLauncher: resourceManagerLauncher,
+        );
+        return null;
       case developmentTestTraySleepingMethod:
         if (!appDataPaths.development) {
           throw UnsupportedError('DEV test panel is unavailable.');
@@ -423,6 +497,16 @@ Future<void> main(List<String> arguments) async {
       case resourceLibraryChangedMethod:
         shellController.requestLibraryRefresh();
         return null;
+      case deviceLinkShareRecordMethod:
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        deviceLinkController.requestShare(
+          clipboardRecordFromWindowJson(
+            values['record']! as Map<Object?, Object?>,
+          ),
+        );
+        await clipboardPreviewLauncher.hide();
+        await shellGateway.showAndFocus();
+        return null;
       default:
         break;
     }
@@ -449,9 +533,9 @@ Future<void> main(List<String> arguments) async {
       clipboardStore: dependencies.clipboardStore,
       clipboardArchiveStore: dependencies.clipboardStore,
       clipboardPreviewLauncher: clipboardPreviewLauncher,
-      clipboardShareGateway: createNativeClipboardShareGateway(
-        defaultTargetPlatform,
-      ),
+      clipboardShareGateway: DeviceClipboardShareGateway(deviceLinkController),
+      deviceLinkController: deviceLinkController,
+      deviceLinkManagerLauncher: deviceLinkManagerLauncher,
       quickPasteGateway: quickPasteGateway,
       quickPastePermissionGateway: quickPasteGateway,
       resourceStore: dependencies.resourceStore,
@@ -476,6 +560,13 @@ bool _usesChineseLabels(AppLanguagePreference language) {
     AppLanguagePreference.system =>
       Platform.localeName.toLowerCase().startsWith('zh'),
   };
+}
+
+Uri? _configuredUri(String value) {
+  final String trimmed = value.trim();
+  if (trimmed.isEmpty) return null;
+  final Uri? uri = Uri.tryParse(trimmed);
+  return uri != null && uri.hasScheme && uri.host.isNotEmpty ? uri : null;
 }
 
 DateTime? _latestClipboardCapture(ClipboardStore store) {
@@ -547,6 +638,46 @@ Future<void> _clearSelectedSystemData({
     }
     await history.create(recursive: true);
   }
+}
+
+Future<void> _runDeviceLinkManagerWindow(
+  WindowController windowController,
+  Map<String, Object?> arguments,
+) async {
+  final String parentWindowId = arguments['parentWindowId']! as String;
+  final RemoteDeviceLinkManagement controller = RemoteDeviceLinkManagement(
+    parentController: WindowController.fromWindowId(parentWindowId),
+  );
+  await controller.reload();
+  final AppSettings settings = await SettingsRepository(
+    SharedPreferencesBackend(),
+  ).load();
+  final bool chinese = _usesChineseLabels(settings.language);
+
+  await windowManager.ensureInitialized();
+  final WindowOptions options = WindowOptions(
+    size: const Size(820, 720),
+    minimumSize: const Size(620, 580),
+    center: true,
+    skipTaskbar: desktopWindowSkipsTaskbar(
+      defaultTargetPlatform,
+      hideDockIcon: settings.hideDockIcon,
+      fallback: false,
+    ),
+    title: chinese ? 'DingDong · 连接设备' : 'DingDong · Connected Devices',
+    titleBarStyle: TitleBarStyle.normal,
+  );
+  await windowManager.waitUntilReadyToShow(options);
+  runApp(
+    DeviceLinkManagerApp(
+      controller: controller,
+      settings: settings,
+      windowController: windowController,
+    ),
+  );
+  await WidgetsBinding.instance.endOfFrame;
+  await windowManager.show();
+  await windowManager.focus();
 }
 
 Future<void> _runSettingsWindow(
@@ -632,11 +763,10 @@ Future<void> _runDevelopmentTestPanelWindow(
     defaultTrayNotificationColor: TrayNotificationColor.pink,
   ).load();
   final bool chinese = _usesChineseLabels(settings.language);
-  const Size size = Size(520, 390);
+  const Size size = Size(780, 720);
   final WindowOptions options = WindowOptions(
     size: size,
-    minimumSize: size,
-    maximumSize: size,
+    minimumSize: const Size(620, 560),
     center: true,
     skipTaskbar: desktopWindowSkipsTaskbar(
       defaultTargetPlatform,
@@ -651,15 +781,244 @@ Future<void> _runDevelopmentTestPanelWindow(
     DevelopmentTestPanelApp(
       settings: settings,
       animationsSupported: Platform.isMacOS,
-      onSleeping: () =>
-          parent.invokeMethod<void>(developmentTestTraySleepingMethod),
-      onNudge: () => parent.invokeMethod<void>(developmentTestTrayNudgeMethod),
+      onRun: (DevelopmentTestAction action) => parent.invokeMethod<void>(
+        developmentTestRunMethod,
+        <String, Object?>{'action': action.id},
+      ),
       windowController: windowController,
     ),
   );
   await WidgetsBinding.instance.endOfFrame;
   await windowManager.show();
   await windowManager.focus();
+}
+
+Future<void> _runDevelopmentTestAction({
+  required DevelopmentTestAction action,
+  required AppDependencies dependencies,
+  required PluginDesktopShellGateway shellGateway,
+  required ShellController shellController,
+  required TrayBuddyController trayBuddyController,
+  required DeviceLinkController deviceLinkController,
+  required MultiWindowDeviceLinkManagerLauncher deviceLinkManagerLauncher,
+  required MultiWindowResourceManagerLauncher resourceManagerLauncher,
+}) async {
+  switch (action) {
+    case DevelopmentTestAction.traySleeping:
+      await shellGateway.previewTrayBuddyState(TrayBuddyState.sleeping);
+      return;
+    case DevelopmentTestAction.trayNudge:
+      await shellGateway.nudgeTrayIcon();
+      return;
+    case DevelopmentTestAction.agentCompletion:
+      await _postDevelopmentDing(
+        dependencies,
+        message: 'DEV 测试：Agent 已完成本轮任务',
+        detail: '这是测试面板生成的基础完成提醒，不代表真实 Agent 任务结果。',
+      );
+      return;
+    case DevelopmentTestAction.agentRichCompletion:
+      await _postDevelopmentDing(
+        dependencies,
+        message: 'DEV 测试：跨设备任务已完成',
+        detail: '这是测试面板生成的模拟完成说明，用来检查手机卡片的长描述、来源、完成时间与震动开关。它不代表真实 Agent 任务结果。',
+      );
+      return;
+    case DevelopmentTestAction.agentBurst:
+      for (var index = 1; index <= 3; index += 1) {
+        await _postDevelopmentDing(
+          dependencies,
+          message: 'DEV 测试：连续提醒 $index/3',
+          detail: '用于检查未读数字、时间顺序和手机端连续接收；这是模拟测试数据。',
+          source: 'DingDong DEV $index',
+          sound: index == 1 ? 'default' : 'muted',
+        );
+        if (index < 3) {
+          await Future<void>.delayed(const Duration(milliseconds: 220));
+        }
+      }
+      return;
+    case DevelopmentTestAction.phoneClipboardText:
+      final ClipboardRecord phoneTextRecord = _developmentTextRecord(
+        action: action,
+        title: 'DEV 手机文字样例',
+        content: 'DingDong DEV 测试：这段文字模拟用户在手机输入框粘贴内容并主动点击“发送”。',
+        source: '来自 DEV 测试手机',
+        additionalTags: const <String>['device-origin:dev-test-mobile'],
+      );
+      await _saveDevelopmentClipboardRecord(
+        record: phoneTextRecord,
+        dependencies: dependencies,
+        shellController: shellController,
+        trayBuddyController: trayBuddyController,
+        resourceManagerLauncher: resourceManagerLauncher,
+      );
+      return;
+    case DevelopmentTestAction.phoneClipboardFile:
+      final ClipboardRecord phoneFileRecord = await _developmentPhoneFileRecord(
+        action: action,
+        dependencies: dependencies,
+      );
+      await _saveDevelopmentClipboardRecord(
+        record: phoneFileRecord,
+        dependencies: dependencies,
+        shellController: shellController,
+        trayBuddyController: trayBuddyController,
+        resourceManagerLauncher: resourceManagerLauncher,
+      );
+      return;
+    case DevelopmentTestAction.autoSendClipboard:
+      final ClipboardRecord autoSendRecord = _developmentTextRecord(
+        action: action,
+        title: 'DEV 电脑自动同步样例',
+        content: 'DingDong DEV 测试：由电脑创建，仅发送给开启“自动同步”的已连接设备。',
+        source: 'DingDong DEV 测试面板',
+      );
+      await _saveDevelopmentClipboardRecord(
+        record: autoSendRecord,
+        dependencies: dependencies,
+        shellController: shellController,
+        trayBuddyController: trayBuddyController,
+        resourceManagerLauncher: resourceManagerLauncher,
+      );
+      await deviceLinkController.handleLocalClipboard(autoSendRecord);
+      return;
+    case DevelopmentTestAction.manualDeviceShare:
+      final ClipboardRecord manualShareRecord = _developmentTextRecord(
+        action: action,
+        title: 'DEV 主动发送样例',
+        content: 'DingDong DEV 测试：请选择一个已连接设备主动发送这条内容。',
+        source: 'DingDong DEV 测试面板',
+      );
+      await _saveDevelopmentClipboardRecord(
+        record: manualShareRecord,
+        dependencies: dependencies,
+        shellController: shellController,
+        trayBuddyController: trayBuddyController,
+        resourceManagerLauncher: resourceManagerLauncher,
+      );
+      await shellGateway.showAndFocus();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      deviceLinkController.requestShare(manualShareRecord);
+      return;
+    case DevelopmentTestAction.openDeviceManager:
+      await deviceLinkManagerLauncher.show();
+      return;
+  }
+}
+
+Future<void> _postDevelopmentDing(
+  AppDependencies dependencies, {
+  required String message,
+  required String detail,
+  String source = 'DingDong DEV',
+  String sound = 'default',
+}) async {
+  final HttpClient client = HttpClient()
+    ..connectionTimeout = const Duration(seconds: 3);
+  try {
+    final HttpClientRequest request = await client.postUrl(
+      dependencies.agentHttpServer.baseUri.resolve('/ding'),
+    );
+    request.headers.contentType = ContentType.json;
+    request.write(
+      jsonEncode(<String, Object?>{
+        'message': message,
+        'detail': detail,
+        'source': source,
+        'sound': sound,
+        'flashCount': 4,
+      }),
+    );
+    final HttpClientResponse response = await request.close();
+    await response.drain<void>();
+    if (response.statusCode != HttpStatus.ok) {
+      throw HttpException(
+        'DEV notification returned HTTP ${response.statusCode}.',
+      );
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+  } finally {
+    client.close(force: true);
+  }
+}
+
+ClipboardRecord _developmentTextRecord({
+  required DevelopmentTestAction action,
+  required String title,
+  required String content,
+  required String source,
+  List<String> additionalTags = const <String>[],
+}) {
+  final DateTime now = DateTime.now().toUtc();
+  final ClipboardClassification classification = ClipboardClassifier.classify(
+    content,
+  );
+  return ClipboardRecord(
+    id: 'DEV-TEST-${action.id}-${now.microsecondsSinceEpoch}',
+    group: classification.group,
+    title: title,
+    content: content,
+    tags: <String>[...classification.tags, 'dev-test', ...additionalTags],
+    source: source,
+    pinned: false,
+    enabled: true,
+    activation: 'taskMatch',
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+Future<ClipboardRecord> _developmentPhoneFileRecord({
+  required DevelopmentTestAction action,
+  required AppDependencies dependencies,
+}) async {
+  final DateTime now = DateTime.now().toUtc();
+  await dependencies.paths.deviceTransferDirectory.create(recursive: true);
+  final File file = File(
+    path.join(
+      dependencies.paths.deviceTransferDirectory.path,
+      'dingdong-dev-phone-${now.microsecondsSinceEpoch}.txt',
+    ),
+  );
+  await file.writeAsString(
+    'DingDong DEV 测试文件\n\n'
+    '这是一份由测试面板创建的本地样例，用于模拟手机主动选择文件并点击发送。\n'
+    '它不是来自真实手机，也不包含真实用户内容。\n',
+    flush: true,
+  );
+  return ClipboardRecord(
+    id: 'DEV-TEST-${action.id}-${now.microsecondsSinceEpoch}',
+    group: '',
+    title: 'DingDong DEV 手机文件样例.txt',
+    content: file.path,
+    tags: const <String>[
+      'clipboard',
+      'file',
+      'file-url',
+      'dev-test',
+      'device-origin:dev-test-mobile',
+    ],
+    source: '来自 DEV 测试手机',
+    pinned: false,
+    enabled: true,
+    activation: 'taskMatch',
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
+Future<void> _saveDevelopmentClipboardRecord({
+  required ClipboardRecord record,
+  required AppDependencies dependencies,
+  required ShellController shellController,
+  required TrayBuddyController trayBuddyController,
+  required MultiWindowResourceManagerLauncher resourceManagerLauncher,
+}) async {
+  dependencies.clipboardStore.save(record);
+  trayBuddyController.recordClipboardActivity(record.updatedAt);
+  shellController.requestClipboardRefresh();
+  await resourceManagerLauncher.refreshClipboard();
 }
 
 Future<void> _restartApplication({
@@ -720,6 +1079,7 @@ Future<void> _runClipboardPreviewWindow(
   final Map<Object?, Object?> recordValues =
       arguments['record']! as Map<Object?, Object?>;
   final ClipboardRecord record = clipboardRecordFromWindowJson(recordValues);
+  final String parentWindowId = arguments['parentWindowId']! as String;
   final Offset position = Offset(
     (arguments['x']! as num).toDouble(),
     (arguments['y']! as num).toDouble(),
@@ -751,10 +1111,25 @@ Future<void> _runClipboardPreviewWindow(
       windowController: windowController,
       clipboardGateway: DesktopClipboardGateway(),
       contentLauncher: UrlLauncherClipboardContentLauncher(),
-      shareGateway: createNativeClipboardShareGateway(defaultTargetPlatform),
+      shareGateway: _ParentDeviceClipboardShareGateway(parentWindowId),
     ),
   );
   await windowController.showInactive();
+}
+
+final class _ParentDeviceClipboardShareGateway
+    implements ClipboardShareGateway {
+  const _ParentDeviceClipboardShareGateway(this.parentWindowId);
+
+  final String parentWindowId;
+
+  @override
+  Future<void> share(ClipboardRecord record) {
+    return WindowController.fromWindowId(parentWindowId).invokeMethod<void>(
+      deviceLinkShareRecordMethod,
+      <String, Object?>{'record': clipboardRecordToWindowJson(record)},
+    );
+  }
 }
 
 Future<void> _runClipboardQrPreviewWindow(

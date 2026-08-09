@@ -11,6 +11,7 @@ import 'package:window_manager/window_manager.dart';
 const String clipboardPreviewWindowKind = 'clipboard-preview';
 const String clipboardQrPreviewWindowKind = 'clipboard-qr-preview';
 const String clipboardPreviewFocusWindowMethod = 'focus_window';
+const String deviceLinkShareRecordMethod = 'device_link_share_record';
 const Size clipboardPreviewWindowSize = Size(304, 420);
 const Size clipboardQrPreviewWindowSize = Size(620, 680);
 const Size clipboardQrPreviewMinimumSize = Size(360, 420);
@@ -18,6 +19,10 @@ const Size clipboardQrPreviewMinimumSize = Size(360, 420);
 /// Hosts the original side preview in a dedicated, reusable Flutter window.
 final class MultiWindowClipboardPreviewLauncher
     implements ClipboardPreviewLauncher {
+  const MultiWindowClipboardPreviewLauncher({required this.parentWindowId});
+
+  final String parentWindowId;
+
   @override
   Future<void> show(ClipboardRecord record) async {
     final Offset position = await _previewPosition();
@@ -51,6 +56,7 @@ final class MultiWindowClipboardPreviewLauncher
           'record': clipboardRecordToWindowJson(record),
           'x': position.dx,
           'y': position.dy,
+          'parentWindowId': parentWindowId,
         }),
       ),
     );

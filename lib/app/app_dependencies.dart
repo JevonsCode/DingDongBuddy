@@ -28,7 +28,88 @@ import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/native_clipboard_change_source.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+enum NotificationDeliveryRoute { native, companion }
+
+final class NotificationDeliveryFailure {
+  const NotificationDeliveryFailure({
+    required this.route,
+    required this.error,
+    required this.stackTrace,
+  });
+
+  final NotificationDeliveryRoute route;
+  final Object error;
+  final StackTrace stackTrace;
+}
+
+typedef NotificationDeliveryFailureObserver =
+    void Function(NotificationDeliveryFailure failure);
+
+/// Runs desktop attention and the companion/mobile callback independently.
+/// A failure on either route is reported without cancelling the other route.
+Future<void> deliverNotificationIndependently({
+  required Future<void> Function() nativeDelivery,
+  Future<void> Function()? companionDelivery,
+  NotificationDeliveryFailureObserver? onFailure,
+}) async {
+  await Future.wait<void>(<Future<void>>[
+    _observeNotificationDelivery(
+      route: NotificationDeliveryRoute.native,
+      delivery: nativeDelivery,
+      onFailure: onFailure,
+    ),
+    if (companionDelivery != null)
+      _observeNotificationDelivery(
+        route: NotificationDeliveryRoute.companion,
+        delivery: companionDelivery,
+        onFailure: onFailure,
+      ),
+  ]);
+}
+
+Future<void> _observeNotificationDelivery({
+  required NotificationDeliveryRoute route,
+  required Future<void> Function() delivery,
+  required NotificationDeliveryFailureObserver? onFailure,
+}) async {
+  try {
+    await delivery();
+  } on Object catch (error, stackTrace) {
+    final NotificationDeliveryFailure failure = NotificationDeliveryFailure(
+      route: route,
+      error: error,
+      stackTrace: stackTrace,
+    );
+    if (onFailure != null) {
+      try {
+        onFailure(failure);
+      } on Object catch (observerError, observerStackTrace) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: observerError,
+            stack: observerStackTrace,
+            library: 'DingDong notification delivery',
+            context: ErrorDescription(
+              'while reporting a ${route.name} delivery failure',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'DingDong notification delivery',
+        context: ErrorDescription('while delivering through ${route.name}'),
+      ),
+    );
+  }
+}
 
 /// Composition root for production repositories and long-lived services.
 final class AppDependencies {
@@ -55,6 +136,7 @@ final class AppDependencies {
     void Function(ClipboardRecord record)? onClipboardCaptured,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
+    NotificationDeliveryFailureObserver? onNotificationDeliveryFailure,
     PreferencesBackend? preferencesBackend,
   }) async {
     final AppDataPaths paths = AppDataPaths.current();
@@ -143,22 +225,32 @@ final class AppDependencies {
         final resolvedRequest = request.sound == DingSound.defaultSound
             ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
             : request;
-        await notificationGateway.trigger(
-          resolvedRequest,
-          customSoundPath: settings.customSoundPath,
+        await deliverNotificationIndependently(
+          nativeDelivery: () => notificationGateway.trigger(
+            resolvedRequest,
+            customSoundPath: settings.customSoundPath,
+          ),
+          companionDelivery: onNotification == null
+              ? null
+              : () => onNotification(resolvedRequest),
+          onFailure: onNotificationDeliveryFailure,
         );
-        await onNotification?.call(resolvedRequest);
       }()),
       onSuppressedDing: (request) => unawaited(() async {
         final AppSettings settings = await settingsRepository.load();
         final resolvedRequest = request.sound == DingSound.defaultSound
             ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
             : request;
-        await notificationGateway.trigger(
-          resolvedRequest,
-          customSoundPath: settings.customSoundPath,
+        await deliverNotificationIndependently(
+          nativeDelivery: () => notificationGateway.trigger(
+            resolvedRequest,
+            customSoundPath: settings.customSoundPath,
+          ),
+          companionDelivery: onSuppressedNotification == null
+              ? null
+              : () => onSuppressedNotification(resolvedRequest),
+          onFailure: onNotificationDeliveryFailure,
         );
-        await onSuppressedNotification?.call(resolvedRequest);
       }()),
       clipboardCaptureService: clipboardCaptureService,
       clipboardGateway: clipboardGateway,

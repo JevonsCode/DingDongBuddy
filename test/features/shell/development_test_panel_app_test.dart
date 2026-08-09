@@ -1,51 +1,95 @@
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/shell/domain/development_test_action.dart';
 import 'package:dingdong/features/shell/ui/development_test_panel_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('DEV test panel triggers state preview and nudge callbacks', (
+  test('development test action IDs round-trip', () {
+    for (final DevelopmentTestAction action in DevelopmentTestAction.values) {
+      expect(DevelopmentTestAction.fromId(action.id), action);
+    }
+    expect(DevelopmentTestAction.fromId('unknown'), isNull);
+    expect(DevelopmentTestAction.fromId(null), isNull);
+  });
+
+  testWidgets('DEV test panel exposes and triggers integration actions', (
     WidgetTester tester,
   ) async {
-    var sleepingCount = 0;
-    var nudgeCount = 0;
+    await tester.binding.setSurfaceSize(const Size(1000, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final List<DevelopmentTestAction> actions = <DevelopmentTestAction>[];
 
     await tester.pumpWidget(
       DevelopmentTestPanelApp(
         settings: const AppSettings(language: AppLanguagePreference.chinese),
         animationsSupported: true,
-        onSleeping: () async => sleepingCount += 1,
-        onNudge: () async => nudgeCount += 1,
+        onRun: (DevelopmentTestAction action) async => actions.add(action),
       ),
     );
 
     expect(find.text('测试面板'), findsOneWidget);
     expect(find.text('DEV'), findsOneWidget);
+    expect(find.byKey(const Key('dev-test-panel-data-notice')), findsOneWidget);
+    expect(find.textContaining('绝不会读取真实手机剪贴板'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('dev-test-panel-sleeping')));
-    await tester.pump();
-    expect(sleepingCount, 1);
+    await tester.pumpAndSettle();
+    expect(actions, <DevelopmentTestAction>[
+      DevelopmentTestAction.traySleeping,
+    ]);
     expect(find.text('已触发：睡眠状态'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('dev-test-panel-nudge')));
-    await tester.pump();
-    expect(nudgeCount, 1);
-    expect(find.text('已触发：左右摇动'), findsOneWidget);
+    final Finder richAlert = find.byKey(const Key('dev-test-panel-agent-rich'));
+    await tester.ensureVisible(richAlert);
+    await tester.tap(richAlert);
+    await tester.pumpAndSettle();
+    expect(actions.last, DevelopmentTestAction.agentRichCompletion);
+    expect(find.text('已创建：手机端长描述 Agent 提醒'), findsOneWidget);
+
+    final Finder phoneText = find.byKey(const Key('dev-test-panel-phone-text'));
+    await tester.ensureVisible(phoneText);
+    await tester.tap(phoneText);
+    await tester.pumpAndSettle();
+    expect(actions.last, DevelopmentTestAction.phoneClipboardText);
+    expect(find.text('已创建：模拟手机文字记录'), findsOneWidget);
+
+    const Map<String, DevelopmentTestAction>
+    remainingActions = <String, DevelopmentTestAction>{
+      'dev-test-panel-nudge': DevelopmentTestAction.trayNudge,
+      'dev-test-panel-agent-basic': DevelopmentTestAction.agentCompletion,
+      'dev-test-panel-agent-burst': DevelopmentTestAction.agentBurst,
+      'dev-test-panel-phone-file': DevelopmentTestAction.phoneClipboardFile,
+      'dev-test-panel-auto-send': DevelopmentTestAction.autoSendClipboard,
+      'dev-test-panel-manual-share': DevelopmentTestAction.manualDeviceShare,
+      'dev-test-panel-device-manager': DevelopmentTestAction.openDeviceManager,
+    };
+    for (final MapEntry<String, DevelopmentTestAction> entry
+        in remainingActions.entries) {
+      final Finder button = find.byKey(Key(entry.key));
+      expect(button, findsOneWidget);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(actions.last, entry.value);
+    }
+    expect(actions, hasLength(DevelopmentTestAction.values.length));
+    expect(actions.toSet(), DevelopmentTestAction.values.toSet());
   });
 
-  testWidgets('unsupported platforms explain why animation is unavailable', (
+  testWidgets('unsupported platforms disable only tray animation actions', (
     WidgetTester tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final List<DevelopmentTestAction> actions = <DevelopmentTestAction>[];
     await tester.pumpWidget(
       DevelopmentTestPanelApp(
         settings: const AppSettings(language: AppLanguagePreference.chinese),
         animationsSupported: false,
-        onSleeping: () async {},
-        onNudge: () async {},
+        onRun: (DevelopmentTestAction action) async => actions.add(action),
       ),
     );
 
-    expect(find.text('状态小人预览目前仅支持 macOS。'), findsOneWidget);
     final FilledButton sleeping = tester.widget(
       find.descendant(
         of: find.byKey(const Key('dev-test-panel-sleeping')),
@@ -53,5 +97,21 @@ void main() {
       ),
     );
     expect(sleeping.onPressed, isNull);
+
+    final Finder agentBasic = find.byKey(
+      const Key('dev-test-panel-agent-basic'),
+    );
+    await tester.ensureVisible(agentBasic);
+    final FilledButton agentButton = tester.widget(
+      find.descendant(of: agentBasic, matching: find.byType(FilledButton)),
+    );
+    expect(agentButton.onPressed, isNotNull);
+    await tester.tap(agentBasic);
+    await tester.pumpAndSettle();
+    expect(actions, <DevelopmentTestAction>[
+      DevelopmentTestAction.agentCompletion,
+    ]);
+
+    expect(find.textContaining('其余集成测试仍可使用'), findsOneWidget);
   });
 }

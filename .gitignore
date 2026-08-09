@@ -35,6 +35,9 @@ DerivedData/
 /build/
 /coverage/
 /test/golden/failures/
+/device_link_relay/node_modules/
+/device_link_relay/.wrangler/
+/device_link_relay/.secrets.*
 *.iml
 .idea/
 docs/superpowers/

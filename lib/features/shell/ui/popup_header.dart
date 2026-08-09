@@ -25,6 +25,7 @@ class PopupHeader extends StatelessWidget {
     required this.onSelected,
     required this.onIssues,
     required this.onBrand,
+    this.onConnections,
     required this.onSettings,
     required this.onVersion,
     this.developmentBuild = false,
@@ -44,6 +45,7 @@ class PopupHeader extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback onIssues;
   final VoidCallback onBrand;
+  final VoidCallback? onConnections;
   final VoidCallback onSettings;
   final VoidCallback onVersion;
   final Future<void> Function()? onStartDragging;
@@ -128,6 +130,15 @@ class PopupHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
+                  ],
+                  if (onConnections != null) ...<Widget>[
+                    _HeaderButton(
+                      key: const Key('popup-open-connections'),
+                      tooltip: context.localized('Connected devices', '连接设备'),
+                      symbol: 'link',
+                      onPressed: onConnections,
+                    ),
+                    const SizedBox(width: 5),
                   ],
                   _HeaderButton(
                     key: const Key('popup-open-settings'),

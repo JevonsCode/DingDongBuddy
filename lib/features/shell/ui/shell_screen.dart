@@ -15,6 +15,9 @@ import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.da
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/device_link/domain/device_link_management.dart';
+import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
+import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -50,6 +53,8 @@ class ShellScreen extends StatefulWidget {
     this.clipboardContentLauncher,
     this.clipboardPreviewLauncher,
     this.clipboardShareGateway,
+    this.deviceLinkController,
+    this.deviceLinkManagerLauncher,
     this.libraryTransferGateway,
     this.resourceManagerLauncher,
     this.settingsWindowLauncher,
@@ -76,6 +81,8 @@ class ShellScreen extends StatefulWidget {
   final ClipboardContentLauncher? clipboardContentLauncher;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
   final ClipboardShareGateway? clipboardShareGateway;
+  final DeviceLinkController? deviceLinkController;
+  final DeviceLinkManagerLauncher? deviceLinkManagerLauncher;
   final LibraryTransferGateway? libraryTransferGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
   final SettingsWindowLauncher? settingsWindowLauncher;
@@ -104,6 +111,8 @@ class _ShellScreenState extends State<ShellScreen> {
   late int _lastClipboardRefreshRevision;
   late int _lastLibraryRefreshRevision;
   late int _lastSelectedIndex;
+  int _lastDeviceShareRevision = 0;
+  bool _deviceShareDialogOpen = false;
 
   @override
   void initState() {
@@ -115,6 +124,9 @@ class _ShellScreenState extends State<ShellScreen> {
     _lastSelectedIndex = widget.controller.selectedIndex;
     widget.controller.addListener(_handleNavigationChanged);
     widget.shortcutHints?.addListener(_handleExternalShortcutHints);
+    _lastDeviceShareRevision =
+        widget.deviceLinkController?.shareRequestRevision ?? 0;
+    widget.deviceLinkController?.addListener(_handleDeviceLinkChanged);
     widget.clipboardViewModel.load();
     widget.libraryViewModel.load();
   }
@@ -137,12 +149,19 @@ class _ShellScreenState extends State<ShellScreen> {
       widget.shortcutHints?.addListener(_handleExternalShortcutHints);
       _handleExternalShortcutHints();
     }
+    if (oldWidget.deviceLinkController != widget.deviceLinkController) {
+      oldWidget.deviceLinkController?.removeListener(_handleDeviceLinkChanged);
+      _lastDeviceShareRevision =
+          widget.deviceLinkController?.shareRequestRevision ?? 0;
+      widget.deviceLinkController?.addListener(_handleDeviceLinkChanged);
+    }
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_handleNavigationChanged);
     widget.shortcutHints?.removeListener(_handleExternalShortcutHints);
+    widget.deviceLinkController?.removeListener(_handleDeviceLinkChanged);
     super.dispose();
   }
 
@@ -197,6 +216,44 @@ class _ShellScreenState extends State<ShellScreen> {
           _showPlainTextShortcutHints = false;
         }
       });
+    }
+  }
+
+  void _handleDeviceLinkChanged() {
+    final DeviceLinkController? controller = widget.deviceLinkController;
+    if (controller == null ||
+        controller.shareRequestRevision == _lastDeviceShareRevision) {
+      return;
+    }
+    _lastDeviceShareRevision = controller.shareRequestRevision;
+    if (controller.pendingShare == null || _deviceShareDialogOpen) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_openPendingDeviceShare());
+    });
+  }
+
+  Future<void> _openDeviceLinks() async {
+    final DeviceLinkManagerLauncher? launcher =
+        widget.deviceLinkManagerLauncher;
+    if (launcher == null) return;
+    await widget.onHideWindow?.call();
+    await launcher.show();
+  }
+
+  Future<void> _openPendingDeviceShare() async {
+    final DeviceLinkController? controller = widget.deviceLinkController;
+    final ClipboardRecord? record = controller?.pendingShare;
+    if (controller == null || record == null || _deviceShareDialogOpen) return;
+    _deviceShareDialogOpen = true;
+    try {
+      await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) =>
+            DeviceShareDialog(controller: controller, record: record),
+      );
+    } finally {
+      controller.clearPendingShare();
+      _deviceShareDialogOpen = false;
     }
   }
 
@@ -513,6 +570,9 @@ class _ShellScreenState extends State<ShellScreen> {
                     onSelected: widget.controller.open,
                     onIssues: _openIssueCenter,
                     onBrand: () => unawaited(_previewConfiguredSound()),
+                    onConnections: widget.deviceLinkManagerLauncher == null
+                        ? null
+                        : () => unawaited(_openDeviceLinks()),
                     onSettings: () {
                       unawaited(_openSettings());
                     },

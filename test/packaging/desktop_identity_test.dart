@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.2.8 from pubspec', () {
+  test('desktop hosts consume application version 1.3.0 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,25 +77,25 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.2.8+41'));
+    expect(pubspec, contains('version: 1.3.0+42'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.2.8';"),
+      contains("const String currentAppVersion = '1.3.0';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '41';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '42';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.2.8'"),
+      contains("'version': '1.3.0'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.2.8'"),
+      contains("'version': '1.3.0'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.2.8"'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.0"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -398,7 +398,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.2.8</span>'));
+    expect(website, contains('<span class="demo-version">v1.3.0</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -415,7 +415,18 @@ void main() {
     expect(website, contains('class="conversation-grid"'));
     expect(website, contains('"hero.title.clipboard": "清晰管理剪贴板列表"'));
     expect(website, contains('"hero.title.resources": "统一管理提示词、Skill、MCP"'));
-    expect(website, contains('"hero.title.alerts": "Agent 执行结束，DingDong 提醒你"'));
+    expect(website, contains('"hero.title.alerts": "Agent 做完，电脑和手机都能提醒你"'));
+    expect(website, contains('id="devices"'));
+    expect(website, contains('class="device-showcase"'));
+    expect(
+      website,
+      contains('"devices.newOnlyTitle": "Automatic means new items only"'),
+    );
+    expect(website, contains('"devices.phonePrivateTitle": "手机剪贴板保持私密"'));
+    expect(website, contains('"devices.illustration": "界面示意"'));
+    expect(website, contains('Android 不安装也能直接使用网页'));
+    expect(websiteStyles, contains('.device-showcase'));
+    expect(websiteStyles, contains('.device-guardrails'));
     expect(website, contains('快捷键帮你高效处理内容工作'));
     expect(website, contains('开启电脑声音，需求交给 AI，做完会用声音提醒你'));
     expect(website, contains('你就可以先去摸摸鱼，毕竟在 AI 时代，人的精力才是最大资产 🫣'));
@@ -489,14 +500,14 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.2.8"'));
-    expect(releaseMetadata, contains('"latestBuild": "41"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.3.0"'));
+    expect(releaseMetadata, contains('"latestBuild": "42"'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.2.8-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.3.0-windows-x64-beta-Setup.exe'),
     );
   });
 
@@ -590,6 +601,12 @@ void main() {
     final String desktopWorkflow = File(
       '.github/workflows/flutter-desktop.yml',
     ).readAsStringSync();
+    final String pagesWorkflow = File(
+      '.github/workflows/pages.yml',
+    ).readAsStringSync();
+    final String deviceLinkDeployWorkflow = File(
+      '.github/workflows/device-link-cloudflare.yml',
+    ).readAsStringSync();
 
     expect(workflow, contains('build macos --release'));
     expect(workflow, contains('scripts/sign_macos_bundle.sh'));
@@ -623,6 +640,11 @@ void main() {
     expect(desktopWorkflow, contains('scripts/thin_macos_app.sh'));
     expect(desktopWorkflow, contains('Verify macOS application architecture'));
     expect(desktopWorkflow, contains('scripts/create_universal_macos_mcp.sh'));
+    expect(desktopWorkflow, contains('name: device-link-web'));
+    expect(desktopWorkflow, contains('node-version: 22'));
+    expect(desktopWorkflow, contains('working-directory: device_link_relay'));
+    expect(desktopWorkflow, contains('npm run check'));
+    expect(desktopWorkflow, contains('npx wrangler deploy --dry-run'));
     expect(File('scripts/sign_macos_bundle.sh').existsSync(), isTrue);
     final String appThinner = File(
       'scripts/thin_macos_app.sh',
@@ -655,9 +677,50 @@ void main() {
     expect(workflow, contains('flutter build windows --release'));
     expect(workflow, isNot(contains('APTABASE_APP_KEY')));
     expect(workflow, contains('--notes-file docs/release-notes.md'));
+    expect(workflow, contains('node-version: 22'));
+    expect(workflow, contains('Recheck the PWA and relay release bundle'));
+    expect(workflow, contains('npx wrangler deploy --dry-run'));
+    expect(workflow, contains('actions: write'));
+    expect(workflow, contains('workflow_dispatch:'));
+    expect(workflow, isNot(contains('\n  push:\n')));
+    expect(
+      workflow,
+      contains('Verify the tag was tested and its web release is deployed'),
+    );
+    expect(workflow, contains('head_sha=\$tag_sha'));
+    expect(workflow, contains('releaseSha'));
+    expect(workflow, contains('docs/.assetsignore'));
+    expect(workflow, contains('gh workflow run pages.yml'));
+    expect(workflow, contains(r'--ref "$RELEASE_TAG"'));
+    expect(releaseGate, contains(r'--ref "$tag"'));
+    expect(pagesWorkflow, contains('workflow_dispatch:'));
+    expect(pagesWorkflow, isNot(contains('push:')));
+    expect(deviceLinkDeployWorkflow, contains('workflow_dispatch:'));
+    expect(deviceLinkDeployWorkflow, contains('device-link-production'));
+    expect(
+      deviceLinkDeployWorkflow,
+      contains("if: github.ref == 'refs/heads/main'"),
+    );
+    expect(deviceLinkDeployWorkflow, contains('cancel-in-progress: false'));
+    expect(deviceLinkDeployWorkflow, contains('node-version: 22'));
+    expect(deviceLinkDeployWorkflow, contains('CLOUDFLARE_API_TOKEN'));
+    expect(deviceLinkDeployWorkflow, contains('npx wrangler deploy'));
+    expect(deviceLinkDeployWorkflow, contains('pushAvailable'));
+    expect(
+      deviceLinkDeployWorkflow,
+      contains("sed -n 's|^!/|docs/|p' docs/.assetsignore"),
+    );
     expect(File('docs/release-notes.md').existsSync(), isTrue);
     expect(releaseGate, contains("workflow_run.conclusion == 'success'"));
     expect(releaseGate, contains('git tag "\$tag" "\$TESTED_SHA"'));
+    expect(releaseGate, contains('https://dingdong.xn--m8txu.com'));
+    expect(releaseGate, contains('serviceVersion'));
+    expect(releaseGate, contains('git ls-tree -r --name-only'));
+    expect(releaseGate, contains(r'git show "$TESTED_SHA:docs/.assetsignore"'));
+    expect(releaseGate, contains('Deployed PWA asset does not match'));
+    expect(releaseGate, contains('existing_tag_sha'));
+    expect(releaseGate, contains('expected tested commit \$TESTED_SHA'));
+    expect(releaseGate, contains("grep -qi '^content-security-policy:'"));
     expect(
       releaseGate,
       contains('GITHUB_TOKEN tag pushes do not start new workflows'),

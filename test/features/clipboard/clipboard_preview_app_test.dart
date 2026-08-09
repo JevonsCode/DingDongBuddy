@@ -48,7 +48,7 @@ void main() {
     expect(find.text('Project'), findsOneWidget);
     expect(find.text('Cursor'), findsOneWidget);
     expect(find.text('Google Chrome'), findsOneWidget);
-    expect(find.text('分享'), findsOneWidget);
+    expect(find.text('发送到设备'), findsOneWidget);
   });
 
   testWidgets('preview hides share when no platform handler is available', (
@@ -81,7 +81,7 @@ void main() {
     );
 
     expect(find.text('复制'), findsOneWidget);
-    expect(find.text('分享'), findsNothing);
+    expect(find.text('发送到设备'), findsNothing);
   });
 
   testWidgets('preview exposes the shared system-open action', (

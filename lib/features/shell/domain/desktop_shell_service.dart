@@ -16,6 +16,7 @@ final class DesktopShellService {
     this.onShowResourceManager,
     this.onShowSettings,
     this.onShowAbout,
+    this.onShowDeviceLinks,
     this.onShowTestPanel,
     this.onHideDockIcon,
     this.onQuickPastePermissionGrantPresentationStarted,
@@ -31,6 +32,7 @@ final class DesktopShellService {
   final Future<void> Function()? onShowResourceManager;
   final Future<void> Function()? onShowSettings;
   final Future<void> Function()? onShowAbout;
+  final Future<void> Function()? onShowDeviceLinks;
   final Future<void> Function()? onShowTestPanel;
   final Future<void> Function()? onHideDockIcon;
   final void Function()? onQuickPastePermissionGrantPresentationStarted;
@@ -67,6 +69,8 @@ final class DesktopShellService {
         controller.open(2);
         _refreshClipboard();
         await gateway.showAndFocus();
+      case DesktopShellCommand.showDeviceLinks:
+        await onShowDeviceLinks?.call();
       case DesktopShellCommand.showTestPanel:
         await onShowTestPanel?.call();
       case DesktopShellCommand.toggleClipboard:

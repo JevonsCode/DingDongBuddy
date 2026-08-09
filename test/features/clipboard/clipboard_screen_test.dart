@@ -1367,8 +1367,8 @@ void main() {
       await tester.tap(find.text(record.title), buttons: kSecondaryButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Share'), findsOneWidget);
-      await tester.tap(find.text('Share'));
+      expect(find.text('Send to device'), findsOneWidget);
+      await tester.tap(find.text('Send to device'));
       await tester.pumpAndSettle();
       expect(shared?.id, record.id);
     },

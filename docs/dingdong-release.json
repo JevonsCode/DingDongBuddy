@@ -1,34 +1,36 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.2.8",
-  "latestBuild": "41",
-  "publishedAt": "2026-08-08T03:59:28Z",
+  "latestVersion": "1.3.0",
+  "latestBuild": "42",
+  "publishedAt": "2026-08-09T12:21:19Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.8/DingDong-1.2.8-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.0/DingDong-1.3.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.8/DingDong-1.2.8-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.0/DingDong-1.3.0-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.2.8/DingDong-1.2.8-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.0/DingDong-1.3.0-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Starts in normal state, rests after three idle minutes, and sleeps after five minutes without Agent or Clipboard activity.",
-    "Returns to normal and restarts idle timing after Clipboard activity or acknowledging an Agent reminder.",
-    "Animates ding every 0.7 seconds and rest or sleeping every 1.2 seconds on macOS and Windows.",
-    "Centers the macOS unread count and renders the resting menu-bar mascot two pixels smaller.",
-    "Updates the website with animated state artwork and visible default Clipboard categories.",
+    "Adds a separate Connected Devices window and QR pairing for a trusted phone through the mobile PWA.",
+    "Sends only new post-pairing Clipboard captures automatically, while existing history requires Send to Device.",
+    "Keeps the phone clipboard private and sends phone text or files only after an explicit Send action.",
+    "Delivers richer Agent completion reminders through background Web Push with optional vibration and diagnostics.",
+    "Uses encrypted WebRTC or relay transport without storing clipboard or file content in the relay.",
+    "Expands the DEV test panel and hardens connection replacement, Web Push, request bounds, and stale-pairing behavior.",
+    "Implements the iPhone and iPad Home Screen Web Push flow; recorded real-device verification is still pending.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

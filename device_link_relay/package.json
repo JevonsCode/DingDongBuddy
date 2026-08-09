@@ -1,0 +1,18 @@
+{
+  "name": "dingdong-device-link-relay",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "check": "node --test test/*.test.js",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.120.0"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

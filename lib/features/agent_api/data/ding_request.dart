@@ -52,6 +52,7 @@ enum DingSound {
 final class DingRequest {
   const DingRequest({
     this.message = 'Task complete',
+    this.detail,
     this.source,
     this.sound = DingSound.defaultSound,
     this.flashCount = 8,
@@ -66,10 +67,12 @@ final class DingRequest {
     final Map<String, Object?> json = jsonDecode(body) as Map<String, Object?>;
     final String message =
         _trimmedOrNull(json['message'] as String?) ?? 'Task complete';
+    final String? detail = _trimmedOrNull(json['detail'] as String?);
     final int requestedFlashCount = json['flashCount'] as int? ?? 8;
     final String? source = _trimmedOrNull(json['source'] as String?);
     return DingRequest(
       message: message,
+      detail: detail,
       source: source,
       sound: DingSound.parse(json['sound']),
       flashCount: requestedFlashCount.clamp(2, 30),
@@ -79,6 +82,7 @@ final class DingRequest {
   }
 
   final String message;
+  final String? detail;
   final String? source;
   final DingSound sound;
   final int flashCount;
@@ -88,6 +92,7 @@ final class DingRequest {
   DingRequest copyWith({DingSound? sound}) {
     return DingRequest(
       message: message,
+      detail: detail,
       source: source,
       sound: sound ?? this.sound,
       flashCount: flashCount,

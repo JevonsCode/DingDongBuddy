@@ -38,10 +38,61 @@ jobs:
 
           version="$(git show "$TESTED_SHA:pubspec.yaml" | sed -n 's/^version: \([^+]*\).*/\1/p')"
           tag="v$version"
+
+          device_link_origin="https://dingdong.xn--m8txu.com"
+          deployed_version="$(curl --fail --silent --show-error "$device_link_origin/v1/health" \
+            | node -e 'let body=""; process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => process.stdout.write(JSON.parse(body).serviceVersion || ""));')"
+          if [ "$deployed_version" != "$version" ]; then
+            echo "Device-link Worker is $deployed_version, expected $version. Deploy it before releasing."
+            exit 1
+          fi
+          deployed_sha="$(curl --fail --silent --show-error "$device_link_origin/v1/health" \
+            | node -e 'let body=""; process.stdin.on("data", chunk => body += chunk); process.stdin.on("end", () => process.stdout.write(JSON.parse(body).releaseSha || ""));')"
+          if [ "$deployed_sha" != "$TESTED_SHA" ]; then
+            echo "Device-link Worker is from $deployed_sha, expected tested commit $TESTED_SHA."
+            exit 1
+          fi
+
+          remote_file="$(mktemp)"
+          trap 'rm -f "$remote_file"' EXIT
+          while IFS= read -r repo_path; do
+            remote_path="${repo_path#docs}"
+            curl --fail --silent --show-error "$device_link_origin$remote_path" -o "$remote_file"
+            expected_hash="$(git show "$TESTED_SHA:$repo_path" | sha256sum | awk '{print $1}')"
+            actual_hash="$(sha256sum "$remote_file" | awk '{print $1}')"
+            if [ "$actual_hash" != "$expected_hash" ]; then
+              echo "Deployed PWA asset does not match $repo_path."
+              exit 1
+            fi
+          done < <(
+            {
+              git ls-tree -r --name-only "$TESTED_SHA" docs/app/
+              git show "$TESTED_SHA:docs/.assetsignore" | sed -n 's|^!/|docs/|p' | while IFS= read -r candidate; do
+                if [ "$(git cat-file -t "$TESTED_SHA:$candidate" 2>/dev/null || true)" = "blob" ]; then
+                  printf '%s\n' "$candidate"
+                fi
+              done
+            } | sort -u
+          )
+
+          curl --fail --silent --show-error \
+            --dump-header "$remote_file" \
+            --output /dev/null \
+            "$device_link_origin/app/"
+          grep -qi '^content-security-policy:' "$remote_file"
+          grep -qi '^strict-transport-security:' "$remote_file"
+          grep -qi '^x-content-type-options: *nosniff' "$remote_file"
+
           if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
             git tag "$tag" "$TESTED_SHA"
             git push origin "$tag"
             echo "$tag was pushed; dispatching Release explicitly because GITHUB_TOKEN tag pushes do not start new workflows."
+          else
+            existing_tag_sha="$(git rev-parse "refs/tags/$tag^{commit}")"
+            if [ "$existing_tag_sha" != "$TESTED_SHA" ]; then
+              echo "$tag points to $existing_tag_sha, expected tested commit $TESTED_SHA."
+              exit 1
+            fi
           fi
 
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -51,5 +102,5 @@ jobs:
 
           gh workflow run release.yml \
             --repo "$GITHUB_REPOSITORY" \
-            --ref main \
+            --ref "$tag" \
             -f tag="$tag"

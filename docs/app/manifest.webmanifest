@@ -1,0 +1,37 @@
+{
+  "name": "DingDong Buddy",
+  "short_name": "DingDong",
+  "id": "./",
+  "description": "在自己的设备之间接收 Agent 提醒并主动传递内容。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "handle_links": "preferred",
+  "launch_handler": { "client_mode": "navigate-existing" },
+  "background_color": "#fffefc",
+  "theme_color": "#fffefc",
+  "icons": [
+    {
+      "src": "../assets/dingdong-pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "../assets/dingdong-pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "./manifest.webmanifest",
+      "id": "https://dingdong.xn--m8txu.com/"
+    }
+  ],
+  "prefer_related_applications": false
+}

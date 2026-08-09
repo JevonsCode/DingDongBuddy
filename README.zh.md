@@ -9,12 +9,12 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <strong>清晰管理剪贴板列表<br>统一管理提示词、Skill、MCP<br>Agent 执行结束，DingDong 提醒你</strong>
+  <strong>清晰管理剪贴板列表<br>统一管理提示词、Skill、MCP<br>把剪贴板内容与 Agent 提醒送到可信设备</strong>
 </p>
 
-DingDong 1.0 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记录清晰可查，
+DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记录清晰可查，
 Prompt、Skill、MCP 只维护一份并接入常用客户端；Agent 做完、卡住或等你决定时，
-DingDong 会用声音把你叫回来。
+DingDong 会提醒你，也能把选中的剪贴板内容和完成提醒送到自己的电脑与手机。
 
 ## DingDong 管理什么
 
@@ -25,8 +25,9 @@ DingDong 会用声音把你叫回来。
 | Skill | 管理包含 `SKILL.md`、脚本、参考资料和资源文件的完整 Package；先发现简介，再按需加载 |
 | MCP | 只维护一份 Server 配置，同步到匹配的 Agent 客户端，并保留无关配置 |
 | Agent 动态 | 在本机记录完成、阻塞和决策提醒，保留未读状态、重复次数和历史，并播放可配置提示声 |
+| 连接设备 | 扫码配对、按设备单向发送剪贴板、主动传递文字与文件，并在手机 PWA 接收更完整的 Agent 完成提醒 |
 
-剪贴板和资源数据默认只保存在这台电脑上。
+剪贴板和资源数据默认只保存在这台电脑上；轻量连接中继不会保存剪贴板或文件正文。
 
 ## 统一管理 Prompt、Skill 和 MCP
 
@@ -54,12 +55,33 @@ flowchart LR
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.2.8。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.3.0。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
 用户明确授权后，Agent 也可以使用 `dingdong_install_skill`、
 `dingdong_upsert_trigger_group` 和 `dingdong_bind_resource_scope`
 直接配置项目专用 Skill。
+
+## 连接设备与手机 PWA
+
+从 DingDong 顶部或托盘菜单打开“**连接设备**”，展示二维码后用手机扫描。
+配对信息会在刷新后保留；每台设备都可以独立断开、重新连接或删除。
+
+- **电脑 → 手机：** 可以按设备开启自动发送，但只发送配对后新复制的内容；
+  连接前的历史只有在你主动选择“**发送到设备**”时才会发送。
+- **手机 → 电脑：** PWA 不会读取或监听手机系统剪贴板。只有你在输入框中输入或
+  粘贴文字、选择文件，并点击“**发送**”后，内容才会进入电脑剪贴板列表。
+- **文件：** 单个文件上限为 25 MB。由电脑托管的内容只有在来源电脑与接收设备
+  保持连接时才可获取。
+- **Agent 提醒：** 手机卡片会展示更完整的说明、来源和完成时间。每台设备可单独
+  开关后台 Web Push 与震动；通知是否真正震动仍由手机系统决定。
+
+DingDong 会先尝试 WebRTC 直连，必要时使用端到端加密的中继转发；中继只转发
+加密帧和 Web Push 载荷，不保存剪贴板或文件正文。Android 可直接使用网页，安装
+PWA 不是通知前提；iPhone 与 iPad 需要先添加到主屏幕，才能开启 Web Push。
+
+Android Chrome 链路已经完成包括后台通知在内的端到端实测。iPhone / iPad
+实现遵循 WebKit 的主屏幕 Web App 要求，但正式发布前仍需要补一轮真实设备记录。
 
 ## 让 Agent 直接安装
 
@@ -144,6 +166,8 @@ DingDong 使用两条互相独立的原生链路：
 - 回环 API 只监听 localhost。
 - DingDong 不包含统计分析或遥测。
 - Agent 读取剪贴板正文默认关闭；元数据仍可用。
+- 连接设备的正文端到端加密；中继不会保存剪贴板或文件正文。
+- 手机 PWA 不读取手机剪贴板，只有点击“发送”才会传出用户主动提供的内容。
 - 同步时会保留客户端中与 DingDong 无关的配置。
 - GitHub Issue 表单要求提交前确认已移除敏感信息。
 
@@ -163,8 +187,11 @@ flutter build macos --release
 
 - `lib/features/activity/` — Agent 动态与未读状态
 - `lib/features/clipboard/` — 采集、分类、搜索、预览和分享
+- `lib/features/device_link/` — 可信设备配对、加密传输、剪贴板与文件传递、Agent 提醒
 - `lib/features/library/` — Prompt、Skill、MCP、作用域、导入和原生同步
 - `lib/features/agent_api/` — 回环 API、MCP Bridge 和完成 Hook
+- `device_link_relay/` — Cloudflare 轻量连接中继与 Web Push 服务
+- `docs/app/` — 可安装的手机 PWA
 - `docs/` — 官网、更新元数据、版本说明和产品文档
 
 更多内容见[架构说明](docs/architecture/ai-companion-architecture.md)。
@@ -174,8 +201,12 @@ flutter build macos --release
 `pubspec.yaml` 是版本来源。`main` 上的发布提交必须同步应用版本、
 构建号、MCP Server 信息、官网、`docs/dingdong-release.json`、版本说明、
 回归清单和版本契约测试。最新 `main` 提交通过 Flutter desktop 工作流后，
-自动化才会创建 `v<version>` 标签并发布签名的 macOS、Windows beta、MCP
-与更新源文件。
+发布门禁还会要求 PWA / 中继来自同一个提交：可以在配置好受保护的
+`device-link-production` 环境后通过 **Device link Cloudflare** 工作流部署，
+也可以从这个已测试的干净提交用已授权 Wrangler 携带准确 SHA 部署。随后自动化创建
+`v<version>` 标签并发布签名的 macOS、
+Windows beta、MCP 与更新源文件。官网只会在下载制品已经存在后，从同一个版本
+标签部署。
 
 参阅[版本说明](docs/release-notes.md)和
 [手工回归清单](docs/product/manual-regression.md)。

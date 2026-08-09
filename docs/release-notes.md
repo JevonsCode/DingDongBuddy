@@ -1,67 +1,104 @@
-# DingDong 1.2.8
+# DingDong 1.3.0
 
-DingDong 1.2.8 makes the desktop companion's idle states predictable and gives
-the new mascot artwork a small two-frame animation on both macOS and Windows.
+DingDong 1.3.0 introduces Connected Devices: a separate desktop manager and a
+mobile PWA for deliberately moving clipboard items, files, and Agent completion
+reminders between devices you trust.
 
-## Companion state timing
+## Connected Devices
 
-- DingDong now opens in the normal state with `AgentToolIcon` instead of
-  inheriting an old idle timestamp from the previous session.
-- After three minutes without Agent or Clipboard activity, the companion moves
-  to the resting state. After five minutes without either activity, it moves to
-  sleeping.
-- A new Agent reminder shows `ding` immediately. A Clipboard capture or an
-  acknowledged reminder wakes the companion and restarts both idle thresholds.
-- An Agent reminder left unopened for five minutes still nudges horizontally
-  once per minute until it is acknowledged.
+- Open the dedicated Connected Devices window from the DingDong header or tray
+  menu, then pair a phone by scanning the computer's QR code.
+- Pairings survive page refreshes. Each device can be disconnected, reconnected,
+  deleted, and configured independently.
+- DingDong attempts a direct WebRTC connection and uses its encrypted relay as
+  a fallback. The relay stores no clipboard or file content.
+- A superseded browser tab stops reconnecting, avoiding the repeated
+  connect/disconnect loop caused by two pages competing for the same pairing.
 
-## Animated desktop artwork
+## Deliberate Clipboard and file delivery
 
-- Reminder artwork alternates between `ding` and `ding2` every 0.7 seconds.
-- Resting and sleeping artwork alternates between its two frames every 1.2
-  seconds.
-- Windows now follows the same normal, reminder, resting, and sleeping states,
-  with light and dark taskbar artwork.
-- The macOS resting mascot renders two pixels smaller in each dimension, and
-  the unread count is lowered by two points for visual centering.
+- Automatic computer-to-device delivery is off by default and can be enabled
+  per device. It sends only new Clipboard captures created after pairing.
+- Existing Clipboard history moves only through the new **Send to Device**
+  action; the old operating-system share action is no longer used.
+- The phone PWA never reads or watches the phone's system clipboard. It sends
+  only text the user enters or pastes, or a selected file, after **Send** is
+  pressed.
+- Files up to 25 MB can be transferred. Computer-hosted content is available
+  only while the source computer and receiving device remain connected.
 
-## Website polish
+## Agent completion reminders on mobile
 
-- Menu-bar notification previews now use the animated white `ding` artwork.
-- The "everything close at hand" note uses the resting mascot, the custom sound
-  card uses sleeping, and the local API heading now includes thinking.
-- The Clipboard demo opens with All, Images, Text, Links, and Files visible in
-  their default order.
+- Completion reminders are enabled by default when notification permission and
+  the Web Push subscription are ready.
+- Mobile cards show a longer task description, source, and completion time, and
+  the PWA can receive them while it is in the background.
+- Vibration is optional per device. The notification diagnostics now distinguish
+  browser subscription, provider acceptance, and notification creation, and
+  include a direct user-initiated vibration test. Android and iOS can still
+  override vibration through their system notification settings.
+- Mobile resting and sleeping mascots alternate frames, matching the companion's
+  animated desktop states.
 
-Intel macOS and Windows packages remain marked as beta.
+## Development and reliability
+
+- The DEV test panel now covers richer Agent reminders, reminder bursts,
+  simulated phone text and files, automatic Clipboard delivery, manual device
+  sharing, and the Connected Devices window.
+- Web Push now uses RFC-standard `aes128gcm`, high urgency, a 24-hour TTL,
+  bounded payloads, authenticated subscription updates, delivery-stage receipts,
+  and safer stale-pairing handling.
+- The public relay limits request sizes, provider hosts, and request rates, and
+  keeps registration authority when a provider expires a subscription.
+
+Intel macOS and Windows packages remain marked as beta. PWA installation is
+optional on Android; iPhone and iPad require a Home Screen web app for Web Push.
+The iOS flow is implemented but still awaits a recorded real-device release pass.
 
 ---
 
-DingDong 1.2.8 重新梳理了桌面伙伴的空闲状态，并让 macOS 与 Windows 都能
-使用新的双帧小人动画。
+DingDong 1.3.0 新增“连接设备”：通过独立的桌面管理窗口与手机 PWA，在自己信任
+的设备之间主动传递剪贴板内容、文件和 Agent 完成提醒。
 
-## 伙伴状态计时
+## 连接设备
 
-- DingDong 每次启动都从正常状态开始，显示 `AgentToolIcon`，不会沿用上次会话
-  的旧空闲时间。
-- 连续三分钟没有 Agent 或剪贴板活动时进入休息状态；连续五分钟两种活动都
-  没有时进入睡眠状态。
-- 新的 Agent 提醒会立即显示 `ding`；发生复制粘贴，或用户查看并处理提醒后，
-  都会恢复正常状态并重新计算两段空闲时间。
-- Agent 提醒五分钟仍未处理时，继续每分钟左右摇动一次，直到提醒被处理。
+- 从 DingDong 顶部或托盘菜单打开独立的“连接设备”窗口，展示二维码后用手机扫码
+  配对。
+- 配对会在页面刷新后保留；每台设备都可以独立断开、重新连接、删除和配置。
+- DingDong 会先尝试 WebRTC 直连，必要时使用加密中继；中继不会保存剪贴板或文件
+  正文。
+- 被新页面替代的旧浏览器标签不会继续抢占连接，避免两个页面互相踢下线造成反复
+  连接、断开。
 
-## 桌面双帧动画
+## 主动传递剪贴板与文件
 
-- 提醒状态每 0.7 秒在 `ding` 与 `ding2` 之间切换。
-- 休息与睡眠状态每 1.2 秒切换一次对应的第二帧。
-- Windows 现在也支持正常、提醒、休息、睡眠四种状态，并分别适配深浅任务栏。
-- macOS 状态栏的休息小人宽高各缩小 2px，未读数字下移 2pt 后更居中。
+- 电脑向设备自动发送默认关闭，可按设备单独开启，并且只发送配对后新产生的剪贴板
+  内容。
+- 连接前的历史只有通过新的“**发送到设备**”操作才会传递，不再调用操作系统原生
+  分享。
+- 手机 PWA 不读取或监听手机系统剪贴板。只有用户主动输入或粘贴文字、选择文件，
+  并点击“**发送**”后，内容才会进入电脑剪贴板列表。
+- 单个文件上限为 25 MB；由电脑托管的内容只有在来源电脑与接收设备保持连接时才可
+  获取。
 
-## 官网细节
+## 手机 Agent 完成提醒
 
-- 状态栏提醒预览改为白色 `ding` 双帧动画。
-- “东西随手能找到”使用休息小人，“提示声由你决定”使用睡眠小人，“喜欢写
-  脚本”标题左侧增加思考小人。
-- 官网剪贴板预览默认展示“全部、图片、文本、链接、文件”分类。
+- 在通知权限和 Web Push 订阅准备好后，完成提醒会默认开启。
+- 手机卡片展示更完整的任务说明、来源和完成时间；PWA 在后台时也可以收到系统通知。
+- 每台设备可单独开关震动。通知诊断会区分浏览器订阅、推送服务接受和浏览器创建
+  通知，并提供一次由用户点击触发的直接震动测试。Android 与 iOS 的系统通知设置
+  仍可能覆盖震动效果。
+- 手机端休息与睡眠小人也会切换双帧，与桌面伙伴的动画状态保持一致。
 
-Intel macOS 与 Windows 安装包继续标记为 beta。
+## 开发与可靠性
+
+- DEV 测试面板新增长说明 Agent 提醒、连续提醒、模拟手机文字与文件、自动发送
+  剪贴板、主动发送到设备和打开连接设备窗口等测试。
+- Web Push 改用标准 `aes128gcm`，并加入高优先级、24 小时 TTL、载荷边界、订阅
+  鉴权、分阶段回执和旧配对隔离。
+- 公网中继限制请求体、推送服务域名和请求频率；推送服务清理过期订阅后，房间鉴权
+  仍会保留。
+
+Intel macOS 与 Windows 安装包继续标记为 beta。Android 不安装 PWA 也可使用；
+iPhone 与 iPad 需要先添加到主屏幕，才能使用 Web Push；iOS 流程已经实现，
+但仍待补一轮有记录的真实设备发布验收。

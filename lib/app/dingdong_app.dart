@@ -21,6 +21,8 @@ import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.da
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
+import 'package:dingdong/features/device_link/domain/device_link_management.dart';
+import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -71,6 +73,8 @@ class DingDongApp extends StatefulWidget {
     this.clipboardArchiveStore,
     this.clipboardPreviewLauncher,
     this.clipboardShareGateway,
+    this.deviceLinkController,
+    this.deviceLinkManagerLauncher,
     this.quickPasteGateway,
     this.quickPastePermissionGateway,
     this.resourceStore,
@@ -115,6 +119,8 @@ class DingDongApp extends StatefulWidget {
   final ClipboardArchiveStore? clipboardArchiveStore;
   final ClipboardPreviewLauncher? clipboardPreviewLauncher;
   final ClipboardShareGateway? clipboardShareGateway;
+  final DeviceLinkController? deviceLinkController;
+  final DeviceLinkManagerLauncher? deviceLinkManagerLauncher;
   final QuickPasteGateway? quickPasteGateway;
   final QuickPastePermissionGateway? quickPastePermissionGateway;
   final ResourceStore? resourceStore;
@@ -284,6 +290,8 @@ class _DingDongAppState extends State<DingDongApp> {
                 UrlLauncherClipboardContentLauncher(),
             clipboardPreviewLauncher: widget.clipboardPreviewLauncher,
             clipboardShareGateway: widget.clipboardShareGateway,
+            deviceLinkController: widget.deviceLinkController,
+            deviceLinkManagerLauncher: widget.deviceLinkManagerLauncher,
             libraryViewModel: _libraryViewModel,
             issueCenterController: _issueCenterController,
             settingsViewModel: _settingsViewModel,

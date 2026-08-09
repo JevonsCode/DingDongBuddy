@@ -1,0 +1,7 @@
+/app/*
+  Cache-Control: no-cache
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; connect-src 'self' wss://dingdong.xn--m8txu.com; form-action 'none'; frame-ancestors 'none'; img-src 'self' data: blob:; manifest-src 'self'; object-src 'none'; script-src 'self'; style-src 'self'; worker-src 'self'
+  Cross-Origin-Resource-Policy: same-origin
+  Referrer-Policy: no-referrer
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff

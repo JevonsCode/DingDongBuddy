@@ -619,6 +619,10 @@ List<MenuItem> desktopTrayContextMenuItems({
     label: chinese ? '打开剪贴板' : 'Open Clipboard',
     onClick: (_) => onCommand(DesktopShellCommand.showClipboard),
   ),
+  MenuItem(
+    label: chinese ? '打开连接设备' : 'Open Connected Devices',
+    onClick: (_) => onCommand(DesktopShellCommand.showDeviceLinks),
+  ),
   if (developmentBuild)
     MenuItem(
       label: chinese ? '测试面板' : 'Test Panel',

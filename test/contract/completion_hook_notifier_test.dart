@@ -90,6 +90,7 @@ void main() {
     );
 
     expect(transport.body?['message'], '已经完成资源同步并安装到本机');
+    expect(transport.body?['detail'], '已经完成资源同步并安装到本机：\n全量测试通过\n应用正在运行');
   });
 
   test('DingDong bridge line is skipped in the recent Agent summary', () async {

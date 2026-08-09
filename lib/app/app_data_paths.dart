@@ -76,6 +76,9 @@ final class AppDataPaths {
     '${applicationSupportDirectory.path}${_separator}agent-launchers.json',
   );
 
+  File get deviceLinksFile =>
+      File('${applicationSupportDirectory.path}${_separator}device-links.json');
+
   Directory get agentAdaptersDirectory => Directory(
     '${applicationSupportDirectory.path}${_separator}Agent Adapters',
   );
@@ -89,6 +92,10 @@ final class AppDataPaths {
 
   Directory get clipboardImagesDirectory => Directory(
     '${applicationSupportDirectory.path}${_separator}Clipboard Images',
+  );
+
+  Directory get deviceTransferDirectory => Directory(
+    '${applicationSupportDirectory.path}${_separator}Device Transfers',
   );
 
   Directory get skillPackagesDirectory => Directory(

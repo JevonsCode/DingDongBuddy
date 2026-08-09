@@ -95,7 +95,7 @@ public class TrayIcon: NSView {
                 attributes: [
                     .foregroundColor: NSColor.white,
                     .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold),
-                    .baselineOffset: -2.0
+                    .baselineOffset: -1.0
                 ]
             )
             button.imagePosition = .imageLeading

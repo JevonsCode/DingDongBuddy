@@ -333,8 +333,8 @@ Future<void> _showClipboardContextMenu(
           if (includeShare)
             DesktopMenuItem<_ClipboardAction>(
               value: _ClipboardAction.share,
-              symbol: 'share',
-              label: context.localized('Share', '分享'),
+              symbol: 'link',
+              label: context.localized('Send to device', '发送到设备'),
             ),
           const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
