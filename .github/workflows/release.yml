@@ -360,4 +360,5 @@ jobs:
 
           gh workflow run pages.yml \
             --repo "$GITHUB_REPOSITORY" \
-            --ref "$RELEASE_TAG"
+            --ref main \
+            -f source_ref="$RELEASE_TAG"
