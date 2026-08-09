@@ -9,7 +9,6 @@ on:
         type: string
 
 permissions:
-  actions: write
   contents: write
 
 env:
@@ -357,8 +356,3 @@ jobs:
               --title "DingDong ${RELEASE_TAG#v}" \
               --notes-file docs/release-notes.md
           fi
-
-          gh workflow run pages.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref main \
-            -f source_ref="$RELEASE_TAG"
