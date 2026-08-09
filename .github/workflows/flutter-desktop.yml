@@ -11,6 +11,27 @@ permissions:
   contents: read
 
 jobs:
+  device-link-web:
+    name: device-link-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: device_link_relay/package-lock.json
+      - name: Install relay dependencies
+        working-directory: device_link_relay
+        run: npm ci
+      - name: Test the PWA and relay contracts
+        working-directory: device_link_relay
+        run: npm run check
+      - name: Verify the Cloudflare Worker bundle
+        working-directory: device_link_relay
+        run: npx wrangler deploy --dry-run
+
   macos-mcp:
     name: macos-mcp-${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
