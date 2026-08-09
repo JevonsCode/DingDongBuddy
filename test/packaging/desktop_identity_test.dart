@@ -684,7 +684,7 @@ void main() {
     expect(workflow, contains('node-version: 22'));
     expect(workflow, contains('Recheck the PWA and relay release bundle'));
     expect(workflow, contains('npx wrangler deploy --dry-run'));
-    expect(workflow, contains('actions: write'));
+    expect(workflow, isNot(contains('actions: write')));
     expect(workflow, contains('workflow_dispatch:'));
     expect(workflow, isNot(contains('\n  push:\n')));
     expect(
@@ -694,13 +694,19 @@ void main() {
     expect(workflow, contains('head_sha=\$tag_sha'));
     expect(workflow, contains('releaseSha'));
     expect(workflow, contains('docs/.assetsignore'));
-    expect(workflow, contains('gh workflow run pages.yml'));
-    expect(workflow, contains('--ref main'));
-    expect(workflow, contains(r'source_ref="$RELEASE_TAG"'));
+    expect(workflow, isNot(contains('gh workflow run pages.yml')));
     expect(releaseGate, contains(r'--ref "$tag"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
     expect(pagesWorkflow, contains('source_ref:'));
-    expect(pagesWorkflow, contains(r'ref: ${{ inputs.source_ref }}'));
+    expect(pagesWorkflow, contains('workflow_run:'));
+    expect(pagesWorkflow, contains('- Release'));
+    expect(pagesWorkflow, contains("conclusion == 'success'"));
+    expect(
+      pagesWorkflow,
+      contains(
+        r"ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || inputs.source_ref }}",
+      ),
+    );
     expect(pagesWorkflow, isNot(contains('push:')));
     expect(deviceLinkDeployWorkflow, contains('workflow_dispatch:'));
     expect(deviceLinkDeployWorkflow, contains('device-link-production'));
