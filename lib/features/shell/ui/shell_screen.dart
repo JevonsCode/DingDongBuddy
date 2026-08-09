@@ -28,7 +28,6 @@ import 'package:dingdong/features/settings/domain/settings_window_launcher.dart'
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
-import 'package:dingdong/features/settings/ui/lifecycle_telemetry_consent_dialog.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/ui/popup_footer.dart';
 import 'package:dingdong/features/shell/ui/popup_header.dart';
@@ -49,7 +48,6 @@ class ShellScreen extends StatefulWidget {
     required this.controller,
     this.agentBaseUri,
     this.developmentBuild = false,
-    this.showLifecycleTelemetryConsentPrompt = false,
     this.clipboardGateway,
     this.desktopContextMenuGateway,
     this.clipboardContentLauncher,
@@ -78,7 +76,6 @@ class ShellScreen extends StatefulWidget {
   final ShellController controller;
   final Uri? agentBaseUri;
   final bool developmentBuild;
-  final bool showLifecycleTelemetryConsentPrompt;
   final ClipboardGateway? clipboardGateway;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final ClipboardContentLauncher? clipboardContentLauncher;
@@ -116,8 +113,6 @@ class _ShellScreenState extends State<ShellScreen> {
   late int _lastSelectedIndex;
   int _lastDeviceShareRevision = 0;
   bool _deviceShareDialogOpen = false;
-  bool _lifecycleTelemetryConsentDialogOpen = false;
-  bool _lifecycleTelemetryConsentHandled = false;
 
   @override
   void initState() {
@@ -128,14 +123,12 @@ class _ShellScreenState extends State<ShellScreen> {
     _lastLibraryRefreshRevision = widget.controller.libraryRefreshRevision;
     _lastSelectedIndex = widget.controller.selectedIndex;
     widget.controller.addListener(_handleNavigationChanged);
-    widget.settingsViewModel.addListener(_handleTelemetryConsentState);
     widget.shortcutHints?.addListener(_handleExternalShortcutHints);
     _lastDeviceShareRevision =
         widget.deviceLinkController?.shareRequestRevision ?? 0;
     widget.deviceLinkController?.addListener(_handleDeviceLinkChanged);
     widget.clipboardViewModel.load();
     widget.libraryViewModel.load();
-    _handleTelemetryConsentState();
   }
 
   @override
@@ -150,15 +143,6 @@ class _ShellScreenState extends State<ShellScreen> {
           widget.controller.clipboardRefreshRevision;
       _lastLibraryRefreshRevision = widget.controller.libraryRefreshRevision;
       _lastSelectedIndex = widget.controller.selectedIndex;
-    }
-    if (oldWidget.settingsViewModel != widget.settingsViewModel) {
-      oldWidget.settingsViewModel.removeListener(_handleTelemetryConsentState);
-      widget.settingsViewModel.addListener(_handleTelemetryConsentState);
-      _handleTelemetryConsentState();
-    }
-    if (!oldWidget.showLifecycleTelemetryConsentPrompt &&
-        widget.showLifecycleTelemetryConsentPrompt) {
-      _handleTelemetryConsentState();
     }
     if (oldWidget.shortcutHints != widget.shortcutHints) {
       oldWidget.shortcutHints?.removeListener(_handleExternalShortcutHints);
@@ -176,56 +160,9 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   void dispose() {
     widget.controller.removeListener(_handleNavigationChanged);
-    widget.settingsViewModel.removeListener(_handleTelemetryConsentState);
     widget.shortcutHints?.removeListener(_handleExternalShortcutHints);
     widget.deviceLinkController?.removeListener(_handleDeviceLinkChanged);
     super.dispose();
-  }
-
-  void _handleTelemetryConsentState() {
-    if (!widget.showLifecycleTelemetryConsentPrompt ||
-        _lifecycleTelemetryConsentHandled ||
-        _lifecycleTelemetryConsentDialogOpen ||
-        !widget.settingsViewModel.isLoaded) {
-      return;
-    }
-    if (widget.settingsViewModel.settings.lifecycleTelemetryConsent !=
-        LifecycleTelemetryConsent.undecided) {
-      _lifecycleTelemetryConsentHandled = true;
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(_showLifecycleTelemetryConsent());
-    });
-  }
-
-  Future<void> _showLifecycleTelemetryConsent() async {
-    if (_lifecycleTelemetryConsentDialogOpen ||
-        _lifecycleTelemetryConsentHandled ||
-        !mounted) {
-      return;
-    }
-    _lifecycleTelemetryConsentDialogOpen = true;
-    try {
-      final bool allowed =
-          await showDialog<bool>(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) => const PopScope(
-              canPop: false,
-              child: LifecycleTelemetryConsentDialog(),
-            ),
-          ) ??
-          false;
-      await widget.settingsViewModel.setLifecycleTelemetryConsent(
-        allowed
-            ? LifecycleTelemetryConsent.enabled
-            : LifecycleTelemetryConsent.disabled,
-      );
-      _lifecycleTelemetryConsentHandled = true;
-    } finally {
-      _lifecycleTelemetryConsentDialogOpen = false;
-    }
   }
 
   void _handleNavigationChanged() {

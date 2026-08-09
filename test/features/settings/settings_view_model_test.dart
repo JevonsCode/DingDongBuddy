@@ -53,27 +53,20 @@ void main() {
     expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
   });
 
-  test('lifecycle statistics require an explicit persisted choice', () async {
+  test('lifecycle statistics default on and persist an opt-out', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
-    final List<LifecycleTelemetryConsent> applied =
-        <LifecycleTelemetryConsent>[];
+    final List<bool> applied = <bool>[];
     final SettingsViewModel model = SettingsViewModel(
       SettingsRepository(backend),
-      onLifecycleTelemetryConsentChanged:
-          (LifecycleTelemetryConsent value) async => applied.add(value),
+      onLifecycleTelemetryChanged: (bool enabled) async => applied.add(enabled),
     );
     await model.load();
 
-    expect(
-      model.settings.lifecycleTelemetryConsent,
-      LifecycleTelemetryConsent.undecided,
-    );
-    await model.setLifecycleTelemetryConsent(LifecycleTelemetryConsent.enabled);
+    expect(model.settings.lifecycleTelemetryEnabled, isTrue);
+    await model.setLifecycleTelemetryEnabled(false);
 
-    expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'enabled');
-    expect(applied, <LifecycleTelemetryConsent>[
-      LifecycleTelemetryConsent.enabled,
-    ]);
+    expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'disabled');
+    expect(applied, <bool>[false]);
   });
 
   test(
@@ -411,10 +404,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.3.1',
-        latestBuild: '43',
+        latestVersion: '1.3.2',
+        latestBuild: '44',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.3.1'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.3.2'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -430,11 +423,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.3.1');
+    expect(model.releaseStatus.latestVersion, '1.3.2');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.3.1'),
+      Uri.parse('https://example.com/dingdong/releases/1.3.2'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);

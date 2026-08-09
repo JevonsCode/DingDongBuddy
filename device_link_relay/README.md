@@ -1,7 +1,7 @@
 # DingDong Cloudflare service
 
 This Worker hosts the phone PWA, the encrypted device-link relay, Web Push, and
-DingDong's optional install/upgrade counts. Lifecycle statistics use D1 and are
+DingDong's bounded install/upgrade counts. Lifecycle statistics use D1 and are
 independent of clipboard relay traffic.
 
 ## Lifecycle-statistics privacy contract
@@ -13,13 +13,13 @@ per-IP rate limit but never writes the IP to D1. It HMACs the installation UUID
 with `TELEMETRY_HASH_SECRET`; only the resulting hash is persisted. Event IDs
 make offline retries idempotent.
 
-The resulting numbers are approximate opted-in installation counts, not active
+The resulting numbers are approximate observed installation counts, not active
 users or license checks. Removing all local app data can create a new random
 identifier, and a modified public client can submit synthetic events.
 
-The desktop app sends no lifecycle request until the user explicitly opts in,
-and it has no session, heartbeat, activity, feature-use, clipboard, file, or
-Agent-message events.
+The desktop app enables lifecycle statistics by default and exposes an opt-out
+under **Settings → Version**. It has no session, heartbeat, activity,
+feature-use, clipboard, file, or Agent-message events.
 
 ## D1 setup
 
@@ -46,7 +46,7 @@ SELECT COUNT(*) AS installs
 FROM lifecycle_events
 WHERE event_type = 'install';
 
--- Opted-in installations seen through either an install or upgrade event.
+-- Installations seen through either an install or upgrade event.
 SELECT COUNT(*) AS known_installations
 FROM lifecycle_installations;
 

@@ -356,40 +356,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           SystemUsageSection(viewModel: widget.viewModel),
                           _SettingsSection(
-                            title: context.localized('Privacy', '隐私'),
-                            description: context.localized(
-                              'Remote statistics are optional and limited to application lifecycle events.',
-                              '远程统计为可选项，并且仅限应用生命周期事件。',
-                            ),
-                            children: <Widget>[
-                              CompactSwitchListTile(
-                                key: const Key('settings-anonymous-telemetry'),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context.localized(
-                                    'Anonymous install and upgrade statistics',
-                                    '匿名安装与升级统计',
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  context.localized(
-                                    'Sends one event after a successful install or version upgrade. No activity, feature usage, clipboard content, files, or Agent messages are sent.',
-                                    '仅在安装成功或版本升级成功后发送一次事件；不发送活跃状态、功能使用、剪贴板内容、文件或 Agent 消息。',
-                                  ),
-                                ),
-                                value:
-                                    settings.lifecycleTelemetryConsent ==
-                                    LifecycleTelemetryConsent.enabled,
-                                onChanged: (bool enabled) => widget.viewModel
-                                    .setLifecycleTelemetryConsent(
-                                      enabled
-                                          ? LifecycleTelemetryConsent.enabled
-                                          : LifecycleTelemetryConsent.disabled,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          _SettingsSection(
                             title: context.localized('Appearance', '外观'),
                             description: context.localized(
                               'Keep the workspace comfortable in your current desktop environment.',

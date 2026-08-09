@@ -12,10 +12,7 @@ void main() {
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.allowAgentClipboardContent, isFalse);
     expect(settings.groupRepeatedAgentSessions, isTrue);
-    expect(
-      settings.lifecycleTelemetryConsent,
-      LifecycleTelemetryConsent.undecided,
-    );
+    expect(settings.lifecycleTelemetryEnabled, isTrue);
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
     expect(settings.hideDockIcon, isFalse);
@@ -32,6 +29,25 @@ void main() {
 
     expect(settings.trayNotificationColor, TrayNotificationColor.pink);
   });
+
+  test(
+    'preserves legacy telemetry opt-outs during default-on migration',
+    () async {
+      final AppSettings undecided = await SettingsRepository(
+        MemoryPreferencesBackend(<String, Object>{
+          'dingdong.telemetry.lifecycleConsent': 'undecided',
+        }),
+      ).load();
+      final AppSettings disabled = await SettingsRepository(
+        MemoryPreferencesBackend(<String, Object>{
+          'dingdong.telemetry.lifecycleConsent': 'disabled',
+        }),
+      ).load();
+
+      expect(undecided.lifecycleTelemetryEnabled, isTrue);
+      expect(disabled.lifecycleTelemetryEnabled, isFalse);
+    },
+  );
 
   test('loads persisted preferences and sanitizes unsafe limits', () async {
     final MemoryPreferencesBackend backend =
@@ -86,10 +102,7 @@ void main() {
     expect(settings.groupRepeatedAgentSessions, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
     expect(settings.agentActivityCountHours, 1);
-    expect(
-      settings.lifecycleTelemetryConsent,
-      LifecycleTelemetryConsent.enabled,
-    );
+    expect(settings.lifecycleTelemetryEnabled, isTrue);
     expect(settings.hideDockIcon, isTrue);
     expect(settings.trayNotificationColor, TrayNotificationColor.purple);
     expect(
@@ -118,7 +131,7 @@ void main() {
       clipboardMaxItems: 600,
       clipboardMaxAgeDays: 30,
       allowAgentClipboardContent: true,
-      lifecycleTelemetryConsent: LifecycleTelemetryConsent.disabled,
+      lifecycleTelemetryEnabled: false,
       rememberAgentActivity: false,
       groupRepeatedAgentSessions: false,
       agentActivityMaxItems: 320,

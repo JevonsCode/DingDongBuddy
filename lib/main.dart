@@ -306,8 +306,7 @@ Future<void> main(List<String> arguments) async {
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
     onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
-    onLifecycleTelemetryConsentChanged:
-        lifecycleTelemetryController.applyConsent,
+    onLifecycleTelemetryChanged: lifecycleTelemetryController.setEnabled,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: applicationUpdater,
@@ -414,8 +413,8 @@ Future<void> main(List<String> arguments) async {
       case 'settings_changed':
         await settingsViewModel.reload();
         unawaited(
-          lifecycleTelemetryController.applyConsent(
-            settingsViewModel.settings.lifecycleTelemetryConsent,
+          lifecycleTelemetryController.setEnabled(
+            settingsViewModel.settings.lifecycleTelemetryEnabled,
           ),
         );
         dependencies.applyClipboardRetention(settingsViewModel.settings);
@@ -543,10 +542,6 @@ Future<void> main(List<String> arguments) async {
     DingDongApp(
       activityController: activityController,
       developmentBuild: appDataPaths.development,
-      showLifecycleTelemetryConsentPrompt:
-          !appDataPaths.development &&
-          startupSettings.lifecycleTelemetryConsent ==
-              LifecycleTelemetryConsent.undecided,
       agentConversationLauncher: agentConversationLauncher,
       agentBaseUri: dependencies.agentHttpServer.baseUri,
       clipboardCaptureService: dependencies.clipboardCaptureService,
@@ -581,17 +576,11 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await WidgetsBinding.instance.endOfFrame;
-  if (!appDataPaths.development &&
-      startupSettings.lifecycleTelemetryConsent ==
-          LifecycleTelemetryConsent.undecided) {
-    await shellGateway.showAndFocus();
-  } else {
-    unawaited(
-      lifecycleTelemetryController.applyConsent(
-        startupSettings.lifecycleTelemetryConsent,
-      ),
-    );
-  }
+  unawaited(
+    lifecycleTelemetryController.setEnabled(
+      startupSettings.lifecycleTelemetryEnabled,
+    ),
+  );
 }
 
 bool _usesChineseLabels(AppLanguagePreference language) {

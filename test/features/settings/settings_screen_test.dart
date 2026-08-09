@@ -146,10 +146,10 @@ void main() {
       final CompactSwitchListTile telemetrySwitch = tester.widget(
         find.byKey(const Key('settings-anonymous-telemetry')),
       );
-      expect(telemetrySwitch.value, isFalse);
-      telemetrySwitch.onChanged!(true);
+      expect(telemetrySwitch.value, isTrue);
+      telemetrySwitch.onChanged!(false);
       await tester.pumpAndSettle();
-      expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'enabled');
+      expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'disabled');
       expect(find.byKey(const Key('settings-opacity')), findsOneWidget);
       expect(find.byKey(const Key('settings-density')), findsNothing);
       expect(

@@ -41,7 +41,7 @@ final class SettingsRepository {
       _backend.read(_allowAgentClipboardContentKey),
       _backend.read(_workspaceShortcutsKey),
       _backend.read(_groupRepeatedAgentSessionsKey),
-      _backend.read(_lifecycleTelemetryConsentKey),
+      _backend.read(_lifecycleTelemetryPreferenceKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -77,7 +77,7 @@ final class SettingsRepository {
       groupRepeatedAgentSessions: values[20] is bool
           ? values[20]! as bool
           : true,
-      lifecycleTelemetryConsent: LifecycleTelemetryConsent.parse(values[21]),
+      lifecycleTelemetryEnabled: _parseLifecycleTelemetryEnabled(values[21]),
     ).sanitized();
   }
 
@@ -125,8 +125,8 @@ final class SettingsRepository {
         settings.groupRepeatedAgentSessions,
       ),
       _backend.write(
-        _lifecycleTelemetryConsentKey,
-        settings.lifecycleTelemetryConsent.name,
+        _lifecycleTelemetryPreferenceKey,
+        settings.lifecycleTelemetryEnabled ? 'enabled' : 'disabled',
       ),
     ]);
   }
@@ -155,5 +155,8 @@ const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';
 const String _workspaceShortcutsKey = 'dingdong.shortcut.workspaces';
 const String _groupRepeatedAgentSessionsKey =
     'dingdong.agentActivity.groupRepeatedSessions';
-const String _lifecycleTelemetryConsentKey =
+// Keep the original key so existing opt-outs survive this default-on migration.
+const String _lifecycleTelemetryPreferenceKey =
     'dingdong.telemetry.lifecycleConsent';
+
+bool _parseLifecycleTelemetryEnabled(Object? value) => value != 'disabled';

@@ -26,8 +26,7 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
     Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
-    Future<void> Function(LifecycleTelemetryConsent value)?
-    onLifecycleTelemetryConsentChanged,
+    Future<void> Function(bool enabled)? onLifecycleTelemetryChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
     ApplicationUpdater? applicationUpdater,
@@ -43,7 +42,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onShowMenuBarRecovery = onShowMenuBarRecovery,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
        _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
-       _onLifecycleTelemetryConsentChanged = onLifecycleTelemetryConsentChanged,
+       _onLifecycleTelemetryChanged = onLifecycleTelemetryChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
        _applicationUpdater = applicationUpdater,
@@ -59,8 +58,7 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
   final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
-  final Future<void> Function(LifecycleTelemetryConsent value)?
-  _onLifecycleTelemetryConsentChanged;
+  final Future<void> Function(bool enabled)? _onLifecycleTelemetryChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
   final ApplicationUpdater? _applicationUpdater;
@@ -351,14 +349,12 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
-  Future<void> setLifecycleTelemetryConsent(
-    LifecycleTelemetryConsent value,
-  ) async {
-    _settings = _settings.copyWith(lifecycleTelemetryConsent: value);
+  Future<void> setLifecycleTelemetryEnabled(bool enabled) async {
+    _settings = _settings.copyWith(lifecycleTelemetryEnabled: enabled);
     notifyListeners();
     await _save();
     try {
-      await _onLifecycleTelemetryConsentChanged?.call(value);
+      await _onLifecycleTelemetryChanged?.call(enabled);
     } on Object {
       _errorMessage = 'Anonymous lifecycle statistics could not be updated.';
       notifyListeners();

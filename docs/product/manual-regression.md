@@ -1,4 +1,4 @@
-# DingDong 1.3.0 Manual Regression Checklist
+# DingDong 1.3.1 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -333,14 +333,15 @@ and macOS golden images; the items below exercise real operating-system state.
 - A newer release adds a small orange-red dot beside the popup version; current,
   unknown, checking, and failed states do not show the dot.
 - Report a problem and Request a feature open the matching structured GitHub forms.
-- A release build with no saved lifecycle-statistics choice shows a
-  non-dismissible explanation with equally available **Don't send** and
-  **Allow** actions. **Don't send** creates no installation identifier or
-  request. **Settings → Privacy** can change the saved choice.
-- With consent enabled, a fresh successful launch sends exactly one `install`
+- A release build shows no lifecycle-statistics prompt. **Settings → Version**
+  contains the default-on disclosure and switch, and an existing disabled
+  preference remains disabled after upgrading.
+- With lifecycle statistics enabled, a fresh successful launch sends exactly one `install`
   event, and the first successful launch after each version/build change sends
   exactly one `upgrade` event. Ordinary launches and feature use send nothing.
   An offline failure is retried with the same event ID on a later launch.
+- Disabling lifecycle statistics sends no new event and discards any locally
+  pending retry.
 - Lifecycle requests contain only the documented random ID, version/build,
   platform, architecture, event type, and time. They contain no clipboard,
   file, Agent, activity, session, or feature-use data; the Worker stores only
@@ -403,8 +404,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.3.0` build `42` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.3.0.42` and product name `DingDong`.
+- The macOS release app metadata is version `1.3.1` build `43` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.3.1.43` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -412,7 +413,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.3.0` and that exact commit SHA; every
+  `/v1/health` must report version `1.3.1` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the release workflow deploys the website from the exact release

@@ -1,7 +1,7 @@
 /// The only remote lifecycle events DingDong supports.
 enum LifecycleTelemetryEventKind { install, upgrade }
 
-/// One idempotent, consented lifecycle event.
+/// One idempotent lifecycle event with a bounded, documented payload.
 final class LifecycleTelemetryEvent {
   const LifecycleTelemetryEvent({
     required this.eventId,

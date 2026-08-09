@@ -15,7 +15,7 @@ import worker from "../src/worker.js";
 const workerSource = readFileSync(new URL("../src/worker.js", import.meta.url), "utf8");
 
 test("relay room ids are opaque and bounded", () => {
-  assert.match(workerSource, /const serviceVersion = "1\.3\.0"/);
+  assert.match(workerSource, /const serviceVersion = "1\.3\.1"/);
   assert.match(workerSource, /releaseSha: env\.DINGDONG_RELEASE_SHA \|\| null/);
   assert.equal(isValidRoom("Abcd_1234-efgh5678-IJKL"), true);
   assert.equal(isValidRoom("short"), false);
@@ -459,10 +459,10 @@ function lifecycleEvent() {
     eventId: "11111111-1111-4111-8111-111111111111",
     installationId: "22222222-2222-4222-8222-222222222222",
     event: "upgrade",
-    currentVersion: "1.3.0",
-    currentBuild: "42",
-    previousVersion: "1.2.0",
-    previousBuild: "37",
+    currentVersion: "1.3.1",
+    currentBuild: "43",
+    previousVersion: "1.3.0",
+    previousBuild: "42",
     platform: "macos",
     architecture: "arm64",
     occurredAt: "2026-08-09T03:04:05.000Z",

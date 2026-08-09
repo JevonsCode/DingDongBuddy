@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
-import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/telemetry/domain/lifecycle_telemetry.dart';
 
 /// Emits at most one event for a successful install or version transition.
@@ -38,15 +37,15 @@ final class LifecycleTelemetryController {
   final DateTime Function() _now;
   final String Function() _createId;
 
-  LifecycleTelemetryConsent _consent = LifecycleTelemetryConsent.undecided;
+  bool _enabled = false;
   Future<void>? _processing;
 
-  Future<void> applyConsent(LifecycleTelemetryConsent value) {
-    _consent = value;
-    if (disabled || value == LifecycleTelemetryConsent.undecided) {
+  Future<void> setEnabled(bool enabled) {
+    _enabled = enabled;
+    if (disabled) {
       return Future<void>.value();
     }
-    if (value == LifecycleTelemetryConsent.disabled) {
+    if (!enabled) {
       return _discardPendingAfterCurrentAttempt();
     }
     final Future<void>? existing = _processing;
@@ -67,7 +66,7 @@ final class LifecycleTelemetryController {
   }
 
   Future<void> _process() async {
-    while (_consent == LifecycleTelemetryConsent.enabled) {
+    while (_enabled) {
       final LifecycleTelemetryEvent? pending = await _loadPendingEvent();
       final LifecycleTelemetryEvent? event =
           pending ?? await _createCurrentEvent();
@@ -133,7 +132,7 @@ final class LifecycleTelemetryController {
   }
 
   Future<bool> _trySend(LifecycleTelemetryEvent event) async {
-    if (_consent != LifecycleTelemetryConsent.enabled) return false;
+    if (!_enabled) return false;
     try {
       await _gateway.send(event);
       return true;

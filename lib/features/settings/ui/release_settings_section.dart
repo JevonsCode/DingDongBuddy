@@ -1,4 +1,5 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
@@ -46,6 +47,26 @@ class ReleaseSettingsSection extends StatelessWidget {
                 label: context.localized('Latest', '最新版本'),
                 value:
                     status.latestVersion ?? context.localized('Unknown', '未知'),
+              ),
+              const SizedBox(height: 8),
+              const Divider(),
+              CompactSwitchListTile(
+                key: const Key('settings-anonymous-telemetry'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  context.localized(
+                    'Anonymous install and update statistics',
+                    '匿名安装与更新统计',
+                  ),
+                ),
+                subtitle: Text(
+                  context.localized(
+                    'On by default. Sends one event after installation or a version update with a random installation ID, app version, operating system, and architecture. No activity, feature usage, clipboard content, files, or Agent messages are sent. The implementation is open source, and you can turn this off at any time.',
+                    '默认开启。仅在安装或版本更新后发送一次统计，内容包括随机安装 ID、应用版本、操作系统和处理器架构；不发送活跃状态、功能使用、剪贴板内容、文件或 Agent 消息。实现代码开源，并可随时关闭。',
+                  ),
+                ),
+                value: viewModel.settings.lifecycleTelemetryEnabled,
+                onChanged: viewModel.setLifecycleTelemetryEnabled,
               ),
               if (status.isUpdateAvailable == true && status.notes.isNotEmpty)
                 Padding(

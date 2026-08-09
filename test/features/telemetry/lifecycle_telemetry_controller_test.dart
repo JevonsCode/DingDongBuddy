@@ -1,30 +1,25 @@
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
-import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/telemetry/data/lifecycle_telemetry_controller.dart';
 import 'package:dingdong/features/telemetry/domain/lifecycle_telemetry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test(
-    'undecided or declined consent creates no identifier or request',
-    () async {
-      final MemoryPreferencesBackend preferences = MemoryPreferencesBackend();
-      final _RecordingGateway gateway = _RecordingGateway();
-      final LifecycleTelemetryController controller = _controller(
-        preferences: preferences,
-        gateway: gateway,
-        hadExistingApplicationData: false,
-      );
+  test('disabled telemetry creates no identifier or request', () async {
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend();
+    final _RecordingGateway gateway = _RecordingGateway();
+    final LifecycleTelemetryController controller = _controller(
+      preferences: preferences,
+      gateway: gateway,
+      hadExistingApplicationData: false,
+    );
 
-      await controller.applyConsent(LifecycleTelemetryConsent.undecided);
-      await controller.applyConsent(LifecycleTelemetryConsent.disabled);
+    await controller.setEnabled(false);
 
-      expect(gateway.attempts, isEmpty);
-      expect(preferences.values, isEmpty);
-    },
-  );
+    expect(gateway.attempts, isEmpty);
+    expect(preferences.values, isEmpty);
+  });
 
-  test('a fresh installation emits one install event after consent', () async {
+  test('a fresh installation emits one install event when enabled', () async {
     final MemoryPreferencesBackend preferences = MemoryPreferencesBackend();
     final _RecordingGateway gateway = _RecordingGateway();
     final LifecycleTelemetryController controller = _controller(
@@ -34,10 +29,10 @@ void main() {
     );
 
     await Future.wait(<Future<void>>[
-      controller.applyConsent(LifecycleTelemetryConsent.enabled),
-      controller.applyConsent(LifecycleTelemetryConsent.enabled),
+      controller.setEnabled(true),
+      controller.setEnabled(true),
     ]);
-    await controller.applyConsent(LifecycleTelemetryConsent.enabled);
+    await controller.setEnabled(true);
 
     expect(gateway.attempts, hasLength(1));
     final LifecycleTelemetryEvent event = gateway.attempts.single;
@@ -75,7 +70,7 @@ void main() {
         hadExistingApplicationData: true,
       );
 
-      await controller.applyConsent(LifecycleTelemetryConsent.enabled);
+      await controller.setEnabled(true);
 
       expect(gateway.attempts.single.kind, LifecycleTelemetryEventKind.upgrade);
       expect(gateway.attempts.single.previousVersion, isNull);
@@ -99,7 +94,7 @@ void main() {
         ids: <String>[_eventId],
       );
 
-      await controller.applyConsent(LifecycleTelemetryConsent.enabled);
+      await controller.setEnabled(true);
 
       final LifecycleTelemetryEvent event = gateway.attempts.single;
       expect(event.kind, LifecycleTelemetryEventKind.upgrade);
@@ -120,7 +115,7 @@ void main() {
         hadExistingApplicationData: false,
       );
 
-      await firstLaunch.applyConsent(LifecycleTelemetryConsent.enabled);
+      await firstLaunch.setEnabled(true);
 
       expect(failingGateway.attempts, hasLength(1));
       expect(
@@ -139,7 +134,7 @@ void main() {
         hadExistingApplicationData: true,
         ids: const <String>[],
       );
-      await nextLaunch.applyConsent(LifecycleTelemetryConsent.enabled);
+      await nextLaunch.setEnabled(true);
 
       expect(retryGateway.attempts, hasLength(1));
       expect(
@@ -168,8 +163,8 @@ void main() {
       hadExistingApplicationData: false,
     );
 
-    await controller.applyConsent(LifecycleTelemetryConsent.enabled);
-    await controller.applyConsent(LifecycleTelemetryConsent.disabled);
+    await controller.setEnabled(true);
+    await controller.setEnabled(false);
 
     expect(gateway.attempts, hasLength(1));
     expect(
@@ -190,7 +185,7 @@ void main() {
       disabled: true,
     );
 
-    await controller.applyConsent(LifecycleTelemetryConsent.enabled);
+    await controller.setEnabled(true);
 
     expect(preferences.values, isEmpty);
     expect(gateway.attempts, isEmpty);

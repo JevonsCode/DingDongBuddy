@@ -1,4 +1,4 @@
--- DingDong's opt-in lifecycle statistics. Raw installation identifiers and
+-- DingDong's bounded lifecycle statistics. Raw installation identifiers and
 -- client IP addresses are deliberately never persisted.
 CREATE TABLE IF NOT EXISTS lifecycle_events (
   event_id TEXT PRIMARY KEY,

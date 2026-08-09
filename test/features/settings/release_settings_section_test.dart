@@ -17,12 +17,17 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: ReleaseSettingsSection(viewModel: model)),
+      MaterialApp(
+        home: SingleChildScrollView(
+          child: ReleaseSettingsSection(viewModel: model),
+        ),
+      ),
     );
+    await tester.ensureVisible(find.byKey(const Key('settings-check-updates')));
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1.3.1'), findsOneWidget);
+    expect(find.text('1.3.2'), findsOneWidget);
     expect(find.text('A new version is available'), findsOneWidget);
     expect(find.textContaining('Faster history search'), findsOneWidget);
     expect(find.byKey(const Key('settings-report-problem')), findsOneWidget);
@@ -43,8 +48,13 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: ReleaseSettingsSection(viewModel: model)),
+      MaterialApp(
+        home: SingleChildScrollView(
+          child: ReleaseSettingsSection(viewModel: model),
+        ),
+      ),
     );
+    await tester.ensureVisible(find.byKey(const Key('settings-check-updates')));
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
@@ -71,6 +81,7 @@ void main() {
         ),
       ),
     );
+    await tester.ensureVisible(find.byKey(const Key('settings-check-updates')));
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
@@ -83,7 +94,7 @@ void main() {
       find.textContaining('grant DingDong\'s macOS permissions again'),
       findsOneWidget,
     );
-    expect(find.text('Update to 1.3.1'), findsOneWidget);
+    expect(find.text('Update to 1.3.2'), findsOneWidget);
     expect(find.byType(FilledButton), findsNWidgets(6));
     final FilledButton installButton = tester.widget<FilledButton>(
       find.byKey(const Key('settings-install-update')),
@@ -95,6 +106,9 @@ void main() {
       ).colorScheme.primary,
     );
 
+    await tester.ensureVisible(
+      find.byKey(const Key('settings-install-update')),
+    );
     await tester.tap(find.byKey(const Key('settings-install-update')));
     await tester.pumpAndSettle();
 
@@ -116,9 +130,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(platform: TargetPlatform.windows),
-        home: ReleaseSettingsSection(viewModel: model),
+        home: SingleChildScrollView(
+          child: ReleaseSettingsSection(viewModel: model),
+        ),
       ),
     );
+    await tester.ensureVisible(find.byKey(const Key('settings-check-updates')));
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
@@ -152,7 +169,7 @@ final class _ApplicationUpdater implements ApplicationUpdater {
 
 final class _ReleaseSource implements ReleaseMetadataSource {
   const _ReleaseSource({
-    this.latestVersion = '1.3.1',
+    this.latestVersion = '1.3.2',
     this.notes = const <String>['Faster history search'],
   });
 
@@ -164,7 +181,7 @@ final class _ReleaseSource implements ReleaseMetadataSource {
     app: 'DingDong',
     latestVersion: latestVersion,
     website: Uri.parse('https://example.com'),
-    releasePage: Uri.parse('https://example.com/releases/1.3.1'),
+    releasePage: Uri.parse('https://example.com/releases/1.3.2'),
     notes: notes,
   );
 }

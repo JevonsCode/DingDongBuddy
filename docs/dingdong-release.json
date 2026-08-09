@@ -1,39 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.3.0",
-  "latestBuild": "42",
-  "publishedAt": "2026-08-09T14:10:36Z",
+  "latestVersion": "1.3.1",
+  "latestBuild": "43",
+  "publishedAt": "2026-08-09T17:33:38Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.0/DingDong-1.3.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.1/DingDong-1.3.1-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.0/DingDong-1.3.0-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.1/DingDong-1.3.1-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.0/DingDong-1.3.0-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.1/DingDong-1.3.1-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds a separate Connected Devices window and QR pairing for a trusted phone through the mobile PWA.",
-    "Sends only new post-pairing Clipboard captures automatically, while existing history requires Send to Device.",
-    "Keeps the phone clipboard private and sends phone text or files only after an explicit Send action.",
-    "Delivers richer Agent completion reminders through background Web Push with optional vibration and diagnostics.",
-    "Lets mobile users swipe between Computer Clipboard and Agent reminders, and opens Agent reminders directly from a notification.",
-    "Uses encrypted WebRTC or relay transport without storing clipboard or file content in the relay.",
-    "Skips DingDong and FULI marker lines when building recent Agent summaries, including the current knowledge-enhancement marker.",
-    "Adds opt-in, privacy-preserving install and upgrade statistics without activity or feature tracking.",
-    "Expands the DEV test panel and hardens connection replacement, Web Push, request bounds, and stale-pairing behavior.",
-    "Implements the iPhone and iPad Home Screen Web Push flow; recorded real-device verification is still pending.",
+    "Enables anonymous install and update statistics by default, with a clear opt-out under Settings → Version.",
+    "Limits lifecycle reporting to one installation or version-update event carrying a random installation ID, app/build version, operating system, architecture, and event time.",
+    "Sends no sessions, heartbeats, activity, feature usage, clipboard content, files, or Agent messages, and keeps previously disabled choices disabled.",
+    "Deploys the website only after release packages exist, using the exact release tag through the protected main-branch Pages environment.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.3.0 from pubspec', () {
+  test('desktop hosts consume application version 1.3.1 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,25 +77,25 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.3.0+42'));
+    expect(pubspec, contains('version: 1.3.1+43'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.3.0';"),
+      contains("const String currentAppVersion = '1.3.1';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '42';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '43';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.3.0'"),
+      contains("'version': '1.3.1'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.3.0'"),
+      contains("'version': '1.3.1'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.0"'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.1"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -398,7 +398,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.3.0</span>'));
+    expect(website, contains('<span class="demo-version">v1.3.1</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -502,16 +502,22 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.3.0"'));
-    expect(releaseMetadata, contains('"latestBuild": "42"'));
-    expect(releaseMetadata, contains('swipe between Computer Clipboard'));
-    expect(releaseMetadata, contains('privacy-preserving install and upgrade'));
+    expect(releaseMetadata, contains('"latestVersion": "1.3.1"'));
+    expect(releaseMetadata, contains('"latestBuild": "43"'));
+    expect(
+      releaseMetadata,
+      contains('Enables anonymous install and update statistics by default'),
+    );
+    expect(
+      releaseMetadata,
+      contains('keeps previously disabled choices disabled'),
+    );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.3.0-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.3.1-windows-x64-beta-Setup.exe'),
     );
   });
 
@@ -820,10 +826,16 @@ void main() {
   });
 
   test(
-    'release builds limit remote statistics to consented lifecycle events',
+    'release builds limit default-on statistics to lifecycle events with opt-out',
     () {
       final String pubspec = File('pubspec.yaml').readAsStringSync();
       final String main = File('lib/main.dart').readAsStringSync();
+      final String settingsRepository = File(
+        'lib/features/settings/data/settings_repository.dart',
+      ).readAsStringSync();
+      final String releaseSettings = File(
+        'lib/features/settings/ui/release_settings_section.dart',
+      ).readAsStringSync();
       final String telemetryDomain = File(
         'lib/features/telemetry/domain/lifecycle_telemetry.dart',
       ).readAsStringSync();
@@ -854,7 +866,18 @@ void main() {
       expect(pubspec, isNot(contains('posthog')));
       expect(main, contains('LifecycleTelemetryController'));
       expect(main, contains('disabled: appDataPaths.development'));
+      expect(main, contains('lifecycleTelemetryController.setEnabled('));
+      expect(main, isNot(contains('showLifecycleTelemetryConsentPrompt')));
       expect(main, isNot(contains('telemetry.track')));
+      expect(settingsRepository, contains("value != 'disabled'"));
+      expect(releaseSettings, contains("'On by default."));
+      expect(releaseSettings, contains("'默认开启。"));
+      expect(
+        File(
+          'lib/features/settings/ui/lifecycle_telemetry_consent_dialog.dart',
+        ).existsSync(),
+        isFalse,
+      );
       expect(
         telemetryDomain,
         contains('enum LifecycleTelemetryEventKind { install, upgrade }'),
