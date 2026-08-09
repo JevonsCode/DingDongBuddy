@@ -7,6 +7,9 @@ on:
         description: Exact release tag whose docs should be deployed
         required: true
         type: string
+  repository_dispatch:
+    types:
+      - deploy-release-pages
   workflow_run:
     workflows:
       - Release
@@ -26,6 +29,7 @@ jobs:
   deploy:
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'repository_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
@@ -35,7 +39,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || inputs.source_ref }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
