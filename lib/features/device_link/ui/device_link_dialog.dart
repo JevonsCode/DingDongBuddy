@@ -453,6 +453,20 @@ class _PairingCard extends StatelessWidget {
                         ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (controller.canPair) ...<Widget>[
+                  const SizedBox(height: 7),
+                  Text(
+                    context.localized(
+                      'Uses a local WebRTC connection when possible, with an '
+                          'end-to-end encrypted relay fallback. The relay does not '
+                          'store clipboard, file, or Agent content.',
+                      '优先使用局域网 WebRTC 直连；无法直连时使用端到端加密中继。'
+                          '中继不保存剪贴板、文件或 Agent 内容。',
+                    ),
+                    key: const Key('device-connection-mode-note'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
                 const SizedBox(height: 11),
                 DesktopActionButton(
                   key: const Key('device-begin-pairing'),
@@ -504,6 +518,17 @@ class _PairingCard extends StatelessWidget {
                     'The pairing key stays inside the QR fragment.',
                     '连接密钥只存在于二维码片段中。',
                   ),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  context.localized(
+                    'Local WebRTC is preferred; an end-to-end encrypted relay '
+                        'keeps the connection available when direct access fails.',
+                    '优先局域网 WebRTC 直连；直连失败时使用端到端加密中继保持连接。',
+                  ),
+                  key: const Key('device-pairing-connection-mode-note'),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),

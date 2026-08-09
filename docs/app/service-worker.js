@@ -1,4 +1,4 @@
-const cacheName = "dingdong-app-shell-v19";
+const cacheName = "dingdong-app-shell-v20";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const notificationVibrationPattern = [250, 100, 250, 100, 450];
@@ -117,9 +117,8 @@ async function handlePush(event) {
       throw pushError("invalid-payload");
     }
     messageId = payload.messageId;
-    pair = await idbGet("pair");
-    if (!pair) throw pushError("pair-missing");
-    if (payload.room !== pair.room) return;
+    pair = await workerPairForRoom(payload.room);
+    if (!pair) return;
     receivedHealth = recordPushHealth(
       "received",
       messageId,
@@ -146,7 +145,7 @@ async function handlePush(event) {
     if (message.type !== "agent.completed" || message.id !== messageId) {
       throw pushError("unexpected-message");
     }
-    if (!workerPairMatches(pair, await idbGet("pair"))) {
+    if (!(await workerPairStillMatches(pair))) {
       await rejectStalePush(pair, messageId, receivedHealth);
       return;
     }
@@ -163,7 +162,7 @@ async function handlePush(event) {
     if (notificationResult === "duplicate") {
       await receivedHealth;
       await postPushReceipt(pair, messageId, "received").catch(() => {});
-      if (!workerPairMatches(pair, await idbGet("pair"))) return;
+      if (!(await workerPairStillMatches(pair))) return;
       const clients = await self.clients.matchAll({
         type: "window",
         includeUncontrolled: true,
@@ -172,6 +171,7 @@ async function handlePush(event) {
         client.postMessage({
           type: "agent.completed",
           source: "push",
+          room: pair.room,
           message,
         });
         client.postMessage({
@@ -196,7 +196,7 @@ async function handlePush(event) {
       postPushReceipt(pair, messageId, "received").catch(() => {}),
       postPushReceipt(pair, messageId, "created").catch(() => {}),
     ]);
-    if (!workerPairMatches(pair, await idbGet("pair"))) return;
+    if (!(await workerPairStillMatches(pair))) return;
     const clients = await self.clients.matchAll({
       type: "window",
       includeUncontrolled: true,
@@ -205,6 +205,7 @@ async function handlePush(event) {
       client.postMessage({
         type: "agent.completed",
         source: "push",
+        room: pair.room,
         message,
       });
       client.postMessage({
@@ -275,9 +276,13 @@ self.addEventListener("pushsubscriptionchange", (event) => {
 });
 
 async function refreshPushSubscription(replacement) {
-  const pair = await idbGet("pair");
-  if (!pair || pair.agentNotificationsEnabled !== true) return;
-  const base = pair.relay.endsWith("/") ? pair.relay : `${pair.relay}/`;
+  const pairs = (await workerPairings()).filter(
+    (pair) => pair.agentNotificationsEnabled === true,
+  );
+  if (pairs.length === 0) return;
+  const base = pairs[0].relay.endsWith("/")
+    ? pairs[0].relay
+    : `${pairs[0].relay}/`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
@@ -292,44 +297,78 @@ async function refreshPushSubscription(replacement) {
       replacement ||
       (await self.registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: base64UrlDecode(config.vapidPublicKey),
-      }));
-    if (!workerPairMatches(pair, await idbGet("pair"))) return;
-    const token = await pushToken(pair.secret);
-    if (!workerPairMatches(pair, await idbGet("pair"))) return;
-    const response = await fetch(
-      new URL(`v1/rooms/${pair.room}/subscription`, base),
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          applicationServerKey: base64UrlDecode(config.vapidPublicKey),
+        }));
+    for (const pair of pairs) {
+      if (!(await workerPairStillMatches(pair))) continue;
+      const token = await pushToken(pair.secret);
+      if (!(await workerPairStillMatches(pair))) continue;
+      const pairBase = pair.relay.endsWith("/")
+        ? pair.relay
+        : `${pair.relay}/`;
+      const response = await fetch(
+        new URL(`v1/rooms/${pair.room}/subscription`, pairBase),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token,
+            subscription: subscription.toJSON(),
+            supportedContentEncodings: Array.from(
+              self.PushManager?.supportedContentEncodings || [],
+            ),
+          }),
+          signal: controller.signal,
         },
-        body: JSON.stringify({
-          token,
-          subscription: subscription.toJSON(),
-          supportedContentEncodings: Array.from(
-            self.PushManager?.supportedContentEncodings || [],
-          ),
-        }),
-        signal: controller.signal,
-      },
-    );
-    if (!response.ok) throw pushError("subscription-refresh-failed");
-    const currentPair = await idbGet("pair");
-    if (!workerPairMatches(pair, currentPair)) {
-      if (
-        !currentPair ||
-        currentPair.agentNotificationsEnabled !== true ||
-        currentPair.room !== pair.room ||
-        currentPair.relay !== pair.relay
-      ) {
+      );
+      if (!response.ok) throw pushError("subscription-refresh-failed");
+      if (!(await workerPairStillMatches(pair))) {
         await deletePushRegistration(pair).catch(() => {});
       }
     }
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function workerPairings() {
+  const registry = await idbGet("pairings").catch(() => null);
+  const legacyPair = await idbGet("pair").catch(() => null);
+  const candidates = [];
+  if (registry?.version === 2 && Array.isArray(registry.pairings)) {
+    candidates.push(...registry.pairings);
+  }
+  if (isWorkerPairing(legacyPair)) candidates.push(legacyPair);
+  const byRoom = new Map();
+  for (const pair of candidates) {
+    if (isWorkerPairing(pair) && !byRoom.has(pair.room)) {
+      byRoom.set(pair.room, pair);
+    }
+  }
+  return Array.from(byRoom.values());
+}
+
+function isWorkerPairing(pair) {
+  return Boolean(
+    pair &&
+      typeof pair.room === "string" &&
+      pair.room &&
+      typeof pair.secret === "string" &&
+      pair.secret &&
+      typeof pair.relay === "string" &&
+      pair.relay,
+  );
+}
+
+async function workerPairForRoom(room) {
+  return (await workerPairings()).find((pair) => pair.room === room) || null;
+}
+
+async function workerPairStillMatches(pair) {
+  return workerPairMatches(pair, await workerPairForRoom(pair?.room));
 }
 
 function workerPairMatches(expected, current) {
@@ -360,7 +399,7 @@ async function handleRealtimeAgentCompletion(context) {
     return;
   }
   try {
-    const pair = await idbGet("pair");
+    const pair = await workerPairForRoom(context.room);
     if (
       !pair ||
       pair.agentNotificationsEnabled !== true ||
@@ -369,7 +408,7 @@ async function handleRealtimeAgentCompletion(context) {
     ) {
       return;
     }
-    if (!workerPairMatches(pair, await idbGet("pair"))) return;
+    if (!(await workerPairStillMatches(pair))) return;
     await showAgentCompletionNotification(message, pair);
   } catch {
     // The realtime list remains available even when the platform refuses a
@@ -379,11 +418,12 @@ async function handleRealtimeAgentCompletion(context) {
 }
 
 async function showAgentCompletionNotification(message, pair) {
-  const existingJob = notificationJobs.get(message.id);
+  const notificationKey = `${pair.room}:${message.id}`;
+  const existingJob = notificationJobs.get(notificationKey);
   if (existingJob) return existingJob;
   const job = (async () => {
     const ledger = await notificationLedger();
-    const shownAt = Number(ledger[message.id]);
+    const shownAt = Number(ledger[notificationKey]);
     if (shownAt > 0 && Date.now() - shownAt < notificationDedupeMs) {
       return "duplicate";
     }
@@ -397,7 +437,7 @@ async function showAgentCompletionNotification(message, pair) {
     const options = {
       body: detail.length > 260 ? `${detail.slice(0, 259)}…` : detail,
       icon: "../assets/dingdong-mobile-alert-icon.png",
-      tag: message.id,
+      tag: notificationKey,
       renotify: true,
       ...(vibrate ? { vibrate: notificationVibrationPattern } : {}),
       data: {
@@ -407,7 +447,7 @@ async function showAgentCompletionNotification(message, pair) {
         url: agentCompletionLaunchUrl(),
       },
     };
-    if (!workerPairMatches(pair, await idbGet("pair"))) return "stale";
+    if (!(await workerPairStillMatches(pair))) return "stale";
     try {
       await self.registration.showNotification(
         message.title || "Agent 完成啦",
@@ -421,18 +461,18 @@ async function showAgentCompletionNotification(message, pair) {
         options,
       );
     }
-    ledger[message.id] = Date.now();
+    ledger[notificationKey] = Date.now();
     await idbSet("notification-ledger", trimNotificationLedger(ledger)).catch(
       () => {},
     );
     return "created";
   })();
-  notificationJobs.set(message.id, job);
+  notificationJobs.set(notificationKey, job);
   try {
     return await job;
   } finally {
-    if (notificationJobs.get(message.id) === job) {
-      notificationJobs.delete(message.id);
+    if (notificationJobs.get(notificationKey) === job) {
+      notificationJobs.delete(notificationKey);
     }
   }
 }
@@ -459,7 +499,8 @@ async function recordPushHealth(
   room,
   notificationEpoch,
 ) {
-  await idbSet("push-health", {
+  if (!room) return;
+  await idbSet(pushHealthKey(room), {
     stage,
     messageId,
     recordedAt: new Date().toISOString(),
@@ -517,9 +558,19 @@ async function postPushReceipt(pair, messageId, stage, errorCode) {
 }
 
 async function revokeBrokenPushSubscription(pair) {
+  await deletePushRegistration(pair);
+  const hasOtherEnabledPair = (await workerPairings()).some(
+    (candidate) =>
+      candidate.room !== pair.room &&
+      candidate.agentNotificationsEnabled === true,
+  );
+  if (hasOtherEnabledPair) return;
   const subscription = await self.registration.pushManager.getSubscription();
   await subscription?.unsubscribe();
-  await deletePushRegistration(pair);
+}
+
+function pushHealthKey(room) {
+  return `push-health:${room}`;
 }
 
 async function deletePushRegistration(pair) {
@@ -575,10 +626,12 @@ function shouldRevokeBrokenPushSubscription(errorCode) {
 
 async function pushFailureContextStillCurrent(failedPair) {
   try {
-    const currentPair = await idbGet("pair");
+    const currentPair = failedPair
+      ? await workerPairForRoom(failedPair.room)
+      : null;
     return failedPair
       ? workerPairSnapshotMatches(failedPair, currentPair)
-      : !currentPair;
+      : false;
   } catch {
     return false;
   }

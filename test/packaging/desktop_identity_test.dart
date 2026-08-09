@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.3.1 from pubspec', () {
+  test('desktop hosts consume application version 1.3.2 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,25 +77,25 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.3.1+43'));
+    expect(pubspec, contains('version: 1.3.2+44'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.3.1';"),
+      contains("const String currentAppVersion = '1.3.2';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '43';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '44';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.3.1'"),
+      contains("'version': '1.3.2'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.3.1'"),
+      contains("'version': '1.3.2'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.1"'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.2"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -398,7 +398,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.3.1</span>'));
+    expect(website, contains('<span class="demo-version">v1.3.2</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -425,7 +425,9 @@ void main() {
     expect(website, contains('"devices.phonePrivateTitle": "手机剪贴板保持私密"'));
     expect(website, contains('"devices.illustration": "界面示意"'));
     expect(website, contains('Android 不安装也能直接使用网页'));
-    expect(website, contains('then swipe between them on mobile'));
+    expect(website, contains('swipe between them on mobile'));
+    expect(website, contains('same local network'));
+    expect(website, contains('switch the active one'));
     expect(website, contains('点击通知会直接进入 Agent 提醒'));
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
@@ -502,22 +504,22 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.3.1"'));
-    expect(releaseMetadata, contains('"latestBuild": "43"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.3.2"'));
+    expect(releaseMetadata, contains('"latestBuild": "44"'));
     expect(
       releaseMetadata,
-      contains('Enables anonymous install and update statistics by default'),
+      contains('Lets one phone keep multiple computers paired'),
     );
     expect(
       releaseMetadata,
-      contains('keeps previously disabled choices disabled'),
+      contains('isolated by source computer'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.3.1-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.3.2-windows-x64-beta-Setup.exe'),
     );
   });
 

@@ -404,10 +404,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.3.2',
-        latestBuild: '44',
+        latestVersion: '1.3.3',
+        latestBuild: '45',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.3.2'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.3.3'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -423,11 +423,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.3.2');
+    expect(model.releaseStatus.latestVersion, '1.3.3');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.3.2'),
+      Uri.parse('https://example.com/dingdong/releases/1.3.3'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);

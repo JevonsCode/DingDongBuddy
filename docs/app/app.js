@@ -12,7 +12,14 @@ import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
 } from "./notification-policy.js";
-import { isStoredPairing, pairingsMatch } from "./pairing-state.js";
+import {
+  isStoredPairing,
+  normalizePairingRegistry,
+  pairingForRoom,
+  pairingRegistryVersion,
+  pairingsMatch,
+  shouldSkipPairingCleanup,
+} from "./pairing-state.js";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -25,6 +32,8 @@ import {
 const storageKeys = {
   identity: "dingdong.identity.v1",
   pair: "dingdong.pair.v1",
+  pairings: "dingdong.pairings.v2",
+  iconStyle: "dingdong.icon-style.v1",
   pendingPair: "dingdong.pending-pair.v1",
   installRequest: "dingdong.install-request.v1",
 };
@@ -35,59 +44,108 @@ const maximumClipboardItemBytes = 160 * 1024;
 const fileChunkBytes = 32 * 1024;
 const maximumConcurrentDownloads = 4;
 const maximumEncodedFileChunkLength = Math.ceil(fileChunkBytes / 3) * 4 + 4;
+const initialReconnectDelayMs = 2400;
+const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
 const directVibrationPattern = [300, 100, 300, 100, 600];
 const agentLaunchIntentKey = "agent-launch-intent";
 const agentLaunchIntentTtlMs = 5 * 60 * 1000;
 const initialContentTab = consumeContentTabLaunch() || "clipboard";
+const initialPairingRegistry = normalizePairingRegistry(
+  loadJson(storageKeys.pairings),
+  loadJson(storageKeys.pair),
+);
 
 const state = {
   identity: loadIdentity(),
-  pair: loadJson(storageKeys.pair),
-  socket: null,
-  peer: null,
-  channel: null,
-  signalKey: null,
-  remoteCandidates: [],
-  connected: false,
-  connecting: false,
-  connectionSuperseded: false,
-  relayHostPresent: false,
-  helloSent: false,
-  relayFrames: Promise.resolve(),
-  incomingMessages: Promise.resolve(),
-  connectionGeneration: 0,
-  relayGeneration: 0,
-  manualDisconnect: false,
-  items: [],
-  agentEvents: [],
-  downloads: new Map(),
-  outgoingRequests: new Set(),
-  selectedFile: null,
+  sessions: new Map(
+    initialPairingRegistry.pairings.map((pair) => [
+      pair.room,
+      createDeviceSession(pair),
+    ]),
+  ),
+  activeRoom: initialPairingRegistry.activeRoom,
+  iconStyle:
+    localStorage.getItem(storageKeys.iconStyle) === "white" ? "white" : "soft",
   activeTab: initialContentTab,
-  reconnectTimer: null,
   toastTimer: null,
   serviceWorkerRegistration: null,
   installPrompt: null,
   installStatus: "idle",
   installRequestedAt: Number(localStorage.getItem(storageKeys.installRequest)) || 0,
   installVerificationTimer: null,
-  notificationCheckInProgress: false,
-  notificationDeliveryHealthy: null,
-  pushSubscriptionReady: false,
-  pushProvider: null,
-  pushProviderStatus: null,
-  pushDeviceReceipt: null,
   pushMutationTail: Promise.resolve(),
-  notificationGeneration: 0,
-  notificationVerificationInProgress: false,
   pendingPair: null,
 };
+
+function createDeviceSession(pair) {
+  applyAgentNotificationDefault(pair);
+  return {
+    pair,
+    socket: null,
+    peer: null,
+    channel: null,
+    signalKey: null,
+    remoteCandidates: [],
+    connected: false,
+    connecting: false,
+    connectionSuperseded: false,
+    relayHostPresent: false,
+    helloSent: false,
+    relayFrames: Promise.resolve(),
+    incomingMessages: Promise.resolve(),
+    connectionGeneration: 0,
+    relayGeneration: 0,
+    items: [],
+    agentEvents: [],
+    downloads: new Map(),
+    outgoingRequests: new Set(),
+    selectedFile: null,
+    draftText: "",
+    lastSyncAt: null,
+    reconnectTimer: null,
+    reconnectDelayMs: initialReconnectDelayMs,
+    notificationCheckInProgress: false,
+    notificationDeliveryHealthy: null,
+    pushSubscriptionReady: false,
+    pushProvider: null,
+    pushProviderStatus: null,
+    pushDeviceReceipt: null,
+    notificationGeneration: 0,
+    notificationVerificationInProgress: false,
+  };
+}
+
+function activeSession() {
+  return state.sessions.get(state.activeRoom) || null;
+}
+
+function sessionForRoom(room) {
+  return typeof room === "string" ? state.sessions.get(room) || null : null;
+}
+
+function sessionIsActive(session) {
+  return Boolean(session && session === activeSession());
+}
+
+function pairingRegistrySnapshot() {
+  return {
+    version: pairingRegistryVersion,
+    activeRoom: state.activeRoom,
+    pairings: Array.from(state.sessions.values(), (session) => ({
+      ...session.pair,
+    })),
+  };
+}
 
 const elements = Object.fromEntries(
   [
     "connection-label",
+    "device-status-button",
+    "online-dot",
+    "online-count",
+    "app-mascot-frame",
     "settings-button",
     "install-app-banner",
     "install-app-title",
@@ -140,6 +198,10 @@ const elements = Object.fromEntries(
     "file-input",
     "message-input",
     "send-button",
+    "composer-target",
+    "device-switcher-dialog",
+    "device-switcher-summary",
+    "device-switcher-list",
     "settings-dialog",
     "settings-device-name",
     "agent-notification-toggle",
@@ -148,6 +210,9 @@ const elements = Object.fromEntries(
     "vibration-support-label",
     "vibration-test",
     "vibration-test-result",
+    "icon-style-soft",
+    "icon-style-white",
+    "icon-style-note",
     "disconnect-device",
     "delete-device",
     "toast",
@@ -177,12 +242,14 @@ window.addEventListener("appinstalled", () => {
   refreshInstallState().catch(() => {});
 });
 document.addEventListener("visibilitychange", handleVisibilityChange);
+window.addEventListener("hashchange", handleRuntimePairingLaunch);
 
 const launchPair = capturePairingLaunch();
 boot(launchPair);
 
 async function boot(scannedPair) {
   wireInteractions();
+  initializeLaunchQueue();
   initializeInstallState();
   registerServiceWorker().then((registration) => {
     state.serviceWorkerRegistration = registration;
@@ -198,61 +265,83 @@ async function boot(scannedPair) {
       return;
     }
     if (event.data?.type === "agent.completed") {
-      receiveAgentEvent(event.data.message, { requestNotification: false });
+      const session = sessionForRoom(event.data.room);
+      if (session) {
+        receiveAgentEvent(event.data.message, {
+          requestNotification: false,
+          session,
+        });
+      }
     }
     if (event.data?.type === "push.health") {
-      if (event.data.room !== state.pair?.room) return;
-      if (event.data.notificationEpoch !== state.pair?.notificationEpoch) return;
-      state.pushDeviceReceipt = {
+      const session = sessionForRoom(event.data.room);
+      if (!session) return;
+      if (event.data.notificationEpoch !== session.pair.notificationEpoch) return;
+      session.pushDeviceReceipt = {
         messageId: event.data.messageId,
         stage: event.data.stage,
         errorCode: event.data.errorCode,
       };
-      state.notificationDeliveryHealthy =
+      session.notificationDeliveryHealthy =
         event.data.stage === "created"
           ? true
           : event.data.stage === "failed"
             ? false
             : null;
-      renderAgentNotificationStatus();
+      if (sessionIsActive(session)) renderAgentNotificationStatus();
     }
   });
   await upgradeDefaultIdentityName();
-  await restorePairFromWorker();
+  await restorePairingsFromWorker();
   await restoreAgentLaunchIntent();
   await restorePushHealthFromWorker();
-  if (applyAgentNotificationDefault(state.pair)) {
-    savePair();
+  let defaultsChanged = false;
+  for (const session of state.sessions.values()) {
+    defaultsChanged = applyAgentNotificationDefault(session.pair) || defaultsChanged;
   }
+  if (defaultsChanged) savePairings();
   renderInstallPromotion();
   refreshInstallState().catch(() => {});
 
-  if (scannedPair && pairingsMatch(state.pair, scannedPair)) {
+  const scannedSession = scannedPair
+    ? sessionForRoom(scannedPair.room)
+    : null;
+  const scannedPairMatches = Boolean(
+    scannedSession && pairingsMatch(scannedSession.pair, scannedPair),
+  );
+  if (scannedPairMatches) {
+    selectDevice(scannedSession.pair.room, { closeDialog: false });
     clearPairingFragment();
     clearPendingPairingLaunch();
-  } else if (scannedPair) {
-    showPairConfirmation(scannedPair);
-    return;
   }
-  if (state.pair) {
-    state.pushSubscriptionReady = false;
-    await persistPairForWorker();
+  if (state.sessions.size > 0) {
+    for (const session of state.sessions.values()) {
+      session.pushSubscriptionReady = false;
+    }
+    await persistPairingsForWorker();
     render();
-    if (!state.pair.manualDisconnect) connect();
-    if (
-      wantsAgentNotifications(state.pair) &&
-      "Notification" in window &&
-      Notification.permission === "granted"
-    ) {
-      enableAgentNotifications({
-        requestPermission: false,
-        markPreference: false,
-        sendTest: false,
-        syncEnabledToDesktop: true,
-      }).then(() => render());
+    for (const session of state.sessions.values()) {
+      if (!session.pair.manualDisconnect) connect(session);
+      if (
+        wantsAgentNotifications(session.pair) &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        enableAgentNotifications({
+          session,
+          requestPermission: false,
+          markPreference: false,
+          sendTest: false,
+          showHelp: false,
+          syncEnabledToDesktop: true,
+        }).then(() => render());
+      }
     }
   } else {
     render();
+  }
+  if (scannedPair && !scannedPairMatches) {
+    showPairConfirmation(scannedPair);
   }
 }
 
@@ -270,25 +359,36 @@ function wireInteractions() {
     state.pendingPair = null;
     render();
   });
+  elements["device-status-button"].addEventListener("click", () => {
+    if (state.sessions.size === 0) {
+      showToast("请先扫描电脑上的连接二维码");
+      return;
+    }
+    renderDeviceSwitcher();
+    elements["device-switcher-dialog"].showModal();
+  });
   elements["reconnect-button"].addEventListener("click", () => {
-    if (!state.pair) return;
-    state.pair.manualDisconnect = false;
-    savePair();
-    connect();
+    const session = activeSession();
+    if (!session) return;
+    session.pair.manualDisconnect = false;
+    savePairings();
+    connect(session);
   });
   elements["settings-button"].addEventListener("click", () => {
-    if (!state.pair) {
+    const session = activeSession();
+    if (!session) {
       showToast("请先扫描电脑上的连接二维码");
       return;
     }
     elements["settings-device-name"].textContent =
-      state.pair.hostName || "连接设置";
+      session.pair.hostName || "连接设置";
     elements["agent-notification-toggle"].checked =
-      wantsAgentNotifications(state.pair);
+      wantsAgentNotifications(session.pair);
     elements["vibration-toggle"].checked =
-      state.pair.vibrationEnabled !== false;
+      session.pair.vibrationEnabled !== false;
     elements["vibration-toggle"].disabled =
-      !wantsAgentNotifications(state.pair);
+      !wantsAgentNotifications(session.pair);
+    renderIconStyleChoices();
     renderAgentNotificationStatus();
     elements["settings-dialog"].showModal();
   });
@@ -304,25 +404,34 @@ function wireInteractions() {
       } else {
         await disableAgentNotifications();
       }
-      event.target.checked = wantsAgentNotifications(state.pair);
+      const session = activeSession();
+      event.target.checked = wantsAgentNotifications(session?.pair);
       elements["vibration-toggle"].disabled =
-        !wantsAgentNotifications(state.pair);
+        !wantsAgentNotifications(session?.pair);
       render();
     },
   );
   elements["vibration-toggle"].addEventListener("change", async (event) => {
-    if (!state.pair) return;
-    state.pair.vibrationEnabled = event.target.checked;
-    state.pair.notificationEpoch = createNotificationEpoch();
-    savePair();
-    await sendSettings();
+    const session = activeSession();
+    if (!session) return;
+    session.pair.vibrationEnabled = event.target.checked;
+    session.pair.notificationEpoch = createNotificationEpoch();
+    savePairings();
+    await sendSettings(session);
   });
   elements["vibration-test"].addEventListener("click", testDeviceVibration);
+  elements["icon-style-soft"].addEventListener("click", () => {
+    setIconStyle("soft");
+  });
+  elements["icon-style-white"].addEventListener("click", () => {
+    setIconStyle("white");
+  });
   elements["disconnect-device"].addEventListener("click", () => {
-    if (!state.pair) return;
-    state.pair.manualDisconnect = true;
-    savePair();
-    closeConnection();
+    const session = activeSession();
+    if (!session) return;
+    session.pair.manualDisconnect = true;
+    savePairings();
+    closeConnection(session);
     elements["settings-dialog"].close();
     render();
   });
@@ -334,6 +443,8 @@ function wireInteractions() {
     button.addEventListener("keydown", handleContentTabKeydown);
   });
   elements["message-input"].addEventListener("input", () => {
+    const session = activeSession();
+    if (session) session.draftText = elements["message-input"].value;
     resizeComposerInput();
     updateSendButton();
   });
@@ -344,7 +455,9 @@ function wireInteractions() {
       showToast("单个文件上限为 25 MB");
       return;
     }
-    state.selectedFile = file;
+    const session = activeSession();
+    if (!session) return;
+    session.selectedFile = file;
     renderSelectedFile();
     updateSendButton();
   });
@@ -538,12 +651,24 @@ function handleContentTabKeydown(event) {
 
 function handleContentTabOpen(message) {
   if (!isContentTab(message.tab)) return false;
+  const targetSession = sessionForRoom(message.room) || activeSession();
+  if (typeof message.room === "string" && !sessionForRoom(message.room)) {
+    document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
+    selectContentTab(message.tab, { animate: true, reveal: true });
+    return true;
+  }
+  if (targetSession && targetSession !== activeSession()) {
+    selectDevice(targetSession.pair.room, { closeDialog: false });
+  }
   if (
     typeof message.room === "string" &&
-    message.room === state.pair?.room &&
+    message.room === targetSession?.pair.room &&
     message.message
   ) {
-    receiveAgentEvent(message.message, { requestNotification: false });
+    receiveAgentEvent(message.message, {
+      requestNotification: false,
+      session: targetSession,
+    });
   }
   document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
   selectContentTab(message.tab, { animate: true, reveal: true });
@@ -620,20 +745,62 @@ function capturePairingLaunch() {
   return null;
 }
 
+function handleRuntimePairingLaunch() {
+  const scannedPair = capturePairingLaunch();
+  if (!scannedPair) return false;
+  const existingSession = sessionForRoom(scannedPair.room);
+  if (existingSession && pairingsMatch(existingSession.pair, scannedPair)) {
+    selectDevice(existingSession.pair.room, { closeDialog: false });
+    clearPairingFragment();
+    clearPendingPairingLaunch();
+    return true;
+  }
+  showPairConfirmation(scannedPair);
+  return true;
+}
+
+function initializeLaunchQueue() {
+  if (!window.launchQueue?.setConsumer) return;
+  window.launchQueue.setConsumer(({ targetURL }) => {
+    let target;
+    try {
+      target = new URL(targetURL, location.href);
+    } catch {
+      return;
+    }
+    if (target.origin !== location.origin || target.pathname !== location.pathname) {
+      return;
+    }
+    const contentLaunch = parseContentTabLaunch(target.href, location.origin);
+    if (contentLaunch) {
+      history.replaceState(null, "", contentLaunch.cleanPath);
+      selectContentTab(contentLaunch.tab, { animate: false });
+    }
+    if (target.hash.startsWith("#pair=")) {
+      history.replaceState(
+        null,
+        "",
+        `${target.pathname}${target.search}${target.hash}`,
+      );
+      handleRuntimePairingLaunch();
+    }
+  });
+}
+
 function clearPendingPairingLaunch() {
   localStorage.removeItem(storageKeys.pendingPair);
 }
 
 function showPairConfirmation(pair) {
   state.pendingPair = pair;
-  elements["pair-title"].textContent = `连接“${pair.hostName || "DingDong 电脑"}”？`;
+  const existing = sessionForRoom(pair.room);
+  elements["pair-title"].textContent = existing
+    ? `重新连接“${pair.hostName || existing.pair.hostName || "DingDong 电脑"}”？`
+    : `添加“${pair.hostName || "DingDong 电脑"}”？`;
   elements["pair-description"].textContent =
-    "连接后只会看到电脑主动发送，或为此设备开启自动发送后产生的内容。你也可以主动发送文字或文件。";
+    "添加后会与已有电脑并列保存，各设备的剪贴板、文件和 Agent 提醒互不混合。优先局域网直连；无法直连时使用端到端加密中继，中继不保存内容。";
   elements["device-name"].value = state.identity.name;
-  elements["pair-view"].hidden = false;
-  elements["empty-view"].hidden = true;
-  elements["content-view"].hidden = true;
-  elements.composer.hidden = true;
+  render();
 }
 
 async function confirmPairing() {
@@ -644,25 +811,22 @@ async function confirmPairing() {
     elements["device-name"].focus();
     return;
   }
-  const previousPair = state.pair;
-  if (previousPair && !pairingsMatch(previousPair, pair)) {
-    invalidateNotificationOperations();
-    closeConnection();
-    previousPair.agentNotificationsEnabled = false;
-    previousPair.notificationEpoch = createNotificationEpoch();
-    const previousPairSnapshot = { ...previousPair };
-    await persistPairForWorker(previousPairSnapshot).catch(() => {});
-    await cleanupPushSubscription(previousPairSnapshot);
-    await resetNotificationRuntime();
-    state.items = [];
-    state.agentEvents = [];
+  const previousSession = sessionForRoom(pair.room);
+  if (previousSession && !pairingsMatch(previousSession.pair, pair)) {
+    invalidateNotificationOperations(previousSession);
+    closeConnection(previousSession);
+    const previousPairSnapshot = { ...previousSession.pair };
+    state.sessions.delete(previousPairSnapshot.room);
+    await persistPairingsForWorker().catch(() => {});
+    await cleanupPushSubscription(previousPairSnapshot, previousSession);
+    await resetNotificationRuntime(previousSession);
   }
   if (name !== state.identity.name) {
     state.identity.nameSource = "user";
   }
   state.identity.name = name;
   localStorage.setItem(storageKeys.identity, JSON.stringify(state.identity));
-  state.pair = {
+  const nextPair = {
     version: 1,
     room: pair.room,
     secret: pair.secret,
@@ -674,44 +838,47 @@ async function confirmPairing() {
     agentNotificationPreferenceSet: false,
     manualDisconnect: false,
   };
+  const session = createDeviceSession(nextPair);
+  state.sessions.set(nextPair.room, session);
+  state.activeRoom = nextPair.room;
   state.pendingPair = null;
   clearPairingFragment();
   clearPendingPairingLaunch();
-  savePair();
+  savePairings();
   render();
   const notificationSetup =
     !isIos() || isStandalone()
-      ? enableAgentNotifications({ markPreference: false })
+      ? enableAgentNotifications({ session, markPreference: false })
       : Promise.resolve(false);
-  connect();
+  connect(session);
   notificationSetup.then(() => render());
 }
 
-async function connect() {
+async function connect(session = activeSession()) {
   if (
-    !state.pair ||
-    state.connecting ||
-    state.socket?.readyState === WebSocket.OPEN ||
-    state.socket?.readyState === WebSocket.CONNECTING
+    !session ||
+    session.connecting ||
+    session.socket?.readyState === WebSocket.OPEN ||
+    session.socket?.readyState === WebSocket.CONNECTING
   ) {
     return;
   }
-  clearTimeout(state.reconnectTimer);
-  const pair = { ...state.pair };
-  const connectionGeneration = state.connectionGeneration;
-  const relayGeneration = state.relayGeneration + 1;
-  state.relayGeneration = relayGeneration;
-  state.connecting = !state.connected;
-  state.relayHostPresent = false;
-  state.helloSent = false;
-  state.connectionSuperseded = false;
-  state.manualDisconnect = false;
-  renderConnectionState();
-  const attempt = { pair, connectionGeneration, relayGeneration };
+  clearTimeout(session.reconnectTimer);
+  const pair = { ...session.pair };
+  const connectionGeneration = session.connectionGeneration;
+  const relayGeneration = session.relayGeneration + 1;
+  session.relayGeneration = relayGeneration;
+  session.connecting = !session.connected;
+  session.relayHostPresent = false;
+  session.helloSent = false;
+  session.connectionSuperseded = false;
+  session.pair.manualDisconnect = false;
+  render();
+  const attempt = { session, pair, connectionGeneration, relayGeneration };
   try {
     const key = await importAesKey(pair.secret);
     if (!relayAttemptIsCurrent(attempt)) return;
-    state.signalKey = key;
+    session.signalKey = key;
     const relay = new URL(pair.relay);
     relay.protocol = relay.protocol === "https:" ? "wss:" : "ws:";
     relay.pathname = `${relay.pathname.replace(/\/$/, "")}/v1/rooms/${encodeURIComponent(
@@ -720,11 +887,11 @@ async function connect() {
     relay.search = "?side=peer";
     const socket = new WebSocket(relay);
     const context = { ...attempt, key, socket };
-    state.socket = socket;
-    state.relayFrames = Promise.resolve();
+    session.socket = socket;
+    session.relayFrames = Promise.resolve();
     socket.addEventListener("message", (event) => {
       if (!relayContextIsCurrent(context)) return;
-      state.relayFrames = state.relayFrames
+      session.relayFrames = session.relayFrames
         .then(() =>
           relayContextIsCurrent(context)
             ? handleRelayFrame(event.data, context)
@@ -734,15 +901,23 @@ async function connect() {
     });
     socket.addEventListener("close", (event) => {
       if (!relayContextIsCurrent(context)) return;
-      state.socket = null;
-      state.relayHostPresent = false;
-      state.connecting = false;
-      state.connected = state.channel?.readyState === "open";
-      state.connectionSuperseded = relayConnectionWasReplaced(event);
-      if (!state.connected) state.items = [];
+      session.socket = null;
+      session.relayHostPresent = false;
+      session.connecting = false;
+      session.connected = session.channel?.readyState === "open";
+      session.connectionSuperseded = relayConnectionWasReplaced(event);
+      if (!session.connected) session.items = [];
       render();
-      if (shouldReconnectRelay(event, state.pair)) {
-        state.reconnectTimer = setTimeout(connect, 2400);
+      if (shouldReconnectRelay(event, session.pair)) {
+        const reconnectDelay = session.reconnectDelayMs;
+        session.reconnectTimer = setTimeout(
+          () => connect(session),
+          reconnectDelay,
+        );
+        session.reconnectDelayMs = Math.min(
+          maximumReconnectDelayMs,
+          Math.round(reconnectDelay * 1.7),
+        );
       }
     });
     socket.addEventListener("error", (error) =>
@@ -754,46 +929,58 @@ async function connect() {
 }
 
 function sessionContextIsCurrent(context) {
+  const session = context?.session;
   return (
-    context?.connectionGeneration === state.connectionGeneration &&
-    pairingsMatch(context.pair, state.pair)
+    Boolean(session) &&
+    state.sessions.get(context.pair?.room) === session &&
+    context.connectionGeneration === session.connectionGeneration &&
+    pairingsMatch(context.pair, session.pair)
   );
 }
 
 function relayAttemptIsCurrent(context) {
   return (
     sessionContextIsCurrent(context) &&
-    context.relayGeneration === state.relayGeneration
+    context.relayGeneration === context.session.relayGeneration
   );
 }
 
 function relayContextIsCurrent(context) {
-  return relayAttemptIsCurrent(context) && state.socket === context.socket;
+  return (
+    relayAttemptIsCurrent(context) && context.session.socket === context.socket
+  );
 }
 
 function peerContextIsCurrent(context) {
-  return sessionContextIsCurrent(context) && state.peer === context.peer;
+  return (
+    sessionContextIsCurrent(context) && context.session.peer === context.peer
+  );
 }
 
 function channelContextIsCurrent(context) {
-  return sessionContextIsCurrent(context) && state.channel === context.channel;
+  return (
+    sessionContextIsCurrent(context) &&
+    context.session.channel === context.channel
+  );
 }
 
 function connectionContextIsCurrent(context) {
   if (!sessionContextIsCurrent(context)) return false;
-  if (context.socket && state.socket !== context.socket) return false;
-  if (context.peer && state.peer !== context.peer) return false;
-  if (context.channel && state.channel !== context.channel) return false;
+  const session = context.session;
+  if (context.socket && session.socket !== context.socket) return false;
+  if (context.peer && session.peer !== context.peer) return false;
+  if (context.channel && session.channel !== context.channel) return false;
   return true;
 }
 
 function connectionErrorForContext(error, context) {
   if (!connectionContextIsCurrent(context)) return;
-  connectionError(error);
+  connectionError(error, context.session);
 }
 
 function sessionContextFrom(context) {
   return {
+    session: context.session,
     pair: context.pair,
     key: context.key,
     connectionGeneration: context.connectionGeneration,
@@ -802,17 +989,19 @@ function sessionContextFrom(context) {
 
 async function handleRelayFrame(raw, context) {
   if (!relayContextIsCurrent(context)) return;
+  const session = context.session;
   const frame = JSON.parse(raw);
   if (frame.type === "relay") {
     if (frame.event === "host_joined") {
-      state.relayHostPresent = true;
+      session.relayHostPresent = true;
       await markConnected(sessionContextFrom(context));
     }
     if (frame.event === "host_left") {
       if (!relayContextIsCurrent(context)) return;
-      state.relayHostPresent = false;
-      state.connected = state.channel?.readyState === "open";
-      if (!state.connected) state.items = [];
+      session.relayHostPresent = false;
+      session.helloSent = false;
+      session.connected = session.channel?.readyState === "open";
+      if (!session.connected) session.items = [];
       render();
     }
     return;
@@ -832,20 +1021,21 @@ async function handleRelayFrame(raw, context) {
       sdpMid: signal.sdpMid,
       sdpMLineIndex: signal.sdpMLineIndex,
     });
-    const peer = state.peer;
+    const peer = session.peer;
     if (peer?.remoteDescription) {
       await peer.addIceCandidate(candidate);
     } else {
-      state.remoteCandidates.push(candidate);
+      session.remoteCandidates.push(candidate);
     }
   }
 }
 
 async function acceptOffer(signal, relayContext) {
   if (!relayContextIsCurrent(relayContext)) return;
-  closePeer();
+  const session = relayContext.session;
+  closePeer(session);
   const peer = new RTCPeerConnection({ iceServers: [] });
-  state.peer = peer;
+  session.peer = peer;
   const context = { ...sessionContextFrom(relayContext), peer };
   peer.addEventListener("icecandidate", (event) => {
     if (
@@ -873,9 +1063,10 @@ async function acceptOffer(signal, relayContext) {
   peer.addEventListener("connectionstatechange", () => {
     if (!peerContextIsCurrent(context)) return;
     if (["failed", "disconnected", "closed"].includes(peer.connectionState)) {
-      state.connected =
-        state.relayHostPresent && state.socket?.readyState === WebSocket.OPEN;
-      if (!state.connected) state.items = [];
+      session.connected =
+        session.relayHostPresent &&
+        session.socket?.readyState === WebSocket.OPEN;
+      if (!session.connected) session.items = [];
       render();
     }
   });
@@ -886,7 +1077,7 @@ async function acceptOffer(signal, relayContext) {
   if (!peerContextIsCurrent(context) || !relayContextIsCurrent(relayContext)) {
     return;
   }
-  for (const candidate of state.remoteCandidates.splice(0)) {
+  for (const candidate of session.remoteCandidates.splice(0)) {
     await peer.addIceCandidate(candidate);
     if (!peerContextIsCurrent(context)) return;
   }
@@ -908,7 +1099,8 @@ async function acceptOffer(signal, relayContext) {
 }
 
 function attachDataChannel(channel, peerContext) {
-  state.channel = channel;
+  const session = peerContext.session;
+  session.channel = channel;
   const context = { ...peerContext, channel };
   channel.addEventListener("open", () => {
     if (!channelContextIsCurrent(context)) return;
@@ -918,10 +1110,11 @@ function attachDataChannel(channel, peerContext) {
   });
   channel.addEventListener("close", () => {
     if (!channelContextIsCurrent(context)) return;
-    state.channel = null;
-    state.connected =
-      state.relayHostPresent && state.socket?.readyState === WebSocket.OPEN;
-    if (!state.connected) state.items = [];
+    session.channel = null;
+    session.connected =
+      session.relayHostPresent &&
+      session.socket?.readyState === WebSocket.OPEN;
+    if (!session.connected) session.items = [];
     render();
   });
   channel.addEventListener("message", (event) => {
@@ -932,11 +1125,13 @@ function attachDataChannel(channel, peerContext) {
 
 async function markConnected(context) {
   if (!sessionContextIsCurrent(context)) return;
-  state.connected = true;
-  state.connecting = false;
+  const session = context.session;
+  session.connected = true;
+  session.connecting = false;
+  session.reconnectDelayMs = initialReconnectDelayMs;
   render();
-  if (state.helloSent) return;
-  state.helloSent = true;
+  if (session.helloSent) return;
+  session.helloSent = true;
   try {
     await sendMessage(
       {
@@ -947,55 +1142,52 @@ async function markConnected(context) {
           kind: "phone",
           platform: state.identity.platform,
         },
-        vibrationEnabled: state.pair.vibrationEnabled !== false,
-        agentNotificationsEnabled: wantsAgentNotifications(state.pair),
+        vibrationEnabled: session.pair.vibrationEnabled !== false,
+        agentNotificationsEnabled: wantsAgentNotifications(session.pair),
       },
       context,
     );
     if (!sessionContextIsCurrent(context)) return;
     if (
-      !wantsAgentNotifications(state.pair) ||
+      !wantsAgentNotifications(session.pair) ||
       notificationPermission() !== "granted"
     ) {
-      sendSettings().catch(() => {});
+      sendSettings(session).catch(() => {});
     }
   } catch (error) {
-    if (sessionContextIsCurrent(context)) state.helloSent = false;
+    if (sessionContextIsCurrent(context)) session.helloSent = false;
     throw error;
   }
 }
 
 function queueIncomingEnvelope(envelope, context) {
   if (!connectionContextIsCurrent(context)) return;
-  state.incomingMessages = state.incomingMessages
+  const session = context.session;
+  session.incomingMessages = session.incomingMessages
     .then(async () => {
       if (!connectionContextIsCurrent(context)) return;
       const message = await openEnvelope(envelope, context.key);
       if (!connectionContextIsCurrent(context)) return;
-      await handleDeviceMessage(message);
+      await handleDeviceMessage(message, session);
     })
     .catch((error) => connectionErrorForContext(error, context));
 }
 
 async function sendSignal(signal, context, peer = null) {
   if (!relayContextIsCurrent(context)) return;
-  if (peer && state.peer !== peer) return;
+  if (peer && context.session.peer !== peer) return;
   const payload = await sealEnvelope(signal, context.key);
   if (!relayContextIsCurrent(context)) return;
-  if (peer && state.peer !== peer) return;
+  if (peer && context.session.peer !== peer) return;
   if (context.socket.readyState !== WebSocket.OPEN) return;
   context.socket.send(encodeRelayFrame("signal", payload));
 }
 
 async function sendMessage(
   message,
-  context = {
-    pair: { ...state.pair },
-    key: state.signalKey,
-    connectionGeneration: state.connectionGeneration,
-  },
+  context = currentSessionContext(activeSession()),
 ) {
-  if (!context.key || !sessionContextIsCurrent(context)) {
+  if (!context?.key || !sessionContextIsCurrent(context)) {
     throw new Error("连接已经变化，请重试");
   }
   const envelope = await sealEnvelope(message, context.key);
@@ -1003,87 +1195,104 @@ async function sendMessage(
   if (!sessionContextIsCurrent(context)) {
     throw new Error("连接已经变化，请重试");
   }
-  if (state.channel?.readyState === "open") {
-    state.channel.send(envelope);
+  const session = context.session;
+  if (session.channel?.readyState === "open") {
+    session.channel.send(envelope);
     return;
   }
   if (
-    state.socket?.readyState === WebSocket.OPEN &&
-    state.relayHostPresent
+    session.socket?.readyState === WebSocket.OPEN &&
+    session.relayHostPresent
   ) {
-    state.socket.send(relayFrame);
+    session.socket.send(relayFrame);
     return;
   }
   throw new Error("电脑当前不在线");
 }
 
-async function handleDeviceMessage(message) {
+function currentSessionContext(session) {
+  return session
+    ? {
+        session,
+        pair: { ...session.pair },
+        key: session.signalKey,
+        connectionGeneration: session.connectionGeneration,
+      }
+    : null;
+}
+
+async function handleDeviceMessage(message, session) {
   switch (message.type) {
     case "welcome":
       if (message.host?.name) {
-        state.pair.hostName = message.host.name;
-        savePair();
+        session.pair.hostName = message.host.name;
+        savePairings();
       }
       render();
       break;
     case "clipboard.snapshot":
-      receiveClipboardSnapshot(message);
+      receiveClipboardSnapshot(message, session);
       break;
     case "clipboard.upsert":
-      if (message.item) upsertClipboardItem(message.item);
+      if (message.item) upsertClipboardItem(message.item, session);
       break;
     case "request.rejected":
-      handleRequestRejected(message);
+      handleRequestRejected(message, session);
       break;
     case "agent.completed":
-      receiveAgentEvent(message);
+      receiveAgentEvent(message, { session });
       break;
     case "file.start":
-      beginDownload(message);
+      beginDownload(message, session);
       break;
     case "file.chunk":
-      receiveDownloadChunk(message);
+      receiveDownloadChunk(message, session);
       break;
     case "file.end":
-      finishDownload(message.transferId);
+      finishDownload(message.transferId, session);
       break;
   }
 }
 
-function receiveClipboardSnapshot(message) {
-  if (message.reset !== false) state.items = [];
+function receiveClipboardSnapshot(message, session) {
+  if (message.reset !== false) session.items = [];
   let rejected = false;
   for (const item of Array.isArray(message.items) ? message.items : []) {
     if (!clipboardItemFitsTransferBoundary(item)) {
       rejected = true;
       continue;
     }
-    mergeClipboardItem(item);
+    mergeClipboardItem(item, session);
   }
-  sortItems();
-  state.items = state.items.slice(0, 50);
+  sortItems(session);
+  session.items = session.items.slice(0, 50);
   if (message.complete !== false) {
-    elements["last-sync-label"].textContent = formatTime(new Date());
+    session.lastSyncAt = new Date();
   }
-  renderClipboard();
-  if (rejected) showToast("部分文字超过传输上限，请在电脑上改为发送文件");
+  if (sessionIsActive(session)) renderClipboard();
+  if (rejected && sessionIsActive(session)) {
+    showToast("部分文字超过传输上限，请在电脑上改为发送文件");
+  }
 }
 
-function upsertClipboardItem(item) {
+function upsertClipboardItem(item, session) {
   if (!clipboardItemFitsTransferBoundary(item)) {
-    showToast("这条文字超过传输上限，请在电脑上改为发送文件");
+    if (sessionIsActive(session)) {
+      showToast("这条文字超过传输上限，请在电脑上改为发送文件");
+    }
     return;
   }
-  mergeClipboardItem(item);
-  sortItems();
-  state.items = state.items.slice(0, 50);
-  renderClipboard();
+  mergeClipboardItem(item, session);
+  sortItems(session);
+  session.items = session.items.slice(0, 50);
+  session.lastSyncAt = new Date();
+  if (sessionIsActive(session)) renderClipboard();
 }
 
-function mergeClipboardItem(item) {
-  const index = state.items.findIndex((value) => value.id === item.id);
-  if (index >= 0) state.items[index] = item;
-  else state.items.unshift(item);
+function mergeClipboardItem(item, session) {
+  const index = session.items.findIndex((value) => value.id === item.id);
+  if (index >= 0) session.items[index] = item;
+  else session.items.unshift(item);
 }
 
 function clipboardItemFitsTransferBoundary(item) {
@@ -1104,48 +1313,54 @@ function clipboardItemFitsTransferBoundary(item) {
   }
 }
 
-function handleRequestRejected(message) {
+function handleRequestRejected(message, session) {
   const requestId = message.requestId;
   if (
     message.requestType !== "clipboard.create" ||
     message.code !== "text_too_large" ||
     typeof requestId !== "string" ||
-    !state.outgoingRequests.delete(requestId)
+    !session.outgoingRequests.delete(requestId)
   ) {
     return;
   }
   const maximumBytes = Number.isSafeInteger(message.maximumBytes)
     ? message.maximumBytes
     : maximumClipboardTextBytes;
-  showToast(`电脑拒绝了过大的文字（上限 ${formatBytes(maximumBytes)}），请改为发送文件`);
+  if (sessionIsActive(session)) {
+    showToast(`电脑拒绝了过大的文字（上限 ${formatBytes(maximumBytes)}），请改为发送文件`);
+  }
 }
 
-function rememberOutgoingRequest(requestId) {
-  state.outgoingRequests.add(requestId);
-  setTimeout(() => state.outgoingRequests.delete(requestId), 30_000);
+function rememberOutgoingRequest(requestId, session) {
+  session.outgoingRequests.add(requestId);
+  setTimeout(() => session.outgoingRequests.delete(requestId), 30_000);
 }
 
-function sortItems() {
-  state.items.sort(
+function sortItems(session) {
+  session.items.sort(
     (left, right) =>
       new Date(right.updatedAt || 0).getTime() -
       new Date(left.updatedAt || 0).getTime(),
   );
 }
 
-function receiveAgentEvent(message, { requestNotification = true } = {}) {
+function receiveAgentEvent(
+  message,
+  { requestNotification = true, session = activeSession() } = {},
+) {
+  if (!session) return;
   if (!message?.id) return;
-  if (!state.agentEvents.some((value) => value.id === message.id)) {
-    state.agentEvents.unshift(message);
-    state.agentEvents = state.agentEvents.slice(0, 50);
-    renderAgentEvents();
+  if (!session.agentEvents.some((value) => value.id === message.id)) {
+    session.agentEvents.unshift(message);
+    session.agentEvents = session.agentEvents.slice(0, 50);
+    if (sessionIsActive(session)) renderAgentEvents();
   }
-  if (requestNotification) notifyAgentCompletion(message);
+  if (requestNotification) notifyAgentCompletion(message, session);
 }
 
-function notifyAgentCompletion(message) {
+function notifyAgentCompletion(message, session) {
   if (
-    !wantsAgentNotifications(state.pair) ||
+    !wantsAgentNotifications(session?.pair) ||
     notificationPermission() !== "granted" ||
     !("serviceWorker" in navigator)
   ) {
@@ -1153,19 +1368,25 @@ function notifyAgentCompletion(message) {
   }
   notifyAgentCompletionThroughWorker(
     message,
-    { ...state.pair },
-    state.notificationGeneration,
+    { ...session.pair },
+    session.notificationGeneration,
+    session,
   ).catch(() => {});
 }
 
-async function notifyAgentCompletionThroughWorker(message, pair, generation) {
-  ensureNotificationContext(pair, generation);
+async function notifyAgentCompletionThroughWorker(
+  message,
+  pair,
+  generation,
+  session,
+) {
+  ensureNotificationContext(pair, generation, session);
   const registration = await withTimeout(
     navigator.serviceWorker.ready,
     5000,
     "Service Worker 尚未就绪",
   );
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   if (!registration.active) throw new Error("Service Worker 尚未激活");
   registration.active.postMessage({
     type: "agent.completed.realtime",
@@ -1176,40 +1397,48 @@ async function notifyAgentCompletionThroughWorker(message, pair, generation) {
 }
 
 async function sendComposerContent() {
-  if (!state.connected) {
+  const session = activeSession();
+  if (!session?.connected) {
     showToast("电脑离线，暂时不能发送");
     return;
   }
   const text = elements["message-input"].value.trim();
-  const file = state.selectedFile;
+  const file = session.selectedFile;
   elements["send-button"].disabled = true;
   try {
     if (file) {
-      await sendFile(file);
-      showToast("文件已发送到电脑剪贴板列表");
+      await sendFile(file, session);
+      showToast(`文件已发送到 ${session.pair.hostName}`);
     } else if (text) {
       if (utf8ByteLength(text) > maximumClipboardTextBytes) {
         throw new Error("文字超过 128 KB，请改为选择文件发送");
       }
       const requestId = `clipboard-${crypto.randomUUID()}`;
-      rememberOutgoingRequest(requestId);
+      rememberOutgoingRequest(requestId, session);
       try {
-        await sendMessage({
-          type: "clipboard.create",
-          requestId,
-          content: text,
-        });
+        await sendMessage(
+          {
+            type: "clipboard.create",
+            requestId,
+            content: text,
+          },
+          currentSessionContext(session),
+        );
       } catch (error) {
-        state.outgoingRequests.delete(requestId);
+        session.outgoingRequests.delete(requestId);
         throw error;
       }
-      showToast("内容已发送到电脑剪贴板列表");
+      showToast(`内容已发送到 ${session.pair.hostName}`);
     } else {
       return;
     }
-    elements["message-input"].value = "";
-    resizeComposerInput();
-    clearSelectedFile();
+    session.draftText = "";
+    session.selectedFile = null;
+    if (sessionIsActive(session)) {
+      elements["message-input"].value = "";
+      resizeComposerInput();
+      clearSelectedFile();
+    }
   } catch (error) {
     showToast(error?.message || "发送失败，请检查连接");
   } finally {
@@ -1217,41 +1446,50 @@ async function sendComposerContent() {
   }
 }
 
-async function sendFile(file) {
+async function sendFile(file, session) {
   if (file.size > maximumFileBytes) throw new Error("文件超过 25 MB");
   const transferId = `upload-${crypto.randomUUID()}`;
-  await sendMessage({
-    type: "file.start",
-    transferId,
-    name: file.name,
-    size: file.size,
-    mime: file.type || "application/octet-stream",
-  });
+  await sendMessage(
+    {
+      type: "file.start",
+      transferId,
+      name: file.name,
+      size: file.size,
+      mime: file.type || "application/octet-stream",
+    },
+    currentSessionContext(session),
+  );
   let index = 0;
   for (let offset = 0; offset < file.size; offset += fileChunkBytes) {
     const bytes = new Uint8Array(
       await file.slice(offset, offset + fileChunkBytes).arrayBuffer(),
     );
-    await waitForDataChannelBuffer();
-    await sendMessage({
-      type: "file.chunk",
-      transferId,
-      index,
-      data: bytesToBase64(bytes),
-    });
+    await waitForDataChannelBuffer(session);
+    await sendMessage(
+      {
+        type: "file.chunk",
+        transferId,
+        index,
+        data: bytesToBase64(bytes),
+      },
+      currentSessionContext(session),
+    );
     index += 1;
   }
-  await sendMessage({ type: "file.end", transferId });
+  await sendMessage(
+    { type: "file.end", transferId },
+    currentSessionContext(session),
+  );
 }
 
-async function waitForDataChannelBuffer() {
-  while (state.channel?.bufferedAmount > 1024 * 1024) {
+async function waitForDataChannelBuffer(session) {
+  while (session.channel?.bufferedAmount > 1024 * 1024) {
     await new Promise((resolve) => setTimeout(resolve, 12));
   }
 }
 
-function receiveDownloadChunk(message) {
-  const download = state.downloads.get(message.transferId);
+function receiveDownloadChunk(message, session) {
+  const download = session.downloads.get(message.transferId);
   if (
     !download ||
     !Number.isSafeInteger(message.index) ||
@@ -1261,14 +1499,14 @@ function receiveDownloadChunk(message) {
     typeof message.data !== "string" ||
     message.data.length > maximumEncodedFileChunkLength
   ) {
-    rejectDownload(message.transferId);
+    rejectDownload(message.transferId, session);
     return;
   }
   let bytes;
   try {
     bytes = base64UrlDecode(message.data.replace(/\+/g, "-").replace(/\//g, "_"));
   } catch {
-    rejectDownload(message.transferId);
+    rejectDownload(message.transferId, session);
     return;
   }
   if (
@@ -1276,14 +1514,14 @@ function receiveDownloadChunk(message) {
     download.received + bytes.byteLength > download.size ||
     download.received + bytes.byteLength > maximumFileBytes
   ) {
-    rejectDownload(message.transferId);
+    rejectDownload(message.transferId, session);
     return;
   }
   download.chunks[message.index] = bytes;
   download.received += bytes.byteLength;
 }
 
-function beginDownload(message) {
+function beginDownload(message, session) {
   const transferId = message.transferId;
   const size = message.size;
   if (
@@ -1293,14 +1531,14 @@ function beginDownload(message) {
     !Number.isSafeInteger(size) ||
     size < 0 ||
     size > maximumFileBytes ||
-    state.downloads.size >= maximumConcurrentDownloads
+    session.downloads.size >= maximumConcurrentDownloads
   ) {
-    rejectDownload(transferId);
+    rejectDownload(transferId, session);
     return;
   }
   const rawName = typeof message.name === "string" ? message.name : "DingDong 文件";
   const safeName = rawName.split(/[\\/]/).filter(Boolean).at(-1)?.slice(0, 180);
-  state.downloads.set(transferId, {
+  session.downloads.set(transferId, {
     itemId: message.itemId,
     name: safeName || "DingDong 文件",
     size,
@@ -1310,14 +1548,16 @@ function beginDownload(message) {
   });
 }
 
-function rejectDownload(transferId) {
-  if (typeof transferId === "string") state.downloads.delete(transferId);
-  showToast("文件数据无效或超过 25 MB，已停止接收");
+function rejectDownload(transferId, session) {
+  if (typeof transferId === "string") session.downloads.delete(transferId);
+  if (sessionIsActive(session)) {
+    showToast("文件数据无效或超过 25 MB，已停止接收");
+  }
 }
 
-function finishDownload(transferId) {
-  const download = state.downloads.get(transferId);
-  state.downloads.delete(transferId);
+function finishDownload(transferId, session) {
+  const download = session.downloads.get(transferId);
+  session.downloads.delete(transferId);
   const completeChunks = download
     ? Array.from(
         { length: download.expectedChunks },
@@ -1329,12 +1569,12 @@ function finishDownload(transferId) {
     download.received !== download.size ||
     completeChunks.some((chunk) => !chunk)
   ) {
-    showToast("文件接收不完整，请重试");
+    if (sessionIsActive(session)) showToast("文件接收不完整，请重试");
     return;
   }
   const blob = new Blob(completeChunks);
   if (blob.size !== download.size) {
-    showToast("文件接收不完整，请重试");
+    if (sessionIsActive(session)) showToast("文件接收不完整，请重试");
     return;
   }
   const url = URL.createObjectURL(blob);
@@ -1343,7 +1583,7 @@ function finishDownload(transferId) {
   anchor.download = download.name;
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
-  showToast("文件已准备好，离线前请保存到手机");
+  showToast(`${session.pair.hostName} 的文件已准备好，请保存到手机`);
 }
 
 async function copyItem(item, button) {
@@ -1365,62 +1605,74 @@ async function copyItem(item, button) {
   setTimeout(() => (button.innerHTML = previous), 900);
 }
 
-function requestFile(item) {
-  sendMessage({ type: "file.request", itemId: item.id }).catch((error) =>
-    showToast(error?.message || "无法下载文件"),
-  );
+function requestFile(item, session = activeSession()) {
+  sendMessage(
+    { type: "file.request", itemId: item.id },
+    currentSessionContext(session),
+  ).catch((error) => showToast(error?.message || "无法下载文件"));
   showToast("正在从电脑获取文件…");
 }
 
 function render() {
   renderInstallPromotion();
-  const hasPair = Boolean(state.pair);
-  elements["pair-view"].hidden = true;
-  elements["empty-view"].hidden = hasPair;
-  elements["content-view"].hidden = !hasPair;
-  elements.composer.hidden = !hasPair;
+  const session = activeSession();
+  const hasPair = Boolean(session);
+  const confirmingPair = Boolean(state.pendingPair);
+  elements["pair-view"].hidden = !confirmingPair;
+  elements["empty-view"].hidden = confirmingPair || state.sessions.size > 0;
+  elements["content-view"].hidden = confirmingPair || !hasPair;
+  elements.composer.hidden = confirmingPair || !hasPair;
   if (hasPair) {
-    elements["settings-device-name"].textContent = state.pair.hostName;
-    renderConnectionState();
+    elements["settings-device-name"].textContent = session.pair.hostName;
+    if (elements["message-input"].value !== session.draftText) {
+      elements["message-input"].value = session.draftText;
+    }
+    elements["composer-target"].textContent = `发送到 ${session.pair.hostName}`;
+    renderConnectionState(session);
     renderTabs();
     renderClipboard();
     renderAgentEvents();
     renderSelectedFile();
     updateSendButton();
     requestAnimationFrame(refreshFeedPagerLayout);
-    const notificationsActive = agentNotificationsActive();
+    const notificationsActive = agentNotificationsActive(session);
     elements["notification-onboarding"].hidden =
-      notificationsActive && state.notificationDeliveryHealthy !== false;
+      notificationsActive && session.notificationDeliveryHealthy !== false;
     elements["enable-notifications"].textContent = notificationsActive
       ? "检查"
       : "开启";
     renderAgentNotificationStatus();
   } else {
     elements["connection-label"].textContent = "等待连接";
+    elements["composer-target"].textContent = "";
   }
+  renderConnectionSummary();
+  renderIconStyleChoices();
+  if (elements["device-switcher-dialog"].open) renderDeviceSwitcher();
 }
 
 function notificationPermission() {
   return "Notification" in window ? Notification.permission : "unsupported";
 }
 
-function agentNotificationsActive() {
+function agentNotificationsActive(session = activeSession()) {
   return agentNotificationsAreActive(
-    state.pair,
+    session?.pair,
     notificationPermission(),
-    state.pushSubscriptionReady,
+    session?.pushSubscriptionReady === true,
   );
 }
 
 function renderAgentNotificationStatus() {
-  if (!state.pair) return;
-  const desired = wantsAgentNotifications(state.pair);
+  const session = activeSession();
+  if (!session) return;
+  const desired = wantsAgentNotifications(session.pair);
   elements["agent-notification-toggle"].checked = desired;
   elements["vibration-toggle"].disabled = !desired;
-  elements["agent-notification-status"].textContent = agentNotificationsActive()
-    ? state.notificationDeliveryHealthy === true
+  elements["agent-notification-status"].textContent = agentNotificationsActive(session)
+    ? session.notificationDeliveryHealthy === true
       ? "已开启 · 浏览器已创建通知"
-      : state.notificationDeliveryHealthy === false
+      : session.notificationDeliveryHealthy === false
         ? "已开启 · 后台送达未通过"
         : "已开启 · 等待送达验证"
     : desired
@@ -1430,25 +1682,126 @@ function renderAgentNotificationStatus() {
       : "已关闭";
 }
 
-function renderConnectionState() {
-  if (!state.pair) return;
-  elements["connection-label"].textContent = state.connectionSuperseded
-    ? `${state.pair.hostName} · 已在另一窗口打开`
-    : state.connected
-      ? `${state.pair.hostName} · 在线`
-      : state.connecting
-        ? `${state.pair.hostName} · 连接中`
-        : `${state.pair.hostName} · 离线`;
-  elements["offline-title"].textContent = state.connectionSuperseded
+function renderConnectionState(session = activeSession()) {
+  if (!session) return;
+  elements["connection-label"].textContent = session.connectionSuperseded
+    ? `${session.pair.hostName} · 已在另一窗口打开`
+    : session.connected
+      ? `${session.pair.hostName} · 在线`
+      : session.connecting
+        ? `${session.pair.hostName} · 连接中`
+        : `${session.pair.hostName} · 离线`;
+  elements["offline-title"].textContent = session.connectionSuperseded
     ? "连接已转移到另一个页面"
     : "电脑当前离线";
-  elements["offline-copy"].textContent = state.connectionSuperseded
+  elements["offline-copy"].textContent = session.connectionSuperseded
     ? "同一设备只保留最新打开的 DingDong；需要时可在这个页面重新连接。"
     : "断开后不会缓存电脑里的剪贴板内容。";
-  elements["reconnect-button"].textContent = state.connectionSuperseded
+  elements["reconnect-button"].textContent = session.connectionSuperseded
     ? "在此连接"
     : "重新连接";
-  elements["offline-banner"].hidden = state.connected;
+  elements["offline-banner"].hidden = session.connected;
+}
+
+function renderConnectionSummary() {
+  const onlineCount = Array.from(state.sessions.values()).filter(
+    (session) => session.connected,
+  ).length;
+  elements["online-dot"].dataset.online = String(onlineCount > 0);
+  elements["online-count"].textContent = `${onlineCount} 台在线`;
+  elements["device-status-button"].setAttribute(
+    "aria-label",
+    `${elements["connection-label"].textContent}，${onlineCount} 台在线，点击切换电脑`,
+  );
+}
+
+function renderDeviceSwitcher() {
+  const onlineCount = Array.from(state.sessions.values()).filter(
+    (session) => session.connected,
+  ).length;
+  elements["device-switcher-summary"].textContent =
+    `${onlineCount} 台在线 · 共 ${state.sessions.size} 台电脑`;
+  elements["device-switcher-list"].replaceChildren(
+    ...Array.from(state.sessions.values(), createDeviceSwitcherItem),
+  );
+}
+
+function createDeviceSwitcherItem(session) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "device-switcher-item";
+  button.classList.toggle("is-active", sessionIsActive(session));
+  button.setAttribute("aria-current", sessionIsActive(session) ? "true" : "false");
+
+  const icon = document.createElement("img");
+  icon.src = "../assets/symbols/manage.png";
+  icon.alt = "";
+  const copy = document.createElement("span");
+  copy.className = "device-switcher-copy";
+  const name = document.createElement("strong");
+  name.textContent = session.pair.hostName || "DingDong 电脑";
+  const status = document.createElement("span");
+  status.className = "device-switcher-status";
+  const dot = document.createElement("i");
+  dot.dataset.online = String(session.connected);
+  const transport = session.connected
+    ? session.channel?.readyState === "open"
+      ? "在线 · 局域网直连"
+      : "在线 · 端到端加密中继"
+    : session.connecting
+      ? "连接中"
+      : session.connectionSuperseded
+        ? "已在另一窗口打开"
+        : "离线";
+  status.append(dot, document.createTextNode(transport));
+  copy.append(name, status);
+  const current = document.createElement("span");
+  current.className = "device-current-mark";
+  current.textContent = sessionIsActive(session) ? "当前" : "切换";
+  button.append(icon, copy, current);
+  button.addEventListener("click", () => selectDevice(session.pair.room));
+  return button;
+}
+
+function selectDevice(room, { closeDialog = true } = {}) {
+  const session = sessionForRoom(room);
+  if (!session) return false;
+  const previousSession = activeSession();
+  if (previousSession) {
+    previousSession.draftText = elements["message-input"].value;
+  }
+  state.activeRoom = room;
+  localStorage.setItem(storageKeys.pairings, JSON.stringify(pairingRegistrySnapshot()));
+  localStorage.setItem(storageKeys.pair, JSON.stringify(session.pair));
+  persistPairingsForWorker().catch(() => {});
+  elements["file-input"].value = "";
+  render();
+  resizeComposerInput();
+  if (closeDialog && elements["device-switcher-dialog"].open) {
+    elements["device-switcher-dialog"].close();
+  }
+  return true;
+}
+
+function setIconStyle(style) {
+  state.iconStyle = style === "white" ? "white" : "soft";
+  localStorage.setItem(storageKeys.iconStyle, state.iconStyle);
+  renderIconStyleChoices();
+}
+
+function renderIconStyleChoices() {
+  document.documentElement.dataset.iconStyle = state.iconStyle;
+  elements["app-mascot-frame"].dataset.iconStyle = state.iconStyle;
+  for (const style of ["soft", "white"]) {
+    const button = elements[`icon-style-${style}`];
+    const selected = state.iconStyle === style;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  }
+  elements["icon-style-note"].textContent =
+    state.iconStyle === "white"
+      ? "已使用白色背景；主屏幕图标需重新添加后才可能由系统更新。"
+      : "已使用浅蓝背景；主屏幕图标仍由手机系统在安装时生成。";
 }
 
 function renderTabs() {
@@ -1467,15 +1820,20 @@ function renderTabs() {
 }
 
 function renderClipboard() {
-  elements["clipboard-count"].textContent = String(state.items.length);
+  const session = activeSession();
+  if (!session) return;
+  elements["clipboard-count"].textContent = String(session.items.length);
   elements["clipboard-list"].replaceChildren(
-    ...state.items.map(createClipboardCard),
+    ...session.items.map((item) => createClipboardCard(item, session)),
   );
-  elements["clipboard-empty"].hidden = state.items.length > 0;
+  elements["clipboard-empty"].hidden = session.items.length > 0;
+  elements["last-sync-label"].textContent = session.lastSyncAt
+    ? formatTime(session.lastSyncAt)
+    : "尚未同步";
   invalidateFallbackFeedPanelHeight("clipboard");
 }
 
-function createClipboardCard(item) {
+function createClipboardCard(item, session) {
   const card = document.createElement("article");
   card.className = "clipboard-card";
 
@@ -1505,8 +1863,8 @@ function createClipboardCard(item) {
   action.type = "button";
   if (item.fileName) {
     action.textContent = item.downloadable === false ? "过大" : "下载";
-    action.disabled = item.downloadable === false || !state.connected;
-    action.addEventListener("click", () => requestFile(item));
+    action.disabled = item.downloadable === false || !session.connected;
+    action.addEventListener("click", () => requestFile(item, session));
   } else {
     const actionIcon = document.createElement("img");
     actionIcon.src = "../assets/symbols/copy.png";
@@ -1520,7 +1878,7 @@ function createClipboardCard(item) {
   const meta = document.createElement("div");
   meta.className = "clipboard-meta";
   const source = document.createElement("span");
-  source.textContent = item.sources?.at(-1) || state.pair.hostName;
+  source.textContent = item.sources?.at(-1) || session.pair.hostName;
   const time = document.createElement("span");
   time.textContent = formatTime(item.updatedAt ? new Date(item.updatedAt) : new Date());
   meta.append(source, time);
@@ -1529,11 +1887,13 @@ function createClipboardCard(item) {
 }
 
 function renderAgentEvents() {
-  elements["agent-count"].textContent = String(state.agentEvents.length);
+  const session = activeSession();
+  if (!session) return;
+  elements["agent-count"].textContent = String(session.agentEvents.length);
   elements["agent-list"].replaceChildren(
-    ...state.agentEvents.map(createAgentCard),
+    ...session.agentEvents.map(createAgentCard),
   );
-  elements["agent-empty"].hidden = state.agentEvents.length > 0;
+  elements["agent-empty"].hidden = session.agentEvents.length > 0;
   invalidateFallbackFeedPanelHeight("agent");
 }
 
@@ -1573,7 +1933,7 @@ function createAgentCard(event) {
 }
 
 function renderSelectedFile() {
-  const file = state.selectedFile;
+  const file = activeSession()?.selectedFile || null;
   elements["selected-file"].hidden = !file;
   elements["selected-file-name"].textContent = file
     ? `${file.name} · ${formatBytes(file.size)}`
@@ -1581,7 +1941,8 @@ function renderSelectedFile() {
 }
 
 function clearSelectedFile() {
-  state.selectedFile = null;
+  const session = activeSession();
+  if (session) session.selectedFile = null;
   elements["file-input"].value = "";
   renderSelectedFile();
   updateSendButton();
@@ -1594,32 +1955,36 @@ function resizeComposerInput() {
 }
 
 function updateSendButton() {
+  const session = activeSession();
   elements["send-button"].disabled =
-    !state.connected ||
-    (!state.selectedFile && !elements["message-input"].value.trim());
+    !session?.connected ||
+    (!session.selectedFile && !elements["message-input"].value.trim());
 }
 
 async function enableAgentNotifications({
+  session = activeSession(),
   requestPermission = true,
   markPreference = true,
   sendTest = true,
+  showHelp = true,
   syncEnabledToDesktop = true,
 } = {}) {
-  if (!state.pair) return false;
-  const generation = state.notificationGeneration + 1;
-  state.notificationGeneration = generation;
-  if (sendTest) state.notificationVerificationInProgress = true;
-  state.pair.agentNotificationsEnabled = true;
-  state.pair.notificationEpoch = createNotificationEpoch();
-  if (markPreference) state.pair.agentNotificationPreferenceSet = true;
-  const pair = { ...state.pair };
-  savePair();
-  const workerPairWrite = persistPairForWorker(pair).then(
+  if (!session) return false;
+  const generation = session.notificationGeneration + 1;
+  session.notificationGeneration = generation;
+  if (sendTest) session.notificationVerificationInProgress = true;
+  session.pair.agentNotificationsEnabled = true;
+  session.pair.notificationEpoch = createNotificationEpoch();
+  if (markPreference) session.pair.agentNotificationPreferenceSet = true;
+  const pair = { ...session.pair };
+  savePairings();
+  const workerPairWrite = persistPairingsForWorker().then(
     () => true,
     () => false,
   );
   try {
     if (isIos() && !isStandalone()) {
+      if (!showHelp) return false;
       if (elements["notification-help-dialog"].open) {
         elements["notification-help-dialog"].close();
       }
@@ -1636,7 +2001,9 @@ async function enableAgentNotifications({
       !("serviceWorker" in navigator) ||
       !("PushManager" in window)
     ) {
-      await showNotificationPermissionHelp("unsupported", "capability");
+      if (showHelp && sessionIsActive(session)) {
+        await showNotificationPermissionHelp("unsupported", "capability");
+      }
       return false;
     }
     let permission = Notification.permission;
@@ -1644,132 +2011,135 @@ async function enableAgentNotifications({
       try {
         permission = await Notification.requestPermission();
       } catch {
-        await showNotificationPermissionHelp("default", "permission");
+        if (showHelp && sessionIsActive(session)) {
+          await showNotificationPermissionHelp("default", "permission");
+        }
         return false;
       }
     }
-    if (!notificationContextIsCurrent(pair, generation)) return false;
+    if (!notificationContextIsCurrent(pair, generation, session)) return false;
     if (permission !== "granted") {
-      await showNotificationPermissionHelp(permission, "permission");
+      if (showHelp && sessionIsActive(session)) {
+        await showNotificationPermissionHelp(permission, "permission");
+      }
       return false;
     }
     if (!(await workerPairWrite)) {
-      if (!notificationContextIsCurrent(pair, generation)) return false;
-      state.pushSubscriptionReady = false;
-      await showNotificationPermissionHelp(
-        "granted",
-        "subscription",
-        new Error("浏览器没有保存推送状态"),
-      );
+      if (!notificationContextIsCurrent(pair, generation, session)) return false;
+      session.pushSubscriptionReady = false;
+      if (showHelp && sessionIsActive(session)) {
+        await showNotificationPermissionHelp(
+          "granted",
+          "subscription",
+          new Error("浏览器没有保存推送状态"),
+        );
+      }
       return false;
     }
-    ensureNotificationContext(pair, generation);
+    ensureNotificationContext(pair, generation, session);
     try {
-      await registerPushSubscription({ pair, generation });
-      if (!notificationContextIsCurrent(pair, generation)) return false;
-      state.pushSubscriptionReady = true;
+      await registerPushSubscription({ session, pair, generation });
+      if (!notificationContextIsCurrent(pair, generation, session)) return false;
+      session.pushSubscriptionReady = true;
     } catch (error) {
       if (isStaleNotificationOperation(error)) return false;
-      state.pushSubscriptionReady = false;
-      await showNotificationPermissionHelp("granted", "subscription", error);
+      session.pushSubscriptionReady = false;
+      if (showHelp && sessionIsActive(session)) {
+        await showNotificationPermissionHelp("granted", "subscription", error);
+      }
       return false;
     }
     if (sendTest) {
       try {
-        await sendTestPush({ pair, generation });
-        if (!notificationContextIsCurrent(pair, generation)) return false;
-        state.pushSubscriptionReady = true;
-        state.notificationDeliveryHealthy = true;
+        await sendTestPush({ session, pair, generation });
+        if (!notificationContextIsCurrent(pair, generation, session)) return false;
+        session.pushSubscriptionReady = true;
+        session.notificationDeliveryHealthy = true;
         showToast("浏览器已创建测试通知；横幅与震动由系统设置控制");
       } catch (error) {
         if (isStaleNotificationOperation(error)) return false;
-        state.pushSubscriptionReady = error?.channelBroken !== true;
-        state.notificationDeliveryHealthy = false;
+        session.pushSubscriptionReady = error?.channelBroken !== true;
+        session.notificationDeliveryHealthy = false;
         try {
-          await sendSettings();
+          await sendSettings(session);
         } catch {}
-        await showNotificationPermissionHelp("granted", "delivery", error);
-        return agentNotificationsActive();
+        if (showHelp && sessionIsActive(session)) {
+          await showNotificationPermissionHelp("granted", "delivery", error);
+        }
+        return agentNotificationsActive(session);
       }
     }
     if (syncEnabledToDesktop) {
       try {
-        await sendSettings();
+        await sendSettings(session);
       } catch {
         // An explicit phone setting is resent after the next user retry.
       }
     }
-    return agentNotificationsActive();
+    return agentNotificationsActive(session);
   } finally {
-    if (notificationContextIsCurrent(pair, generation)) {
-      if (sendTest) state.notificationVerificationInProgress = false;
-      if (!agentNotificationsActive()) sendSettings().catch(() => {});
+    if (notificationContextIsCurrent(pair, generation, session)) {
+      if (sendTest) session.notificationVerificationInProgress = false;
+      if (!agentNotificationsActive(session)) {
+        sendSettings(session).catch(() => {});
+      }
     }
   }
 }
 
 async function recheckAgentNotifications() {
-  if (state.notificationCheckInProgress) return;
-  state.notificationCheckInProgress = true;
+  const session = activeSession();
+  if (!session || session.notificationCheckInProgress) return;
+  session.notificationCheckInProgress = true;
   const button = elements["notification-recheck"];
   const previousLabel = button.textContent;
   button.disabled = true;
   button.textContent = "检查中";
   try {
-    const enabled = await enableAgentNotifications();
+    const enabled = await enableAgentNotifications({ session });
     if (
       enabled &&
-      state.notificationDeliveryHealthy === true &&
+      session.notificationDeliveryHealthy === true &&
       elements["notification-help-dialog"].open
     ) {
       elements["notification-help-dialog"].close();
     }
     render();
   } finally {
-    state.notificationCheckInProgress = false;
+    session.notificationCheckInProgress = false;
     button.disabled = false;
     button.textContent = previousLabel;
   }
 }
 
-async function disableAgentNotifications() {
-  if (!state.pair) return;
-  const pair = state.pair;
-  invalidateNotificationOperations();
-  state.notificationDeliveryHealthy = null;
-  state.pushSubscriptionReady = false;
-  state.pushProviderStatus = null;
-  state.pushDeviceReceipt = null;
+async function disableAgentNotifications(session = activeSession()) {
+  if (!session) return;
+  const pair = session.pair;
+  invalidateNotificationOperations(session);
+  session.notificationDeliveryHealthy = null;
+  session.pushSubscriptionReady = false;
+  session.pushProviderStatus = null;
+  session.pushDeviceReceipt = null;
   pair.agentNotificationsEnabled = false;
   pair.notificationEpoch = createNotificationEpoch();
   pair.agentNotificationPreferenceSet = true;
   const cleanupPair = { ...pair };
-  savePair();
+  savePairings();
   try {
-    await persistPairForWorker();
+    await persistPairingsForWorker();
   } catch {}
   try {
-    await sendSettings();
+    await sendSettings(session);
   } catch {}
-  await cleanupPushSubscription(cleanupPair);
+  await cleanupPushSubscription(cleanupPair, session);
 }
 
-function cleanupPushSubscription(pair) {
-  return queuePushMutation(() => performPushSubscriptionCleanup(pair));
+function cleanupPushSubscription(pair, session = sessionForRoom(pair?.room)) {
+  return queuePushMutation(() => performPushSubscriptionCleanup(pair, session));
 }
 
-async function performPushSubscriptionCleanup(pair) {
-  if (await cleanupSupersededByActivePair(pair)) return;
-  try {
-    const registration =
-      state.serviceWorkerRegistration ||
-      (await navigator.serviceWorker?.getRegistration("./"));
-    const subscription = await registration?.pushManager?.getSubscription();
-    if (subscription) {
-      await withTimeout(subscription.unsubscribe(), 5000, "取消旧推送订阅超时");
-    }
-  } catch {}
-  if (await cleanupSupersededByActivePair(pair)) return;
+async function performPushSubscriptionCleanup(pair, session) {
+  if (await cleanupSupersededByCurrentPair(pair)) return;
   try {
     const token = await pushToken(pair.secret);
     await fetchWithTimeout(
@@ -1782,37 +2152,63 @@ async function performPushSubscriptionCleanup(pair) {
       "删除旧推送登记超时",
     );
   } catch {}
+  if (await cleanupSupersededByCurrentPair(pair)) return;
+  const hasOtherEnabledPair = Array.from(state.sessions.values()).some(
+    (candidate) =>
+      candidate !== session && wantsAgentNotifications(candidate.pair),
+  );
+  if (hasOtherEnabledPair) return;
+  const sharedRegistry = await workerPairingRegistry().catch(() => null);
+  if (
+    sharedRegistry?.pairings.some(
+      (candidate) =>
+        candidate.room !== pair.room && wantsAgentNotifications(candidate),
+    )
+  ) {
+    return;
+  }
+  try {
+    const registration =
+      state.serviceWorkerRegistration ||
+      (await navigator.serviceWorker?.getRegistration("./"));
+    const subscription = await registration?.pushManager?.getSubscription();
+    if (subscription) {
+      await withTimeout(subscription.unsubscribe(), 5000, "取消推送订阅超时");
+    }
+  } catch {}
 }
 
-async function resetNotificationRuntime() {
-  state.notificationDeliveryHealthy = null;
-  state.pushSubscriptionReady = false;
-  state.pushProvider = null;
-  state.pushProviderStatus = null;
-  state.pushDeviceReceipt = null;
-  state.notificationVerificationInProgress = false;
-  await idbDelete("push-health").catch(() => {});
+async function resetNotificationRuntime(session) {
+  if (!session) return;
+  session.notificationDeliveryHealthy = null;
+  session.pushSubscriptionReady = false;
+  session.pushProvider = null;
+  session.pushProviderStatus = null;
+  session.pushDeviceReceipt = null;
+  session.notificationVerificationInProgress = false;
+  await idbDelete(pushHealthKey(session.pair.room)).catch(() => {});
 }
 
 function registerPushSubscription({
   force = false,
-  pair = state.pair,
-  generation = state.notificationGeneration,
+  session = activeSession(),
+  pair = session?.pair,
+  generation = session?.notificationGeneration,
 } = {}) {
   return queuePushMutation(() =>
-    createPushSubscription({ force, pair, generation }),
+    createPushSubscription({ force, pair, generation, session }),
   );
 }
 
-async function createPushSubscription({ force, pair, generation }) {
-  ensureNotificationContext(pair, generation);
+async function createPushSubscription({ force, pair, generation, session }) {
+  ensureNotificationContext(pair, generation, session);
   const configResponse = await fetchWithTimeout(
     apiUrl(pair.relay, "v1/config"),
     {},
     8000,
     "连接推送服务超时",
   );
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   if (!configResponse.ok) throw new Error("无法读取推送服务配置");
   const config = await configResponse.json();
   if (!config.pushAvailable || !config.vapidPublicKey) {
@@ -1823,10 +2219,11 @@ async function createPushSubscription({ force, pair, generation }) {
     8000,
     "浏览器没有完成 Service Worker 启动",
   );
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   const applicationServerKey = base64UrlDecode(config.vapidPublicKey);
   let subscription = await registration.pushManager.getSubscription();
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
+  let subscriptionRebuilt = false;
   if (
     subscription &&
     (force ||
@@ -1836,19 +2233,21 @@ async function createPushSubscription({ force, pair, generation }) {
       ))
   ) {
     await subscription.unsubscribe();
-    ensureNotificationContext(pair, generation);
+    ensureNotificationContext(pair, generation, session);
     subscription = null;
+    subscriptionRebuilt = true;
   }
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
     });
-    ensureNotificationContext(pair, generation);
+    ensureNotificationContext(pair, generation, session);
+    subscriptionRebuilt = true;
   }
   const token = await pushToken(pair.secret);
-  ensureNotificationContext(pair, generation);
-  await ensureSharedNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
+  await ensureSharedNotificationContext(pair, generation, session);
   const response = await fetchWithTimeout(
     apiUrl(pair.relay, `v1/rooms/${pair.room}/subscription`),
     {
@@ -1868,23 +2267,69 @@ async function createPushSubscription({ force, pair, generation }) {
     8000,
     "保存推送订阅超时",
   );
-  ensureNotificationContext(pair, generation);
-  await ensureSharedNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
+  await ensureSharedNotificationContext(pair, generation, session);
   const result = await response.json().catch(() => null);
   if (!response.ok || result?.registered !== true) {
     throw new Error("推送订阅保存失败");
   }
-  state.pushProvider = result.provider || null;
+  session.pushProvider = result.provider || null;
+  if (subscriptionRebuilt) {
+    await registerSubscriptionForOtherPairs(subscription, session);
+  }
   return subscription;
 }
 
+async function registerSubscriptionForOtherPairs(subscription, currentSession) {
+  for (const session of state.sessions.values()) {
+    if (
+      session === currentSession ||
+      !wantsAgentNotifications(session.pair)
+    ) {
+      continue;
+    }
+    try {
+      const token = await pushToken(session.pair.secret);
+      const response = await fetchWithTimeout(
+        apiUrl(
+          session.pair.relay,
+          `v1/rooms/${session.pair.room}/subscription`,
+        ),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token,
+            subscription: subscription.toJSON(),
+            supportedContentEncodings: Array.from(
+              PushManager.supportedContentEncodings || [],
+            ),
+          }),
+        },
+        8000,
+        "恢复其他电脑的推送订阅超时",
+      );
+      const result = await response.json().catch(() => null);
+      session.pushSubscriptionReady =
+        response.ok && result?.registered === true;
+      session.pushProvider = result?.provider || session.pushProvider;
+    } catch {
+      session.pushSubscriptionReady = false;
+    }
+  }
+}
+
 async function sendTestPush({
+  session,
   pair,
   generation,
   allowSubscriptionRefresh = true,
 }) {
-  ensureNotificationContext(pair, generation);
-  await ensureSharedNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
+  await ensureSharedNotificationContext(pair, generation, session);
   const key = await importAesKey(pair.secret);
   const messageId = `notification-test-${Date.now()}`;
   const envelope = await sealEnvelope(
@@ -1897,7 +2342,7 @@ async function sendTestPush({
     },
     key,
   );
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   const response = await fetchWithTimeout(
     apiUrl(pair.relay, `v1/push/${pair.room}`),
     {
@@ -1911,24 +2356,30 @@ async function sendTestPush({
     8000,
     "测试通知发送超时",
   );
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   const result = await response.json().catch(() => null);
   if (
     allowSubscriptionRefresh &&
     (response.status === 404 || result?.reason === "subscription-expired")
   ) {
-    await registerPushSubscription({ force: true, pair, generation });
+    await registerPushSubscription({ force: true, session, pair, generation });
     return sendTestPush({
+      session,
       pair,
       generation,
       allowSubscriptionRefresh: false,
     });
   }
-  state.pushProviderStatus = result;
+  session.pushProviderStatus = result;
   if (!response.ok || result?.accepted !== true) {
     throw notificationError("推送服务拒绝了测试消息，请重新登记通道", true);
   }
-  const status = await waitForPushReceipt(messageId, pair, generation);
+  const status = await waitForPushReceipt(
+    messageId,
+    pair,
+    generation,
+    session,
+  );
   if (status?.receipt?.stage === "created") return status;
   if (status?.receipt?.stage === "failed") {
     throw notificationError(
@@ -1942,12 +2393,12 @@ async function sendTestPush({
   );
 }
 
-async function waitForPushReceipt(messageId, pair, generation) {
+async function waitForPushReceipt(messageId, pair, generation, session) {
   const deadline = Date.now() + 12000;
   let status = null;
   while (Date.now() < deadline) {
-    ensureNotificationContext(pair, generation);
-    status = await readPushStatus(messageId, pair, generation).catch(
+    ensureNotificationContext(pair, generation, session);
+    status = await readPushStatus(messageId, pair, generation, session).catch(
       (error) => {
         if (isStaleNotificationOperation(error)) throw error;
         return status;
@@ -1966,11 +2417,12 @@ async function waitForPushReceipt(messageId, pair, generation) {
 
 async function readPushStatus(
   messageId,
-  pair = state.pair,
-  generation = state.notificationGeneration,
+  pair = activeSession()?.pair,
+  generation = activeSession()?.notificationGeneration,
+  session = sessionForRoom(pair?.room),
 ) {
   if (!pair) return null;
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   const statusUrl = new URL(
     apiUrl(pair.relay, `v1/push/${pair.room}/status`),
   );
@@ -1985,12 +2437,12 @@ async function readPushStatus(
     5000,
     "读取手机通知状态超时",
   );
-  ensureNotificationContext(pair, generation);
+  ensureNotificationContext(pair, generation, session);
   if (!response.ok) return null;
   const status = await response.json();
-  state.pushProvider = status.provider || state.pushProvider;
-  state.pushProviderStatus = status.providerStatus || null;
-  state.pushDeviceReceipt = status.receipt || null;
+  session.pushProvider = status.provider || session.pushProvider;
+  session.pushProviderStatus = status.providerStatus || null;
+  session.pushDeviceReceipt = status.receipt || null;
   return status;
 }
 
@@ -2000,19 +2452,22 @@ function notificationError(message, channelBroken) {
   return error;
 }
 
-function notificationContextIsCurrent(pair, generation) {
+function notificationContextIsCurrent(pair, generation, session) {
   return (
-    generation === state.notificationGeneration &&
+    Boolean(session) &&
+    state.sessions.get(pair?.room) === session &&
+    generation === session.notificationGeneration &&
     pair?.agentNotificationsEnabled === true &&
-    pairingsMatch(pair, state.pair) &&
-    pair.notificationEpoch === state.pair?.notificationEpoch
+    pairingsMatch(pair, session.pair) &&
+    pair.notificationEpoch === session.pair.notificationEpoch
   );
 }
 
-async function ensureSharedNotificationContext(pair, generation) {
-  ensureNotificationContext(pair, generation);
-  const workerPair = await idbGet("pair");
-  ensureNotificationContext(pair, generation);
+async function ensureSharedNotificationContext(pair, generation, session) {
+  ensureNotificationContext(pair, generation, session);
+  const workerRegistry = await workerPairingRegistry();
+  ensureNotificationContext(pair, generation, session);
+  const workerPair = pairingForRoom(workerRegistry, pair.room);
   if (workerNotificationPairMatches(pair, workerPair)) return;
   const error = new Error("通知操作已被另一个 DingDong 页面更新");
   error.code = "notification-operation-stale";
@@ -2028,16 +2483,14 @@ function workerNotificationPairMatches(expected, current) {
   );
 }
 
-async function cleanupSupersededByActivePair(cleanupPair) {
-  const workerPair = await idbGet("pair").catch(() => null);
-  return (
-    workerPair?.agentNotificationsEnabled === true &&
-    pairingsMatch(cleanupPair, workerPair)
-  );
+async function cleanupSupersededByCurrentPair(cleanupPair) {
+  const workerRegistry = await workerPairingRegistry().catch(() => null);
+  const workerPair = pairingForRoom(workerRegistry, cleanupPair?.room);
+  return shouldSkipPairingCleanup(cleanupPair, workerPair);
 }
 
-function ensureNotificationContext(pair, generation) {
-  if (notificationContextIsCurrent(pair, generation)) return;
+function ensureNotificationContext(pair, generation, session) {
+  if (notificationContextIsCurrent(pair, generation, session)) return;
   const error = new Error("通知操作已过期");
   error.code = "notification-operation-stale";
   throw error;
@@ -2047,9 +2500,10 @@ function isStaleNotificationOperation(error) {
   return error?.code === "notification-operation-stale";
 }
 
-function invalidateNotificationOperations() {
-  state.notificationGeneration += 1;
-  state.notificationVerificationInProgress = false;
+function invalidateNotificationOperations(session = activeSession()) {
+  if (!session) return;
+  session.notificationGeneration += 1;
+  session.notificationVerificationInProgress = false;
 }
 
 function createNotificationEpoch() {
@@ -2076,89 +2530,108 @@ function applicationServerKeysMatch(stored, configured) {
   return left.every((value, index) => value === right[index]);
 }
 
-async function sendSettings() {
-  await persistPairForWorker();
-  if (!state.connected) return;
-  await sendMessage({
-    type: "settings.update",
-    agentNotificationsEnabled: wantsAgentNotifications(state.pair),
-    vibrationEnabled: state.pair.vibrationEnabled !== false,
-  });
+async function sendSettings(session = activeSession()) {
+  if (!session) return;
+  await persistPairingsForWorker();
+  if (!session.connected) return;
+  await sendMessage(
+    {
+      type: "settings.update",
+      agentNotificationsEnabled: wantsAgentNotifications(session.pair),
+      vibrationEnabled: session.pair.vibrationEnabled !== false,
+    },
+    currentSessionContext(session),
+  );
 }
 
 async function deleteDevice() {
-  if (!state.pair) return;
-  if (!confirm("删除后需要重新扫描电脑二维码才能连接。确定删除吗？")) return;
-  await disableAgentNotifications();
-  closeConnection();
-  localStorage.removeItem(storageKeys.pair);
-  await deletePairForWorker();
-  state.pair = null;
-  state.items = [];
-  state.agentEvents = [];
-  await resetNotificationRuntime();
+  const session = activeSession();
+  if (!session) return;
+  if (
+    !confirm(
+      `删除“${session.pair.hostName}”后，需要重新扫描这台电脑的二维码才能连接。确定删除吗？`,
+    )
+  ) {
+    return;
+  }
+  await disableAgentNotifications(session);
+  closeConnection(session);
+  state.sessions.delete(session.pair.room);
+  state.activeRoom = state.sessions.keys().next().value || null;
+  await resetNotificationRuntime(session);
+  savePairings();
   elements["settings-dialog"].close();
   render();
 }
 
-function closeConnection() {
-  state.connectionGeneration += 1;
-  state.relayGeneration += 1;
-  clearTimeout(state.reconnectTimer);
-  state.reconnectTimer = null;
-  state.socket?.close();
-  state.socket = null;
-  closePeer();
-  state.signalKey = null;
-  state.relayFrames = Promise.resolve();
-  state.incomingMessages = Promise.resolve();
-  state.connected = false;
-  state.connecting = false;
-  state.relayHostPresent = false;
-  state.helloSent = false;
-  state.items = [];
-  state.downloads.clear();
-  state.outgoingRequests.clear();
+function closeConnection(session = activeSession()) {
+  if (!session) return;
+  session.connectionGeneration += 1;
+  session.relayGeneration += 1;
+  clearTimeout(session.reconnectTimer);
+  session.reconnectTimer = null;
+  session.reconnectDelayMs = initialReconnectDelayMs;
+  session.socket?.close();
+  session.socket = null;
+  closePeer(session);
+  session.signalKey = null;
+  session.relayFrames = Promise.resolve();
+  session.incomingMessages = Promise.resolve();
+  session.connected = false;
+  session.connecting = false;
+  session.relayHostPresent = false;
+  session.helloSent = false;
+  session.items = [];
+  session.lastSyncAt = null;
+  session.downloads.clear();
+  session.outgoingRequests.clear();
 }
 
-function closePeer() {
-  const channel = state.channel;
-  const peer = state.peer;
-  state.channel = null;
-  state.peer = null;
-  state.remoteCandidates = [];
+function closePeer(session) {
+  const channel = session.channel;
+  const peer = session.peer;
+  session.channel = null;
+  session.peer = null;
+  session.remoteCandidates = [];
   channel?.close();
   peer?.close();
 }
 
-function connectionError(error) {
+function connectionError(error, session) {
   console.error(error);
-  state.connecting = false;
-  state.connected =
-    state.channel?.readyState === "open" ||
-    (state.relayHostPresent && state.socket?.readyState === WebSocket.OPEN);
-  if (!state.connected) state.items = [];
+  session.connecting = false;
+  session.connected =
+    session.channel?.readyState === "open" ||
+    (session.relayHostPresent &&
+      session.socket?.readyState === WebSocket.OPEN);
+  if (!session.connected) session.items = [];
   render();
 }
 
-function savePair() {
-  if (!state.pair) return;
-  localStorage.setItem(storageKeys.pair, JSON.stringify(state.pair));
-  persistPairForWorker().catch(() => {});
+function savePairings() {
+  const registry = pairingRegistrySnapshot();
+  localStorage.setItem(storageKeys.pairings, JSON.stringify(registry));
+  const activePair = activeSession()?.pair;
+  if (activePair) {
+    localStorage.setItem(storageKeys.pair, JSON.stringify(activePair));
+  } else {
+    localStorage.removeItem(storageKeys.pair);
+  }
+  persistPairingsForWorker().catch(() => {});
 }
 
-async function restorePairFromWorker() {
-  if (isStoredPairing(state.pair)) return;
+async function restorePairingsFromWorker() {
+  if (state.sessions.size > 0) return;
   try {
-    const persisted = await idbGet("pair");
-    if (!isStoredPairing(persisted)) {
-      state.pair = null;
-      return;
+    const registry = await workerPairingRegistry();
+    for (const pair of registry.pairings) {
+      state.sessions.set(pair.room, createDeviceSession(pair));
     }
-    state.pair = persisted;
-    localStorage.setItem(storageKeys.pair, JSON.stringify(persisted));
+    state.activeRoom = registry.activeRoom;
+    savePairings();
   } catch {
-    state.pair = null;
+    state.sessions.clear();
+    state.activeRoom = null;
   }
 }
 
@@ -2178,34 +2651,47 @@ async function restoreAgentLaunchIntent() {
     return;
   }
   state.activeTab = "agent";
+  const session = sessionForRoom(intent.room);
+  if (session) state.activeRoom = session.pair.room;
   if (
     typeof intent.room === "string" &&
-    intent.room === state.pair?.room &&
+    intent.room === session?.pair.room &&
     typeof intent.message?.id === "string"
   ) {
-    receiveAgentEvent(intent.message, { requestNotification: false });
+    receiveAgentEvent(intent.message, {
+      requestNotification: false,
+      session,
+    });
   }
 }
 
 async function restorePushHealthFromWorker() {
-  try {
-    const health = await idbGet("push-health");
-    if (
-      !health ||
-      typeof health.stage !== "string" ||
-      health.room !== state.pair?.room ||
-      health.notificationEpoch !== state.pair?.notificationEpoch
-    ) {
-      return;
-    }
-    state.pushDeviceReceipt = health;
-    state.notificationDeliveryHealthy =
-      health.stage === "created"
-        ? true
-        : health.stage === "failed"
-          ? false
-          : null;
-  } catch {}
+  for (const session of state.sessions.values()) {
+    try {
+      const health =
+        (await idbGet(pushHealthKey(session.pair.room))) ||
+        (sessionIsActive(session) ? await idbGet("push-health") : null);
+      if (
+        !health ||
+        typeof health.stage !== "string" ||
+        health.room !== session.pair.room ||
+        health.notificationEpoch !== session.pair.notificationEpoch
+      ) {
+        continue;
+      }
+      session.pushDeviceReceipt = health;
+      session.notificationDeliveryHealthy =
+        health.stage === "created"
+          ? true
+          : health.stage === "failed"
+            ? false
+            : null;
+    } catch {}
+  }
+}
+
+function pushHealthKey(room) {
+  return `push-health:${room}`;
 }
 
 function clearPairingFragment() {
@@ -2659,6 +3145,7 @@ function showInstallDialog({ eyebrow, title, instructions }) {
 }
 
 async function showNotificationPermissionHelp(permission, stage, error) {
+  const session = activeSession();
   const actualPermission =
     "Notification" in window ? Notification.permission : "unsupported";
   const subscription = await currentPushSubscription();
@@ -2685,11 +3172,11 @@ async function showNotificationPermissionHelp(permission, stage, error) {
     reason = error?.message || "浏览器没有完成 Push 订阅。";
     steps.push("确认当前网络可以正常访问 DingDong。", "确认 Chrome 的系统通知仍然开启，然后点“重新检查”。");
   } else if (stage === "delivery") {
-    title = state.pushProviderStatus?.accepted
+    title = session?.pushProviderStatus?.accepted
       ? "推送服务已接收，手机后台没有回执"
       : "推送通道已建立，测试消息未送达";
     reason = error?.message || "手机没有确认系统通知已经显示。";
-    if (state.pushProviderStatus?.accepted && isAndroid()) {
+    if (session?.pushProviderStatus?.accepted && isAndroid()) {
       steps.push(
         "确认 Chrome 的系统通知和 DingDong 网站通知都已允许。",
         "在系统里允许 Chrome 后台联网，并把 Chrome 的电池策略改为“不限制”后再测试。",
@@ -2735,22 +3222,23 @@ async function showNotificationPermissionHelp(permission, stage, error) {
     subscription ? "已建立" : "未建立",
     subscription ? "ready" : "waiting",
   );
-  const providerAccepted = state.pushProviderStatus?.accepted === true;
-  const providerFailed = state.pushProviderStatus?.accepted === false;
+  const providerAccepted = session?.pushProviderStatus?.accepted === true;
+  const providerFailed = session?.pushProviderStatus?.accepted === false;
   setNotificationStatus(
     elements["notification-provider-status"],
     providerAccepted
-      ? `${state.pushProvider || "推送服务"} 已接收`
+      ? `${session?.pushProvider || "推送服务"} 已接收`
       : providerFailed
         ? "发送失败"
         : "待测试",
     providerAccepted ? "ready" : providerFailed ? "blocked" : "waiting",
   );
   const receiptMatchesProvider =
-    state.pushDeviceReceipt?.messageId &&
-    state.pushDeviceReceipt.messageId === state.pushProviderStatus?.messageId;
+    session?.pushDeviceReceipt?.messageId &&
+    session.pushDeviceReceipt.messageId ===
+      session.pushProviderStatus?.messageId;
   const receiptStage = receiptMatchesProvider
-    ? state.pushDeviceReceipt.stage
+    ? session.pushDeviceReceipt.stage
     : null;
   setNotificationStatus(
     elements["notification-device-status"],
@@ -2811,25 +3299,27 @@ async function currentPushSubscription() {
 
 function handleVisibilityChange() {
   if (document.visibilityState !== "visible") return;
+  const session = activeSession();
   refreshInstallState().catch(() => {});
   if (!("Notification" in window) || !elements["notification-help-dialog"].open) {
     render();
     return;
   }
   if (
-    !state.notificationCheckInProgress &&
-    state.pair &&
-    wantsAgentNotifications(state.pair) &&
+    session &&
+    !session.notificationCheckInProgress &&
+    wantsAgentNotifications(session.pair) &&
     Notification.permission === "granted" &&
-    !agentNotificationsActive()
+    !agentNotificationsActive(session)
   ) {
     enableAgentNotifications({
+      session,
       requestPermission: false,
       markPreference: false,
     }).then((enabled) => {
       if (
         enabled &&
-        state.notificationDeliveryHealthy === true &&
+        session.notificationDeliveryHealthy === true &&
         elements["notification-help-dialog"].open
       ) {
         elements["notification-help-dialog"].close();
@@ -2855,13 +3345,22 @@ async function registerServiceWorker() {
   }
 }
 
-async function persistPairForWorker(pair = state.pair) {
-  if (!pair) return;
-  await idbSet("pair", pair);
+async function persistPairingsForWorker() {
+  const registry = pairingRegistrySnapshot();
+  const activePair = activeSession()?.pair || null;
+  await idbSetMany([
+    ["pairings", registry],
+    ["active-room", state.activeRoom],
+    ["pair", activePair],
+  ]);
 }
 
-async function deletePairForWorker() {
-  await idbDelete("pair");
+async function workerPairingRegistry() {
+  const [registry, legacyPair] = await Promise.all([
+    idbGet("pairings").catch(() => null),
+    idbGet("pair").catch(() => null),
+  ]);
+  return normalizePairingRegistry(registry, legacyPair);
 }
 
 function openDatabase() {
@@ -2882,6 +3381,21 @@ async function idbSet(key, value) {
   await new Promise((resolve, reject) => {
     const transaction = database.transaction("settings", "readwrite");
     transaction.objectStore("settings").put(value, key);
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+  database.close();
+}
+
+async function idbSetMany(entries) {
+  const database = await openDatabase();
+  await new Promise((resolve, reject) => {
+    const transaction = database.transaction("settings", "readwrite");
+    const store = transaction.objectStore("settings");
+    for (const [key, value] of entries) {
+      if (value == null) store.delete(key);
+      else store.put(value, key);
+    }
     transaction.oncomplete = resolve;
     transaction.onerror = () => reject(transaction.error);
   });

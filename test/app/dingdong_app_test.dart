@@ -40,14 +40,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.3.1', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.3.2', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.3.1')), findsOneWidget);
-    expect(find.text('v1.3.1'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.3.2')), findsOneWidget);
+    expect(find.text('v1.3.2'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);

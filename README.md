@@ -26,7 +26,7 @@ clipboard items to a trusted phone through the mobile PWA.
 | Skill | Complete packages with `SKILL.md`, scripts, references, and assets; summary-first discovery and on-demand loading |
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
-| Connected devices | QR pairing, per-device one-way Clipboard delivery, explicit text and file transfer, and rich Agent completion reminders in the mobile PWA |
+| Connected devices | One phone can keep multiple computers paired and online, with per-computer Clipboard, file, draft, and Agent reminder isolation |
 
 Clipboard and resource data stay on this computer by default. The lightweight
 connection relay stores no clipboard or file content.
@@ -57,7 +57,7 @@ flowchart LR
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.3.1.”
+- “Use this project's release workflow, run every check, and prepare version 1.3.2.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with
@@ -68,7 +68,10 @@ Agents can also configure project-scoped Skills after explicit user approval wit
 
 Open **Connected Devices** from the DingDong header or tray menu, show the QR
 code, and scan it with a phone. The pairing is retained across page refreshes;
-each device can be disconnected, reconnected, or deleted independently.
+each device can be disconnected, reconnected, or deleted independently. Scan
+another computer to add it without replacing the existing pairing. The phone
+keeps every computer connected when possible and lets you switch the active
+computer from the online status beside the header.
 
 - **Computer → phone:** enable automatic delivery per device to send only new
   clipboard items copied after pairing. Existing history is sent only when you
@@ -85,6 +88,12 @@ each device can be disconnected, reconnected, or deleted independently.
 - **Mobile navigation:** tap the tabs or swipe horizontally between Computer
   Clipboard and Agent reminders. Tapping a system notification opens Agent
   reminders directly without reloading an already running PWA.
+- **Computer isolation:** Clipboard items, Agent events, incoming files, drafts,
+  transfer state, and notification diagnostics stay inside their source
+  computer. Switching the active computer never mixes or moves those records.
+- **Interface icon:** choose the soft-blue or white background in phone
+  settings. The installed Home Screen icon is created by the operating system
+  and may require removing and re-adding the PWA before it changes.
 
 DingDong attempts a direct WebRTC connection and falls back to its encrypted
 relay when necessary. The relay forwards encrypted frames and Web Push payloads

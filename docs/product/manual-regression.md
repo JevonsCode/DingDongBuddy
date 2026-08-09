@@ -1,4 +1,4 @@
-# DingDong 1.3.1 Manual Regression Checklist
+# DingDong 1.3.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -131,6 +131,19 @@ and macOS golden images; the items below exercise real operating-system state.
 - Show a fresh QR code on the computer, scan it with Android Chrome, confirm the
   pairing, refresh the page, and reopen the installed PWA if present. The saved
   pairing reconnects without scanning again.
+- Pair a second computer from the same phone without deleting or replacing the
+  first. Both computers remain independently connected when available. The
+  header shows a green online dot plus the online-computer count; opening it
+  lists every paired computer and switches the active computer without
+  disconnecting the others.
+- Put different Clipboard items, Agent events, selected files, and unsent text
+  drafts into the two computer sessions. Switch repeatedly and verify every
+  value returns only with its source computer. Refresh and confirm the same
+  active computer and all pairings are restored.
+- While the PWA is already open, scan a third computer QR. The confirmation
+  opens without a page reload, says the new computer will be added, and leaves
+  the existing computer connections running. Cancel without changing the
+  existing device list.
 - Open the same pairing in a second browser tab. The newer page takes over once;
   the replaced page stops reconnecting and the devices do not enter a repeating
   connect/disconnect loop.
@@ -153,7 +166,13 @@ and macOS golden images; the items below exercise real operating-system state.
   longer available; reconnecting does not expose unsent history.
 - Verify a same-network connection can establish WebRTC. Then block or fail the
   direct channel and confirm encrypted relay fallback remains connected without
-  duplicating Clipboard items.
+  duplicating Clipboard items. Confirm both desktop and phone explain that local
+  WebRTC is preferred and that the encrypted relay is a fallback, rather than
+  claiming that the feature is LAN-only.
+- In phone settings, switch the interface icon background between soft blue and
+  white. Verify the header and install preview update immediately and the copy
+  accurately says the operating system may require re-adding the PWA before the
+  Home Screen icon changes.
 - Trigger a rich Agent completion while the PWA is visible, in the background,
   and with the phone locked. Each event appears once with description, source,
   and completion time; background delivery does not require reopening the PWA.
@@ -404,8 +423,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.3.1` build `43` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.3.1.43` and product name `DingDong`.
+- The macOS release app metadata is version `1.3.2` build `44` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.3.2.44` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -413,7 +432,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.3.1` and that exact commit SHA; every
+  `/v1/health` must report version `1.3.2` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the release workflow deploys the website from the exact release

@@ -35,6 +35,12 @@ void main() {
     expect(find.text('只在你信任的设备之间传递内容。'), findsNothing);
     expect(find.text('1 台设备'), findsNothing);
     expect(find.text('已连接设备'), findsOneWidget);
+    expect(
+      find.byKey(const Key('device-connection-mode-note')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('优先使用局域网 WebRTC 直连'), findsOneWidget);
+    expect(find.textContaining('端到端加密中继'), findsOneWidget);
     expect(find.text('停止连接'), findsOneWidget);
     await tester.tap(find.text('停止连接'));
     await tester.pump();

@@ -16,12 +16,23 @@
     <div class="app-shell">
       <header class="app-header">
         <div class="brand-lockup">
-          <div class="mascot-frame">
+          <div id="app-mascot-frame" class="mascot-frame" data-icon-style="soft">
             <img src="../assets/dingdong-icon.png" alt="" />
           </div>
           <div>
             <h1>DingDong</h1>
-            <p id="connection-label">等待连接</p>
+            <button
+              id="device-status-button"
+              class="device-status-button"
+              type="button"
+              aria-label="等待连接，0 台在线，点击查看电脑"
+            >
+              <span id="connection-label">等待连接</span>
+              <span class="online-summary">
+                <i id="online-dot" data-online="false" aria-hidden="true"></i>
+                <span id="online-count">0 台在线</span>
+              </span>
+            </button>
           </div>
         </div>
         <button id="settings-button" class="icon-button" type="button" aria-label="设备设置">
@@ -187,9 +198,35 @@
             发送
           </button>
         </div>
-        <p class="composer-note">只有点击“发送”后，内容才会进入电脑的剪贴板列表。</p>
+        <p class="composer-note">
+          <strong id="composer-target"></strong>
+          只有点击“发送”后，内容才会进入电脑的剪贴板列表。
+        </p>
       </section>
     </div>
+
+    <dialog id="device-switcher-dialog" class="settings-dialog device-switcher-dialog">
+      <form method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">连接的电脑</p>
+            <h2>选择当前设备</h2>
+            <span id="device-switcher-summary" class="dialog-summary">0 台在线</span>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
+        </div>
+        <p class="connection-mode-note">
+          优先使用局域网直连；无法直连时自动切换到端到端加密中继。中继不保存剪贴板、文件或 Agent 内容。
+        </p>
+        <div id="device-switcher-list" class="device-switcher-list"></div>
+        <p class="add-device-note">
+          添加电脑：在另一台电脑的 DingDong“连接设备”中打开二维码，再用手机扫描。新设备会加入列表，不会替换现有设备。
+        </p>
+        <div class="dialog-actions single-action">
+          <button class="primary-button" value="cancel" type="submit">完成</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog id="settings-dialog" class="settings-dialog">
       <form method="dialog">
@@ -228,6 +265,34 @@
             </span>
           </div>
           <button id="vibration-test" class="small-button" type="button">测试</button>
+        </div>
+        <div class="setting-row icon-style-setting">
+          <div>
+            <strong>手机界面图标</strong>
+            <span id="icon-style-note">主屏幕图标由手机系统在安装时生成</span>
+          </div>
+          <div class="icon-style-choices" role="group" aria-label="图标背景">
+            <button
+              id="icon-style-soft"
+              class="icon-style-choice is-selected"
+              type="button"
+              aria-pressed="true"
+              title="浅蓝背景"
+            >
+              <span class="icon-style-preview soft"><img src="../assets/dingdong-icon.png" alt="" /></span>
+              浅蓝
+            </button>
+            <button
+              id="icon-style-white"
+              class="icon-style-choice"
+              type="button"
+              aria-pressed="false"
+              title="白色背景"
+            >
+              <span class="icon-style-preview white"><img src="../assets/dingdong-icon.png" alt="" /></span>
+              白色
+            </button>
+          </div>
         </div>
         <div class="dialog-actions">
           <button id="disconnect-device" class="quiet-button" type="button">断开连接</button>

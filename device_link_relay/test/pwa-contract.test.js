@@ -11,7 +11,12 @@ import {
 } from "../../docs/app/device-name.js";
 import {
   isStoredPairing,
+  normalizePairingRegistry,
+  pairingForRoom,
   pairingsMatch,
+  removePairing,
+  shouldSkipPairingCleanup,
+  upsertPairing,
 } from "../../docs/app/pairing-state.js";
 import {
   adjacentContentTab,
@@ -91,7 +96,7 @@ test("phone text and files are uploaded only from the explicit Send action", () 
     appSource,
     /type: "clipboard\.create",\s*requestId,\s*content: text/,
   );
-  assert.match(appSource, /await sendFile\(file\)/);
+  assert.match(appSource, /await sendFile\(file, session\)/);
   assert.match(pageSource, /只有点击“发送”后，内容才会进入电脑的剪贴板列表。/);
   assert.match(pageSource, /placeholder="输入或手动粘贴内容…"/);
 });
@@ -159,36 +164,36 @@ test("clipboard reconnect history is split into relay-safe item frames", () => {
   );
   assert.match(desktopControllerSource, /for \(final ClipboardRecord record in records\.reversed\)/);
   assert.match(desktopControllerSource, /'type': 'clipboard\.upsert'/);
-  assert.match(appSource, /case "clipboard\.snapshot":\s*receiveClipboardSnapshot\(message\)/);
+  assert.match(appSource, /case "clipboard\.snapshot":\s*receiveClipboardSnapshot\(message, session\)/);
   assert.match(appSource, /case "clipboard\.upsert":/);
 });
 
 test("incoming phone downloads enforce the same 25 MB safety boundary", () => {
   assert.match(appSource, /size > maximumFileBytes/);
-  assert.match(appSource, /state\.downloads\.size >= maximumConcurrentDownloads/);
+  assert.match(appSource, /session\.downloads\.size >= maximumConcurrentDownloads/);
   assert.match(appSource, /message\.data\.length > maximumEncodedFileChunkLength/);
   assert.match(appSource, /bytes\.byteLength > fileChunkBytes/);
   assert.match(appSource, /message\.index >= download\.expectedChunks/);
-  assert.match(appSource, /state\.downloads\.clear\(\)/);
+  assert.match(appSource, /session\.downloads\.clear\(\)/);
 });
 
 test("host clipboard content stays memory-only and is cleared on disconnect", () => {
   assert.doesNotMatch(appSource, /localStorage\.setItem\([^\n]*items/);
-  assert.match(appSource, /state\.items = \[\];\s*render\(\)/);
+  assert.match(appSource, /session\.items = \[\]/);
   assert.match(pageSource, /断开后不会缓存电脑里的剪贴板内容。/);
 });
 
 test("pairing never promises or displays unsent host history", () => {
   assert.match(
     appSource,
-    /连接后只会看到电脑主动发送，或为此设备开启自动发送后产生的内容/,
+    /各设备的剪贴板、文件和 Agent 提醒互不混合/,
   );
   assert.match(
     pageSource,
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v19/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v20/);
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
@@ -210,8 +215,8 @@ test("a superseded PWA page stops reconnecting instead of stealing the room back
     false,
   );
   assert.match(appSource, /if \(!relayContextIsCurrent\(context\)\) return/);
-  assert.match(appSource, /state\.connectionGeneration \+= 1/);
-  assert.match(appSource, /state\.relayGeneration \+= 1/);
+  assert.match(appSource, /session\.connectionGeneration \+= 1/);
+  assert.match(appSource, /session\.relayGeneration \+= 1/);
   assert.match(appSource, /连接已转移到另一个页面/);
   assert.match(desktopSessionSource, /deviceLinkConnectionWasReplaced/);
 });
@@ -294,7 +299,7 @@ test("agent notifications open the Agent tab without reloading a live PWA", () =
   assert.match(appSource, /selectContentTab\(message\.tab, \{ animate: true, reveal: true \}\)/);
   assert.match(
     appSource,
-    /typeof message\.room === "string"[\s\S]*message\.room === state\.pair\?\.room[\s\S]*message\.message/,
+    /typeof message\.room === "string"[\s\S]*message\.room === targetSession\?\.pair\.room[\s\S]*message\.message/,
   );
   assert.match(serviceWorkerSource, /url\.searchParams\.set\("tab", "agent"\)/);
   assert.match(
@@ -330,16 +335,16 @@ test("agent notifications open the Agent tab without reloading a live PWA", () =
   );
   assert.match(serviceWorkerSource, /await storeAgentLaunchIntent\(data\)/);
   assert.match(serviceWorkerSource, /idbSet\(agentLaunchIntentKey/);
-  assert.match(appSource, /await restorePairFromWorker\(\);\s*await restoreAgentLaunchIntent\(\)/);
+  assert.match(appSource, /await restorePairingsFromWorker\(\);\s*await restoreAgentLaunchIntent\(\)/);
   assert.match(appSource, /await idbDelete\(agentLaunchIntentKey\)/);
   assert.match(appSource, /intent\?\.tab !== "agent"/);
-  assert.match(appSource, /intent\.room === state\.pair\?\.room/);
+  assert.match(appSource, /intent\.room === session\?\.pair\.room/);
   assert.match(appSource, /Date\.now\(\) - intent\.createdAt > agentLaunchIntentTtlMs/);
 });
 
 test("stale socket and data-channel callbacks cannot mutate a newer connection", () => {
-  assert.match(appSource, /const connectionGeneration = state\.connectionGeneration/);
-  assert.match(appSource, /const relayGeneration = state\.relayGeneration \+ 1/);
+  assert.match(appSource, /const connectionGeneration = session\.connectionGeneration/);
+  assert.match(appSource, /const relayGeneration = session\.relayGeneration \+ 1/);
   assert.match(appSource, /handleRelayFrame\(event\.data, context\)/);
   assert.match(appSource, /openEnvelope\(frame\.payload, context\.key\)/);
   assert.match(appSource, /queueIncomingEnvelope\(event\.data, context\)/);
@@ -376,15 +381,15 @@ test("agent completion reminders default on without claiming delivery before pus
   };
   assert.equal(applyAgentNotificationDefault(explicitlyDisabled), false);
   assert.equal(wantsAgentNotifications(explicitlyDisabled), false);
-  assert.match(appSource, /agentNotificationsEnabled: wantsAgentNotifications\(state\.pair\)/);
-  assert.match(appSource, /enableAgentNotifications\(\{ markPreference: false \}\)/);
+  assert.match(appSource, /agentNotificationsEnabled: wantsAgentNotifications\(session\.pair\)/);
+  assert.match(appSource, /enableAgentNotifications\(\{ session, markPreference: false \}\)/);
   assert.match(
     appSource,
-    /await registerPushSubscription\(\{ pair, generation \}\);[\s\S]*state\.pushSubscriptionReady = true/,
+    /await registerPushSubscription\(\{ session, pair, generation \}\);[\s\S]*session\.pushSubscriptionReady = true/,
   );
-  assert.match(appSource, /state\.pushSubscriptionReady = false;[\s\S]*await sendSettings\(\)/);
-  assert.match(appSource, /const generation = state\.notificationGeneration \+ 1/);
-  assert.match(appSource, /await cleanupPushSubscription\(cleanupPair\)/);
+  assert.match(appSource, /session\.pushSubscriptionReady = false/);
+  assert.match(appSource, /const generation = session\.notificationGeneration \+ 1/);
+  assert.match(appSource, /await cleanupPushSubscription\(cleanupPair, session\)/);
   assert.match(appSource, /function queuePushMutation\(operation\)/);
   assert.match(pageSource, /默认开启，等待系统授权/);
   assert.match(serviceWorkerSource, /notification-policy\.js/);
@@ -423,12 +428,12 @@ test("encrypted relay data is the fallback when local WebRTC cannot connect", ()
     appSource,
     /const relayFrame = encodeRelayFrame\("data", envelope\)/,
   );
-  assert.match(appSource, /state\.socket\.send\(relayFrame\)/);
+  assert.match(appSource, /session\.socket\.send\(relayFrame\)/);
   assert.match(
     appSource,
-    /state\.relayHostPresent && state\.socket\?\.readyState === WebSocket\.OPEN/,
+    /session\.socket\?\.readyState === WebSocket\.OPEN[\s\S]*session\.relayHostPresent/,
   );
-  assert.match(appSource, /state\.relayFrames = state\.relayFrames/);
+  assert.match(appSource, /session\.relayFrames = session\.relayFrames/);
   assert.match(desktopSessionSource, /frame\['type'\] == 'data'/);
   assert.match(
     desktopSessionSource,
@@ -453,19 +458,121 @@ test("a saved pairing survives refresh and a stale matching QR fragment", () => 
   assert.equal(isStoredPairing(scanned), true);
   assert.equal(pairingsMatch(stored, scanned), true);
   assert.equal(pairingsMatch(stored, { ...scanned, room: "another-room" }), false);
-  assert.match(appSource, /await restorePairFromWorker\(\)/);
+  assert.match(appSource, /await restorePairingsFromWorker\(\)/);
   assert.match(appSource, /async function idbGet\(key\)/);
   assert.match(appSource, /const launchPair = capturePairingLaunch\(\)/);
   assert.match(appSource, /storageKeys\.pendingPair/);
   assert.match(appSource, /10 \* 60 \* 1000/);
-  assert.match(appSource, /scannedPair && pairingsMatch\(state\.pair, scannedPair\)/);
+  assert.match(appSource, /scannedSession && pairingsMatch\(scannedSession\.pair, scannedPair\)/);
   assert.match(
     appSource,
-    /clearPairingFragment\(\);\s*clearPendingPairingLaunch\(\);\s*savePair\(\)/,
+    /clearPairingFragment\(\);\s*clearPendingPairingLaunch\(\)/,
   );
   assert.match(serviceWorkerSource, /pairing-state\.js/);
   assert.match(serviceWorkerSource, /content-navigation\.js/);
   assert.doesNotMatch(serviceWorkerSource, /client\.navigate\(client\.url\)/);
+});
+
+test("one phone keeps multiple computers isolated and switchable", () => {
+  const first = {
+    version: 1,
+    room: "computer-room-one-123456",
+    secret: "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
+    relay: "https://relay.example",
+    hostName: "工作电脑",
+  };
+  const second = {
+    ...first,
+    room: "computer-room-two-123456",
+    secret: "CwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
+    hostName: "家里电脑",
+  };
+  const migrated = normalizePairingRegistry(null, first);
+  assert.equal(migrated.pairings.length, 1);
+  const added = upsertPairing(migrated, second);
+  assert.equal(added.pairings.length, 2);
+  assert.equal(added.activeRoom, second.room);
+  assert.equal(pairingForRoom(added, first.room)?.hostName, "工作电脑");
+  const removed = removePairing(added, second.room);
+  assert.equal(removed.pairings.length, 1);
+  assert.equal(removed.activeRoom, first.room);
+
+  const disabled = {
+    ...first,
+    agentNotificationsEnabled: false,
+    notificationEpoch: "disabled-epoch",
+  };
+  assert.equal(shouldSkipPairingCleanup(disabled, disabled), false);
+  assert.equal(
+    shouldSkipPairingCleanup(disabled, {
+      ...disabled,
+      agentNotificationsEnabled: true,
+      notificationEpoch: "re-enabled-epoch",
+    }),
+    true,
+  );
+  assert.equal(
+    shouldSkipPairingCleanup(disabled, { ...disabled, secret: second.secret }),
+    true,
+  );
+
+  assert.match(appSource, /sessions: new Map\(/);
+  assert.match(appSource, /for \(const session of state\.sessions\.values\(\)\)/);
+  assert.match(appSource, /connect\(session\)/);
+  assert.match(appSource, /if \(scannedPair && !scannedPairMatches\)/);
+  assert.match(appSource, /const confirmingPair = Boolean\(state\.pendingPair\)/);
+  assert.match(
+    appSource,
+    /sendTest: false,\s*showHelp: false,\s*syncEnabledToDesktop: true/,
+  );
+  assert.match(
+    appSource,
+    /window\.addEventListener\("hashchange", handleRuntimePairingLaunch\)/,
+  );
+  assert.match(appSource, /window\.launchQueue\.setConsumer/);
+  assert.match(
+    appSource,
+    /existingSession && pairingsMatch\(existingSession\.pair, scannedPair\)/,
+  );
+  assert.match(appSource, /session\.items/);
+  assert.match(appSource, /session\.agentEvents/);
+  assert.match(appSource, /session\.downloads/);
+  assert.match(appSource, /session\.draftText/);
+  assert.match(appSource, /maximumReconnectDelayMs/);
+  assert.match(appSource, /Math\.round\(reconnectDelay \* 1\.7\)/);
+  assert.match(appSource, /function selectDevice\(room/);
+  assert.match(appSource, /state\.activeRoom = room/);
+  assert.match(pageSource, /id="device-status-button"/);
+  assert.match(pageSource, /id="online-dot"/);
+  assert.match(pageSource, /id="online-count"/);
+  assert.match(pageSource, /id="device-switcher-dialog"/);
+  assert.match(pageSource, /新设备会加入列表，不会替换现有设备/);
+  assert.match(pageSource, /优先使用局域网直连/);
+  assert.match(pageSource, /端到端加密中继/);
+  assert.match(stylesSource, /\.device-switcher-item\.is-active/);
+  assert.match(stylesSource, /data-online="true"/);
+
+  assert.match(serviceWorkerSource, /async function workerPairings\(\)/);
+  assert.match(serviceWorkerSource, /for \(const pair of pairs\)/);
+  assert.match(serviceWorkerSource, /workerPairForRoom\(payload\.room\)/);
+  assert.match(serviceWorkerSource, /pushHealthKey\(room\)/);
+  assert.match(serviceWorkerSource, /room: pair\.room,[\s\S]*message/);
+  assert.match(appSource, /hasOtherEnabledPair/);
+  assert.match(
+    appSource,
+    /sharedRegistry\?\.pairings\.some\([\s\S]*candidate\.room !== pair\.room/,
+  );
+  assert.match(serviceWorkerSource, /hasOtherEnabledPair/);
+});
+
+test("the phone interface icon can switch to a white background", () => {
+  assert.match(pageSource, /id="icon-style-soft"/);
+  assert.match(pageSource, /id="icon-style-white"/);
+  assert.match(appSource, /function setIconStyle\(style\)/);
+  assert.match(appSource, /storageKeys\.iconStyle/);
+  assert.match(stylesSource, /mascot-frame\[data-icon-style="white"\]/);
+  assert.match(pageSource, /主屏幕图标由手机系统在安装时生成/);
+  assert.match(appSource, /主屏幕图标需重新添加后才可能由系统更新/);
 });
 
 test("the mobile page exposes a real PWA install experience", () => {
@@ -538,7 +645,7 @@ test("notification diagnostics are platform-aware and never require closing all 
   assert.match(appSource, /async function sendTestPush\(\{[\s\S]*allowSubscriptionRefresh = true,[\s\S]*\}\)/);
   assert.match(appSource, /浏览器已创建测试通知/);
   assert.match(appSource, /result\?\.accepted !== true/);
-  assert.match(appSource, /waitForPushReceipt\(messageId, pair, generation\)/);
+  assert.match(appSource, /waitForPushReceipt\([\s\S]*messageId,[\s\S]*pair,[\s\S]*generation,[\s\S]*session/);
   assert.match(appSource, /PushManager\.supportedContentEncodings/);
   assert.match(appSource, /applicationServerKeysMatch/);
   assert.match(appSource, /registration\?\.pushManager\?\.getSubscription\(\)/);
@@ -555,7 +662,7 @@ test("notification diagnostics are platform-aware and never require closing all 
   assert.match(serviceWorkerSource, /postPushReceipt\(pair, messageId, "created"\)/);
   assert.match(serviceWorkerSource, /await receivedHealth;[\s\S]*recordPushHealth\([\s\S]*"created"/);
   assert.match(serviceWorkerSource, /function workerPairMatches\(expected, current\)/);
-  assert.match(serviceWorkerSource, /if \(payload\.room !== pair\.room\) return/);
+  assert.match(serviceWorkerSource, /pair = await workerPairForRoom\(payload\.room\)/);
   assert.match(serviceWorkerSource, /"decrypt-failed"/);
   assert.match(serviceWorkerSource, /shouldRevokeBrokenPushSubscription/);
   assert.match(serviceWorkerSource, /pushFailureContextStillCurrent\(pair\)/);
