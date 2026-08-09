@@ -698,13 +698,15 @@ void main() {
     expect(releaseGate, contains(r'--ref "$tag"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
     expect(pagesWorkflow, contains('source_ref:'));
+    expect(pagesWorkflow, contains('repository_dispatch:'));
+    expect(pagesWorkflow, contains('- deploy-release-pages'));
     expect(pagesWorkflow, contains('workflow_run:'));
     expect(pagesWorkflow, contains('- Release'));
     expect(pagesWorkflow, contains("conclusion == 'success'"));
     expect(
       pagesWorkflow,
       contains(
-        r"ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || inputs.source_ref }}",
+        r"ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}",
       ),
     );
     expect(pagesWorkflow, isNot(contains('push:')));
