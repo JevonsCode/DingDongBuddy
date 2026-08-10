@@ -1,0 +1,22 @@
+test/features/shell/tray_buddy_controller_test.dart
+  s_77d24897c4db98::t_93b61b9b66cad8 5,14,20,25,34-36,38-41,43-52
+  s_77d24897c4db98::t_567705e1b74923 15-19
+pubspec.yaml
+  s_77d24897c4db98::t_93b61b9b66cad8 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.39-trip",
+  "base_commit_sha": "a65edd68172d2a195dadf5485d4f2e6cee96b04e",
+  "prompts": {},
+  "sessions": {
+    "s_77d24897c4db98": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019feb6d-de5e-79d1-9d54-0b8a43755e8a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Jevons <36203025+JevonsCode@users.noreply.github.com>"
+    }
+  }
+}
