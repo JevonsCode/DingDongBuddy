@@ -6,6 +6,7 @@ let kEventOnTrayIconMouseUp = "onTrayIconMouseUp"
 let kEventOnTrayIconRightMouseDown = "onTrayIconRightMouseDown"
 let kEventOnTrayIconRightMouseUp = "onTrayIconRightMouseUp"
 let kEventOnTrayMenuItemClick = "onTrayMenuItemClick"
+let kEventOnTaskbarAppearanceChanged = "onTaskbarAppearanceChanged"
 
 extension NSRect {
     var topLeft: CGPoint {
@@ -44,6 +45,9 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             break
         case "getBounds":
             getBounds(call, result: result)
+            break
+        case "getTaskbarSurfaceIsLight":
+            getTaskbarSurfaceIsLight(call, result: result)
             break
         case "setIcon":
             setIcon(call, result: result)
@@ -135,6 +139,15 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             result(nil)
         }
     }
+
+    public func getTaskbarSurfaceIsLight(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        if let trayIcon {
+            result(trayIcon.surfaceIsLight)
+            return
+        }
+        let match = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua])
+        result(match != .darkAqua)
+    }
     
     public func setIcon(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
@@ -161,6 +174,13 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             }
             trayIcon?.onTrayIconRightMouseUp = { () in
                 self.channel.invokeMethod(kEventOnTrayIconRightMouseUp, arguments: nil, result: nil)
+            }
+            trayIcon?.onAppearanceChanged = { [weak self] isLight in
+                self?.channel.invokeMethod(
+                    kEventOnTaskbarAppearanceChanged,
+                    arguments: isLight,
+                    result: nil
+                )
             }
         }
         

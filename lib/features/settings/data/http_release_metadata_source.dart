@@ -76,6 +76,7 @@ String _requiredString(Map<String, Object?> json, String key) {
 }
 
 final List<Uri> defaultReleaseMetadataUris = <Uri>[
+  Uri.parse('https://dingdong.xn--m8txu.com/dingdong-release.json'),
   Uri.parse(
     'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/dingdong-release.json',
   ),

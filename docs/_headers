@@ -5,3 +5,6 @@
   Referrer-Policy: no-referrer
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
+
+/dingdong-release.json
+  Cache-Control: no-cache

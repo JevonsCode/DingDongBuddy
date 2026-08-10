@@ -263,7 +263,7 @@ class TrayManager {
     );
   }
 
-  /// Whether the sampled Windows taskbar surface is light.
+  /// Whether the current desktop tray surface is light.
   Future<bool> getTaskbarSurfaceIsLight() async {
     return await _channel.invokeMethod<bool>('getTaskbarSurfaceIsLight') ??
         false;

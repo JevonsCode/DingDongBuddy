@@ -13,6 +13,7 @@ public class TrayIcon: NSView {
     public var onTrayIconMouseUp:(() -> Void)?
     public var onTrayIconRightMouseDown:(() -> Void)?
     public var onTrayIconRightMouseUp:(() -> Void)?
+    public var onAppearanceChanged:((Bool) -> Void)?
     
     var statusItem: NSStatusItem?
     
@@ -30,6 +31,15 @@ public class TrayIcon: NSView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public var surfaceIsLight: Bool {
+        effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) != .darkAqua
+    }
+
+    public override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        onAppearanceChanged?(surfaceIsLight)
     }
     
     public func setImage(_ image: NSImage, _ imagePosition: String) {

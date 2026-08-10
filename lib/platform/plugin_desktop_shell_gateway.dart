@@ -109,7 +109,7 @@ final class PluginDesktopShellGateway
     windowManager.addListener(this);
     trayManager.addListener(this);
     await _unreadController.restore();
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isMacOS) {
       _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
       await _unreadController.refresh();
     }
@@ -309,6 +309,7 @@ final class PluginDesktopShellGateway
           : macOSTrayBuddyIconPath(
               hot: hot,
               state: mascotState,
+              taskbarIsLight: _taskbarIsLight,
               alternateFrame: alternateFrame,
             ),
       isTemplate: false,
@@ -585,22 +586,25 @@ int macOSTrayBuddyIconSize({
 String macOSTrayBuddyIconPath({
   required bool hot,
   required TrayBuddyState state,
+  required bool taskbarIsLight,
   bool alternateFrame = false,
 }) {
   final TrayBuddyState visualState = trayBuddyVisualState(
     hot: hot,
     state: state,
   );
+  final String contrastSuffix = taskbarIsLight ? '-w' : '';
   return switch (visualState) {
-    TrayBuddyState.normal => 'Assets/DingDongIP/AgentToolIcon-w.png',
+    TrayBuddyState.normal =>
+      'Assets/DingDongIP/AgentToolIcon$contrastSuffix.png',
     TrayBuddyState.resting =>
       alternateFrame
-          ? 'Assets/DingDongIP/rest-w2.png'
-          : 'Assets/DingDongIP/rest-w.png',
+          ? 'Assets/DingDongIP/rest${contrastSuffix}2.png'
+          : 'Assets/DingDongIP/rest$contrastSuffix.png',
     TrayBuddyState.sleeping =>
       alternateFrame
-          ? 'Assets/DingDongIP/sleeping-w2.png'
-          : 'Assets/DingDongIP/sleeping-w.png',
+          ? 'Assets/DingDongIP/sleeping${contrastSuffix}2.png'
+          : 'Assets/DingDongIP/sleeping$contrastSuffix.png',
     TrayBuddyState.reminder =>
       alternateFrame
           ? 'Assets/DingDongIP/ding-w2.png'

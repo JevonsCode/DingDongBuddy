@@ -13,6 +13,6 @@ abstract mixin class TrayListener {
 
   void onTrayMenuItemClick(MenuItem menuItem) {}
 
-  /// Emitted when the sampled Windows taskbar surface changes brightness.
+  /// Emitted when the desktop tray surface changes brightness.
   void onTaskbarAppearanceChanged(bool taskbarIsLight) {}
 }

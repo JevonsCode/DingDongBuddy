@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.3.2 from pubspec', () {
+  test('desktop hosts consume application version 1.3.3 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,25 +77,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.3.2+44'));
+    expect(pubspec, contains('version: 1.3.3+45'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.3.2';"),
+      contains("const String currentAppVersion = '1.3.3';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '44';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '45';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.3.2'"),
+      contains("'version': '1.3.3'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.3.2'"),
+      contains("'version': '1.3.3'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.2"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,3,3,45'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.3"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -368,6 +369,35 @@ void main() {
     expect(guide, contains('do not merely'));
   });
 
+  test('release checks prefer the Worker-hosted metadata mirror', () {
+    final String source = File(
+      'lib/features/settings/data/http_release_metadata_source.dart',
+    ).readAsStringSync();
+    final String assetIgnore = File('docs/.assetsignore').readAsStringSync();
+    final String assetHeaders = File('docs/_headers').readAsStringSync();
+    const String workerMetadata =
+        'https://dingdong.xn--m8txu.com/dingdong-release.json';
+    const String websiteMetadata =
+        'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/dingdong-release.json';
+    const String githubMetadata =
+        'https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/docs/dingdong-release.json';
+
+    expect(assetIgnore, contains('!/dingdong-release.json'));
+    expect(assetHeaders, contains('/dingdong-release.json'));
+    expect(assetHeaders, contains('Cache-Control: no-cache'));
+    expect(source, contains(workerMetadata));
+    expect(source, contains(websiteMetadata));
+    expect(source, contains(githubMetadata));
+    expect(
+      source.indexOf(workerMetadata),
+      lessThan(source.indexOf(websiteMetadata)),
+    );
+    expect(
+      source.indexOf(websiteMetadata),
+      lessThan(source.indexOf(githubMetadata)),
+    );
+  });
+
   test('website keeps release diagnostics behind debug mode', () {
     final String website = File('docs/index.html').readAsStringSync();
     final String releaseMetadata = File(
@@ -398,7 +428,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.3.2</span>'));
+    expect(website, contains('<span class="demo-version">v1.3.3</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -504,22 +534,22 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.3.2"'));
-    expect(releaseMetadata, contains('"latestBuild": "44"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.3.3"'));
+    expect(releaseMetadata, contains('"latestBuild": "45"'));
     expect(
       releaseMetadata,
-      contains('Lets one phone keep multiple computers paired'),
+      contains('Prefers the Cloudflare-hosted release metadata mirror'),
     );
     expect(
       releaseMetadata,
-      contains('isolated by source computer'),
+      contains('Adapts unbacked macOS menu-bar mascot artwork'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.3.2-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.3.3-windows-x64-beta-Setup.exe'),
     );
   });
 

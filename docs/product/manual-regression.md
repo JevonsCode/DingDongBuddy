@@ -1,4 +1,4 @@
-# DingDong 1.3.2 Manual Regression Checklist
+# DingDong 1.3.3 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -17,15 +17,18 @@ and macOS golden images; the items below exercise real operating-system state.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
 - After Command-dragging the macOS status item, its position is restored across
   application restarts.
-- A fresh launch starts in normal state with `AgentToolIcon-w`. With no Agent
-  reminder or Clipboard capture, it switches to `rest-w` after three minutes
-  and `sleeping-w` after five minutes.
+- A fresh launch starts in normal state with `AgentToolIcon` in dark appearance
+  and `AgentToolIcon-w` in light appearance. With no Agent reminder or Clipboard
+  capture, it switches to the matching `rest` state after three minutes and the
+  matching `sleeping` state after five minutes.
 - A new Agent reminder shows `ding-w`. A Clipboard capture or acknowledging the
   reminder restores normal and restarts both idle thresholds; there is no turn
   animation.
-- On macOS, `ding-w` alternates with `ding-w2` every 0.7 seconds. `rest-w` and
-  `sleeping-w` alternate with their second frames every 1.2 seconds; resting is
-  rendered 2px smaller in both dimensions.
+- On macOS, changing between light and dark appearance immediately swaps the
+  unbacked normal, resting, and sleeping artwork without restarting DingDong.
+  `ding-w` alternates with `ding-w2` every 0.7 seconds regardless of appearance.
+  Resting and sleeping alternate with their matching second frames every 1.2
+  seconds; resting is rendered 2px smaller in both dimensions.
 - On Windows light and dark taskbars, normal, reminder, resting, and sleeping
   use their matching artwork and the same 0.7/1.2-second frame timing.
 - With an unread macOS reminder, the count is visually centered inside the
@@ -348,7 +351,10 @@ and macOS golden images; the items below exercise real operating-system state.
   primary alert; interleaved Agents and separate fallback-only tasks remain
   independent.
 - Choosing a custom sound uses the OS file picker; clearing it returns to the default.
-- Version checking shows current/latest values, notes, failure state, website, and release links.
+- Version checking shows current/latest values, notes, failure state, website,
+  and release links. It tries the Cloudflare Worker metadata mirror before the
+  website and GitHub fallbacks, and a failed source does not prevent the next
+  source from being checked.
 - A newer release adds a small orange-red dot beside the popup version; current,
   unknown, checking, and failed states do not show the dot.
 - Report a problem and Request a feature open the matching structured GitHub forms.
@@ -423,8 +429,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.3.2` build `44` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.3.2.44` and product name `DingDong`.
+- The macOS release app metadata is version `1.3.3` build `45` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.3.3.45` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -432,7 +438,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.3.2` and that exact commit SHA; every
+  `/v1/health` must report version `1.3.3` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the release workflow deploys the website from the exact release

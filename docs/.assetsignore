@@ -1,6 +1,7 @@
 /*
 !/app
 !/app/**
+!/dingdong-release.json
 !/assets
 /assets/*
 !/assets/dingdong-alert-icon-2.png

@@ -70,39 +70,72 @@ void main() {
     },
   );
 
-  test('macOS tray maps every buddy state to the new white artwork', () {
+  test('macOS tray adapts unbacked buddy art to the menu bar contrast', () {
     expect(
-      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.normal),
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.normal,
+        taskbarIsLight: false,
+      ),
+      'Assets/DingDongIP/AgentToolIcon.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.resting,
+        taskbarIsLight: false,
+      ),
+      'Assets/DingDongIP/rest.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.sleeping,
+        taskbarIsLight: false,
+      ),
+      'Assets/DingDongIP/sleeping.png',
+    );
+    expect(
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.normal,
+        taskbarIsLight: true,
+      ),
       'Assets/DingDongIP/AgentToolIcon-w.png',
     );
     expect(
-      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.reminder),
-      'Assets/DingDongIP/ding-w.png',
-    );
-    expect(
-      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.resting),
-      'Assets/DingDongIP/rest-w.png',
-    );
-    expect(
-      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.sleeping),
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.sleeping,
+        taskbarIsLight: true,
+      ),
       'Assets/DingDongIP/sleeping-w.png',
     );
+  });
+
+  test('macOS reminder keeps white artwork over its colored background', () {
     expect(
-      macOSTrayBuddyIconPath(hot: true, state: TrayBuddyState.sleeping),
+      macOSTrayBuddyIconPath(
+        hot: false,
+        state: TrayBuddyState.reminder,
+        taskbarIsLight: false,
+      ),
       'Assets/DingDongIP/ding-w.png',
     );
     expect(
       macOSTrayBuddyIconPath(
         hot: false,
         state: TrayBuddyState.resting,
+        taskbarIsLight: false,
         alternateFrame: true,
       ),
-      'Assets/DingDongIP/rest-w2.png',
+      'Assets/DingDongIP/rest2.png',
     );
     expect(
       macOSTrayBuddyIconPath(
         hot: true,
         state: TrayBuddyState.normal,
+        taskbarIsLight: false,
         alternateFrame: true,
       ),
       'Assets/DingDongIP/ding-w2.png',
@@ -401,6 +434,22 @@ void main() {
     expect(source, contains('.primary-status-item'));
     expect(source, contains('event.modifierFlags.contains(.command)'));
     expect(source, contains('button.mouseDown(with: event)'));
+  });
+
+  test('macOS tray reports and watches its effective appearance', () {
+    final String plugin = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift',
+    ).readAsStringSync();
+    final String source = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
+    ).readAsStringSync();
+
+    expect(plugin, contains('case "getTaskbarSurfaceIsLight":'));
+    expect(plugin, contains('kEventOnTaskbarAppearanceChanged'));
+    expect(plugin, contains('trayIcon.surfaceIsLight'));
+    expect(source, contains('public var surfaceIsLight: Bool'));
+    expect(source, contains('viewDidChangeEffectiveAppearance()'));
+    expect(source, contains('onAppearanceChanged?(surfaceIsLight)'));
   });
 
   test(

@@ -1,61 +1,47 @@
-# DingDong 1.3.2
+# DingDong 1.3.3
 
-DingDong 1.3.2 lets one phone stay paired with multiple computers while keeping
-each computer's content and connection state separate.
+DingDong 1.3.3 makes update checks more resilient and keeps the menu-bar buddy
+legible across macOS light and dark appearances.
 
-## Multiple computers on one phone
+## More resilient update checks
 
-- Scan another computer without replacing the existing pairing. The PWA keeps
-  every saved computer connected when available and restores them after a
-  refresh.
-- The online status now includes a green indicator and the number of connected
-  computers. Open it to see every paired computer and switch the active one.
-- Clipboard items, Agent reminders, files, unsent text, transfer progress, and
-  notification diagnostics stay inside their source computer. Switching never
-  mixes or moves records between devices.
-- Scanning a new QR code while the PWA is already open starts the add-device
-  flow without reloading or interrupting existing connections.
+- Desktop update checks now try the release metadata mirrored by DingDong's
+  Cloudflare Worker first, then continue through the existing website and
+  GitHub fallbacks when a source is unavailable.
+- The Worker publishes the same `dingdong-release.json` used by the website and
+  serves it with a no-cache policy so a newly deployed version can be discovered
+  without waiting for stale metadata to expire.
+- The extra source improves fallback coverage but does not guarantee
+  reachability on every network or in every region.
 
-## Clearer connection and interface controls
+## Adaptive macOS menu-bar contrast
 
-- DingDong prefers a direct WebRTC connection, which is normally available on
-  the same local network, and falls back to its end-to-end encrypted relay when
-  direct connectivity is unavailable. The relay stores no Clipboard or file
-  content.
-- Phone settings can switch the in-app DingDong icon between a soft-blue and a
-  white background. Because the operating system owns the installed Home Screen
-  icon, changing that icon may require removing and re-adding the PWA.
-- Completion-notification clicks remain bound to the correct computer and open
-  Agent reminders directly without creating a competing connection.
-- Reconnect attempts now back off after repeated network failures instead of
-  rapidly cycling between connected and disconnected states.
+- Normal, resting, and sleeping menu-bar states now select their `-w` or
+  non-`-w` artwork from the current macOS appearance.
+- Changing the system appearance refreshes the tray artwork immediately without
+  restarting DingDong.
+- Reminder states keep their white artwork over the colored reminder background,
+  including the alternate animation frame.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.3.2 让一部手机可以同时保存并连接多台电脑，同时确保每台电脑的内容与
-连接状态彼此独立。
+DingDong 1.3.3 提高了更新检查的容错能力，并让菜单栏伙伴在 macOS 浅色与深色
+外观下都保持清晰可见。
 
-## 一部手机连接多台电脑
+## 更新检查更可靠
 
-- 扫描另一台电脑时会新增配对，不再替换已有电脑。PWA 会在条件允许时保持所有已
-  保存电脑在线，并在刷新后恢复连接。
-- 顶部在线状态增加绿色指示灯与在线电脑数量；点击即可查看所有已配对电脑并切换
-  当前电脑。
-- 剪贴板、Agent 提醒、文件、未发送文字、传输进度和通知诊断都跟随来源电脑独立
-  保存；切换设备不会混合或搬动这些记录。
-- PWA 已经打开时继续扫描新二维码，会直接进入添加设备流程，不重载页面，也不会
-  中断已有连接。
+- 桌面端检查更新时会优先读取 DingDong Cloudflare Worker 上的发布元数据；该来源
+  不可用时，仍会继续尝试原有官网与 GitHub 备用地址。
+- Worker 与官网发布同一份 `dingdong-release.json`，并使用不缓存策略，减少新版本
+  部署后仍读到旧元数据的情况。
+- 新增来源可以提高兜底覆盖，但无法保证所有网络或地区都一定可访问。
 
-## 更清楚的连接与界面控制
+## macOS 菜单栏自动适配明暗外观
 
-- DingDong 优先尝试 WebRTC 直连，通常在同一局域网内建立；无法直连时使用端到端
-  加密中继兜底。中继不会保存剪贴板或文件正文。
-- 手机设置可以在浅蓝和白色背景之间切换应用内 DingDong 图标。主屏幕图标由操作
-  系统安装时生成，若要更新它，可能需要移除后重新添加 PWA。
-- 点击完成通知时会严格绑定对应电脑，并直接打开 Agent 提醒，不会新建一个抢占连接
-  的页面。
-- 网络连续失败时，重连间隔会逐步延长，不再快速反复显示连接与断开。
+- 普通、休息和睡眠状态会根据当前 macOS 外观选择 `-w` 或无 `-w` 的图标资源。
+- 切换系统外观时，托盘图标会立即刷新，不需要重启 DingDong。
+- 提醒状态有彩色背景，因此继续使用白色图标，包括第二帧动画。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。
