@@ -2,6 +2,7 @@ import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,14 +11,18 @@ void main() {
     expect(trayBuddyClipboardIdleDelay, const Duration(minutes: 5));
   });
 
-  test(
-    'reminder state nudges every interval after five-minute delay',
-    () async {
-      final ActivityController activityController = ActivityController();
+  test('reminder state nudges every interval after five-minute delay', () {
+    fakeAsync((FakeAsync time) {
+      final DateTime startedAt = DateTime.utc(2026, 8, 10, 12);
+      DateTime now() => startedAt.add(time.elapsed);
+      final ActivityController activityController = ActivityController(
+        now: now,
+      );
       final List<TrayBuddyState> states = <TrayBuddyState>[];
       var nudgeCount = 0;
       final TrayBuddyController buddy = TrayBuddyController(
         activityController: activityController,
+        now: now,
         reminderDelay: const Duration(milliseconds: 15),
         reminderRepeatInterval: const Duration(milliseconds: 20),
         agentRestDelay: const Duration(days: 1),
@@ -25,26 +30,27 @@ void main() {
         onStateChanged: (TrayBuddyState state) async => states.add(state),
         onReminderNudge: () async => nudgeCount += 1,
       );
-      addTearDown(() {
+
+      try {
+        buddy.start();
+        activityController.record(source: 'Codex', message: 'Task complete');
+
+        expect(states.last, TrayBuddyState.reminder);
+        expect(nudgeCount, 0);
+        time.elapse(const Duration(milliseconds: 75));
+        expect(nudgeCount, greaterThanOrEqualTo(2));
+
+        activityController.markAllSeen();
+        final int stoppedAt = nudgeCount;
+        time.elapse(const Duration(milliseconds: 55));
+        expect(nudgeCount, stoppedAt);
+        expect(states.last, TrayBuddyState.normal);
+      } finally {
         buddy.dispose();
         activityController.dispose();
-      });
-
-      buddy.start();
-      activityController.record(source: 'Codex', message: 'Task complete');
-
-      expect(states.last, TrayBuddyState.reminder);
-      expect(nudgeCount, 0);
-      await Future<void>.delayed(const Duration(milliseconds: 75));
-      expect(nudgeCount, greaterThanOrEqualTo(2));
-
-      activityController.markAllSeen();
-      final int stoppedAt = nudgeCount;
-      await Future<void>.delayed(const Duration(milliseconds: 55));
-      expect(nudgeCount, stoppedAt);
-      expect(states.last, TrayBuddyState.normal);
-    },
-  );
+      }
+    });
+  });
 
   test('an overdue reminder on launch nudges immediately', () {
     final DateTime now = DateTime.utc(2026, 8, 7, 12);
