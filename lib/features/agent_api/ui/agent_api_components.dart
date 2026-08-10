@@ -19,7 +19,7 @@ class _ConnectionHeader extends StatelessWidget {
                 key: const Key('agent-api-back'),
                 tooltip: context.localized('Back to Dynamic', '返回动态'),
                 onPressed: onBack,
-                icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                icon: Icon(Icons.arrow_back_rounded, size: 18),
               ),
             ),
           ),
@@ -31,8 +31,8 @@ class _ConnectionHeader extends StatelessWidget {
             children: <Widget>[
               Text(
                 context.localized('Agent connections', 'Agent 连接'),
-                style: const TextStyle(
-                  color: PopupStyle.textPrimary,
+                style: TextStyle(
+                  color: PopupStyle.of(context).textPrimary,
                   fontSize: 18,
                   height: 1.1,
                   fontWeight: FontWeight.w800,
@@ -44,8 +44,8 @@ class _ConnectionHeader extends StatelessWidget {
                   'Verify the local service and inspect real Agent signals.',
                   '验证本机服务，并查看真实的 Agent 信号。',
                 ),
-                style: const TextStyle(
-                  color: PopupStyle.textSecondary,
+                style: TextStyle(
+                  color: PopupStyle.of(context).textSecondary,
                   fontSize: 11,
                   height: 1.4,
                 ),
@@ -87,14 +87,14 @@ class _ConnectionHealthCard extends StatelessWidget {
     ) = switch (status) {
       _AgentHealthStatus.healthy => (
         Icons.check_circle_outline_rounded,
-        const Color(0xFF426A4B),
-        const Color(0xFFEAF3EC),
+        PopupStyle.of(context).success,
+        PopupStyle.of(context).success.withValues(alpha: 0.14),
         context.localized('Local service verified', '本机服务已验证'),
       ),
       _AgentHealthStatus.checking => (
         Icons.sync_rounded,
-        PopupStyle.accent,
-        PopupStyle.accentSoft,
+        PopupStyle.of(context).accent,
+        PopupStyle.of(context).accentSoft,
         context.localized('Checking local service', '正在检查本机服务'),
       ),
       _AgentHealthStatus.unavailable => (
@@ -105,8 +105,8 @@ class _ConnectionHealthCard extends StatelessWidget {
       ),
       _AgentHealthStatus.unknown => (
         Icons.help_outline_rounded,
-        PopupStyle.textSecondary,
-        PopupStyle.field,
+        PopupStyle.of(context).textSecondary,
+        PopupStyle.of(context).field,
         context.localized('Runtime status unverified', '运行状态尚未验证'),
       ),
     };
@@ -148,7 +148,7 @@ class _ConnectionHealthCard extends StatelessWidget {
               height: 30,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: PopupStyle.surface,
+                color: PopupStyle.of(context).surface,
                 borderRadius: BorderRadius.circular(7),
               ),
               child: status == _AgentHealthStatus.checking
@@ -168,8 +168,8 @@ class _ConnectionHealthCard extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: PopupStyle.textPrimary,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -178,8 +178,8 @@ class _ConnectionHealthCard extends StatelessWidget {
                   SelectableText(
                     origin,
                     key: const Key('agent-api-runtime-endpoint'),
-                    style: const TextStyle(
-                      color: PopupStyle.textSecondary,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textSecondary,
                       fontSize: 11,
                       fontFamily: 'monospace',
                     ),
@@ -200,7 +200,7 @@ class _ConnectionHealthCard extends StatelessWidget {
                     style: TextStyle(
                       color: status == _AgentHealthStatus.unavailable
                           ? color
-                          : PopupStyle.textSecondary,
+                          : PopupStyle.of(context).textSecondary,
                       fontSize: 10,
                       height: 1.35,
                     ),
@@ -233,7 +233,7 @@ class _ConnectionHealthCard extends StatelessWidget {
                     onPressed: status == _AgentHealthStatus.checking
                         ? null
                         : () => unawaited(onRetry!()),
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    icon: Icon(Icons.refresh_rounded, size: 18),
                   ),
                 ),
               ),
@@ -275,7 +275,7 @@ class _ConnectionChecklist extends StatelessWidget {
           );
     return Container(
       key: const Key('agent-connection-checklist'),
-      decoration: PopupStyle.card(radius: 8),
+      decoration: PopupStyle.of(context).card(radius: 8),
       child: Column(
         children: <Widget>[
           _ConnectionRow(
@@ -369,7 +369,7 @@ class _ConnectionRow extends StatelessWidget {
         ? Theme.of(context).colorScheme.error
         : good
         ? const Color(0xFF426A4B)
-        : PopupStyle.textSecondary;
+        : PopupStyle.of(context).textSecondary;
     final Widget content = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
       child: Row(
@@ -382,8 +382,8 @@ class _ConnectionRow extends StatelessWidget {
               children: <Widget>[
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: PopupStyle.textPrimary,
+                  style: TextStyle(
+                    color: PopupStyle.of(context).textPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
@@ -393,8 +393,8 @@ class _ConnectionRow extends StatelessWidget {
                   detail,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: PopupStyle.textSecondary,
+                  style: TextStyle(
+                    color: PopupStyle.of(context).textSecondary,
                     fontSize: 10,
                     height: 1.3,
                   ),
@@ -403,10 +403,10 @@ class _ConnectionRow extends StatelessWidget {
             ),
           ),
           if (onTap != null)
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 17,
-              color: PopupStyle.textSecondary,
+              color: PopupStyle.of(context).textSecondary,
             ),
         ],
       ),
@@ -439,7 +439,7 @@ class _AdvancedDisclosure extends StatelessWidget {
       label: label,
       child: ExcludeSemantics(
         child: Material(
-          color: PopupStyle.field,
+          color: PopupStyle.of(context).field,
           borderRadius: BorderRadius.circular(7),
           child: InkWell(
             key: const Key('agent-api-toggle-advanced'),
@@ -449,10 +449,10 @@ class _AdvancedDisclosure extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
               child: Row(
                 children: <Widget>[
-                  const Icon(
+                  Icon(
                     Icons.terminal_rounded,
                     size: 17,
-                    color: PopupStyle.textSecondary,
+                    color: PopupStyle.of(context).textSecondary,
                   ),
                   const SizedBox(width: 9),
                   Expanded(
@@ -461,8 +461,8 @@ class _AdvancedDisclosure extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           label,
-                          style: const TextStyle(
-                            color: PopupStyle.textPrimary,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).textPrimary,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -473,8 +473,8 @@ class _AdvancedDisclosure extends StatelessWidget {
                             'Endpoints, commands, and setup prompt',
                             '端点、命令与接入提示词',
                           ),
-                          style: const TextStyle(
-                            color: PopupStyle.textSecondary,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).textSecondary,
                             fontSize: 10,
                           ),
                         ),
@@ -486,7 +486,7 @@ class _AdvancedDisclosure extends StatelessWidget {
                         ? Icons.expand_less_rounded
                         : Icons.expand_more_rounded,
                     size: 19,
-                    color: PopupStyle.textSecondary,
+                    color: PopupStyle.of(context).textSecondary,
                   ),
                 ],
               ),
@@ -515,8 +515,8 @@ class _SectionTitle extends StatelessWidget {
       children: <Widget>[
         Text(
           title,
-          style: const TextStyle(
-            color: PopupStyle.textPrimary,
+          style: TextStyle(
+            color: PopupStyle.of(context).textPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w800,
           ),
@@ -524,8 +524,8 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           description,
-          style: const TextStyle(
-            color: PopupStyle.textSecondary,
+          style: TextStyle(
+            color: PopupStyle.of(context).textSecondary,
             fontSize: 11,
             height: 1.4,
           ),
@@ -553,7 +553,7 @@ class _CommandRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(11, 8, 6, 8),
       decoration: BoxDecoration(
-        color: PopupStyle.field,
+        color: PopupStyle.of(context).field,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -561,8 +561,8 @@ class _CommandRow extends StatelessWidget {
           Expanded(
             child: SelectableText(
               command,
-              style: const TextStyle(
-                color: PopupStyle.textPrimary,
+              style: TextStyle(
+                color: PopupStyle.of(context).textPrimary,
                 fontFamily: 'monospace',
                 fontSize: 10,
                 height: 1.3,
@@ -643,7 +643,7 @@ class _EndpointList extends StatelessWidget {
         for (int index = 0; index < rows.length; index += 1) ...<Widget>[
           _EndpointRow(data: rows[index]),
           if (index != rows.length - 1)
-            const Divider(height: 1, color: Color(0xFFE7E7E3)),
+            Divider(height: 1, color: PopupStyle.of(context).border),
         ],
       ],
     );
@@ -668,13 +668,17 @@ class _EndpointRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 4),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: get ? PopupStyle.accentSoft : const Color(0xFFF1EBDD),
+              color: get
+                  ? PopupStyle.of(context).accentSoft
+                  : PopupStyle.of(context).warmSurface,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               data.method,
               style: TextStyle(
-                color: get ? PopupStyle.accent : const Color(0xFF75684F),
+                color: get
+                    ? PopupStyle.of(context).accent
+                    : PopupStyle.of(context).warmAccent,
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
               ),
@@ -688,8 +692,8 @@ class _EndpointRow extends StatelessWidget {
               children: <Widget>[
                 SelectableText(
                   data.path,
-                  style: const TextStyle(
-                    color: PopupStyle.textPrimary,
+                  style: TextStyle(
+                    color: PopupStyle.of(context).textPrimary,
                     fontFamily: 'monospace',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -698,8 +702,8 @@ class _EndpointRow extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   data.description,
-                  style: const TextStyle(
-                    color: PopupStyle.textSecondary,
+                  style: TextStyle(
+                    color: PopupStyle.of(context).textSecondary,
                     fontSize: 10,
                     height: 1.3,
                   ),

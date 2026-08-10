@@ -15,8 +15,8 @@ final class AppTheme {
 
   static ThemeData dark() => _build(
     brightness: Brightness.dark,
-    surface: const Color(0xFF1D2022),
-    seed: const Color(0xFF8BA0AB),
+    surface: const Color(0xFF182126),
+    seed: const Color(0xFF7EB5CF),
   );
 
   static ThemeData desktopPanelLight() => _desktopPanel(light());
@@ -28,37 +28,37 @@ final class AppTheme {
     final ColorScheme colors = base.colorScheme.copyWith(
       primary: isDark ? const Color(0xFF8CB9CF) : const Color(0xFF2F6F8F),
       onPrimary: isDark ? const Color(0xFF10242D) : Colors.white,
-      surface: isDark ? const Color(0xFF191919) : Colors.white,
-      surfaceDim: isDark ? const Color(0xFF191919) : const Color(0xFFF7F7F5),
-      surfaceBright: isDark ? const Color(0xFF252525) : Colors.white,
+      surface: isDark ? const Color(0xFF182126) : Colors.white,
+      surfaceDim: isDark ? const Color(0xFF182126) : const Color(0xFFF7F7F5),
+      surfaceBright: isDark ? const Color(0xFF243038) : Colors.white,
       surfaceContainerLowest: isDark
-          ? const Color(0xFF202020)
+          ? const Color(0xFF1B252B)
           : const Color(0xFFF7F7F5),
       surfaceContainerLow: isDark
-          ? const Color(0xFF242424)
+          ? const Color(0xFF202B32)
           : const Color(0xFFF4F4F2),
       surfaceContainer: isDark
-          ? const Color(0xFF292929)
+          ? const Color(0xFF253139)
           : const Color(0xFFF1F1EF),
       surfaceContainerHigh: isDark
-          ? const Color(0xFF303030)
+          ? const Color(0xFF2B3942)
           : const Color(0xFFEDEDEB),
       surfaceContainerHighest: isDark
-          ? const Color(0xFF373737)
+          ? const Color(0xFF32424C)
           : const Color(0xFFE6E6E3),
-      onSurface: isDark ? const Color(0xFFE8E8E6) : const Color(0xFF37352F),
+      onSurface: isDark ? const Color(0xFFEDF2F4) : const Color(0xFF37352F),
       onSurfaceVariant: isDark
-          ? const Color(0xFFA9A9A5)
+          ? const Color(0xFFABB8BE)
           : const Color(0xFF787774),
-      outline: isDark ? const Color(0xFF565656) : const Color(0xFFD0D0CC),
+      outline: isDark ? const Color(0xFF52626B) : const Color(0xFFD0D0CC),
       outlineVariant: isDark
-          ? const Color(0xFF343434)
+          ? const Color(0xFF34434C)
           : const Color(0xFFE9E9E7),
       secondaryContainer: isDark
-          ? const Color(0xFF303030)
+          ? const Color(0xFF2B3942)
           : const Color(0xFFEDEDEB),
       onSecondaryContainer: isDark
-          ? const Color(0xFFE8E8E6)
+          ? const Color(0xFFEDF2F4)
           : const Color(0xFF37352F),
       surfaceTint: Colors.transparent,
     );

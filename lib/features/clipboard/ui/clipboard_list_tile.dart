@@ -183,10 +183,12 @@ class _CalloutClipboardTile extends StatelessWidget {
         clipBehavior: Clip.none,
         children: <Widget>[
           Material(
-            color: selected ? PopupStyle.accentSoft : PopupStyle.surface,
+            color: selected
+                ? PopupStyle.of(context).accentSoft
+                : PopupStyle.of(context).surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(9),
-              side: const BorderSide(color: PopupStyle.border),
+              side: BorderSide(color: PopupStyle.of(context).border),
             ),
             clipBehavior: Clip.antiAlias,
             child: _InteractiveInkWell(
@@ -211,8 +213,8 @@ class _CalloutClipboardTile extends StatelessWidget {
                             record.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: PopupStyle.textPrimary,
+                            style: TextStyle(
+                              color: PopupStyle.of(context).textPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                             ),
@@ -225,8 +227,8 @@ class _CalloutClipboardTile extends StatelessWidget {
                                   _subtitle(context),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: PopupStyle.textSecondary,
+                                  style: TextStyle(
+                                    color: PopupStyle.of(context).textSecondary,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -251,8 +253,8 @@ class _CalloutClipboardTile extends StatelessWidget {
                         record.updatedAt,
                         now: now,
                       ),
-                      style: const TextStyle(
-                        color: PopupStyle.textSecondary,
+                      style: TextStyle(
+                        color: PopupStyle.of(context).textSecondary,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
@@ -268,7 +270,7 @@ class _CalloutClipboardTile extends StatelessWidget {
                         height: 29,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: PopupStyle.accent,
+                          color: PopupStyle.of(context).accent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -278,8 +280,8 @@ class _CalloutClipboardTile extends StatelessWidget {
                                   '$shortcutIndex',
                                   platform,
                                 ),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).background,
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                           ),
@@ -289,8 +291,8 @@ class _CalloutClipboardTile extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           context.localized('Plain text', '纯文本'),
-                          style: const TextStyle(
-                            color: PopupStyle.textSecondary,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).textSecondary,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -309,7 +311,7 @@ class _CalloutClipboardTile extends StatelessWidget {
               child: ClipboardPinnedIndicator(
                 recordId: record.id,
                 keyPrefix: 'clipboard-pinned-indicator',
-                color: PopupStyle.accent,
+                color: PopupStyle.of(context).accent,
                 size: 17,
               ),
             ),
@@ -411,29 +413,29 @@ class _RecordLeading extends StatelessWidget {
               height: 46,
               fit: BoxFit.cover,
               cacheWidth: 92,
-              errorBuilder: (_, _, _) => _iconBox(record),
+              errorBuilder: (_, _, _) => _iconBox(context, record),
             ),
           )
-        : _iconBox(record);
+        : _iconBox(context, record);
     return _SystemContentAction(record: record, onOpen: onOpen, child: leading);
   }
 
-  Widget _iconBox(ClipboardRecord record) {
+  Widget _iconBox(BuildContext context, ClipboardRecord record) {
     final ClipboardKind kind = record.kind;
     final bool fromDevice = _isFromLinkedDevice(record);
     return Container(
       width: 30,
       height: 30,
       decoration: BoxDecoration(
-        color: PopupStyle.field,
+        color: PopupStyle.of(context).field,
         borderRadius: BorderRadius.circular(7),
       ),
       child: Center(
         child: fromDevice
-            ? const Icon(
+            ? Icon(
                 Icons.phone_iphone_rounded,
                 size: 17,
-                color: PopupStyle.accent,
+                color: PopupStyle.of(context).accent,
               )
             : PopupSymbolIcon(
                 record.sensitive ? 'sensitive' : _symbolFor(kind),
@@ -443,8 +445,8 @@ class _RecordLeading extends StatelessWidget {
                     : kind == ClipboardKind.command
                     ? const Color(0xFF22C55E)
                     : kind == ClipboardKind.url
-                    ? PopupStyle.accent
-                    : PopupStyle.textSecondary,
+                    ? PopupStyle.of(context).accent
+                    : PopupStyle.of(context).textSecondary,
               ),
       ),
     );

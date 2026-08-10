@@ -39,8 +39,8 @@ class _McpSetupCardState extends State<McpSetupCard> {
       children: <Widget>[
         Text(
           context.localized('Agent setup prompt', '给 Agent 的接入提示词'),
-          style: const TextStyle(
-            color: PopupStyle.textPrimary,
+          style: TextStyle(
+            color: PopupStyle.of(context).textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
@@ -51,14 +51,14 @@ class _McpSetupCardState extends State<McpSetupCard> {
           constraints: const BoxConstraints(maxHeight: 250),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: PopupStyle.field,
+            color: PopupStyle.of(context).field,
             borderRadius: BorderRadius.circular(6),
           ),
           child: SingleChildScrollView(
             child: SelectableText(
               widget.settingsViewModel.mcpSetupPrompt,
-              style: const TextStyle(
-                color: PopupStyle.textPrimary,
+              style: TextStyle(
+                color: PopupStyle.of(context).textPrimary,
                 fontFamily: 'monospace',
                 fontSize: 10,
                 height: 1.4,

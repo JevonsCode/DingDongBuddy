@@ -132,8 +132,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
               children: <Widget>[
                 Text(
                   context.localized('Recent agents', '最近 Agent'),
-                  style: const TextStyle(
-                    color: PopupStyle.textSecondary,
+                  style: TextStyle(
+                    color: PopupStyle.of(context).textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -160,8 +160,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
             if (widget.activityController.activities.isEmpty)
               Text(
                 context.localized('No recent agent events', '暂无 Agent 事件'),
-                style: const TextStyle(
-                  color: PopupStyle.textSecondary,
+                style: TextStyle(
+                  color: PopupStyle.of(context).textSecondary,
                   fontSize: 10,
                 ),
               )
@@ -190,8 +190,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
             const SizedBox(height: 28),
             Text(
               context.localized('Enabled', '已启用'),
-              style: const TextStyle(
-                color: PopupStyle.textSecondary,
+              style: TextStyle(
+                color: PopupStyle.of(context).textSecondary,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
@@ -203,8 +203,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   'Enable resources from the library to see them here.',
                   '在资源库启用资源后会显示在这里。',
                 ),
-                style: const TextStyle(
-                  color: PopupStyle.textSecondary,
+                style: TextStyle(
+                  color: PopupStyle.of(context).textSecondary,
                   fontSize: 10,
                 ),
               )

@@ -235,9 +235,9 @@ class _ActivityHistoryRow extends StatelessWidget {
                               ),
                               count: activity.repeatCount,
                               foregroundColor: activity.unseen
-                                  ? PopupStyle.activityUnread.withValues(
-                                      alpha: 0.58,
-                                    )
+                                  ? PopupStyle.of(
+                                      context,
+                                    ).activityUnread.withValues(alpha: 0.58)
                                   : null,
                             ),
                           ),

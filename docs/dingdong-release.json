@@ -1,33 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.3.3",
-  "latestBuild": "45",
-  "publishedAt": "2026-08-10T07:58:28Z",
+  "latestVersion": "1.3.6",
+  "latestBuild": "46",
+  "publishedAt": "2026-08-10T13:20:29Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.3/DingDong-1.3.3-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.6/DingDong-1.3.6-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.3/DingDong-1.3.3-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.6/DingDong-1.3.6-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.3/DingDong-1.3.3-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.3.6/DingDong-1.3.6-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Prefers the Cloudflare-hosted release metadata mirror when checking for updates, while keeping the website and GitHub endpoints as fallbacks.",
-    "Publishes the same release metadata through the DingDong Worker with no-cache headers so update checks can recover from an unavailable source.",
-    "Adapts unbacked macOS menu-bar mascot artwork to the current light or dark appearance and refreshes immediately when the appearance changes.",
-    "Keeps reminder artwork white over its colored background, including both animation frames.",
+    "Uses a layered blue-black palette instead of near-black gray throughout the dark popup interface.",
+    "Keeps Dynamic, Resource Library, Clipboard, and Agent API surfaces, controls, badges, and content cards coherent in dark mode.",
+    "Prevents populated Dynamic and Resource Library cards from clipping, and improves contrast on accent-colored badges and controls.",
+    "Lets macOS tint normal, resting, and sleeping menu-bar artwork as native template images while preserving the colored reminder icon.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

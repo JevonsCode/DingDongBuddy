@@ -109,7 +109,7 @@ final class PluginDesktopShellGateway
     windowManager.addListener(this);
     trayManager.addListener(this);
     await _unreadController.restore();
-    if (Platform.isWindows || Platform.isMacOS) {
+    if (Platform.isWindows) {
       _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
       await _unreadController.refresh();
     }
@@ -309,10 +309,11 @@ final class PluginDesktopShellGateway
           : macOSTrayBuddyIconPath(
               hot: hot,
               state: mascotState,
-              taskbarIsLight: _taskbarIsLight,
               alternateFrame: alternateFrame,
             ),
-      isTemplate: false,
+      isTemplate:
+          Platform.isMacOS &&
+          macOSTrayBuddyIconIsTemplate(hot: hot, state: mascotState),
       iconSize: windows
           ? iconSize
           : macOSTrayBuddyIconSize(
@@ -482,6 +483,9 @@ final class PluginDesktopShellGateway
 
   @override
   void onTaskbarAppearanceChanged(bool taskbarIsLight) {
+    if (!Platform.isWindows) {
+      return;
+    }
     if (_taskbarIsLight == taskbarIsLight) {
       return;
     }
@@ -583,28 +587,31 @@ int macOSTrayBuddyIconSize({
     : baseSize;
 
 @visibleForTesting
+bool macOSTrayBuddyIconIsTemplate({
+  required bool hot,
+  required TrayBuddyState state,
+}) => trayBuddyVisualState(hot: hot, state: state) != TrayBuddyState.reminder;
+
+@visibleForTesting
 String macOSTrayBuddyIconPath({
   required bool hot,
   required TrayBuddyState state,
-  required bool taskbarIsLight,
   bool alternateFrame = false,
 }) {
   final TrayBuddyState visualState = trayBuddyVisualState(
     hot: hot,
     state: state,
   );
-  final String contrastSuffix = taskbarIsLight ? '-w' : '';
   return switch (visualState) {
-    TrayBuddyState.normal =>
-      'Assets/DingDongIP/AgentToolIcon$contrastSuffix.png',
+    TrayBuddyState.normal => 'Assets/DingDongIP/AgentToolIcon-w.png',
     TrayBuddyState.resting =>
       alternateFrame
-          ? 'Assets/DingDongIP/rest${contrastSuffix}2.png'
-          : 'Assets/DingDongIP/rest$contrastSuffix.png',
+          ? 'Assets/DingDongIP/rest-w2.png'
+          : 'Assets/DingDongIP/rest-w.png',
     TrayBuddyState.sleeping =>
       alternateFrame
-          ? 'Assets/DingDongIP/sleeping${contrastSuffix}2.png'
-          : 'Assets/DingDongIP/sleeping$contrastSuffix.png',
+          ? 'Assets/DingDongIP/sleeping-w2.png'
+          : 'Assets/DingDongIP/sleeping-w.png',
     TrayBuddyState.reminder =>
       alternateFrame
           ? 'Assets/DingDongIP/ding-w2.png'

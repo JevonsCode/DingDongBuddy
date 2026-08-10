@@ -11,25 +11,25 @@ class _RecentAgentCount extends StatelessWidget {
     return DecoratedBox(
       key: const Key('recent-agent-count'),
       decoration: BoxDecoration(
-        color: PopupStyle.surface,
+        color: PopupStyle.of(context).surface,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: PopupStyle.border),
+        border: Border.all(color: PopupStyle.of(context).border),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const Icon(
+            Icon(
               Icons.schedule_rounded,
               size: 9,
-              color: PopupStyle.textTertiary,
+              color: PopupStyle.of(context).textTertiary,
             ),
             const SizedBox(width: 4),
             Text(
               context.localized('$hours h · $count', '$hours 小时 · $count'),
-              style: const TextStyle(
-                color: PopupStyle.textSecondary,
+              style: TextStyle(
+                color: PopupStyle.of(context).textSecondary,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),
@@ -56,7 +56,7 @@ class _RecentAgentMoreButton extends StatelessWidget {
           key: const Key('recent-agent-more'),
           onTap: onTap,
           borderRadius: BorderRadius.circular(6),
-          hoverColor: PopupStyle.accentSoft,
+          hoverColor: PopupStyle.of(context).accentSoft,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(7, 4, 4, 4),
             child: Row(
@@ -64,17 +64,17 @@ class _RecentAgentMoreButton extends StatelessWidget {
               children: <Widget>[
                 Text(
                   context.localized('More', '更多'),
-                  style: const TextStyle(
-                    color: PopupStyle.accent,
+                  style: TextStyle(
+                    color: PopupStyle.of(context).accent,
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(width: 2),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   size: 13,
-                  color: PopupStyle.accent,
+                  color: PopupStyle.of(context).accent,
                 ),
               ],
             ),
@@ -172,15 +172,15 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                 ),
                 decoration: BoxDecoration(
                   color: Color.lerp(
-                    PopupStyle.surface,
-                    PopupStyle.accentSoft,
+                    PopupStyle.of(context).surface,
+                    PopupStyle.of(context).accentSoft,
                     pulse * 0.72,
                   ),
                   borderRadius: BorderRadius.circular(9),
                   border: Border.all(
                     color: Color.lerp(
-                      PopupStyle.border,
-                      PopupStyle.accent,
+                      PopupStyle.of(context).border,
+                      PopupStyle.of(context).accent,
                       pulse * 0.42,
                     )!,
                   ),
@@ -188,19 +188,19 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                       ? const <BoxShadow>[]
                       : <BoxShadow>[
                           BoxShadow(
-                            color: PopupStyle.accent.withValues(
-                              alpha: 0.14 * pulse,
-                            ),
+                            color: PopupStyle.of(
+                              context,
+                            ).accent.withValues(alpha: 0.14 * pulse),
                             blurRadius: 12 * pulse,
                           ),
                         ],
                 ),
                 child: Row(
                   children: <Widget>[
-                    const PopupSymbolIcon(
+                    PopupSymbolIcon(
                       'today',
                       size: 18,
-                      color: PopupStyle.accent,
+                      color: PopupStyle.of(context).accent,
                     ),
                     const SizedBox(width: 9),
                     Expanded(
@@ -214,8 +214,8 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                                   widget.activity.source,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: PopupStyle.textPrimary,
+                                  style: TextStyle(
+                                    color: PopupStyle.of(context).textPrimary,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -229,8 +229,8 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                             key: Key('activity-message-${widget.activity.id}'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: PopupStyle.textSecondary,
+                            style: TextStyle(
+                              color: PopupStyle.of(context).textSecondary,
                               fontSize: 10,
                             ),
                           ),
@@ -254,12 +254,12 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                               ),
                               count: widget.activity.repeatCount,
                               foregroundColor: widget.activity.unseen
-                                  ? PopupStyle.activityUnread.withValues(
-                                      alpha: 0.58,
-                                    )
-                                  : PopupStyle.textPrimary.withValues(
-                                      alpha: 0.13,
-                                    ),
+                                  ? PopupStyle.of(
+                                      context,
+                                    ).activityUnread.withValues(alpha: 0.58)
+                                  : PopupStyle.of(
+                                      context,
+                                    ).textPrimary.withValues(alpha: 0.13),
                               verticalOffset: 0.5,
                             ),
                           ),
@@ -279,8 +279,8 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                         maxLines: 1,
                         textAlign: TextAlign.end,
                         overflow: TextOverflow.clip,
-                        style: const TextStyle(
-                          color: PopupStyle.textSecondary,
+                        style: TextStyle(
+                          color: PopupStyle.of(context).textSecondary,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           fontFeatures: <FontFeature>[
@@ -302,11 +302,11 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                           'Open Agent conversation',
                           '打开 Agent 对话',
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.open_in_new_rounded,
                           key: Key('activity-open-conversation'),
                           size: 13,
-                          color: PopupStyle.textTertiary,
+                          color: PopupStyle.of(context).textTertiary,
                         ),
                       ),
                     ] else if (widget.activity.conversationTarget !=
@@ -359,10 +359,10 @@ class _MetricCard extends StatelessWidget {
       label: '$label, $value',
       child: ExcludeSemantics(
         child: Material(
-          color: PopupStyle.surface,
+          color: PopupStyle.of(context).surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(color: PopupStyle.border),
+            side: BorderSide(color: PopupStyle.of(context).border),
           ),
           child: InkWell(
             onTap: onTap,
@@ -385,7 +385,7 @@ class _MetricCard extends StatelessWidget {
                             PopupSymbolIcon(
                               symbol,
                               size: 18,
-                              color: PopupStyle.accent,
+                              color: PopupStyle.of(context).accent,
                             ),
                             const SizedBox(width: 7),
                             Flexible(
@@ -393,8 +393,8 @@ class _MetricCard extends StatelessWidget {
                                 value,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: PopupStyle.textPrimary,
+                                style: TextStyle(
+                                  color: PopupStyle.of(context).textPrimary,
                                   fontSize: 15,
                                   height: 1,
                                   fontWeight: FontWeight.w800,
@@ -409,8 +409,8 @@ class _MetricCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: PopupStyle.textSecondary,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).textSecondary,
                             fontSize: 10,
                             height: 1,
                             fontWeight: FontWeight.w600,
@@ -430,20 +430,22 @@ class _MetricCard extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: PopupStyle.accent,
+                          color: PopupStyle.of(context).accent,
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
-                              color: PopupStyle.accent.withValues(alpha: 0.20),
+                              color: PopupStyle.of(
+                                context,
+                              ).accent.withValues(alpha: 0.20),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: const Text(
+                        child: Text(
                           'MCP',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: PopupStyle.of(context).background,
                             fontSize: 9,
                             height: 1,
                             fontWeight: FontWeight.w800,
@@ -481,10 +483,11 @@ class _EnabledResourceCard extends StatelessWidget {
     final ResourceCardPresentation display =
         ResourceCardPresentation.fromResource(resource);
     final Color background = switch (resource.type) {
-      ResourceType.prompt => PopupStyle.warmSurface,
-      ResourceType.skill => PopupStyle.skillSurface,
+      ResourceType.prompt => PopupStyle.of(context).warmSurface,
+      ResourceType.skill => PopupStyle.of(context).skillSurface,
       ResourceType.mcp => PopupStyle.mcpSurface(brightness),
-      ResourceType.knowledge || ResourceType.clipboard => PopupStyle.surface,
+      ResourceType.knowledge ||
+      ResourceType.clipboard => PopupStyle.of(context).surface,
     };
     final String symbol = switch (resource.type) {
       ResourceType.prompt => 'prompt',
@@ -494,13 +497,20 @@ class _EnabledResourceCard extends StatelessWidget {
       ResourceType.clipboard => 'clipboard',
     };
     final Color accent = switch (resource.type) {
-      ResourceType.prompt => const Color(0xFFA97822),
-      ResourceType.skill => const Color(0xFF4C63A1),
+      ResourceType.prompt => PopupStyle.of(context).warmAccent,
+      ResourceType.skill => PopupStyle.of(context).skillAccent,
       ResourceType.mcp => PopupStyle.mcpAccent(brightness),
-      ResourceType.knowledge => PopupStyle.accent,
-      ResourceType.clipboard => PopupStyle.textSecondary,
+      ResourceType.knowledge => PopupStyle.of(context).accent,
+      ResourceType.clipboard => PopupStyle.of(context).textSecondary,
     };
     final List<String> tags = _enabledResourceTags(context, resource, display);
+    final String scopedLabel = context.localized('Scoped', '有触发范围');
+    final List<String> visibleTags = <String>[
+      ...tags.take(2),
+      if (resource.isScopedSkill && !tags.take(2).contains(scopedLabel))
+        scopedLabel,
+    ];
+    final int hiddenTagCount = tags.length - visibleTags.length;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onSecondaryTapDown: (TapDownDetails details) =>
@@ -509,7 +519,7 @@ class _EnabledResourceCard extends StatelessWidget {
         key: Key('today-enabled-${resource.id}'),
         height: 92,
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-        decoration: PopupStyle.card(color: background, radius: 9),
+        decoration: PopupStyle.of(context).card(color: background, radius: 9),
         child: Row(
           children: <Widget>[
             SizedBox(
@@ -527,8 +537,8 @@ class _EnabledResourceCard extends StatelessWidget {
                     key: Key('today-enabled-title-${resource.id}'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: PopupStyle.textPrimary,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -539,31 +549,31 @@ class _EnabledResourceCard extends StatelessWidget {
                     key: Key('today-enabled-summary-${resource.id}'),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: PopupStyle.textSecondary,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textSecondary,
                       fontSize: 10,
                       height: 1.25,
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 3,
-                    children: <Widget>[
-                      ...tags
-                          .take(4)
-                          .map(
-                            (String tag) => _TinyTag(
-                              key:
-                                  resource.isScopedSkill &&
-                                      tag ==
-                                          context.localized('Scoped', '有触发范围')
+                  SizedBox(
+                    height: 16,
+                    child: ClipRect(
+                      child: Wrap(
+                        spacing: 4,
+                        children: <Widget>[
+                          for (final String tag in visibleTags)
+                            _TinyTag(
+                              key: resource.isScopedSkill && tag == scopedLabel
                                   ? Key('today-enabled-scope-${resource.id}')
                                   : null,
                               label: tag,
                             ),
-                          ),
-                    ],
+                          if (hiddenTagCount > 0)
+                            _TinyTag(label: '+$hiddenTagCount'),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -678,13 +688,13 @@ class _TinyTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: PopupStyle.field,
+        color: PopupStyle.of(context).field,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: PopupStyle.textSecondary,
+        style: TextStyle(
+          color: PopupStyle.of(context).textSecondary,
           fontSize: 10,
           height: 1,
           fontWeight: FontWeight.w600,

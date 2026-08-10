@@ -18,7 +18,7 @@ class _ResourceCards extends StatelessWidget {
       return Center(
         child: Text(
           context.localized('No matching resources', '没有匹配的资源'),
-          style: const TextStyle(color: PopupStyle.textSecondary),
+          style: TextStyle(color: PopupStyle.of(context).textSecondary),
         ),
       );
     }
@@ -108,10 +108,10 @@ class _ResourceCard extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final bool isMcp = resource.type == ResourceType.mcp;
     final Color background = switch (resource.type) {
-      ResourceType.prompt => PopupStyle.warmSurface,
-      ResourceType.skill => PopupStyle.skillSurface,
+      ResourceType.prompt => PopupStyle.of(context).warmSurface,
+      ResourceType.skill => PopupStyle.of(context).skillSurface,
       ResourceType.mcp => PopupStyle.mcpSurface(Theme.of(context).brightness),
-      _ => PopupStyle.surfaceSoft,
+      _ => PopupStyle.of(context).surfaceSoft,
     };
     final BoxDecoration decoration = isMcp
         ? BoxDecoration(
@@ -121,7 +121,7 @@ class _ResourceCard extends StatelessWidget {
               color: PopupStyle.mcpBorder(Theme.of(context).brightness),
             ),
           )
-        : PopupStyle.card(color: background, radius: 9);
+        : PopupStyle.of(context).card(color: background, radius: 9);
     return Opacity(
       opacity: resource.enabled ? 1 : 0.58,
       child: Container(
@@ -151,10 +151,10 @@ class _ResourceCard extends StatelessWidget {
                     Text(
                       display.title,
                       key: Key('resource-card-title-${resource.id}'),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: PopupStyle.textPrimary,
+                      style: TextStyle(
+                        color: PopupStyle.of(context).textPrimary,
                         fontSize: 13,
                         height: 1.15,
                         fontWeight: FontWeight.w700,
@@ -164,10 +164,10 @@ class _ResourceCard extends StatelessWidget {
                     Text(
                       display.summary,
                       key: Key('resource-card-summary-${resource.id}'),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: PopupStyle.textSecondary,
+                      style: TextStyle(
+                        color: PopupStyle.of(context).textSecondary,
                         fontSize: 10,
                         height: 1.25,
                       ),
@@ -227,11 +227,11 @@ class _ResourceCard extends StatelessWidget {
                         ? context.localized('Disable', '停用')
                         : context.localized('Enable', '启用'),
                     color: resource.enabled
-                        ? PopupStyle.success
-                        : PopupStyle.textTertiary,
+                        ? PopupStyle.of(context).success
+                        : PopupStyle.of(context).textTertiary,
                     backgroundColor: resource.enabled
-                        ? PopupStyle.success.withValues(alpha: 0.13)
-                        : PopupStyle.field,
+                        ? PopupStyle.of(context).success.withValues(alpha: 0.13)
+                        : PopupStyle.of(context).field,
                     onPressed: onToggleEnabled,
                   ),
                   _CardAction(
@@ -289,14 +289,15 @@ class _CardAction extends StatelessWidget {
           size: 30,
           iconSize: 16,
           backgroundColor:
-              backgroundColor ?? PopupStyle.field.withValues(alpha: 0.72),
-          foregroundColor: color ?? PopupStyle.textSecondary,
+              backgroundColor ??
+              PopupStyle.of(context).field.withValues(alpha: 0.72),
+          foregroundColor: color ?? PopupStyle.of(context).textSecondary,
           icon: symbol == 'enabled' || symbol == 'paused'
               ? EnabledStatusIcon(enabled: symbol == 'enabled', size: 16)
               : PopupSymbolIcon(
                   symbol,
                   size: 16,
-                  color: color ?? PopupStyle.textSecondary,
+                  color: color ?? PopupStyle.of(context).textSecondary,
                 ),
         ),
       ),
@@ -329,10 +330,10 @@ class _ResourceTag extends StatelessWidget {
                   Theme.of(context).brightness,
                   opacity: 0.16,
                 ),
-                ResourceType.skill => const Color(0xFFE9EBF7),
-                _ => const Color(0xFFF0EBDD),
+                ResourceType.skill => PopupStyle.of(context).skillTagSurface,
+                _ => PopupStyle.of(context).warmTagSurface,
               }
-            : PopupStyle.field,
+            : PopupStyle.of(context).field,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -343,10 +344,10 @@ class _ResourceTag extends StatelessWidget {
                   ResourceType.mcp => PopupStyle.mcpAccent(
                     Theme.of(context).brightness,
                   ),
-                  ResourceType.skill => const Color(0xFF4C63A1),
-                  _ => const Color(0xFF75684F),
+                  ResourceType.skill => PopupStyle.of(context).skillAccent,
+                  _ => PopupStyle.of(context).warmAccent,
                 }
-              : PopupStyle.textSecondary,
+              : PopupStyle.of(context).textSecondary,
           fontSize: 10,
           height: 1,
           fontWeight: FontWeight.w600,
@@ -417,13 +418,13 @@ String _resourceSymbol(ResourceType type) {
 }
 
 Color _resourceColor(ResourceType type, {bool isDark = false}) {
+  final Brightness brightness = isDark ? Brightness.dark : Brightness.light;
+  final PopupPalette popup = PopupStyle.forBrightness(brightness);
   return switch (type) {
-    ResourceType.prompt => const Color(0xFFA97822),
-    ResourceType.skill => const Color(0xFF4C63A1),
-    ResourceType.mcp => PopupStyle.mcpAccent(
-      isDark ? Brightness.dark : Brightness.light,
-    ),
-    ResourceType.knowledge => PopupStyle.accent,
-    ResourceType.clipboard => PopupStyle.textSecondary,
+    ResourceType.prompt => popup.warmAccent,
+    ResourceType.skill => popup.skillAccent,
+    ResourceType.mcp => PopupStyle.mcpAccent(brightness),
+    ResourceType.knowledge => popup.accent,
+    ResourceType.clipboard => popup.textSecondary,
   };
 }

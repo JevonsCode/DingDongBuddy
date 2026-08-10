@@ -1,47 +1,49 @@
-# DingDong 1.3.3
+# DingDong 1.3.6
 
-DingDong 1.3.3 makes update checks more resilient and keeps the menu-bar buddy
-legible across macOS light and dark appearances.
+DingDong 1.3.6 gives the popup a softer blue-black dark appearance and lets
+macOS render ordinary menu-bar buddy states with native adaptive tinting.
 
-## More resilient update checks
+## Softer, coherent dark mode
 
-- Desktop update checks now try the release metadata mirrored by DingDong's
-  Cloudflare Worker first, then continue through the existing website and
-  GitHub fallbacks when a source is unavailable.
-- The Worker publishes the same `dingdong-release.json` used by the website and
-  serves it with a no-cache policy so a newly deployed version can be discovered
-  without waiting for stale metadata to expire.
-- The extra source improves fallback coverage but does not guarantee
-  reachability on every network or in every region.
+- The dark interface now uses layered blue-black surfaces instead of near-black
+  gray, keeping the popup calm while preserving separation between the shell,
+  controls, cards, fields, and footer.
+- Dynamic, Resource Library, Clipboard, and Agent API now consistently consume
+  the theme-aware palette. Their content cards, tags, status indicators, filter
+  counts, and primary actions retain clear contrast in dark mode.
+- Populated Dynamic and Resource Library cards no longer clip at the bottom.
+  New dark golden coverage keeps those real-content layouts and the Clipboard
+  workspace from regressing.
 
-## Adaptive macOS menu-bar contrast
+## Native macOS menu-bar appearance
 
-- Normal, resting, and sleeping menu-bar states now select their `-w` or
-  non-`-w` artwork from the current macOS appearance.
-- Changing the system appearance refreshes the tray artwork immediately without
-  restarting DingDong.
-- Reminder states keep their white artwork over the colored reminder background,
-  including the alternate animation frame.
+- Normal, resting, and sleeping buddy states now use macOS template images, so
+  AppKit applies the correct monochrome tint for the current menu-bar appearance.
+- The reminder state stays non-template because its colored capsule and white
+  artwork are intentional, including the alternate animation frame.
+- Windows continues to select dedicated light- and dark-taskbar artwork.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.3.3 提高了更新检查的容错能力，并让菜单栏伙伴在 macOS 浅色与深色
-外观下都保持清晰可见。
+DingDong 1.3.6 为弹窗带来更柔和的蓝黑色暗黑模式，并让 macOS 用系统原生方式
+为普通菜单栏伙伴状态自动着色。
 
-## 更新检查更可靠
+## 更柔和、统一的暗黑模式
 
-- 桌面端检查更新时会优先读取 DingDong Cloudflare Worker 上的发布元数据；该来源
-  不可用时，仍会继续尝试原有官网与 GitHub 备用地址。
-- Worker 与官网发布同一份 `dingdong-release.json`，并使用不缓存策略，减少新版本
-  部署后仍读到旧元数据的情况。
-- 新增来源可以提高兜底覆盖，但无法保证所有网络或地区都一定可访问。
+- 暗黑界面不再使用接近纯黑的灰色，而是采用有层次的蓝黑色；弹窗外壳、控件、
+  卡片、输入框与底栏之间仍保持清晰分区。
+- 动态、资源库、剪贴板与 Agent API 统一使用可随主题切换的色板；内容卡片、标签、
+  状态标记、筛选数量和主操作按钮在暗黑模式下都有清楚的对比度。
+- 填充真实内容后，动态和资源库卡片不再出现底部裁切；新增暗黑 golden 截图覆盖
+  这两个页面与剪贴板页面，防止布局和配色回退。
 
-## macOS 菜单栏自动适配明暗外观
+## macOS 菜单栏原生适配
 
-- 普通、休息和睡眠状态会根据当前 macOS 外观选择 `-w` 或无 `-w` 的图标资源。
-- 切换系统外观时，托盘图标会立即刷新，不需要重启 DingDong。
-- 提醒状态有彩色背景，因此继续使用白色图标，包括第二帧动画。
+- 普通、休息和睡眠状态改用 macOS template image，由 AppKit 根据当前菜单栏外观
+  自动应用正确的单色着色。
+- 提醒状态刻意保留非 template 的彩色胶囊与白色图案，包括第二帧动画。
+- Windows 继续按浅色或深色任务栏选择对应资源。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

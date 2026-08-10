@@ -263,7 +263,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                             onPressed: widget.baseUri == null
                                 ? null
                                 : _testDing,
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.notifications_none_rounded,
                               size: 17,
                             ),
@@ -282,7 +282,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                                       ResourceManagerDestination.agentAdapters,
                                 ),
                               ),
-                              icon: const Icon(Icons.hub_outlined, size: 17),
+                              icon: Icon(Icons.hub_outlined, size: 17),
                               label: context.localized(
                                 'Manage Agents',
                                 '管理 Agent',
@@ -367,8 +367,8 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                                 'The bundled bridge exposes prompts, skills, MCP references, and notifications through JSON-RPC.',
                                 '内置桥接通过 JSON-RPC 提供提示词、技能、MCP 引用与通知能力。',
                               ),
-                              style: const TextStyle(
-                                color: PopupStyle.textSecondary,
+                              style: TextStyle(
+                                color: PopupStyle.of(context).textSecondary,
                                 fontSize: 11,
                                 height: 1.4,
                               ),

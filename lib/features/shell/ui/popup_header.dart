@@ -55,7 +55,7 @@ class PopupHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 108,
-      color: PopupStyle.surface,
+      color: PopupStyle.of(context).surface,
       child: Column(
         children: <Widget>[
           SizedBox(
@@ -91,12 +91,14 @@ class PopupHeader extends StatelessWidget {
                                       key: const Key('popup-brand-sound'),
                                       behavior: HitTestBehavior.opaque,
                                       onTap: onBrand,
-                                      child: const Text(
+                                      child: Text(
                                         'DingDong',
                                         maxLines: 1,
                                         softWrap: false,
                                         style: TextStyle(
-                                          color: PopupStyle.textPrimary,
+                                          color: PopupStyle.of(
+                                            context,
+                                          ).textPrimary,
                                           fontSize: 17,
                                           height: 1.18,
                                           fontWeight: FontWeight.w700,
@@ -220,13 +222,13 @@ class _DevelopmentBadge extends StatelessWidget {
       key: const Key('popup-development-badge'),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: PopupStyle.developmentSoft,
+        color: PopupStyle.of(context).developmentSoft,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Text(
+      child: Text(
         'DEV',
         style: TextStyle(
-          color: PopupStyle.development,
+          color: PopupStyle.of(context).development,
           fontSize: 8,
           height: 1,
           fontWeight: FontWeight.w800,
@@ -259,11 +261,11 @@ class _VersionButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Text(
+              Text(
                 'v$currentAppVersion',
                 key: Key('app-version-$currentAppVersion'),
                 style: TextStyle(
-                  color: PopupStyle.textSecondary,
+                  color: PopupStyle.of(context).textSecondary,
                   fontSize: 9,
                   height: 1,
                   fontWeight: FontWeight.w600,
@@ -275,8 +277,8 @@ class _VersionButton extends StatelessWidget {
                   key: const Key('popup-version-update-dot'),
                   width: 5,
                   height: 5,
-                  decoration: const BoxDecoration(
-                    color: PopupStyle.development,
+                  decoration: BoxDecoration(
+                    color: PopupStyle.of(context).development,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -313,12 +315,12 @@ class _HeaderButton extends StatelessWidget {
           onPressed: onPressed,
           size: 30,
           iconSize: 15,
-          backgroundColor: PopupStyle.surfaceSoft,
-          foregroundColor: PopupStyle.textSecondary,
+          backgroundColor: PopupStyle.of(context).surfaceSoft,
+          foregroundColor: PopupStyle.of(context).textSecondary,
           icon: PopupSymbolIcon(
             symbol,
             size: 15,
-            color: PopupStyle.textSecondary,
+            color: PopupStyle.of(context).textSecondary,
           ),
         ),
       ),
@@ -334,6 +336,7 @@ class _IssueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
     final String label = context.localized(
       '$count issues need attention',
       '$count 个问题需要处理',
@@ -348,9 +351,9 @@ class _IssueButton extends StatelessWidget {
           onPressed: onPressed,
           size: 32,
           iconSize: 17,
-          backgroundColor: const Color(0xFFFFF3F1),
-          foregroundColor: const Color(0xFFB93A32),
-          borderColor: const Color(0xFFF1C8C3),
+          backgroundColor: colors.errorContainer.withValues(alpha: 0.72),
+          foregroundColor: colors.onErrorContainer,
+          borderColor: colors.error.withValues(alpha: 0.26),
           icon: Stack(
             clipBehavior: Clip.none,
             children: <Widget>[
@@ -369,7 +372,10 @@ class _IssueButton extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: const Color(0xFFB93A32),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: PopupStyle.surface, width: 1.5),
+                      border: Border.all(
+                        color: PopupStyle.of(context).surface,
+                        width: 1.5,
+                      ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -425,15 +431,15 @@ class _WorkspaceTab extends StatelessWidget {
               minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 9),
               backgroundColor: selected
-                  ? PopupStyle.accentSoft
-                  : PopupStyle.surface,
+                  ? PopupStyle.of(context).accentSoft
+                  : PopupStyle.of(context).surface,
               foregroundColor: selected
-                  ? PopupStyle.accent
-                  : PopupStyle.textSecondary,
+                  ? PopupStyle.of(context).accent
+                  : PopupStyle.of(context).textSecondary,
               side: BorderSide(
                 color: selected
-                    ? PopupStyle.accent.withValues(alpha: 0.25)
-                    : PopupStyle.border,
+                    ? PopupStyle.of(context).accent.withValues(alpha: 0.25)
+                    : PopupStyle.of(context).border,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -463,8 +469,8 @@ class _WorkspaceTab extends StatelessWidget {
                                 symbol,
                                 size: 17,
                                 color: selected
-                                    ? PopupStyle.accent
-                                    : PopupStyle.textSecondary,
+                                    ? PopupStyle.of(context).accent
+                                    : PopupStyle.of(context).textSecondary,
                               ),
                             ),
                           ),
@@ -495,8 +501,10 @@ class _WorkspaceTab extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: selected
-                                ? PopupStyle.accent.withValues(alpha: 0.86)
-                                : PopupStyle.textTertiary,
+                                ? PopupStyle.of(
+                                    context,
+                                  ).accent.withValues(alpha: 0.86)
+                                : PopupStyle.of(context).textTertiary,
                             fontFamily: 'monospace',
                             fontSize: 9,
                             fontWeight: FontWeight.w700,

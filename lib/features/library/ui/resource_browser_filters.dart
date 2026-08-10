@@ -104,12 +104,14 @@ class _FilterButton extends StatelessWidget {
       onSelected: (_) => onPressed(),
       height: 35,
       padding: EdgeInsets.zero,
-      foregroundColor: PopupStyle.textSecondary,
-      selectedForegroundColor: PopupStyle.accent,
-      backgroundColor: PopupStyle.surface,
-      selectedBackgroundColor: PopupStyle.accentSoft,
-      borderColor: PopupStyle.border,
-      selectedBorderColor: PopupStyle.accent.withValues(alpha: 0.25),
+      foregroundColor: PopupStyle.of(context).textSecondary,
+      selectedForegroundColor: PopupStyle.of(context).accent,
+      backgroundColor: PopupStyle.of(context).surface,
+      selectedBackgroundColor: PopupStyle.of(context).accentSoft,
+      borderColor: PopupStyle.of(context).border,
+      selectedBorderColor: PopupStyle.of(
+        context,
+      ).accent.withValues(alpha: 0.25),
       borderRadius: 8,
     );
   }
@@ -142,13 +144,15 @@ class _GroupButton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: selected ? PopupStyle.accent : PopupStyle.textSecondary,
+              color: selected
+                  ? PopupStyle.of(context).accent
+                  : PopupStyle.of(context).textSecondary,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               '$count',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: PopupStyle.of(context).background,
                 fontSize: 9,
                 fontWeight: FontWeight.w700,
               ),
@@ -159,12 +163,14 @@ class _GroupButton extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onPressed(),
       height: 32,
-      foregroundColor: PopupStyle.textSecondary,
-      selectedForegroundColor: PopupStyle.accent,
-      backgroundColor: PopupStyle.surface,
-      selectedBackgroundColor: PopupStyle.accentSoft,
-      borderColor: PopupStyle.border,
-      selectedBorderColor: PopupStyle.accent.withValues(alpha: 0.25),
+      foregroundColor: PopupStyle.of(context).textSecondary,
+      selectedForegroundColor: PopupStyle.of(context).accent,
+      backgroundColor: PopupStyle.of(context).surface,
+      selectedBackgroundColor: PopupStyle.of(context).accentSoft,
+      borderColor: PopupStyle.of(context).border,
+      selectedBorderColor: PopupStyle.of(
+        context,
+      ).accent.withValues(alpha: 0.25),
       borderRadius: 8,
     );
   }

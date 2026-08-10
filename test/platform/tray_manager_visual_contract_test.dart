@@ -70,76 +70,78 @@ void main() {
     },
   );
 
-  test('macOS tray adapts unbacked buddy art to the menu bar contrast', () {
+  test('macOS tray uses native template artwork outside reminders', () {
     expect(
-      macOSTrayBuddyIconPath(
-        hot: false,
-        state: TrayBuddyState.normal,
-        taskbarIsLight: false,
-      ),
-      'Assets/DingDongIP/AgentToolIcon.png',
-    );
-    expect(
-      macOSTrayBuddyIconPath(
-        hot: false,
-        state: TrayBuddyState.resting,
-        taskbarIsLight: false,
-      ),
-      'Assets/DingDongIP/rest.png',
-    );
-    expect(
-      macOSTrayBuddyIconPath(
-        hot: false,
-        state: TrayBuddyState.sleeping,
-        taskbarIsLight: false,
-      ),
-      'Assets/DingDongIP/sleeping.png',
-    );
-    expect(
-      macOSTrayBuddyIconPath(
-        hot: false,
-        state: TrayBuddyState.normal,
-        taskbarIsLight: true,
-      ),
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.normal),
       'Assets/DingDongIP/AgentToolIcon-w.png',
     );
     expect(
-      macOSTrayBuddyIconPath(
-        hot: false,
-        state: TrayBuddyState.sleeping,
-        taskbarIsLight: true,
-      ),
-      'Assets/DingDongIP/sleeping-w.png',
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.resting),
+      'Assets/DingDongIP/rest-w.png',
     );
-  });
-
-  test('macOS reminder keeps white artwork over its colored background', () {
     expect(
-      macOSTrayBuddyIconPath(
-        hot: false,
-        state: TrayBuddyState.reminder,
-        taskbarIsLight: false,
-      ),
-      'Assets/DingDongIP/ding-w.png',
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.sleeping),
+      'Assets/DingDongIP/sleeping-w.png',
     );
     expect(
       macOSTrayBuddyIconPath(
         hot: false,
         state: TrayBuddyState.resting,
-        taskbarIsLight: false,
         alternateFrame: true,
       ),
-      'Assets/DingDongIP/rest2.png',
+      'Assets/DingDongIP/rest-w2.png',
+    );
+    expect(
+      macOSTrayBuddyIconIsTemplate(hot: false, state: TrayBuddyState.normal),
+      isTrue,
+    );
+    expect(
+      macOSTrayBuddyIconIsTemplate(hot: false, state: TrayBuddyState.resting),
+      isTrue,
+    );
+    expect(
+      macOSTrayBuddyIconIsTemplate(hot: false, state: TrayBuddyState.sleeping),
+      isTrue,
+    );
+  });
+
+  test('macOS reminder keeps non-template art over its colored background', () {
+    expect(
+      macOSTrayBuddyIconPath(hot: false, state: TrayBuddyState.reminder),
+      'Assets/DingDongIP/ding-w.png',
+    );
+    expect(
+      macOSTrayBuddyIconIsTemplate(hot: false, state: TrayBuddyState.reminder),
+      isFalse,
     );
     expect(
       macOSTrayBuddyIconPath(
         hot: true,
         state: TrayBuddyState.normal,
-        taskbarIsLight: false,
         alternateFrame: true,
       ),
       'Assets/DingDongIP/ding-w2.png',
     );
+    expect(
+      macOSTrayBuddyIconIsTemplate(hot: true, state: TrayBuddyState.normal),
+      isFalse,
+    );
+  });
+
+  test('macOS buddy template choice reaches the native AppKit image', () {
+    final String gateway = File(
+      'lib/platform/plugin_desktop_shell_gateway.dart',
+    ).readAsStringSync();
+    final String plugin = File(
+      'packages/tray_manager/macos/tray_manager/Classes/TrayManagerPlugin.swift',
+    ).readAsStringSync();
+
+    expect(
+      gateway,
+      contains('macOSTrayBuddyIconIsTemplate(hot: hot, state: mascotState)'),
+    );
+    expect(gateway, isNot(contains('isTemplate: false')));
+    expect(plugin, contains('image!.isTemplate = isTemplate'));
   });
 
   test('tray buddy animation timing and macOS rest sizing match the spec', () {

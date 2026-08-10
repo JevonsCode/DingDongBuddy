@@ -38,14 +38,14 @@ class PopupFooter extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
-        color: PopupStyle.background.withValues(alpha: 0.97),
-        border: const Border(top: BorderSide(color: PopupStyle.border)),
+        color: PopupStyle.of(context).background.withValues(alpha: 0.97),
+        border: Border(top: BorderSide(color: PopupStyle.of(context).border)),
       ),
       child: Text(
         '$apiStatus   ·   $shortcutStatus',
         maxLines: 1,
-        style: const TextStyle(
-          color: PopupStyle.textSecondary,
+        style: TextStyle(
+          color: PopupStyle.of(context).textSecondary,
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),

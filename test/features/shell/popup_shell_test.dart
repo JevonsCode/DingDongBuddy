@@ -4,10 +4,12 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -60,6 +62,68 @@ void main() {
     expect(find.byKey(const Key('popup-tab-1')), findsOneWidget);
     expect(find.byKey(const Key('popup-tab-2')), findsOneWidget);
     expect(find.byKey(const Key('popup-tab-3')), findsNothing);
+  });
+
+  testWidgets('dark clipboard popup uses dark surfaces and readable text', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ShellController controller = ShellController(initialIndex: 2);
+    addTearDown(controller.dispose);
+    final SettingsRepository settings = SettingsRepository(
+      MemoryPreferencesBackend(<String, Object>{
+        'dingdong.panel.themeMode': 'dark',
+      }),
+    );
+    final ClipboardRecord record = ClipboardRecord(
+      id: 'dark-popup-record',
+      group: 'Clipboard',
+      title: 'Dark popup record',
+      content: 'Dark popup content',
+      tags: const <String>['clipboard', 'text'],
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: DateTime.utc(2026, 8, 10),
+      updatedAt: DateTime.utc(2026, 8, 10),
+    );
+
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: settings,
+        shellController: controller,
+        clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[record]),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Material shell = tester.widget<Material>(
+      find.byKey(const Key('popup-shell')),
+    );
+    expect(shell.color, PopupStyle.dark.background);
+
+    final DesktopSearchField search = tester.widget<DesktopSearchField>(
+      find.byType(DesktopSearchField),
+    );
+    expect(search.backgroundColor, PopupStyle.dark.field);
+    expect(search.borderColor, PopupStyle.dark.border);
+    expect(search.foregroundColor, PopupStyle.dark.textSecondary);
+
+    final Finder tile = find.byType(ClipboardListTile);
+    final Material tileSurface = tester.widget<Material>(
+      find.descendant(of: tile, matching: find.byType(Material)).first,
+    );
+    expect(tileSurface.color, PopupStyle.dark.accentSoft);
+    final RoundedRectangleBorder tileShape =
+        tileSurface.shape! as RoundedRectangleBorder;
+    expect(tileShape.side.color, PopupStyle.dark.border);
+    expect(
+      tester.widget<Text>(find.text('Dark popup record')).style?.color,
+      PopupStyle.dark.textPrimary,
+    );
   });
 
   testWidgetsOnPlatform(
@@ -844,7 +908,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.3.4'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.3.7'),
       );
       addTearDown(settings.dispose);
       await settings.load();

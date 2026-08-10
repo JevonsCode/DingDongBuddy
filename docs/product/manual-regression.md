@@ -1,4 +1,4 @@
-# DingDong 1.3.3 Manual Regression Checklist
+# DingDong 1.3.6 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -9,6 +9,14 @@ and macOS golden images; the items below exercise real operating-system state.
 - A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
 - A saved non-default opacity can be restored before the desktop shell starts without a native window crash.
 - DingDong opens the saved default workspace and restores theme and opacity.
+- In dark mode, the popup uses layered blue-black surfaces rather than pure or
+  near-black gray, with a distinct header, workspace body, cards, fields, and
+  footer.
+- Populate Dynamic with recent Agent events plus Prompt, Skill, and MCP cards;
+  no title, summary, or tag row clips, and badges remain legible.
+- Populate Resource Library with Prompt, Skill, and MCP cards; Manage, type and
+  group filter counts, status actions, tags, and card text retain clear contrast
+  without bottom overflow.
 - On macOS, switching Spaces and reopening the popup keeps the selected opacity
   instead of falling back to the default appearance.
 - Opening DingDong from Applications, Launchpad, or Spotlight reveals and focuses
@@ -17,18 +25,19 @@ and macOS golden images; the items below exercise real operating-system state.
 - Closing the window follows the configured desktop behavior and the tray can reopen it.
 - After Command-dragging the macOS status item, its position is restored across
   application restarts.
-- A fresh launch starts in normal state with `AgentToolIcon` in dark appearance
-  and `AgentToolIcon-w` in light appearance. With no Agent reminder or Clipboard
-  capture, it switches to the matching `rest` state after three minutes and the
-  matching `sleeping` state after five minutes.
+- A fresh macOS launch starts in normal state with `AgentToolIcon-w` rendered as
+  a native template image. With no Agent reminder or Clipboard capture, it
+  switches to the template `rest-w` state after three minutes and the template
+  `sleeping-w` state after five minutes.
 - A new Agent reminder shows `ding-w`. A Clipboard capture or acknowledging the
   reminder restores normal and restarts both idle thresholds; there is no turn
   animation.
-- On macOS, changing between light and dark appearance immediately swaps the
-  unbacked normal, resting, and sleeping artwork without restarting DingDong.
-  `ding-w` alternates with `ding-w2` every 0.7 seconds regardless of appearance.
-  Resting and sleeping alternate with their matching second frames every 1.2
-  seconds; resting is rendered 2px smaller in both dimensions.
+- On macOS, changing between light and dark appearance immediately retints the
+  template normal, resting, and sleeping artwork without restarting DingDong or
+  swapping assets. The non-template reminder art remains white over its colored
+  capsule; `ding-w` alternates with `ding-w2` every 0.7 seconds. Resting and
+  sleeping alternate with their matching second frames every 1.2 seconds;
+  resting is rendered 2px smaller in both dimensions.
 - On Windows light and dark taskbars, normal, reminder, resting, and sleeping
   use their matching artwork and the same 0.7/1.2-second frame timing.
 - With an unread macOS reminder, the count is visually centered inside the
@@ -429,8 +438,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.3.3` build `45` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.3.3.45` and product name `DingDong`.
+- The macOS release app metadata is version `1.3.6` build `46` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.3.6.46` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -438,7 +447,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.3.3` and that exact commit SHA; every
+  `/v1/health` must report version `1.3.6` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the release workflow deploys the website from the exact release

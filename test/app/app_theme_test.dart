@@ -1,4 +1,5 @@
 import 'package:dingdong/app/app_theme.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,5 +42,21 @@ void main() {
         Colors.transparent,
       );
     }
+  });
+
+  test('dark surfaces use layered blue-black instead of pure black', () {
+    final PopupPalette palette = PopupStyle.dark;
+
+    expect(AppTheme.dark().scaffoldBackgroundColor, palette.background);
+    expect(palette.background, isNot(Colors.black));
+    expect(palette.background.b, greaterThan(palette.background.r));
+    expect(
+      palette.surface.computeLuminance(),
+      greaterThan(palette.background.computeLuminance()),
+    );
+    expect(
+      palette.field.computeLuminance(),
+      greaterThan(palette.surface.computeLuminance()),
+    );
   });
 }

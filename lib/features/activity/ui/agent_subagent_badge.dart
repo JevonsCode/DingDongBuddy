@@ -22,8 +22,9 @@ final class AgentSubagentBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color foreground = foregroundColor ?? PopupStyle.accent;
-    final Color background = backgroundColor ?? PopupStyle.accentSoft;
+    final Color foreground = foregroundColor ?? PopupStyle.of(context).accent;
+    final Color background =
+        backgroundColor ?? PopupStyle.of(context).accentSoft;
     return Tooltip(
       message: context.localized('Codex subagent', 'Codex 子代理'),
       child: DecoratedBox(
@@ -84,7 +85,7 @@ final class AgentUnknownConversationIcon extends StatelessWidget {
         child: Icon(
           Icons.help_outline_rounded,
           size: compact ? 13 : 16,
-          color: color ?? PopupStyle.textTertiary,
+          color: color ?? PopupStyle.of(context).textTertiary,
         ),
       ),
     );

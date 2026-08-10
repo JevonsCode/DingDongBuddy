@@ -52,7 +52,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
           Container(
             height: 58,
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-            decoration: PopupStyle.card(radius: 10),
+            decoration: PopupStyle.of(context).card(radius: 10),
             child: Row(
               children: <Widget>[
                 Expanded(
@@ -65,20 +65,20 @@ class _CompactClipboardToolbar extends StatelessWidget {
                     hintText: context.localized('Search clipboard', '搜索剪贴板'),
                     clearTooltip: context.localized('Clear search', '清除搜索'),
                     style: const TextStyle(fontSize: 12),
-                    hintStyle: const TextStyle(
-                      color: PopupStyle.textSecondary,
+                    hintStyle: TextStyle(
+                      color: PopupStyle.of(context).textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
-                    searchIcon: const PopupSymbolIcon(
+                    searchIcon: PopupSymbolIcon(
                       'search',
-                      color: PopupStyle.textSecondary,
+                      color: PopupStyle.of(context).textSecondary,
                       size: 19,
                     ),
-                    backgroundColor: PopupStyle.field,
-                    borderColor: PopupStyle.border,
-                    focusBorderColor: PopupStyle.accent,
-                    foregroundColor: PopupStyle.textSecondary,
+                    backgroundColor: PopupStyle.of(context).field,
+                    borderColor: PopupStyle.of(context).border,
+                    focusBorderColor: PopupStyle.of(context).accent,
+                    foregroundColor: PopupStyle.of(context).textSecondary,
                     borderRadius: 8,
                   ),
                 ),
@@ -174,11 +174,11 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
   Widget build(BuildContext context) {
     final bool highlighted = widget.filtersExpanded || widget.filtersActive;
     final Color foreground = highlighted
-        ? PopupStyle.accent
-        : PopupStyle.textSecondary;
+        ? PopupStyle.of(context).accent
+        : PopupStyle.of(context).textSecondary;
     final Color background = highlighted
-        ? PopupStyle.accentSoft
-        : PopupStyle.surface;
+        ? PopupStyle.of(context).accentSoft
+        : PopupStyle.of(context).surface;
     final String label = widget.filtersExpanded
         ? context.localized('Hide categories and groups', '收起分类与分组')
         : widget.filtersActive
@@ -206,8 +206,8 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
               foregroundColor: foreground,
               backgroundColor: background,
               borderColor: highlighted
-                  ? PopupStyle.accent.withValues(alpha: 0.32)
-                  : PopupStyle.border,
+                  ? PopupStyle.of(context).accent.withValues(alpha: 0.32)
+                  : PopupStyle.of(context).border,
               icon: SizedBox(
                 width: 38,
                 height: 38,
@@ -244,7 +244,7 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
                           height: 7,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: PopupStyle.accent,
+                            color: PopupStyle.of(context).accent,
                             border: Border.all(color: background),
                           ),
                         ),
@@ -355,12 +355,14 @@ class _ClipboardKindFilters extends StatelessWidget {
           ? viewModel.clearFilters()
           : viewModel.setCategory(category.id),
       height: 32,
-      foregroundColor: PopupStyle.textSecondary,
-      selectedForegroundColor: PopupStyle.accent,
-      backgroundColor: PopupStyle.surface,
-      selectedBackgroundColor: PopupStyle.accentSoft,
-      borderColor: PopupStyle.border,
-      selectedBorderColor: PopupStyle.accent.withValues(alpha: 0.28),
+      foregroundColor: PopupStyle.of(context).textSecondary,
+      selectedForegroundColor: PopupStyle.of(context).accent,
+      backgroundColor: PopupStyle.of(context).surface,
+      selectedBackgroundColor: PopupStyle.of(context).accentSoft,
+      borderColor: PopupStyle.of(context).border,
+      selectedBorderColor: PopupStyle.of(
+        context,
+      ).accent.withValues(alpha: 0.28),
     );
   }
 }
@@ -507,13 +509,15 @@ class _ClipboardGroupFiltersState extends State<_ClipboardGroupFilters> {
                             height: 18,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: PopupStyle.accent.withValues(alpha: 0.12),
+                              color: PopupStyle.of(
+                                context,
+                              ).accent.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               '$shortcutIndex',
-                              style: const TextStyle(
-                                color: PopupStyle.accent,
+                              style: TextStyle(
+                                color: PopupStyle.of(context).accent,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -531,14 +535,14 @@ class _ClipboardGroupFiltersState extends State<_ClipboardGroupFilters> {
                     onSelected: (bool selected) =>
                         widget.viewModel.setGroup(selected ? group : null),
                     height: 32,
-                    foregroundColor: PopupStyle.textSecondary,
-                    selectedForegroundColor: PopupStyle.accent,
-                    backgroundColor: PopupStyle.surface,
-                    selectedBackgroundColor: PopupStyle.accentSoft,
-                    borderColor: PopupStyle.border,
-                    selectedBorderColor: PopupStyle.accent.withValues(
-                      alpha: 0.28,
-                    ),
+                    foregroundColor: PopupStyle.of(context).textSecondary,
+                    selectedForegroundColor: PopupStyle.of(context).accent,
+                    backgroundColor: PopupStyle.of(context).surface,
+                    selectedBackgroundColor: PopupStyle.of(context).accentSoft,
+                    borderColor: PopupStyle.of(context).border,
+                    selectedBorderColor: PopupStyle.of(
+                      context,
+                    ).accent.withValues(alpha: 0.28),
                   ),
                 ),
               ),

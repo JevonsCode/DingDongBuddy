@@ -51,8 +51,8 @@ class ResourceBrowserScreen extends StatelessWidget {
                         '整理后可被 Agent 复用的内容',
                       ),
                       key: const Key('resource-library-context'),
-                      style: const TextStyle(
-                        color: PopupStyle.textTertiary,
+                      style: TextStyle(
+                        color: PopupStyle.of(context).textTertiary,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
@@ -63,10 +63,10 @@ class ResourceBrowserScreen extends StatelessWidget {
                     onPressed: resourceManagerLauncher == null
                         ? null
                         : () => resourceManagerLauncher!.show(),
-                    icon: const PopupSymbolIcon(
+                    icon: PopupSymbolIcon(
                       'manage',
                       size: 17,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     label: context.localized('Manage', '资源管理'),
                     tone: DesktopActionTone.primary,
@@ -85,20 +85,20 @@ class ResourceBrowserScreen extends StatelessWidget {
                   '搜索提示词、Skills 和 MCP',
                 ),
                 clearTooltip: context.localized('Clear search', '清除搜索'),
-                style: const TextStyle(fontSize: 12),
-                hintStyle: const TextStyle(
-                  color: PopupStyle.textSecondary,
+                style: TextStyle(fontSize: 12),
+                hintStyle: TextStyle(
+                  color: PopupStyle.of(context).textSecondary,
                   fontSize: 12,
                 ),
-                searchIcon: const PopupSymbolIcon(
+                searchIcon: PopupSymbolIcon(
                   'search',
-                  color: PopupStyle.textSecondary,
+                  color: PopupStyle.of(context).textSecondary,
                   size: 19,
                 ),
-                backgroundColor: PopupStyle.surface,
-                borderColor: PopupStyle.border,
-                focusBorderColor: PopupStyle.accent,
-                foregroundColor: PopupStyle.textSecondary,
+                backgroundColor: PopupStyle.of(context).surface,
+                borderColor: PopupStyle.of(context).border,
+                focusBorderColor: PopupStyle.of(context).accent,
+                foregroundColor: PopupStyle.of(context).textSecondary,
                 borderRadius: 8,
               ),
             ),

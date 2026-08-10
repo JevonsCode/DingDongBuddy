@@ -12,6 +12,8 @@ class EnabledStatusIcon extends StatelessWidget {
   Widget build(BuildContext context) => Icon(
     enabled ? Icons.check_rounded : Icons.pause_rounded,
     size: size,
-    color: enabled ? PopupStyle.success : PopupStyle.textTertiary,
+    color: enabled
+        ? PopupStyle.of(context).success
+        : PopupStyle.of(context).textTertiary,
   );
 }

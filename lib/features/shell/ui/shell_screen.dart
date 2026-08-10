@@ -538,12 +538,12 @@ class _ShellScreenState extends State<ShellScreen> {
           key: const Key('desktop-shell-golden'),
           child: Material(
             key: const Key('popup-shell'),
-            color: PopupStyle.background,
+            color: PopupStyle.of(context).background,
             shape: systemOwnsCorners
                 ? null
                 : RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(PopupStyle.radius),
-                    side: const BorderSide(color: PopupStyle.border),
+                    side: BorderSide(color: PopupStyle.of(context).border),
                   ),
             clipBehavior: systemOwnsCorners ? Clip.none : Clip.antiAlias,
             child: Column(
