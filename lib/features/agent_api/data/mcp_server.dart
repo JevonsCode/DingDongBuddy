@@ -2,6 +2,8 @@
 
 import 'dart:convert';
 
+import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
+
 /// Executes one advertised MCP tool against DingDong's local services.
 abstract interface class McpToolExecutor {
   Future<Map<String, Object?>> execute(
@@ -33,10 +35,14 @@ final class McpServer {
             'protocolVersion': '2025-03-26',
             'capabilities': <String, Object?>{
               'tools': <String, Object?>{'listChanged': false},
+              'resources': <String, Object?>{
+                'subscribe': false,
+                'listChanged': false,
+              },
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.3.6',
+              'version': '1.3.7',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
@@ -47,7 +53,7 @@ final class McpServer {
                 'A Skill candidate is not an instruction: only when its description matches the task, call dingdong_load_skill with its id or name and current workspace before applying the returned full SKILL.md. '
                 'Load only a Skill returned by the current catalog. Read only referenced package files with dingdong_read_skill_file. '
                 'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. '
-                'After a successful dingdong_bridge response, if conversation.capsule.visible is true and the host supports native capsule rendering, render that capsule once. Otherwise, if conversation.line is non-empty, include that line exactly once in the user-visible response. Show only the provided resource titles; do not include resource content, descriptions, or IDs. '
+                'When conversation.capsule.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item and append * only when confirmedUse is true. The mergeKey is opaque merge-only metadata and must never be displayed. The marker proves that DingDong returned the full Skill this task; it does not claim that every instruction was followed. Never mark a Skill candidate, Prompt, or MCP. Select the footer presentation by capability, not by product name: on an MCP Apps host call dingdong_render_conversation_footer exactly once with the final merged capsule; on an explicitly ANSI-capable terminal use conversation.presentations.ansi.line; otherwise include conversation.line exactly once. Never paste the MCP App HTML or XML into an ordinary response. Show only resource titles and markers; do not show resource content, descriptions, IDs, or merge keys. '
                 'When the user explicitly asks to configure a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, and dingdong_bind_resource_scope with strict project scope. '
                 'Use dingdong_notify when the task is blocked or waiting for '
                 'the user. A configured completion hook normally handles the '
@@ -63,12 +69,75 @@ final class McpServer {
           'result': <String, Object?>{'tools': tools},
         });
       }
+      if (method == 'resources/list') {
+        return jsonEncode(<String, Object?>{
+          'jsonrpc': '2.0',
+          'id': id,
+          'result': <String, Object?>{
+            'resources': <Map<String, Object?>>[
+              <String, Object?>{
+                'uri': dingDongConversationFooterResourceUri,
+                'name': 'dingdong-conversation-footer',
+                'title': 'DingDong Conversation Footer',
+                'description': 'Compact Prompt, Skill, and MCP usage footer.',
+                'mimeType': dingDongConversationFooterResourceMimeType,
+              },
+            ],
+          },
+        });
+      }
+      if (method == 'resources/read') {
+        final Map<String, Object?> params =
+            message['params'] as Map<String, Object?>? ?? <String, Object?>{};
+        if (params['uri'] != dingDongConversationFooterResourceUri) {
+          return _error(
+            id: id,
+            code: -32602,
+            message: 'Unknown DingDong resource URI',
+          );
+        }
+        return jsonEncode(<String, Object?>{
+          'jsonrpc': '2.0',
+          'id': id,
+          'result': <String, Object?>{
+            'contents': <Map<String, Object?>>[
+              <String, Object?>{
+                'uri': dingDongConversationFooterResourceUri,
+                'mimeType': dingDongConversationFooterResourceMimeType,
+                'text': dingDongConversationFooterHtml,
+                '_meta': const <String, Object?>{
+                  'ui': <String, Object?>{'prefersBorder': false},
+                },
+              },
+            ],
+          },
+        });
+      }
       if (method == 'tools/call') {
         final Map<String, Object?> params =
             message['params'] as Map<String, Object?>? ?? <String, Object?>{};
         final String? name = params['name'] as String?;
         final Map<String, Object?> arguments =
             params['arguments'] as Map<String, Object?>? ?? <String, Object?>{};
+        if (name == dingDongConversationFooterRenderToolName) {
+          try {
+            final Map<String, Object?> conversation =
+                buildDingDongConversationFooterFromArguments(arguments);
+            return _conversationFooterToolResult(
+              id: id,
+              conversation: conversation,
+            );
+          } on FormatException catch (error) {
+            return _toolResult(
+              id: id,
+              payload: <String, Object?>{
+                'status': 'error',
+                'message': error.message,
+              },
+              isError: true,
+            );
+          }
+        }
         if (name == null || _executor == null) {
           return _toolResult(
             id: id,
@@ -110,7 +179,7 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative Skill catalog containing every valid, enabled, scope-matched Skill as id, name, and description only. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions. If conversation.capsule.visible is true and the host supports native capsule rendering, render that capsule once; otherwise include conversation.line exactly once in the user-visible response. Show only the provided resource titles, not resource content, descriptions, or IDs.',
+          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative Skill catalog containing every valid, enabled, scope-matched Skill as id, name, and description only. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions. Keep a visible conversation.capsule until the final response and replace only the item with the same mergeKey using conversation.item from each successful Skill load. Append * only when that item has confirmedUse=true. Choose the footer by capability: MCP Apps render tool, explicitly supported ANSI line, then Markdown conversation.line. Never paste raw HTML or XML into the response. The mergeKey is merge-only metadata; show only titles and markers, not resource content, descriptions, IDs, or merge keys.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(
@@ -126,7 +195,36 @@ final class McpServer {
           description:
               'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
         ),
+        'conversationId': _stringProperty(
+          description:
+              'Stable Agent conversation or session identifier. DingDong fills this from the Agent process when available.',
+        ),
         'expand': _enumProperty(<String>['none', 'prompts', 'all']),
+      },
+    ),
+    _tool(
+      name: dingDongConversationFooterRenderToolName,
+      title: 'Render DingDong Conversation Footer',
+      description:
+          'Presentation-only MCP Apps tool. On a host that advertises MCP Apps UI support, call this exactly once near the final response after replacing each Bridge capsule item with the successful dingdong_load_skill conversation.item that has the same mergeKey. Unsupported hosts should not call it and should use the supplied ANSI or Markdown fallback instead.',
+      properties: <String, Object?>{
+        'capsule': _conversationFooterCapsuleProperty(),
+      },
+      required: const <String>['capsule'],
+      outputSchema: const <String, Object?>{
+        'type': 'object',
+        'properties': <String, Object?>{
+          'conversation': <String, Object?>{'type': 'object'},
+        },
+        'required': <String>['conversation'],
+      },
+      meta: const <String, Object?>{
+        'ui': <String, Object?>{
+          'resourceUri': dingDongConversationFooterResourceUri,
+        },
+        'openai/outputTemplate': dingDongConversationFooterResourceUri,
+        'openai/toolInvocation/invoking': 'Rendering DingDong footer…',
+        'openai/toolInvocation/invoked': 'DingDong footer ready.',
       },
     ),
     _tool(
@@ -177,7 +275,7 @@ final class McpServer {
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
       description:
-          'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and all configured context scope rules are checked again on every load; preserve the bridge source for this request.',
+          'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and all configured context scope rules are checked again on every load; preserve the bridge source for this request. A successful visible Skill load returns conversation.item with the same mergeKey as its candidate, confirmedUse=true, and marker="*" for deterministic replacement in the final capsule.',
       properties: <String, Object?>{
         'name': _stringProperty(),
         'id': _stringProperty(),
@@ -324,6 +422,26 @@ String _toolResult({
   });
 }
 
+String _conversationFooterToolResult({
+  required Object? id,
+  required Map<String, Object?> conversation,
+}) {
+  return jsonEncode(<String, Object?>{
+    'jsonrpc': '2.0',
+    'id': id,
+    'result': <String, Object?>{
+      'content': <Map<String, Object?>>[
+        <String, Object?>{
+          'type': 'text',
+          'text': conversation['line']! as String,
+        },
+      ],
+      'structuredContent': <String, Object?>{'conversation': conversation},
+      'isError': false,
+    },
+  });
+}
+
 Map<String, Object?> _tool({
   required String name,
   required String title,
@@ -331,6 +449,8 @@ Map<String, Object?> _tool({
   required Map<String, Object?> properties,
   List<String> required = const <String>[],
   List<List<String>> anyOfRequired = const <List<String>>[],
+  Map<String, Object?>? outputSchema,
+  Map<String, Object?>? meta,
 }) {
   return <String, Object?>{
     'name': name,
@@ -345,8 +465,48 @@ Map<String, Object?> _tool({
             .map((List<String> fields) => <String, Object?>{'required': fields})
             .toList(growable: false),
     },
+    'outputSchema': ?outputSchema,
+    '_meta': ?meta,
   };
 }
+
+Map<String, Object?> _conversationFooterCapsuleProperty() =>
+    const <String, Object?>{
+      'type': 'object',
+      'description':
+          'The final merged conversation.capsule from dingdong_bridge.',
+      'properties': <String, Object?>{
+        'label': <String, Object?>{'type': 'string', 'maxLength': 32},
+        'items': <String, Object?>{
+          'type': 'array',
+          'maxItems': 24,
+          'items': <String, Object?>{
+            'type': 'object',
+            'properties': <String, Object?>{
+              'title': <String, Object?>{'type': 'string', 'maxLength': 64},
+              'type': <String, Object?>{
+                'type': 'string',
+                'enum': <String>['prompt', 'skill', 'mcp'],
+              },
+              'usage': <String, Object?>{
+                'type': 'string',
+                'enum': <String>['active', 'candidate', 'loaded', 'available'],
+              },
+              'mergeKey': <String, Object?>{
+                'type': 'string',
+                'maxLength': 160,
+                'description':
+                    'Opaque stable key used only to replace the matching item.',
+              },
+              'confirmedUse': <String, Object?>{'type': 'boolean'},
+              'marker': <String, Object?>{'type': 'string'},
+            },
+            'required': <String>['title', 'type', 'usage'],
+          },
+        },
+      },
+      'required': <String>['items'],
+    };
 
 Map<String, Object?> _stringProperty({String? description}) =>
     <String, Object?>{'type': 'string', 'description': ?description};

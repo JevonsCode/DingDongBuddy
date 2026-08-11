@@ -35,7 +35,7 @@ final class FileAgentActivityStore implements AgentActivityStore {
     try {
       final Object? decoded = jsonDecode(file.readAsStringSync());
       if (decoded is! Map<String, Object?> ||
-          decoded['version'] != 1 ||
+          (decoded['version'] != 1 && decoded['version'] != 2) ||
           decoded['activities'] is! List<Object?>) {
         return const AgentActivityHistory();
       }
@@ -70,7 +70,7 @@ final class FileAgentActivityStore implements AgentActivityStore {
     final File backup = File('${file.path}.bak');
     temporary.writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-        'version': 1,
+        'version': 2,
         'activities': history.activities
             .map((AgentActivity item) => item.toJson())
             .toList(growable: false),

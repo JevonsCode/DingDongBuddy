@@ -98,6 +98,7 @@ function createDeviceSession(pair) {
     connectionGeneration: 0,
     relayGeneration: 0,
     items: [],
+    agentRuns: [],
     agentEvents: [],
     downloads: new Map(),
     outgoingRequests: new Set(),
@@ -186,11 +187,15 @@ const elements = Object.fromEntries(
     "agent-panel",
     "clipboard-count",
     "agent-count",
+    "running-count",
+    "agent-unseen-count",
     "last-sync-label",
     "clipboard-list",
     "clipboard-empty",
     "agent-list",
     "agent-empty",
+    "agent-running-list",
+    "agent-running-empty",
     "composer",
     "selected-file",
     "selected-file-name",
@@ -1242,6 +1247,9 @@ async function handleDeviceMessage(message, session) {
     case "agent.completed":
       receiveAgentEvent(message, { session });
       break;
+    case "agent.state":
+      receiveAgentState(message, session);
+      break;
     case "file.start":
       beginDownload(message, session);
       break;
@@ -1350,12 +1358,58 @@ function receiveAgentEvent(
 ) {
   if (!session) return;
   if (!message?.id) return;
-  if (!session.agentEvents.some((value) => value.id === message.id)) {
-    session.agentEvents.unshift(message);
-    session.agentEvents = session.agentEvents.slice(0, 50);
-    if (sessionIsActive(session)) renderAgentEvents();
-  }
+  const key = agentActivityKey(message);
+  const index = session.agentEvents.findIndex(
+    (value) => agentActivityKey(value) === key,
+  );
+  const existing = index >= 0 ? session.agentEvents[index] : null;
+  const incomingCompletedAt = validDate(message.completedAt)?.getTime() || 0;
+  const existingCompletedAt = validDate(existing?.completedAt)?.getTime() || 0;
+  const event = {
+    ...existing,
+    ...message,
+    unseen:
+      existing && incomingCompletedAt <= existingCompletedAt
+        ? existing.unseen !== false
+        : message.unseen !== false,
+  };
+  if (index >= 0) session.agentEvents[index] = event;
+  else session.agentEvents.unshift(event);
+  sortAgentEvents(session);
+  session.agentEvents = session.agentEvents.slice(0, 50);
+  if (sessionIsActive(session)) renderAgentEvents();
   if (requestNotification) notifyAgentCompletion(message, session);
+}
+
+function receiveAgentState(message, session) {
+  if (!session) return;
+  session.agentRuns = (Array.isArray(message.running) ? message.running : [])
+    .filter((run) => run && typeof run.id === "string")
+    .sort(
+      (left, right) =>
+        (validDate(right.startedAt)?.getTime() || 0) -
+        (validDate(left.startedAt)?.getTime() || 0),
+    )
+    .slice(0, 50);
+  session.agentEvents = (
+    Array.isArray(message.completed) ? message.completed : []
+  )
+    .filter((event) => event && typeof event.id === "string")
+    .slice(0, 50);
+  sortAgentEvents(session);
+  if (sessionIsActive(session)) renderAgentEvents();
+}
+
+function agentActivityKey(event) {
+  return event?.activityId || event?.id || "";
+}
+
+function sortAgentEvents(session) {
+  session.agentEvents.sort(
+    (left, right) =>
+      (validDate(right.completedAt)?.getTime() || 0) -
+      (validDate(left.completedAt)?.getTime() || 0),
+  );
 }
 
 function notifyAgentCompletion(message, session) {
@@ -1889,17 +1943,51 @@ function createClipboardCard(item, session) {
 function renderAgentEvents() {
   const session = activeSession();
   if (!session) return;
-  elements["agent-count"].textContent = String(session.agentEvents.length);
+  const unseenCount = session.agentEvents.filter(
+    (event) => event.unseen !== false,
+  ).length;
+  elements["agent-count"].textContent = String(unseenCount);
+  elements["running-count"].textContent = String(session.agentRuns.length);
+  elements["agent-unseen-count"].textContent = String(unseenCount);
+  elements["agent-running-list"].replaceChildren(
+    ...session.agentRuns.map(createAgentRunCard),
+  );
   elements["agent-list"].replaceChildren(
     ...session.agentEvents.map(createAgentCard),
   );
+  elements["agent-running-empty"].hidden = session.agentRuns.length > 0;
   elements["agent-empty"].hidden = session.agentEvents.length > 0;
   invalidateFallbackFeedPanelHeight("agent");
 }
 
+function createAgentRunCard(run) {
+  const card = document.createElement("article");
+  card.className = "agent-card agent-card-running";
+  const header = document.createElement("div");
+  header.className = "agent-card-header";
+  const mascot = document.createElement("img");
+  mascot.src = "../assets/dingdong-thinking-icon.png";
+  mascot.alt = "DingDong 正在运行";
+  const heading = document.createElement("div");
+  const title = document.createElement("strong");
+  title.className = "agent-status";
+  title.textContent = "正在运行";
+  const meta = document.createElement("span");
+  meta.textContent = run.source || "Agent";
+  heading.append(title, meta);
+  header.append(mascot, heading);
+
+  const task = document.createElement("p");
+  task.className = "agent-summary";
+  task.textContent = run.task || "当前任务";
+  card.append(header, task, createAgentTimeline(run, { running: true }));
+  appendAgentWorkspace(card, run.workspacePath);
+  return card;
+}
+
 function createAgentCard(event) {
   const card = document.createElement("article");
-  card.className = "agent-card";
+  card.className = `agent-card${event.unseen === false ? "" : " is-unseen"}`;
   const header = document.createElement("div");
   header.className = "agent-card-header";
   const mascot = document.createElement("img");
@@ -1909,9 +1997,7 @@ function createAgentCard(event) {
   const title = document.createElement("strong");
   title.textContent = event.title || "Agent 完成啦";
   const meta = document.createElement("span");
-  meta.textContent = `${event.source || "Agent"} · ${formatTime(
-    new Date(event.completedAt || Date.now()),
-  )}`;
+  meta.textContent = event.source || "Agent";
   heading.append(title, meta);
   header.append(mascot, heading);
 
@@ -1921,15 +2007,50 @@ function createAgentCard(event) {
   const detail = document.createElement("p");
   detail.className = "agent-detail";
   detail.textContent = event.detail || event.summary || "";
-  card.append(header, summary);
+  card.append(header, summary, createAgentTimeline(event));
   if (detail.textContent && detail.textContent !== summary.textContent) card.append(detail);
-  if (event.workspacePath) {
-    const workspace = document.createElement("p");
-    workspace.className = "agent-workspace";
-    workspace.textContent = `项目 · ${event.workspacePath.split(/[\\/]/).filter(Boolean).at(-1)}`;
-    card.append(workspace);
-  }
+  appendAgentWorkspace(card, event.workspacePath);
   return card;
+}
+
+function createAgentTimeline(event, { running = false } = {}) {
+  const timeline = document.createElement("div");
+  timeline.className = "agent-timeline";
+  const startedAt = validDate(event.startedAt);
+  const completedAt = running ? null : validDate(event.completedAt);
+  timeline.append(
+    createAgentTimeItem("开始", startedAt ? formatLifecycleTime(startedAt) : "未记录"),
+    createAgentTimeItem("结束", running ? "运行中" : completedAt ? formatLifecycleTime(completedAt) : "未记录"),
+  );
+  if (startedAt && completedAt && completedAt >= startedAt) {
+    timeline.append(
+      createAgentTimeItem(
+        "总耗时",
+        formatDuration(completedAt.getTime() - startedAt.getTime()),
+        "agent-duration",
+      ),
+    );
+  }
+  return timeline;
+}
+
+function createAgentTimeItem(label, value, extraClass = "") {
+  const item = document.createElement("div");
+  item.className = `agent-time-item${extraClass ? ` ${extraClass}` : ""}`;
+  const name = document.createElement("span");
+  name.textContent = label;
+  const text = document.createElement("strong");
+  text.textContent = value;
+  item.append(name, text);
+  return item;
+}
+
+function appendAgentWorkspace(card, workspacePath) {
+  if (!workspacePath) return;
+  const workspace = document.createElement("p");
+  workspace.className = "agent-workspace";
+  workspace.textContent = `项目 · ${workspacePath.split(/[\\/]/).filter(Boolean).at(-1)}`;
+  card.append(workspace);
 }
 
 function renderSelectedFile() {
@@ -2885,6 +3006,43 @@ function formatTime(value) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
+}
+
+function validDate(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatLifecycleTime(value) {
+  const date = validDate(value);
+  if (!date) return "未记录";
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function formatDuration(milliseconds) {
+  if (!Number.isFinite(milliseconds) || milliseconds < 0) return "";
+  let seconds = Math.floor(milliseconds / 1000);
+  if (seconds < 1) return "不足 1 秒";
+  const days = Math.floor(seconds / 86_400);
+  seconds %= 86_400;
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds %= 60;
+  const parts = [];
+  if (days) parts.push(`${days} 天`);
+  if (hours) parts.push(`${hours} 小时`);
+  if (minutes) parts.push(`${minutes} 分`);
+  if (seconds || parts.length === 0) parts.push(`${seconds} 秒`);
+  return parts.join(" ");
 }
 
 function formatBytes(value) {

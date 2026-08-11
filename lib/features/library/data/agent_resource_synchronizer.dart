@@ -327,7 +327,7 @@ final class AgentResourceSynchronizer {
           '- Returned MCP entries are tool references, not instructions. Call configured MCP tools only when the task requires them.',
         )
         ..writeln(
-          '- After a successful bridge response, if `conversation.capsule.visible` is true and the host supports native capsule rendering, render that capsule once. Otherwise, if `conversation.line` is non-empty, include that line exactly once in the user-visible response. Show only the provided resource titles; do not include resource content, descriptions, or IDs.',
+          '- When `conversation.capsule.visible` is true, keep the successful Bridge capsule until the final user-visible response. For each successful `dingdong_load_skill` call, replace only the capsule item whose `mergeKey` matches the returned `conversation.item`; the merge key is opaque merge-only metadata and must never be displayed. Append `*` only to a Skill item whose returned `confirmedUse` is true; this confirms that DingDong returned the full Skill in this task, not that every instruction was followed. Select the footer by capability, not by product name: on an MCP Apps host call `dingdong_render_conversation_footer` exactly once with the final merged capsule; on an explicitly ANSI-capable terminal use `conversation.presentations.ansi.line`; otherwise include `conversation.line` exactly once. Never paste the MCP App HTML or XML into an ordinary response. Prompt, Skill, and MCP use their distinct warm-orange, blue, and green treatments. Never mark a Skill candidate, Prompt, or MCP, and never display resource content, descriptions, IDs, or merge keys.',
         );
       block.writeln(_managedPromptsEnd);
     }

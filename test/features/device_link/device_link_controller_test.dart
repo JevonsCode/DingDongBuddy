@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
@@ -678,6 +681,127 @@ void main() {
   });
 
   test(
+    'agent state snapshots keep running tasks separate from unread history',
+    () async {
+      AgentActivity completed = AgentActivity(
+        id: 'activity-1',
+        source: 'Codex',
+        message: '同步已完成',
+        startedAt: DateTime.utc(2026, 8, 11, 8),
+        completedAt: DateTime.utc(2026, 8, 11, 8, 10),
+        unseen: true,
+      );
+      final AgentTaskRun running = AgentTaskRun(
+        id: 'run-2',
+        source: 'Codex',
+        task: '继续验证手机状态',
+        startedAt: DateTime.utc(2026, 8, 11, 8, 11),
+      );
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        agentStateProvider: () => (
+          activities: <AgentActivity>[completed],
+          activeRuns: <AgentTaskRun>[running],
+        ),
+      );
+      addTearDown(harness.dispose);
+
+      await harness.controller.syncAgentState();
+
+      final Map<String, Object?> first = harness.session.sent.single;
+      expect(first['type'], 'agent.state');
+      expect(
+        (first['running'] as List<Object?>).single,
+        containsPair('id', 'run-2'),
+      );
+      expect(
+        (first['completed'] as List<Object?>).single,
+        allOf(
+          containsPair('id', 'activity-1'),
+          containsPair('unseen', true),
+          containsPair('startedAt', '2026-08-11T08:00:00.000Z'),
+          containsPair('completedAt', '2026-08-11T08:10:00.000Z'),
+        ),
+      );
+
+      completed = completed.seen();
+      await harness.controller.syncAgentState();
+      expect(
+        ((harness.session.sent.last['completed'] as List<Object?>).single
+            as Map<String, Object?>)['unseen'],
+        isFalse,
+      );
+    },
+  );
+
+  test(
+    'maximum Agent snapshot stays inside the encrypted relay frame',
+    () async {
+      final String oversized = List<String>.filled(5000, '状态').join();
+      final AgentConversationTarget target = AgentConversationTarget(
+        client: AgentClient.codex,
+        workspacePath: '/workspace/${List<String>.filled(600, 'x').join()}',
+      );
+      final List<AgentActivity> activities = List<AgentActivity>.generate(
+        deviceLinkAgentHistoryLimit + 5,
+        (int index) => AgentActivity(
+          id: 'activity-$index',
+          source: oversized,
+          message: oversized,
+          task: oversized,
+          detail: oversized,
+          startedAt: DateTime.utc(2026, 8, 11, 8),
+          completedAt: DateTime.utc(2026, 8, 11, 9),
+          unseen: true,
+          conversationTarget: target,
+        ),
+      );
+      final List<AgentTaskRun> runs = List<AgentTaskRun>.generate(
+        deviceLinkAgentRunningLimit + 5,
+        (int index) => AgentTaskRun(
+          id: 'run-$index',
+          source: oversized,
+          task: oversized,
+          startedAt: DateTime.utc(2026, 8, 11, 9),
+          conversationTarget: target,
+        ),
+      );
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        agentStateProvider: () => (activities: activities, activeRuns: runs),
+      );
+      addTearDown(harness.dispose);
+
+      await harness.controller.syncAgentState();
+
+      final Map<String, Object?> message = harness.session.sent.single;
+      expect(
+        message['running'],
+        isA<List<Object?>>().having(
+          (List<Object?> items) => items.length,
+          'length',
+          deviceLinkAgentRunningLimit,
+        ),
+      );
+      expect(
+        message['completed'],
+        isA<List<Object?>>().having(
+          (List<Object?> items) => items.length,
+          'length',
+          deviceLinkAgentHistoryLimit,
+        ),
+      );
+      final String envelope = await SecureMessageCodec.fromBase64Url(
+        _secret,
+      ).seal(message);
+      expect(
+        () => encodeDeviceLinkRelayFrame(type: 'data', envelope: envelope),
+        returnsNormally,
+      );
+    },
+  );
+
+  test(
     'agent Web Push is compact, encrypted, and carries its message id',
     () async {
       final HttpServer server = await HttpServer.bind(
@@ -722,6 +846,15 @@ void main() {
           detail: fullDetail,
           source: List<String>.filled(40, 'Codex"\\').join(),
         ),
+        activity: AgentActivity(
+          id: 'activity-1',
+          source: 'Codex',
+          message: '完成摘要',
+          startedAt: DateTime.utc(2026, 8, 8, 7, 59),
+          completedAt: DateTime.utc(2026, 8, 8, 8),
+          unseen: true,
+        ),
+        notificationId: 'completion-1',
       );
 
       final Map<String, Object?> body = await received.future;
@@ -735,7 +868,9 @@ void main() {
       expect(contentType?.mimeType, ContentType.json.mimeType);
       expect(authorization, startsWith('Bearer '));
       expect(pushMessage['id'], messageId);
+      expect(pushMessage['activityId'], 'activity-1');
       expect(pushMessage['type'], 'agent.completed');
+      expect(pushMessage['startedAt'], '2026-08-08T07:59:00.000Z');
       expect((pushMessage['detail']! as String).endsWith('…'), isTrue);
       expect(
         harness.session.sent.single['detail'],
@@ -754,6 +889,7 @@ Future<_Harness> _connectedHarness({
   List<ClipboardRecord> clipboardRecords = const <ClipboardRecord>[],
   List<String> sharedClipboardItemIds = const <String>[],
   Uri? relayBaseUrl,
+  AgentStateProvider? agentStateProvider,
 }) async {
   final Directory directory = await Directory.systemTemp.createTemp(
     'dingdong-device-link-test-',
@@ -794,6 +930,7 @@ Future<_Harness> _connectedHarness({
     relayBaseUrl: relayBaseUrl ?? Uri.parse('https://relay.example'),
     sessionFactory: ({required relayUrl, required room, required secret}) =>
         session,
+    agentStateProvider: agentStateProvider,
   );
   await controller.start();
   session.connectedValue = true;

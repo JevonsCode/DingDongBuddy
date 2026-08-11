@@ -22,13 +22,20 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     this._transport, {
     String Function()? currentDirectory,
     Future<String?> Function(String directory)? repositoryUrlResolver,
+    String? Function()? conversationIdResolver,
+    String? Function()? sourceResolver,
   }) : _currentDirectory = currentDirectory ?? _defaultCurrentDirectory,
        _repositoryUrlResolver =
-           repositoryUrlResolver ?? _defaultRepositoryUrlResolver;
+           repositoryUrlResolver ?? _defaultRepositoryUrlResolver,
+       _conversationIdResolver =
+           conversationIdResolver ?? _defaultConversationId,
+       _sourceResolver = sourceResolver ?? _defaultAgentSource;
 
   final McpHttpTransport _transport;
   final String Function() _currentDirectory;
   final Future<String?> Function(String directory) _repositoryUrlResolver;
+  final String? Function() _conversationIdResolver;
+  final String? Function() _sourceResolver;
   String? _lastBridgeSource;
 
   @override
@@ -148,6 +155,18 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
         ? _currentDirectory()
         : (body['workspacePath'] as String).trim();
     body['workspacePath'] = directory;
+    if ((body['conversationId'] as String? ?? '').trim().isEmpty) {
+      final String? conversationId = _conversationIdResolver()?.trim();
+      if (conversationId != null && conversationId.isNotEmpty) {
+        body['conversationId'] = conversationId;
+      }
+    }
+    if ((body['source'] as String? ?? '').trim().isEmpty) {
+      final String? source = _sourceResolver()?.trim();
+      if (source != null && source.isNotEmpty) {
+        body['source'] = source;
+      }
+    }
     if ((body['repositoryUrl'] as String? ?? '').trim().isEmpty) {
       final String? repositoryUrl = await _repositoryUrlResolver(directory);
       if (repositoryUrl != null && repositoryUrl.trim().isNotEmpty) {
@@ -231,6 +250,45 @@ String? _responseSource(Map<String, Object?> response) {
 }
 
 String _defaultCurrentDirectory() => Directory.current.path;
+
+String? _defaultConversationId() => _firstEnvironmentValue(const <String>[
+  'CODEX_THREAD_ID',
+  'CLAUDE_SESSION_ID',
+  'CURSOR_SESSION_ID',
+  'GEMINI_SESSION_ID',
+  'KIRO_SESSION_ID',
+]);
+
+String? _defaultAgentSource() {
+  final Map<String, String> environment = Platform.environment;
+  if ((environment['CODEX_THREAD_ID'] ?? '').trim().isNotEmpty) {
+    return 'Codex';
+  }
+  if ((environment['CLAUDE_SESSION_ID'] ?? '').trim().isNotEmpty ||
+      environment.containsKey('CLAUDECODE')) {
+    return 'Claude Code';
+  }
+  if ((environment['CURSOR_SESSION_ID'] ?? '').trim().isNotEmpty) {
+    return 'Cursor';
+  }
+  if ((environment['GEMINI_SESSION_ID'] ?? '').trim().isNotEmpty) {
+    return 'Gemini CLI';
+  }
+  if ((environment['KIRO_SESSION_ID'] ?? '').trim().isNotEmpty) {
+    return 'Kiro';
+  }
+  return null;
+}
+
+String? _firstEnvironmentValue(List<String> keys) {
+  for (final String key in keys) {
+    final String value = (Platform.environment[key] ?? '').trim();
+    if (value.isNotEmpty) {
+      return value;
+    }
+  }
+  return null;
+}
 
 Future<String?> _defaultRepositoryUrlResolver(String directory) async {
   try {

@@ -160,16 +160,31 @@
               aria-hidden="true"
               inert
             >
-              <div class="section-heading">
+              <div class="section-heading agent-section-heading">
                 <div>
-                  <p class="eyebrow">工作完成</p>
-                  <h2>Agent 完成提醒</h2>
+                  <p class="eyebrow">实时状态</p>
+                  <h2>正在运行</h2>
                 </div>
+                <span class="agent-section-count"><b id="running-count">0</b> 个</span>
+              </div>
+              <div id="agent-running-list" class="content-list"></div>
+              <div id="agent-running-empty" class="list-empty list-empty-compact">
+                <img src="../assets/dingdong-rest-icon.png" alt="" />
+                <strong>当前没有运行中的任务</strong>
+                <span>Agent 开始新任务后，会实时出现在这里。</span>
+              </div>
+              <div class="agent-section-divider" aria-hidden="true"></div>
+              <div class="section-heading agent-section-heading">
+                <div>
+                  <p class="eyebrow">完成记录</p>
+                  <h2>Agent 提醒</h2>
+                </div>
+                <span class="agent-section-count">未读 <b id="agent-unseen-count">0</b></span>
               </div>
               <div id="agent-list" class="content-list"></div>
               <div id="agent-empty" class="list-empty">
                 <img src="../assets/dingdong-rest-icon.png" alt="" />
-                <strong>暂时没有新提醒</strong>
+                <strong>暂时没有完成记录</strong>
                 <span>Agent 完成任务后，会在这里留下更完整的结果。</span>
               </div>
             </section>

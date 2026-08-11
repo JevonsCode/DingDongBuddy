@@ -9,7 +9,7 @@ void main() {
     );
     expect(
       windowsTrayIconPath(taskbarIsLight: false, unread: true),
-      'windows/runner/resources/tray_icon_on_dark_unread.ico',
+      'windows/runner/resources/tray_icon_adaptive_unread.ico',
     );
     expect(
       windowsTrayIconPath(taskbarIsLight: true, unread: false),
@@ -17,7 +17,7 @@ void main() {
     );
     expect(
       windowsTrayIconPath(taskbarIsLight: true, unread: true),
-      'windows/runner/resources/tray_icon_on_light_unread.ico',
+      'windows/runner/resources/tray_icon_adaptive_unread.ico',
     );
     expect(
       windowsTrayIconPath(
@@ -43,7 +43,7 @@ void main() {
         state: WindowsTrayIconState.sleeping,
         alternateFrame: true,
       ),
-      'windows/runner/resources/tray_icon_on_light_unread2.ico',
+      'windows/runner/resources/tray_icon_adaptive_unread2.ico',
     );
   });
 

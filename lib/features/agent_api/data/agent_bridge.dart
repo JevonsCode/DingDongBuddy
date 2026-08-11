@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -10,6 +11,25 @@ import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
+
+/// A task start observed at the Bridge boundary before resource resolution.
+final class AgentBridgeTaskStart {
+  const AgentBridgeTaskStart({
+    required this.task,
+    required this.source,
+    required this.startedAt,
+    this.workspacePath,
+    this.repositoryUrl,
+    this.conversationId,
+  });
+
+  final String task;
+  final String source;
+  final DateTime startedAt;
+  final String? workspacePath;
+  final String? repositoryUrl;
+  final String? conversationId;
+}
 
 /// Delivers required Prompt instructions and the dynamic Skill catalog.
 ///
@@ -20,12 +40,14 @@ final class AgentBridge {
     this._store, {
     TriggerGroupStore? triggerGroupStore,
     DateTime Function()? now,
+    this.onTaskStarted,
   }) : _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
        _now = now ?? DateTime.now;
 
   final ResourceStore _store;
   final TriggerGroupStore _triggerGroupStore;
   final DateTime Function() _now;
+  final void Function(AgentBridgeTaskStart start)? onTaskStarted;
 
   static const int _maximumSkillPackageFiles = 200;
   static const int _maximumSkillFileBytes = 5 * 1024 * 1024;
@@ -40,6 +62,7 @@ final class AgentBridge {
           .trim();
       final String source = requestedSource.isEmpty ? 'Agent' : requestedSource;
       final String expand = request['expand'] as String? ?? 'prompts';
+      final DateTime startedAt = _now().toUtc();
       final TriggerContext context = TriggerContext(
         projectPath: _firstString(request, const <String>[
           'workspacePath',
@@ -53,6 +76,26 @@ final class AgentBridge {
         ]),
         source: source,
       );
+      if (task.isNotEmpty) {
+        try {
+          onTaskStarted?.call(
+            AgentBridgeTaskStart(
+              task: task,
+              source: source,
+              startedAt: startedAt,
+              workspacePath: context.projectPath,
+              repositoryUrl: context.repositoryUrl,
+              conversationId: _firstString(request, const <String>[
+                'conversationId',
+                'sessionId',
+                'threadId',
+              ]),
+            ),
+          );
+        } on Object {
+          // Lifecycle observation must never prevent Prompt and Skill delivery.
+        }
+      }
       final Set<String> terms = task
           .toLowerCase()
           .split(RegExp(r'[^\p{L}\p{N}_-]+', unicode: true))
@@ -107,7 +150,7 @@ final class AgentBridge {
       final Set<String> selectedIds = selected
           .map((Resource resource) => resource.id)
           .toSet();
-      final DateTime usedAt = _now().toUtc();
+      final DateTime usedAt = startedAt;
       final List<Resource> updatedResources = resources
           .map(
             (Resource resource) => selectedIds.contains(resource.id)
@@ -141,14 +184,15 @@ final class AgentBridge {
             .map((_ResolvedSkill skill) => skill.resource),
         ...mcps.where(_isVisibleInAgentConversation),
       ];
-      final List<String> conversationTitles = conversationResources
-          .map(_conversationResourceName)
-          .map(_displayResourceTitle)
-          .where((String title) => title.isNotEmpty)
+      final List<Map<String, Object?>> conversationItems = conversationResources
+          .map(_conversationCapsuleItem)
+          .where(
+            (Map<String, Object?> item) => (item['title'] as String).isNotEmpty,
+          )
           .toList(growable: false);
-      final String conversationLine = conversationTitles.isEmpty
-          ? ''
-          : 'DingDong · ${conversationTitles.join(' | ')}';
+      final Map<String, Object?> conversation = buildDingDongConversationFooter(
+        items: conversationItems,
+      );
 
       List<Map<String, Object?>> items(ResourceType type) {
         return used
@@ -186,15 +230,7 @@ final class AgentBridge {
             'mcps': items(ResourceType.mcp),
             'knowledge': items(ResourceType.knowledge),
           },
-          'conversation': <String, Object?>{
-            'capsule': <String, Object?>{
-              'label': 'DingDong',
-              'titles': conversationTitles,
-              'visible': conversationTitles.isNotEmpty,
-            },
-            'line': conversationLine,
-            'titles': conversationTitles,
-          },
+          'conversation': conversation,
           'delivery': <String, Object?>{
             'prompts': 'full-required-instructions',
             'promptSnapshot': 'authoritative-replace',
@@ -241,6 +277,10 @@ final class AgentBridge {
       resources[resourceIndex] = tracked;
       await _store.save(resources);
       final Map<String, Object?> package = await _packageSummary(tracked);
+      final Map<String, Object?> conversationItem =
+          normalizeDingDongConversationFooterItem(
+            _conversationCapsuleItem(tracked, confirmedSkillUse: true),
+          )!;
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{
@@ -255,6 +295,12 @@ final class AgentBridge {
             'contentIncluded': true,
             'package': package,
           },
+          if (_isVisibleInAgentConversation(tracked))
+            'conversation': <String, Object?>{
+              'item': conversationItem,
+              'evidence': 'successful-full-skill-load',
+              'merge': 'replace-same-merge-key-in-final-capsule',
+            },
           'delivery': const <String, Object?>{
             'content': 'full-skill-md-required-workflow',
             'supportingFiles': 'manifest-read-on-demand',
@@ -581,6 +627,40 @@ String _conversationResourceName(Resource resource) =>
 
 bool _isVisibleInAgentConversation(Resource resource) =>
     !resource.hideInAgentConversation;
+
+Map<String, Object?> _conversationCapsuleItem(
+  Resource resource, {
+  bool confirmedSkillUse = false,
+}) {
+  final String title = _displayResourceTitle(
+    _conversationResourceName(resource),
+  );
+  final String type = resource.type.name;
+  final bool skill = resource.type == ResourceType.skill;
+  final String marker = skill && confirmedSkillUse ? '*' : '';
+  return <String, Object?>{
+    'title': title,
+    'type': type,
+    'tone': type,
+    'usage': switch (resource.type) {
+      ResourceType.prompt => 'active',
+      ResourceType.skill => confirmedSkillUse ? 'loaded' : 'candidate',
+      ResourceType.mcp => 'available',
+      _ => 'available',
+    },
+    'mergeKey': '${resource.type.name}:${resource.id}',
+    if (skill) 'confirmedUse': confirmedSkillUse,
+    if (skill) 'marker': marker,
+    'lineToken': '${_conversationTypeIndicator(resource.type)} $title$marker',
+  };
+}
+
+String _conversationTypeIndicator(ResourceType type) => switch (type) {
+  ResourceType.prompt => '🟠',
+  ResourceType.skill => '🔵',
+  ResourceType.mcp => '🟢',
+  _ => '⚪',
+};
 
 String _displayResourceTitle(String value) {
   final String normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');

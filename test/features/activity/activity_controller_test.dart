@@ -4,6 +4,122 @@ import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('observed task lifecycle keeps the real start and completion times', () {
+    final DateTime startedAt = DateTime.utc(2026, 8, 11, 9, 30, 4);
+    final DateTime completedAt = DateTime.utc(2026, 8, 11, 9, 42, 19);
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'run-1',
+      now: () => completedAt,
+    );
+
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: '实现实时任务状态',
+      startedAt: startedAt,
+      workspacePath: '/workspace/dingdong',
+      conversationId: 'thread-1',
+    );
+
+    expect(controller.activeRuns.single.startedAt, startedAt);
+    final AgentCompletionRecord completion = controller.record(
+      source: 'Codex',
+      message: '实时状态已完成',
+      detail: '包含开始与结束时间。',
+      completedAt: completedAt,
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-1',
+        workspacePath: '/workspace/dingdong',
+      ),
+    );
+
+    expect(controller.activeRuns, isEmpty);
+    expect(completion.notificationId, 'run-1');
+    expect(completion.activity.task, '实现实时任务状态');
+    expect(completion.activity.startedAt, startedAt);
+    expect(completion.activity.completedAt, completedAt);
+    expect(completion.activity.detail, '包含开始与结束时间。');
+  });
+
+  test('conversation id closes only its matching running task', () {
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'run-${++id}',
+      now: () => DateTime.utc(2026, 8, 11, 10),
+    );
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: '第一项任务',
+      startedAt: DateTime.utc(2026, 8, 11, 9),
+      conversationId: 'thread-1',
+    );
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: '第二项任务',
+      startedAt: DateTime.utc(2026, 8, 11, 9, 5),
+      conversationId: 'thread-2',
+    );
+
+    controller.record(
+      source: 'Codex',
+      message: '第一项完成',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-1',
+      ),
+    );
+
+    expect(controller.activeRuns.single.task, '第二项任务');
+    expect(controller.activities.single.task, '第一项任务');
+  });
+
+  test('conversation ids are isolated between known Agent clients', () {
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'run-${++id}',
+      now: () => DateTime.utc(2026, 8, 11, 10),
+    );
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: 'Codex task',
+      startedAt: DateTime.utc(2026, 8, 11, 9),
+      conversationId: 'shared-conversation-id',
+    );
+    controller.recordTaskStarted(
+      source: 'Claude Code',
+      task: 'Claude task',
+      startedAt: DateTime.utc(2026, 8, 11, 9, 5),
+      conversationId: 'shared-conversation-id',
+    );
+
+    expect(controller.activeRuns, hasLength(2));
+
+    controller.record(
+      source: 'Claude Code',
+      message: 'Claude task complete',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.claudeCode,
+        conversationId: 'shared-conversation-id',
+      ),
+    );
+
+    expect(controller.activeRuns.single.source, 'Codex');
+    expect(controller.activities.single.task, 'Claude task');
+
+    controller.record(
+      source: 'Codex',
+      message: 'Codex task complete',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'shared-conversation-id',
+      ),
+    );
+
+    expect(controller.activeRuns, isEmpty);
+    expect(controller.activities, hasLength(2));
+    expect(controller.activities.first.task, 'Codex task');
+  });
+
   test('notification stays unseen until the Dynamic reveal finishes', () {
     final ActivityController controller = ActivityController(
       idGenerator: () => 'activity-1',

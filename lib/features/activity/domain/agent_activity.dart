@@ -8,6 +8,9 @@ final class AgentActivity {
     required this.message,
     required this.completedAt,
     required this.unseen,
+    this.task,
+    this.detail,
+    this.startedAt,
     this.repeatCount = 1,
     this.conversationTarget,
   });
@@ -19,6 +22,9 @@ final class AgentActivity {
       message: json['message']! as String,
       completedAt: DateTime.parse(json['completedAt']! as String).toUtc(),
       unseen: json['unseen'] == true,
+      task: _trimmed(json['task']),
+      detail: _trimmed(json['detail']),
+      startedAt: _dateTime(json['startedAt']),
       repeatCount: _repeatCount(json['repeatCount']),
       conversationTarget: json['conversationTarget'] is Map
           ? AgentConversationTarget.fromJson(
@@ -33,6 +39,9 @@ final class AgentActivity {
   final String message;
   final DateTime completedAt;
   final bool unseen;
+  final String? task;
+  final String? detail;
+  final DateTime? startedAt;
   final int repeatCount;
   final AgentConversationTarget? conversationTarget;
 
@@ -42,6 +51,9 @@ final class AgentActivity {
     message: message,
     completedAt: completedAt,
     unseen: false,
+    task: task,
+    detail: detail,
+    startedAt: startedAt,
     repeatCount: repeatCount,
     conversationTarget: conversationTarget,
   );
@@ -50,7 +62,11 @@ final class AgentActivity {
     required String source,
     required String message,
     required DateTime completedAt,
+    String? task,
+    String? detail,
+    DateTime? startedAt,
     AgentConversationTarget? conversationTarget,
+    bool preserveLifecycle = false,
   }) {
     final AgentConversationTarget? mergedTarget =
         this.conversationTarget == null
@@ -64,6 +80,9 @@ final class AgentActivity {
       message: message,
       completedAt: completedAt,
       unseen: true,
+      task: preserveLifecycle ? this.task : task,
+      detail: detail ?? (preserveLifecycle ? this.detail : null),
+      startedAt: preserveLifecycle ? this.startedAt : startedAt,
       repeatCount: repeatCount + 1,
       conversationTarget: mergedTarget,
     );
@@ -76,6 +95,9 @@ final class AgentActivity {
         message: message,
         completedAt: completedAt,
         unseen: unseen,
+        task: task,
+        detail: detail,
+        startedAt: startedAt,
         repeatCount: repeatCount,
         conversationTarget: conversationTarget?.merge(target) ?? target,
       );
@@ -86,10 +108,25 @@ final class AgentActivity {
     'message': message,
     'completedAt': completedAt.toUtc().toIso8601String(),
     'unseen': unseen,
+    if (task != null) 'task': task,
+    if (detail != null) 'detail': detail,
+    if (startedAt != null) 'startedAt': startedAt!.toUtc().toIso8601String(),
     'repeatCount': repeatCount,
     if (conversationTarget != null)
       'conversationTarget': conversationTarget!.toJson(),
   };
+}
+
+String? _trimmed(Object? value) {
+  if (value is! String || value.trim().isEmpty) {
+    return null;
+  }
+  return value.trim();
+}
+
+DateTime? _dateTime(Object? value) {
+  final String? text = _trimmed(value);
+  return text == null ? null : DateTime.tryParse(text)?.toUtc();
 }
 
 int _repeatCount(Object? value) {

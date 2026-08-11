@@ -73,6 +73,9 @@ final class PluginDesktopShellGateway
   bool _trayBuddyAlternateFrame = false;
   GlobalHotKey _globalHotKey = GlobalHotKey.defaultValue;
   final ValueNotifier<bool> shortcutHints = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _windowVisible = ValueNotifier<bool>(false);
+
+  ValueListenable<bool> get windowVisible => _windowVisible;
 
   @override
   Stream<DesktopShellCommand> get commands => _commands.stream;
@@ -116,6 +119,7 @@ final class PluginDesktopShellGateway
     await _rebuildContextMenu();
     _installMethodHandlers();
     await windowManager.hide();
+    _windowVisible.value = false;
     await _registerGlobalHotKey(_globalHotKey);
     _started = true;
   }
@@ -158,6 +162,7 @@ final class PluginDesktopShellGateway
       await _positionPopup();
     }
     await windowManager.show();
+    _windowVisible.value = true;
     await windowManager.restore();
     await windowManager.focus();
     await _applyWindowOpacity();
@@ -392,6 +397,7 @@ final class PluginDesktopShellGateway
     _unreadAcknowledgementTimer?.cancel();
     _trayBuddyPreviewTimer?.cancel();
     _trayBuddyPreviewState = null;
+    _windowVisible.value = false;
     await onHideAuxiliaryWindows?.call();
     await windowManager.hide();
   }
@@ -468,6 +474,7 @@ final class PluginDesktopShellGateway
     trayManager.removeListener(this);
     windowManager.removeListener(this);
     await trayManager.destroy();
+    _windowVisible.value = false;
     _started = false;
   }
 
@@ -528,6 +535,7 @@ final class PluginDesktopShellGateway
 
   @override
   void onWindowFocus() {
+    _windowVisible.value = true;
     unawaited(_applyWindowOpacity());
   }
 

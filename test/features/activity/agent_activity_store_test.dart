@@ -15,6 +15,7 @@ void main() {
       File('${temporary.path}/agent-activity.json'),
     );
     final DateTime completedAt = DateTime.utc(2026, 7, 21, 10);
+    final DateTime startedAt = completedAt.subtract(const Duration(minutes: 3));
 
     store.save(
       AgentActivityHistory(
@@ -23,6 +24,9 @@ void main() {
             id: 'activity-1',
             source: 'Codex',
             message: 'Finished the task',
+            task: 'Build the app',
+            detail: 'Built and verified the app.',
+            startedAt: startedAt,
             completedAt: completedAt,
             unseen: true,
             repeatCount: 2,
@@ -42,6 +46,9 @@ void main() {
 
     final AgentActivityHistory restored = store.load();
     expect(restored.activities.single.message, 'Finished the task');
+    expect(restored.activities.single.task, 'Build the app');
+    expect(restored.activities.single.detail, 'Built and verified the app.');
+    expect(restored.activities.single.startedAt, startedAt);
     expect(restored.activities.single.unseen, isTrue);
     expect(restored.activities.single.repeatCount, 2);
     expect(

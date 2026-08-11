@@ -18,6 +18,31 @@ import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+const Map<String, Map<String, String>> _expectedConversationPalette =
+    <String, Map<String, String>>{
+      'prompt': <String, String>{'light': '#A97822', 'dark': '#D8A64A'},
+      'skill': <String, String>{'light': '#4C63A1', 'dark': '#91A8E8'},
+      'mcp': <String, String>{'light': '#2F7651', 'dark': '#8BB29E'},
+    };
+
+Map<String, Object?> _expectedConversationPresentations({
+  required String ansiLine,
+  required String markdownLine,
+}) => <String, Object?>{
+  'rich': const <String, Object?>{
+    'protocol': 'mcp-apps',
+    'resourceUri': 'ui://dingdong/conversation-footer/v1.html',
+    'renderTool': 'dingdong_render_conversation_footer',
+    'requiresCapability': 'mcp-apps',
+  },
+  'ansi': <String, Object?>{
+    'format': 'ansi-256',
+    'line': ansiLine,
+    'requiresCapability': 'ansi-color',
+  },
+  'markdown': <String, Object?>{'format': 'markdown', 'line': markdownLine},
+};
+
 void main() {
   test('GET /health retains the native response contract', () async {
     final AgentRouter router = AgentRouter();
@@ -604,13 +629,52 @@ void main() {
         containsPair('description', 'Build and release Flutter applications'),
       );
       expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
+      const String markdownLine =
+          'DingDong · 🟠 代码审查与发布流... | 🔵 部署自动化助手 | 🟢 生产环境监控连接';
+      const String ansiLine =
+          '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m代码审查与发布流...\u001B[0m | \u001B[38;5;69m部署自动化助手\u001B[0m | \u001B[38;5;71m生产环境监控连接\u001B[0m';
       expect(response.json['conversation'], <String, Object?>{
         'capsule': <String, Object?>{
           'label': 'DingDong',
+          'items': <Map<String, Object?>>[
+            <String, Object?>{
+              'title': '代码审查与发布流...',
+              'type': 'prompt',
+              'tone': 'prompt',
+              'usage': 'active',
+              'mergeKey': 'prompt:prompt',
+              'lineToken': '🟠 代码审查与发布流...',
+            },
+            <String, Object?>{
+              'title': '部署自动化助手',
+              'type': 'skill',
+              'tone': 'skill',
+              'usage': 'candidate',
+              'confirmedUse': false,
+              'marker': '',
+              'mergeKey': 'skill:skill',
+              'lineToken': '🔵 部署自动化助手',
+            },
+            <String, Object?>{
+              'title': '生产环境监控连接',
+              'type': 'mcp',
+              'tone': 'mcp',
+              'usage': 'available',
+              'mergeKey': 'mcp:mcp',
+              'lineToken': '🟢 生产环境监控连接',
+            },
+          ],
+          'palette': _expectedConversationPalette,
+          'confirmedSkillUseMarker': '*',
           'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
           'visible': true,
         },
-        'line': 'DingDong · 代码审查与发布流... | 部署自动化助手 | 生产环境监控连接',
+        'presentations': _expectedConversationPresentations(
+          ansiLine: ansiLine,
+          markdownLine: markdownLine,
+        ),
+        'ansiLine': ansiLine,
+        'line': markdownLine,
         'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
       });
       expect(response.json['delivery'], <String, Object?>{
@@ -743,13 +807,51 @@ void main() {
       ),
     );
 
+    const String markdownLine = 'DingDong · 🟠 提示词 | 🔵 技能加载名 | 🟢 MCP titl...';
+    const String ansiLine =
+        '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m提示词\u001B[0m | \u001B[38;5;69m技能加载名\u001B[0m | \u001B[38;5;71mMCP titl...\u001B[0m';
     expect(response.json['conversation'], <String, Object?>{
       'capsule': <String, Object?>{
         'label': 'DingDong',
+        'items': <Map<String, Object?>>[
+          <String, Object?>{
+            'title': '提示词',
+            'type': 'prompt',
+            'tone': 'prompt',
+            'usage': 'active',
+            'mergeKey': 'prompt:prompt-session-name',
+            'lineToken': '🟠 提示词',
+          },
+          <String, Object?>{
+            'title': '技能加载名',
+            'type': 'skill',
+            'tone': 'skill',
+            'usage': 'candidate',
+            'confirmedUse': false,
+            'marker': '',
+            'mergeKey': 'skill:skill-session-name',
+            'lineToken': '🔵 技能加载名',
+          },
+          <String, Object?>{
+            'title': 'MCP titl...',
+            'type': 'mcp',
+            'tone': 'mcp',
+            'usage': 'available',
+            'mergeKey': 'mcp:mcp-title-fallback',
+            'lineToken': '🟢 MCP titl...',
+          },
+        ],
+        'palette': _expectedConversationPalette,
+        'confirmedSkillUseMarker': '*',
         'titles': <String>['提示词', '技能加载名', 'MCP titl...'],
         'visible': true,
       },
-      'line': 'DingDong · 提示词 | 技能加载名 | MCP titl...',
+      'presentations': _expectedConversationPresentations(
+        ansiLine: ansiLine,
+        markdownLine: markdownLine,
+      ),
+      'ansiLine': ansiLine,
+      'line': markdownLine,
       'titles': <String>['提示词', '技能加载名', 'MCP titl...'],
     });
   });
@@ -813,7 +915,15 @@ void main() {
         containsPair('id', 'hidden-prompt'),
       );
       expect(conversation['titles'], <String>['Visible ...']);
-      expect(conversation['line'], 'DingDong · Visible ...');
+      expect(conversation['line'], 'DingDong · 🟢 Visible ...');
+      final HttpResponseData hiddenLoad = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/agent/skills/load?id=hidden-skill',
+        ),
+      );
+      expect(hiddenLoad.statusCode, 200);
+      expect(hiddenLoad.json, isNot(contains('conversation')));
     },
   );
 
@@ -845,6 +955,31 @@ void main() {
         'reviewer-b',
       ]);
 
+      final HttpResponseData bridge = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"review"}',
+        ),
+      );
+      final Map<String, Object?> bridgeConversation =
+          bridge.json['conversation']! as Map<String, Object?>;
+      final Map<String, Object?> bridgeCapsule =
+          bridgeConversation['capsule']! as Map<String, Object?>;
+      final List<Map<String, Object?>> bridgeItems =
+          (bridgeCapsule['items']! as List<Object?>)
+              .cast<Map<String, Object?>>();
+      expect(
+        bridgeItems.map((Map<String, Object?> item) => item['title']).toSet(),
+        <Object?>{'reviewer...'},
+      );
+      expect(
+        bridgeItems
+            .map((Map<String, Object?> item) => item['mergeKey'])
+            .toSet(),
+        <Object?>{'skill:reviewer-a', 'skill:reviewer-b'},
+      );
+
       final selected = await router.route(
         const HttpRequestData(method: 'GET', uri: '/skill?id=reviewer-b'),
       );
@@ -853,6 +988,11 @@ void main() {
         (selected.json['skill'] as Map<String, Object?>)['content'],
         contains('# reviewer-b'),
       );
+      final Map<String, Object?> selectedConversation =
+          selected.json['conversation']! as Map<String, Object?>;
+      final Map<String, Object?> selectedItem =
+          selectedConversation['item']! as Map<String, Object?>;
+      expect(selectedItem['mergeKey'], 'skill:reviewer-b');
     },
   );
 
@@ -1812,6 +1952,13 @@ void main() {
             'bridge=${matchingBridge.json} resources=${(await resources.load()).map((Resource item) => item.toApiJson()).toList()} groups=${(await groups.load()).map((TriggerGroup group) => group.toJson()).toList()}',
       );
       expect(candidates(unrelatedBridge), isEmpty);
+      final Map<String, Object?> bridgeConversation =
+          matchingBridge.json['conversation']! as Map<String, Object?>;
+      final Map<String, Object?> bridgeCapsule =
+          bridgeConversation['capsule']! as Map<String, Object?>;
+      final Map<String, Object?> candidateSkillItem =
+          (bridgeCapsule['items']! as List<Object?>).single
+              as Map<String, Object?>;
 
       final matchingLoad = await router.route(
         HttpRequestData(
@@ -1836,6 +1983,23 @@ void main() {
         (matchingLoad.json['skill'] as Map<String, Object?>)['content'],
         document,
       );
+      final Map<String, Object?> usageConversation =
+          matchingLoad.json['conversation']! as Map<String, Object?>;
+      final Map<String, Object?> usedSkillItem =
+          usageConversation['item']! as Map<String, Object?>;
+      expect(usageConversation['evidence'], 'successful-full-skill-load');
+      expect(
+        usageConversation['merge'],
+        'replace-same-merge-key-in-final-capsule',
+      );
+      expect(usedSkillItem['type'], 'skill');
+      expect(usedSkillItem['tone'], 'skill');
+      expect(usedSkillItem['usage'], 'loaded');
+      expect(usedSkillItem['confirmedUse'], isTrue);
+      expect(usedSkillItem['marker'], '*');
+      expect(usedSkillItem['mergeKey'], candidateSkillItem['mergeKey']);
+      expect(usedSkillItem['mergeKey'], 'skill:$resourceId');
+      expect(usedSkillItem['lineToken'], endsWith('*'));
       expect(unrelatedLoad.statusCode, 404);
     },
   );

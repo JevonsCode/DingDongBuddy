@@ -4,11 +4,24 @@ import 'dart:math';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:flutter/foundation.dart';
 
 const int defaultAgentActivityMaxItems = 500;
 const int defaultAgentActivityCountHours = 24;
 const int maximumAgentActivityCountHours = 24 * 365;
+
+/// The durable activity plus the unique lifecycle event used for notification
+/// de-duplication on linked devices.
+final class AgentCompletionRecord {
+  const AgentCompletionRecord({
+    required this.activity,
+    required this.notificationId,
+  });
+
+  final AgentActivity activity;
+  final String notificationId;
+}
 
 /// Bounded, durable Agent completion feed and recent-count state.
 final class ActivityController extends ChangeNotifier {
@@ -33,6 +46,7 @@ final class ActivityController extends ChangeNotifier {
   final String Function() _idGenerator;
   final DateTime Function() _now;
   List<AgentActivity> _activities = const <AgentActivity>[];
+  List<AgentTaskRun> _activeRuns = const <AgentTaskRun>[];
   List<DateTime> _completionTimes = const <DateTime>[];
   int _revealRevision = 0;
   bool _revealActive = false;
@@ -45,6 +59,9 @@ final class ActivityController extends ChangeNotifier {
 
   List<AgentActivity> get activities =>
       List<AgentActivity>.unmodifiable(_activities);
+
+  List<AgentTaskRun> get activeRuns =>
+      List<AgentTaskRun>.unmodifiable(_activeRuns);
 
   int get unseenCount =>
       _activities.where((AgentActivity item) => item.unseen).length;
@@ -121,28 +138,91 @@ final class ActivityController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void record({
+  AgentTaskRun recordTaskStarted({
+    required String source,
+    required String task,
+    required DateTime startedAt,
+    String? workspacePath,
+    String? repositoryUrl,
+    String? conversationId,
+  }) {
+    final String normalizedSource = _normalizedSource(source);
+    final String normalizedTask = task.trim().isEmpty ? '当前任务' : task.trim();
+    final String? normalizedWorkspace = _trimmed(workspacePath);
+    final String? normalizedConversationId = _trimmed(conversationId);
+    final AgentConversationTarget? target =
+        normalizedConversationId == null && normalizedWorkspace == null
+        ? null
+        : AgentConversationTarget(
+            client: AgentClient.fromSource(normalizedSource),
+            conversationId: normalizedConversationId,
+            workspacePath: normalizedWorkspace,
+          );
+    final AgentTaskRun run = AgentTaskRun(
+      id: _idGenerator(),
+      source: normalizedSource,
+      task: normalizedTask,
+      startedAt: startedAt.toUtc(),
+      repositoryUrl: _trimmed(repositoryUrl),
+      conversationTarget: target,
+    );
+    _activeRuns = <AgentTaskRun>[
+      run,
+      ..._activeRuns.where(
+        (AgentTaskRun existing) =>
+            !_sameConversation(existing.conversationTarget, target),
+      ),
+    ].take(50).toList(growable: false);
+    notifyListeners();
+    return run;
+  }
+
+  AgentCompletionRecord record({
     required String source,
     required String message,
+    String? detail,
+    DateTime? completedAt,
     AgentConversationTarget? conversationTarget,
   }) {
-    final DateTime completedAt = _now().toUtc();
-    final String normalizedSource = source.trim().isEmpty
-        ? 'Agent'
-        : source.trim();
+    final DateTime resolvedCompletedAt = (completedAt ?? _now()).toUtc();
+    final String normalizedSource = _normalizedSource(source);
     final String normalizedMessage = message.trim().isEmpty
         ? 'Task complete'
         : message.trim();
+    final String normalizedDetail = detail?.trim().isNotEmpty == true
+        ? detail!.trim()
+        : normalizedMessage;
+    final int runIndex = _matchingRunIndex(
+      source: normalizedSource,
+      target: conversationTarget,
+    );
+    final AgentTaskRun? run = runIndex < 0 ? null : _activeRuns[runIndex];
+    if (runIndex >= 0) {
+      _activeRuns = _activeRuns
+          .asMap()
+          .entries
+          .where((MapEntry<int, AgentTaskRun> entry) => entry.key != runIndex)
+          .map((MapEntry<int, AgentTaskRun> entry) => entry.value)
+          .toList(growable: false);
+    }
+    final AgentConversationTarget? resolvedTarget = _completionTarget(
+      source: normalizedSource,
+      run: run,
+      completionTarget: conversationTarget,
+    );
     final int repeatedIndex = _groupRepeatedAgentSessions
-        ? _conversationIndex(conversationTarget)
+        ? _conversationIndex(resolvedTarget)
         : -1;
     if (repeatedIndex >= 0) {
       final AgentActivity previous = _activities[repeatedIndex];
       final AgentActivity repeated = previous.repeated(
         source: normalizedSource,
         message: normalizedMessage,
-        completedAt: completedAt,
-        conversationTarget: conversationTarget,
+        task: run?.task,
+        detail: normalizedDetail,
+        startedAt: run?.startedAt,
+        completedAt: resolvedCompletedAt,
+        conversationTarget: resolvedTarget,
       );
       _activities = <AgentActivity>[
         repeated,
@@ -158,23 +238,33 @@ final class ActivityController extends ChangeNotifier {
       _loaded = true;
       _persist();
       notifyListeners();
-      return;
+      return AgentCompletionRecord(
+        activity: repeated,
+        notificationId: run?.id ?? _generateId(),
+      );
     }
     final AgentActivity activity = AgentActivity(
-      id: _idGenerator(),
+      id: run?.id ?? _idGenerator(),
       source: normalizedSource,
       message: normalizedMessage,
-      completedAt: completedAt,
+      task: run?.task,
+      detail: normalizedDetail,
+      startedAt: run?.startedAt,
+      completedAt: resolvedCompletedAt,
       unseen: true,
-      conversationTarget: conversationTarget,
+      conversationTarget: resolvedTarget,
     );
     _activities = <AgentActivity>[activity, ..._activities.take(_maxItems - 1)];
-    _completionTimes = <DateTime>[completedAt, ..._completionTimes];
+    _completionTimes = <DateTime>[resolvedCompletedAt, ..._completionTimes];
     _trimCompletionTimes();
     _loaded = true;
     _persist();
     _scheduleRecentCountRefresh();
     notifyListeners();
+    return AgentCompletionRecord(
+      activity: activity,
+      notificationId: run?.id ?? activity.id,
+    );
   }
 
   /// Records a completion hook that was deduplicated at the transport layer.
@@ -224,6 +314,7 @@ final class ActivityController extends ChangeNotifier {
       message: normalizedMessage,
       completedAt: completedAt,
       conversationTarget: target,
+      preserveLifecycle: true,
     );
     _activities = <AgentActivity>[
       repeated,
@@ -270,6 +361,107 @@ final class ActivityController extends ChangeNotifier {
     );
   }
 
+  int _matchingRunIndex({
+    required String source,
+    required AgentConversationTarget? target,
+  }) {
+    if (_activeRuns.isEmpty) {
+      return -1;
+    }
+    final AgentConversationTarget? matchTarget = _targetForSource(
+      source: source,
+      target: target,
+    );
+    final String? conversationId = _trimmed(matchTarget?.conversationId);
+    if (conversationId != null) {
+      final int exact = _activeRuns.indexWhere(
+        (AgentTaskRun run) =>
+            _sameConversation(run.conversationTarget, matchTarget),
+      );
+      if (exact >= 0) {
+        return exact;
+      }
+    }
+
+    final String? workspace = _normalizedPath(target?.workspacePath);
+    final List<int> candidates = <int>[
+      for (var index = 0; index < _activeRuns.length; index += 1)
+        if (workspace == null ||
+            _normalizedPath(
+                  _activeRuns[index].conversationTarget?.workspacePath,
+                ) ==
+                workspace)
+          index,
+    ];
+    if (candidates.isEmpty) {
+      return -1;
+    }
+    final String sourceKey = source.trim().toLowerCase();
+    final List<int> exactSource = candidates
+        .where(
+          (int index) =>
+              _activeRuns[index].source.trim().toLowerCase() == sourceKey,
+        )
+        .toList(growable: false);
+    if (exactSource.length == 1) {
+      return exactSource.single;
+    }
+    final List<int> compatibleSource = candidates
+        .where((int index) {
+          final String candidate = _activeRuns[index].source
+              .trim()
+              .toLowerCase();
+          return candidate == sourceKey ||
+              candidate == 'agent' ||
+              sourceKey == 'agent';
+        })
+        .toList(growable: false);
+    if (compatibleSource.length == 1) {
+      return compatibleSource.single;
+    }
+    return candidates.length == 1 ? candidates.single : -1;
+  }
+
+  AgentConversationTarget? _targetForSource({
+    required String source,
+    required AgentConversationTarget? target,
+  }) {
+    if (target == null) {
+      return null;
+    }
+    return AgentConversationTarget(
+      client: target.client == AgentClient.unknown
+          ? AgentClient.fromSource(source)
+          : target.client,
+      conversationId: target.conversationId,
+      workspacePath: target.workspacePath,
+    );
+  }
+
+  AgentConversationTarget? _completionTarget({
+    required String source,
+    required AgentTaskRun? run,
+    required AgentConversationTarget? completionTarget,
+  }) {
+    final AgentConversationTarget? startedTarget = run?.conversationTarget;
+    final AgentConversationTarget? merged = startedTarget == null
+        ? completionTarget
+        : completionTarget == null
+        ? startedTarget
+        : startedTarget.merge(completionTarget);
+    if (merged == null) {
+      return null;
+    }
+    final AgentClient sourceClient = AgentClient.fromSource(source);
+    return AgentConversationTarget(
+      client: merged.client == AgentClient.unknown
+          ? sourceClient
+          : merged.client,
+      conversationId: merged.conversationId,
+      workspacePath: merged.workspacePath,
+    );
+  }
+
   bool _sameConversation(
     AgentConversationTarget? left,
     AgentConversationTarget? right,
@@ -309,6 +501,7 @@ final class ActivityController extends ChangeNotifier {
   void clear() {
     _recentCountTimer?.cancel();
     _activities = const <AgentActivity>[];
+    _activeRuns = const <AgentTaskRun>[];
     _completionTimes = const <DateTime>[];
     _revealActive = false;
     _loaded = true;
@@ -392,6 +585,18 @@ final class ActivityController extends ChangeNotifier {
     super.dispose();
   }
 }
+
+String _normalizedSource(String value) =>
+    value.trim().isEmpty ? 'Agent' : value.trim();
+
+String? _trimmed(String? value) {
+  final String? trimmed = value?.trim();
+  return trimmed == null || trimmed.isEmpty ? null : trimmed;
+}
+
+String? _normalizedPath(String? value) => _trimmed(
+  value,
+)?.replaceAll('\\', '/').replaceAll(RegExp(r'/+$'), '').toLowerCase();
 
 int _sanitizeMaxItems(int value) => value.clamp(1, 5000);
 

@@ -63,6 +63,24 @@ void main() {
     );
   });
 
+  test('bridge adds the Agent conversation identity when available', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async => null,
+      conversationIdResolver: () => 'thread-42',
+      sourceResolver: () => 'Codex',
+    );
+
+    await executor.execute('dingdong_bridge', <String, Object?>{
+      'task': 'Track lifecycle',
+    });
+
+    expect(transport.body?['conversationId'], 'thread-42');
+    expect(transport.body?['source'], 'Codex');
+  });
+
   test('bridge source is reused by subsequent Skill reads', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     transport.response = <String, Object?>{'status': 'ok', 'source': 'Codex'};

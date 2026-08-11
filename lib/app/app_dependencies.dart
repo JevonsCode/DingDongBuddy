@@ -5,6 +5,7 @@ import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
+import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
@@ -136,6 +137,7 @@ final class AppDependencies {
     void Function(ClipboardRecord record)? onClipboardCaptured,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
+    void Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
     NotificationDeliveryFailureObserver? onNotificationDeliveryFailure,
     PreferencesBackend? preferencesBackend,
   }) async {
@@ -220,6 +222,7 @@ final class AppDependencies {
     final NativeNotificationGateway notificationGateway =
         NativeNotificationGateway();
     final AgentRouter router = AgentRouter(
+      onAgentTaskStarted: onAgentTaskStarted,
       onDing: (request) => unawaited(() async {
         final AppSettings settings = await settingsRepository.load();
         final resolvedRequest = request.sound == DingSound.defaultSound

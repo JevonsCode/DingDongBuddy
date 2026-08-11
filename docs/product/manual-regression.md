@@ -1,4 +1,4 @@
-# DingDong 1.3.6 Manual Regression Checklist
+# DingDong 1.3.7 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -40,8 +40,14 @@ and macOS golden images; the items below exercise real operating-system state.
   resting is rendered 2px smaller in both dimensions.
 - On Windows light and dark taskbars, normal, reminder, resting, and sleeping
   use their matching artwork and the same 0.7/1.2-second frame timing.
+- On Windows, the two reminder animation frames use the adaptive unread icons
+  and remain legible after switching between light and dark taskbars. Normal,
+  resting, and sleeping continue to use their taskbar-specific resources.
 - With an unread macOS reminder, the count is visually centered inside the
   capsule and sits about 2px lower than before.
+- Receive an Agent completion while the popup is hidden or while another
+  workspace is selected. Its unread state remains until Dynamic is actually
+  visible and the completion card has rendered.
 - Leave an Agent reminder unopened for five minutes: the status item nudges
   horizontally once per minute until the reminder is acknowledged.
 - Click the popup mascot three times within five seconds: it uses `thinking`
@@ -188,6 +194,15 @@ and macOS golden images; the items below exercise real operating-system state.
 - Trigger a rich Agent completion while the PWA is visible, in the background,
   and with the phone locked. Each event appears once with description, source,
   and completion time; background delivery does not require reopening the PWA.
+- Start two tasks from different Agent clients, including two tasks that reuse
+  the same conversation ID. The phone's selected-computer Agent view lists both
+  as running with their real start times. Completing one removes only its
+  matching run and adds a completion with task, detail, start, end, and total
+  duration; its unread count matches the desktop snapshot.
+- Disconnect and reconnect while one task is running and after one has
+  completed. The selected computer restores the authoritative running and
+  completion snapshot without duplicates. Restarting the desktop app does not
+  restore an old run as active.
 - Tap the Clipboard and Agent tabs, then swipe both directions between them.
   The selected tab, accessibility state, horizontal snap position, and panel
   height remain synchronized without a vertical jump or mid-gesture lockout.
@@ -196,6 +211,8 @@ and macOS golden images; the items below exercise real operating-system state.
   reloaded, an older page cannot create a competing connection, and a
   notification from an earlier pairing never injects content into the current
   pairing.
+- Inspect the system notification: both its main icon and badge use DingDong
+  artwork rather than a stale or browser-default icon.
 - Turn vibration off and on per device. Run the direct vibration diagnostic and
   a test Push. Record separately whether the browser accepted vibration and
   whether the operating system vibrated; system notification-channel policy may
@@ -311,6 +328,18 @@ and macOS golden images; the items below exercise real operating-system state.
 - The displayed MCP executable exists inside the installed distribution.
 - Sending JSON-RPC `tools/list` to the bundled executable returns DingDong tools.
 - `dingdong_bridge` remains summary-first and does not include clipboard content by default.
+- A Bridge response exposes one `conversation` capsule for visible active
+  Prompts, candidate Skills, and available MCPs. Repeating the Bridge call
+  replaces the prior snapshot by stable merge key instead of appending duplicate
+  labels or retaining resources that are no longer active.
+- `resources/list` and `resources/read` expose only the self-contained DingDong
+  conversation-footer MCP Apps resource. Calling
+  `dingdong_render_conversation_footer` renders the same canonical capsule as
+  rich, ANSI, and Markdown presentations without external assets or executable
+  HTML injection.
+- A candidate Skill has no `*` marker. After `dingdong_load_skill` succeeds,
+  replace the same merge-key item with the returned loaded item and verify it
+  gains exactly one `*` marker without creating a second footer entry.
 - With **Allow Agents to read clipboard content** off, metadata queries remain
   available but content reads, API capture, collection, and promotion are
   rejected. Enabling it takes effect without a restart; sensitive records still
@@ -338,6 +367,10 @@ and macOS golden images; the items below exercise real operating-system state.
   `◇ FULI` form and the current `🌠 FULI · 知识增强` form.
 - When more than six items exist, the `More` button opens Resource Manager directly at Recent Agents.
 - A resumable Recent Agent item opens its exact conversation from both Dynamic and Resource Manager.
+- Start matching conversation IDs from two known Agent clients, then complete
+  only one. Its completion retains the original task and start time while the
+  other client's run remains active; a generic `Agent` source may match only
+  when the remaining context is unambiguous.
 - Codex thread links, Claude Code, Gemini, and Kiro resume commands reopen the expected session.
 - A valid `agent-launchers.json` can open Claude Code in a new iTerm tab; an
   invalid file fails visibly without silently falling back to Terminal.app.
@@ -438,8 +471,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.3.6` build `46` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.3.6.46` and product name `DingDong`.
+- The macOS release app metadata is version `1.3.7` build `47` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.3.7.47` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -447,7 +480,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.3.6` and that exact commit SHA; every
+  `/v1/health` must report version `1.3.7` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the release workflow deploys the website from the exact release

@@ -313,11 +313,14 @@ void main() {
             .setMockMethodCallHandler(channel, null);
       });
       final PluginDesktopShellGateway gateway = PluginDesktopShellGateway();
+      expect(gateway.windowVisible.value, isFalse);
 
       await gateway.setOpacity(0.96);
       calls.clear();
       gateway.onWindowFocus();
       await Future<void>.delayed(Duration.zero);
+
+      expect(gateway.windowVisible.value, isTrue);
 
       expect(
         calls,
@@ -332,6 +335,8 @@ void main() {
               ),
         ),
       );
+      await gateway.hide();
+      expect(gateway.windowVisible.value, isFalse);
     },
   );
 
@@ -611,6 +616,14 @@ void main() {
           isTrue,
         );
       }
+    }
+    for (final String frame in <String>['', '2']) {
+      expect(
+        File(
+          'windows/runner/resources/tray_icon_adaptive_unread$frame.ico',
+        ).existsSync(),
+        isTrue,
+      );
     }
   });
 }

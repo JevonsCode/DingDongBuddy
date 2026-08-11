@@ -788,6 +788,13 @@ mcp:
       expect(contents, contains('Call configured MCP tools only when'));
       expect(contents, contains('conversation.capsule.visible'));
       expect(contents, contains('conversation.line'));
+      expect(contents, contains('dingdong_render_conversation_footer'));
+      expect(contents, contains('conversation.presentations.ansi.line'));
+      expect(contents, contains('MCP App HTML or XML'));
+      expect(contents, contains('warm-orange, blue, and green'));
+      expect(contents, contains('confirmedUse'));
+      expect(contents, contains('mergeKey'));
+      expect(contents, contains('not that every instruction was followed'));
       expect(
         contents,
         isNot(contains('Add one star to every complete response.')),

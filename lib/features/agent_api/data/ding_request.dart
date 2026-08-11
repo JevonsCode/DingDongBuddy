@@ -58,6 +58,7 @@ final class DingRequest {
     this.flashCount = 8,
     this.fallback = false,
     this.conversationTarget,
+    this.receivedAt,
   });
 
   factory DingRequest.parse(String body) {
@@ -88,8 +89,9 @@ final class DingRequest {
   final int flashCount;
   final bool fallback;
   final AgentConversationTarget? conversationTarget;
+  final DateTime? receivedAt;
 
-  DingRequest copyWith({DingSound? sound}) {
+  DingRequest copyWith({DingSound? sound, DateTime? receivedAt}) {
     return DingRequest(
       message: message,
       detail: detail,
@@ -98,6 +100,7 @@ final class DingRequest {
       flashCount: flashCount,
       fallback: fallback,
       conversationTarget: conversationTarget,
+      receivedAt: receivedAt ?? this.receivedAt,
     );
   }
 }

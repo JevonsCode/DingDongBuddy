@@ -12,13 +12,16 @@ String windowsTrayIconPath({
       ? WindowsTrayIconState.reminder
       : state;
   final String frame = alternateFrame ? '2' : '';
-  final String suffix = switch (visualState) {
-    WindowsTrayIconState.normal => '',
-    WindowsTrayIconState.reminder => '_unread$frame',
-    WindowsTrayIconState.resting => '_rest$frame',
-    WindowsTrayIconState.sleeping => '_sleeping$frame',
+  return switch (visualState) {
+    WindowsTrayIconState.normal =>
+      'windows/runner/resources/tray_icon_on_$surface.ico',
+    WindowsTrayIconState.reminder =>
+      'windows/runner/resources/tray_icon_adaptive_unread$frame.ico',
+    WindowsTrayIconState.resting =>
+      'windows/runner/resources/tray_icon_on_${surface}_rest$frame.ico',
+    WindowsTrayIconState.sleeping =>
+      'windows/runner/resources/tray_icon_on_${surface}_sleeping$frame.ico',
   };
-  return 'windows/runner/resources/tray_icon_on_$surface$suffix.ico';
 }
 
 /// Returns the localized Windows notification-area hover text.

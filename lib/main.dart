@@ -20,6 +20,7 @@ import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.d
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_thread_inspector.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
+import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -179,10 +180,22 @@ Future<void> main(List<String> arguments) async {
       unawaited(resourceManagerLauncher.refreshClipboard());
       unawaited(deviceLinkController.handleLocalClipboard(record));
     },
+    onAgentTaskStarted: (AgentBridgeTaskStart start) {
+      activityController.recordTaskStarted(
+        source: start.source,
+        task: start.task,
+        startedAt: start.startedAt,
+        workspacePath: start.workspacePath,
+        repositoryUrl: start.repositoryUrl,
+        conversationId: start.conversationId,
+      );
+    },
     onNotification: (request) async {
-      activityController.record(
+      final AgentCompletionRecord completion = activityController.record(
         source: request.source ?? 'Agent',
         message: request.message,
+        detail: request.detail,
+        completedAt: request.receivedAt,
         conversationTarget: request.conversationTarget,
       );
       final target = request.conversationTarget;
@@ -194,7 +207,11 @@ Future<void> main(List<String> arguments) async {
         );
       }
       await shellGateway.markUnread();
-      await deviceLinkController.sendAgentCompleted(request);
+      await deviceLinkController.sendAgentCompleted(
+        request,
+        activity: completion.activity,
+        notificationId: completion.notificationId,
+      );
     },
     onSuppressedNotification: (request) async {
       final target = request.conversationTarget;
@@ -239,12 +256,19 @@ Future<void> main(List<String> arguments) async {
         defaultValue: 'https://dingdong.xn--m8txu.com',
       ),
     ),
+    agentStateProvider: () => (
+      activities: activityController.activities,
+      activeRuns: activityController.activeRuns,
+    ),
     onClipboardReceived: () {
       shellController.requestClipboardRefresh();
       unawaited(resourceManagerLauncher.refreshClipboard());
     },
   );
   await deviceLinkController.start();
+  activityController.addListener(() {
+    unawaited(deviceLinkController.syncAgentState());
+  });
   deviceLinkController.addListener(() {
     unawaited(deviceLinkManagerLauncher.refresh());
   });
@@ -572,6 +596,7 @@ Future<void> main(List<String> arguments) async {
       onStartDragging: shellGateway.startDragging,
       onHideWindow: shellGateway.hide,
       shortcutHints: shellGateway.shortcutHints,
+      windowVisible: shellGateway.windowVisible,
       shellController: shellController,
     ),
   );

@@ -35,6 +35,7 @@ final class AgentRouter {
   AgentRouter({
     void Function(DingRequest request)? onDing,
     void Function(DingRequest request)? onSuppressedDing,
+    void Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
     ClipboardCaptureService? clipboardCaptureService,
     ClipboardGateway? clipboardGateway,
     ClipboardStore? clipboardStore,
@@ -49,6 +50,7 @@ final class AgentRouter {
     void Function(int index)? onShowUi,
   }) : _onDing = onDing ?? _ignoreDing,
        _onSuppressedDing = onSuppressedDing ?? _ignoreDing,
+       _onAgentTaskStarted = onAgentTaskStarted,
        _clipboardCaptureService = clipboardCaptureService,
        _clipboardGateway = clipboardGateway,
        _clipboardRoutes = clipboardStore == null
@@ -118,6 +120,7 @@ final class AgentRouter {
 
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
+  final void Function(AgentBridgeTaskStart start)? _onAgentTaskStarted;
   final ClipboardCaptureService? _clipboardCaptureService;
   final ClipboardGateway? _clipboardGateway;
   final ClipboardRoutes? _clipboardRoutes;
@@ -196,8 +199,10 @@ final class AgentRouter {
     }
     if (request.method == 'POST' && request.parsedUri.path == '/ding') {
       try {
-        final DingRequest dingRequest = DingRequest.parse(request.body);
         final DateTime now = _now();
+        final DingRequest dingRequest = DingRequest.parse(
+          request.body,
+        ).copyWith(receivedAt: now.toUtc());
         final String? sourceKey = _notificationSourceKey(dingRequest.source);
         _recentPrimaryDings.removeWhere((String? _, DateTime recordedAt) {
           final Duration age = now.difference(recordedAt);
@@ -255,6 +260,7 @@ final class AgentRouter {
         store,
         triggerGroupStore: _triggerGroupStore,
         now: _now,
+        onTaskStarted: _onAgentTaskStarted,
       ).respond(request.body);
     }
     if (request.method == 'GET' &&

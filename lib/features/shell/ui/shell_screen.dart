@@ -63,6 +63,7 @@ class ShellScreen extends StatefulWidget {
     this.onStartDragging,
     this.onHideWindow,
     this.shortcutHints,
+    this.windowVisible,
     this.now,
     super.key,
   });
@@ -91,6 +92,7 @@ class ShellScreen extends StatefulWidget {
   final Future<void> Function()? onStartDragging;
   final Future<void> Function()? onHideWindow;
   final ValueListenable<bool>? shortcutHints;
+  final ValueListenable<bool>? windowVisible;
   final DateTime Function()? now;
 
   @override
@@ -612,6 +614,7 @@ class _ShellScreenState extends State<ShellScreen> {
         onOpenAgentApi: () => unawaited(_openAgentApi()),
         agentBaseUri: widget.agentBaseUri,
         onHideWindow: widget.onHideWindow,
+        windowVisible: widget.windowVisible,
         resourceManagerLauncher: _resourceManagerLauncher(),
         contextMenuGateway: widget.desktopContextMenuGateway,
         now: widget.now,

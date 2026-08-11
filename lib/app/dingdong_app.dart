@@ -97,6 +97,7 @@ class DingDongApp extends StatefulWidget {
     this.onStartDragging,
     this.onHideWindow,
     this.shortcutHints,
+    this.windowVisible,
     this.shellController,
     this.now,
     super.key,
@@ -143,6 +144,7 @@ class DingDongApp extends StatefulWidget {
   final Future<void> Function()? onStartDragging;
   final Future<void> Function()? onHideWindow;
   final ValueListenable<bool>? shortcutHints;
+  final ValueListenable<bool>? windowVisible;
   final ShellController? shellController;
   final DateTime Function()? now;
 
@@ -308,6 +310,7 @@ class _DingDongAppState extends State<DingDongApp> {
             onStartDragging: widget.onStartDragging,
             onHideWindow: widget.onHideWindow,
             shortcutHints: widget.shortcutHints,
+            windowVisible: widget.windowVisible,
             now: widget.now,
           ),
         );

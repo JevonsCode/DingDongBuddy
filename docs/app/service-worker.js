@@ -1,4 +1,4 @@
-const cacheName = "dingdong-app-shell-v20";
+const cacheName = "dingdong-app-shell-v22";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const notificationVibrationPattern = [250, 100, 250, 100, 450];
@@ -434,9 +434,14 @@ async function showAgentCompletionNotification(message, pair) {
       .trim();
     const vibrate =
       pair.vibrationEnabled !== false && message.vibrate !== false;
+    const notificationBrandIcon = new URL(
+      "../assets/dingdong-pwa-192.png",
+      self.registration.scope,
+    ).href;
     const options = {
       body: detail.length > 260 ? `${detail.slice(0, 259)}…` : detail,
-      icon: "../assets/dingdong-mobile-alert-icon.png",
+      icon: notificationBrandIcon,
+      badge: notificationBrandIcon,
       tag: notificationKey,
       renotify: true,
       ...(vibrate ? { vibrate: notificationVibrationPattern } : {}),

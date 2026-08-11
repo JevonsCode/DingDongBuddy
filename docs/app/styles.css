@@ -659,6 +659,65 @@ main {
   padding: 14px;
 }
 
+.agent-section-heading + .content-list {
+  margin-top: 0;
+}
+
+.agent-section-count {
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.agent-section-count b {
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.agent-section-divider {
+  height: 1px;
+  margin: 22px 2px 18px;
+  background: var(--border);
+}
+
+.list-empty-compact {
+  min-height: 142px;
+}
+
+.list-empty-compact img {
+  width: 42px;
+  height: 42px;
+}
+
+.agent-card-running {
+  border-color: rgb(43 126 93 / 24%);
+  background: linear-gradient(145deg, rgb(241 251 247 / 92%), var(--surface));
+}
+
+.agent-card.is-unseen {
+  border-color: rgb(247 151 62 / 34%);
+  box-shadow: 0 8px 24px rgb(128 78 31 / 8%);
+}
+
+.agent-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.agent-status::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2b9a6d;
+  box-shadow: 0 0 0 4px rgb(43 154 109 / 12%);
+  content: "";
+}
+
 .agent-card-header {
   display: flex;
   align-items: center;
@@ -704,6 +763,44 @@ main {
   font-size: 12px;
   line-height: 1.58;
   white-space: pre-wrap;
+}
+
+.agent-timeline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.agent-time-item {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: rgb(255 255 255 / 58%);
+}
+
+.agent-time-item span,
+.agent-time-item strong {
+  display: block;
+}
+
+.agent-time-item span {
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+.agent-time-item strong {
+  overflow: hidden;
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-duration {
+  grid-column: 1 / -1;
 }
 
 .agent-workspace {

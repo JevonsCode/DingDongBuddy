@@ -193,7 +193,7 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v20/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v22/);
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
@@ -265,6 +265,31 @@ test("mobile content tabs use native swipe paging and stay accessible", () => {
   assert.match(appSource, /event\.key === "ArrowLeft"/);
   assert.match(appSource, /event\.key === "ArrowRight"/);
   assert.match(appSource, /prefers-reduced-motion: reduce/);
+});
+
+test("Agent state shows realtime runs, unread history, and honest lifecycle times", () => {
+  assert.match(pageSource, /id="running-count"/);
+  assert.match(pageSource, /id="agent-running-list"/);
+  assert.match(pageSource, /id="agent-running-empty"/);
+  assert.match(pageSource, /id="agent-unseen-count"/);
+  assert.match(pageSource, />正在运行</);
+  assert.match(pageSource, />完成记录</);
+  assert.match(appSource, /agentRuns: \[\]/);
+  assert.match(appSource, /case "agent\.state"/);
+  assert.match(appSource, /function receiveAgentState\(message, session\)/);
+  assert.match(appSource, /event\.unseen !== false/);
+  assert.match(
+    appSource,
+    /session\.agentEvents\.filter\([\s\S]*event\.unseen !== false/,
+  );
+  assert.match(appSource, /createAgentTimeline\(run, \{ running: true \}\)/);
+  assert.match(appSource, /createAgentTimeItem\("开始"/);
+  assert.match(appSource, /createAgentTimeItem\("结束"/);
+  assert.match(appSource, /"总耗时"/);
+  assert.match(appSource, /startedAt \? formatLifecycleTime\(startedAt\) : "未记录"/);
+  assert.match(appSource, /running \? "运行中"/);
+  assert.match(stylesSource, /\.agent-card-running/);
+  assert.match(stylesSource, /\.agent-timeline/);
 });
 
 test("agent notifications open the Agent tab without reloading a live PWA", () => {
@@ -689,6 +714,19 @@ test("a realtime duplicate never masquerades as a Push-created notification", ()
   assert.match(duplicateBranch, /stage: "received"/);
   assert.doesNotMatch(duplicateBranch, /postPushReceipt\(pair, messageId, "created"\)/);
   assert.doesNotMatch(duplicateBranch, /recordPushHealth\(\s*"created"/);
+});
+
+test("system notifications use DingDong branding for both icon surfaces", () => {
+  assert.match(
+    serviceWorkerSource,
+    /const notificationBrandIcon = new URL\(\s*"\.\.\/assets\/dingdong-pwa-192\.png",\s*self\.registration\.scope,\s*\)\.href/,
+  );
+  assert.match(serviceWorkerSource, /icon: notificationBrandIcon/);
+  assert.match(serviceWorkerSource, /badge: notificationBrandIcon/);
+  assert.doesNotMatch(
+    serviceWorkerSource,
+    /icon: "\.\.\/assets\/dingdong-mobile-alert-icon\.png"/,
+  );
 });
 
 test("mobile mascots use dark assets and the sleeping mascot alternates frames", () => {

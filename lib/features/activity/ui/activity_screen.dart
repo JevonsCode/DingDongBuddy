@@ -17,6 +17,7 @@ import 'package:dingdong/features/library/domain/resource_card_presentation.dart
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 part 'activity_cards.dart';
@@ -35,6 +36,7 @@ class ActivityScreen extends StatefulWidget {
     this.onHideWindow,
     this.contextMenuGateway,
     this.resourceManagerLauncher,
+    this.windowVisible,
     this.now,
     super.key,
   });
@@ -50,6 +52,7 @@ class ActivityScreen extends StatefulWidget {
   final Future<void> Function()? onHideWindow;
   final DesktopContextMenuGateway? contextMenuGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
+  final ValueListenable<bool>? windowVisible;
   final DateTime Function()? now;
 
   @override
@@ -59,13 +62,6 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   int _scheduledRevealRevision = 0;
   bool _revealRequestScheduled = false;
-  Timer? _seenAcknowledgementTimer;
-
-  @override
-  void dispose() {
-    _seenAcknowledgementTimer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +72,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         widget.clipboardViewModel,
         widget.libraryViewModel,
         widget.settingsViewModel,
+        if (widget.windowVisible != null) widget.windowVisible!,
       ]),
       builder: (BuildContext context, Widget? child) {
         _scheduleSeenAcknowledgement();
@@ -234,7 +231,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   void _scheduleSeenAcknowledgement() {
     final ActivityController controller = widget.activityController;
-    if (controller.unseenCount == 0) {
+    if (!_windowIsVisible || controller.unseenCount == 0) {
       return;
     }
 
@@ -249,7 +246,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
           return;
         }
         final ActivityController current = widget.activityController;
-        if (current.unseenCount > 0 && !current.revealActive) {
+        if (_windowIsVisible &&
+            current.unseenCount > 0 &&
+            !current.revealActive) {
           current.requestReveal();
         }
       });
@@ -261,14 +260,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
       return;
     }
     _scheduledRevealRevision = revision;
-    _seenAcknowledgementTimer?.cancel();
-    _seenAcknowledgementTimer = Timer(const Duration(milliseconds: 1500), () {
-      _seenAcknowledgementTimer = null;
-      if (mounted && controller.revealRevision == revision) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          _windowIsVisible &&
+          controller.revealRevision == revision) {
         controller.markAllSeen();
       }
     });
   }
+
+  bool get _windowIsVisible => widget.windowVisible?.value ?? true;
 
   VoidCallback? _conversationTap(BuildContext context, AgentActivity activity) {
     final AgentConversationTarget? target = activity.conversationTarget;

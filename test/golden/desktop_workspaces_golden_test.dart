@@ -236,6 +236,13 @@ _pumpDarkWorkspace(
     ),
   );
   await tester.pumpAndSettle();
+  final BuildContext imageContext = tester.element(find.byType(MaterialApp));
+  await tester.runAsync(() async {
+    for (final Image image in tester.widgetList<Image>(find.byType(Image))) {
+      await precacheImage(image.image, imageContext);
+    }
+  });
+  await tester.pump();
   return (activity: activityController, shell: controller);
 }
 

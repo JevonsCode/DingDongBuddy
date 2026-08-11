@@ -5,6 +5,8 @@ import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
@@ -19,7 +21,13 @@ import 'package:path/path.dart' as path;
 
 const int deviceLinkMaximumFileBytes = 25 * 1024 * 1024;
 const int deviceLinkMaximumTextBytes = 128 * 1024;
+const int deviceLinkAgentRunningLimit = 25;
+const int deviceLinkAgentHistoryLimit = 40;
 const int _fileChunkBytes = 32 * 1024;
+
+typedef AgentStateProvider =
+    ({List<AgentActivity> activities, List<AgentTaskRun> activeRuns})
+    Function();
 
 final class DeviceLinkTextTooLargeException implements Exception {
   const DeviceLinkTextTooLargeException({
@@ -46,6 +54,7 @@ final class DeviceLinkController extends ChangeNotifier
     required Uri? relayBaseUrl,
     DeviceLinkSessionFactory sessionFactory = createDeviceLinkSession,
     VoidCallback? onClipboardReceived,
+    AgentStateProvider? agentStateProvider,
   }) => DeviceLinkController._(
     store: store,
     clipboardStore: clipboardStore,
@@ -54,6 +63,7 @@ final class DeviceLinkController extends ChangeNotifier
     relayBaseUrl: relayBaseUrl,
     sessionFactory: sessionFactory,
     onClipboardReceived: onClipboardReceived,
+    agentStateProvider: agentStateProvider,
   );
 
   DeviceLinkController._({
@@ -64,6 +74,7 @@ final class DeviceLinkController extends ChangeNotifier
     required this._relayBaseUrl,
     required this._sessionFactory,
     this.onClipboardReceived,
+    this._agentStateProvider,
   });
 
   final DeviceLinkStore _store;
@@ -73,6 +84,7 @@ final class DeviceLinkController extends ChangeNotifier
   final Uri? _relayBaseUrl;
   final DeviceLinkSessionFactory _sessionFactory;
   final VoidCallback? onClipboardReceived;
+  final AgentStateProvider? _agentStateProvider;
   final Map<String, _ManagedDeviceSession> _sessionsByRoom =
       <String, _ManagedDeviceSession>{};
   final Map<String, DeviceConnectionStatus> _statuses =
@@ -88,6 +100,7 @@ final class DeviceLinkController extends ChangeNotifier
   int _shareRequestRevision = 0;
   bool _started = false;
   bool _disposed = false;
+  Future<void> _agentSyncTail = Future<void>.value();
 
   @override
   LocalDeviceIdentity get localDevice => _localDevice;
@@ -207,23 +220,30 @@ final class DeviceLinkController extends ChangeNotifier
     }
   }
 
-  Future<void> sendAgentCompleted(DingRequest request) async {
-    final DateTime completedAt = DateTime.now().toUtc();
+  Future<void> sendAgentCompleted(
+    DingRequest request, {
+    required AgentActivity activity,
+    required String notificationId,
+  }) async {
     for (final LinkedDevice device in _devices) {
-      if (!device.receiveAgentNotifications) continue;
       final Map<String, Object?> message = <String, Object?>{
         'type': 'agent.completed',
-        'id': 'agent-${completedAt.microsecondsSinceEpoch}-${device.id}',
+        'id': notificationId,
+        'activityId': activity.id,
         'title': 'Agent 完成啦',
-        'source': request.source ?? 'Agent',
-        'summary': request.message,
-        'detail': request.detail ?? request.message,
-        'completedAt': completedAt.toIso8601String(),
+        'source': activity.source,
+        'summary': activity.message,
+        'detail': request.detail ?? activity.detail ?? activity.message,
+        'unseen': activity.unseen,
+        if (activity.task != null) 'task': activity.task,
+        if (activity.startedAt != null)
+          'startedAt': activity.startedAt!.toUtc().toIso8601String(),
+        'completedAt': activity.completedAt.toUtc().toIso8601String(),
         'vibrate': device.vibrationEnabled,
-        if (request.conversationTarget?.workspacePath != null)
-          'workspacePath': request.conversationTarget!.workspacePath,
-        if (request.conversationTarget?.conversationId != null)
-          'conversationId': request.conversationTarget!.conversationId,
+        if (activity.conversationTarget?.workspacePath != null)
+          'workspacePath': activity.conversationTarget!.workspacePath,
+        if (activity.conversationTarget?.conversationId != null)
+          'conversationId': activity.conversationTarget!.conversationId,
       };
       if (isConnected(device.id)) {
         try {
@@ -232,6 +252,7 @@ final class DeviceLinkController extends ChangeNotifier
           // The encrypted Web Push below is the background fallback.
         }
       }
+      if (!device.receiveAgentNotifications) continue;
       try {
         await _sendPush(device, message);
       } on Object catch (error, stackTrace) {
@@ -350,13 +371,94 @@ final class DeviceLinkController extends ChangeNotifier
   }) => <String, Object?>{
     'type': 'agent.completed',
     'id': message['id'],
+    'activityId': message['activityId'],
     'title': _truncateUtf8(message['title'], titleBytes),
     'source': _truncateUtf8(message['source'], sourceBytes),
     'summary': _truncateUtf8(message['summary'], summaryBytes),
     'detail': _truncateUtf8(message['detail'], detailBytes),
+    if (message['task'] != null)
+      'task': _truncateUtf8(message['task'], summaryBytes),
+    if (message['workspacePath'] != null)
+      'workspacePath': _truncateUtf8(message['workspacePath'], 512),
+    'unseen': message['unseen'] != false,
+    if (message['startedAt'] != null) 'startedAt': message['startedAt'],
     'completedAt': message['completedAt'],
     'vibrate': message['vibrate'] != false,
   };
+
+  /// Broadcasts the authoritative in-app Agent state immediately. This does
+  /// not alter or retract any system notification already shown by the phone.
+  Future<void> syncAgentState() {
+    if (_agentStateProvider == null) {
+      return Future<void>.value();
+    }
+    final Future<void> next = _agentSyncTail.then(
+      (_) => _broadcastAgentState(),
+    );
+    _agentSyncTail = next;
+    return next;
+  }
+
+  Future<void> _broadcastAgentState() async {
+    for (final LinkedDevice device in _devices) {
+      if (!isConnected(device.id)) continue;
+      try {
+        await _sendAgentState(_sessionForDevice(device.id));
+      } on Object {
+        // A reconnect receives the same authoritative snapshot after hello.
+      }
+    }
+  }
+
+  Future<void> _sendAgentState(_ManagedDeviceSession managed) async {
+    final AgentStateProvider? provider = _agentStateProvider;
+    if (provider == null) return;
+    final snapshot = provider();
+    await managed.handle.send(<String, Object?>{
+      'type': 'agent.state',
+      'generatedAt': DateTime.now().toUtc().toIso8601String(),
+      'running': snapshot.activeRuns
+          .take(deviceLinkAgentRunningLimit)
+          .map(_agentRunPayload)
+          .toList(growable: false),
+      'completed': snapshot.activities
+          .take(deviceLinkAgentHistoryLimit)
+          .map(_agentActivityPayload)
+          .toList(growable: false),
+    });
+  }
+
+  Map<String, Object?> _agentRunPayload(AgentTaskRun run) => <String, Object?>{
+    'id': run.id,
+    'source': _truncateUtf8(run.source, 96),
+    'task': _truncateUtf8(run.task, 600),
+    'startedAt': run.startedAt.toUtc().toIso8601String(),
+    if (run.conversationTarget?.workspacePath != null)
+      'workspacePath': _truncateUtf8(
+        run.conversationTarget!.workspacePath,
+        320,
+      ),
+  };
+
+  Map<String, Object?> _agentActivityPayload(AgentActivity activity) =>
+      <String, Object?>{
+        'id': activity.id,
+        'activityId': activity.id,
+        'title': 'Agent 完成啦',
+        'source': _truncateUtf8(activity.source, 96),
+        'summary': _truncateUtf8(activity.message, 480),
+        'detail': _truncateUtf8(activity.detail ?? activity.message, 1200),
+        'unseen': activity.unseen,
+        if (activity.task != null) 'task': _truncateUtf8(activity.task, 480),
+        if (activity.startedAt != null)
+          'startedAt': activity.startedAt!.toUtc().toIso8601String(),
+        'completedAt': activity.completedAt.toUtc().toIso8601String(),
+        if (activity.conversationTarget?.workspacePath != null)
+          'workspacePath': _truncateUtf8(
+            activity.conversationTarget!.workspacePath,
+            320,
+          ),
+      };
 
   String _truncateUtf8(Object? value, int maximumBytes) {
     final String text = (value ?? '').toString();
@@ -645,6 +747,7 @@ final class DeviceLinkController extends ChangeNotifier
         );
       }
     }
+    await _sendAgentState(managed);
   }
 
   Future<void> _rememberSharedClipboardItem(

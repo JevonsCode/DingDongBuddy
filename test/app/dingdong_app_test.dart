@@ -40,14 +40,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.3.6', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.3.7', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.3.6')), findsOneWidget);
-    expect(find.text('v1.3.6'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.3.7')), findsOneWidget);
+    expect(find.text('v1.3.7'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -157,56 +157,55 @@ void main() {
     );
   });
 
-  testWidgets(
-    'Dynamic highlights an unseen completed Agent then marks it seen',
-    (WidgetTester tester) async {
-      final ActivityController activityController = ActivityController(
-        idGenerator: () => 'completed-agent',
-        now: () => DateTime.utc(2026, 7, 12, 10),
-      );
-      const AgentConversationTarget target = AgentConversationTarget(
-        client: AgentClient.codex,
-        conversationId: 'thread-unseen-repeat',
-      );
-      activityController.record(
-        source: 'Codex',
-        message: 'Refactor complete',
-        conversationTarget: target,
-      );
-      activityController.record(
-        source: 'Codex',
-        message: 'Refactor complete again',
-        conversationTarget: target,
-      );
-      activityController.requestReveal();
+  testWidgets('Dynamic marks a rendered Agent seen without a delay', (
+    WidgetTester tester,
+  ) async {
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'completed-agent',
+      now: () => DateTime.utc(2026, 7, 12, 10),
+    );
+    const AgentConversationTarget target = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'thread-unseen-repeat',
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Refactor complete',
+      conversationTarget: target,
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Refactor complete again',
+      conversationTarget: target,
+    );
+    activityController.requestReveal();
 
-      await tester.pumpWidget(
-        DingDongApp(activityController: activityController),
-      );
-      await tester.pump();
+    await tester.pumpWidget(
+      DingDongApp(activityController: activityController),
+    );
+    await tester.pump();
 
-      expect(find.byKey(const Key('activity-completed-agent')), findsOneWidget);
-      expect(find.byKey(const Key('recent-agent-count')), findsOneWidget);
-      expect(find.text('24 h · 1'), findsOneWidget);
-      expect(activityController.unseenCount, 1);
-      Text repeatText = tester.widget<Text>(find.text('×2'));
-      expect(
-        repeatText.style?.color,
-        PopupStyle.activityUnread.withValues(alpha: 0.58),
-      );
+    expect(find.byKey(const Key('activity-completed-agent')), findsOneWidget);
+    expect(find.byKey(const Key('recent-agent-count')), findsOneWidget);
+    expect(find.text('24 h · 1'), findsOneWidget);
+    expect(activityController.unseenCount, 0);
+    Text repeatText = tester.widget<Text>(find.text('×2'));
+    expect(
+      repeatText.style?.color,
+      PopupStyle.textPrimary.withValues(alpha: 0.13),
+    );
 
-      await tester.pump(const Duration(milliseconds: 1600));
-      expect(activityController.unseenCount, 0);
-      repeatText = tester.widget<Text>(find.text('×2'));
-      expect(
-        repeatText.style?.color,
-        PopupStyle.textPrimary.withValues(alpha: 0.13),
-      );
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
-      activityController.dispose();
-    },
-  );
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(activityController.unseenCount, 0);
+    repeatText = tester.widget<Text>(find.text('×2'));
+    expect(
+      repeatText.style?.color,
+      PopupStyle.textPrimary.withValues(alpha: 0.13),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    activityController.dispose();
+  });
 
   testWidgets('Dynamic acknowledges a new unseen Agent while already visible', (
     WidgetTester tester,
@@ -237,15 +236,16 @@ void main() {
     );
     await tester.pump();
     await tester.pump();
+    await tester.pump();
 
-    expect(activityController.unseenCount, 1);
+    expect(activityController.unseenCount, 0);
     Text repeatText = tester.widget<Text>(find.text('×2'));
     expect(
       repeatText.style?.color,
-      PopupStyle.activityUnread.withValues(alpha: 0.58),
+      PopupStyle.textPrimary.withValues(alpha: 0.13),
     );
 
-    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pump(const Duration(milliseconds: 50));
 
     expect(activityController.unseenCount, 0);
     repeatText = tester.widget<Text>(find.text('×2'));
@@ -255,6 +255,56 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
+    activityController.dispose();
+  });
+
+  testWidgets('Dynamic keeps Agent events unseen while the window is hidden', (
+    WidgetTester tester,
+  ) async {
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'hidden-unseen-agent',
+      now: () => DateTime.utc(2026, 8, 11, 10),
+    );
+    final ValueNotifier<bool> windowVisible = ValueNotifier<bool>(false);
+    addTearDown(windowVisible.dispose);
+
+    await tester.pumpWidget(
+      DingDongApp(
+        activityController: activityController,
+        windowVisible: windowVisible,
+      ),
+    );
+    await tester.pump();
+
+    activityController.record(
+      source: 'Codex',
+      message: 'Background task complete',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'hidden-unseen-conversation',
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(activityController.unseenCount, 1);
+    expect(activityController.revealActive, isFalse);
+
+    activityController.requestReveal();
+    await tester.pump();
+    await tester.pump();
+
+    expect(activityController.unseenCount, 1);
+    expect(activityController.revealActive, isTrue);
+
+    windowVisible.value = true;
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+
+    expect(activityController.unseenCount, 0);
+    expect(activityController.revealActive, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
     activityController.dispose();
   });
 
@@ -281,7 +331,7 @@ void main() {
       return card.decoration! as BoxDecoration;
     }
 
-    expect(cardDecoration().color, isNot(PopupStyle.surface));
+    expect(cardDecoration().color, PopupStyle.surface);
 
     activityController.markAllSeen();
     await tester.pump();
@@ -294,7 +344,7 @@ void main() {
     );
     expect((laterCard.decoration! as BoxDecoration).color, PopupStyle.surface);
 
-    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pump(const Duration(milliseconds: 50));
     await tester.pumpWidget(const SizedBox.shrink());
     activityController.dispose();
   });
