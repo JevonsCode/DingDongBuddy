@@ -41,6 +41,51 @@ void main() {
     expect(completion.activity.detail, '包含开始与结束时间。');
   });
 
+  test(
+    'repeated starts without a conversation id replace the same running chat',
+    () {
+      var id = 0;
+      final ActivityController controller = ActivityController(
+        idGenerator: () => 'run-${++id}',
+      );
+
+      for (var round = 1; round <= 8; round += 1) {
+        controller.recordTaskStarted(
+          source: 'Codex',
+          task: '第 $round 轮对话',
+          startedAt: DateTime.utc(2026, 8, 11, 9, round),
+          workspacePath: '/workspace/dingdong',
+        );
+      }
+
+      expect(controller.activeRuns, hasLength(1));
+      expect(controller.activeRuns.single.id, 'run-8');
+      expect(controller.activeRuns.single.task, '第 8 轮对话');
+    },
+  );
+
+  test('missing conversation ids stay isolated between Agent clients', () {
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'run-${++id}',
+    );
+
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: 'Codex task',
+      startedAt: DateTime.utc(2026, 8, 11, 9),
+      workspacePath: '/workspace/dingdong',
+    );
+    controller.recordTaskStarted(
+      source: 'Claude Code',
+      task: 'Claude task',
+      startedAt: DateTime.utc(2026, 8, 11, 9, 5),
+      workspacePath: '/workspace/dingdong',
+    );
+
+    expect(controller.activeRuns, hasLength(2));
+  });
+
   test('conversation id closes only its matching running task', () {
     var id = 0;
     final ActivityController controller = ActivityController(

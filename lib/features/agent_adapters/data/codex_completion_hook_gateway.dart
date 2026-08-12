@@ -116,7 +116,7 @@ final class StdioCodexAppServerConnection implements CodexAppServerConnection {
         'clientInfo': <String, Object?>{
           'name': 'dingdong',
           'title': 'DingDong',
-          'version': '1.4.0',
+          'version': '1.4.1',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,

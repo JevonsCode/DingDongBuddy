@@ -170,7 +170,7 @@ final class ActivityController extends ChangeNotifier {
       run,
       ..._activeRuns.where(
         (AgentTaskRun existing) =>
-            !_sameConversation(existing.conversationTarget, target),
+            !_sameRunningConversation(existing.conversationTarget, target),
       ),
     ].take(50).toList(growable: false);
     notifyListeners();
@@ -469,6 +469,30 @@ final class ActivityController extends ChangeNotifier {
     final String? leftId = left?.conversationId;
     final String? rightId = right?.conversationId;
     if (leftId == null || rightId == null || leftId != rightId) {
+      return false;
+    }
+    return left!.client == AgentClient.unknown ||
+        right!.client == AgentClient.unknown ||
+        left.client == right.client;
+  }
+
+  bool _sameRunningConversation(
+    AgentConversationTarget? left,
+    AgentConversationTarget? right,
+  ) {
+    if (_sameConversation(left, right)) {
+      return true;
+    }
+    final String? leftConversationId = _trimmed(left?.conversationId);
+    final String? rightConversationId = _trimmed(right?.conversationId);
+    if (leftConversationId != null && rightConversationId != null) {
+      return false;
+    }
+    final String? leftWorkspace = _normalizedPath(left?.workspacePath);
+    final String? rightWorkspace = _normalizedPath(right?.workspacePath);
+    if (leftWorkspace == null ||
+        rightWorkspace == null ||
+        leftWorkspace != rightWorkspace) {
       return false;
     }
     return left!.client == AgentClient.unknown ||

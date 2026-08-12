@@ -6,6 +6,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
+import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
@@ -733,6 +734,39 @@ void main() {
       );
     },
   );
+
+  test('agent state snapshots send one running item for one chat', () async {
+    var id = 0;
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'run-${++id}',
+    );
+    for (var round = 1; round <= 8; round += 1) {
+      activityController.recordTaskStarted(
+        source: 'Codex',
+        task: '第 $round 轮对话',
+        startedAt: DateTime.utc(2026, 8, 11, 9, round),
+        workspacePath: '/workspace/dingdong',
+      );
+    }
+    final _Harness harness = await _connectedHarness(
+      autoSend: false,
+      agentStateProvider: () => (
+        activities: activityController.activities,
+        activeRuns: activityController.activeRuns,
+      ),
+    );
+    addTearDown(harness.dispose);
+
+    await harness.controller.syncAgentState();
+
+    final List<Object?> running =
+        harness.session.sent.single['running']! as List<Object?>;
+    expect(running, hasLength(1));
+    expect(
+      running.single,
+      allOf(containsPair('id', 'run-8'), containsPair('task', '第 8 轮对话')),
+    );
+  });
 
   test(
     'maximum Agent snapshot stays inside the encrypted relay frame',

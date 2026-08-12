@@ -1,35 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.4.0",
-  "latestBuild": "48",
-  "publishedAt": "2026-08-12T12:52:17Z",
+  "latestVersion": "1.4.1",
+  "latestBuild": "49",
+  "publishedAt": "2026-08-12T16:09:42Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.0/DingDong-1.4.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.1/DingDong-1.4.1-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.0/DingDong-1.4.0-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.1/DingDong-1.4.1-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.0/DingDong-1.4.0-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.1/DingDong-1.4.1-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Delivers complete Skill packages dynamically or to each Agent's native user and exact-project directories with fail-closed ownership, conflict, recovery, and drift protection.",
-    "Adds native Skill targets for Grok Build and Pi while keeping Agents that are not installed folded away by default.",
-    "Explains project-native delivery inline and connects it to exact project selection, with optional reviewed Codex Impeccable project Hooks.",
-    "Redesigns Resource Manager, Clipboard details and categories, device connection, dialogs, controls, and dark-mode surfaces for a denser native desktop workflow.",
-    "Keeps dynamic Skill catalog and full-load arbitration consistent across Agent identity, native transitions, duplicates, and current scope.",
-    "Removes the legacy MCP Apps conversation-footer renderer and resources in favor of the Bridge-provided single-line Markdown, ANSI, or fallback presentation.",
+    "Shows one running item per Agent chat on linked phones instead of treating every turn as a separate running task.",
+    "Falls back to the Agent client and normalized workspace only when a stable conversation ID is unavailable.",
+    "Keeps distinct known conversations and different Agent clients isolated while replacing stale turn-level entries with the latest task.",
+    "Adds activity-controller and phone-snapshot regression coverage for eight consecutive turns in one Codex chat.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }
