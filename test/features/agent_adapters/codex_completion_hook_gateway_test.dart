@@ -190,6 +190,105 @@ void main() {
       <String>['hooks/list'],
     );
   });
+
+  test(
+    'refuses an exact completion Hook when another family Hook exists',
+    () async {
+      final Map<String, Object?> response = <String, Object?>{
+        'data': <Object?>[
+          _hookEntry(
+            homeDirectory: home,
+            command: command,
+            trustStatus: 'untrusted',
+          ),
+        ],
+      };
+      final Map<String, Object?> cwd =
+          (response['data']! as List<Object?>).single as Map<String, Object?>;
+      (cwd['hooks']! as List<Object?>).add(<String, Object?>{
+        'key': '/tmp/duplicate:stop:0:0',
+        'eventName': 'stop',
+        'handlerType': 'command',
+        'isManaged': false,
+        'command': '"/tmp/dingdong_mcp" --notify-stop --source "Codex"',
+        'sourcePath': '/tmp/config.toml',
+        'source': 'project',
+        'enabled': true,
+        'currentHash': 'sha256:duplicate',
+        'trustStatus': 'untrusted',
+      });
+      final CodexAppServerCompletionHookGateway gateway =
+          CodexAppServerCompletionHookGateway(
+            connectionFactory: _FakeConnectionFactory(
+              _FakeConnection(response),
+            ),
+            homeDirectory: home,
+            dingDongMcpCommandPath: mcp,
+          );
+
+      final CodexCompletionHookStatus status = await gateway.inspect();
+
+      expect(status.review, CodexCompletionHookReview.failed);
+      expect(status.canRepair, isFalse);
+      expect(status.detail, contains('Multiple DingDong'));
+    },
+  );
+
+  test('parallel gateway inspections keep Hook inventories isolated', () async {
+    final _FakeConnection exactConnection = _FakeConnection(<String, Object?>{
+      'data': <Object?>[
+        _hookEntry(
+          homeDirectory: home,
+          command: command,
+          trustStatus: 'untrusted',
+        ),
+      ],
+    }, requestDelay: const Duration(milliseconds: 20));
+    final Map<String, Object?> duplicateCwd = _hookEntry(
+      homeDirectory: home,
+      command: command,
+      trustStatus: 'untrusted',
+    );
+    (duplicateCwd['hooks']! as List<Object?>).add(<String, Object?>{
+      'key': '/tmp/duplicate:stop:0:0',
+      'eventName': 'stop',
+      'handlerType': 'command',
+      'isManaged': false,
+      'command': '"/tmp/dingdong_mcp" --notify-stop --source "Codex"',
+      'sourcePath': '/tmp/config.toml',
+      'source': 'project',
+      'enabled': true,
+      'currentHash': 'sha256:duplicate',
+      'trustStatus': 'untrusted',
+    });
+    final _FakeConnection duplicateConnection = _FakeConnection(
+      <String, Object?>{
+        'data': <Object?>[duplicateCwd],
+      },
+      requestDelay: const Duration(milliseconds: 20),
+    );
+    CodexAppServerCompletionHookGateway gateway(_FakeConnection connection) =>
+        CodexAppServerCompletionHookGateway(
+          connectionFactory: _FakeConnectionFactory(connection),
+          homeDirectory: home,
+          dingDongMcpCommandPath: mcp,
+        );
+
+    final List<CodexCompletionHookStatus> statuses = await Future.wait(
+      <Future<CodexCompletionHookStatus>>[
+        gateway(exactConnection).inspect(),
+        gateway(duplicateConnection).inspect(),
+      ],
+    );
+
+    expect(statuses[0].review, CodexCompletionHookReview.untrusted);
+    expect(statuses[0].canRepair, isTrue);
+    expect(statuses[1].review, CodexCompletionHookReview.failed);
+    expect(statuses[1].canRepair, isFalse);
+    expect(statuses[1].detail, contains('Multiple DingDong'));
+    expect(exactConnection.closed, isTrue);
+    expect(duplicateConnection.closed, isTrue);
+  });
 }
 
 Map<String, Object?> _hookEntry({
@@ -235,11 +334,13 @@ final class _FakeConnection implements CodexAppServerConnection {
   _FakeConnection(
     this.initialHooksResponse, {
     Map<String, Object?>? afterWriteHooksResponse,
+    this.requestDelay = Duration.zero,
   }) : afterWriteHooksResponse =
            afterWriteHooksResponse ?? initialHooksResponse;
 
   final Map<String, Object?> initialHooksResponse;
   final Map<String, Object?> afterWriteHooksResponse;
+  final Duration requestDelay;
   final List<_Request> requests = <_Request>[];
   bool wrote = false;
   bool closed = false;
@@ -250,6 +351,9 @@ final class _FakeConnection implements CodexAppServerConnection {
     Map<String, Object?>? params,
   ]) async {
     requests.add(_Request(method, params));
+    if (requestDelay > Duration.zero) {
+      await Future<void>.delayed(requestDelay);
+    }
     if (method == 'hooks/list') {
       return wrote ? afterWriteHooksResponse : initialHooksResponse;
     }

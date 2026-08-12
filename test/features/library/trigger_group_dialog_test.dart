@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   testWidgets('trigger-group picker searches and keeps multi-selection', (
@@ -118,5 +121,91 @@ void main() {
 
     expect(result?.name, 'DingDong project');
     expect(result?.rules.single.value, '/workspace/dingdong');
+  });
+
+  testWidgets('project scope accepts only exact existing project groups', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-project-scope-dialog-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final Directory project = Directory(path.join(temp.path, 'project'))
+      ..createSync();
+    final DateTime now = DateTime.utc(2026, 8, 12);
+    final List<TriggerGroup> groups = <TriggerGroup>[
+      TriggerGroup(
+        id: 'exact',
+        name: 'Exact project',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.equals,
+            value: project.path,
+          ),
+        ],
+        createdAt: now,
+        updatedAt: now,
+      ),
+      TriggerGroup(
+        id: 'contains',
+        name: 'Loose project rule',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.contains,
+            value: 'project',
+          ),
+        ],
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) => FilledButton(
+            onPressed: () => showDialog<Set<String>>(
+              context: context,
+              builder: (BuildContext context) => TriggerGroupPickerDialog(
+                groups: groups,
+                selectedIds: const <String>{'contains'},
+                onCreate:
+                    ({
+                      required String name,
+                      required List<TriggerRule> rules,
+                    }) async => TriggerGroup(
+                      id: 'new',
+                      name: name,
+                      rules: rules,
+                      createdAt: now,
+                      updatedAt: now,
+                    ),
+                onUpdate: (_) async {},
+                onDelete: (_) async {},
+                exactProjectOnly: true,
+              ),
+            ),
+            child: const Text('Open'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Exact project'), findsOneWidget);
+    expect(find.text('Loose project rule'), findsNothing);
+    expect(
+      find.text(
+        'Only exact, existing project directories can receive a native Skill.',
+      ),
+      findsOneWidget,
+    );
   });
 }

@@ -116,7 +116,7 @@ final class StdioCodexAppServerConnection implements CodexAppServerConnection {
         'clientInfo': <String, Object?>{
           'name': 'dingdong',
           'title': 'DingDong',
-          'version': '1.3.7',
+          'version': '1.4.0',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,
@@ -368,12 +368,15 @@ final class CodexAppServerCompletionHookGateway
     final List<Map<String, Object?>> exact = hooks
         .where(_isExactDingDongHook)
         .toList(growable: false);
-    if (exact.length > 1) {
+    final List<Map<String, Object?>> family = hooks
+        .where(_looksLikeDingDongHook)
+        .toList(growable: false);
+    if (family.length > 1) {
       return const CodexCompletionHookStatus(
         review: CodexCompletionHookReview.failed,
         enabled: false,
         detail:
-            'Multiple identical DingDong Stop Hooks were found. Remove duplicates before trusting.',
+            'Multiple DingDong Stop Hooks were found across Codex sources. Remove duplicates before trusting.',
       );
     }
     if (exact.isEmpty) {

@@ -275,7 +275,7 @@ void main() {
     );
   });
 
-  testWidgets('popup mascot follows buddy state artwork', (
+  testWidgets('light popup mascot follows colored buddy state artwork', (
     WidgetTester tester,
   ) async {
     final ShellController controller = ShellController();
@@ -295,6 +295,39 @@ void main() {
         find.byKey(const Key('popup-mascot-image')),
       );
       expect((image.image as AssetImage).assetName, entry.value);
+    }
+  });
+
+  testWidgets('dark popup mascot uses high-contrast buddy state artwork', (
+    WidgetTester tester,
+  ) async {
+    final ShellController controller = ShellController();
+    addTearDown(controller.dispose);
+    final SettingsRepository settings = SettingsRepository(
+      MemoryPreferencesBackend(<String, Object>{
+        'dingdong.panel.themeMode': 'dark',
+      }),
+    );
+    await tester.pumpWidget(
+      DingDongApp(settingsRepository: settings, shellController: controller),
+    );
+    await tester.pumpAndSettle();
+
+    final Map<TrayBuddyState, String> expected = <TrayBuddyState, String>{
+      TrayBuddyState.normal: 'Assets/DingDongIP/AgentToolIcon-w.png',
+      TrayBuddyState.reminder: 'Assets/DingDongIP/ding-w.png',
+      TrayBuddyState.resting: 'Assets/DingDongIP/rest-w.png',
+      TrayBuddyState.sleeping: 'Assets/DingDongIP/sleeping-w.png',
+    };
+    for (final MapEntry<TrayBuddyState, String> entry in expected.entries) {
+      controller.setMascotState(entry.key);
+      await tester.pump();
+      final Image image = tester.widget<Image>(
+        find.byKey(const Key('popup-mascot-image')),
+      );
+      expect((image.image as AssetImage).assetName, entry.value);
+      expect(image.color, isNull);
+      expect(image.colorBlendMode, isNull);
     }
   });
 
@@ -325,6 +358,37 @@ void main() {
       (image.image as AssetImage).assetName,
       'Assets/DingDongIP/AgentToolIcon.png',
     );
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('dark thinking mascot keeps its original colored artwork', (
+    WidgetTester tester,
+  ) async {
+    final SettingsRepository settings = SettingsRepository(
+      MemoryPreferencesBackend(<String, Object>{
+        'dingdong.panel.themeMode': 'dark',
+      }),
+    );
+    await tester.pumpWidget(DingDongApp(settingsRepository: settings));
+    await tester.pumpAndSettle();
+
+    final Finder mascot = find.byKey(const Key('popup-mascot'));
+    for (var index = 0; index < 3; index += 1) {
+      await tester.tap(mascot);
+      await tester.pump();
+    }
+
+    final Image image = tester.widget<Image>(
+      find.byKey(const Key('popup-mascot-image')),
+    );
+    expect(
+      (image.image as AssetImage).assetName,
+      'Assets/DingDongIP/thinking.png',
+    );
+    expect(image.color, isNull);
+    expect(image.colorBlendMode, isNull);
+
+    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
   });
 
@@ -418,6 +482,56 @@ void main() {
     expect(launcher.openCount, 1);
     expect(events, <String>['hide', 'manager']);
   });
+
+  testWidgets(
+    'clipboard category management hides the popup before deep-linking',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final List<String> events = <String>[];
+      final _FakeResourceManagerLauncher launcher =
+          _FakeResourceManagerLauncher(onShow: () => events.add('manager'));
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        DingDongApp(
+          resourceManagerLauncher: launcher,
+          shellController: controller,
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[
+            ClipboardRecord(
+              id: 'category-deep-link',
+              group: 'Clipboard',
+              title: 'Category deep link',
+              content: 'Category deep link',
+              tags: const <String>['clipboard', 'text'],
+              pinned: false,
+              enabled: true,
+              activation: 'taskMatch',
+              createdAt: DateTime.utc(2026, 8, 12),
+              updatedAt: DateTime.utc(2026, 8, 12),
+            ),
+          ]),
+          onHideWindow: () async => events.add('hide'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('clipboard-toggle-filters')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('clipboard-manage-categories')));
+      await tester.pump();
+
+      expect(events, <String>['hide', 'manager']);
+      expect(launcher.openCount, 1);
+      expect(launcher.lastDestination, ResourceManagerDestination.clipboard);
+      expect(
+        find.byKey(const Key('clipboard-category-rules-dialog')),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets(
     'resource card de-duplicates tags and toggles its compact status control',
@@ -908,7 +1022,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.3.8'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.4.1'),
       );
       addTearDown(settings.dispose);
       await settings.load();

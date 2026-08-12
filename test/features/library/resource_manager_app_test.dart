@@ -230,6 +230,25 @@ void main() {
       await tester.pump();
       expect(conversationLauncher.opened?.conversationId, 'thread-1');
 
+      await _sendWindowMethod(
+        messenger,
+        channel: 'mixin.one/window_controller/resource-manager-test',
+        method: manageClipboardCategoriesMethod,
+      );
+      await tester.pumpAndSettle();
+      final Finder categoryDialog = find.byKey(
+        const Key('clipboard-category-rules-dialog'),
+      );
+      expect(find.byKey(const Key('clipboard-manager-search')), findsOneWidget);
+      expect(categoryDialog, findsOneWidget);
+      await tester.tap(
+        find.descendant(
+          of: categoryDialog,
+          matching: find.byIcon(Icons.close_rounded),
+        ),
+      );
+      await tester.pumpAndSettle();
+
       await tester.tap(find.byKey(const Key('resource-manager-nav-clipboard')));
       await tester.pump();
       expect(find.byKey(const Key('clipboard-manager-search')), findsOneWidget);
@@ -237,6 +256,30 @@ void main() {
       await tester.tap(find.byKey(const Key('resource-manager-nav-resources')));
       await tester.pump();
       expect(find.byKey(const Key('resource-search')), findsOneWidget);
+
+      await tester.tap(find.text('新建资源'));
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('resource-title')),
+        'Unsaved workspace draft',
+      );
+      await tester.tap(find.byKey(const Key('resource-manager-nav-clipboard')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('resource-unsaved-changes-dialog')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('resource-keep-editing')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('resource-editor')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('resource-manager-nav-clipboard')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('resource-discard-changes')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-manager-search')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('resource-manager-nav-resources')));
+      await tester.pump();
 
       final ResourceManagerCreateRequest request =
           const ResourceManagerCreateRequest(

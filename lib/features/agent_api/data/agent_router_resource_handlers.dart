@@ -6,6 +6,18 @@ extension _AgentRouterResourceHandlers on AgentRouter {
     if (store == null) {
       return _resourceUnavailable();
     }
+    if (store is ExclusiveResourceStore) {
+      return (store as ExclusiveResourceStore).exclusiveMutation(
+        () => _createResourceLocked(body, store),
+      );
+    }
+    return _createResourceLocked(body, store);
+  }
+
+  Future<HttpResponseData> _createResourceLocked(
+    String body,
+    ResourceStore store,
+  ) async {
     try {
       final Map<String, Object?> json =
           jsonDecode(body) as Map<String, Object?>;
@@ -67,6 +79,17 @@ extension _AgentRouterResourceHandlers on AgentRouter {
         }
       }
       final DateTime timestamp = _now().toUtc();
+      if (json.containsKey('skillDeliveryByAgent') ||
+          json.containsKey('skillHooksEnabledByAgent')) {
+        return const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message':
+                'Create the Skill first, then use its atomic delivery endpoint',
+          },
+        );
+      }
       final Resource resource = Resource(
         id: _idGenerator(),
         type: type,

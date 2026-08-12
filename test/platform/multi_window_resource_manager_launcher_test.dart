@@ -119,4 +119,91 @@ void main() {
       request.toJson(),
     );
   });
+
+  test(
+    'category management focuses clipboard then sends the deep-link request',
+    () async {
+      const MethodChannel windows = MethodChannel(
+        'mixin.one/desktop_multi_window',
+      );
+      const MethodChannel channels = MethodChannel(
+        'mixin.one/desktop_multi_window/channels',
+      );
+      final TestDefaultBinaryMessenger messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final List<MethodCall> channelCalls = <MethodCall>[];
+      messenger.setMockMethodCallHandler(windows, (MethodCall call) async {
+        if (call.method == 'getAllWindows') {
+          return <Object?>[
+            <String, String>{
+              'windowId': 'resource-window',
+              'windowArgument': jsonEncode(<String, String>{
+                'kind': resourceManagerWindowKind,
+              }),
+            },
+          ];
+        }
+        return null;
+      });
+      messenger.setMockMethodCallHandler(channels, (MethodCall call) async {
+        channelCalls.add(call);
+        return null;
+      });
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(windows, null);
+        messenger.setMockMethodCallHandler(channels, null);
+      });
+
+      await const MultiWindowResourceManagerLauncher(
+        parentWindowId: 'main-window',
+      ).showClipboardCategories();
+
+      final List<Map<Object?, Object?>> invocations = channelCalls
+          .where((MethodCall call) => call.method == 'invokeMethod')
+          .map((MethodCall call) => call.arguments! as Map<Object?, Object?>)
+          .toList(growable: false);
+      expect(
+        invocations.map((Map<Object?, Object?> call) => call['method']),
+        <String>['window_focus', manageClipboardCategoriesMethod],
+      );
+      expect(invocations.first['arguments'], 'clipboard');
+    },
+  );
+
+  test('new category manager window carries the clipboard deep-link', () async {
+    const MethodChannel windows = MethodChannel(
+      'mixin.one/desktop_multi_window',
+    );
+    final TestDefaultBinaryMessenger messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    MethodCall? creationCall;
+    messenger.setMockMethodCallHandler(windows, (MethodCall call) async {
+      switch (call.method) {
+        case 'getAllWindows':
+          return <Object?>[];
+        case 'createWindow':
+          creationCall = call;
+          return 'created-resource-window';
+        default:
+          return null;
+      }
+    });
+    addTearDown(() {
+      messenger.setMockMethodCallHandler(windows, null);
+    });
+
+    await const MultiWindowResourceManagerLauncher(
+      parentWindowId: 'main-window',
+    ).showClipboardCategories();
+
+    expect(creationCall, isNotNull);
+    final Map<Object?, Object?> configuration =
+        creationCall!.arguments! as Map<Object?, Object?>;
+    final Map<String, Object?> arguments = decodeDesktopWindowArguments(
+      configuration['arguments']! as String,
+    );
+    expect(arguments['kind'], resourceManagerWindowKind);
+    expect(arguments['destination'], 'clipboard');
+    expect(arguments['openClipboardCategories'], true);
+  });
 }

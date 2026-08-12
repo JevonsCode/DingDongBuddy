@@ -49,6 +49,21 @@ enum ResourceActivation {
   }
 }
 
+/// How one Agent receives a Skill whose master switch is enabled.
+enum SkillDeliveryMode {
+  dynamic,
+  nativeUser,
+  nativeProject;
+
+  static SkillDeliveryMode parse(Object? value) {
+    return values.firstWhere(
+      (SkillDeliveryMode mode) => mode.name == value,
+      orElse: () =>
+          throw FormatException('Unknown Skill delivery mode: $value'),
+    );
+  }
+}
+
 /// Maximum number of characters accepted for the name shown while an Agent
 /// loads this resource into a conversation.
 const int maximumAgentSessionNameCharacters = 7;
@@ -76,6 +91,10 @@ final class Resource {
     List<String> triggerGroupIds = const <String>[],
     bool strictProjectSkill = false,
     List<String> skillProjectPaths = const <String>[],
+    Map<String, SkillDeliveryMode> skillDeliveryByAgent =
+        const <String, SkillDeliveryMode>{},
+    Map<String, bool> skillHooksEnabledByAgent = const <String, bool>{},
+    String? skillPackageDigest,
     this.sortOrder,
     this.usageCount = 0,
     this.lastUsedAt,
@@ -104,6 +123,15 @@ final class Resource {
              .where((String projectPath) => projectPath.isNotEmpty)
              .toSet(),
        ),
+       skillDeliveryByAgent = type == ResourceType.skill
+           ? _normalizedAgentMap(skillDeliveryByAgent)
+           : const <String, SkillDeliveryMode>{},
+       skillHooksEnabledByAgent = type == ResourceType.skill
+           ? _normalizedAgentMap(skillHooksEnabledByAgent)
+           : const <String, bool>{},
+       skillPackageDigest = type == ResourceType.skill
+           ? _trimmedOrNull(skillPackageDigest)
+           : null,
        activation =
            activation ??
            (pinned ? ResourceActivation.always : ResourceActivation.taskMatch);
@@ -142,6 +170,14 @@ final class Resource {
           json['strictProjectSkill'] as bool? ??
           (type == ResourceType.skill && skillProjectPaths.isNotEmpty),
       skillProjectPaths: skillProjectPaths,
+      skillDeliveryByAgent: _skillDeliveryByAgentFromJson(
+        json['skillDeliveryByAgent'],
+      ),
+      skillHooksEnabledByAgent: _boolByAgentFromJson(
+        json['skillHooksEnabledByAgent'],
+        field: 'skillHooksEnabledByAgent',
+      ),
+      skillPackageDigest: json['skillPackageDigest'] as String?,
       sortOrder: json['sortOrder'] as int?,
       usageCount: json['usageCount'] as int? ?? 0,
       lastUsedAt: json['lastUsedAt'] == null
@@ -191,6 +227,15 @@ final class Resource {
   /// Retained in persisted data for exact-scope validation and cleanup of
   /// DingDong-managed native mirrors.
   final List<String> skillProjectPaths;
+  final Map<String, SkillDeliveryMode> skillDeliveryByAgent;
+  final Map<String, bool> skillHooksEnabledByAgent;
+  final String? skillPackageDigest;
+
+  SkillDeliveryMode skillDeliveryForAgent(String agentId) =>
+      skillDeliveryByAgent[agentId.trim()] ?? SkillDeliveryMode.dynamic;
+
+  bool skillHooksEnabledForAgent(String agentId) =>
+      skillHooksEnabledByAgent[agentId.trim()] ?? false;
   final int? sortOrder;
   final int usageCount;
   final DateTime? lastUsedAt;
@@ -217,6 +262,15 @@ final class Resource {
       if (triggerGroupIds.isNotEmpty) 'triggerGroupIds': triggerGroupIds,
       if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
+      if (skillDeliveryByAgent.isNotEmpty)
+        'skillDeliveryByAgent': <String, String>{
+          for (final MapEntry<String, SkillDeliveryMode> entry
+              in skillDeliveryByAgent.entries)
+            entry.key: entry.value.name,
+        },
+      if (skillHooksEnabledByAgent.isNotEmpty)
+        'skillHooksEnabledByAgent': skillHooksEnabledByAgent,
+      if (skillPackageDigest != null) 'skillPackageDigest': skillPackageDigest,
       if (sortOrder != null) 'sortOrder': sortOrder,
       'usageCount': usageCount,
       if (lastUsedAt != null)
@@ -240,6 +294,16 @@ final class Resource {
       'triggerGroupIds': triggerGroupIds,
       if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
+      if (type == ResourceType.skill) ...<String, Object?>{
+        'skillDeliveryByAgent': <String, String>{
+          for (final MapEntry<String, SkillDeliveryMode> entry
+              in skillDeliveryByAgent.entries)
+            entry.key: entry.value.name,
+        },
+        'skillHooksEnabledByAgent': skillHooksEnabledByAgent,
+        if (skillPackageDigest != null)
+          'skillPackageDigest': skillPackageDigest,
+      },
       if (agentSessionName != null) 'agentSessionName': agentSessionName,
       if (hideInAgentConversation) 'hideInAgentConversation': true,
       'usageCount': usageCount,
@@ -265,6 +329,16 @@ final class Resource {
       'triggerGroupIds': triggerGroupIds,
       if (type == ResourceType.skill) 'strictProjectSkill': strictProjectSkill,
       if (skillProjectPaths.isNotEmpty) 'skillProjectPaths': skillProjectPaths,
+      if (type == ResourceType.skill) ...<String, Object?>{
+        'skillDeliveryByAgent': <String, String>{
+          for (final MapEntry<String, SkillDeliveryMode> entry
+              in skillDeliveryByAgent.entries)
+            entry.key: entry.value.name,
+        },
+        'skillHooksEnabledByAgent': skillHooksEnabledByAgent,
+        if (skillPackageDigest != null)
+          'skillPackageDigest': skillPackageDigest,
+      },
       if (agentSessionName != null) 'agentSessionName': agentSessionName,
       if (hideInAgentConversation) 'hideInAgentConversation': true,
       'usageCount': usageCount,
@@ -296,6 +370,9 @@ final class Resource {
     List<String>? triggerGroupIds,
     bool? strictProjectSkill,
     List<String>? skillProjectPaths,
+    Map<String, SkillDeliveryMode>? skillDeliveryByAgent,
+    Map<String, bool>? skillHooksEnabledByAgent,
+    Object? skillPackageDigest = _unset,
     int? sortOrder,
     int? usageCount,
     DateTime? lastUsedAt,
@@ -327,6 +404,12 @@ final class Resource {
       triggerGroupIds: triggerGroupIds ?? this.triggerGroupIds,
       strictProjectSkill: strictProjectSkill ?? this.strictProjectSkill,
       skillProjectPaths: skillProjectPaths ?? this.skillProjectPaths,
+      skillDeliveryByAgent: skillDeliveryByAgent ?? this.skillDeliveryByAgent,
+      skillHooksEnabledByAgent:
+          skillHooksEnabledByAgent ?? this.skillHooksEnabledByAgent,
+      skillPackageDigest: identical(skillPackageDigest, _unset)
+          ? this.skillPackageDigest
+          : skillPackageDigest as String?,
       sortOrder: sortOrder ?? this.sortOrder,
       usageCount: usageCount ?? this.usageCount,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
@@ -357,6 +440,12 @@ final class Resource {
             _listEquals(triggerGroupIds, other.triggerGroupIds) &&
             strictProjectSkill == other.strictProjectSkill &&
             _listEquals(skillProjectPaths, other.skillProjectPaths) &&
+            _mapEquals(skillDeliveryByAgent, other.skillDeliveryByAgent) &&
+            _mapEquals(
+              skillHooksEnabledByAgent,
+              other.skillHooksEnabledByAgent,
+            ) &&
+            skillPackageDigest == other.skillPackageDigest &&
             sortOrder == other.sortOrder &&
             usageCount == other.usageCount &&
             lastUsedAt == other.lastUsedAt &&
@@ -384,12 +473,78 @@ final class Resource {
     Object.hashAll(triggerGroupIds),
     strictProjectSkill,
     Object.hashAll(skillProjectPaths),
+    Object.hashAll(skillDeliveryByAgent.entries),
+    Object.hashAll(skillHooksEnabledByAgent.entries),
+    skillPackageDigest,
     sortOrder,
     usageCount,
     lastUsedAt,
     createdAt,
     updatedAt,
   ]);
+}
+
+const Object _unset = Object();
+
+Map<String, SkillDeliveryMode> _skillDeliveryByAgentFromJson(Object? value) {
+  if (value == null) {
+    return const <String, SkillDeliveryMode>{};
+  }
+  if (value is! Map) {
+    throw const FormatException(
+      'Resource field "skillDeliveryByAgent" must be an object.',
+    );
+  }
+  return <String, SkillDeliveryMode>{
+    for (final MapEntry<Object?, Object?> entry in value.entries)
+      entry.key as String: SkillDeliveryMode.parse(entry.value),
+  };
+}
+
+Map<String, bool> _boolByAgentFromJson(Object? value, {required String field}) {
+  if (value == null) {
+    return const <String, bool>{};
+  }
+  if (value is! Map) {
+    throw FormatException('Resource field "$field" must be an object.');
+  }
+  return <String, bool>{
+    for (final MapEntry<Object?, Object?> entry in value.entries)
+      entry.key as String: entry.value as bool,
+  };
+}
+
+Map<String, V> _normalizedAgentMap<V>(Map<String, V> values) {
+  final List<MapEntry<String, V>> entries =
+      values.entries
+          .map(
+            (MapEntry<String, V> entry) =>
+                MapEntry<String, V>(entry.key.trim(), entry.value),
+          )
+          .where((MapEntry<String, V> entry) => entry.key.isNotEmpty)
+          .toList(growable: false)
+        ..sort(
+          (MapEntry<String, V> left, MapEntry<String, V> right) =>
+              left.key.compareTo(right.key),
+        );
+  return Map<String, V>.unmodifiable(<String, V>{
+    for (final MapEntry<String, V> entry in entries) entry.key: entry.value,
+  });
+}
+
+bool _mapEquals<K, V>(Map<K, V> left, Map<K, V> right) {
+  if (identical(left, right)) {
+    return true;
+  }
+  if (left.length != right.length) {
+    return false;
+  }
+  for (final MapEntry<K, V> entry in left.entries) {
+    if (right[entry.key] != entry.value || !right.containsKey(entry.key)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 String _requiredString(Map<String, Object?> json, String key) {

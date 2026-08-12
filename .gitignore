@@ -44,6 +44,7 @@ docs/superpowers/
 docs/audits/
 .design-qa/
 design-qa.md
+.impeccable/
 .worktrees/
 app.*.symbols
 app.*.map.json

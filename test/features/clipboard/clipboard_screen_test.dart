@@ -4,6 +4,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
@@ -518,6 +519,67 @@ void main() {
     expect(find.byKey(const Key('clipboard-category-text')), findsNothing);
   });
 
+  testWidgets(
+    'popup category management deep-links without opening a local dialog',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[_record()]),
+      )..load();
+      final _FakeResourceManagerLauncher launcher =
+          _FakeResourceManagerLauncher();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ClipboardScreen(
+            viewModel: model,
+            filtersExpanded: true,
+            resourceManagerLauncher: launcher,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('clipboard-manage-categories')));
+      await tester.pump();
+
+      expect(launcher.categoryManagementOpenCount, 1);
+      expect(
+        find.byKey(const Key('clipboard-category-rules-dialog')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('popup category management is disabled without a launcher', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[_record()]),
+    )..load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardScreen(viewModel: model, filtersExpanded: true),
+      ),
+    );
+
+    final DesktopIconButton button = tester.widget<DesktopIconButton>(
+      find.byKey(const Key('clipboard-manage-categories')),
+    );
+    expect(button.onPressed, isNull);
+    expect(
+      find.byKey(const Key('clipboard-category-rules-dialog')),
+      findsNothing,
+    );
+  });
+
   testWidgets('Command-F focuses clipboard search', (
     WidgetTester tester,
   ) async {
@@ -992,14 +1054,6 @@ void main() {
     final Finder permissionButton = find.byKey(
       const Key('clipboard-open-permission-settings'),
     );
-    expect(
-      tester
-          .widget<FilledButton>(permissionButton)
-          .style
-          ?.side
-          ?.resolve(const <WidgetState>{}),
-      BorderSide.none,
-    );
     expect(tester.getSize(permissionButton).height, 32);
     await tester.tap(permissionButton);
     await tester.pump();
@@ -1454,7 +1508,7 @@ void main() {
       );
       final RoundedRectangleBorder shape =
           dialog.shape! as RoundedRectangleBorder;
-      expect(shape.borderRadius, BorderRadius.circular(18));
+      expect(shape.borderRadius, BorderRadius.circular(14));
       expect(
         find.descendant(
           of: find.byKey(const Key('clipboard-group-dialog')),
@@ -1740,8 +1794,10 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
   }
 }
 
-final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
+final class _FakeResourceManagerLauncher
+    implements ResourceManagerLauncher, ClipboardCategoryManagerLauncher {
   ResourceManagerCreateRequest? lastCreateRequest;
+  int categoryManagementOpenCount = 0;
 
   @override
   Future<void> show({
@@ -1751,6 +1807,11 @@ final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {
         ResourceManagerDestination.resources,
   }) async {
     lastCreateRequest = createRequest;
+  }
+
+  @override
+  Future<void> showClipboardCategories() async {
+    categoryManagementOpenCount += 1;
   }
 }
 

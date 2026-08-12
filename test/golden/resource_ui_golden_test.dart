@@ -369,7 +369,7 @@ Apply the user's saved preferences.''',
       final Rect listRect = tester.getRect(
         find.byKey(const Key('clipboard-category-list-surface')),
       );
-      expect(listRect.top - toolbarRect.bottom, closeTo(10, 0.1));
+      expect(listRect.top - toolbarRect.bottom, closeTo(8, 0.1));
       final List<Rect> actionRects =
           <String>['links', 'images', 'files', 'text']
               .map(
@@ -378,10 +378,16 @@ Apply the user's saved preferences.''',
                 ),
               )
               .toList(growable: false);
-      for (final Rect actionRect in actionRects) {
-        expect(actionRect.width, closeTo(142, 0.1));
+      for (int index = 0; index < actionRects.length; index++) {
+        final Rect actionRect = actionRects[index];
+        final String id = <String>['links', 'images', 'files', 'text'][index];
+        final Rect copyRect = tester.getRect(
+          find.byKey(Key('clipboard-category-copy-$id')),
+        );
+        expect(actionRect.width, closeTo(104, 0.1));
         expect(actionRect.right, closeTo(actionRects.first.right, 0.1));
         expect(listRect.contains(actionRect.center), isTrue);
+        expect(copyRect.right, lessThanOrEqualTo(actionRect.left - 8));
       }
 
       await expectLater(
@@ -401,6 +407,7 @@ Future<void> _noopCreate({
   List<String>? tags,
   String? updateUrl,
   String? packagePath,
+  String? skillPackageDigest,
   String? note,
   bool? pinned,
   bool? enabled,

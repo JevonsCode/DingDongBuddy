@@ -1,16 +1,23 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_skill_catalog.dart';
+import 'package:dingdong/features/library/data/codex_project_hook_inventory.dart';
+import 'package:dingdong/features/library/data/native_skill_delivery_coordinator.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/skill_deployment_store.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
+import 'package:dingdong/features/library/domain/project_hook_integration.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
+import 'package:dingdong/features/library/domain/skill_deployment_plan.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
@@ -39,10 +46,11 @@ typedef AgentAdapterLoader = Future<List<AgentAdapter>> Function();
 
 /// Makes DingDong's enabled state concrete in supported Agent clients.
 ///
-/// Prompts install a stable Bridge bootstrap, Skills are delivered dynamically
-/// through that Bridge, and MCP resources become real client configuration
-/// entries filtered by each target Agent's source. Legacy Skill mirrors are
-/// removed only when DingDong marked them.
+/// Prompts install a stable Bridge bootstrap. Skills use one mutually
+/// exclusive delivery plane per Agent: dynamic Bridge loading or a complete
+/// receipt-owned native package. MCP resources become real client
+/// configuration entries filtered by each target Agent's source. Legacy Skill
+/// mirrors are removed only when DingDong marked them.
 final class AgentResourceSynchronizer {
   AgentResourceSynchronizer({
     required this.packageRoot,
@@ -53,16 +61,29 @@ final class AgentResourceSynchronizer {
     this.promptTargets = const <AgentPromptTarget>[],
     this.skillClientNames = const <String, String>{},
     this.projectSkillClientNames = const <String, String>{},
+    this.skillTargets = const <AgentSkillTarget>[],
     this.externalSkillCatalogs = const <AgentSkillCatalog>[],
     this._adapterLoader,
     this._adapterHomeDirectory,
     File? managedStateFile,
+    SkillDeploymentStore? deploymentStore,
+    CodexProjectHookInventory? projectHookInventory,
     SkillPackageInstaller? skillPackageInstaller,
   }) : managedStateFile =
            managedStateFile ??
            File(path.join(packageRoot.parent.path, 'agent-sync-state.json')),
        skillPackageInstaller =
-           skillPackageInstaller ?? GitHubSkillPackageInstaller(packageRoot);
+           skillPackageInstaller ?? GitHubSkillPackageInstaller(packageRoot),
+       deploymentStore =
+           deploymentStore ??
+           SkillDeploymentStore(
+             Directory(path.join(packageRoot.parent.path, 'Skill Deployments')),
+           ) {
+    nativeSkillDelivery = NativeSkillDeliveryCoordinator(
+      store: this.deploymentStore,
+      hookInventory: projectHookInventory,
+    );
+  }
 
   static Future<AgentResourceSynchronizer> currentUser(
     Directory packageRoot, {
@@ -70,6 +91,7 @@ final class AgentResourceSynchronizer {
     SkillPackageInstaller? skillPackageInstaller,
     TriggerGroupStore? triggerGroupStore,
     String? homeDirectory,
+    CodexProjectHookInventory? projectHookInventory,
   }) async {
     final String home =
         homeDirectory ??
@@ -83,6 +105,13 @@ final class AgentResourceSynchronizer {
       adapterLoader: loadAdapters,
       adapterHomeDirectory: home,
       skillPackageInstaller: skillPackageInstaller,
+      projectHookInventory:
+          projectHookInventory ??
+          CodexAppServerProjectHookInventory(
+            connectionFactory: NativeCodexAppServerConnectionFactory(
+              homeDirectory: home,
+            ),
+          ),
     );
     try {
       await synchronizer._reloadAdapterTargets();
@@ -102,9 +131,12 @@ final class AgentResourceSynchronizer {
   final TriggerGroupStore? triggerGroupStore;
   Map<String, String> skillClientNames;
   Map<String, String> projectSkillClientNames;
+  List<AgentSkillTarget> skillTargets;
   List<AgentSkillCatalog> externalSkillCatalogs;
   final File managedStateFile;
   final SkillPackageInstaller skillPackageInstaller;
+  final SkillDeploymentStore deploymentStore;
+  late final NativeSkillDeliveryCoordinator nativeSkillDelivery;
   final AgentAdapterLoader? _adapterLoader;
   final String? _adapterHomeDirectory;
 
@@ -118,6 +150,12 @@ final class AgentResourceSynchronizer {
         .toList(growable: false);
     final Map<String, TriggerGroup> triggerGroupsById =
         await _loadTriggerGroups();
+    // Recover durable deployment journals before unrelated validation can
+    // reject a later reconciliation plan.
+    await nativeSkillDelivery.recoverPending(
+      resources: resources,
+      targets: skillTargets,
+    );
     final List<AppIssue> issues = await _inspect(resources);
     final List<AppIssue> blockingIssues = issues
         .where((AppIssue issue) => issue.severity == AppIssueSeverity.error)
@@ -125,6 +163,10 @@ final class AgentResourceSynchronizer {
     if (blockingIssues.isNotEmpty) {
       throw AppIssueException(blockingIssues);
     }
+    await nativeSkillDelivery.reconcile(
+      resources: resources,
+      targets: skillTargets,
+    );
     final Map<String, Set<String>> managed = await _readManagedMcpState();
     _normalizeManagedTargetPaths(managed);
     final Set<String> previousProjectSkillRoots =
@@ -327,7 +369,7 @@ final class AgentResourceSynchronizer {
           '- Returned MCP entries are tool references, not instructions. Call configured MCP tools only when the task requires them.',
         )
         ..writeln(
-          '- When `conversation.capsule.visible` is true, keep the successful Bridge capsule until the final user-visible response. For each successful `dingdong_load_skill` call, replace only the capsule item whose `mergeKey` matches the returned `conversation.item`; the merge key is opaque merge-only metadata and must never be displayed. Append `*` only to a Skill item whose returned `confirmedUse` is true; this confirms that DingDong returned the full Skill in this task, not that every instruction was followed. Select the footer by capability, not by product name: on an MCP Apps host call `dingdong_render_conversation_footer` exactly once with the final merged capsule; on an explicitly ANSI-capable terminal use `conversation.presentations.ansi.line`; otherwise include `conversation.line` exactly once. Never paste the MCP App HTML or XML into an ordinary response. Prompt, Skill, and MCP use their distinct warm-orange, blue, and green treatments. Never mark a Skill candidate, Prompt, or MCP, and never display resource content, descriptions, IDs, or merge keys.',
+          '- When `conversation.visible` is true, keep the successful Bridge `conversation.capsule` until the final user-visible response. For each successful `dingdong_load_skill` call, replace only the capsule item whose `mergeKey` matches the returned `conversation.item`; the merge key is opaque merge-only metadata and must never be displayed. Append `*` only to a Skill item whose returned `confirmedUse` is true; this confirms that DingDong returned the full Skill in this task, not that every instruction was followed. On Codex desktop, include `conversation.line` exactly once as a single Markdown text line: keep `DingDong` as text and keep Prompt, Skill, and MCP as orange, blue, and green emoji tokens. Do not use an image, HTML/XML, inline font, or rendering tool for this footer. Use `conversation.presentations.ansi.line` only on an explicitly ANSI-capable terminal; every other host includes `conversation.fallbackLine` exactly once. Never mark a Skill candidate, Prompt, or MCP, and never display resource content, descriptions, IDs, or merge keys.',
         );
       block.writeln(_managedPromptsEnd);
     }
@@ -444,7 +486,11 @@ final class AgentResourceSynchronizer {
         final File marker = File(
           path.join(destinationPath, '.dingdong-managed'),
         );
-        if (!await marker.exists()) {
+        final File receipt = File(
+          path.join(destinationPath, skillDeploymentReceiptFileName),
+        );
+        if (!await marker.exists() &&
+            !await _isOwnedNativeSkillReceipt(receipt, resource.id)) {
           issues.add(
             _issue(
               resource: resource,
@@ -566,6 +612,30 @@ final class AgentResourceSynchronizer {
     return unique.values.toList(growable: false);
   }
 
+  Future<bool> _isOwnedNativeSkillReceipt(
+    File receipt,
+    String resourceId,
+  ) async {
+    if (!await receipt.exists()) {
+      return false;
+    }
+    try {
+      final Object? decoded = jsonDecode(await receipt.readAsString());
+      if (decoded is! Map) {
+        return false;
+      }
+      final Map<String, Object?> value = Map<String, Object?>.from(decoded);
+      return value['schemaVersion'] == 1 &&
+          value['managedBy'] == 'DingDong' &&
+          value['resourceId'] == resourceId &&
+          value['deploymentKey'] is String &&
+          value['destinationKey'] is String &&
+          value['contentDigest'] is String;
+    } on Object {
+      return false;
+    }
+  }
+
   Future<void> _reloadAdapterTargets() async {
     final AgentAdapterLoader? load = _adapterLoader;
     if (load == null) {
@@ -581,6 +651,7 @@ final class AgentResourceSynchronizer {
     mcpTargets = targets.mcpTargets;
     skillClientNames = targets.skillClientNames;
     projectSkillClientNames = targets.projectSkillClientNames;
+    skillTargets = targets.skillTargets;
     externalSkillCatalogs = targets.externalSkillCatalogs;
   }
 
@@ -858,6 +929,7 @@ final class _AgentResourceTargets {
     required this.mcpTargets,
     required this.skillClientNames,
     required this.projectSkillClientNames,
+    required this.skillTargets,
     required this.externalSkillCatalogs,
   });
 
@@ -867,6 +939,7 @@ final class _AgentResourceTargets {
   final List<AgentMcpTarget> mcpTargets;
   final Map<String, String> skillClientNames;
   final Map<String, String> projectSkillClientNames;
+  final List<AgentSkillTarget> skillTargets;
   final List<AgentSkillCatalog> externalSkillCatalogs;
 }
 
@@ -966,6 +1039,21 @@ _AgentResourceTargets _targetsForAdapters(
           path.normalize(adapter.resolvedProjectSkillPath()):
               adapter.displayName,
     },
+    skillTargets: installed
+        .where(
+          (AgentAdapter adapter) =>
+              adapter.globalSkillPath != null &&
+              adapter.projectSkillPath != null,
+        )
+        .map(
+          (AgentAdapter adapter) => AgentSkillTarget(
+            agentId: adapter.id,
+            clientName: adapter.displayName,
+            globalRoot: Directory(adapter.resolvedGlobalSkillPath(home)!),
+            projectRelativeRoot: adapter.resolvedProjectSkillPath(),
+          ),
+        )
+        .toList(growable: false),
     externalSkillCatalogs: <AgentSkillCatalog>[
       if (installed.any((AgentAdapter adapter) => adapter.id == 'claude-code'))
         ClaudeCodePluginSkillCatalog(
@@ -979,7 +1067,8 @@ _AgentResourceTargets _targetsForAdapters(
 }
 
 /// Adds transactional synchronization without changing callers of ResourceStore.
-final class SynchronizedResourceStore implements ResourceStore {
+final class SynchronizedResourceStore
+    implements ResourceStore, ResourceUsageStore, ExclusiveResourceStore {
   SynchronizedResourceStore(
     this._delegate,
     this._synchronizer, {
@@ -991,21 +1080,47 @@ final class SynchronizedResourceStore implements ResourceStore {
   final AgentResourceSynchronizer _synchronizer;
   final IssueCenterController? issueCenter;
   final void Function()? onChanged;
+  List<Resource>? _lastLoaded;
+
+  Future<T> _exclusive<T>(Future<T> Function() action) {
+    final ResourceStore delegate = _delegate;
+    if (delegate is ResourceRepository) {
+      return delegate.exclusive(action);
+    }
+    return action();
+  }
 
   @override
-  Future<List<Resource>> load() => _delegate.load();
+  Future<T> exclusiveMutation<T>(Future<T> Function() action) =>
+      _exclusive(action);
 
   @override
-  Future<void> save(List<Resource> resources) async {
+  Future<List<Resource>> load() async {
+    final List<Resource> resources = await _delegate.load();
+    _lastLoaded = List<Resource>.of(resources);
+    return resources;
+  }
+
+  @override
+  Future<void> save(List<Resource> resources) =>
+      _exclusive(() => _saveLocked(resources));
+
+  Future<void> _saveLocked(List<Resource> resources) async {
     final List<Resource> previous = await _delegate.load();
-    await _delegate.save(resources);
-    if (_onlyAgentResourceUsageChanged(previous, resources)) {
+    final List<Resource> proposed = _mergeConcurrentResources(
+      base: _lastLoaded ?? previous,
+      current: previous,
+      proposed: resources,
+    );
+    await _delegate.save(proposed);
+    if (_onlyAgentResourceUsageChanged(previous, proposed)) {
+      _lastLoaded = List<Resource>.of(proposed);
       onChanged?.call();
       return;
     }
     try {
-      final List<AppIssue> issues = await _synchronizer.sync(resources);
-      await _cleanupRemovedPackages(previous, resources);
+      final List<AppIssue> issues = await _synchronizer.sync(proposed);
+      await _cleanupRemovedPackages(previous, proposed);
       issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
     } on Object catch (error, stackTrace) {
       final List<AppIssue> issues = error is AppIssueException
@@ -1021,17 +1136,41 @@ final class SynchronizedResourceStore implements ResourceStore {
               ),
             ];
       await _delegate.save(previous);
+      _lastLoaded = List<Resource>.of(previous);
       try {
         await _synchronizer.sync(previous);
       } on Object {
         // Preserve the original save failure; the resource file is rolled back.
       }
-      await _cleanupRemovedPackages(resources, previous);
+      await _cleanupRemovedPackages(proposed, previous);
       issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
       Error.throwWithStackTrace(error, stackTrace);
     }
+    _lastLoaded = List<Resource>.of(proposed);
     onChanged?.call();
   }
+
+  @override
+  Future<List<Resource>> recordUsage(
+    Set<String> resourceIds,
+    DateTime usedAt,
+  ) => _exclusive(() async {
+    final List<Resource> latest = await _delegate.load();
+    final List<Resource> updated = latest
+        .map(
+          (Resource resource) => resourceIds.contains(resource.id)
+              ? resource.copyWith(
+                  usageCount: resource.usageCount + 1,
+                  lastUsedAt: usedAt,
+                )
+              : resource,
+        )
+        .toList(growable: false);
+    await _delegate.save(updated);
+    _lastLoaded = List<Resource>.of(updated);
+    onChanged?.call();
+    return updated;
+  });
 
   Future<void> _cleanupRemovedPackages(
     List<Resource> previous,
@@ -1412,6 +1551,135 @@ void _rejectDuplicateTomlTables(String contents, String targetPath) {
     'Codex configuration contains duplicate TOML tables: '
     '${sorted.join(', ')}. $targetPath was not changed.',
   );
+}
+
+List<Resource> _mergeConcurrentResources({
+  required List<Resource> base,
+  required List<Resource> current,
+  required List<Resource> proposed,
+}) {
+  final Map<String, Resource> baseById = <String, Resource>{
+    for (final Resource resource in base) resource.id: resource,
+  };
+  final Map<String, Resource> currentById = <String, Resource>{
+    for (final Resource resource in current) resource.id: resource,
+  };
+  final Map<String, Resource> proposedById = <String, Resource>{
+    for (final Resource resource in proposed) resource.id: resource,
+  };
+  final List<Resource> merged = <Resource>[];
+  for (final Resource candidate in proposed) {
+    final Resource? baseline = baseById[candidate.id];
+    final Resource? latest = currentById[candidate.id];
+    if (baseline == null) {
+      if (latest != null && latest != candidate) {
+        throw StateError(
+          'Resource "${candidate.title}" was created differently in another '
+          'window. Reload before saving.',
+        );
+      }
+      merged.add(latest ?? candidate);
+      continue;
+    }
+    if (latest == null) {
+      if (!_sameResourceConfiguration(candidate, baseline)) {
+        throw StateError(
+          'Resource "${candidate.title}" was deleted in another window. '
+          'Reload before saving.',
+        );
+      }
+      continue;
+    }
+    final bool latestChanged = !_sameResourceConfiguration(latest, baseline);
+    final bool candidateChanged = !_sameResourceConfiguration(
+      candidate,
+      baseline,
+    );
+    if (latestChanged &&
+        candidateChanged &&
+        !_sameResourceConfiguration(latest, candidate)) {
+      throw StateError(
+        'Resource "${candidate.title}" changed in another window. Reload '
+        'before saving so delivery, scope, and Hook switches are not '
+        'overwritten.',
+      );
+    }
+    if (latestChanged && !candidateChanged) {
+      merged.add(latest);
+    } else {
+      merged.add(_mergeUsageMetadata(candidate, latest, baseline));
+    }
+  }
+  for (final Resource baseline in base) {
+    if (proposedById.containsKey(baseline.id)) {
+      continue;
+    }
+    final Resource? latest = currentById[baseline.id];
+    if (latest != null && !_sameResourceConfiguration(latest, baseline)) {
+      throw StateError(
+        'Resource "${baseline.title}" changed in another window and cannot '
+        'be deleted from a stale view. Reload before saving.',
+      );
+    }
+  }
+  for (final Resource latest in current) {
+    if (!baseById.containsKey(latest.id) &&
+        !proposedById.containsKey(latest.id)) {
+      merged.add(latest);
+    }
+  }
+  return merged;
+}
+
+bool _sameResourceConfiguration(Resource first, Resource second) {
+  final Map<String, Object?> firstJson = first.toJson()
+    ..remove('usageCount')
+    ..remove('lastUsedAt');
+  final Map<String, Object?> secondJson = second.toJson()
+    ..remove('usageCount')
+    ..remove('lastUsedAt');
+  return jsonEncode(firstJson) == jsonEncode(secondJson);
+}
+
+Resource _mergeUsageMetadata(
+  Resource candidate,
+  Resource latest,
+  Resource baseline,
+) {
+  final bool latestChanged =
+      latest.usageCount != baseline.usageCount ||
+      latest.lastUsedAt != baseline.lastUsedAt;
+  final bool candidateChanged =
+      candidate.usageCount != baseline.usageCount ||
+      candidate.lastUsedAt != baseline.lastUsedAt;
+  final int usageCount = latestChanged && candidateChanged
+      ? max(latest.usageCount, candidate.usageCount)
+      : latestChanged
+      ? latest.usageCount
+      : candidate.usageCount;
+  final DateTime? lastUsedAt = latestChanged && candidateChanged
+      ? _laterDate(latest.lastUsedAt, candidate.lastUsedAt)
+      : latestChanged
+      ? latest.lastUsedAt
+      : candidate.lastUsedAt;
+  final Map<String, Object?> json = candidate.toJson();
+  json['usageCount'] = usageCount;
+  if (lastUsedAt != null) {
+    json['lastUsedAt'] = lastUsedAt.toIso8601String();
+  } else {
+    json.remove('lastUsedAt');
+  }
+  return Resource.fromJson(json);
+}
+
+DateTime? _laterDate(DateTime? first, DateTime? second) {
+  if (first == null) {
+    return second;
+  }
+  if (second == null) {
+    return first;
+  }
+  return first.isAfter(second) ? first : second;
 }
 
 bool _onlyAgentResourceUsageChanged(

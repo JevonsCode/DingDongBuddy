@@ -18,12 +18,12 @@ Keep the three resource types distinct:
 | Type | How it reaches the Agent | What the Agent does |
 |---|---|---|
 | Prompt | Native instruction files contain only a persistent Bridge bootstrap. Every active Prompt is returned in full by `dingdong_bridge`. | Treat each successful response as the current authoritative Prompt snapshot and apply every active Prompt automatically as a required instruction. |
-| Skill | Each successful Bridge response contains the authoritative complete catalog of every valid, enabled, scope-matched Skill as `id`, `name`, and `description` only. Full content stays in DingDong until requested. | Match a returned description first, then call `dingdong_load_skill` with the candidate ID or name and current workspace. Apply the returned full `SKILL.md`; read only referenced package files with `dingdong_read_skill_file`. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope. |
+| Skill | Each Agent has exactly one delivery plane per Skill: `dynamic`, `nativeUser`, or `nativeProject`. Dynamic delivery uses the Bridge catalog/load protocol; native delivery installs the complete package into that Agent's configured discovery root. | For a dynamic candidate, match its description, call `dingdong_load_skill` for the full `SKILL.md`, and read only referenced package files with `dingdong_read_skill_file`. For native delivery, let the Agent discover and run the on-disk package; do not also load it through DingDong. |
 | MCP | Enabled MCP servers are written into the client's native MCP configuration. The bridge returns only candidate metadata. | Call a configured MCP tool only when the task needs it. MCP availability is not an instruction and does not require a call every turn. |
 
-Enabled state and trigger groups filter the Skill catalog, and every Skill and supporting-file load re-checks them so an old name or ID cannot bypass a disabled or out-of-scope resource. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. Unscoped MCP servers are synchronized to every configured client; source-scoped MCP servers are synchronized only to matching native client configurations. DingDong no longer mirrors managed Skills into native Agent Skill directories; Adapter Skill paths remain useful for removing legacy DingDong mirrors and warning about independently installed native Skills with the same name.
+Enabled state and trigger groups filter the dynamic Skill catalog, and every dynamic Skill and supporting-file load re-checks them so an old name or ID cannot bypass a disabled or out-of-scope resource. Native Skills are copied as complete receipt-owned packages so relative scripts, references, assets, and Agent manifests keep their original layout. Delivery planes are mutually exclusive: a native-mode Skill is withheld from Bridge catalog and load routes, including while deployment/removal state is uncertain. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. Unscoped MCP servers are synchronized to every configured client; source-scoped MCP servers are synchronized only to matching native client configurations.
 
-The bridge also returns a compact canonical `conversation.capsule` plus capability-specific presentations when Prompt, Skill, or MCP resources are exposed. When `conversation.capsule.visible` is true, keep that state until the final user-visible response so later usage evidence can be merged. A successful visible `dingdong_load_skill` response returns a replacement `conversation.item` with the same opaque `mergeKey` as its candidate, `confirmedUse: true`, and `marker: "*"`; replace only that matching item. The merge key is merge-only metadata and must never be displayed. Only direct full-Skill-load evidence earns the marker, and it does not claim the Agent followed every instruction. Select presentation by capability rather than product name: an MCP Apps host calls `dingdong_render_conversation_footer` exactly once with the final merged capsule; an explicitly ANSI-capable terminal uses `conversation.presentations.ansi.line`; every other host includes the Markdown `conversation.line` exactly once. The MCP App is a self-contained `ui://` HTML resource, not HTML to paste into a normal reply. Prompt, Skill, and MCP use warm orange, blue, and green respectively. Show only truncated titles and the truthful marker; never display resource content, descriptions, IDs, or merge keys.
+The bridge also returns a compact canonical `conversation.capsule` plus text presentations when Prompt, Skill, or MCP resources are exposed. When `conversation.visible` is true, keep that capsule until the final user-visible response so later usage evidence can be merged. A successful visible `dingdong_load_skill` response returns a replacement `conversation.item` with the same opaque `mergeKey` as its candidate, `confirmedUse: true`, and `marker: "*"`; replace only that matching item. The merge key is merge-only metadata and must never be displayed. Only direct full-Skill-load evidence earns the marker, and it does not claim the Agent followed every instruction. Codex desktop includes `conversation.line` exactly once as a single Markdown text line: DingDong stays text, while Prompt, Skill, and MCP use orange, blue, and green emoji tokens. Do not use an image, HTML/XML, inline font, or rendering tool for this footer. Use `conversation.presentations.ansi.line` only on an explicitly ANSI-capable terminal; every other host includes `conversation.fallbackLine` exactly once. Show only truncated titles and the truthful marker; never display resource content, descriptions, IDs, or merge keys.
 
 ## Workflow
 
@@ -38,21 +38,35 @@ The bridge also returns a compact canonical `conversation.capsule` plus capabili
 4. Create or patch the trigger group before attaching it to a resource. Never invent an unknown trigger-group ID.
 5. Verify with `dingdong_bridge` using representative task text, `workspacePath`, `repositoryUrl`, and `source` when relevant. Check both a matching and non-matching context.
 
+## Skill Delivery and Switches
+
+Keep these controls separate:
+
+- `enabled` is the resource master switch. Turning it off removes only DingDong-owned native copies and suppresses dynamic delivery; it never deletes an external same-name Skill.
+- Delivery is selected per Agent and is not another enable switch. `dynamic` is Bridge-managed, `nativeUser` is Agent-global, and `nativeProject` is installed under each exact project root.
+- A Skill must not mix `nativeUser` and `nativeProject` across Agents. User-native delivery is global and cannot retain trigger-group/project scope; project-native Agents for one Skill share the same exact project set.
+- All project-native Agents for one Skill share the same exact project-path set. Do not retarget one Agent without changing the shared scope intentionally.
+- The Hook switch is independent, defaults off, and currently supports only Impeccable with Codex project-native delivery. A new or changed Codex Hook still requires review in `/hooks`; DingDong never invents or migrates Codex's opaque trust hash.
+
+Supported Agents discover native Skill changes automatically. A native change is durable on disk, but an already-running task may still have its old catalog: report the state as deployed or removed, recommend a new Agent task for verification, and restart the Agent only if the Skill is missing there. Never describe restart as required, or claim that turning off a native Skill makes the current task forget content it already loaded.
+
 ## Install a Skill for One Project
 
 When the user asks to install “this Skill through DingDong for project X”:
 
 1. Resolve the Skill source to either an official GitHub repository/folder/`SKILL.md` URL or an absolute local Skill directory/`SKILL.md` path. Resolve project X to its existing exact absolute project path. Do not guess either value. If a separate native Skill with the same name already exists in an Agent's global directory, warn that DingDong's switch cannot disable that independent copy.
-2. Search for the Skill first. If it is not already managed by DingDong, call `dingdong_install_skill`. Keep the returned resource `id`.
-3. Call `dingdong_upsert_trigger_group` with a stable name dedicated to this Skill/project pair and only the exact absolute `projectPath`. Keep the returned group `id`; do not add another OR-ed rule to a strict project Skill group or reuse a shared group's name when its rules would change.
-4. Call `dingdong_bind_resource_scope` with the resource ID, that group ID, and `strictProjectSkill: true`.
-5. Call `dingdong_bridge` once with the matching workspace and once with an unrelated workspace. The Skill must be a candidate only in the matching context. Call `dingdong_load_skill` in both contexts as well: the matching load must succeed and the unrelated load must fail.
+2. Search for the Skill first. If it is not already managed by DingDong, call `dingdong_install_skill`. Keep the returned resource `id`; a new install remains disabled.
+3. Call `dingdong_set_skill_delivery` with that resource ID, the exact Adapter `agentId`, `enabled: true`, `mode: "nativeProject"`, the existing absolute project path in `projectPaths`, and `hooksEnabled: false` unless the user separately requested the supported Hook integration.
+4. Call `dingdong_get_skill_deployments`. The expected Agent/project deployment must be observed with no in-progress operation. If reconciliation failed for a recoverable reason, call `dingdong_reconcile_skill` once and inspect status again; never overwrite an unmanaged conflict.
+5. Start a new Agent task in the target project and verify native discovery and one representative relative script/reference path. The Skill must not also appear in DingDong's dynamic Bridge catalog. Check an unrelated project to confirm that no project-native copy was created there.
 
-These writes are idempotent: installation updates the same source/name, trigger-group upsert reuses its name, and scope binding replaces the resource's group IDs. A newly installed Skill stays disabled until it is successfully bound, so the multi-step workflow does not create a transient globally available candidate. Strict binding rejects `contains`, repository rules, relative, root, missing, or unknown project scopes. Never treat Bridge filtering alone as sufficient: the full-content load must enforce the same scope.
+These writes are idempotent: canonical source plus identical package digest reuses the existing resource/artifact, and an identical delivery request performs no write. A different source declaring the same Skill name is a conflict rather than an overwrite. Native deployment refuses user-owned same-name directories, invalid ownership receipts, symlinks, unsafe paths, and destination collisions.
+
+For a dynamic project Skill instead, set that Agent's delivery to `dynamic`, create one exact-project trigger group with `dingdong_upsert_trigger_group`, and bind it with `dingdong_bind_resource_scope`. Then verify matching and unrelated Bridge catalogs plus full loads. Dynamic scope and native project placement are different delivery mechanisms; never configure both for the same Agent/Skill.
 
 ## Configure Agent Adapters
 
-Agent Adapters are user-level declarative YAML files for Agent detection, MCP and Prompt targets, and native Skill locations retained for legacy DingDong mirror cleanup and independent-Skill collision warnings. Use them when the user asks to add a client or change those Agent integration paths. DingDong-managed Skills are delivered dynamically and are not deployed to the Adapter's Skill paths. Do not use Adapters for conversation terminal selection; that is `agent-launchers.json`.
+Agent Adapters are user-level declarative YAML files for Agent detection, MCP and Prompt targets, and native Skill deployment roots. DingDong uses the Skill roots both for receipt-owned native delivery and for legacy cleanup/external collision warnings. Use Adapters when the user asks to add a client or change those Agent integration paths. Do not use Adapters for conversation terminal selection; that is `agent-launchers.json`.
 
 Resolve the user directory by operating system:
 
@@ -150,7 +164,7 @@ These settings currently affect macOS CLI launchers for Claude Code, Gemini CLI,
 | Project/repository scope | Trigger group with OR-ed rules |
 | SKU/domain ownership | Resource tags, title, and group |
 | Reusable clipboard item | Alias/tag or promoted resource |
-| Agent MCP/Prompt targets and legacy Skill cleanup locations | User-level Agent Adapter YAML |
+| Agent MCP/Prompt targets and native Skill deployment roots | User-level Agent Adapter YAML |
 | Reminder conversation destination | User-level `agent-launchers.json` |
 | Completion/attention signal | `/ding` or `dingdong_notify` |
 
@@ -162,7 +176,10 @@ These settings currently affect macOS CLI launchers for Claude Code, Gemini CLI,
 - Keep clipboard content hidden unless the user explicitly requests it; sensitive content requires separate explicit consent.
 - Treat `contains` as case-insensitive substring matching, not a path-segment boundary check.
 - Strict project Skill loading requires an `equals` rule with an existing exact absolute project path.
-- Strict scope controls DingDong's dynamic catalog and load endpoints only. Detect and disclose any separate user-owned native copy of the same Skill before claiming that other projects cannot use it.
+- Strict trigger-group scope controls DingDong's dynamic catalog/load endpoints. Project-native scope instead controls exact on-disk deployment targets. Detect and disclose any separate user-owned native copy before claiming that DingDong's switch controls every instance.
+- Never deliver the same managed Skill through both Bridge and a native root for the same Agent/workspace.
+- Never overwrite, adopt, or delete a native Skill or Hook entry without a matching DingDong ownership receipt and unchanged expected content.
+- Treat native deployment success/removal and current Agent-session visibility as separate states; request a new task when discovery must be verified.
 - Never treat Skill or MCP candidate summaries as Prompt instructions.
 - Never place commands, scripts, Hooks, tokens, or environment variables in Agent Adapter YAML.
 - Do not edit the `Agent Adapter History` directory directly.

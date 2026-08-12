@@ -96,20 +96,34 @@ class _PopupMascotState extends State<PopupMascot>
     _controller.forward(from: 0);
   }
 
-  String get _assetPath {
+  String _assetPath(Brightness brightness) {
     if (_showThinking) {
       return 'Assets/DingDongIP/thinking.png';
     }
+    final bool useHighContrastArtwork = brightness == Brightness.dark;
     return switch (widget.state) {
-      TrayBuddyState.normal => 'Assets/DingDongIP/AgentToolIcon.png',
-      TrayBuddyState.reminder => 'Assets/DingDongIP/ding.png',
-      TrayBuddyState.resting => 'Assets/DingDongIP/rest.png',
-      TrayBuddyState.sleeping => 'Assets/DingDongIP/sleeping.png',
+      TrayBuddyState.normal =>
+        useHighContrastArtwork
+            ? 'Assets/DingDongIP/AgentToolIcon-w.png'
+            : 'Assets/DingDongIP/AgentToolIcon.png',
+      TrayBuddyState.reminder =>
+        useHighContrastArtwork
+            ? 'Assets/DingDongIP/ding-w.png'
+            : 'Assets/DingDongIP/ding.png',
+      TrayBuddyState.resting =>
+        useHighContrastArtwork
+            ? 'Assets/DingDongIP/rest-w.png'
+            : 'Assets/DingDongIP/rest.png',
+      TrayBuddyState.sleeping =>
+        useHighContrastArtwork
+            ? 'Assets/DingDongIP/sleeping-w.png'
+            : 'Assets/DingDongIP/sleeping.png',
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    final Brightness brightness = Theme.of(context).brightness;
     return GestureDetector(
       key: const Key('popup-mascot'),
       behavior: HitTestBehavior.opaque,
@@ -122,7 +136,7 @@ class _PopupMascotState extends State<PopupMascot>
           child: child,
         ),
         child: Image.asset(
-          _assetPath,
+          _assetPath(brightness),
           key: const Key('popup-mascot-image'),
           width: 34,
           height: 34,

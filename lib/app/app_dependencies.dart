@@ -263,6 +263,7 @@ final class AppDependencies {
       resourceStore: resourceStore,
       triggerGroupStore: triggerGroupStore,
       skillPackageInstaller: skillPackageInstaller,
+      skillDeploymentStore: resourceSynchronizer.deploymentStore,
       onClipboardMonitoring: (bool enabled) => unawaited(() async {
         if (enabled) {
           await clipboardMonitorService.start();

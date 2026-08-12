@@ -1,8 +1,10 @@
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_qr_payload.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -12,7 +14,7 @@ void main() {
   ) async {
     final DateTime now = DateTime.utc(2026, 7, 16);
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: SizedBox(
           width: 304,
           height: 420,
@@ -43,7 +45,7 @@ void main() {
     expect(close, findsOneWidget);
     expect(tester.getSize(close), const Size.square(30));
     expect(find.byTooltip('关闭'), findsOneWidget);
-    expect(find.text('text'), findsOneWidget);
+    expect(find.text('文本'), findsOneWidget);
     expect(find.text('Clipboard'), findsOneWidget);
     expect(find.text('Project'), findsOneWidget);
     expect(find.text('Cursor'), findsOneWidget);
@@ -56,7 +58,7 @@ void main() {
   ) async {
     final DateTime now = DateTime.utc(2026, 7, 16);
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: SizedBox(
           width: 304,
           height: 420,
@@ -90,7 +92,7 @@ void main() {
     var openCount = 0;
     final DateTime now = DateTime.utc(2026, 8, 3);
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: SizedBox(
           width: 304,
           height: 420,
@@ -128,7 +130,7 @@ void main() {
     final DateTime now = DateTime.utc(2026, 8, 3);
     var qrExpandCount = 0;
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
@@ -236,7 +238,7 @@ void main() {
     var closeCount = 0;
 
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
@@ -265,7 +267,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
@@ -300,7 +302,7 @@ void main() {
   ) async {
     final DateTime now = DateTime.utc(2026, 8, 3);
     await tester.pumpWidget(
-      MaterialApp(
+      _previewTestApp(
         home: SizedBox(
           width: 304,
           height: 420,
@@ -328,3 +330,15 @@ void main() {
     expect(find.text('二维码'), findsNothing);
   });
 }
+
+Widget _previewTestApp({required Widget home}) => MaterialApp(
+  locale: const Locale('zh'),
+  supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
+  localizationsDelegates: const <LocalizationsDelegate<Object>>[
+    DingDongLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  home: home,
+);

@@ -1,0 +1,10 @@
+schemaVersion: 1
+id: grok-build
+displayName: Grok Build
+
+detect:
+  directory: ~/.grok
+
+skills:
+  global: ~/.grok/skills
+  project: .grok/skills

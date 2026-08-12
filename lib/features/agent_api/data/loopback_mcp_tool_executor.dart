@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 
@@ -87,6 +88,9 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
         body: arguments,
       ),
       'dingdong_bind_resource_scope' => _bindResourceScope(arguments),
+      'dingdong_set_skill_delivery' => _setSkillDelivery(arguments),
+      'dingdong_get_skill_deployments' => _skillDeployments(arguments),
+      'dingdong_reconcile_skill' => _reconcileSkill(arguments),
       'dingdong_notify' => _transport.request(
         method: 'POST',
         path: '/ding',
@@ -106,6 +110,37 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       method: 'POST',
       path: '/library/$resourceId/scope',
       body: body,
+    );
+  }
+
+  Future<Map<String, Object?>> _setSkillDelivery(
+    Map<String, Object?> arguments,
+  ) {
+    final String resourceId = (arguments['resourceId'] as String? ?? '').trim();
+    final Map<String, Object?> body = Map<String, Object?>.of(arguments)
+      ..remove('resourceId');
+    return _transport.request(
+      method: 'PUT',
+      path: '/library/skills/$resourceId/delivery',
+      body: body,
+    );
+  }
+
+  Future<Map<String, Object?>> _skillDeployments(
+    Map<String, Object?> arguments,
+  ) {
+    final String resourceId = (arguments['resourceId'] as String? ?? '').trim();
+    return _transport.request(
+      method: 'GET',
+      path: '/library/skills/$resourceId/deployments',
+    );
+  }
+
+  Future<Map<String, Object?>> _reconcileSkill(Map<String, Object?> arguments) {
+    final String resourceId = (arguments['resourceId'] as String? ?? '').trim();
+    return _transport.request(
+      method: 'POST',
+      path: '/library/skills/$resourceId/reconcile',
     );
   }
 
@@ -259,26 +294,8 @@ String? _defaultConversationId() => _firstEnvironmentValue(const <String>[
   'KIRO_SESSION_ID',
 ]);
 
-String? _defaultAgentSource() {
-  final Map<String, String> environment = Platform.environment;
-  if ((environment['CODEX_THREAD_ID'] ?? '').trim().isNotEmpty) {
-    return 'Codex';
-  }
-  if ((environment['CLAUDE_SESSION_ID'] ?? '').trim().isNotEmpty ||
-      environment.containsKey('CLAUDECODE')) {
-    return 'Claude Code';
-  }
-  if ((environment['CURSOR_SESSION_ID'] ?? '').trim().isNotEmpty) {
-    return 'Cursor';
-  }
-  if ((environment['GEMINI_SESSION_ID'] ?? '').trim().isNotEmpty) {
-    return 'Gemini CLI';
-  }
-  if ((environment['KIRO_SESSION_ID'] ?? '').trim().isNotEmpty) {
-    return 'Kiro';
-  }
-  return null;
-}
+String? _defaultAgentSource() =>
+    inferAgentSourceFromEnvironment(Platform.environment);
 
 String? _firstEnvironmentValue(List<String> keys) {
   for (final String key in keys) {

@@ -292,6 +292,51 @@ void main() {
     expect(transport.body?['triggerGroupIds'], <String>['checkout']);
     expect(transport.body?['strictProjectSkill'], isTrue);
   });
+
+  test('Skill delivery maps to the atomic per-Agent route', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_set_skill_delivery', <String, Object?>{
+      'resourceId': 'skill-1',
+      'agentId': 'codex',
+      'mode': 'nativeProject',
+      'projectPaths': <String>['/work/checkout'],
+      'hooksEnabled': true,
+    });
+
+    expect(transport.method, 'PUT');
+    expect(transport.path, '/library/skills/skill-1/delivery');
+    expect(transport.body?.containsKey('resourceId'), isFalse);
+    expect(transport.body?['agentId'], 'codex');
+    expect(transport.body?['mode'], 'nativeProject');
+  });
+
+  test('Skill deployment status maps to the read route', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_get_skill_deployments', <String, Object?>{
+      'resourceId': 'skill-1',
+    });
+
+    expect(transport.method, 'GET');
+    expect(transport.path, '/library/skills/skill-1/deployments');
+    expect(transport.body, isNull);
+  });
+
+  test('Skill reconcile maps to the idempotent retry route', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_reconcile_skill', <String, Object?>{
+      'resourceId': 'skill-1',
+    });
+
+    expect(transport.method, 'POST');
+    expect(transport.path, '/library/skills/skill-1/reconcile');
+    expect(transport.body, isNull);
+  });
 }
 
 final class _InspectingInstallTransport implements McpHttpTransport {

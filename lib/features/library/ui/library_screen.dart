@@ -17,12 +17,13 @@ import 'package:dingdong/features/library/ui/resource_list.dart';
 import 'package:flutter/material.dart';
 
 /// Adaptive list/details resource management workspace.
-class LibraryScreen extends StatelessWidget {
+class LibraryScreen extends StatefulWidget {
   const LibraryScreen({
     required this.viewModel,
     this.transferGateway,
     this.contextMenuGateway,
     this.onOpenExternalLink,
+    this.skillAgents = ResourceEditor.defaultSkillDeliveryAgents,
     super.key,
   });
 
@@ -30,22 +31,81 @@ class LibraryScreen extends StatelessWidget {
   final LibraryTransferGateway? transferGateway;
   final DesktopContextMenuGateway? contextMenuGateway;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
+  final List<SkillDeliveryAgentOption> skillAgents;
+
+  @override
+  State<LibraryScreen> createState() => LibraryScreenState();
+}
+
+class LibraryScreenState extends State<LibraryScreen> {
+  bool _editorDirty = false;
+
+  bool get hasUnsavedChanges => _editorDirty;
+
+  Future<bool> confirmDiscardChanges() async {
+    if (!_editorDirty) {
+      return true;
+    }
+    final bool discard =
+        await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) => DesktopAlertDialog(
+            key: const Key('resource-unsaved-changes-dialog'),
+            title: Text(
+              context.localized('Discard unsaved changes?', '放弃未保存的更改？'),
+            ),
+            content: Text(
+              context.localized(
+                'Your edits have not been saved. Leaving this page will discard them.',
+                '当前编辑尚未保存，离开此页面将放弃这些更改。',
+              ),
+            ),
+            actions: <Widget>[
+              DesktopActionButton(
+                key: const Key('resource-keep-editing'),
+                onPressed: () => Navigator.pop(context, false),
+                label: context.localized('Keep editing', '继续编辑'),
+                compact: true,
+              ),
+              DesktopActionButton(
+                key: const Key('resource-discard-changes'),
+                onPressed: () => Navigator.pop(context, true),
+                label: context.localized('Discard changes', '放弃更改'),
+                tone: DesktopActionTone.danger,
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (discard && mounted) {
+      setState(() => _editorDirty = false);
+    }
+    return discard;
+  }
+
+  Future<void> _closeEditor() async {
+    if (await confirmDiscardChanges()) {
+      widget.viewModel.closeEditor();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: viewModel,
+      listenable: widget.viewModel,
       builder: (BuildContext context, Widget? child) {
         final bool showingDetail =
-            viewModel.selectedResource != null || viewModel.isCreating;
+            widget.viewModel.selectedResource != null ||
+            widget.viewModel.isCreating;
         return Material(
           color: Theme.of(context).colorScheme.surface,
           child: showingDetail
               ? Column(
+                  key: const Key('library-detail-page'),
                   children: <Widget>[
                     _LibraryDetailHeader(
-                      resource: viewModel.selectedResource,
-                      onBack: viewModel.closeEditor,
+                      resource: widget.viewModel.selectedResource,
+                      onBack: _closeEditor,
                     ),
                     const Divider(height: 1),
                     Expanded(child: _buildEditor(context)),
@@ -54,26 +114,43 @@ class LibraryScreen extends StatelessWidget {
               : Column(
                   children: <Widget>[
                     ResourceFilterBar(
-                      viewModel: viewModel,
-                      onImportJson: transferGateway == null
+                      viewModel: widget.viewModel,
+                      onImportJson: widget.transferGateway == null
                           ? null
                           : () => _importJson(context),
-                      onImportLink: viewModel.updateFetcher == null
+                      onImportLink: widget.viewModel.updateFetcher == null
                           ? null
                           : () => _importLink(context),
                       onImportHistory: () => _showImportHistory(context),
-                      onExport: transferGateway == null
+                      onExport: widget.transferGateway == null
                           ? null
                           : () => _export(context),
-                      onDeleteSelection: () => _confirmDeleteSelection(context),
                     ),
                     const Divider(height: 1),
                     Expanded(
-                      child: ResourceList(
-                        viewModel: viewModel,
-                        contextMenuGateway: contextMenuGateway,
-                        onDeleteResource: (Resource resource) =>
-                            _confirmDeleteResource(context, resource),
+                      child: Stack(
+                        children: <Widget>[
+                          Positioned.fill(
+                            child: ResourceList(
+                              viewModel: widget.viewModel,
+                              contextMenuGateway: widget.contextMenuGateway,
+                              onDeleteResource: (Resource resource) =>
+                                  _confirmDeleteResource(context, resource),
+                            ),
+                          ),
+                          if (widget.viewModel.selectionCount > 0)
+                            Positioned(
+                              left: 16,
+                              right: 16,
+                              bottom: 12,
+                              child: _ResourceSelectionBar(
+                                selectionCount: widget.viewModel.selectionCount,
+                                onDelete: () =>
+                                    _confirmDeleteSelection(context),
+                                onClear: widget.viewModel.clearSelection,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -96,13 +173,13 @@ class LibraryScreen extends StatelessWidget {
       ),
     );
     if (confirmed) {
-      await viewModel.deleteResources(<String>{resource.id});
+      await widget.viewModel.deleteResources(<String>{resource.id});
     }
   }
 
   Future<void> _confirmDeleteSelection(BuildContext context) async {
-    final Set<String> ids = viewModel.allResources
-        .where((Resource resource) => viewModel.isSelected(resource.id))
+    final Set<String> ids = widget.viewModel.allResources
+        .where((Resource resource) => widget.viewModel.isSelected(resource.id))
         .map((Resource resource) => resource.id)
         .toSet();
     if (ids.isEmpty) {
@@ -117,7 +194,7 @@ class LibraryScreen extends StatelessWidget {
       ),
     );
     if (confirmed) {
-      await viewModel.deleteResources(ids);
+      await widget.viewModel.deleteResources(ids);
     }
   }
 
@@ -150,22 +227,28 @@ class LibraryScreen extends StatelessWidget {
 
   Widget _buildEditor(BuildContext context) {
     return ResourceEditor(
-      resource: viewModel.selectedResource,
-      isCreating: viewModel.isCreating,
-      initialType: viewModel.creatingType,
-      initialTitle: viewModel.creatingTitle,
-      initialContent: viewModel.creatingContent,
-      triggerGroups: viewModel.triggerGroups,
-      onCreate: viewModel.create,
-      onCreateWithAgentSessionName: viewModel.create,
-      onCreateTriggerGroup: viewModel.createTriggerGroup,
-      onUpdateTriggerGroup: viewModel.updateTriggerGroup,
-      onDeleteTriggerGroup: viewModel.deleteTriggerGroup,
+      resource: widget.viewModel.selectedResource,
+      isCreating: widget.viewModel.isCreating,
+      initialType: widget.viewModel.creatingType,
+      initialTitle: widget.viewModel.creatingTitle,
+      initialContent: widget.viewModel.creatingContent,
+      triggerGroups: widget.viewModel.triggerGroups,
+      onCreate: widget.viewModel.create,
+      onCreateWithAgentSessionName: widget.viewModel.create,
+      onCreateTriggerGroup: widget.viewModel.createTriggerGroup,
+      onUpdateTriggerGroup: widget.viewModel.updateTriggerGroup,
+      onDeleteTriggerGroup: widget.viewModel.deleteTriggerGroup,
       onDelete: () => _confirmDelete(context),
-      onSave: viewModel.save,
+      onSave: widget.viewModel.save,
       onSyncUpdate: (String updateUrl) => _syncUpdate(context, updateUrl),
-      onResolveSkillSource: viewModel.installSkillPackage,
-      onOpenExternalLink: onOpenExternalLink,
+      onResolveSkillSource: widget.viewModel.installSkillPackage,
+      onOpenExternalLink: widget.onOpenExternalLink,
+      skillAgents: widget.skillAgents,
+      onDirtyChanged: (bool value) {
+        if (mounted && _editorDirty != value) {
+          setState(() => _editorDirty = value);
+        }
+      },
     );
   }
 
@@ -197,14 +280,14 @@ class LibraryScreen extends StatelessWidget {
       },
     );
     if (confirmed ?? false) {
-      await viewModel.deleteSelected();
+      await widget.viewModel.deleteSelected();
     }
   }
 
   Future<void> _export(BuildContext context) async {
     try {
-      final String? path = await transferGateway?.saveExport(
-        contents: viewModel.exportJson(),
+      final String? path = await widget.transferGateway?.saveExport(
+        contents: widget.viewModel.exportJson(),
       );
       if (path != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -235,7 +318,7 @@ class LibraryScreen extends StatelessWidget {
   }
 
   Future<void> _importJson(BuildContext context) async {
-    final String? contents = await transferGateway?.chooseImportJson();
+    final String? contents = await widget.transferGateway?.chooseImportJson();
     if (contents == null) {
       return;
     }
@@ -244,7 +327,8 @@ class LibraryScreen extends StatelessWidget {
     }
     await _prepareAndCommitImport(
       context,
-      prepare: () => viewModel.prepareBundleJson(contents, resolveOnline: true),
+      prepare: () =>
+          widget.viewModel.prepareBundleJson(contents, resolveOnline: true),
       source: 'JSON file',
       kind: LibraryImportSourceKind.file,
     );
@@ -264,7 +348,7 @@ class LibraryScreen extends StatelessWidget {
     }
     await _prepareAndCommitImport(
       context,
-      prepare: () => viewModel.prepareBundleJsonFromUrl(options.url),
+      prepare: () => widget.viewModel.prepareBundleJsonFromUrl(options.url),
       source: options.url,
       kind: LibraryImportSourceKind.link,
     );
@@ -284,12 +368,16 @@ class LibraryScreen extends StatelessWidget {
       final bool confirmed = await showLibraryImportReviewDialog(
         context,
         result,
-        onOpenExternalLink: onOpenExternalLink,
+        onOpenExternalLink: widget.onOpenExternalLink,
       );
       if (!confirmed || !context.mounted) {
         return;
       }
-      await viewModel.commitBundleImport(result, source: source, kind: kind);
+      await widget.viewModel.commitBundleImport(
+        result,
+        source: source,
+        kind: kind,
+      );
       if (context.mounted) {
         _showImportFeedback(context, result);
       }
@@ -355,13 +443,13 @@ class LibraryScreen extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) =>
-          LibraryImportHistoryDialog(entries: viewModel.importHistory),
+          LibraryImportHistoryDialog(entries: widget.viewModel.importHistory),
     );
   }
 
   Future<void> _syncUpdate(BuildContext context, String updateUrl) async {
     try {
-      final updated = await viewModel.syncSelectedFromUpdateLink(
+      final updated = await widget.viewModel.syncSelectedFromUpdateLink(
         overrideUrl: updateUrl,
       );
       if (context.mounted && updated != null) {
@@ -410,21 +498,21 @@ class _LibraryDetailHeader extends StatelessWidget {
       color: colors.onSurfaceVariant,
     );
     return SizedBox(
-      height: 48,
+      height: 56,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: <Widget>[
             DesktopIconButton(
               key: const Key('library-editor-back'),
               tooltip: context.localized('Back to resources', '返回资源列表'),
+              semanticLabel: context.localized('Back to resources', '返回资源列表'),
               onPressed: onBack,
               size: 32,
               foregroundColor: colors.onSurfaceVariant,
-              backgroundColor: colors.surfaceContainerLow,
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
               key: const Key('library-detail-breadcrumb'),
               child: Row(
@@ -457,6 +545,74 @@ class _LibraryDetailHeader extends StatelessWidget {
   }
 }
 
+class _ResourceSelectionBar extends StatelessWidget {
+  const _ResourceSelectionBar({
+    required this.selectionCount,
+    required this.onDelete,
+    required this.onClear,
+  });
+
+  final int selectionCount;
+  final VoidCallback onDelete;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: context.localized(
+        '$selectionCount resources selected',
+        '已选择 $selectionCount 项资源',
+      ),
+      child: Container(
+        key: const Key('resource-selection-bar'),
+        constraints: const BoxConstraints(minHeight: 50),
+        padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: colors.outlineVariant.withValues(alpha: 0.9),
+          ),
+        ),
+        child: Row(
+          children: <Widget>[
+            Text(
+              context.localized(
+                '$selectionCount selected',
+                '已选 $selectionCount 项',
+              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const Spacer(),
+            DesktopActionButton(
+              key: const Key('resource-delete-selection'),
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline_rounded, size: 16),
+              label: context.localized('Delete', '删除'),
+              compact: true,
+              tone: DesktopActionTone.danger,
+            ),
+            const SizedBox(width: 6),
+            DesktopActionButton(
+              key: const Key('resource-clear-selection'),
+              onPressed: onClear,
+              icon: const Icon(Icons.close_rounded, size: 15),
+              label: context.localized('Clear selection', '清除选择'),
+              compact: true,
+              tone: DesktopActionTone.neutral,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _BreadcrumbDivider extends StatelessWidget {
   const _BreadcrumbDivider({required this.color});
 
@@ -464,7 +620,7 @@ class _BreadcrumbDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 6),
-    child: Icon(Icons.chevron_right_rounded, size: 18, color: color),
+    padding: const EdgeInsets.symmetric(horizontal: 5),
+    child: Icon(Icons.chevron_right_rounded, size: 15, color: color),
   );
 }

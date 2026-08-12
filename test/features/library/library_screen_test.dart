@@ -1,5 +1,7 @@
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_choice_chip.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -10,6 +12,7 @@ import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -79,6 +82,219 @@ void main() {
 
     expect(find.byKey(const Key('resource-list')), findsOneWidget);
     expect(find.byKey(const Key('resource-editor')), findsNothing);
+  });
+
+  testWidgets('resource editor confirms before discarding unsaved changes', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(900, 720);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026);
+    final LibraryViewModel model = LibraryViewModel(
+      _MemoryStore(<Resource>[
+        Resource(
+          id: 'unsaved-resource',
+          type: ResourceType.prompt,
+          title: 'Draft prompt',
+          content: 'Original content',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    await tester.tap(find.text('Draft prompt'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('resource-title')),
+      'Unsaved title',
+    );
+    await tester.tap(find.byKey(const Key('library-editor-back')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('resource-unsaved-changes-dialog')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('resource-keep-editing')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('resource-editor')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('library-editor-back')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('resource-discard-changes')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('resource-editor')), findsNothing);
+    expect(find.byKey(const Key('resource-list')), findsOneWidget);
+    expect(model.allResources.single.title, 'Draft prompt');
+  });
+
+  testWidgets('resource advanced settings expand from the keyboard', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(900, 720);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final LibraryViewModel model = LibraryViewModel(_MemoryStore(<Resource>[]));
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+    await tester.tap(find.text('New resource'));
+    await tester.pump();
+    await tester.ensureVisible(
+      find.byKey(const Key('resource-advanced-settings')),
+    );
+
+    final Finder disclosure = find.byKey(
+      const Key('resource-advanced-settings'),
+    );
+    final Finder focus = find.descendant(
+      of: disclosure,
+      matching: find.byType(Focus),
+    );
+    tester.widget<Focus>(focus.first).focusNode?.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('resource-pinned')), findsOneWidget);
+    expect(find.byKey(const Key('resource-enabled')), findsOneWidget);
+  });
+
+  testWidgets('all resource types use one compact filter control language', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final LibraryViewModel model = LibraryViewModel(_MemoryStore(<Resource>[]));
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    for (final Key key in const <Key>[
+      Key('resource-filter-all'),
+      Key('resource-filter-prompt'),
+      Key('resource-filter-skill'),
+      Key('resource-filter-mcp'),
+      Key('resource-filter-pinned'),
+    ]) {
+      final Finder filter = find.byKey(key);
+      expect(filter, findsOneWidget);
+      expect(
+        find.descendant(of: filter, matching: find.byType(DesktopChoiceChip)),
+        findsOneWidget,
+      );
+    }
+    final DesktopChoiceChip all = tester.widget<DesktopChoiceChip>(
+      find.descendant(
+        of: find.byKey(const Key('resource-filter-all')),
+        matching: find.byType(DesktopChoiceChip),
+      ),
+    );
+    expect(all.selected, isTrue);
+    expect(find.text('All'), findsOneWidget);
+  });
+
+  testWidgets('resource results are one continuous aligned list', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026);
+    final LibraryViewModel model = LibraryViewModel(
+      _MemoryStore(<Resource>[
+        Resource(
+          id: 'continuous-first',
+          type: ResourceType.prompt,
+          title: 'First row',
+          content: 'First summary',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'continuous-second',
+          type: ResourceType.mcp,
+          title: 'Second row',
+          content: '{}',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    expect(find.byKey(const Key('resource-list-header')), findsOneWidget);
+    expect(find.text('Type'), findsOneWidget);
+    expect(find.text('Resource'), findsOneWidget);
+    expect(find.text('Status'), findsOneWidget);
+    final Rect first = tester.getRect(
+      find.byKey(const Key('resource-row-continuous-first')),
+    );
+    final Rect second = tester.getRect(
+      find.byKey(const Key('resource-row-continuous-second')),
+    );
+    expect(first.left, second.left);
+    expect(first.width, second.width);
+    expect(second.top - first.top, 58);
+  });
+
+  testWidgets('resource status can be toggled without opening the editor', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026);
+    final _MemoryStore store = _MemoryStore(<Resource>[
+      Resource(
+        id: 'status-toggle',
+        type: ResourceType.prompt,
+        title: 'Status toggle',
+        content: 'Toggle this resource from the list.',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final LibraryViewModel model = LibraryViewModel(store);
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    final Finder statusCell = find.byKey(
+      const Key('resource-status-status-toggle'),
+    );
+    final Finder updatedCell = find.byKey(
+      const Key('resource-updated-status-toggle'),
+    );
+    expect(
+      find.descendant(of: statusCell, matching: find.byType(CompactSwitch)),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(updatedCell).dx - tester.getTopRight(statusCell).dx,
+      16,
+    );
+    expect(tester.getSize(updatedCell).width, 116);
+    expect(
+      find.descendant(of: statusCell, matching: find.text('On')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byTooltip('Disable resource'));
+    await tester.pump();
+
+    expect(find.byKey(const Key('resource-editor')), findsNothing);
+    expect(model.allResources.single.enabled, isFalse);
+    expect(find.byTooltip('Enable resource'), findsOneWidget);
   });
 
   testWidgets('scoped Skill is identified in the resource manager list', (
@@ -183,7 +399,7 @@ void main() {
       const Size.square(32),
     );
     expect(tester.widget<Icon>(find.byIcon(Icons.arrow_back_rounded)).size, 18);
-    expect(tester.widget<Icon>(divider).size, 18);
+    expect(tester.widget<Icon>(divider).size, 15);
     expect(
       tester.getCenter(find.byKey(const Key('library-editor-back'))).dy,
       tester.getCenter(divider).dy,
@@ -239,7 +455,14 @@ void main() {
     expect(find.text('Architecture notes'), findsNothing);
     expect(find.byKey(const Key('resource-editor')), findsOneWidget);
     expect(find.byKey(const Key('resource-list')), findsNothing);
+    expect(find.byKey(const Key('library-detail-page')), findsOneWidget);
     expect(find.byKey(const Key('library-detail-breadcrumb')), findsOneWidget);
+    expect(find.byTooltip('Back to resources'), findsOneWidget);
+    expect(find.text('Back to resources'), findsNothing);
+    expect(
+      tester.getSize(find.byKey(const Key('library-editor-back'))),
+      const Size.square(32),
+    );
     final TextField titleField = tester.widget<TextField>(
       find.byKey(const Key('resource-title')),
     );
@@ -332,9 +555,13 @@ description: Use for the second task.
 
     expect(find.text('Select visible'), findsNothing);
     expect(find.text('Select all'), findsOneWidget);
+    expect(find.byKey(const Key('resource-selection-bar')), findsNothing);
+    expect(find.byKey(const Key('resource-delete-selection')), findsNothing);
     await tester.tap(find.byKey(const Key('resource-select-all')));
     await tester.pump();
     expect(model.selectionCount, 2);
+    expect(find.byKey(const Key('resource-selection-bar')), findsOneWidget);
+    expect(find.byKey(const Key('resource-delete-selection')), findsOneWidget);
     await tester.tap(find.byKey(const Key('resource-delete-selection')));
     await tester.pumpAndSettle();
     expect(find.text('Delete selected resources?'), findsOneWidget);

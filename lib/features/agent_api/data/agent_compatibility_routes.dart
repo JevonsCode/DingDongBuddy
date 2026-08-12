@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
+import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -13,6 +14,7 @@ final class AgentCompatibilityRoutes {
     required this.resourceStore,
     this.clipboardStore,
     this.triggerGroupStore,
+    this.querySkillDeploymentPresence,
     DateTime Function()? now,
     Uri? baseUri,
   }) : _now = now ?? _utcNow,
@@ -21,6 +23,7 @@ final class AgentCompatibilityRoutes {
   final ResourceStore resourceStore;
   final ClipboardStore? clipboardStore;
   final TriggerGroupStore? triggerGroupStore;
+  final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
   final DateTime Function() _now;
   Uri _baseUri;
 
@@ -42,6 +45,7 @@ final class AgentCompatibilityRoutes {
         AgentBridge(
           resourceStore,
           triggerGroupStore: triggerGroupStore,
+          querySkillDeploymentPresence: querySkillDeploymentPresence,
           now: _now,
         ).respond(
           jsonEncode(<String, Object?>{
@@ -458,6 +462,9 @@ const List<String> _features = <String>[
   'agentContextPack',
   'mcpWriteConfiguration',
   'strictProjectSkillScope',
+  'perAgentSkillDelivery',
+  'nativeSkillDeployments',
+  'skillDeploymentReconciliation',
   'dynamicSkillCatalog',
   'scopedSkillLoading',
 ];
@@ -474,6 +481,9 @@ const List<Map<String, String>> _endpoints = <Map<String, String>>[
   <String, String>{'method': 'GET', 'path': '/library'},
   <String, String>{'method': 'POST', 'path': '/library'},
   <String, String>{'method': 'POST', 'path': '/library/skills/install'},
+  <String, String>{'method': 'PUT', 'path': '/library/skills/{id}/delivery'},
+  <String, String>{'method': 'GET', 'path': '/library/skills/{id}/deployments'},
+  <String, String>{'method': 'POST', 'path': '/library/skills/{id}/reconcile'},
   <String, String>{'method': 'GET', 'path': '/library/trigger-groups'},
   <String, String>{'method': 'POST', 'path': '/library/trigger-groups'},
   <String, String>{'method': 'POST', 'path': '/library/trigger-groups/upsert'},

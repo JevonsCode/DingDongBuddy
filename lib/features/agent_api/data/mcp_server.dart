@@ -2,8 +2,6 @@
 
 import 'dart:convert';
 
-import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
-
 /// Executes one advertised MCP tool against DingDong's local services.
 abstract interface class McpToolExecutor {
   Future<Map<String, Object?>> execute(
@@ -35,26 +33,22 @@ final class McpServer {
             'protocolVersion': '2025-03-26',
             'capabilities': <String, Object?>{
               'tools': <String, Object?>{'listChanged': false},
-              'resources': <String, Object?>{
-                'subscribe': false,
-                'listChanged': false,
-              },
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.3.7',
+              'version': '1.4.0',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
                 'Every active Prompt returned there is a required instruction: it is included in full and must be applied automatically. '
                 'Each successful response is the authoritative Prompt snapshot for the current task and replaces every Prompt set returned for earlier tasks; a Prompt absent from the current snapshot is inactive and must not be applied. '
-                'The same response contains the authoritative Skill catalog for the current task and workspace: every valid, enabled, scope-matched Skill as an id, name, and description candidate. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope. '
+                'The same response contains the authoritative dynamic-delivery Skill catalog for the current task and workspace: every resolved, valid, enabled, scope-matched dynamic Skill as an id, name, and description candidate. A managed Skill can be absent because it is disabled, invalid, out of scope, delivered natively, transitioning, or blocked by a duplicate-name conflict; inspect active.skillSuppressions and active.skillConflicts when present. '
                 'If the Bridge call fails, report that DingDong resources could not be loaded and do not reuse an earlier Prompt or Skill set. '
                 'A Skill candidate is not an instruction: only when its description matches the task, call dingdong_load_skill with its id or name and current workspace before applying the returned full SKILL.md. '
                 'Load only a Skill returned by the current catalog. Read only referenced package files with dingdong_read_skill_file. '
                 'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. '
-                'When conversation.capsule.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item and append * only when confirmedUse is true. The mergeKey is opaque merge-only metadata and must never be displayed. The marker proves that DingDong returned the full Skill this task; it does not claim that every instruction was followed. Never mark a Skill candidate, Prompt, or MCP. Select the footer presentation by capability, not by product name: on an MCP Apps host call dingdong_render_conversation_footer exactly once with the final merged capsule; on an explicitly ANSI-capable terminal use conversation.presentations.ansi.line; otherwise include conversation.line exactly once. Never paste the MCP App HTML or XML into an ordinary response. Show only resource titles and markers; do not show resource content, descriptions, IDs, or merge keys. '
-                'When the user explicitly asks to configure a Skill through DingDong for one project, use dingdong_install_skill, dingdong_upsert_trigger_group, and dingdong_bind_resource_scope with strict project scope. '
+                'When conversation.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item and append * only when confirmedUse is true. The mergeKey is opaque merge-only metadata and must never be displayed. The marker proves that DingDong returned the full Skill this task; it does not claim that every instruction was followed. Never mark a Skill candidate, Prompt, or MCP. On Codex desktop, include conversation.line exactly once as a single Markdown text line; keep DingDong as text and use the Prompt, Skill, and MCP emoji tokens. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Use conversation.presentations.ansi.line only on an explicitly ANSI-capable terminal; every other host includes conversation.fallbackLine exactly once. Show only resource titles and markers; do not show resource content, descriptions, IDs, or merge keys. '
+                'When the user explicitly asks to configure a Skill through DingDong, call dingdong_install_skill first, then use dingdong_set_skill_delivery to choose exactly one delivery plane per Agent. Native project delivery uses strict project scope and requires exact existing project paths; its Hook switch is separate and defaults off. '
                 'Use dingdong_notify when the task is blocked or waiting for '
                 'the user. A configured completion hook normally handles the '
                 'final task-complete alert; if the client has no completion '
@@ -69,75 +63,12 @@ final class McpServer {
           'result': <String, Object?>{'tools': tools},
         });
       }
-      if (method == 'resources/list') {
-        return jsonEncode(<String, Object?>{
-          'jsonrpc': '2.0',
-          'id': id,
-          'result': <String, Object?>{
-            'resources': <Map<String, Object?>>[
-              <String, Object?>{
-                'uri': dingDongConversationFooterResourceUri,
-                'name': 'dingdong-conversation-footer',
-                'title': 'DingDong Conversation Footer',
-                'description': 'Compact Prompt, Skill, and MCP usage footer.',
-                'mimeType': dingDongConversationFooterResourceMimeType,
-              },
-            ],
-          },
-        });
-      }
-      if (method == 'resources/read') {
-        final Map<String, Object?> params =
-            message['params'] as Map<String, Object?>? ?? <String, Object?>{};
-        if (params['uri'] != dingDongConversationFooterResourceUri) {
-          return _error(
-            id: id,
-            code: -32602,
-            message: 'Unknown DingDong resource URI',
-          );
-        }
-        return jsonEncode(<String, Object?>{
-          'jsonrpc': '2.0',
-          'id': id,
-          'result': <String, Object?>{
-            'contents': <Map<String, Object?>>[
-              <String, Object?>{
-                'uri': dingDongConversationFooterResourceUri,
-                'mimeType': dingDongConversationFooterResourceMimeType,
-                'text': dingDongConversationFooterHtml,
-                '_meta': const <String, Object?>{
-                  'ui': <String, Object?>{'prefersBorder': false},
-                },
-              },
-            ],
-          },
-        });
-      }
       if (method == 'tools/call') {
         final Map<String, Object?> params =
             message['params'] as Map<String, Object?>? ?? <String, Object?>{};
         final String? name = params['name'] as String?;
         final Map<String, Object?> arguments =
             params['arguments'] as Map<String, Object?>? ?? <String, Object?>{};
-        if (name == dingDongConversationFooterRenderToolName) {
-          try {
-            final Map<String, Object?> conversation =
-                buildDingDongConversationFooterFromArguments(arguments);
-            return _conversationFooterToolResult(
-              id: id,
-              conversation: conversation,
-            );
-          } on FormatException catch (error) {
-            return _toolResult(
-              id: id,
-              payload: <String, Object?>{
-                'status': 'error',
-                'message': error.message,
-              },
-              isError: true,
-            );
-          }
-        }
         if (name == null || _executor == null) {
           return _toolResult(
             id: id,
@@ -179,7 +110,7 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative Skill catalog containing every valid, enabled, scope-matched Skill as id, name, and description only. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions. Keep a visible conversation.capsule until the final response and replace only the item with the same mergeKey using conversation.item from each successful Skill load. Append * only when that item has confirmedUse=true. Choose the footer by capability: MCP Apps render tool, explicitly supported ANSI line, then Markdown conversation.line. Never paste raw HTML or XML into the response. The mergeKey is merge-only metadata; show only titles and markers, not resource content, descriptions, IDs, or merge keys.',
+          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative resolved dynamic-delivery Skill catalog containing valid, enabled, scope-matched winners as id, name, and description only; active.skillSuppressions and active.skillConflicts explain managed Skills withheld for native delivery, transitions, or conflicts. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions. When conversation.visible is true, keep conversation.capsule until the final response and replace only the item with the same mergeKey using conversation.item from each successful Skill load. Append * only when that item has confirmedUse=true. Codex includes conversation.line exactly once as a single Markdown text line; DingDong stays text and resource types use emoji tokens. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use conversation.presentations.ansi.line; every other host uses conversation.fallbackLine. The mergeKey is merge-only metadata; show only titles and markers, not resource content, descriptions, IDs, or merge keys.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(
@@ -200,31 +131,6 @@ final class McpServer {
               'Stable Agent conversation or session identifier. DingDong fills this from the Agent process when available.',
         ),
         'expand': _enumProperty(<String>['none', 'prompts', 'all']),
-      },
-    ),
-    _tool(
-      name: dingDongConversationFooterRenderToolName,
-      title: 'Render DingDong Conversation Footer',
-      description:
-          'Presentation-only MCP Apps tool. On a host that advertises MCP Apps UI support, call this exactly once near the final response after replacing each Bridge capsule item with the successful dingdong_load_skill conversation.item that has the same mergeKey. Unsupported hosts should not call it and should use the supplied ANSI or Markdown fallback instead.',
-      properties: <String, Object?>{
-        'capsule': _conversationFooterCapsuleProperty(),
-      },
-      required: const <String>['capsule'],
-      outputSchema: const <String, Object?>{
-        'type': 'object',
-        'properties': <String, Object?>{
-          'conversation': <String, Object?>{'type': 'object'},
-        },
-        'required': <String>['conversation'],
-      },
-      meta: const <String, Object?>{
-        'ui': <String, Object?>{
-          'resourceUri': dingDongConversationFooterResourceUri,
-        },
-        'openai/outputTemplate': dingDongConversationFooterResourceUri,
-        'openai/toolInvocation/invoking': 'Rendering DingDong footer…',
-        'openai/toolInvocation/invoked': 'DingDong footer ready.',
       },
     ),
     _tool(
@@ -343,7 +249,7 @@ final class McpServer {
       name: 'dingdong_install_skill',
       title: 'Install DingDong Skill',
       description:
-          'Install or update one complete Agent Skill package in DingDong from an official GitHub location or an absolute local Skill path. A new resource stays disabled until scope binding succeeds; use its returned id to finish the workflow.',
+          'Install or update one complete Agent Skill package in DingDong from a GitHub location or an absolute local Skill path. A new resource stays disabled; use its returned id with dingdong_set_skill_delivery to choose each Agent delivery plane explicitly.',
       properties: <String, Object?>{
         'source': _stringProperty(
           description:
@@ -384,6 +290,80 @@ final class McpServer {
       required: <String>['resourceId', 'triggerGroupIds'],
     ),
     _tool(
+      name: 'dingdong_set_skill_delivery',
+      title: 'Set DingDong Skill Delivery',
+      description:
+          'Atomically set the Skill master enabled switch and exactly one delivery plane for one Agent. Choose dynamic, nativeUser, or nativeProject. nativeProject requires at least one exact existing project path. The independent Hook switch is allowed only for Codex project-native Impeccable and defaults off.',
+      properties: <String, Object?>{
+        'resourceId': _stringProperty(),
+        'agentId': _stringProperty(
+          description:
+              'Stable Agent Adapter id such as codex, claude-code, cursor, gemini, or kiro.',
+        ),
+        'mode': _enumProperty(<String>[
+          'dynamic',
+          'nativeUser',
+          'nativeProject',
+        ]),
+        'enabled': _booleanProperty(),
+        'projectPaths': _stringArrayProperty(),
+        'hooksEnabled': _booleanProperty(),
+      },
+      required: <String>['resourceId', 'agentId', 'mode', 'enabled'],
+      allOf: <Map<String, Object?>>[
+        <String, Object?>{
+          'if': <String, Object?>{
+            'properties': <String, Object?>{
+              'mode': <String, Object?>{'const': 'nativeProject'},
+            },
+            'required': <String>['mode'],
+          },
+          'then': <String, Object?>{
+            'required': <String>['projectPaths'],
+            'properties': <String, Object?>{
+              'projectPaths': <String, Object?>{'minItems': 1},
+            },
+          },
+          'else': <String, Object?>{
+            'properties': <String, Object?>{
+              'projectPaths': <String, Object?>{'maxItems': 0},
+              'hooksEnabled': <String, Object?>{'const': false},
+            },
+          },
+        },
+        <String, Object?>{
+          'if': <String, Object?>{
+            'properties': <String, Object?>{
+              'hooksEnabled': <String, Object?>{'const': true},
+            },
+            'required': <String>['hooksEnabled'],
+          },
+          'then': <String, Object?>{
+            'properties': <String, Object?>{
+              'agentId': <String, Object?>{'const': 'codex'},
+              'mode': <String, Object?>{'const': 'nativeProject'},
+            },
+          },
+        },
+      ],
+    ),
+    _tool(
+      name: 'dingdong_get_skill_deployments',
+      title: 'Get DingDong Skill Deployments',
+      description:
+          'Read one Skill resource\'s desired delivery policy, observed native deployments, and active recovery operations. This reports DingDong state; native Agent discovery is automatic and is not represented as a required reload.',
+      properties: <String, Object?>{'resourceId': _stringProperty()},
+      required: <String>['resourceId'],
+    ),
+    _tool(
+      name: 'dingdong_reconcile_skill',
+      title: 'Reconcile DingDong Skill',
+      description:
+          'Validate one Skill id, request an idempotent full native-resource synchronization, then return that Skill\'s desired, observed, and active-operation snapshot. Unmanaged copies, ownership conflicts, and drift fail closed.',
+      properties: <String, Object?>{'resourceId': _stringProperty()},
+      required: <String>['resourceId'],
+    ),
+    _tool(
       name: 'dingdong_notify',
       title: 'Notify DingDong',
       description:
@@ -422,26 +402,6 @@ String _toolResult({
   });
 }
 
-String _conversationFooterToolResult({
-  required Object? id,
-  required Map<String, Object?> conversation,
-}) {
-  return jsonEncode(<String, Object?>{
-    'jsonrpc': '2.0',
-    'id': id,
-    'result': <String, Object?>{
-      'content': <Map<String, Object?>>[
-        <String, Object?>{
-          'type': 'text',
-          'text': conversation['line']! as String,
-        },
-      ],
-      'structuredContent': <String, Object?>{'conversation': conversation},
-      'isError': false,
-    },
-  });
-}
-
 Map<String, Object?> _tool({
   required String name,
   required String title,
@@ -449,6 +409,7 @@ Map<String, Object?> _tool({
   required Map<String, Object?> properties,
   List<String> required = const <String>[],
   List<List<String>> anyOfRequired = const <List<String>>[],
+  List<Map<String, Object?>> allOf = const <Map<String, Object?>>[],
   Map<String, Object?>? outputSchema,
   Map<String, Object?>? meta,
 }) {
@@ -459,54 +420,18 @@ Map<String, Object?> _tool({
     'inputSchema': <String, Object?>{
       'type': 'object',
       'properties': properties,
+      'additionalProperties': false,
       if (required.isNotEmpty) 'required': required,
       if (anyOfRequired.isNotEmpty)
         'anyOf': anyOfRequired
             .map((List<String> fields) => <String, Object?>{'required': fields})
             .toList(growable: false),
+      if (allOf.isNotEmpty) 'allOf': allOf,
     },
     'outputSchema': ?outputSchema,
     '_meta': ?meta,
   };
 }
-
-Map<String, Object?> _conversationFooterCapsuleProperty() =>
-    const <String, Object?>{
-      'type': 'object',
-      'description':
-          'The final merged conversation.capsule from dingdong_bridge.',
-      'properties': <String, Object?>{
-        'label': <String, Object?>{'type': 'string', 'maxLength': 32},
-        'items': <String, Object?>{
-          'type': 'array',
-          'maxItems': 24,
-          'items': <String, Object?>{
-            'type': 'object',
-            'properties': <String, Object?>{
-              'title': <String, Object?>{'type': 'string', 'maxLength': 64},
-              'type': <String, Object?>{
-                'type': 'string',
-                'enum': <String>['prompt', 'skill', 'mcp'],
-              },
-              'usage': <String, Object?>{
-                'type': 'string',
-                'enum': <String>['active', 'candidate', 'loaded', 'available'],
-              },
-              'mergeKey': <String, Object?>{
-                'type': 'string',
-                'maxLength': 160,
-                'description':
-                    'Opaque stable key used only to replace the matching item.',
-              },
-              'confirmedUse': <String, Object?>{'type': 'boolean'},
-              'marker': <String, Object?>{'type': 'string'},
-            },
-            'required': <String>['title', 'type', 'usage'],
-          },
-        },
-      },
-      'required': <String>['items'],
-    };
 
 Map<String, Object?> _stringProperty({String? description}) =>
     <String, Object?>{'type': 'string', 'description': ?description};

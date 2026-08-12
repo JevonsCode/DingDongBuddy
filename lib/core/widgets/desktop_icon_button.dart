@@ -9,6 +9,7 @@ class DesktopIconButton extends StatelessWidget {
     required this.icon,
     this.onPressed,
     this.tooltip,
+    this.semanticLabel,
     this.selected = false,
     this.size = 32,
     this.iconSize = 18,
@@ -35,6 +36,7 @@ class DesktopIconButton extends StatelessWidget {
   final Widget icon;
   final VoidCallback? onPressed;
   final String? tooltip;
+  final String? semanticLabel;
   final bool selected;
   final double size;
   final double iconSize;
@@ -60,13 +62,17 @@ class DesktopIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final bool enabled = onPressed != null;
+    final bool effectiveSelected = isSelected ?? selected;
     final Color foreground =
         foregroundColor ??
-        (selected ? colors.primary : colors.onSurfaceVariant);
+        (effectiveSelected ? colors.primary : colors.onSurfaceVariant);
     final Color background =
         backgroundColor ??
-        (selected ? colors.primary.withValues(alpha: 0.1) : Colors.transparent);
+        (effectiveSelected
+            ? colors.primary.withValues(alpha: 0.1)
+            : Colors.transparent);
     final ButtonStyle defaultStyle = ButtonStyle(
+      animationDuration: Duration.zero,
       minimumSize: WidgetStatePropertyAll<Size>(Size.square(size)),
       maximumSize: WidgetStatePropertyAll<Size>(Size.square(size)),
       padding: WidgetStatePropertyAll<EdgeInsetsGeometry>(
@@ -74,27 +80,47 @@ class DesktopIconButton extends StatelessWidget {
       ),
       tapTargetSize: tapTargetSize ?? MaterialTapTargetSize.shrinkWrap,
       shape: WidgetStatePropertyAll<OutlinedBorder>(
-        RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(7),
-          side: borderColor == null
-              ? BorderSide.none
-              : BorderSide(color: borderColor!),
-        ),
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
       ),
-      foregroundColor: WidgetStatePropertyAll<Color>(
-        enabled ? foreground : foreground.withValues(alpha: 0.4),
-      ),
+      side: WidgetStateProperty.resolveWith<BorderSide>((states) {
+        if (enabled && states.contains(WidgetState.focused)) {
+          return BorderSide(
+            color: colors.primary.withValues(alpha: 0.78),
+            width: 1.5,
+          );
+        }
+        if (borderColor != null) return BorderSide(color: borderColor!);
+        if (effectiveSelected) {
+          return BorderSide(color: colors.primary.withValues(alpha: 0.22));
+        }
+        return BorderSide.none;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        return enabled ? foreground : foreground.withValues(alpha: 0.4);
+      }),
       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
         if (!enabled) return background.withValues(alpha: 0.35);
         if (states.contains(WidgetState.pressed)) {
-          return colors.primary.withValues(alpha: selected ? 0.18 : 0.1);
+          return Color.alphaBlend(
+            colors.onSurface.withValues(alpha: 0.1),
+            background,
+          );
         }
-        if (states.contains(WidgetState.hovered) ||
-            states.contains(WidgetState.focused)) {
-          return colors.surfaceContainerHigh;
+        if (states.contains(WidgetState.hovered)) {
+          return Color.alphaBlend(
+            colors.onSurface.withValues(alpha: 0.055),
+            background,
+          );
+        }
+        if (states.contains(WidgetState.focused)) {
+          return Color.alphaBlend(
+            colors.primary.withValues(alpha: 0.07),
+            background,
+          );
         }
         return background;
       }),
+      elevation: const WidgetStatePropertyAll<double>(0),
       overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
       splashFactory: NoSplash.splashFactory,
       mouseCursor: WidgetStatePropertyAll<MouseCursor>(
@@ -102,7 +128,12 @@ class DesktopIconButton extends StatelessWidget {
             (enabled ? SystemMouseCursors.click : SystemMouseCursors.basic),
       ),
     );
-    return IconButton(
+    final ButtonStyle resolvedStyle =
+        (style?.merge(defaultStyle) ?? defaultStyle).copyWith(
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+        );
+    Widget result = IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
       onLongPress: onLongPress,
@@ -118,8 +149,21 @@ class DesktopIconButton extends StatelessWidget {
       isSelected: isSelected,
       selectedIcon: selectedIcon,
       // Keep feature-level geometry/colors authoritative when supplied.
-      style: style?.merge(defaultStyle) ?? defaultStyle,
+      style: resolvedStyle,
       icon: icon,
     );
+    if (semanticLabel != null) {
+      result = Semantics(
+        container: true,
+        button: true,
+        enabled: enabled,
+        selected: effectiveSelected,
+        label: semanticLabel,
+        child: ExcludeSemantics(child: result),
+      );
+    } else if (effectiveSelected) {
+      result = Semantics(selected: true, child: result);
+    }
+    return result;
   }
 }

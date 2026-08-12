@@ -6,6 +6,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/skill_deployment_store.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/knowledge_indexer.dart';
@@ -16,6 +17,7 @@ import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:path/path.dart' as path;
 
 /// Handles resource-library reads and mutations that share the public API.
 final class LibraryRoutes {
@@ -24,6 +26,7 @@ final class LibraryRoutes {
     TriggerGroupStore? triggerGroupStore,
     SkillPackageInstaller? skillPackageInstaller,
     ResourceUpdateFetcher? updateFetcher,
+    SkillDeploymentStore? skillDeploymentStore,
     DateTime Function()? now,
     String Function()? idGenerator,
   }) : // Named private initializing formals are not callable cross-library.
@@ -32,6 +35,9 @@ final class LibraryRoutes {
        // Named private initializing formals are not callable cross-library.
        // ignore: prefer_initializing_formals
        _skillPackageInstaller = skillPackageInstaller,
+       // Named private initializing formals are not callable cross-library.
+       // ignore: prefer_initializing_formals
+       _skillDeploymentStore = skillDeploymentStore,
        _updateFetcher = updateFetcher ?? HttpResourceUpdateFetcher(),
        _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? _utcNow,
@@ -42,13 +48,25 @@ final class LibraryRoutes {
   final ResourceStore _store;
   final TriggerGroupStore? _triggerGroupStore;
   final SkillPackageInstaller? _skillPackageInstaller;
+  final SkillDeploymentStore? _skillDeploymentStore;
   final ResourceUpdateFetcher _updateFetcher;
   final String Function() _idGenerator;
   final DateTime Function() _now;
   final LibraryImporter _importer;
   final KnowledgeIndexer _knowledgeIndexer = KnowledgeIndexer();
 
-  Future<HttpResponseData> installSkill(String body) async {
+  Future<T> _exclusiveMutation<T>(Future<T> Function() action) {
+    final ResourceStore store = _store;
+    final ExclusiveResourceStore? exclusive = store is ExclusiveResourceStore
+        ? store as ExclusiveResourceStore
+        : null;
+    return exclusive == null ? action() : exclusive.exclusiveMutation(action);
+  }
+
+  Future<HttpResponseData> installSkill(String body) =>
+      _exclusiveMutation(() => _installSkill(body));
+
+  Future<HttpResponseData> _installSkill(String body) async {
     final SkillPackageInstaller? installer = _skillPackageInstaller;
     if (installer == null) {
       return const HttpResponseData(
@@ -83,22 +101,75 @@ final class LibraryRoutes {
           'sourceReference must be an absolute local Skill path',
         );
       }
-      final String normalizedSource = (sourceReferenceUri ?? sourceUri)
-          .toString();
-      final SkillPackageInstallResult installed = await installer.install(
-        sourceUri,
-      );
+      final Uri identitySource = sourceReferenceUri ?? sourceUri;
+      final String normalizedSource = identitySource.toString();
+      final String sourceKey = await skillPackageSourceKey(identitySource);
+      final List<Resource> resources = List<Resource>.of(await _store.load());
+      final List<Resource> sourceMatches = <Resource>[];
+      for (final Resource resource in resources) {
+        if (resource.type != ResourceType.skill || resource.updateUrl == null) {
+          continue;
+        }
+        final Uri? installedSource = parseSkillPackageSource(
+          resource.updateUrl!,
+        );
+        if (installedSource == null) {
+          continue;
+        }
+        String installedSourceKey;
+        try {
+          installedSourceKey = await skillPackageSourceKey(installedSource);
+        } on FormatException {
+          installedSourceKey = installedSource.toString();
+        }
+        if (installedSourceKey == sourceKey) {
+          sourceMatches.add(resource);
+        }
+      }
+      if (sourceMatches.length > 1) {
+        return _skillConflict(
+          'Multiple resources already use this Skill source.',
+          code: 'skill_source_conflict',
+        );
+      }
+      final String explicitResourceId = (payload['resourceId'] as String? ?? '')
+          .trim();
+      final Resource? explicitResource = explicitResourceId.isEmpty
+          ? null
+          : resources
+                .where(
+                  (Resource resource) =>
+                      resource.type == ResourceType.skill &&
+                      resource.id == explicitResourceId,
+                )
+                .firstOrNull;
+      if (explicitResourceId.isNotEmpty && explicitResource == null) {
+        return _resourceNotFound();
+      }
+      if (explicitResource != null &&
+          sourceMatches.isNotEmpty &&
+          sourceMatches.single.id != explicitResource.id) {
+        return _skillConflict(
+          'The requested resource and Skill source identify different resources.',
+          code: 'skill_identity_conflict',
+        );
+      }
+      final Resource? sourceExisting =
+          explicitResource ?? sourceMatches.firstOrNull;
+      final String targetResourceId = sourceExisting?.id ?? _idGenerator();
+      final ResourceKeyedSkillPackageInstaller? keyedInstaller =
+          installer is ResourceKeyedSkillPackageInstaller
+          ? installer as ResourceKeyedSkillPackageInstaller
+          : null;
+      final SkillPackageInstallResult installed = keyedInstaller == null
+          ? await installer.install(sourceUri)
+          : await keyedInstaller.installForResource(
+              sourceUri,
+              resourceId: targetResourceId,
+            );
       final SkillConfiguration skill = SkillConfiguration.parseOnline(
         installed.skillDocument,
       );
-      final List<Resource> resources = List<Resource>.of(await _store.load());
-      final List<Resource> sourceMatches = resources
-          .where(
-            (Resource resource) =>
-                resource.type == ResourceType.skill &&
-                resource.updateUrl == normalizedSource,
-          )
-          .toList(growable: false);
       final List<Resource> nameMatches = resources
           .where(
             (Resource resource) =>
@@ -106,17 +177,40 @@ final class LibraryRoutes {
                 _onlineSkillName(resource) == skill.name,
           )
           .toList(growable: false);
-      if (sourceMatches.length > 1 || nameMatches.length > 1) {
-        return const HttpResponseData(
-          statusCode: 409,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Multiple matching Skill resources already exist',
-          },
+      if (nameMatches.length > 1) {
+        await keyedInstaller?.rollback(installed);
+        return _skillConflict(
+          'Multiple resources already use this Skill name.',
+          code: 'skill_name_conflict',
         );
       }
       final Resource? sameName = nameMatches.firstOrNull;
-      final Resource? existing = sourceMatches.firstOrNull ?? sameName;
+      if (sameName != null &&
+          (sourceExisting == null || sameName.id != sourceExisting.id)) {
+        await keyedInstaller?.rollback(installed);
+        return _skillConflict(
+          'A different Skill source already uses the name "${skill.name}".',
+          code: 'skill_name_conflict',
+        );
+      }
+      final Resource? existing = sourceExisting ?? sameName;
+      if (existing != null &&
+          existing.skillPackageDigest != null &&
+          existing.skillPackageDigest == installed.packageDigest &&
+          existing.content == installed.skillDocument &&
+          existing.packagePath != null &&
+          path.equals(
+            path.normalize(path.absolute(existing.packagePath!)),
+            path.normalize(path.absolute(installed.directoryPath)),
+          )) {
+        return HttpResponseData(
+          statusCode: 200,
+          json: <String, Object?>{
+            'status': 'unchanged',
+            'item': existing.toApiJson(),
+          },
+        );
+      }
       final DateTime timestamp = _now().toUtc();
       final String title = (payload['title'] as String? ?? '').trim();
       final String group = (payload['group'] as String? ?? '').trim();
@@ -131,7 +225,7 @@ final class LibraryRoutes {
           : resources.indexWhere((Resource item) => item.id == existing.id);
       if (existing == null) {
         resource = Resource(
-          id: _idGenerator(),
+          id: targetResourceId,
           type: ResourceType.skill,
           group: group.isEmpty ? null : group,
           title: title.isEmpty ? skill.name : title,
@@ -140,12 +234,20 @@ final class LibraryRoutes {
           source: 'DingDong MCP',
           updateUrl: normalizedSource,
           packagePath: installed.directoryPath,
+          skillPackageDigest: installed.packageDigest.isEmpty
+              ? null
+              : installed.packageDigest,
           enabled: false,
           activation: ResourceActivation.taskMatch,
           createdAt: timestamp,
           updatedAt: timestamp,
         );
-        await _store.save(<Resource>[...resources, resource]);
+        try {
+          await _store.save(<Resource>[...resources, resource]);
+        } on Object {
+          await keyedInstaller?.rollback(installed);
+          rethrow;
+        }
       } else {
         resource = existing.copyWith(
           group: group.isEmpty ? existing.group : group,
@@ -154,11 +256,19 @@ final class LibraryRoutes {
           tags: tags,
           updateUrl: normalizedSource,
           packagePath: installed.directoryPath,
+          skillPackageDigest: installed.packageDigest.isEmpty
+              ? existing.skillPackageDigest
+              : installed.packageDigest,
           enabled: existing.enabled,
           updatedAt: timestamp,
         );
         resources[existingIndex!] = resource;
-        await _store.save(resources);
+        try {
+          await _store.save(resources);
+        } on Object {
+          await keyedInstaller?.rollback(installed);
+          rethrow;
+        }
       }
       return HttpResponseData(
         statusCode: existing == null ? 201 : 200,
@@ -175,7 +285,287 @@ final class LibraryRoutes {
     }
   }
 
-  Future<HttpResponseData> bindScope(String id, String body) async {
+  Future<HttpResponseData> setSkillDelivery(String id, String body) =>
+      _exclusiveMutation(() => _setSkillDelivery(id, body));
+
+  Future<HttpResponseData> _setSkillDelivery(String id, String body) async {
+    try {
+      final Object? decoded = jsonDecode(body);
+      if (decoded is! Map<String, Object?>) {
+        return _invalidUpdate('Skill delivery body must be a JSON object');
+      }
+      const Set<String> allowedKeys = <String>{
+        'enabled',
+        'agentId',
+        'mode',
+        'hooksEnabled',
+        'projectPaths',
+      };
+      final List<String> unknownKeys = decoded.keys
+          .where((String key) => !allowedKeys.contains(key))
+          .toList(growable: false);
+      if (unknownKeys.isNotEmpty) {
+        return _invalidUpdate(
+          'Unknown Skill delivery fields: ${unknownKeys.join(', ')}',
+        );
+      }
+      final String agentId = (decoded['agentId'] as String? ?? '').trim();
+      if (!RegExp(r'^[a-z0-9]+(?:-[a-z0-9]+)*$').hasMatch(agentId)) {
+        return _invalidUpdate('agentId must be a lowercase Agent Adapter id');
+      }
+      final SkillDeliveryMode mode = SkillDeliveryMode.parse(decoded['mode']);
+      final bool hooksEnabled = decoded['hooksEnabled'] as bool? ?? false;
+      final List<String> requestedProjectPaths =
+          (decoded['projectPaths'] as List<Object?>? ?? const <Object?>[])
+              .map((Object? value) => (value as String).trim())
+              .where((String value) => value.isNotEmpty)
+              .toSet()
+              .toList(growable: false);
+      final List<String> projectPaths = <String>[];
+      for (final String requested in requestedProjectPaths) {
+        final String normalized = path.normalize(path.absolute(requested));
+        if (!path.isAbsolute(requested) ||
+            path.equals(normalized, path.dirname(normalized)) ||
+            !Directory(normalized).existsSync()) {
+          return _invalidUpdate(
+            'nativeProject requires an existing absolute project path',
+          );
+        }
+        projectPaths.add(Directory(normalized).resolveSymbolicLinksSync());
+      }
+      if (mode == SkillDeliveryMode.nativeProject && projectPaths.isEmpty) {
+        return _invalidUpdate(
+          'nativeProject requires an existing absolute project path',
+        );
+      }
+      if (mode != SkillDeliveryMode.nativeProject &&
+          (projectPaths.isNotEmpty || hooksEnabled)) {
+        return _invalidUpdate(
+          'Project paths and Hooks require nativeProject delivery',
+        );
+      }
+
+      final List<Resource> resources = List<Resource>.of(await _store.load());
+      final int index = resources.indexWhere(
+        (Resource resource) =>
+            resource.id == id && resource.type == ResourceType.skill,
+      );
+      if (index < 0) {
+        return _resourceNotFound();
+      }
+      final Resource existing = resources[index];
+      if (hooksEnabled &&
+          (agentId != 'codex' || _onlineSkillName(existing) != 'impeccable')) {
+        return _invalidUpdate(
+          'Managed Hooks are currently available only for Impeccable on Codex',
+        );
+      }
+      final bool anotherAgentUsesProjectDelivery = existing
+          .skillDeliveryByAgent
+          .entries
+          .any(
+            (MapEntry<String, SkillDeliveryMode> entry) =>
+                entry.key != agentId &&
+                entry.value == SkillDeliveryMode.nativeProject,
+          );
+      final bool anotherAgentUsesUserDelivery = existing
+          .skillDeliveryByAgent
+          .entries
+          .any(
+            (MapEntry<String, SkillDeliveryMode> entry) =>
+                entry.key != agentId &&
+                entry.value == SkillDeliveryMode.nativeUser,
+          );
+      if ((mode == SkillDeliveryMode.nativeUser &&
+              anotherAgentUsesProjectDelivery) ||
+          (mode == SkillDeliveryMode.nativeProject &&
+              anotherAgentUsesUserDelivery)) {
+        return _skillConflict(
+          'One Skill cannot mix user-native and project-native delivery '
+          'across Agents.',
+          code: 'skill_native_scope_conflict',
+        );
+      }
+      if (mode == SkillDeliveryMode.nativeProject &&
+          anotherAgentUsesProjectDelivery &&
+          !_sameStringSet(projectPaths, existing.skillProjectPaths)) {
+        return _skillConflict(
+          'Project-native delivery uses one shared exact project scope across '
+          'all Agents for this Skill.',
+          code: 'skill_project_scope_conflict',
+        );
+      }
+      final Map<String, SkillDeliveryMode> delivery =
+          <String, SkillDeliveryMode>{...existing.skillDeliveryByAgent};
+      final Map<String, bool> hooks = <String, bool>{
+        ...existing.skillHooksEnabledByAgent,
+      };
+      if (mode == SkillDeliveryMode.dynamic) {
+        delivery.remove(agentId);
+      } else {
+        delivery[agentId] = mode;
+      }
+      if (hooksEnabled) {
+        hooks[agentId] = true;
+      } else {
+        hooks.remove(agentId);
+      }
+      final bool hasProjectNative = delivery.values.any(
+        (SkillDeliveryMode value) => value == SkillDeliveryMode.nativeProject,
+      );
+      final List<String> resolvedProjectPaths =
+          mode == SkillDeliveryMode.nativeProject
+          ? (anotherAgentUsesProjectDelivery
+                ? existing.skillProjectPaths
+                : (List<String>.of(projectPaths)..sort()))
+          : (hasProjectNative ? existing.skillProjectPaths : const <String>[]);
+      final Resource candidate = existing.copyWith(
+        enabled: decoded['enabled'] as bool? ?? existing.enabled,
+        triggerGroupIds: mode == SkillDeliveryMode.nativeUser
+            ? const <String>[]
+            : existing.triggerGroupIds,
+        skillDeliveryByAgent: delivery,
+        skillHooksEnabledByAgent: hooks,
+        strictProjectSkill: hasProjectNative,
+        skillProjectPaths: resolvedProjectPaths,
+      );
+      if (candidate == existing) {
+        return HttpResponseData(
+          statusCode: 200,
+          json: <String, Object?>{
+            'status': 'unchanged',
+            'item': existing.toApiJson(),
+            ..._skillDeliveryGuidance(
+              mode: mode,
+              enabled: existing.enabled,
+              changed: false,
+            ),
+          },
+        );
+      }
+      final Resource updated = candidate.copyWith(updatedAt: _now().toUtc());
+      resources[index] = updated;
+      await _store.save(resources);
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'updated',
+          'item': updated.toApiJson(),
+          ..._skillDeliveryGuidance(
+            mode: mode,
+            enabled: updated.enabled,
+            changed: true,
+          ),
+        },
+      );
+    } on Object catch (error) {
+      return HttpResponseData(
+        statusCode: 400,
+        json: <String, Object?>{'status': 'error', 'message': error.toString()},
+      );
+    }
+  }
+
+  static Map<String, Object?> _skillDeliveryGuidance({
+    required SkillDeliveryMode mode,
+    required bool enabled,
+    required bool changed,
+  }) {
+    if (mode == SkillDeliveryMode.dynamic) {
+      return <String, Object?>{
+        'discovery': 'bridgeAfterNativeAbsenceVerified',
+        'taskBoundaryRecommended': changed,
+        'restartAgentIfMissing': false,
+        'message': enabled
+            ? 'Dynamic delivery becomes available through a new Agent task '
+                  'after DingDong verifies native copies are absent.'
+            : 'Dynamic delivery is configured but the Skill master switch is off.',
+      };
+    }
+    return <String, Object?>{
+      'discovery': 'automaticNativeScan',
+      'taskBoundaryRecommended': changed,
+      'restartAgentIfMissing': enabled,
+      'message': enabled
+          ? 'Supported Agents discover native Skill changes automatically; '
+                'start a new task, and restart the Agent only if the Skill is '
+                'still missing.'
+          : 'Native delivery is configured but the Skill master switch is off.',
+    };
+  }
+
+  static bool _sameStringSet(List<String> first, List<String> second) =>
+      first.length == second.length && first.toSet().containsAll(second);
+
+  Future<HttpResponseData> skillDeployments(String id) async {
+    final SkillDeploymentStore? store = _skillDeploymentStore;
+    if (store == null) {
+      return const HttpResponseData(
+        statusCode: 503,
+        json: <String, Object?>{
+          'status': 'error',
+          'message': 'Native Skill deployment state is not available',
+        },
+      );
+    }
+    final Resource? resource = (await _store.load())
+        .where(
+          (Resource value) =>
+              value.id == id && value.type == ResourceType.skill,
+        )
+        .firstOrNull;
+    if (resource == null) {
+      return _resourceNotFound();
+    }
+    final SkillDeploymentObservedState observed = await store.readObserved();
+    final SkillDeploymentJournal journal = await store.readJournal();
+    return HttpResponseData(
+      statusCode: 200,
+      json: <String, Object?>{
+        'status': 'ok',
+        'desired': resource.toSummaryApiJson(),
+        'deployments': observed.deployments.values
+            .where((SkillDeploymentObservation value) => value.resourceId == id)
+            .map((SkillDeploymentObservation value) => value.toJson())
+            .toList(growable: false),
+        'operations': journal.operations.values
+            .where((SkillDeploymentOperation value) => value.resourceId == id)
+            .map((SkillDeploymentOperation value) => value.toJson())
+            .toList(growable: false),
+      },
+    );
+  }
+
+  Future<HttpResponseData> reconcileSkill(String id) =>
+      _exclusiveMutation(() => _reconcileSkill(id));
+
+  Future<HttpResponseData> _reconcileSkill(String id) async {
+    if (_skillDeploymentStore == null) {
+      return const HttpResponseData(
+        statusCode: 503,
+        json: <String, Object?>{
+          'status': 'error',
+          'message': 'Native Skill deployment state is not available',
+        },
+      );
+    }
+    final List<Resource> resources = await _store.load();
+    if (!resources.any(
+      (Resource value) => value.id == id && value.type == ResourceType.skill,
+    )) {
+      return _resourceNotFound();
+    }
+    // A synchronized ResourceStore treats this idempotent save as an explicit
+    // full reconciliation request. Validation above prevents an unknown id
+    // from causing unrelated global mutations.
+    await _store.save(resources);
+    return skillDeployments(id);
+  }
+
+  Future<HttpResponseData> bindScope(String id, String body) =>
+      _exclusiveMutation(() => _bindScope(id, body));
+
+  Future<HttpResponseData> _bindScope(String id, String body) async {
     try {
       final Map<String, Object?> payload =
           jsonDecode(body) as Map<String, Object?>;
@@ -518,7 +908,10 @@ final class LibraryRoutes {
     );
   }
 
-  Future<HttpResponseData> update(String id, String body) async {
+  Future<HttpResponseData> update(String id, String body) =>
+      _exclusiveMutation(() => _update(id, body));
+
+  Future<HttpResponseData> _update(String id, String body) async {
     try {
       final Object? decoded = jsonDecode(body);
       if (decoded is! Map<String, Object?> || decoded.isEmpty) {
@@ -590,6 +983,12 @@ final class LibraryRoutes {
       }
 
       final bool pinned = decoded['pinned'] as bool? ?? existing.pinned;
+      if (decoded.containsKey('skillDeliveryByAgent') ||
+          decoded.containsKey('skillHooksEnabledByAgent')) {
+        return _invalidUpdate(
+          'Use the atomic Skill delivery endpoint to change delivery or Hooks',
+        );
+      }
       final Resource updated = existing.copyWith(
         type: type,
         group: decoded['group'] as String?,
@@ -633,7 +1032,10 @@ final class LibraryRoutes {
     }
   }
 
-  Future<HttpResponseData> delete(String id) async {
+  Future<HttpResponseData> delete(String id) =>
+      _exclusiveMutation(() => _delete(id));
+
+  Future<HttpResponseData> _delete(String id) async {
     final List<Resource> resources = await _store.load();
     final Resource? existing = resources
         .where(
@@ -735,6 +1137,17 @@ HttpResponseData _invalidUpdate(String message) {
   return HttpResponseData(
     statusCode: 400,
     json: <String, Object?>{'status': 'error', 'message': message},
+  );
+}
+
+HttpResponseData _skillConflict(String message, {required String code}) {
+  return HttpResponseData(
+    statusCode: 409,
+    json: <String, Object?>{
+      'status': 'error',
+      'code': code,
+      'message': message,
+    },
   );
 }
 

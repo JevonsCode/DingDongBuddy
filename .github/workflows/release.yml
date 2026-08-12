@@ -356,3 +356,18 @@ jobs:
               --title "DingDong ${RELEASE_TAG#v}" \
               --notes-file docs/release-notes.md
           fi
+      - name: Deploy release website
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          jq -n \
+            --arg source_ref "$RELEASE_TAG" \
+            '{
+              event_type: "deploy-release-pages",
+              client_payload: {source_ref: $source_ref}
+            }' \
+            | gh api \
+              --method POST \
+              "/repos/$GITHUB_REPOSITORY/dispatches" \
+              --input -

@@ -76,11 +76,16 @@ class _DeviceLinkManagerAppState extends State<DeviceLinkManagerApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: Semantics(
-        container: true,
-        explicitChildNodes: true,
-        label: 'DingDong device connection manager',
-        child: DeviceLinkManagerScreen(controller: widget.controller),
+      home: Builder(
+        builder: (BuildContext context) => Semantics(
+          container: true,
+          explicitChildNodes: true,
+          label: context.localized(
+            'DingDong device connection manager',
+            'DingDong 设备连接管理窗口',
+          ),
+          child: DeviceLinkManagerScreen(controller: widget.controller),
+        ),
       ),
     );
   }

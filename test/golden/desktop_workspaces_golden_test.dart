@@ -82,6 +82,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await _precacheImages(tester);
 
       await _capture(tester, 'clipboard_dark');
     },
@@ -236,6 +237,11 @@ _pumpDarkWorkspace(
     ),
   );
   await tester.pumpAndSettle();
+  await _precacheImages(tester);
+  return (activity: activityController, shell: controller);
+}
+
+Future<void> _precacheImages(WidgetTester tester) async {
   final BuildContext imageContext = tester.element(find.byType(MaterialApp));
   await tester.runAsync(() async {
     for (final Image image in tester.widgetList<Image>(find.byType(Image))) {
@@ -243,7 +249,6 @@ _pumpDarkWorkspace(
     }
   });
   await tester.pump();
-  return (activity: activityController, shell: controller);
 }
 
 Future<void> _pumpWorkspace(

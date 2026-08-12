@@ -100,6 +100,15 @@ skills:
     final Map<String, String> documents =
         await loadBundledAgentAdapterDocuments();
 
+    expect(builtInAgentAdapterIds, <String>[
+      'codex',
+      'claude-code',
+      'cursor',
+      'gemini',
+      'grok-build',
+      'kiro',
+      'pi',
+    ]);
     expect(documents.keys, builtInAgentAdapterIds);
     expect(
       documents.values
@@ -107,5 +116,28 @@ skills:
           .map((AgentAdapter adapter) => adapter.id),
       builtInAgentAdapterIds,
     );
+
+    final String homeDirectory = Platform.isWindows
+        ? r'C:\Users\example'
+        : '/Users/example';
+    final AgentAdapter grok = AgentAdapter.parse(documents['grok-build']!);
+    expect(grok.displayName, 'Grok Build');
+    expect(
+      grok.resolvedGlobalSkillPath(homeDirectory),
+      path.join(homeDirectory, '.grok', 'skills'),
+    );
+    expect(grok.resolvedProjectSkillPath(), path.join('.grok', 'skills'));
+    expect(grok.mcpFilePath, isNull);
+    expect(grok.promptFilePath, isNull);
+
+    final AgentAdapter pi = AgentAdapter.parse(documents['pi']!);
+    expect(pi.displayName, 'Pi');
+    expect(
+      pi.resolvedGlobalSkillPath(homeDirectory),
+      path.join(homeDirectory, '.pi', 'agent', 'skills'),
+    );
+    expect(pi.resolvedProjectSkillPath(), path.join('.pi', 'skills'));
+    expect(pi.mcpFilePath, isNull);
+    expect(pi.promptFilePath, isNull);
   });
 }

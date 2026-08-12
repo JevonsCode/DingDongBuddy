@@ -22,6 +22,7 @@ import 'package:dingdong/features/agent_api/data/trigger_group_routes.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/skill_deployment_store.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
@@ -42,6 +43,7 @@ final class AgentRouter {
     ResourceStore? resourceStore,
     TriggerGroupStore? triggerGroupStore,
     SkillPackageInstaller? skillPackageInstaller,
+    SkillDeploymentStore? skillDeploymentStore,
     ResourceUpdateFetcher? updateFetcher,
     String Function()? idGenerator,
     DateTime Function()? now,
@@ -71,6 +73,7 @@ final class AgentRouter {
                resourceStore,
                triggerGroupStore: triggerGroupStore,
                skillPackageInstaller: skillPackageInstaller,
+               skillDeploymentStore: skillDeploymentStore,
                updateFetcher: updateFetcher,
                now: now,
                idGenerator: idGenerator,
@@ -89,6 +92,8 @@ final class AgentRouter {
                resourceStore: resourceStore,
                clipboardStore: clipboardStore,
                triggerGroupStore: triggerGroupStore,
+               querySkillDeploymentPresence:
+                   skillDeploymentStore?.queryPresence,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -113,6 +118,7 @@ final class AgentRouter {
        ),
        _resourceStore = resourceStore,
        _triggerGroupStore = triggerGroupStore,
+       _skillDeploymentStore = skillDeploymentStore,
        _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? DateTime.now,
        _allowAgentClipboardContent =
@@ -133,6 +139,7 @@ final class AgentRouter {
   final DesktopControlRoutes _desktopControlRoutes;
   final ResourceStore? _resourceStore;
   final TriggerGroupStore? _triggerGroupStore;
+  final SkillDeploymentStore? _skillDeploymentStore;
   final String Function() _idGenerator;
   final DateTime Function() _now;
   final Future<bool> Function() _allowAgentClipboardContent;
@@ -259,6 +266,7 @@ final class AgentRouter {
       return AgentBridge(
         store,
         triggerGroupStore: _triggerGroupStore,
+        querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
         now: _now,
         onTaskStarted: _onAgentTaskStarted,
       ).respond(request.body);
@@ -273,6 +281,7 @@ final class AgentRouter {
       return AgentBridge(
         store,
         triggerGroupStore: _triggerGroupStore,
+        querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
         now: _now,
       ).loadSkill(request.parsedUri.queryParameters);
     }
@@ -285,6 +294,7 @@ final class AgentRouter {
       return AgentBridge(
         store,
         triggerGroupStore: _triggerGroupStore,
+        querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
         now: _now,
       ).readSkillFile(request.parsedUri.queryParameters);
     }
@@ -318,6 +328,25 @@ final class AgentRouter {
       return routes == null
           ? _resourceUnavailable()
           : routes.bindScope(request.parsedUri.pathSegments[1], request.body);
+    }
+    if (request.parsedUri.pathSegments.length == 4 &&
+        request.parsedUri.pathSegments[0] == 'library' &&
+        request.parsedUri.pathSegments[1] == 'skills') {
+      final LibraryRoutes? routes = _libraryRoutes;
+      if (routes == null) {
+        return _resourceUnavailable();
+      }
+      final String resourceId = request.parsedUri.pathSegments[2];
+      final String action = request.parsedUri.pathSegments[3];
+      if (request.method == 'PUT' && action == 'delivery') {
+        return routes.setSkillDelivery(resourceId, request.body);
+      }
+      if (request.method == 'GET' && action == 'deployments') {
+        return routes.skillDeployments(resourceId);
+      }
+      if (request.method == 'POST' && action == 'reconcile') {
+        return routes.reconcileSkill(resourceId);
+      }
     }
     if ((request.method == 'PATCH' || request.method == 'DELETE') &&
         request.parsedUri.pathSegments.length == 3 &&

@@ -10,6 +10,7 @@ import 'package:dingdong/features/device_link/domain/device_link_management.dart
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 /// Full connection-management surface hosted by its own desktop window.
@@ -23,45 +24,152 @@ final class DeviceLinkManagerScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (BuildContext context, _) {
+        final ColorScheme colors = Theme.of(context).colorScheme;
         return Scaffold(
           key: const Key('device-link-manager-screen'),
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 920),
-                child: LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints bounds) {
-                    final Widget devices = _DevicesColumn(
-                      controller: controller,
-                    );
-                    final Widget pairing = _PairingCard(controller: controller);
-                    if (bounds.maxWidth < 700) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          devices,
-                          const SizedBox(height: 18),
-                          pairing,
-                        ],
-                      );
-                    }
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Expanded(flex: 5, child: devices),
-                        const SizedBox(width: 20),
-                        Expanded(flex: 4, child: pairing),
-                      ],
-                    );
-                  },
+          backgroundColor: colors.surface,
+          body: FocusTraversalGroup(
+            policy: OrderedTraversalPolicy(),
+            child: SingleChildScrollView(
+              key: const Key('device-link-manager-scroll-view'),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 960),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      _WorkspaceHeader(controller: controller),
+                      const SizedBox(height: 18),
+                      LayoutBuilder(
+                        builder: (BuildContext context, BoxConstraints bounds) {
+                          final Widget pairing = _PairingCard(
+                            controller: controller,
+                          );
+                          final Widget devices = _DevicesColumn(
+                            controller: controller,
+                          );
+                          if (bounds.maxWidth < 720) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: <Widget>[
+                                pairing,
+                                const SizedBox(height: 20),
+                                devices,
+                              ],
+                            );
+                          }
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Expanded(flex: 5, child: pairing),
+                              const SizedBox(width: 20),
+                              Expanded(flex: 6, child: devices),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _WorkspaceHeader extends StatelessWidget {
+  const _WorkspaceHeader({required this.controller});
+
+  final DeviceLinkManagement controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.devices_other_rounded,
+            size: 21,
+            color: colors.primary,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Semantics(
+                header: true,
+                child: Text(
+                  context.localized('Connected devices', '连接设备'),
+                  key: const Key('device-link-manager-title'),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.localized(
+                  'Pair a trusted device and choose what this computer sends.',
+                  '连接可信设备，并选择这台电脑可以发送的内容。',
+                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        _CountBadge(count: controller.devices.length),
+      ],
+    );
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  const _CountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Semantics(
+      label: context.localized('$count paired devices', '已连接 $count 台设备'),
+      child: ExcludeSemantics(
+        child: Container(
+          key: const Key('device-link-device-count'),
+          constraints: const BoxConstraints(minWidth: 30, minHeight: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            '$count',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -84,7 +192,7 @@ class _DevicesColumn extends StatelessWidget {
         ),
         const SizedBox(height: 9),
         if (controller.devices.isEmpty && controller.pendingPairing == null)
-          _EmptyDevicesCard(controller: controller)
+          const _EmptyDevicesCard()
         else
           for (final LinkedDevice device in controller.devices) ...<Widget>[
             _DeviceCard(controller: controller, device: device),
@@ -210,10 +318,12 @@ class _LocalDeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
+      key: const Key('device-local-device'),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.08),
+        color: colors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outlineVariant),
       ),
       child: Row(
         children: <Widget>[
@@ -221,12 +331,12 @@ class _LocalDeviceCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
+              color: colors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.computer_rounded,
-              color: colors.primary,
+              color: colors.onSurfaceVariant,
               size: 21,
             ),
           ),
@@ -268,72 +378,78 @@ class _DeviceCard extends StatelessWidget {
     final bool connected = status == DeviceConnectionStatus.connected;
     final bool connecting = status == DeviceConnectionStatus.connecting;
     final bool active = connected || connecting;
-    return Container(
-      key: Key('linked-device-${device.id}'),
-      padding: const EdgeInsets.fromLTRB(13, 12, 13, 11),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(_deviceIcon(device.kind), size: 21),
-              const SizedBox(width: 9),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      device.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _statusLabel(context, status),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: connected
-                            ? const Color(0xFF238558)
-                            : colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+    final _StatusPalette statusPalette = _statusPalette(colors, status);
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: Container(
+        key: Key('linked-device-${device.id}'),
+        padding: const EdgeInsets.fromLTRB(13, 12, 13, 11),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _deviceIcon(device.kind),
+                    size: 18,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: connected
-                      ? const Color(0xFF2FA66D)
-                      : colors.outlineVariant,
-                  shape: BoxShape.circle,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    device.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Divider(height: 1),
-          CompactSwitchListTile(
-            title: Text(context.localized('Auto send clipboard', '自动发送剪贴板')),
-            subtitle: Text(
-              context.localized(
+                const SizedBox(width: 8),
+                _StatusBadge(
+                  status: status,
+                  statusKey: Key('device-status-${device.id}'),
+                  palette: statusPalette,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 10),
+            _SectionLabel(label: context.localized('Settings', '设备设置')),
+            const SizedBox(height: 4),
+            _DeviceSettingRow(
+              key: Key('device-auto-send-${device.id}'),
+              title: context.localized('Auto send clipboard', '自动发送剪贴板'),
+              subtitle: context.localized(
                 'This computer → ${device.name}',
                 '这台电脑 → ${device.name}',
               ),
+              semanticLabel: context.localized(
+                'Auto send clipboard from this computer to ${device.name}',
+                '自动将剪贴板从这台电脑发送到 ${device.name}',
+              ),
+              value: device.autoSendClipboard,
+              onChanged: (bool value) =>
+                  unawaited(controller.setAutoSendClipboard(device.id, value)),
             ),
-            value: device.autoSendClipboard,
-            onChanged: (bool value) =>
-                unawaited(controller.setAutoSendClipboard(device.id, value)),
-          ),
-          CompactSwitchListTile(
-            title: Text(context.localized('Agent completion', 'Agent 完成提醒')),
-            subtitle: Text(
-              device.receiveAgentNotifications
+            _DeviceSettingRow(
+              key: Key('device-agent-notifications-${device.id}'),
+              title: context.localized('Agent completion', 'Agent 完成提醒'),
+              subtitle: device.receiveAgentNotifications
                   ? device.vibrationEnabled
                         ? context.localized(
                             'Enabled · Phone vibration is on',
@@ -347,43 +463,51 @@ class _DeviceCard extends StatelessWidget {
                       'Completion notifications are off for this device',
                       '此设备的完成提醒已关闭',
                     ),
+              semanticLabel: context.localized(
+                'Agent completion notifications for ${device.name}',
+                '${device.name} 的 Agent 完成提醒',
+              ),
+              value: device.receiveAgentNotifications,
+              onChanged: (bool value) =>
+                  unawaited(controller.setAgentNotifications(device.id, value)),
             ),
-            value: device.receiveAgentNotifications,
-            onChanged: (bool value) =>
-                unawaited(controller.setAgentNotifications(device.id, value)),
-          ),
-          const SizedBox(height: 3),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: DesktopActionButton(
-                  key: Key('device-connection-${device.id}'),
-                  label: connecting
-                      ? context.localized('Stop connecting', '停止连接')
-                      : connected
-                      ? context.localized('Disconnect', '断开连接')
-                      : context.localized('Reconnect', '重新连接'),
-                  icon: active ? Icons.link_off_rounded : Icons.refresh_rounded,
-                  compact: true,
-                  onPressed: () => unawaited(
-                    active
-                        ? controller.disconnect(device.id)
-                        : controller.reconnect(device.id),
+            const SizedBox(height: 8),
+            _SectionLabel(label: context.localized('Connection', '连接操作')),
+            const SizedBox(height: 7),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: DesktopActionButton(
+                    key: Key('device-connection-${device.id}'),
+                    label: connecting
+                        ? context.localized('Stop connecting', '停止连接')
+                        : connected
+                        ? context.localized('Disconnect', '断开连接')
+                        : context.localized('Reconnect', '重新连接'),
+                    icon: active
+                        ? Icons.link_off_rounded
+                        : Icons.refresh_rounded,
+                    compact: true,
+                    onPressed: () => unawaited(
+                      active
+                          ? controller.disconnect(device.id)
+                          : controller.reconnect(device.id),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 7),
-              DesktopActionButton(
-                key: Key('device-delete-${device.id}'),
-                label: context.localized('Delete', '删除'),
-                icon: Icons.delete_outline_rounded,
-                compact: true,
-                tone: DesktopActionTone.danger,
-                onPressed: () => unawaited(_confirmDelete(context)),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 7),
+                DesktopActionButton(
+                  key: Key('device-delete-${device.id}'),
+                  label: context.localized('Delete', '删除'),
+                  icon: Icons.delete_outline_rounded,
+                  compact: true,
+                  tone: DesktopActionTone.danger,
+                  onPressed: () => unawaited(_confirmDelete(context)),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -425,137 +549,267 @@ class _PairingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final PendingDevicePairing? pairing = controller.pendingPairing;
     final ColorScheme colors = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: pairing == null
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  context.localized('Connect a new device', '连接新设备'),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  controller.canPair
-                      ? context.localized(
-                          'Open the camera on your phone and scan the QR code.',
-                          '用手机相机扫描二维码即可连接。',
-                        )
-                      : context.localized(
-                          'The DEV PWA endpoint is not configured in this build.',
-                          '这个构建尚未配置 DEV PWA 地址。',
-                        ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                if (controller.canPair) ...<Widget>[
-                  const SizedBox(height: 7),
-                  Text(
-                    context.localized(
-                      'Uses a local WebRTC connection when possible, with an '
-                          'end-to-end encrypted relay fallback. The relay does not '
-                          'store clipboard, file, or Agent content.',
-                      '优先使用局域网 WebRTC 直连；无法直连时使用端到端加密中继。'
-                          '中继不保存剪贴板、文件或 Agent 内容。',
-                    ),
-                    key: const Key('device-connection-mode-note'),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-                const SizedBox(height: 11),
-                DesktopActionButton(
-                  key: const Key('device-begin-pairing'),
-                  label: context.localized('Show pairing QR', '显示连接二维码'),
-                  icon: Icons.qr_code_2_rounded,
-                  tone: DesktopActionTone.primary,
-                  onPressed: controller.canPair
-                      ? () => unawaited(controller.beginPairing())
-                      : null,
-                ),
-              ],
-            )
-          : Column(
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        context.localized('Scan to connect', '扫码连接'),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    Text(
-                      _statusLabel(context, controller.pairingStatus),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  width: 224,
-                  height: 224,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: QrImageView(
-                    key: const Key('device-pairing-qr'),
-                    data: pairing.url.toString(),
-                    version: QrVersions.auto,
-                    errorCorrectionLevel: QrErrorCorrectLevel.M,
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  context.localized(
-                    'The pairing key stays inside the QR fragment.',
-                    '连接密钥只存在于二维码片段中。',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  context.localized(
-                    'Local WebRTC is preferred; an end-to-end encrypted relay '
-                        'keeps the connection available when direct access fails.',
-                    '优先局域网 WebRTC 直连；直连失败时使用端到端加密中继保持连接。',
-                  ),
-                  key: const Key('device-pairing-connection-mode-note'),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 10),
-                DesktopActionButton(
-                  key: const Key('device-cancel-pairing'),
-                  label: context.localized('Cancel pairing', '取消连接'),
-                  onPressed: () => unawaited(controller.cancelPairing()),
-                ),
-              ],
+    final Widget content = pairing == null
+        ? _PairingStart(controller: controller)
+        : _PairingQr(controller: controller, pairing: pairing);
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: Container(
+        key: const Key('device-pairing-panel'),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(
+            colors.primary.withValues(alpha: 0.045),
+            colors.surface,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colors.primary.withValues(
+              alpha: pairing == null ? 0.2 : 0.34,
             ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            content,
+            if (controller.canPair || pairing != null) ...<Widget>[
+              const SizedBox(height: 14),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              _SecurityNote(pairingVisible: pairing != null),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
 
-class _EmptyDevicesCard extends StatelessWidget {
-  const _EmptyDevicesCard({required this.controller});
+class _PairingStart extends StatelessWidget {
+  const _PairingStart({required this.controller});
 
   final DeviceLinkManagement controller;
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.11),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(
+                Icons.qr_code_2_rounded,
+                size: 21,
+                color: colors.primary,
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      context.localized('Connect a new device', '连接新设备'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    controller.canPair
+                        ? context.localized(
+                            'Create a QR code, then scan it with the device you trust.',
+                            '生成二维码，再用你信任的设备扫码。',
+                          )
+                        : context.localized(
+                            'The DEV PWA endpoint is not configured in this build.',
+                            '这个构建尚未配置 DEV PWA 地址。',
+                          ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        DesktopActionButton(
+          key: const Key('device-begin-pairing'),
+          label: context.localized('Show pairing QR', '显示连接二维码'),
+          semanticLabel: context.localized(
+            'Show QR code to pair a trusted device',
+            '显示二维码以连接可信设备',
+          ),
+          icon: Icons.qr_code_2_rounded,
+          tone: DesktopActionTone.primary,
+          autofocus: controller.canPair,
+          onPressed: controller.canPair
+              ? () => unawaited(controller.beginPairing())
+              : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _PairingQr extends StatelessWidget {
+  const _PairingQr({required this.controller, required this.pairing});
+
+  final DeviceLinkManagement controller;
+  final PendingDevicePairing pairing;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final _StatusPalette statusPalette = _statusPalette(
+      colors,
+      controller.pairingStatus,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  context.localized('Scan to connect', '扫码连接'),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            _StatusBadge(
+              status: controller.pairingStatus,
+              statusKey: const Key('device-pairing-status'),
+              palette: statusPalette,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final double qrSize = constraints.maxWidth
+                .clamp(184.0, 208.0)
+                .toDouble();
+            return Center(
+              child: Semantics(
+                key: const Key('device-pairing-qr'),
+                image: true,
+                label: context.localized(
+                  'Pairing QR code for ${controller.localDevice.name}',
+                  '${controller.localDevice.name} 的连接二维码',
+                ),
+                child: ExcludeSemantics(
+                  child: Container(
+                    width: qrSize,
+                    height: qrSize,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colors.outlineVariant.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    child: QrImageView(
+                      data: pairing.url.toString(),
+                      version: QrVersions.auto,
+                      errorCorrectionLevel: QrErrorCorrectLevel.M,
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        Text(
+          context.localized(
+            'Scan with the device you want to trust.',
+            '请使用要信任的设备扫码。',
+          ),
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+        ),
+        const SizedBox(height: 12),
+        DesktopActionButton(
+          key: const Key('device-cancel-pairing'),
+          label: context.localized('Cancel pairing', '取消连接'),
+          semanticLabel: context.localized('Cancel device pairing', '取消设备连接'),
+          icon: Icons.close_rounded,
+          onPressed: () => unawaited(controller.cancelPairing()),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecurityNote extends StatelessWidget {
+  const _SecurityNote({required this.pairingVisible});
+
+  final bool pairingVisible;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Icon(Icons.lock_outline_rounded, size: 15, color: colors.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            pairingVisible
+                ? context.localized(
+                    'The key stays in the QR. WebRTC is preferred; the encrypted relay fallback stores no content.',
+                    '密钥只存在于二维码中；优先使用 WebRTC 直连，加密中继不保存内容。',
+                  )
+                : context.localized(
+                    'WebRTC is preferred; the end-to-end encrypted relay fallback stores no clipboard, file, or Agent content.',
+                    '优先使用 WebRTC 直连；端到端加密中继不保存剪贴板、文件或 Agent 内容。',
+                  ),
+            key: const Key('device-connection-mode-note'),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyDevicesCard extends StatelessWidget {
+  const _EmptyDevicesCard();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
+      key: const Key('device-empty-state'),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         children: <Widget>[
@@ -575,6 +829,206 @@ class _EmptyDevicesCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DeviceSettingRow extends StatefulWidget {
+  const _DeviceSettingRow({
+    required this.title,
+    required this.subtitle,
+    required this.semanticLabel,
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
+
+  final String title;
+  final String subtitle;
+  final String semanticLabel;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  State<_DeviceSettingRow> createState() => _DeviceSettingRowState();
+}
+
+class _DeviceSettingRowState extends State<_DeviceSettingRow> {
+  late final FocusNode _focusNode;
+  bool _focused = false;
+  bool _hovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode(debugLabel: widget.semanticLabel);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    final ValueChanged<bool>? onChanged = widget.onChanged;
+    if (onChanged == null) return;
+    if (!_focusNode.hasFocus) _focusNode.requestFocus();
+    onChanged(!widget.value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final bool enabled = widget.onChanged != null;
+    return FocusableActionDetector(
+      focusNode: _focusNode,
+      enabled: enabled,
+      mouseCursor: enabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
+      shortcuts: const <ShortcutActivator, Intent>{
+        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+      },
+      actions: <Type, Action<Intent>>{
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (ActivateIntent intent) {
+            _toggle();
+            return null;
+          },
+        ),
+      },
+      onShowFocusHighlight: (bool value) {
+        if (_focused != value) setState(() => _focused = value);
+      },
+      onShowHoverHighlight: (bool value) {
+        if (_hovered != value) setState(() => _hovered = value);
+      },
+      child: Semantics(
+        container: true,
+        button: true,
+        enabled: enabled,
+        toggled: widget.value,
+        label: widget.semanticLabel,
+        onTap: enabled ? _toggle : null,
+        child: ExcludeSemantics(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: enabled ? _toggle : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              decoration: BoxDecoration(
+                color: _hovered || _focused
+                    ? colors.surfaceContainerHigh.withValues(alpha: 0.72)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                  color: _focused ? colors.primary : Colors.transparent,
+                  width: _focused ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          widget.title,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          widget.subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ExcludeSemantics(
+                    child: CompactSwitch(value: widget.value, onChanged: null),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({
+    required this.status,
+    required this.statusKey,
+    required this.palette,
+  });
+
+  final DeviceConnectionStatus status;
+  final Key statusKey;
+  final _StatusPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    final String label = _statusLabel(context, status);
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Container(
+          key: statusKey,
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+          decoration: BoxDecoration(
+            color: palette.background,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: palette.dot,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: palette.foreground,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -608,6 +1062,46 @@ IconData _deviceIcon(LinkedDeviceKind kind) => switch (kind) {
   LinkedDeviceKind.computer => Icons.computer_rounded,
   LinkedDeviceKind.phone => Icons.phone_iphone_rounded,
 };
+
+_StatusPalette _statusPalette(
+  ColorScheme colors,
+  DeviceConnectionStatus status,
+) {
+  return switch (status) {
+    DeviceConnectionStatus.connected => _StatusPalette(
+      foreground: colors.primary,
+      background: colors.primary.withValues(alpha: 0.1),
+      dot: colors.primary,
+    ),
+    DeviceConnectionStatus.connecting => _StatusPalette(
+      foreground: colors.onTertiaryContainer,
+      background: colors.tertiaryContainer,
+      dot: colors.tertiary,
+    ),
+    DeviceConnectionStatus.error => _StatusPalette(
+      foreground: colors.onErrorContainer,
+      background: colors.errorContainer,
+      dot: colors.error,
+    ),
+    DeviceConnectionStatus.disconnected => _StatusPalette(
+      foreground: colors.onSurfaceVariant,
+      background: colors.surfaceContainerHigh,
+      dot: colors.outline,
+    ),
+  };
+}
+
+final class _StatusPalette {
+  const _StatusPalette({
+    required this.foreground,
+    required this.background,
+    required this.dot,
+  });
+
+  final Color foreground;
+  final Color background;
+  final Color dot;
+}
 
 String _statusLabel(BuildContext context, DeviceConnectionStatus status) {
   return switch (status) {

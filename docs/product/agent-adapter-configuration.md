@@ -1,10 +1,10 @@
 # Agent Adapter 配置
 
 Agent Adapter 描述 DingDong 如何识别一个本机 Agent、把 MCP 与固定的 Prompt
-Bridge 引导写到哪里，以及到哪些原生 Skill 目录清理旧版 DingDong 镜像并检查独立
-Skill 冲突。DingDong 管理的 Skill 已改为通过 Bridge 动态发现和按需加载，不再部署到
-这些目录。Adapter 只登记受支持的文件位置和格式，不允许提供任意命令、Hook、Token
-或启动脚本。
+Bridge 引导写到哪里，以及原生 Skill 的用户级和项目级交付目录。Skill 可以按 Agent
+选择动态交付、原生全局或原生项目；原生模式会把完整 Skill 包部署到 Adapter 声明的
+目录。Adapter 只登记受支持的文件位置和格式，不允许提供任意命令、Hook、Token 或
+启动脚本。
 
 用户可以在 **资源管理 → Agent 接入** 查看所有内置和自定义 Adapter。页面默认展示
 可验证的配置证据：YAML 是否有效、检测目录是否存在，以及 MCP、Prompt、Skill 路径
@@ -25,7 +25,7 @@ YAML 编辑器及当前版本与前两个版本的比较收在 **高级配置**�
 | Linux | `~/.local/share/DingDong/Agent Adapters` |
 
 每个 `.yaml` 或 `.yml` 文件定义一个 Adapter，建议文件名与 `id` 一致。DingDong 自带
-Codex、Claude Code、Cursor、Gemini CLI 和 Kiro 的内置定义：
+Codex、Claude Code、Cursor、Gemini CLI、Grok Build、Kiro 和 Pi 的内置定义：
 
 - 没有同 ID 用户文件时，使用内置定义。
 - 在资源管理里保存内置定义时，会在上述目录创建同 ID 用户覆盖文件。
@@ -66,9 +66,9 @@ prompt:
 | `schemaVersion` | 是 | 当前只接受整数 `1` |
 | `id` | 是 | 1–64 位小写字母、数字和单连字符 |
 | `displayName` | 是 | 资源管理和问题中心显示的客户端名称 |
-| `detect.directory` | 是 | 目录存在时，认为该 Agent 已安装并参与同步 |
-| `skills.global` | 否 | 用户级原生 Skill 目录，仅用于旧版托管镜像清理和独立 Skill 冲突检查；与 `skills.project` 成对出现 |
-| `skills.project` | 否 | 相对于项目根目录的原生 Skill 目录，仅用于旧版托管镜像清理和冲突检查 |
+| `detect.directory` | 是 | 目录存在时，UI 将该 Agent 视为已检测到；这不验证可执行文件、版本、登录或连接状态 |
+| `skills.global` | 否 | 用户级原生 Skill 交付目录；也用于旧版托管镜像清理和独立 Skill 冲突检查；与 `skills.project` 成对出现 |
+| `skills.project` | 否 | 相对于项目根目录的原生 Skill 交付目录；项目模式只接受已存在的精确项目路径 |
 | `mcp.file` | 否 | Agent 的用户级 MCP 配置文件；与 `mcp.format` 成对出现 |
 | `mcp.format` | 否 | MCP 配置格式 |
 | `prompt.file` | 否 | DingDong 写入固定 Prompt/Skill Bridge 引导的原生指令文件 |
@@ -82,6 +82,27 @@ prompt:
 - `gemini-json`
 - `kiro-json`
 - `mcpServers-json`：通用 JSON，根对象使用 `mcpServers`
+
+Grok Build 和 Pi 当前内置 Adapter 只声明各自官方的原生 Skill 目录：Grok Build 使用
+`~/.grok/skills` 与 `.grok/skills`，Pi 使用 `~/.pi/agent/skills` 与
+`.pi/skills`。Grok 的 MCP 配置是独立 TOML 契约，不能冒用 `codex-toml`；Pi 官方默认
+不提供 MCP。因此，在 DingDong 增加相应专用、安全合并器以前，这两个内置 Adapter
+不会声明 MCP 或 Bridge Prompt。资源里的“动态”仍表示 DingDong Bridge 交付策略，
+但选择它不会替 Grok Build 或 Pi 自动安装 Bridge；只有用户另行接通兼容工具后才会
+生效。
+
+这两个 Adapter 目前还有以下明确边界：
+
+- `detect.directory` 只是默认数据目录的存在性证据。刚装好但尚未运行的 Agent 可能被
+  显示为“未安装”；Grok 的 `GROK_HOME` 和 Pi 的 `PI_CODING_AGENT_DIR` 覆盖也不能由
+  当前单目录 schema 自动推导。覆盖目录仍位于用户主目录内时，可复制内置 Adapter
+  为用户覆盖，并把 detect 与全局 Skill 路径改成真实目录；位于主目录外时，当前安全
+  路径约束不支持该配置。
+- Pi 还会发现 `~/.agents/skills`、项目及祖先目录中的 `.agents/skills`。当前 Adapter
+  schema 每个层级只能登记一个交付根，因此 DingDong 默认写入隔离的 `.pi` 路径，
+  不会盘点、去重或删除那些通用根中的外部 Skill。
+- Pi 只有在项目已被信任时才加载 `.pi/skills`。自动化或无交互验收可使用
+  `pi -p --approve ...`；磁盘部署成功本身不代表 Pi 已接受该项目。
 
 `detect.directory`、`skills.global`、`mcp.file` 和 `prompt.file` 必须使用 `~`、
 `~/...` 或用户主目录内的绝对路径；DingDong 会解析已有符号链接，真实目标也不能

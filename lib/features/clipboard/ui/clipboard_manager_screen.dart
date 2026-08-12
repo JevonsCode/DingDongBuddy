@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
@@ -20,6 +22,7 @@ import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const double _managerSearchControlHeight = 40;
 const double _sourceFilterMenuWidth = 280;
@@ -30,12 +33,14 @@ class ClipboardManagerScreen extends StatefulWidget {
     required this.viewModel,
     this.contextMenuGateway,
     this.resourceManagerLauncher,
+    this.categoryManagementRequestRevision = 0,
     super.key,
   });
 
   final ClipboardViewModel viewModel;
   final DesktopContextMenuGateway? contextMenuGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
+  final int categoryManagementRequestRevision;
 
   @override
   State<ClipboardManagerScreen> createState() => _ClipboardManagerScreenState();
@@ -43,6 +48,48 @@ class ClipboardManagerScreen extends StatefulWidget {
 
 class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   final Set<String> _selectedIds = <String>{};
+  bool _categoryDialogOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.categoryManagementRequestRevision > 0) {
+      _scheduleCategoryManagement();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ClipboardManagerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.categoryManagementRequestRevision >
+        oldWidget.categoryManagementRequestRevision) {
+      _scheduleCategoryManagement();
+    }
+  }
+
+  void _scheduleCategoryManagement() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(_showCategoryManagement());
+      }
+    });
+  }
+
+  Future<void> _showCategoryManagement() async {
+    if (_categoryDialogOpen) {
+      return;
+    }
+    _categoryDialogOpen = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (BuildContext context) =>
+            ClipboardCategoryRulesDialog(viewModel: widget.viewModel),
+      );
+    } finally {
+      _categoryDialogOpen = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +189,8 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                     _ManagerFilters(
                       viewModel: widget.viewModel,
                       contextMenuGateway: widget.contextMenuGateway,
+                      onManageCategories: () =>
+                          unawaited(_showCategoryManagement()),
                     ),
                   ],
                 ),
@@ -174,6 +223,10 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                               ? _selectedIds.add(record.id)
                               : _selectedIds.remove(record.id);
                         }),
+                        onOpenDetails: () {
+                          widget.viewModel.select(record);
+                          unawaited(_showDetails(record));
+                        },
                         onSecondaryTapUp: (TapUpDetails details) =>
                             _showItemMenu(record, details.globalPosition),
                       );
@@ -396,63 +449,19 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   Future<void> _showDetails(ClipboardRecord record) async {
     await showDialog<void>(
       context: context,
-      builder: (BuildContext context) => DesktopAlertDialog(
-        maxWidth: 600,
-        title: Text(record.title),
-        content: SizedBox(
-          width: 560,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Wrap(
-                spacing: 7,
-                runSpacing: 7,
-                children: <Widget>[
-                  _MetaChip(
-                    label:
-                        widget.viewModel.categoryFor(record)?.name ??
-                        context.localized('Uncategorized', '未分类'),
-                  ),
-                  _MetaChip(label: record.kind.name),
-                  if (record.copyCount > 1)
-                    _MetaChip(
-                      label: context.localized(
-                        '${record.copyCount} copies',
-                        '复制 ${record.copyCount} 次',
-                      ),
-                    ),
-                  for (final String group in record.groupNames)
-                    _MetaChip(label: group),
-                ],
-              ),
-              if (record.sources.isNotEmpty) ...<Widget>[
-                const SizedBox(height: 12),
-                Text(
-                  context.localized('Sources', '来源'),
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-                const SizedBox(height: 7),
-                Wrap(
-                  spacing: 7,
-                  runSpacing: 7,
-                  children: record.sources
-                      .map((String source) => _MetaChip(label: source))
-                      .toList(growable: false),
-                ),
-              ],
-              const SizedBox(height: 14),
-              SelectableText(record.content),
-            ],
-          ),
-        ),
-        actions: <Widget>[
-          DesktopActionButton(
-            onPressed: () => Navigator.pop(context),
-            label: context.localized('Close', '关闭'),
-            compact: true,
-          ),
-        ],
+      builder: (BuildContext context) => _ClipboardDetailsDialog(
+        record: record,
+        categoryLabel:
+            widget.viewModel.categoryFor(record)?.name ??
+            context.localized('Uncategorized', '未分类'),
+        onClose: () => Navigator.pop(context),
+        onCopy: () async {
+          await widget.viewModel.copySelected();
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.localized('Copied', '已复制'))),
+          );
+        },
       ),
     );
   }
@@ -1057,10 +1066,12 @@ class _ManagerFilters extends StatelessWidget {
   const _ManagerFilters({
     required this.viewModel,
     required this.contextMenuGateway,
+    required this.onManageCategories,
   });
 
   final ClipboardViewModel viewModel;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final VoidCallback onManageCategories;
 
   @override
   Widget build(BuildContext context) {
@@ -1098,11 +1109,7 @@ class _ManagerFilters extends StatelessWidget {
               DesktopIconButton(
                 key: const Key('clipboard-manager-categories'),
                 tooltip: context.localized('Manage categories', '管理分类'),
-                onPressed: () => showDialog<void>(
-                  context: context,
-                  builder: (BuildContext context) =>
-                      ClipboardCategoryRulesDialog(viewModel: viewModel),
-                ),
+                onPressed: onManageCategories,
                 icon: const Icon(Icons.tune_rounded, size: 16),
               ),
             ],
@@ -1213,6 +1220,263 @@ String _categoryLabel(BuildContext context, ClipboardCategoryRule rule) =>
       _ => rule.name,
     };
 
+class _ClipboardDetailsDialog extends StatelessWidget {
+  const _ClipboardDetailsDialog({
+    required this.record,
+    required this.categoryLabel,
+    required this.onClose,
+    required this.onCopy,
+  });
+
+  final ClipboardRecord record;
+  final String categoryLabel;
+  final VoidCallback onClose;
+  final Future<void> Function() onCopy;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final String title = record.title.trim().isEmpty
+        ? context.localized('Untitled clipboard item', '未命名剪贴板条目')
+        : record.title;
+    final List<_DetailDatum> overview = <_DetailDatum>[
+      _DetailDatum(
+        label: context.localized('Category', '分类'),
+        value: categoryLabel,
+      ),
+      _DetailDatum(
+        label: context.localized('Content type', '内容类型'),
+        value: _clipboardKindLabel(context, record.kind),
+      ),
+      _DetailDatum(
+        label: context.localized('Copy count', '复制次数'),
+        value: '${record.copyCount}',
+      ),
+      _DetailDatum(
+        label: context.localized('Updated', '更新时间'),
+        value: MaterialLocalizations.of(
+          context,
+        ).formatMediumDate(record.updatedAt.toLocal()),
+      ),
+    ];
+    return DesktopDialogFrame(
+      dialogKey: const Key('clipboard-details-dialog'),
+      width: 660,
+      maxHeight: (MediaQuery.sizeOf(context).height - 48).clamp(360, 700),
+      density: DesktopDialogDensity.editor,
+      header: DesktopDialogHeader(
+        density: DesktopDialogDensity.editor,
+        leading: Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            _clipboardKindIcon(record.kind),
+            size: 17,
+            color: colors.primary,
+          ),
+        ),
+        title: Text(title),
+        subtitle: Text(
+          context.localized(
+            'Clipboard details and complete content',
+            '剪贴板详情与完整内容',
+          ),
+        ),
+        onClose: onClose,
+        closeTooltip: context.localized('Close', '关闭'),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisExtent: 52,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: overview.length,
+              itemBuilder: (BuildContext context, int index) =>
+                  _DetailDatumView(datum: overview[index]),
+            ),
+            if (record.groupNames.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 18),
+              _DetailSectionLabel(label: context.localized('Groups', '分组')),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                children: record.groupNames
+                    .map((String value) => _MetaChip(label: value))
+                    .toList(growable: false),
+              ),
+            ],
+            if (record.sources.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 18),
+              _DetailSectionLabel(label: context.localized('Sources', '来源')),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                children: record.sources
+                    .map((String value) => _MetaChip(label: value))
+                    .toList(growable: false),
+              ),
+            ],
+            const SizedBox(height: 18),
+            _DetailSectionLabel(label: context.localized('Content', '内容')),
+            const SizedBox(height: 8),
+            Container(
+              key: const Key('clipboard-details-content'),
+              constraints: const BoxConstraints(minHeight: 130),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(
+                  color: colors.outlineVariant.withValues(alpha: 0.72),
+                ),
+              ),
+              child: SelectableText(
+                record.sensitive
+                    ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
+                    : record.content,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                  fontFamily: _clipboardKindIsCodeLike(record.kind)
+                      ? 'monospace'
+                      : null,
+                  color: record.sensitive
+                      ? colors.onSurfaceVariant
+                      : colors.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      footer: DesktopDialogFooter(
+        density: DesktopDialogDensity.editor,
+        showDivider: true,
+        actions: <Widget>[
+          DesktopActionButton(
+            onPressed: onClose,
+            label: context.localized('Close', '关闭'),
+            compact: true,
+          ),
+          DesktopActionButton(
+            key: const Key('clipboard-details-copy'),
+            onPressed: record.sensitive ? null : () => onCopy(),
+            icon: const Icon(Icons.copy_rounded, size: 15),
+            label: context.localized('Copy content', '复制内容'),
+            tone: DesktopActionTone.primary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _DetailDatum {
+  const _DetailDatum({required this.label, required this.value});
+
+  final String label;
+  final String value;
+}
+
+class _DetailDatumView extends StatelessWidget {
+  const _DetailDatumView({required this.datum});
+
+  final _DetailDatum datum;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            datum.label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+              fontSize: 10.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            datum.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailSectionLabel extends StatelessWidget {
+  const _DetailSectionLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label,
+    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+      color: Theme.of(context).colorScheme.onSurface,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+}
+
+String _clipboardKindLabel(BuildContext context, ClipboardKind kind) =>
+    switch (kind) {
+      ClipboardKind.text => context.localized('Text', '文本'),
+      ClipboardKind.url => context.localized('Link', '链接'),
+      ClipboardKind.command => context.localized('Command', '命令'),
+      ClipboardKind.code => context.localized('Code', '代码'),
+      ClipboardKind.json => 'JSON',
+      ClipboardKind.path => context.localized('Path', '路径'),
+      ClipboardKind.email => context.localized('Email', '邮箱'),
+      ClipboardKind.file => context.localized('File', '文件'),
+      ClipboardKind.image => context.localized('Image', '图片'),
+    };
+
+IconData _clipboardKindIcon(ClipboardKind kind) => switch (kind) {
+  ClipboardKind.image => Icons.image_outlined,
+  ClipboardKind.file => Icons.description_outlined,
+  ClipboardKind.command => Icons.terminal_rounded,
+  ClipboardKind.url => Icons.link_rounded,
+  ClipboardKind.code || ClipboardKind.json => Icons.code_rounded,
+  ClipboardKind.path => Icons.folder_outlined,
+  ClipboardKind.email => Icons.mail_outline_rounded,
+  ClipboardKind.text => Icons.notes_rounded,
+};
+
+bool _clipboardKindIsCodeLike(ClipboardKind kind) =>
+    kind == ClipboardKind.command ||
+    kind == ClipboardKind.code ||
+    kind == ClipboardKind.json;
+
 class _MetaChip extends StatelessWidget {
   const _MetaChip({required this.label});
 
@@ -1276,12 +1540,13 @@ class _BulkToolbar extends StatelessWidget {
   }
 }
 
-class _ManagerRow extends StatelessWidget {
+class _ManagerRow extends StatefulWidget {
   const _ManagerRow({
     required this.record,
     required this.categoryLabel,
     required this.selected,
     required this.onChanged,
+    required this.onOpenDetails,
     required this.onSecondaryTapUp,
     required this.showReorderHandle,
     required this.showPinnedIndicator,
@@ -1293,10 +1558,26 @@ class _ManagerRow extends StatelessWidget {
   final String categoryLabel;
   final bool selected;
   final ValueChanged<bool> onChanged;
+  final VoidCallback onOpenDetails;
   final GestureTapUpCallback onSecondaryTapUp;
   final bool showReorderHandle;
   final bool showPinnedIndicator;
   final int reorderIndex;
+
+  @override
+  State<_ManagerRow> createState() => _ManagerRowState();
+}
+
+class _ManagerRowState extends State<_ManagerRow> {
+  final FocusNode _focusNode = FocusNode();
+  bool _hovered = false;
+  bool _focused = false;
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1308,129 +1589,176 @@ class _ManagerRow extends StatelessWidget {
         clipBehavior: Clip.none,
         children: <Widget>[
           Material(
-            color: selected
+            color: widget.selected
                 ? colors.primary.withValues(alpha: 0.075)
+                : _hovered || _focused
+                ? colors.onSurface.withValues(alpha: 0.035)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(5),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onSecondaryTapUp: onSecondaryTapUp,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(5),
-                onTap: () => onChanged(!selected),
-                child: Row(
-                  children: <Widget>[
-                    const SizedBox(width: 5),
-                    Semantics(
-                      selected: selected,
-                      button: true,
-                      child: SizedBox.square(
-                        key: Key('clipboard-manager-select-${record.id}'),
-                        dimension: 32,
-                        child: Center(child: SelectionMark(selected: selected)),
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              onEnter: (_) => setState(() => _hovered = true),
+              onExit: (_) => setState(() => _hovered = false),
+              child: FocusableActionDetector(
+                key: Key('clipboard-manager-open-${widget.record.id}'),
+                focusNode: _focusNode,
+                mouseCursor: SystemMouseCursors.click,
+                shortcuts: const <ShortcutActivator, Intent>{
+                  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+                },
+                actions: <Type, Action<Intent>>{
+                  ActivateIntent: CallbackAction<ActivateIntent>(
+                    onInvoke: (_) {
+                      widget.onOpenDetails();
+                      return null;
+                    },
+                  ),
+                },
+                onShowFocusHighlight: (bool value) {
+                  if (_focused != value) setState(() => _focused = value);
+                },
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.onOpenDetails,
+                  onSecondaryTapUp: widget.onSecondaryTapUp,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: _focused
+                            ? colors.primary.withValues(alpha: 0.58)
+                            : Colors.transparent,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    if (showReorderHandle)
-                      ReorderableDragStartListener(
-                        index: reorderIndex,
-                        child: Tooltip(
-                          message: context.localized('Reorder', '调整顺序'),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                            child: Icon(
-                              Icons.drag_indicator_rounded,
-                              size: 17,
-                              color: colors.onSurfaceVariant,
+                    child: Row(
+                      children: <Widget>[
+                        const SizedBox(width: 5),
+                        Semantics(
+                          selected: widget.selected,
+                          button: true,
+                          label: context.localized('Select item', '选择条目'),
+                          child: DesktopIconButton(
+                            key: Key(
+                              'clipboard-manager-select-${widget.record.id}',
+                            ),
+                            tooltip: context.localized('Select item', '选择条目'),
+                            semanticLabel: context.localized(
+                              'Select item',
+                              '选择条目',
+                            ),
+                            selected: widget.selected,
+                            size: 32,
+                            onPressed: () => widget.onChanged(!widget.selected),
+                            icon: SelectionMark(selected: widget.selected),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        if (widget.showReorderHandle)
+                          ReorderableDragStartListener(
+                            index: widget.reorderIndex,
+                            child: Tooltip(
+                              message: context.localized('Reorder', '调整顺序'),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                ),
+                                child: Icon(
+                                  Icons.drag_indicator_rounded,
+                                  size: 17,
+                                  color: colors.onSurfaceVariant,
+                                ),
+                              ),
                             ),
                           ),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                widget.record.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                widget.record.content.replaceAll('\n', ' '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: colors.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            record.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
+                        if (widget.record.groupNames.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(
+                              widget.record.groupNames.join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
                           ),
-                          const SizedBox(height: 3),
-                          Text(
-                            record.content.replaceAll('\n', ' '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: colors.onSurfaceVariant),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
                           ),
+                          color: colors.surfaceContainerLow,
+                          child: Text(
+                            widget.categoryLabel,
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.record.kind.name,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                        const SizedBox(width: 8),
+                        if (widget.record.copyCount > 1) ...<Widget>[
+                          ClipboardCopyCount(
+                            recordId: widget.record.id,
+                            count: widget.record.copyCount,
+                          ),
+                          const SizedBox(width: 8),
                         ],
-                      ),
-                    ),
-                    if (record.groupNames.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 3,
+                        Text(
+                          clipboardTimestampLabel(
+                            context,
+                            widget.record.updatedAt,
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
                         ),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          record.groupNames.join(' · '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                      ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      color: colors.surfaceContainerLow,
-                      child: Text(
-                        categoryLabel,
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
+                        const SizedBox(width: 14),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      record.kind.name,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (record.copyCount > 1) ...<Widget>[
-                      ClipboardCopyCount(
-                        recordId: record.id,
-                        count: record.copyCount,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      clipboardTimestampLabel(context, record.updatedAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-          if (showPinnedIndicator && record.pinned)
+          if (widget.showPinnedIndicator && widget.record.pinned)
             Positioned(
               top: -7,
               right: -2,
               child: ClipboardPinnedIndicator(
-                recordId: record.id,
+                recordId: widget.record.id,
                 keyPrefix: 'clipboard-manager-pinned-indicator',
                 color: colors.primary,
                 size: 18,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
@@ -7,6 +9,7 @@ import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
 
 typedef CreateTriggerGroup =
     Future<TriggerGroup> Function({
@@ -22,6 +25,7 @@ final class TriggerGroupPickerDialog extends StatefulWidget {
     required this.onCreate,
     required this.onUpdate,
     required this.onDelete,
+    this.exactProjectOnly = false,
     super.key,
   });
 
@@ -30,6 +34,7 @@ final class TriggerGroupPickerDialog extends StatefulWidget {
   final CreateTriggerGroup onCreate;
   final Future<void> Function(TriggerGroup group) onUpdate;
   final Future<void> Function(String id) onDelete;
+  final bool exactProjectOnly;
 
   @override
   State<TriggerGroupPickerDialog> createState() =>
@@ -48,6 +53,13 @@ final class _TriggerGroupPickerDialogState
     super.initState();
     _groups = List<TriggerGroup>.of(widget.groups);
     _selectedIds = <String>{...widget.selectedIds};
+    if (widget.exactProjectOnly) {
+      final Set<String> eligibleIds = _groups
+          .where(_isExactProjectGroup)
+          .map((TriggerGroup group) => group.id)
+          .toSet();
+      _selectedIds.removeWhere((String id) => !eligibleIds.contains(id));
+    }
     _searchController = TextEditingController();
   }
 
@@ -65,12 +77,13 @@ final class _TriggerGroupPickerDialogState
         _groups
             .where(
               (TriggerGroup group) =>
-                  needle.isEmpty ||
-                  group.name.toLowerCase().contains(needle) ||
-                  group.rules.any(
-                    (TriggerRule rule) =>
-                        rule.value.toLowerCase().contains(needle),
-                  ),
+                  (!widget.exactProjectOnly || _isExactProjectGroup(group)) &&
+                  (needle.isEmpty ||
+                      group.name.toLowerCase().contains(needle) ||
+                      group.rules.any(
+                        (TriggerRule rule) =>
+                            rule.value.toLowerCase().contains(needle),
+                      )),
             )
             .toList()
           ..sort(
@@ -82,12 +95,21 @@ final class _TriggerGroupPickerDialogState
       width: 540,
       maxHeight: 620,
       header: DesktopDialogHeader(
-        title: Text(context.localized('Trigger groups', '选择触发组')),
+        title: Text(
+          widget.exactProjectOnly
+              ? context.localized('Project installation scope', '项目安装范围')
+              : context.localized('Trigger groups', '选择触发组'),
+        ),
         subtitle: Text(
-          context.localized(
-            'Resources become available when a selected group matches this project or Agent source.',
-            '所选触发组命中当前项目或 Agent 来源时，资源才会生效。',
-          ),
+          widget.exactProjectOnly
+              ? context.localized(
+                  'Only exact, existing project directories can receive a native Skill.',
+                  '只有精确且已存在的项目目录才能接收原生 Skill。',
+                )
+              : context.localized(
+                  'Resources become available when a selected group matches this project or Agent source.',
+                  '所选触发组命中当前项目或 Agent 来源时，资源才会生效。',
+                ),
         ),
         onClose: () => Navigator.pop(context),
         closeTooltip: context.localized('Close', '关闭'),
@@ -114,7 +136,15 @@ final class _TriggerGroupPickerDialogState
                     padding: const EdgeInsets.symmetric(vertical: 30),
                     child: Text(
                       _groups.isEmpty
-                          ? context.localized('No trigger groups yet', '还没有触发组')
+                          ? widget.exactProjectOnly
+                                ? context.localized(
+                                    'No project groups yet',
+                                    '还没有项目组',
+                                  )
+                                : context.localized(
+                                    'No trigger groups yet',
+                                    '还没有触发组',
+                                  )
                           : context.localized(
                               'No matching trigger groups',
                               '没有匹配的触发组',
@@ -228,7 +258,9 @@ final class _TriggerGroupPickerDialogState
             key: const Key('create-trigger-group'),
             onPressed: _create,
             icon: const Icon(Icons.add_rounded, size: 17),
-            label: context.localized('New trigger group', '新建触发组'),
+            label: widget.exactProjectOnly
+                ? context.localized('New project group', '新建项目组')
+                : context.localized('New trigger group', '新建触发组'),
             tone: DesktopActionTone.soft,
             compact: true,
           ),
@@ -253,7 +285,9 @@ final class _TriggerGroupPickerDialogState
     final TriggerGroupEditResult? result =
         await showDialog<TriggerGroupEditResult>(
           context: context,
-          builder: (BuildContext context) => const TriggerGroupEditorDialog(),
+          builder: (BuildContext context) => TriggerGroupEditorDialog(
+            exactProjectOnly: widget.exactProjectOnly,
+          ),
         );
     if (result == null || result.delete) {
       return;
@@ -275,8 +309,10 @@ final class _TriggerGroupPickerDialogState
     final TriggerGroupEditResult? result =
         await showDialog<TriggerGroupEditResult>(
           context: context,
-          builder: (BuildContext context) =>
-              TriggerGroupEditorDialog(group: group),
+          builder: (BuildContext context) => TriggerGroupEditorDialog(
+            group: group,
+            exactProjectOnly: widget.exactProjectOnly,
+          ),
         );
     if (result == null) {
       return;
@@ -361,9 +397,14 @@ final class TriggerGroupEditResult {
 }
 
 final class TriggerGroupEditorDialog extends StatefulWidget {
-  const TriggerGroupEditorDialog({this.group, super.key});
+  const TriggerGroupEditorDialog({
+    this.group,
+    this.exactProjectOnly = false,
+    super.key,
+  });
 
   final TriggerGroup? group;
+  final bool exactProjectOnly;
 
   @override
   State<TriggerGroupEditorDialog> createState() =>
@@ -385,7 +426,9 @@ final class _TriggerGroupEditorDialogState
         <TriggerRule>[
           TriggerRule(
             field: TriggerRuleField.projectPath,
-            operator: TriggerRuleOperator.contains,
+            operator: widget.exactProjectOnly
+                ? TriggerRuleOperator.equals
+                : TriggerRuleOperator.contains,
             value: '',
           ),
         ];
@@ -412,15 +455,24 @@ final class _TriggerGroupEditorDialogState
       maxHeight: 680,
       header: DesktopDialogHeader(
         title: Text(
-          widget.group == null
+          widget.exactProjectOnly
+              ? widget.group == null
+                    ? context.localized('New project group', '新建项目组')
+                    : context.localized('Edit project group', '编辑项目组')
+              : widget.group == null
               ? context.localized('New trigger group', '新建触发组')
               : context.localized('Edit trigger group', '编辑触发组'),
         ),
         subtitle: Text(
-          context.localized(
-            'Match a project path, repository, or Agent source.',
-            '按项目目录、仓库地址或 Agent 来源设置触发条件。',
-          ),
+          widget.exactProjectOnly
+              ? context.localized(
+                  'Add one or more existing absolute project directories.',
+                  '添加一个或多个已存在的绝对项目目录。',
+                )
+              : context.localized(
+                  'Match a project path, repository, or Agent source.',
+                  '按项目目录、仓库地址或 Agent 来源设置触发条件。',
+                ),
         ),
         onClose: () => Navigator.pop(context),
         closeTooltip: context.localized('Close', '关闭'),
@@ -448,8 +500,10 @@ final class _TriggerGroupEditorDialogState
               Expanded(
                 child: _DialogLabel(
                   text: context.localized(
-                    'Match any of these rules',
-                    '满足任一规则时触发',
+                    widget.exactProjectOnly
+                        ? 'Install in any of these projects'
+                        : 'Match any of these rules',
+                    widget.exactProjectOnly ? '安装到以下任一项目' : '满足任一规则时触发',
                   ),
                 ),
               ),
@@ -457,7 +511,9 @@ final class _TriggerGroupEditorDialogState
                 key: const Key('add-trigger-rule'),
                 onPressed: _addRule,
                 icon: const Icon(Icons.add_rounded, size: 16),
-                label: context.localized('Add rule', '添加规则'),
+                label: widget.exactProjectOnly
+                    ? context.localized('Add project', '添加项目')
+                    : context.localized('Add rule', '添加规则'),
                 tone: DesktopActionTone.soft,
                 compact: true,
               ),
@@ -478,6 +534,7 @@ final class _TriggerGroupEditorDialogState
                       child: _TriggerRuleRow(
                         key: ValueKey<_EditableTriggerRule>(rule),
                         rule: rule,
+                        exactProjectOnly: widget.exactProjectOnly,
                         canDelete: _rules.length > 1,
                         onChanged: () => setState(() => _error = null),
                         onDelete: () => _removeRule(rule),
@@ -534,7 +591,9 @@ final class _TriggerGroupEditorDialogState
       _rules.add(
         _EditableTriggerRule(
           field: TriggerRuleField.projectPath,
-          operator: TriggerRuleOperator.contains,
+          operator: widget.exactProjectOnly
+              ? TriggerRuleOperator.equals
+              : TriggerRuleOperator.contains,
         ),
       );
     });
@@ -574,6 +633,22 @@ final class _TriggerGroupEditorDialogState
       );
       return;
     }
+    if (widget.exactProjectOnly &&
+        rules.any(
+          (TriggerRule rule) =>
+              rule.field != TriggerRuleField.projectPath ||
+              rule.operator != TriggerRuleOperator.equals ||
+              !path.isAbsolute(path.normalize(rule.value)) ||
+              !Directory(path.normalize(rule.value)).existsSync(),
+        )) {
+      setState(
+        () => _error = context.localized(
+          'Each project must be an existing absolute directory.',
+          '每个项目都必须是已存在的绝对目录。',
+        ),
+      );
+      return;
+    }
     Navigator.pop(context, TriggerGroupEditResult(name: name, rules: rules));
   }
 }
@@ -600,6 +675,7 @@ final class _EditableTriggerRule {
 final class _TriggerRuleRow extends StatelessWidget {
   const _TriggerRuleRow({
     required this.rule,
+    required this.exactProjectOnly,
     required this.canDelete,
     required this.onChanged,
     required this.onDelete,
@@ -607,6 +683,7 @@ final class _TriggerRuleRow extends StatelessWidget {
   });
 
   final _EditableTriggerRule rule;
+  final bool exactProjectOnly;
   final bool canDelete;
   final VoidCallback onChanged;
   final VoidCallback onDelete;
@@ -622,51 +699,64 @@ final class _TriggerRuleRow extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          Expanded(
-            flex: 4,
-            child: DesktopSelectField<TriggerRuleField>(
-              value: rule.field,
-              items: <DesktopSelectItem<TriggerRuleField>>[
-                DesktopSelectItem<TriggerRuleField>(
-                  value: TriggerRuleField.projectPath,
-                  label: context.localized('Project directory', '项目目录'),
+          if (exactProjectOnly)
+            SizedBox(
+              width: 150,
+              child: Text(
+                context.localized('Project directory · Equals', '项目目录 · 等于'),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
                 ),
-                DesktopSelectItem<TriggerRuleField>(
-                  value: TriggerRuleField.repositoryUrl,
-                  label: context.localized('Repository address', '仓库地址'),
-                ),
-                DesktopSelectItem<TriggerRuleField>(
-                  value: TriggerRuleField.source,
-                  label: context.localized('Agent source', 'Agent 来源'),
-                ),
-              ],
-              onChanged: (TriggerRuleField value) {
-                rule.field = value;
-                onChanged();
-              },
+              ),
+            )
+          else ...<Widget>[
+            Expanded(
+              flex: 4,
+              child: DesktopSelectField<TriggerRuleField>(
+                value: rule.field,
+                items: <DesktopSelectItem<TriggerRuleField>>[
+                  DesktopSelectItem<TriggerRuleField>(
+                    value: TriggerRuleField.projectPath,
+                    label: context.localized('Project directory', '项目目录'),
+                  ),
+                  DesktopSelectItem<TriggerRuleField>(
+                    value: TriggerRuleField.repositoryUrl,
+                    label: context.localized('Repository address', '仓库地址'),
+                  ),
+                  DesktopSelectItem<TriggerRuleField>(
+                    value: TriggerRuleField.source,
+                    label: context.localized('Agent source', 'Agent 来源'),
+                  ),
+                ],
+                onChanged: (TriggerRuleField value) {
+                  rule.field = value;
+                  onChanged();
+                },
+              ),
             ),
-          ),
-          const SizedBox(width: 7),
-          Expanded(
-            flex: 3,
-            child: DesktopSelectField<TriggerRuleOperator>(
-              value: rule.operator,
-              items: <DesktopSelectItem<TriggerRuleOperator>>[
-                DesktopSelectItem<TriggerRuleOperator>(
-                  value: TriggerRuleOperator.equals,
-                  label: context.localized('Equals', '等于'),
-                ),
-                DesktopSelectItem<TriggerRuleOperator>(
-                  value: TriggerRuleOperator.contains,
-                  label: context.localized('Contains', '包含'),
-                ),
-              ],
-              onChanged: (TriggerRuleOperator value) {
-                rule.operator = value;
-                onChanged();
-              },
+            const SizedBox(width: 7),
+            Expanded(
+              flex: 3,
+              child: DesktopSelectField<TriggerRuleOperator>(
+                value: rule.operator,
+                items: <DesktopSelectItem<TriggerRuleOperator>>[
+                  DesktopSelectItem<TriggerRuleOperator>(
+                    value: TriggerRuleOperator.equals,
+                    label: context.localized('Equals', '等于'),
+                  ),
+                  DesktopSelectItem<TriggerRuleOperator>(
+                    value: TriggerRuleOperator.contains,
+                    label: context.localized('Contains', '包含'),
+                  ),
+                ],
+                onChanged: (TriggerRuleOperator value) {
+                  rule.operator = value;
+                  onChanged();
+                },
+              ),
             ),
-          ),
+          ],
           const SizedBox(width: 7),
           Expanded(
             flex: 6,
@@ -694,6 +784,16 @@ final class _TriggerRuleRow extends StatelessWidget {
     );
   }
 }
+
+bool _isExactProjectGroup(TriggerGroup group) =>
+    group.rules.isNotEmpty &&
+    group.rules.every(
+      (TriggerRule rule) =>
+          rule.field == TriggerRuleField.projectPath &&
+          rule.operator == TriggerRuleOperator.equals &&
+          path.isAbsolute(path.normalize(rule.value)) &&
+          Directory(path.normalize(rule.value)).existsSync(),
+    );
 
 final class _DialogLabel extends StatelessWidget {
   const _DialogLabel({required this.text});

@@ -4,10 +4,12 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
+import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
@@ -18,10 +20,12 @@ import 'package:dingdong/features/issue_center/ui/issue_center_screen.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
+import 'package:dingdong/features/library/ui/resource_editor.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -36,6 +40,7 @@ class ResourceManagerApp extends StatefulWidget {
     required this.windowController,
     this.agentAdapterController,
     this.initialDestination = ResourceManagerDestination.resources,
+    this.openClipboardCategoriesOnLaunch = false,
     this.resourceManagerLauncher,
     this.agentConversationLauncher,
     this.desktopContextMenuGateway,
@@ -52,6 +57,7 @@ class ResourceManagerApp extends StatefulWidget {
   final AppSettings settings;
   final WindowController windowController;
   final ResourceManagerDestination initialDestination;
+  final bool openClipboardCategoriesOnLaunch;
   final ResourceManagerLauncher? resourceManagerLauncher;
   final AgentConversationLauncher? agentConversationLauncher;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
@@ -64,12 +70,18 @@ class ResourceManagerApp extends StatefulWidget {
 
 class _ResourceManagerAppState extends State<ResourceManagerApp> {
   int _selectedIndex = 0;
+  int _clipboardCategoryRequestRevision = 0;
+  final GlobalKey<LibraryScreenState> _libraryScreenKey =
+      GlobalKey<LibraryScreenState>();
   late final AgentConversationLauncher _agentConversationLauncher;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialDestination.index;
+    _clipboardCategoryRequestRevision = widget.openClipboardCategoriesOnLaunch
+        ? 1
+        : 0;
     _agentConversationLauncher =
         widget.agentConversationLauncher ?? NativeAgentConversationLauncher();
     _preflightActivityTargets();
@@ -88,24 +100,30 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
             if (destination == ResourceManagerDestination.issues) {
               await _loadHostIssues();
             }
-            _selectDestination(destination);
+            await _selectDestination(destination);
             await windowManager.focus();
           case 'clipboard_changed':
             widget.clipboardViewModel.load();
+          case manageClipboardCategoriesMethod:
+            await _selectDestination(ResourceManagerDestination.clipboard);
+            if (mounted &&
+                _selectedIndex == ResourceManagerDestination.clipboard.index) {
+              setState(() => _clipboardCategoryRequestRevision += 1);
+            }
           case 'edit_resource':
             final Object? arguments = call.arguments;
             final String? id = arguments is Map
                 ? arguments['id'] as String?
                 : null;
-            if (id != null) {
+            if (id != null && await _confirmDiscardLibraryChanges()) {
               _selectResource(id);
             }
           case 'create_resource':
             final ResourceManagerCreateRequest? request =
                 ResourceManagerCreateRequest.fromJson(call.arguments);
-            if (request != null) {
+            if (request != null && await _confirmDiscardLibraryChanges()) {
               await widget.viewModel.load();
-              _selectDestination(ResourceManagerDestination.resources);
+              await _selectDestination(ResourceManagerDestination.resources);
               widget.viewModel.startCreating(
                 type: request.type,
                 title: request.title,
@@ -133,13 +151,26 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
     );
   }
 
+  Future<bool> _confirmDiscardLibraryChanges() async {
+    final LibraryScreenState? library = _libraryScreenKey.currentState;
+    return library == null || await library.confirmDiscardChanges();
+  }
+
   @override
   void dispose() {
     widget.agentAdapterController?.dispose();
     super.dispose();
   }
 
-  void _selectDestination(ResourceManagerDestination destination) {
+  Future<void> _selectDestination(
+    ResourceManagerDestination destination,
+  ) async {
+    if (destination.index != _selectedIndex &&
+        _selectedIndex == ResourceManagerDestination.resources.index) {
+      if (!await _confirmDiscardLibraryChanges()) {
+        return;
+      }
+    }
     if (destination == ResourceManagerDestination.issues) {
       unawaited(_loadHostIssues());
     }
@@ -219,14 +250,20 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
           child: Scaffold(
             key: const Key('resource-manager-shell'),
             body: AnimatedBuilder(
-              animation: widget.issueCenterController,
+              animation: Listenable.merge(<Listenable>[
+                widget.issueCenterController,
+                if (widget.agentAdapterController != null)
+                  widget.agentAdapterController!,
+              ]),
               builder: (BuildContext context, _) => Row(
                 children: <Widget>[
                   _WorkspaceSidebar(
                     selectedIndex: _selectedIndex,
                     issueCount: widget.issueCenterController.count,
-                    onSelected: (int value) => _selectDestination(
-                      ResourceManagerDestination.values[value],
+                    onSelected: (int value) => unawaited(
+                      _selectDestination(
+                        ResourceManagerDestination.values[value],
+                      ),
                     ),
                   ),
                   const VerticalDivider(width: 1),
@@ -234,7 +271,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
                     child: switch (ResourceManagerDestination
                         .values[_selectedIndex]) {
                       ResourceManagerDestination.resources => LibraryScreen(
+                        key: _libraryScreenKey,
                         viewModel: widget.viewModel,
+                        skillAgents: _skillDeliveryAgents(),
                         transferGateway: FileSelectorLibraryTransferGateway(),
                         contextMenuGateway: widget.desktopContextMenuGateway,
                         onOpenExternalLink: widget.onOpenExternalLink,
@@ -245,6 +284,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
                           contextMenuGateway: widget.desktopContextMenuGateway,
                           resourceManagerLauncher:
                               widget.resourceManagerLauncher,
+                          categoryManagementRequestRevision:
+                              _clipboardCategoryRequestRevision,
                         ),
                       ResourceManagerDestination.recentAgents =>
                         AgentActivityManagerScreen(
@@ -271,6 +312,28 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
       ),
     );
   }
+
+  List<SkillDeliveryAgentOption> _skillDeliveryAgents() {
+    final List<SkillDeliveryAgentOption> result =
+        (widget.agentAdapterController?.entries ?? const <AgentAdapterEntry>[])
+            .where(
+              (AgentAdapterEntry entry) =>
+                  entry.isValid &&
+                  entry.adapter!.globalSkillPath != null &&
+                  entry.adapter!.projectSkillPath != null,
+            )
+            .map(
+              (AgentAdapterEntry entry) => SkillDeliveryAgentOption(
+                id: entry.id,
+                label: entry.displayName,
+                available: entry.installed,
+              ),
+            )
+            .toList(growable: false);
+    return widget.agentAdapterController == null
+        ? ResourceEditor.defaultSkillDeliveryAgents
+        : result;
+  }
 }
 
 String _localized(BuildContext context, String english, String chinese) =>
@@ -294,50 +357,42 @@ class _WorkspaceSidebar extends StatelessWidget {
       key: const Key('resource-manager-navigation'),
       color: colors.surfaceContainerLowest,
       child: SizedBox(
-        width: 184,
+        width: 176,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 18, 10, 12),
+          padding: const EdgeInsets.fromLTRB(10, 20, 10, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: 17,
-                      color: colors.onSurface,
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Text(
-                        _localized(context, 'Resource manager', '资源管理'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
-                  _localized(context, 'WORKSPACE', '工作区'),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                    letterSpacing: 0.5,
+                  'DingDong',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
                   ),
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  _localized(context, 'WORKSPACE', '管理'),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.45,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               _SidebarItem(
                 key: const Key('resource-manager-nav-resources'),
-                icon: Icons.layers_outlined,
+                symbol: 'library',
                 label: _localized(context, 'Resources', '资源'),
                 selected:
                     selectedIndex == ResourceManagerDestination.resources.index,
@@ -347,7 +402,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               const SizedBox(height: 3),
               _SidebarItem(
                 key: const Key('resource-manager-nav-clipboard'),
-                icon: Icons.content_paste_outlined,
+                symbol: 'clipboard',
                 label: _localized(context, 'Clipboard', '剪贴板'),
                 selected:
                     selectedIndex == ResourceManagerDestination.clipboard.index,
@@ -405,9 +460,10 @@ class _WorkspaceSidebar extends StatelessWidget {
   }
 }
 
-class _SidebarItem extends StatelessWidget {
+class _SidebarItem extends StatefulWidget {
   const _SidebarItem({
-    required this.icon,
+    this.icon,
+    this.symbol,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -415,67 +471,131 @@ class _SidebarItem extends StatelessWidget {
     super.key,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? symbol;
   final String label;
   final bool selected;
   final VoidCallback onTap;
   final int badgeCount;
 
   @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
+  bool _hovered = false;
+  bool _focused = false;
+
+  void _activate() => widget.onTap();
+
+  @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    return Material(
-      color: selected
-          ? colors.primary.withValues(alpha: 0.09)
-          : Colors.transparent,
-      borderRadius: BorderRadius.circular(5),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(5),
-        onTap: onTap,
-        child: SizedBox(
-          height: 32,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9),
-            child: Row(
-              children: <Widget>[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: selected ? colors.primary : colors.onSurfaceVariant,
+    final bool selected = widget.selected;
+    final Color fill = selected
+        ? colors.primary.withValues(alpha: 0.085)
+        : (_hovered || _focused)
+        ? colors.onSurface.withValues(alpha: 0.038)
+        : Colors.transparent;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: widget.label,
+      onTap: _activate,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: FocusableActionDetector(
+          mouseCursor: SystemMouseCursors.click,
+          shortcuts: const <ShortcutActivator, Intent>{
+            SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+            SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+          },
+          actions: <Type, Action<Intent>>{
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) {
+                _activate();
+                return null;
+              },
+            ),
+          },
+          onShowFocusHighlight: (bool value) {
+            if (_focused != value) setState(() => _focused = value);
+          },
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _activate,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 9),
+              decoration: BoxDecoration(
+                color: fill,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: _focused
+                      ? colors.primary.withValues(alpha: 0.5)
+                      : Colors.transparent,
                 ),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              child: Row(
+                children: <Widget>[
+                  if (widget.symbol != null)
+                    PopupSymbolIcon(
+                      widget.symbol!,
+                      size: 16,
+                      color: selected
+                          ? colors.primary
+                          : colors.onSurfaceVariant,
+                    )
+                  else
+                    Icon(
+                      widget.icon,
+                      size: 16,
+                      color: selected
+                          ? colors.primary
+                          : colors.onSurfaceVariant,
                     ),
-                  ),
-                ),
-                if (badgeCount > 0)
-                  Container(
-                    key: const Key('resource-manager-issue-count'),
-                    constraints: const BoxConstraints(minWidth: 18),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBE9E7),
-                      borderRadius: BorderRadius.circular(9),
-                    ),
+                  const SizedBox(width: 9),
+                  Expanded(
                     child: Text(
-                      badgeCount > 99 ? '99+' : '$badgeCount',
-                      style: const TextStyle(
-                        color: Color(0xFFB93A32),
-                        fontSize: 9,
-                        height: 1.2,
-                        fontWeight: FontWeight.w700,
+                      widget.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: selected
+                            ? colors.onSurface
+                            : colors.onSurfaceVariant,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     ),
                   ),
-              ],
+                  if (widget.badgeCount > 0)
+                    Container(
+                      key: const Key('resource-manager-issue-count'),
+                      constraints: const BoxConstraints(minWidth: 18),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: colors.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: Text(
+                        widget.badgeCount > 99 ? '99+' : '${widget.badgeCount}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: colors.error,
+                          fontSize: 9,
+                          height: 1.2,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

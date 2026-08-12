@@ -404,10 +404,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.3.8',
-        latestBuild: '48',
+        latestVersion: '1.4.1',
+        latestBuild: '49',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.3.8'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.1'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -423,11 +423,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.3.8');
+    expect(model.releaseStatus.latestVersion, '1.4.1');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.3.8'),
+      Uri.parse('https://example.com/dingdong/releases/1.4.1'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -514,6 +514,29 @@ void main() {
       expect(model.mcpSetupPrompt, contains('Preserve every existing entry'));
       expect(model.mcpSetupPrompt, contains('reload the client'));
       expect(model.mcpSetupPrompt, contains('dingdong_notify'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('exactly one per-Agent delivery mode'),
+      );
+      expect(
+        model.mcpSetupPrompt,
+        contains('dynamic, nativeUser, or nativeProject'),
+      );
+      expect(model.mcpSetupPrompt, contains('master enabled switch'));
+      expect(model.mcpSetupPrompt, contains('dingdong_set_skill_delivery'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('automatically discover local Skill changes'),
+      );
+      expect(model.mcpSetupPrompt, contains('start a new Agent task'));
+      expect(model.mcpSetupPrompt, contains('restart the Agent only if'));
+      expect(model.mcpSetupPrompt, contains('duplicate-name conflict'));
+      expect(model.mcpSetupPrompt, contains('Hook switch is separate'));
+      expect(model.mcpSetupPrompt, contains('exact current definition'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('matching Hooks from every loaded source all run'),
+      );
       expect(model.mcpSetupPrompt, contains('required instruction'));
       expect(
         model.mcpSetupPrompt,
@@ -567,6 +590,20 @@ void main() {
       expect(model.mcpSetupPrompt, isNot(contains('不要介绍 DingDong')));
       expect(model.mcpSetupPrompt, contains('立即调用一次'));
       expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
+      expect(model.mcpSetupPrompt, contains('每个 Agent 恰好一种交付模式'));
+      expect(
+        model.mcpSetupPrompt,
+        contains('dynamic、nativeUser 或 nativeProject'),
+      );
+      expect(model.mcpSetupPrompt, contains('总启用开关'));
+      expect(model.mcpSetupPrompt, contains('dingdong_set_skill_delivery'));
+      expect(model.mcpSetupPrompt, contains('自动发现本地 Skill 变化'));
+      expect(model.mcpSetupPrompt, contains('新建 Agent 任务'));
+      expect(model.mcpSetupPrompt, contains('仍看不到时才重启 Agent'));
+      expect(model.mcpSetupPrompt, contains('同名冲突'));
+      expect(model.mcpSetupPrompt, contains('Hook 开关独立'));
+      expect(model.mcpSetupPrompt, contains('当前精确定义'));
+      expect(model.mcpSetupPrompt, contains('所有已加载来源中命中的 Hook 都会运行'));
       expect(model.mcpSetupPrompt, contains('必须自动应用的指令'));
       expect(model.mcpSetupPrompt, contains('Skill 候选不是指令'));
       expect(model.mcpSetupPrompt, contains('MCP 摘要不是指令'));

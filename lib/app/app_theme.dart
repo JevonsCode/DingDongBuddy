@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +16,7 @@ final class AppTheme {
 
   static ThemeData dark() => _build(
     brightness: Brightness.dark,
-    surface: const Color(0xFF182126),
+    surface: PopupStyle.dark.background,
     seed: const Color(0xFF7EB5CF),
   );
 
@@ -28,34 +29,34 @@ final class AppTheme {
     final ColorScheme colors = base.colorScheme.copyWith(
       primary: isDark ? const Color(0xFF8CB9CF) : const Color(0xFF2F6F8F),
       onPrimary: isDark ? const Color(0xFF10242D) : Colors.white,
-      surface: isDark ? const Color(0xFF182126) : Colors.white,
-      surfaceDim: isDark ? const Color(0xFF182126) : const Color(0xFFF7F7F5),
-      surfaceBright: isDark ? const Color(0xFF243038) : Colors.white,
+      surface: isDark ? PopupStyle.dark.background : Colors.white,
+      surfaceDim: isDark ? PopupStyle.dark.background : const Color(0xFFF7F7F5),
+      surfaceBright: isDark ? PopupStyle.dark.surface : Colors.white,
       surfaceContainerLowest: isDark
-          ? const Color(0xFF1B252B)
+          ? const Color(0xFF1D282E)
           : const Color(0xFFF7F7F5),
       surfaceContainerLow: isDark
-          ? const Color(0xFF202B32)
+          ? PopupStyle.dark.surfaceSoft
           : const Color(0xFFF4F4F2),
       surfaceContainer: isDark
-          ? const Color(0xFF253139)
+          ? PopupStyle.dark.surface
           : const Color(0xFFF1F1EF),
       surfaceContainerHigh: isDark
-          ? const Color(0xFF2B3942)
+          ? PopupStyle.dark.field
           : const Color(0xFFEDEDEB),
       surfaceContainerHighest: isDark
-          ? const Color(0xFF32424C)
+          ? const Color(0xFF394D58)
           : const Color(0xFFE6E6E3),
       onSurface: isDark ? const Color(0xFFEDF2F4) : const Color(0xFF37352F),
       onSurfaceVariant: isDark
           ? const Color(0xFFABB8BE)
-          : const Color(0xFF787774),
-      outline: isDark ? const Color(0xFF52626B) : const Color(0xFFD0D0CC),
+          : const Color(0xFF6B6A67),
+      outline: isDark ? const Color(0xFF536773) : const Color(0xFFD0D0CC),
       outlineVariant: isDark
-          ? const Color(0xFF34434C)
+          ? const Color(0xFF3B4D57)
           : const Color(0xFFE9E9E7),
       secondaryContainer: isDark
-          ? const Color(0xFF2B3942)
+          ? PopupStyle.dark.field
           : const Color(0xFFEDEDEB),
       onSecondaryContainer: isDark
           ? const Color(0xFFEDF2F4)
@@ -96,9 +97,7 @@ final class AppTheme {
         focusedBorder: inputBorder.copyWith(
           borderSide: BorderSide(color: colors.primary, width: 1.35),
         ),
-        hintStyle: text.bodyMedium?.copyWith(
-          color: colors.onSurfaceVariant.withValues(alpha: 0.72),
-        ),
+        hintStyle: text.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 11,
           vertical: 10,

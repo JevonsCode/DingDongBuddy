@@ -142,15 +142,27 @@ void main() {
     expect(await store.load(), isEmpty);
   });
 
-  test('bundled Skill documents direct strict project installation', () async {
+  test('bundled Skill documents per-Agent Skill delivery', () async {
     final String document = await _loadConfigureSkill();
 
     expect(document, contains('dingdong_install_skill'));
+    expect(document, contains('dingdong_set_skill_delivery'));
+    expect(document, contains('dingdong_get_skill_deployments'));
+    expect(document, contains('dingdong_reconcile_skill'));
     expect(document, contains('dingdong_upsert_trigger_group'));
     expect(document, contains('dingdong_bind_resource_scope'));
-    expect(document, contains('strictProjectSkill'));
+    expect(document, isNot(contains('strictProjectSkill')));
+    expect(document, contains('`dynamic`, `nativeUser`, or `nativeProject`'));
+    expect(document, contains('`mode: "nativeProject"`'));
+    expect(document, contains('`projectPaths`'));
     expect(document, contains('exact absolute project path'));
-    expect(document, contains('authoritative complete catalog'));
+    expect(document, contains('dynamic Skill catalog'));
+    expect(document, contains('discover native Skill changes automatically'));
+    expect(
+      document,
+      contains('restart the Agent only if the Skill is missing'),
+    );
+    expect(document, isNot(contains('reload required')));
     expect(
       document,
       contains(
@@ -319,6 +331,36 @@ void main() {
       );
     },
   );
+
+  test('version eleven refreshes native Skill delivery instructions', () async {
+    final DateTime originalTime = DateTime.utc(2026, 8, 1);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      builtInDingDongConfigureSkill(
+        'dynamic-only instructions',
+        originalTime,
+      ).copyWith(enabled: false, hideInAgentConversation: true),
+    ]);
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 10;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      now: () => DateTime.utc(2026, 8, 12),
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isTrue);
+
+    final Resource skill = (await store.load()).single;
+    expect(skill.content, await _loadConfigureSkill());
+    expect(skill.enabled, isFalse);
+    expect(skill.hideInAgentConversation, isTrue);
+    expect(skill.updatedAt, DateTime.utc(2026, 8, 12));
+    expect(
+      preferences.values[BuiltInResourceInstaller.preferenceKey],
+      BuiltInResourceInstaller.currentVersion,
+    );
+  });
 }
 
 Future<String> _loadConfigureSkill() =>

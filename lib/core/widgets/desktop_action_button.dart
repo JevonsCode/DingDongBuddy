@@ -18,6 +18,10 @@ class DesktopActionButton extends StatelessWidget {
     this.minWidth = 0,
     this.height,
     this.style,
+    this.tooltip,
+    this.semanticLabel,
+    this.focusNode,
+    this.autofocus = false,
     Key? key,
   }) : _buttonKey = key,
        assert(label != null || child != null),
@@ -34,6 +38,10 @@ class DesktopActionButton extends StatelessWidget {
   final double minWidth;
   final double? height;
   final ButtonStyle? style;
+  final String? tooltip;
+  final String? semanticLabel;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   /// Style helper for custom flat selector rows that still use the shared
   /// button surface and no-halo interaction contract.
@@ -75,7 +83,7 @@ class DesktopActionButton extends StatelessWidget {
     final double resolvedHeight =
         height ??
         style?.minimumSize?.resolve(const <WidgetState>{})?.height ??
-        (compact ? 32 : 36);
+        (compact ? 30 : 34);
     final ButtonStyle baseStyle = ButtonStyle(
       animationDuration: Duration.zero,
       splashFactory: NoSplash.splashFactory,
@@ -91,12 +99,19 @@ class DesktopActionButton extends StatelessWidget {
         EdgeInsets.symmetric(horizontal: compact ? 9 : 11),
       ),
       shape: WidgetStatePropertyAll<OutlinedBorder>(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
       ),
-      side: const WidgetStatePropertyAll<BorderSide>(BorderSide.none),
-      foregroundColor: WidgetStatePropertyAll<Color>(
-        enabled ? palette.foreground : palette.disabledForeground,
-      ),
+      side: WidgetStateProperty.resolveWith<BorderSide>((states) {
+        if (enabled && states.contains(WidgetState.focused)) {
+          return BorderSide(color: palette.focusRing, width: 1.5);
+        }
+        return palette.border == null
+            ? BorderSide.none
+            : BorderSide(color: palette.border!);
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        return enabled ? palette.foreground : palette.disabledForeground;
+      }),
       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
         if (!enabled) return palette.disabledBackground;
         if (states.contains(WidgetState.pressed)) return palette.pressed;
@@ -107,7 +122,7 @@ class DesktopActionButton extends StatelessWidget {
         return palette.background;
       }),
       textStyle: const WidgetStatePropertyAll<TextStyle>(
-        TextStyle(fontSize: 12, fontWeight: FontWeight.w700, height: 1.1),
+        TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.1),
       ),
       mouseCursor: WidgetStatePropertyAll<MouseCursor>(
         enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
@@ -158,16 +173,39 @@ class DesktopActionButton extends StatelessWidget {
     // ButtonStyle.merge keeps the receiver's non-null values. The caller's
     // style must therefore be the receiver, otherwise custom tab/selector
     // surfaces silently lose their foreground, background, border and size.
-    final ButtonStyle resolvedStyle = style?.merge(baseStyle) ?? baseStyle;
-    return SizedBox(
+    final ButtonStyle resolvedStyle = (style?.merge(baseStyle) ?? baseStyle)
+        .copyWith(
+          splashFactory: NoSplash.splashFactory,
+          overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
+        );
+    Widget result = SizedBox(
       height: resolvedHeight,
       child: FilledButton(
         key: _buttonKey,
         onPressed: onPressed,
+        focusNode: focusNode,
+        autofocus: autofocus,
         style: resolvedStyle,
         child: buttonChild,
       ),
     );
+    if (semanticLabel != null) {
+      result = Semantics(
+        container: true,
+        button: true,
+        enabled: enabled,
+        label: semanticLabel,
+        child: ExcludeSemantics(child: result),
+      );
+    }
+    if (tooltip != null && tooltip!.isNotEmpty) {
+      result = Tooltip(
+        message: tooltip!,
+        excludeFromSemantics: semanticLabel != null,
+        child: result,
+      );
+    }
+    return result;
   }
 }
 
@@ -176,7 +214,7 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
     alpha: 0.42,
   );
   final Color disabledBackground = colors.surfaceContainerHigh.withValues(
-    alpha: 0.5,
+    alpha: 0.48,
   );
   return switch (tone) {
     DesktopActionTone.primary => _DesktopActionPalette(
@@ -187,9 +225,11 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
         colors.primary,
       ),
       pressed: Color.alphaBlend(
-        colors.onPrimary.withValues(alpha: 0.14),
+        colors.onPrimary.withValues(alpha: 0.18),
         colors.primary,
       ),
+      border: null,
+      focusRing: colors.onPrimary.withValues(alpha: 0.8),
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
@@ -197,15 +237,19 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
       foreground: colors.primary,
       background: colors.primary.withValues(alpha: 0.1),
       hovered: colors.primary.withValues(alpha: 0.15),
-      pressed: colors.primary.withValues(alpha: 0.2),
+      pressed: colors.primary.withValues(alpha: 0.22),
+      border: colors.primary.withValues(alpha: 0.2),
+      focusRing: colors.primary.withValues(alpha: 0.78),
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
     DesktopActionTone.neutral => _DesktopActionPalette(
-      foreground: colors.onSurfaceVariant,
-      background: colors.surfaceContainerHigh.withValues(alpha: 0.74),
-      hovered: colors.surfaceContainerHighest,
+      foreground: colors.onSurface,
+      background: colors.surfaceContainerHigh.withValues(alpha: 0.68),
+      hovered: colors.surfaceContainerHigh,
       pressed: colors.surfaceContainerHighest,
+      border: colors.outlineVariant.withValues(alpha: 0.58),
+      focusRing: colors.primary.withValues(alpha: 0.78),
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
@@ -217,9 +261,11 @@ _DesktopActionPalette _palette(ColorScheme colors, DesktopActionTone tone) {
         colors.error,
       ),
       pressed: Color.alphaBlend(
-        colors.onError.withValues(alpha: 0.14),
+        colors.onError.withValues(alpha: 0.18),
         colors.error,
       ),
+      border: null,
+      focusRing: colors.onError.withValues(alpha: 0.8),
       disabledForeground: disabledForeground,
       disabledBackground: disabledBackground,
     ),
@@ -232,6 +278,8 @@ final class _DesktopActionPalette {
     required this.background,
     required this.hovered,
     required this.pressed,
+    required this.border,
+    required this.focusRing,
     required this.disabledForeground,
     required this.disabledBackground,
   });
@@ -240,6 +288,8 @@ final class _DesktopActionPalette {
   final Color background;
   final Color hovered;
   final Color pressed;
+  final Color? border;
+  final Color focusRing;
   final Color disabledForeground;
   final Color disabledBackground;
 }

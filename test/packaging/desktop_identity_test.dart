@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.3.7 from pubspec', () {
+  test('desktop hosts consume application version 1.4.0 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,26 +77,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.3.7+47'));
+    expect(pubspec, contains('version: 1.4.0+48'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.3.7';"),
+      contains("const String currentAppVersion = '1.4.0';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '47';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '48';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.3.7'"),
+      contains("'version': '1.4.0'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.3.7'"),
+      contains("'version': '1.4.0'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,3,7,47'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.3.7"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,4,0,48'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.4.0"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -243,9 +243,10 @@ void main() {
       expect(prompt, contains('Skill'));
       expect(prompt, contains('MCP'));
       expect(prompt, contains('dingdong_install_skill'));
-      expect(prompt, contains('dingdong_render_conversation_footer'));
+      expect(prompt, contains('conversation.line'));
+      expect(prompt, isNot(contains('dingdong_render_conversation_footer')));
       expect(prompt, contains('conversation.presentations.ansi.line'));
-      expect(prompt, contains('MCP App'));
+      expect(prompt, isNot(contains('iframe')));
       expect(prompt, contains('strict'));
     }
     expect(english, contains('Trust & enable'));
@@ -256,6 +257,8 @@ void main() {
     expect(chinese, contains('Prompt、Skill 和 MCP 的调用逻辑'));
     expect(englishPrompt, contains('a Skill candidate is not an instruction'));
     expect(chinesePrompt, contains('Skill 候选不是指令'));
+    expect(englishPrompt, contains('single Markdown text line'));
+    expect(chinesePrompt, contains('严格单行的 Markdown 文本'));
   });
 
   test('website Agent setup prompts stay in sync with the app', () {
@@ -431,7 +434,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.3.7</span>'));
+    expect(website, contains('<span class="demo-version">v1.4.0</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -537,21 +540,19 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.3.7"'));
-    expect(releaseMetadata, contains('"latestBuild": "47"'));
-    expect(releaseMetadata, contains('Tracks observed Agent task starts'));
+    expect(releaseMetadata, contains('"latestVersion": "1.4.0"'));
+    expect(releaseMetadata, contains('"latestBuild": "48"'));
+    expect(releaseMetadata, contains('Delivers complete Skill packages'));
     expect(
       releaseMetadata,
-      contains(
-        'Provides one merge-safe Prompt, Skill, and MCP conversation footer',
-      ),
+      contains('Keeps dynamic Skill catalog and full-load arbitration'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.3.7-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.4.0-windows-x64-beta-Setup.exe'),
     );
   });
 
@@ -735,6 +736,15 @@ void main() {
     expect(workflow, contains('releaseSha'));
     expect(workflow, contains('docs/.assetsignore'));
     expect(workflow, isNot(contains('gh workflow run pages.yml')));
+    expect(workflow, contains('name: Deploy release website'));
+    expect(workflow, contains(r'--arg source_ref "$RELEASE_TAG"'));
+    expect(workflow, contains('event_type: "deploy-release-pages"'));
+    expect(workflow, contains(r'client_payload: {source_ref: $source_ref}'));
+    expect(workflow, contains(r'"/repos/$GITHUB_REPOSITORY/dispatches"'));
+    expect(
+      workflow.indexOf('name: Deploy release website'),
+      greaterThan(workflow.indexOf('name: Publish GitHub release')),
+    );
     expect(releaseGate, contains(r'--ref "$tag"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
     expect(pagesWorkflow, contains('source_ref:'));

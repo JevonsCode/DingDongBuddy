@@ -1,0 +1,10 @@
+schemaVersion: 1
+id: pi
+displayName: Pi
+
+detect:
+  directory: ~/.pi/agent
+
+skills:
+  global: ~/.pi/agent/skills
+  project: .pi/skills

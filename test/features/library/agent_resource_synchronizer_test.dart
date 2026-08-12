@@ -7,6 +7,7 @@ import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/agent_skill_catalog.dart';
+import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
@@ -786,15 +787,19 @@ mcp:
       expect(contents, contains('dingdong_load_skill'));
       expect(contents, contains('dingdong_read_skill_file'));
       expect(contents, contains('Call configured MCP tools only when'));
-      expect(contents, contains('conversation.capsule.visible'));
+      expect(contents, contains('conversation.visible'));
       expect(contents, contains('conversation.line'));
-      expect(contents, contains('dingdong_render_conversation_footer'));
+      expect(contents, contains('exactly once'));
+      expect(contents, contains('keep `DingDong` as text'));
+      expect(contents, contains('Do not use an image'));
       expect(contents, contains('conversation.presentations.ansi.line'));
-      expect(contents, contains('MCP App HTML or XML'));
-      expect(contents, contains('warm-orange, blue, and green'));
+      expect(contents, contains('conversation.fallbackLine'));
+      expect(contents, contains('orange, blue, and green emoji tokens'));
       expect(contents, contains('confirmedUse'));
       expect(contents, contains('mergeKey'));
       expect(contents, contains('not that every instruction was followed'));
+      expect(contents, isNot(contains('dingdong_render_conversation_footer')));
+      expect(contents, isNot(contains('iframe')));
       expect(
         contents,
         isNot(contains('Add one star to every complete response.')),
@@ -1139,6 +1144,81 @@ command = "second"
     expect(codex.readAsStringSync(), original);
     expect(changeCount, 1);
   });
+
+  test(
+    'stale windows cannot overwrite delivery and usage metadata still merges',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-resource-cas-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final File library = File(path.join(temp.path, 'resources.json'));
+      final DateTime now = DateTime.utc(2026, 8, 12);
+      final Resource original = Resource(
+        id: 'skill-1',
+        type: ResourceType.skill,
+        title: 'Reviewer',
+        content: '---\nname: reviewer\ndescription: Review changes\n---\n',
+        createdAt: now,
+        updatedAt: now,
+      );
+      await ResourceRepository(
+        ResourceFileService(library),
+      ).save(<Resource>[original]);
+      SynchronizedResourceStore window(String name) =>
+          SynchronizedResourceStore(
+            ResourceRepository(ResourceFileService(library)),
+            AgentResourceSynchronizer(
+              packageRoot: Directory(path.join(temp.path, name, 'packages')),
+              skillRoots: const <Directory>[],
+              mcpTargets: const <AgentMcpTarget>[],
+            ),
+          );
+      final SynchronizedResourceStore first = window('first');
+      final SynchronizedResourceStore second = window('second');
+      final Resource firstSnapshot = (await first.load()).single;
+      final Resource secondSnapshot = (await second.load()).single;
+
+      await first.save(<Resource>[
+        firstSnapshot.copyWith(
+          skillDeliveryByAgent: const <String, SkillDeliveryMode>{
+            'codex': SkillDeliveryMode.dynamic,
+          },
+          updatedAt: now.add(const Duration(seconds: 1)),
+        ),
+      ]);
+      await expectLater(
+        second.save(<Resource>[
+          secondSnapshot.copyWith(
+            title: 'Stale title edit',
+            updatedAt: now.add(const Duration(seconds: 2)),
+          ),
+        ]),
+        throwsA(isA<StateError>()),
+      );
+      Resource latest = (await first.load()).single;
+      expect(latest.title, 'Reviewer');
+      expect(latest.skillDeliveryByAgent, <String, SkillDeliveryMode>{
+        'codex': SkillDeliveryMode.dynamic,
+      });
+
+      final Resource editable = (await second.load()).single;
+      await first.recordUsage(<String>{original.id}, now);
+      await second.save(<Resource>[
+        editable.copyWith(
+          title: 'Fresh title edit',
+          updatedAt: now.add(const Duration(seconds: 3)),
+        ),
+      ]);
+      latest = (await first.load()).single;
+      expect(latest.title, 'Fresh title edit');
+      expect(latest.usageCount, 1);
+      expect(latest.lastUsedAt, now);
+      expect(latest.skillDeliveryByAgent, <String, SkillDeliveryMode>{
+        'codex': SkillDeliveryMode.dynamic,
+      });
+    },
+  );
 
   test('unchanged resource saves still force native synchronization', () async {
     final Directory temp = Directory.systemTemp.createTempSync(

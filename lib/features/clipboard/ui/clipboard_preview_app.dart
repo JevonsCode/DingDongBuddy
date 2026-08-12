@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
@@ -12,9 +13,11 @@ import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_qr_payload.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
+import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -26,6 +29,7 @@ class ClipboardPreviewApp extends StatefulWidget {
     required this.clipboardGateway,
     required this.contentLauncher,
     required this.shareGateway,
+    this.settings = const AppSettings(),
     super.key,
   });
 
@@ -34,6 +38,7 @@ class ClipboardPreviewApp extends StatefulWidget {
   final ClipboardGateway clipboardGateway;
   final ClipboardContentLauncher contentLauncher;
   final ClipboardShareGateway? shareGateway;
+  final AppSettings settings;
 
   @override
   State<ClipboardPreviewApp> createState() => _ClipboardPreviewAppState();
@@ -93,9 +98,16 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
       await widget.contentLauncher.open(_record);
     } on Object {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('该内容已不存在或无法打开。')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.localized(
+              'This content no longer exists or cannot be opened.',
+              '该内容已不存在或无法打开。',
+            ),
+          ),
+        ),
+      );
     }
   }
 
@@ -104,6 +116,24 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.desktopPanelLight(),
+      darkTheme: AppTheme.desktopPanelDark(),
+      themeMode: switch (widget.settings.themeMode) {
+        AppThemePreference.system => ThemeMode.system,
+        AppThemePreference.light => ThemeMode.light,
+        AppThemePreference.dark => ThemeMode.dark,
+      },
+      locale: switch (widget.settings.language) {
+        AppLanguagePreference.system => null,
+        AppLanguagePreference.english => const Locale('en'),
+        AppLanguagePreference.chinese => const Locale('zh'),
+      },
+      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
+      localizationsDelegates: const <LocalizationsDelegate<Object>>[
+        DingDongLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: CallbackShortcuts(
         bindings: <ShortcutActivator, VoidCallback>{
           const SingleActivator(LogicalKeyboardKey.escape): () =>
@@ -139,12 +169,14 @@ class ClipboardQrPreviewApp extends StatefulWidget {
     required this.initialRecord,
     required this.parentWindowId,
     required this.windowController,
+    this.settings = const AppSettings(),
     super.key,
   });
 
   final ClipboardRecord initialRecord;
   final String parentWindowId;
   final WindowController windowController;
+  final AppSettings settings;
 
   @override
   State<ClipboardQrPreviewApp> createState() => _ClipboardQrPreviewAppState();
@@ -197,6 +229,24 @@ class _ClipboardQrPreviewAppState extends State<ClipboardQrPreviewApp> {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: AppTheme.desktopPanelLight(),
+    darkTheme: AppTheme.desktopPanelDark(),
+    themeMode: switch (widget.settings.themeMode) {
+      AppThemePreference.system => ThemeMode.system,
+      AppThemePreference.light => ThemeMode.light,
+      AppThemePreference.dark => ThemeMode.dark,
+    },
+    locale: switch (widget.settings.language) {
+      AppLanguagePreference.system => null,
+      AppLanguagePreference.english => const Locale('en'),
+      AppLanguagePreference.chinese => const Locale('zh'),
+    },
+    supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
+    localizationsDelegates: const <LocalizationsDelegate<Object>>[
+      DingDongLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
     home: CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.escape): _close,
@@ -258,6 +308,17 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
   @override
   Widget build(BuildContext context) {
     final ClipboardRecord record = widget.record;
+    final PopupPalette palette = PopupStyle.of(context);
+    final List<_PreviewMetaData> metadata = <_PreviewMetaData>[
+      _PreviewMetaData(
+        label: _kindLabel(context, record.kind),
+        icon: _kindIcon(record.kind),
+      ),
+      for (final String group in record.groupNames)
+        _PreviewMetaData(label: group, icon: Icons.folder_outlined),
+      for (final String source in record.sources)
+        _PreviewMetaData(label: source, icon: Icons.apps_rounded),
+    ];
     final File? image = _firstExistingImage(record);
     final bool hasImage = record.kind == ClipboardKind.image && image != null;
     final ClipboardQrData? qrData = _qrData;
@@ -267,7 +328,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
         key: const Key('clipboard-preview-copy'),
         onPressed: widget.onCopy,
         icon: Icons.copy_rounded,
-        label: '复制',
+        label: context.localized('Copy', '复制'),
         tone: DesktopActionTone.primary,
       ),
       if (widget.onOpen != null)
@@ -275,7 +336,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
           key: const Key('clipboard-preview-open'),
           onPressed: widget.onOpen!,
           icon: Icons.open_in_new_rounded,
-          label: '打开',
+          label: context.localized('Open', '打开'),
           tone: DesktopActionTone.soft,
         ),
       if (widget.onShare != null)
@@ -283,7 +344,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
           key: const Key('clipboard-preview-share'),
           onPressed: widget.onShare!,
           icon: Icons.send_to_mobile_rounded,
-          label: '发送到设备',
+          label: context.localized('Send to device', '发送到设备'),
         ),
       if (qrData != null)
         _PreviewAction(
@@ -292,15 +353,16 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
             _showQr = !showQr;
           }),
           icon: Icons.qr_code_2_rounded,
-          label: '二维码',
+          label: context.localized('QR code', '二维码'),
           tone: showQr ? DesktopActionTone.soft : DesktopActionTone.neutral,
         ),
     ];
     return Material(
-      color: PopupStyle.background.withValues(alpha: 0.98),
+      key: const Key('clipboard-preview-card'),
+      color: palette.background.withValues(alpha: 0.98),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: PopupStyle.border),
+        side: BorderSide(color: palette.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -317,13 +379,18 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        record.title,
+                        record.title.trim().isEmpty
+                            ? context.localized(
+                                'Untitled clipboard item',
+                                '未命名剪贴板条目',
+                              )
+                            : record.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: PopupStyle.textPrimary,
+                          color: palette.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -331,10 +398,10 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                         TimeOfDay.fromDateTime(
                           record.updatedAt.toLocal(),
                         ).format(context),
-                        style: const TextStyle(
-                          fontSize: 10,
+                        style: TextStyle(
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: PopupStyle.textSecondary,
+                          color: palette.textSecondary,
                         ),
                       ),
                     ],
@@ -342,27 +409,28 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                 ),
                 DesktopIconButton(
                   key: const Key('clipboard-preview-close'),
-                  tooltip: '关闭',
+                  tooltip: context.localized('Close', '关闭'),
                   onPressed: widget.onClose,
                   icon: const Icon(Icons.close_rounded, size: 16),
                   size: 30,
                   iconSize: 16,
-                  foregroundColor: PopupStyle.textSecondary,
-                  backgroundColor: PopupStyle.field,
+                  foregroundColor: palette.textSecondary,
+                  backgroundColor: palette.field,
                 ),
               ],
             ),
             const SizedBox(height: 9),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: <Widget>[
-                _PreviewMeta(label: record.kind.name),
-                for (final String group in record.groupNames)
-                  _PreviewMeta(label: group),
-                for (final String source in record.sources)
-                  _PreviewMeta(label: source),
-              ],
+            SizedBox(
+              height: 23,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: metadata.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                itemBuilder: (BuildContext context, int index) => _PreviewMeta(
+                  label: metadata[index].label,
+                  icon: metadata[index].icon,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             if (showQr)
@@ -378,7 +446,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(8),
-                    decoration: PopupStyle.card(radius: 9),
+                    decoration: palette.card(radius: 9),
                     child: Image.file(image, fit: BoxFit.contain),
                   ),
                 ),
@@ -405,6 +473,7 @@ class _PreviewActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PopupPalette palette = PopupStyle.of(context);
     final List<List<_PreviewAction>> rows = actions.length <= 3
         ? <List<_PreviewAction>>[actions]
         : <List<_PreviewAction>>[
@@ -415,9 +484,9 @@ class _PreviewActionBar extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: PopupStyle.surfaceSoft,
+        color: palette.surfaceSoft,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: PopupStyle.border),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -484,80 +553,89 @@ class _PreviewQrCode extends StatelessWidget {
   final VoidCallback onExpand;
 
   @override
-  Widget build(BuildContext context) => Container(
-    key: const Key('clipboard-preview-qr-surface'),
-    width: double.infinity,
-    decoration: BoxDecoration(
-      color: PopupStyle.field,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final bool showLabel = constraints.maxHeight >= 150;
-        final double reservedHeight = showLabel ? 30 : 12;
-        final double qrSize = math.max(
-          72,
-          math.min(
-            210,
+  Widget build(BuildContext context) {
+    final PopupPalette palette = PopupStyle.of(context);
+    return Container(
+      key: const Key('clipboard-preview-qr-surface'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: palette.field,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool showLabel = constraints.maxHeight >= 150;
+          final double reservedHeight = showLabel ? 30 : 12;
+          final double qrSize = math.max(
+            72,
             math.min(
-              constraints.maxWidth - 20,
-              constraints.maxHeight - reservedHeight,
+              210,
+              math.min(
+                constraints.maxWidth - 20,
+                constraints.maxHeight - reservedHeight,
+              ),
             ),
-          ),
-        );
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Semantics(
-                button: true,
-                label: '放大二维码',
-                onTap: onExpand,
-                child: Tooltip(
-                  message: '点击放大二维码',
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.zoomIn,
-                    child: GestureDetector(
-                      key: const Key('clipboard-preview-qr-expand'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: onExpand,
-                      child: _QrArtwork(
-                        data: data,
-                        size: qrSize,
-                        viewKey: const Key('clipboard-preview-qr-view'),
+          );
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Semantics(
+                  button: true,
+                  label: context.localized('Enlarge QR code', '放大二维码'),
+                  onTap: onExpand,
+                  child: Tooltip(
+                    message: context.localized(
+                      'Click to enlarge QR code',
+                      '点击放大二维码',
+                    ),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.zoomIn,
+                      child: GestureDetector(
+                        key: const Key('clipboard-preview-qr-expand'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onExpand,
+                        child: _QrArtwork(
+                          data: data,
+                          size: qrSize,
+                          viewKey: const Key('clipboard-preview-qr-view'),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (showLabel) ...<Widget>[
-                const SizedBox(height: 7),
-                const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(
-                      Icons.zoom_in_rounded,
-                      size: 12,
-                      color: PopupStyle.textSecondary,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      '扫码分享 · 点击放大',
-                      style: TextStyle(
-                        color: PopupStyle.textSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                if (showLabel) ...<Widget>[
+                  const SizedBox(height: 7),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Icon(
+                        Icons.zoom_in_rounded,
+                        size: 12,
+                        color: palette.textSecondary,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 4),
+                      Text(
+                        context.localized(
+                          'Scan to share · Click to enlarge',
+                          '扫码分享 · 点击放大',
+                        ),
+                        style: TextStyle(
+                          color: palette.textSecondary,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
-            ],
-          ),
-        );
-      },
-    ),
-  );
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class ClipboardQrPreviewCard extends StatelessWidget {
@@ -571,97 +649,105 @@ class ClipboardQrPreviewCard extends StatelessWidget {
   final VoidCallback onClose;
 
   @override
-  Widget build(BuildContext context) => Material(
-    key: const Key('clipboard-preview-qr-expanded'),
-    color: PopupStyle.background.withValues(alpha: 0.98),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: const BorderSide(color: PopupStyle.border),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: MouseRegion(
-      cursor: SystemMouseCursors.zoomOut,
-      child: GestureDetector(
-        key: const Key('clipboard-preview-qr-collapse'),
-        behavior: HitTestBehavior.opaque,
-        onTap: onClose,
-        child: Stack(
-          children: <Widget>[
-            Positioned.fill(
-              child: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final double qrSize = math.max(
-                    96,
-                    math.min(
-                      constraints.maxWidth - 36,
-                      constraints.maxHeight - 108,
-                    ),
-                  );
-                  return Center(
-                    child: _QrArtwork(
-                      data: data,
-                      size: qrSize,
-                      viewKey: const Key('clipboard-preview-qr-expanded-view'),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const Positioned(
-              left: 16,
-              top: 16,
-              child: Row(
-                children: <Widget>[
-                  Icon(
-                    Icons.qr_code_2_rounded,
-                    size: 15,
-                    color: PopupStyle.accent,
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    'QR Code',
-                    style: TextStyle(
-                      color: PopupStyle.textPrimary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              right: 12,
-              top: 12,
-              child: DesktopIconButton(
-                key: const Key('clipboard-preview-qr-expanded-close'),
-                tooltip: '关闭大图',
-                onPressed: onClose,
-                icon: const Icon(Icons.close_rounded, size: 16),
-                size: 30,
-                iconSize: 16,
-                foregroundColor: PopupStyle.textSecondary,
-                backgroundColor: PopupStyle.field,
-              ),
-            ),
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 18,
-              child: Text(
-                '点击任意处关闭大图 · Esc',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: PopupStyle.textSecondary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+  Widget build(BuildContext context) {
+    final PopupPalette palette = PopupStyle.of(context);
+    return Material(
+      key: const Key('clipboard-preview-qr-expanded'),
+      color: palette.background.withValues(alpha: 0.98),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: palette.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.zoomOut,
+        child: GestureDetector(
+          key: const Key('clipboard-preview-qr-collapse'),
+          behavior: HitTestBehavior.opaque,
+          onTap: onClose,
+          child: Stack(
+            children: <Widget>[
+              Positioned.fill(
+                child: LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    final double qrSize = math.max(
+                      96,
+                      math.min(
+                        constraints.maxWidth - 36,
+                        constraints.maxHeight - 108,
+                      ),
+                    );
+                    return Center(
+                      child: _QrArtwork(
+                        data: data,
+                        size: qrSize,
+                        viewKey: const Key(
+                          'clipboard-preview-qr-expanded-view',
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-            ),
-          ],
+              Positioned(
+                left: 16,
+                top: 16,
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.qr_code_2_rounded,
+                      size: 15,
+                      color: palette.accent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'QR Code',
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 12,
+                top: 12,
+                child: DesktopIconButton(
+                  key: const Key('clipboard-preview-qr-expanded-close'),
+                  tooltip: context.localized('Close enlarged view', '关闭大图'),
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close_rounded, size: 16),
+                  size: 30,
+                  iconSize: 16,
+                  foregroundColor: palette.textSecondary,
+                  backgroundColor: palette.field,
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 18,
+                child: Text(
+                  context.localized(
+                    'Click anywhere to close · Esc',
+                    '点击任意处关闭大图 · Esc',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: palette.textSecondary,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _QrArtwork extends StatelessWidget {
@@ -676,50 +762,73 @@ class _QrArtwork extends StatelessWidget {
   final Key viewKey;
 
   @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(10),
-    child: QrImageView.withQr(
-      key: viewKey,
-      qr: data.qrCode,
-      size: size,
-      padding: const EdgeInsets.all(12),
-      backgroundColor: Colors.white,
-      eyeStyle: const QrEyeStyle(
-        eyeShape: QrEyeShape.square,
-        color: PopupStyle.textPrimary,
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: QrImageView.withQr(
+        key: viewKey,
+        qr: data.qrCode,
+        size: size,
+        padding: const EdgeInsets.all(12),
+        backgroundColor: Colors.white,
+        eyeStyle: QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: PopupStyle.textPrimary,
+        ),
+        dataModuleStyle: QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: PopupStyle.textPrimary,
+        ),
+        semanticsLabel: context.localized('Content QR code', '内容二维码'),
       ),
-      dataModuleStyle: const QrDataModuleStyle(
-        dataModuleShape: QrDataModuleShape.square,
-        color: PopupStyle.textPrimary,
-      ),
-      semanticsLabel: '内容二维码',
-    ),
-  );
+    );
+  }
 }
 
 class _PreviewMeta extends StatelessWidget {
-  const _PreviewMeta({required this.label});
+  const _PreviewMeta({required this.label, required this.icon});
 
   final String label;
+  final IconData icon;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-    decoration: BoxDecoration(
-      color: PopupStyle.field,
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        color: PopupStyle.textSecondary,
-        fontSize: 9,
-        fontWeight: FontWeight.w600,
+  Widget build(BuildContext context) {
+    final PopupPalette palette = PopupStyle.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: palette.field,
+        borderRadius: BorderRadius.circular(4),
       ),
-    ),
-  );
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 11, color: palette.textTertiary),
+          const SizedBox(width: 4),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 118),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: palette.textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _PreviewMetaData {
+  const _PreviewMetaData({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
 }
 
 File? _firstExistingImage(ClipboardRecord record) {
@@ -738,24 +847,40 @@ class _PreviewContent extends StatelessWidget {
   final ClipboardRecord record;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: PopupStyle.field,
-      borderRadius: BorderRadius.circular(9),
-    ),
-    child: SingleChildScrollView(
-      child: SelectableText(
-        record.sensitive ? '敏感内容已隐藏' : record.content,
-        style: const TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 11,
-          color: PopupStyle.textSecondary,
+  Widget build(BuildContext context) {
+    final PopupPalette palette = PopupStyle.of(context);
+    final bool codeLike =
+        record.kind == ClipboardKind.command ||
+        record.kind == ClipboardKind.code ||
+        record.kind == ClipboardKind.json;
+    return Semantics(
+      container: true,
+      label: record.sensitive
+          ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
+          : context.localized('Clipboard content', '剪贴板内容'),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: palette.field,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: SingleChildScrollView(
+          child: SelectableText(
+            record.sensitive
+                ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
+                : record.content,
+            style: TextStyle(
+              fontFamily: codeLike ? 'monospace' : null,
+              fontSize: 11.5,
+              height: 1.45,
+              color: palette.textSecondary,
+            ),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _PreviewKindIcon extends StatelessWidget {
@@ -764,27 +889,48 @@ class _PreviewKindIcon extends StatelessWidget {
   final ClipboardKind kind;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: 30,
-    height: 30,
-    decoration: BoxDecoration(
-      color: PopupStyle.field,
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Icon(
-      switch (kind) {
-        ClipboardKind.image => Icons.image_outlined,
-        ClipboardKind.file => Icons.description_outlined,
-        ClipboardKind.command => Icons.terminal_rounded,
-        ClipboardKind.url => Icons.link_rounded,
-        ClipboardKind.code || ClipboardKind.json => Icons.code_rounded,
-        ClipboardKind.path => Icons.folder_outlined,
-        _ => Icons.content_paste_rounded,
-      },
-      size: 16,
-      color: kind == ClipboardKind.command
-          ? const Color(0xFF22C55E)
-          : PopupStyle.accent,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final PopupPalette palette = PopupStyle.of(context);
+    return Semantics(
+      label: _kindLabel(context, kind),
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: palette.field,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          _kindIcon(kind),
+          size: 16,
+          color: kind == ClipboardKind.command
+              ? palette.success
+              : palette.accent,
+        ),
+      ),
+    );
+  }
 }
+
+IconData _kindIcon(ClipboardKind kind) => switch (kind) {
+  ClipboardKind.image => Icons.image_outlined,
+  ClipboardKind.file => Icons.description_outlined,
+  ClipboardKind.command => Icons.terminal_rounded,
+  ClipboardKind.url => Icons.link_rounded,
+  ClipboardKind.code || ClipboardKind.json => Icons.code_rounded,
+  ClipboardKind.path => Icons.folder_outlined,
+  ClipboardKind.email => Icons.mail_outline_rounded,
+  _ => Icons.content_paste_rounded,
+};
+
+String _kindLabel(BuildContext context, ClipboardKind kind) => switch (kind) {
+  ClipboardKind.text => context.localized('Text', '文本'),
+  ClipboardKind.url => context.localized('Link', '链接'),
+  ClipboardKind.command => context.localized('Command', '命令'),
+  ClipboardKind.code => context.localized('Code', '代码'),
+  ClipboardKind.json => 'JSON',
+  ClipboardKind.path => context.localized('Path', '路径'),
+  ClipboardKind.email => context.localized('Email', '邮箱'),
+  ClipboardKind.file => context.localized('File', '文件'),
+  ClipboardKind.image => context.localized('Image', '图片'),
+};

@@ -1175,6 +1175,7 @@ Future<void> _runClipboardPreviewWindow(
       clipboardGateway: DesktopClipboardGateway(),
       contentLauncher: UrlLauncherClipboardContentLauncher(),
       shareGateway: _ParentDeviceClipboardShareGateway(parentWindowId),
+      settings: windowSettings,
     ),
   );
   await windowController.showInactive();
@@ -1229,6 +1230,7 @@ Future<void> _runClipboardQrPreviewWindow(
       initialRecord: record,
       parentWindowId: parentWindowId,
       windowController: windowController,
+      settings: windowSettings,
     ),
   );
   await windowController.show();
@@ -1435,6 +1437,8 @@ Future<void> _runResourceManagerWindow(
       settings: settings,
       windowController: windowController,
       initialDestination: initialDestination,
+      openClipboardCategoriesOnLaunch:
+          arguments['openClipboardCategories'] == true,
       resourceManagerLauncher: MultiWindowResourceManagerLauncher(
         parentWindowId: parentWindowId ?? windowController.windowId,
       ),

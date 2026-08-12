@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
+import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
-import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
@@ -40,6 +41,7 @@ final class AgentBridge {
     this._store, {
     TriggerGroupStore? triggerGroupStore,
     DateTime Function()? now,
+    this.querySkillDeploymentPresence,
     this.onTaskStarted,
   }) : _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
        _now = now ?? DateTime.now;
@@ -47,6 +49,7 @@ final class AgentBridge {
   final ResourceStore _store;
   final TriggerGroupStore _triggerGroupStore;
   final DateTime Function() _now;
+  final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
   final void Function(AgentBridgeTaskStart start)? onTaskStarted;
 
   static const int _maximumSkillPackageFiles = 200;
@@ -134,41 +137,56 @@ final class AgentBridge {
         ...mcps,
         ...knowledge,
       ];
-      final List<_ResolvedSkill> skillCandidates =
-          _resolvedSkills(
-            available.where(
+      final SkillDeliveryResolution skillResolution =
+          await resolveSkillDelivery(
+            resources: available.where(
               (Resource resource) => resource.type == ResourceType.skill,
             ),
-          )..sort((_ResolvedSkill left, _ResolvedSkill right) {
-            final int name = left.configuration.name.compareTo(
-              right.configuration.name,
-            );
-            return name != 0
-                ? name
-                : left.resource.id.compareTo(right.resource.id);
-          });
+            agentId: resolveAgentAdapterId(source),
+            workspacePath: context.projectPath,
+            queryPresence: querySkillDeploymentPresence,
+          );
+      final List<DynamicSkillCandidate> skillCandidates =
+          List<DynamicSkillCandidate>.of(skillResolution.candidates)
+            ..sort((DynamicSkillCandidate left, DynamicSkillCandidate right) {
+              final int name = left.configuration.name.compareTo(
+                right.configuration.name,
+              );
+              return name != 0
+                  ? name
+                  : left.resource.id.compareTo(right.resource.id);
+            });
       final Set<String> selectedIds = selected
           .map((Resource resource) => resource.id)
           .toSet();
       final DateTime usedAt = startedAt;
-      final List<Resource> updatedResources = resources
-          .map(
-            (Resource resource) => selectedIds.contains(resource.id)
-                ? resource.copyWith(
-                    usageCount: resource.usageCount + 1,
-                    lastUsedAt: usedAt,
-                  )
-                : resource,
-          )
-          .toList(growable: false);
+      List<Resource> updatedResources = resources;
       if (selectedIds.isNotEmpty) {
-        await _store.save(updatedResources);
+        final ResourceStore store = _store;
+        final ResourceUsageStore? usageStore = store is ResourceUsageStore
+            ? store as ResourceUsageStore
+            : null;
+        if (usageStore != null) {
+          updatedResources = await usageStore.recordUsage(selectedIds, usedAt);
+        } else {
+          updatedResources = resources
+              .map(
+                (Resource resource) => selectedIds.contains(resource.id)
+                    ? resource.copyWith(
+                        usageCount: resource.usageCount + 1,
+                        lastUsedAt: usedAt,
+                      )
+                    : resource,
+              )
+              .toList(growable: false);
+          await store.save(updatedResources);
+        }
       }
       final Map<String, Resource> updatedById = <String, Resource>{
         for (final Resource resource in updatedResources) resource.id: resource,
       };
       final List<Resource> used = selected
-          .map((Resource resource) => updatedById[resource.id]!)
+          .map((Resource resource) => updatedById[resource.id] ?? resource)
           .toList(growable: false);
       final Set<String> matchedTriggerGroupIds = triggerGroups
           .where((TriggerGroup group) => group.matches(context))
@@ -178,10 +196,10 @@ final class AgentBridge {
         ...prompts.where(_isVisibleInAgentConversation),
         ...skillCandidates
             .where(
-              (_ResolvedSkill skill) =>
+              (DynamicSkillCandidate skill) =>
                   _isVisibleInAgentConversation(skill.resource),
             )
-            .map((_ResolvedSkill skill) => skill.resource),
+            .map((DynamicSkillCandidate skill) => skill.resource),
         ...mcps.where(_isVisibleInAgentConversation),
       ];
       final List<Map<String, Object?>> conversationItems = conversationResources
@@ -227,6 +245,17 @@ final class AgentBridge {
             'skills': skillCandidates
                 .map(_skillCandidateJson)
                 .toList(growable: false),
+            if (skillResolution.conflicts.isNotEmpty)
+              'skillConflicts': skillResolution.conflicts
+                  .map((SkillDeliveryConflict conflict) => conflict.toJson())
+                  .toList(growable: false),
+            if (skillResolution.suppressed.isNotEmpty)
+              'skillSuppressions': skillResolution.suppressed
+                  .map(
+                    (SkillDeliverySuppression suppression) =>
+                        suppression.toJson(),
+                  )
+                  .toList(growable: false),
             'mcps': items(ResourceType.mcp),
             'knowledge': items(ResourceType.knowledge),
           },
@@ -234,7 +263,7 @@ final class AgentBridge {
           'delivery': <String, Object?>{
             'prompts': 'full-required-instructions',
             'promptSnapshot': 'authoritative-replace',
-            'skills': 'id-name-description-catalog-load-on-match',
+            'skills': 'dynamic-id-name-description-catalog-load-on-match',
             'skillCatalogSnapshot': 'authoritative-replace',
             'mcps': 'summary-call-on-demand',
           },
@@ -258,24 +287,49 @@ final class AgentBridge {
   }
 
   /// Loads one full Skill after re-checking its enabled state and scope.
-  Future<HttpResponseData> loadSkill(Map<String, String> query) async {
+  Future<HttpResponseData> loadSkill(Map<String, String> query) {
+    final ResourceStore store = _store;
+    final ExclusiveResourceStore? exclusive = store is ExclusiveResourceStore
+        ? store as ExclusiveResourceStore
+        : null;
+    return exclusive == null
+        ? _loadSkill(query)
+        : exclusive.exclusiveMutation(() => _loadSkill(query));
+  }
+
+  Future<HttpResponseData> _loadSkill(Map<String, String> query) async {
     try {
       final _SkillLookup lookup = await _lookupSkill(query);
       final HttpResponseData? error = lookup.error;
       if (error != null) {
         return error;
       }
-      final _ResolvedSkill skill = lookup.skill!;
+      final DynamicSkillCandidate skill = lookup.skill!;
       final List<Resource> resources = lookup.resources;
-      final int resourceIndex = resources.indexWhere(
-        (Resource resource) => resource.id == skill.resource.id,
-      );
-      final Resource tracked = skill.resource.copyWith(
-        usageCount: skill.resource.usageCount + 1,
-        lastUsedAt: _now().toUtc(),
-      );
-      resources[resourceIndex] = tracked;
-      await _store.save(resources);
+      final DateTime usedAt = _now().toUtc();
+      final ResourceStore store = _store;
+      final ResourceUsageStore? usageStore = store is ResourceUsageStore
+          ? store as ResourceUsageStore
+          : null;
+      late final Resource tracked;
+      if (usageStore != null) {
+        final List<Resource> updated = await usageStore.recordUsage(<String>{
+          skill.resource.id,
+        }, usedAt);
+        tracked = updated.firstWhere(
+          (Resource resource) => resource.id == skill.resource.id,
+        );
+      } else {
+        final int resourceIndex = resources.indexWhere(
+          (Resource resource) => resource.id == skill.resource.id,
+        );
+        tracked = skill.resource.copyWith(
+          usageCount: skill.resource.usageCount + 1,
+          lastUsedAt: usedAt,
+        );
+        resources[resourceIndex] = tracked;
+        await store.save(resources);
+      }
       final Map<String, Object?> package = await _packageSummary(tracked);
       final Map<String, Object?> conversationItem =
           normalizeDingDongConversationFooterItem(
@@ -337,7 +391,7 @@ final class AgentBridge {
       if (error != null) {
         return error;
       }
-      final _ResolvedSkill skill = lookup.skill!;
+      final DynamicSkillCandidate skill = lookup.skill!;
       final String? packagePath = skill.resource.packagePath;
       if (packagePath == null) {
         return const HttpResponseData(
@@ -446,29 +500,50 @@ final class AgentBridge {
     final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
       await _triggerGroupStore.load(),
     );
-    final List<_ResolvedSkill> matches =
-        _resolvedSkills(
-              resources
-                  .where(
-                    (Resource resource) =>
-                        resource.enabled &&
-                        resource.type == ResourceType.skill &&
-                        resourceMatchesScope(
-                          resource,
-                          context,
-                          triggerGroupsById,
-                        ),
-                  )
-                  .where(
-                    (Resource resource) => id.isEmpty || resource.id == id,
-                  ),
-            )
-            .where(
-              (_ResolvedSkill skill) =>
-                  name.isEmpty || skill.configuration.name == name,
-            )
-            .toList(growable: false);
+    final SkillDeliveryResolution resolution = await resolveSkillDelivery(
+      resources: resources.where(
+        (Resource resource) =>
+            resource.enabled &&
+            resource.type == ResourceType.skill &&
+            resourceMatchesScope(resource, context, triggerGroupsById),
+      ),
+      agentId: resolveAgentAdapterId(context.source),
+      workspacePath: context.projectPath,
+      queryPresence: querySkillDeploymentPresence,
+    );
+    final List<DynamicSkillCandidate> matches = resolution.candidates
+        .where(
+          (DynamicSkillCandidate skill) =>
+              id.isEmpty || skill.resource.id == id,
+        )
+        .where(
+          (DynamicSkillCandidate skill) =>
+              name.isEmpty || skill.configuration.name == name,
+        )
+        .toList(growable: false);
     if (matches.isEmpty) {
+      final SkillDeliveryConflict? conflict = resolution.conflicts
+          .where(
+            (SkillDeliveryConflict value) =>
+                (name.isEmpty || value.name == name) &&
+                (id.isEmpty || value.resourceIds.contains(id)),
+          )
+          .firstOrNull;
+      if (conflict != null) {
+        return _SkillLookup.error(
+          context,
+          HttpResponseData(
+            statusCode: 409,
+            json: <String, Object?>{
+              'status': 'error',
+              'message':
+                  'Skill name resolves to different artifacts; choose one delivery source first',
+              'name': conflict.name,
+              'candidateIds': conflict.resourceIds,
+            },
+          ),
+        );
+      }
       return _SkillLookup.error(
         context,
         const HttpResponseData(
@@ -489,7 +564,7 @@ final class AgentBridge {
             'status': 'error',
             'message': 'Skill name is ambiguous; include its id',
             'candidateIds': matches
-                .map((_ResolvedSkill skill) => skill.resource.id)
+                .map((DynamicSkillCandidate skill) => skill.resource.id)
                 .toList(growable: false),
           },
         ),
@@ -595,25 +670,7 @@ Map<String, TriggerGroup> _groupsById(List<TriggerGroup> groups) =>
       for (final TriggerGroup group in groups) group.id: group,
     };
 
-List<_ResolvedSkill> _resolvedSkills(Iterable<Resource> resources) {
-  final List<_ResolvedSkill> skills = <_ResolvedSkill>[];
-  for (final Resource resource in resources) {
-    try {
-      skills.add(
-        _ResolvedSkill(
-          resource,
-          SkillConfiguration.parseOnline(resource.content),
-        ),
-      );
-    } on FormatException {
-      // Invalid Skills remain visible in DingDong's Issues workspace without
-      // breaking delivery of valid Prompts and Skill candidates.
-    }
-  }
-  return skills;
-}
-
-Map<String, Object?> _skillCandidateJson(_ResolvedSkill skill) =>
+Map<String, Object?> _skillCandidateJson(DynamicSkillCandidate skill) =>
     <String, Object?>{
       'id': skill.resource.id,
       'name': skill.configuration.name,
@@ -723,13 +780,6 @@ List<String>? _safeSkillFileSegments(String value) {
   return segments;
 }
 
-final class _ResolvedSkill {
-  const _ResolvedSkill(this.resource, this.configuration);
-
-  final Resource resource;
-  final SkillConfiguration configuration;
-}
-
 final class _SkillLookup {
   const _SkillLookup._(
     this.context, {
@@ -741,7 +791,7 @@ final class _SkillLookup {
   factory _SkillLookup.success(
     TriggerContext context,
     List<Resource> resources,
-    _ResolvedSkill skill,
+    DynamicSkillCandidate skill,
   ) => _SkillLookup._(context, resources: resources, skill: skill);
 
   factory _SkillLookup.error(TriggerContext context, HttpResponseData error) =>
@@ -749,6 +799,6 @@ final class _SkillLookup {
 
   final TriggerContext context;
   final List<Resource> resources;
-  final _ResolvedSkill? skill;
+  final DynamicSkillCandidate? skill;
   final HttpResponseData? error;
 }

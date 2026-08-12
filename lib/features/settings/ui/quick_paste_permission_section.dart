@@ -16,9 +16,10 @@ class QuickPastePermissionSection extends StatelessWidget {
       animation: viewModel,
       builder: (BuildContext context, Widget? child) {
         final bool? granted = viewModel.isQuickPastePermissionGranted;
+        final ColorScheme colors = Theme.of(context).colorScheme;
         final Color statusColor = granted == false
-            ? Theme.of(context).colorScheme.error
-            : Theme.of(context).colorScheme.primary;
+            ? colors.error
+            : colors.primary;
         return Padding(
           padding: const EdgeInsets.only(bottom: 32),
           child: Column(
@@ -37,60 +38,75 @@ class QuickPastePermissionSection extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
-              const Divider(),
-              Row(
-                children: <Widget>[
-                  Icon(
-                    granted == false
-                        ? Icons.warning_amber_rounded
-                        : Icons.check_circle_outline_rounded,
-                    color: statusColor,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(switch (granted) {
-                      true => context.localized('Permission granted', '权限已授予'),
-                      false => context.localized(
-                        'Permission required',
-                        '需要授予权限',
-                      ),
-                      null => context.localized(
-                        'Permission status unavailable',
-                        '无法获取权限状态',
-                      ),
-                    }),
-                  ),
-                  DesktopIconButton(
-                    tooltip: context.localized('Refresh status', '刷新状态'),
-                    onPressed: viewModel.refreshQuickPastePermission,
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-                  if (granted == false)
-                    DesktopActionButton(
-                      key: const Key('settings-open-accessibility'),
-                      onPressed: viewModel.openQuickPastePermissionSettings,
-                      icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                      label: context.localized(
-                        'Open permission helper',
-                        '打开授权助手',
-                      ),
-                      tone: DesktopActionTone.neutral,
+              Container(
+                key: const Key('settings-quick-paste-permission-status'),
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerLow.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      granted == false
+                          ? Icons.warning_amber_rounded
+                          : Icons.check_circle_outline_rounded,
+                      size: 20,
+                      color: statusColor,
                     ),
-                ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        switch (granted) {
+                          true => context.localized(
+                            'Permission granted',
+                            '权限已授予',
+                          ),
+                          false => context.localized(
+                            'Permission required',
+                            '需要授予权限',
+                          ),
+                          null => context.localized(
+                            'Permission status unavailable',
+                            '无法获取权限状态',
+                          ),
+                        },
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    DesktopIconButton(
+                      tooltip: context.localized('Refresh status', '刷新状态'),
+                      onPressed: viewModel.refreshQuickPastePermission,
+                      icon: const Icon(Icons.refresh_rounded),
+                    ),
+                    if (granted == false) ...<Widget>[
+                      const SizedBox(width: 6),
+                      DesktopActionButton(
+                        key: const Key('settings-open-accessibility'),
+                        onPressed: viewModel.openQuickPastePermissionSettings,
+                        icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                        label: context.localized(
+                          'Open permission helper',
+                          '打开授权助手',
+                        ),
+                        tone: DesktopActionTone.neutral,
+                      ),
+                    ],
+                  ],
+                ),
               ),
               if (granted == false) ...<Widget>[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Container(
                   key: const Key('settings-accessibility-helper-explanation'),
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
+                    color: colors.surfaceContainerHigh.withValues(alpha: 0.46),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +114,7 @@ class QuickPastePermissionSection extends StatelessWidget {
                       Icon(
                         Icons.drag_indicator_rounded,
                         size: 20,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: colors.primary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(

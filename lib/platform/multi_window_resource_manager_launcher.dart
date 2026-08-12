@@ -7,7 +7,7 @@ const String resourceManagerWindowKind = 'resource-manager';
 
 /// Cross-platform launcher for DingDong's dedicated resource manager window.
 final class MultiWindowResourceManagerLauncher
-    implements ResourceManagerLauncher {
+    implements ResourceManagerLauncher, ClipboardCategoryManagerLauncher {
   const MultiWindowResourceManagerLauncher({required this.parentWindowId});
 
   final String parentWindowId;
@@ -34,6 +34,24 @@ final class MultiWindowResourceManagerLauncher
     ResourceManagerCreateRequest? createRequest,
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
+  }) => _show(
+    editingResourceId: editingResourceId,
+    createRequest: createRequest,
+    destination: destination,
+  );
+
+  @override
+  Future<void> showClipboardCategories() => _show(
+    destination: ResourceManagerDestination.clipboard,
+    openClipboardCategories: true,
+  );
+
+  Future<void> _show({
+    String? editingResourceId,
+    ResourceManagerCreateRequest? createRequest,
+    ResourceManagerDestination destination =
+        ResourceManagerDestination.resources,
+    bool openClipboardCategories = false,
   }) async {
     final ResourceManagerDestination resolvedDestination =
         editingResourceId == null && createRequest == null
@@ -48,6 +66,9 @@ final class MultiWindowResourceManagerLauncher
           'window_focus',
           resolvedDestination.name,
         );
+        if (openClipboardCategories) {
+          await controller.invokeMethod<void>(manageClipboardCategoriesMethod);
+        }
         if (editingResourceId != null) {
           await controller.invokeMethod<void>('edit_resource', <String, String>{
             'id': editingResourceId,
@@ -67,6 +88,7 @@ final class MultiWindowResourceManagerLauncher
       'kind': resourceManagerWindowKind,
       'parentWindowId': parentWindowId,
       'destination': resolvedDestination.name,
+      if (openClipboardCategories) 'openClipboardCategories': true,
     };
     if (editingResourceId != null) {
       arguments['editingResourceId'] = editingResourceId;

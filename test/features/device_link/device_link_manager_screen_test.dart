@@ -3,6 +3,7 @@ import 'package:dingdong/features/device_link/domain/device_link_management.dart
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,28 +11,16 @@ void main() {
   testWidgets('a connecting device can be stopped from the manager window', (
     WidgetTester tester,
   ) async {
-    tester.view.physicalSize = const Size(820, 720);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
     final _FakeManagement controller = _FakeManagement();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('zh'),
-        supportedLocales: const <Locale>[Locale('zh')],
-        localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          DingDongLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: DeviceLinkManagerScreen(controller: controller),
-      ),
+    await _pumpManager(
+      tester,
+      controller: controller,
+      locale: const Locale('zh'),
     );
 
     expect(find.byKey(const Key('device-link-manager-screen')), findsOneWidget);
-    expect(find.text('连接设备'), findsNothing);
+    expect(find.text('连接设备'), findsOneWidget);
     expect(find.text('只在你信任的设备之间传递内容。'), findsNothing);
     expect(find.text('1 台设备'), findsNothing);
     expect(find.text('已连接设备'), findsOneWidget);
@@ -39,7 +28,7 @@ void main() {
       find.byKey(const Key('device-connection-mode-note')),
       findsOneWidget,
     );
-    expect(find.textContaining('优先使用局域网 WebRTC 直连'), findsOneWidget);
+    expect(find.textContaining('优先使用 WebRTC 直连'), findsOneWidget);
     expect(find.textContaining('端到端加密中继'), findsOneWidget);
     expect(find.text('停止连接'), findsOneWidget);
     await tester.tap(find.text('停止连接'));
@@ -47,10 +36,164 @@ void main() {
 
     expect(controller.disconnectedDeviceId, 'phone-one');
   });
+
+  testWidgets('pairing stays first and actionable at the minimum window size', (
+    WidgetTester tester,
+  ) async {
+    final _FakeManagement controller = _FakeManagement(includeDevice: false);
+
+    await _pumpManager(
+      tester,
+      controller: controller,
+      size: const Size(620, 580),
+      locale: const Locale('zh'),
+    );
+
+    final Finder pairingPanel = find.byKey(const Key('device-pairing-panel'));
+    final Finder localDevice = find.byKey(const Key('device-local-device'));
+    final Finder beginPairing = find.byKey(const Key('device-begin-pairing'));
+    expect(pairingPanel, findsOneWidget);
+    expect(localDevice, findsOneWidget);
+    expect(
+      tester.getTopLeft(pairingPanel).dy,
+      lessThan(tester.getTopLeft(localDevice).dy),
+    );
+    expect(tester.getBottomRight(beginPairing).dy, lessThanOrEqualTo(580));
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(beginPairing);
+    await tester.pump();
+    expect(controller.beganPairing, isTrue);
+  });
+
+  testWidgets('active pairing QR is visible and has one security explanation', (
+    WidgetTester tester,
+  ) async {
+    final SemanticsHandle semantics = tester.ensureSemantics();
+    final _FakeManagement controller = _FakeManagement(
+      includeDevice: false,
+      pendingPairing: _pendingPairing(),
+    );
+
+    await _pumpManager(
+      tester,
+      controller: controller,
+      size: const Size(620, 580),
+    );
+
+    final Finder qr = find.byKey(const Key('device-pairing-qr'));
+    expect(qr, findsOneWidget);
+    expect(tester.getBottomRight(qr).dy, lessThanOrEqualTo(580));
+    expect(tester.getSemantics(qr).label, contains('Pairing QR code for 测试电脑'));
+    expect(
+      find.byKey(const Key('device-connection-mode-note')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('device-pairing-connection-mode-note')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('device setting rows support keyboard activation', (
+    WidgetTester tester,
+  ) async {
+    final _FakeManagement controller = _FakeManagement();
+    await _pumpManager(tester, controller: controller);
+
+    final Finder setting = find.byKey(const Key('device-auto-send-phone-one'));
+    final Finder focusable = find
+        .descendant(of: setting, matching: find.byType(FocusableActionDetector))
+        .first;
+    final FocusableActionDetector detector = tester.widget(focusable);
+    detector.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+
+    expect(controller.autoSendDeviceId, 'phone-one');
+    expect(controller.autoSendValue, isTrue);
+  });
+
+  testWidgets('error status uses the active dark theme color scheme', (
+    WidgetTester tester,
+  ) async {
+    const Color seed = Color(0xFF6B7A4D);
+    final ThemeData theme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: seed,
+        brightness: Brightness.dark,
+      ),
+    );
+    final _FakeManagement controller = _FakeManagement(
+      connectionStatus: DeviceConnectionStatus.error,
+    );
+
+    await _pumpManager(tester, controller: controller, theme: theme);
+
+    final Container badge = tester.widget<Container>(
+      find.byKey(const Key('device-status-phone-one')),
+    );
+    final BoxDecoration decoration = badge.decoration! as BoxDecoration;
+    expect(decoration.color, theme.colorScheme.errorContainer);
+    expect(find.text('Connection error'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+Future<void> _pumpManager(
+  WidgetTester tester, {
+  required _FakeManagement controller,
+  Size size = const Size(820, 720),
+  Locale locale = const Locale('en'),
+  ThemeData? theme,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: theme,
+      locale: locale,
+      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
+      localizationsDelegates: const <LocalizationsDelegate<Object>>[
+        DingDongLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: DeviceLinkManagerScreen(controller: controller),
+    ),
+  );
+  await tester.pump();
+}
+
+PendingDevicePairing _pendingPairing() {
+  return PendingDevicePairing(
+    payload: DevicePairingPayload(
+      room: 'abcdefghijklmnopqrstuvwx',
+      secret: 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc',
+      hostId: 'host-one',
+      hostName: 'Test computer',
+      relayUrl: Uri.parse('wss://relay.example.test'),
+    ),
+    url: Uri.parse('https://device.example.test/pair#payload'),
+    createdAt: DateTime.utc(2026, 8, 8),
+  );
 }
 
 final class _FakeManagement extends ChangeNotifier
     implements DeviceLinkManagement {
+  _FakeManagement({
+    this.includeDevice = true,
+    this.pendingPairing,
+    this.connectionStatus = DeviceConnectionStatus.connecting,
+  });
+
   final LinkedDevice device = LinkedDevice(
     id: 'phone-one',
     name: '我的手机',
@@ -65,13 +208,23 @@ final class _FakeManagement extends ChangeNotifier
     pairedAt: DateTime.utc(2026, 8, 8),
   );
 
+  final bool includeDevice;
+  final DeviceConnectionStatus connectionStatus;
+
+  @override
+  final PendingDevicePairing? pendingPairing;
+
   String? disconnectedDeviceId;
+  String? autoSendDeviceId;
+  bool? autoSendValue;
+  bool beganPairing = false;
 
   @override
   bool get canPair => true;
 
   @override
-  List<LinkedDevice> get devices => <LinkedDevice>[device];
+  List<LinkedDevice> get devices =>
+      includeDevice ? <LinkedDevice>[device] : const <LinkedDevice>[];
 
   @override
   LocalDeviceIdentity get localDevice => const LocalDeviceIdentity(
@@ -85,10 +238,10 @@ final class _FakeManagement extends ChangeNotifier
       DeviceConnectionStatus.disconnected;
 
   @override
-  PendingDevicePairing? get pendingPairing => null;
-
-  @override
-  Future<PendingDevicePairing?> beginPairing() async => null;
+  Future<PendingDevicePairing?> beginPairing() async {
+    beganPairing = true;
+    return pendingPairing;
+  }
 
   @override
   Future<void> cancelPairing() async {}
@@ -111,9 +264,11 @@ final class _FakeManagement extends ChangeNotifier
   Future<void> setAgentNotifications(String deviceId, bool value) async {}
 
   @override
-  Future<void> setAutoSendClipboard(String deviceId, bool value) async {}
+  Future<void> setAutoSendClipboard(String deviceId, bool value) async {
+    autoSendDeviceId = deviceId;
+    autoSendValue = value;
+  }
 
   @override
-  DeviceConnectionStatus statusOf(String deviceId) =>
-      DeviceConnectionStatus.connecting;
+  DeviceConnectionStatus statusOf(String deviceId) => connectionStatus;
 }

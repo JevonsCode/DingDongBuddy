@@ -63,6 +63,7 @@ final class ResourceManagerCreateRequest {
 /// Multi-window signal emitted after the resource manager commits a library
 /// change to shared storage.
 const String resourceLibraryChangedMethod = 'resource_library_changed';
+const String manageClipboardCategoriesMethod = 'manage_clipboard_categories';
 
 /// Opens the full resource management experience in its own desktop window.
 abstract interface class ResourceManagerLauncher {
@@ -72,4 +73,23 @@ abstract interface class ResourceManagerLauncher {
     ResourceManagerDestination destination =
         ResourceManagerDestination.resources,
   });
+}
+
+/// Optional deep-link capability for opening clipboard category management.
+///
+/// Callout launchers can wrap a regular [ResourceManagerLauncher] while still
+/// preserving this richer route. Launchers without the capability gracefully
+/// fall back to the clipboard workspace.
+abstract interface class ClipboardCategoryManagerLauncher {
+  Future<void> showClipboardCategories();
+}
+
+Future<void> showClipboardCategoryManager(
+  ResourceManagerLauncher launcher,
+) async {
+  if (launcher case final ClipboardCategoryManagerLauncher categoryLauncher) {
+    await categoryLauncher.showClipboardCategories();
+    return;
+  }
+  await launcher.show(destination: ResourceManagerDestination.clipboard);
 }

@@ -24,6 +24,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
     required this.showShortcutHint,
     required this.showGroupShortcutHints,
     required this.contextMenuGateway,
+    required this.resourceManagerLauncher,
     required this.onGroupShortcutStartIndexChanged,
     required this.onToggleFilters,
   });
@@ -35,6 +36,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
   final bool showShortcutHint;
   final bool showGroupShortcutHints;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final ResourceManagerLauncher? resourceManagerLauncher;
   final ValueChanged<int> onGroupShortcutStartIndexChanged;
   final VoidCallback onToggleFilters;
 
@@ -97,6 +99,7 @@ class _CompactClipboardToolbar extends StatelessWidget {
             _ClipboardKindFilters(
               viewModel: viewModel,
               showResetShortcutHint: showResetShortcutHint,
+              resourceManagerLauncher: resourceManagerLauncher,
             ),
             if (viewModel.groups.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
@@ -264,10 +267,12 @@ class _ClipboardKindFilters extends StatelessWidget {
   const _ClipboardKindFilters({
     required this.viewModel,
     required this.showResetShortcutHint,
+    required this.resourceManagerLauncher,
   });
 
   final ClipboardViewModel viewModel;
   final bool showResetShortcutHint;
+  final ResourceManagerLauncher? resourceManagerLauncher;
 
   @override
   Widget build(BuildContext context) {
@@ -293,11 +298,11 @@ class _ClipboardKindFilters extends StatelessWidget {
           DesktopIconButton(
             key: const Key('clipboard-manage-categories'),
             tooltip: context.localized('Manage categories', '管理分类'),
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (BuildContext context) =>
-                  ClipboardCategoryRulesDialog(viewModel: viewModel),
-            ),
+            onPressed: resourceManagerLauncher == null
+                ? null
+                : () => unawaited(
+                    showClipboardCategoryManager(resourceManagerLauncher!),
+                  ),
             icon: const Icon(Icons.tune_rounded, size: 16),
           ),
         ],

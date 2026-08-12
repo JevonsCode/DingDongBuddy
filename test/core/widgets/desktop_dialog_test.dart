@@ -39,9 +39,9 @@ void main() {
     final Dialog dialog = tester.widget<Dialog>(find.byType(Dialog));
     final RoundedRectangleBorder shape =
         dialog.shape! as RoundedRectangleBorder;
-    expect(shape.borderRadius, BorderRadius.circular(18));
+    expect(shape.borderRadius, BorderRadius.circular(14));
     expect(shape.side, BorderSide.none);
-    expect(dialog.elevation, 12);
+    expect(dialog.elevation, 10);
 
     final ConstrainedBox frame = tester
         .widgetList<ConstrainedBox>(find.byType(ConstrainedBox))
@@ -58,9 +58,9 @@ void main() {
     final Size deleteSize = tester.getSize(
       find.widgetWithText(FilledButton, 'Delete'),
     );
-    expect(cancelSize.width, closeTo(deleteSize.width, 0.01));
-    expect(cancelSize.height, 38);
-    expect(deleteSize.height, 38);
+    expect(cancelSize.width, isNot(closeTo(deleteSize.width, 0.01)));
+    expect(cancelSize.height, 34);
+    expect(deleteSize.height, 34);
 
     final FilledButton delete = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Delete'),
@@ -69,5 +69,58 @@ void main() {
       delete.style?.backgroundColor?.resolve(<WidgetState>{}),
       Theme.of(tester.element(find.byType(Dialog))).colorScheme.error,
     );
+
+    final ThemeData dialogTheme = Theme.of(tester.element(find.byType(Dialog)));
+    expect(
+      dialogTheme.filledButtonTheme.style?.splashFactory,
+      NoSplash.splashFactory,
+    );
+    expect(
+      dialogTheme.filledButtonTheme.style?.overlayColor?.resolve(<WidgetState>{
+        WidgetState.hovered,
+      }),
+      Colors.transparent,
+    );
+  });
+
+  testWidgets('dialog densities expose alert, chooser, and editor spacing', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const DesktopDialogFrame(
+          width: 620,
+          density: DesktopDialogDensity.editor,
+          header: DesktopDialogHeader(
+            title: Text('Edit resource'),
+            density: DesktopDialogDensity.editor,
+          ),
+          body: Text('Editor body'),
+          footer: DesktopDialogFooter(
+            density: DesktopDialogDensity.editor,
+            actions: <Widget>[TextButton(onPressed: null, child: Text('Save'))],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Padding &&
+            widget.padding == const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Container &&
+            widget.padding == const EdgeInsets.fromLTRB(24, 22, 18, 18),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.getSize(find.widgetWithText(TextButton, 'Save')).height, 36);
   });
 }

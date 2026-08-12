@@ -28,12 +28,12 @@ const Map<String, Map<String, String>> _expectedConversationPalette =
 Map<String, Object?> _expectedConversationPresentations({
   required String ansiLine,
   required String markdownLine,
+  String? fallbackLine,
 }) => <String, Object?>{
-  'rich': const <String, Object?>{
-    'protocol': 'mcp-apps',
-    'resourceUri': 'ui://dingdong/conversation-footer/v1.html',
-    'renderTool': 'dingdong_render_conversation_footer',
-    'requiresCapability': 'mcp-apps',
+  'codex': <String, Object?>{
+    'format': 'markdown',
+    'line': markdownLine,
+    'usesToolCall': false,
   },
   'ansi': <String, Object?>{
     'format': 'ansi-256',
@@ -41,6 +41,10 @@ Map<String, Object?> _expectedConversationPresentations({
     'requiresCapability': 'ansi-color',
   },
   'markdown': <String, Object?>{'format': 'markdown', 'line': markdownLine},
+  'text': <String, Object?>{
+    'format': 'plain-text',
+    'line': fallbackLine ?? markdownLine,
+  },
 };
 
 void main() {
@@ -634,6 +638,7 @@ void main() {
       const String ansiLine =
           '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m代码审查与发布流...\u001B[0m | \u001B[38;5;69m部署自动化助手\u001B[0m | \u001B[38;5;71m生产环境监控连接\u001B[0m';
       expect(response.json['conversation'], <String, Object?>{
+        'visible': true,
         'capsule': <String, Object?>{
           'label': 'DingDong',
           'items': <Map<String, Object?>>[
@@ -675,12 +680,13 @@ void main() {
         ),
         'ansiLine': ansiLine,
         'line': markdownLine,
+        'fallbackLine': markdownLine,
         'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
       });
       expect(response.json['delivery'], <String, Object?>{
         'prompts': 'full-required-instructions',
         'promptSnapshot': 'authoritative-replace',
-        'skills': 'id-name-description-catalog-load-on-match',
+        'skills': 'dynamic-id-name-description-catalog-load-on-match',
         'skillCatalogSnapshot': 'authoritative-replace',
         'mcps': 'summary-call-on-demand',
       });
@@ -811,6 +817,7 @@ void main() {
     const String ansiLine =
         '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m提示词\u001B[0m | \u001B[38;5;69m技能加载名\u001B[0m | \u001B[38;5;71mMCP titl...\u001B[0m';
     expect(response.json['conversation'], <String, Object?>{
+      'visible': true,
       'capsule': <String, Object?>{
         'label': 'DingDong',
         'items': <Map<String, Object?>>[
@@ -852,6 +859,7 @@ void main() {
       ),
       'ansiLine': ansiLine,
       'line': markdownLine,
+      'fallbackLine': markdownLine,
       'titles': <String>['提示词', '技能加载名', 'MCP titl...'],
     });
   });
@@ -928,7 +936,7 @@ void main() {
   );
 
   test(
-    'Skill loading uses catalog id to disambiguate duplicate names',
+    'Skill delivery suppresses different artifacts that share one name',
     () async {
       final DateTime now = DateTime.utc(2026, 7, 28);
       Resource skill(String id, String description) => Resource(
@@ -964,6 +972,8 @@ void main() {
       );
       final Map<String, Object?> bridgeConversation =
           bridge.json['conversation']! as Map<String, Object?>;
+      final Map<String, Object?> active =
+          bridge.json['active']! as Map<String, Object?>;
       final Map<String, Object?> bridgeCapsule =
           bridgeConversation['capsule']! as Map<String, Object?>;
       final List<Map<String, Object?>> bridgeItems =
@@ -971,30 +981,64 @@ void main() {
               .cast<Map<String, Object?>>();
       expect(
         bridgeItems.map((Map<String, Object?> item) => item['title']).toSet(),
-        <Object?>{'reviewer...'},
+        isEmpty,
       );
-      expect(
-        bridgeItems
-            .map((Map<String, Object?> item) => item['mergeKey'])
-            .toSet(),
-        <Object?>{'skill:reviewer-a', 'skill:reviewer-b'},
-      );
+      expect(active['skillConflicts'], <Object?>[
+        <String, Object?>{
+          'name': 'reviewer',
+          'candidateIds': <String>['reviewer-a', 'reviewer-b'],
+          'reason': 'different-artifacts-share-one-skill-name',
+        },
+      ]);
 
       final selected = await router.route(
         const HttpRequestData(method: 'GET', uri: '/skill?id=reviewer-b'),
       );
-      expect(selected.statusCode, 200);
-      expect(
-        (selected.json['skill'] as Map<String, Object?>)['content'],
-        contains('# reviewer-b'),
-      );
-      final Map<String, Object?> selectedConversation =
-          selected.json['conversation']! as Map<String, Object?>;
-      final Map<String, Object?> selectedItem =
-          selectedConversation['item']! as Map<String, Object?>;
-      expect(selectedItem['mergeKey'], 'skill:reviewer-b');
+      expect(selected.statusCode, 409);
+      expect(selected.json['candidateIds'], <Object?>[
+        'reviewer-a',
+        'reviewer-b',
+      ]);
     },
   );
+
+  test('Bridge reports why a managed native Skill is not dynamic', () async {
+    final DateTime now = DateTime.utc(2026, 7, 28);
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'native-reviewer',
+          type: ResourceType.skill,
+          title: 'Native reviewer',
+          content:
+              '---\nname: reviewer\ndescription: Review application code\n---\n',
+          skillDeliveryByAgent: const <String, SkillDeliveryMode>{
+            'codex': SkillDeliveryMode.nativeProject,
+          },
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+
+    final HttpResponseData bridge = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: '{"task":"review","source":"Codex","workspacePath":"/work/app"}',
+      ),
+    );
+
+    final Map<String, Object?> active =
+        bridge.json['active']! as Map<String, Object?>;
+    expect(active['skills'], isEmpty);
+    expect(active['skillSuppressions'], <Object?>[
+      <String, Object?>{
+        'resourceId': 'native-reviewer',
+        'reason': 'nativeDelivery',
+      },
+    ]);
+  });
 
   test('POST /agent/bridge stops returning a disabled global prompt', () async {
     final DateTime now = DateTime.utc(2026, 7, 12);

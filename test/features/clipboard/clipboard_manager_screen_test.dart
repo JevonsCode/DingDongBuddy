@@ -13,9 +13,35 @@ import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('deep-link request opens category management in the manager', (
+    WidgetTester tester,
+  ) async {
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(),
+    )..load();
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardManagerScreen(
+          viewModel: model,
+          categoryManagementRequestRevision: 1,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('clipboard-category-rules-dialog')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('clipboard-manager-search')), findsOneWidget);
+  });
+
   testWidgets(
     'manager source dropdown searches and multi-selects recorded apps',
     (WidgetTester tester) async {
@@ -244,7 +270,36 @@ void main() {
     expect(find.text('Sources'), findsOneWidget);
     expect(find.text('Terminal'), findsOneWidget);
     expect(find.text('Google Chrome'), findsOneWidget);
-    expect(find.text('3 copies'), findsOneWidget);
+    expect(find.byKey(const Key('clipboard-details-dialog')), findsOneWidget);
+    expect(find.text('Copy count'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.byKey(const Key('clipboard-details-content')), findsOneWidget);
+  });
+
+  testWidgets('keyboard activation opens full clipboard details', (
+    WidgetTester tester,
+  ) async {
+    final DateTime now = DateTime.utc(2026, 8, 7);
+    final ClipboardViewModel model = ClipboardViewModel(
+      InMemoryClipboardStore(<ClipboardRecord>[
+        _record('keyboard-details', now),
+      ]),
+    )..load();
+    addTearDown(model.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: ClipboardManagerScreen(viewModel: model)),
+    );
+
+    final FocusableActionDetector row = tester.widget(
+      find.byKey(const Key('clipboard-manager-open-keyboard-details')),
+    );
+    row.focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('clipboard-details-dialog')), findsOneWidget);
+    expect(find.byKey(const Key('clipboard-details-content')), findsOneWidget);
   });
 
   testWidgets('bulk manager keeps archive and dedicated delete actions', (
@@ -631,8 +686,17 @@ void main() {
       }),
       isTrue,
     );
+    await tester.tap(textDeleteButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Delete this category?'), findsOneWidget);
+    expect(model.categoryRules.any((rule) => rule.id == 'text'), isTrue);
+    await tester.tap(
+      find.byKey(const Key('clipboard-category-delete-confirm')),
+    );
+    await tester.pumpAndSettle();
+    expect(model.categoryRules.any((rule) => rule.id == 'text'), isFalse);
     expect(
-      find.byKey(const Key('clipboard-category-edit-text')),
+      find.byKey(const Key('clipboard-category-edit-links')),
       findsOneWidget,
     );
     await tester.tap(find.byKey(const Key('clipboard-category-add')));
@@ -649,6 +713,17 @@ void main() {
       find.byKey(const Key('clipboard-category-name')),
       'DingDong project',
     );
+    expect(
+      find.byKey(const Key('clipboard-category-content-regex')),
+      findsNothing,
+    );
+    await tester.ensureVisible(
+      find.byKey(const Key('clipboard-category-advanced-toggle')),
+    );
+    await tester.tap(
+      find.byKey(const Key('clipboard-category-advanced-toggle')),
+    );
+    await tester.pump();
     await tester.enterText(
       find.byKey(const Key('clipboard-category-content-regex')),
       'dingdong',

@@ -1,4 +1,4 @@
-# DingDong 1.3.7 Manual Regression Checklist
+# DingDong 1.4.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -110,6 +110,10 @@ and macOS golden images; the items below exercise real operating-system state.
   standard Command-Q/Command-W behavior; the default `Alt-Q/W/E` does the same
   on Windows. All three combinations are individually configurable.
 - The compact Clipboard toolbar shows search and filters only; clipboard monitoring remains available from the tray menu and Settings.
+- Click Manage categories from the compact Clipboard filter row. DingDong hides
+  the popup, opens or focuses Resource Manager on its Clipboard workspace, and
+  opens category rules there; no category-rule editor is layered over the
+  compact popup.
 - Arrow keys change selection and Enter restores it.
 - Textual-row context menus expose both Paste and Paste as Plain Text; file and
   image rows do not expose the plain-text action.
@@ -279,14 +283,42 @@ and macOS golden images; the items below exercise real operating-system state.
   global, project, and task Prompts are returned dynamically by the next bridge
   call, each successful response replaces the previous Prompt snapshot, and
   Prompt bodies never appear in those native files.
-- Every successful Bridge call returns all enabled, scope-matched Skills as
-  `id`, `name`, and `description` only, regardless of Prompt activation mode.
-- Loading a returned Skill provides its complete `SKILL.md` and package
-  manifest; referenced files can be read on demand, while disabled or
-  out-of-scope loads fail.
-- Existing DingDong-managed native Skill mirrors are removed during
-  synchronization; user-owned native Skills are preserved and appear as
-  warnings in Resource Manager's first-level Issues page.
+- Each Skill has one master enabled switch and exactly one delivery mode per
+  Agent: `dynamic`, `nativeUser`, or `nativeProject`. Changing one Agent does
+  not silently change another Agent's delivery plane.
+- Every successful Bridge call returns the resolved dynamic-delivery Skill
+  catalog as `id`, `name`, and `description` only. Native-delivery Skills,
+  transitions whose native absence is not yet confirmed, and ambiguous
+  duplicate-name artifacts are withheld and reported through delivery
+  suppressions or conflicts instead of falling back to dynamic delivery.
+- Loading a returned dynamic Skill provides its complete `SKILL.md` and package
+  manifest; referenced files can be read on demand. Disabled, out-of-scope,
+  native-delivery, transition-suppressed, and duplicate-conflict loads fail by
+  the same rules as catalog construction.
+- `nativeUser` installs the complete receipt-owned package in that Adapter's
+  user Skill root. `nativeProject` installs it only under each exact existing
+  project root, and its configured project paths remain one shared exact set
+  across Agents for that Skill.
+- The same Skill cannot mix user-native and project-native modes across Agents;
+  user-native mode clears trigger-group/project scope.
+- Supported Agents discover native Skill file changes automatically. Delivery
+  responses recommend a new task when state actually changed and recommend an
+  Agent restart only when an enabled native Skill remains missing; they never
+  claim a reload is unconditionally required.
+- Codex does not merge same-name native Skills. DingDong deduplicates identical
+  managed artifacts, suppresses different managed artifacts with the same name,
+  and fails closed on an unmanaged native destination collision. A separate
+  user-owned native copy is preserved and may still appear independently.
+- The project Hook switch is independent from Skill delivery, defaults off, and
+  is accepted only for Codex project-native Impeccable. Writing or updating the
+  Hook does not grant trust: `/hooks` must review its exact current definition,
+  and any definition change requires another review. Matching Hooks from all
+  loaded sources run, so duplicate, partial, or different same-family entries
+  are surfaced as conflicts instead of being appended.
+- Legacy pre-delivery DingDong mirrors are removed during synchronization;
+  current receipt-owned native deliveries are reconciled to desired state.
+  User-owned native Skills are preserved and appear as warnings in Resource
+  Manager's first-level Issues page.
 - The Issues page stays available when empty, has one manual detection action,
   uses the `rest.png` mascot when no issue is found, and can open the affected
   resource when one is recorded.
@@ -300,9 +332,9 @@ and macOS golden images; the items below exercise real operating-system state.
   revisions, and does not overwrite an unsaved editor when its file changes
   externally.
 - Saving, restoring, or deleting an Adapter immediately resynchronizes current
-  resources. Changing its paths removes only legacy DingDong-managed Skill
-  copies and managed Prompt/MCP content from old targets while preserving
-  user-owned content.
+  resources. Changing its paths reconciles receipt-owned native Skills and
+  managed Prompt/MCP content from old targets to the new targets while
+  preserving user-owned content.
 - Native MCP synchronization refuses unrelated duplicate tables instead of
   overwriting them, removes only DingDong-managed stale tables, detects a file
   changed after it was read, writes atomically, and verifies the saved result by
@@ -327,16 +359,31 @@ and macOS golden images; the items below exercise real operating-system state.
   describes how the Agent should install and verify DingDong MCP.
 - The displayed MCP executable exists inside the installed distribution.
 - Sending JSON-RPC `tools/list` to the bundled executable returns DingDong tools.
+- `dingdong_set_skill_delivery` uses a closed input schema, requires an explicit
+  master enabled value, requires at least one path for `nativeProject`, rejects
+  project paths or enabled Hooks for other modes, and permits the Hook switch
+  only with Codex project-native delivery before runtime Skill-name validation.
+- `PUT /library/skills/{id}/delivery` and its MCP wrapper return `discovery`,
+  `taskBoundaryRecommended`, and `restartAgentIfMissing`; they do not return the
+  misleading legacy `reloadRequired` field. Repeating an unchanged request does
+  not recommend another task boundary.
+- `dingdong_get_skill_deployments` returns desired policy, observed
+  DingDong-owned native deployments, and active recovery operations.
+  `dingdong_reconcile_skill` validates the Skill before requesting an idempotent
+  full native-resource synchronization and then returns the same snapshot;
+  unknown IDs and unavailable deployment state have no synchronization side
+  effect.
 - `dingdong_bridge` remains summary-first and does not include clipboard content by default.
 - A Bridge response exposes one `conversation` capsule for visible active
   Prompts, candidate Skills, and available MCPs. Repeating the Bridge call
   replaces the prior snapshot by stable merge key instead of appending duplicate
   labels or retaining resources that are no longer active.
-- `resources/list` and `resources/read` expose only the self-contained DingDong
-  conversation-footer MCP Apps resource. Calling
-  `dingdong_render_conversation_footer` renders the same canonical capsule as
-  rich, ANSI, and Markdown presentations without external assets or executable
-  HTML injection.
+- Codex desktop includes `conversation.line` exactly once as a single Markdown
+  text line. `DingDong` remains text; Prompt, Skill, and MCP retain their orange,
+  blue, and green emoji tokens. No image, MCP Apps tool call, or outer tool card
+  is created.
+- Explicitly ANSI-capable terminals use the ANSI presentation. Every other host
+  shows `conversation.fallbackLine` exactly once with the `DingDong` text label.
 - A candidate Skill has no `*` marker. After `dingdong_load_skill` succeeds,
   replace the same merge-key item with the returned loaded item and verify it
   gains exactly one `*` marker without creating a second footer entry.
@@ -471,8 +518,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.3.7` build `47` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.3.7.47` and product name `DingDong`.
+- The macOS release app metadata is version `1.4.0` build `48` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.4.0.48` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -480,11 +527,14 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.3.7` and that exact commit SHA; every
+  `/v1/health` must report version `1.4.0` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
-  assets exist, the release workflow deploys the website from the exact release
-  tag so versioned download links never point at missing files.
+  assets exist, the Release workflow sends a `deploy-release-pages`
+  `repository_dispatch` whose `client_payload.source_ref` is the exact release
+  tag. The current four-workflow chain exceeds GitHub's automatic `workflow_run`
+  chaining limit, so versioned download links must not be exposed before this
+  final deployment succeeds.
 - The macOS DMG uses the DingDong volume icon and contains a branded background, `DingDong.app`, an `Applications` shortcut, and `安装与权限说明.txt`.
 - The DMG background clearly points from DingDong to Applications and explains first launch and Accessibility permission.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.

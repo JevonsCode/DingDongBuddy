@@ -10,11 +10,25 @@ import 'package:dingdong/core/widgets/desktop_disclosure.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+final class SkillDeliveryAgentOption {
+  const SkillDeliveryAgentOption({
+    required this.id,
+    required this.label,
+    this.available = true,
+  });
+
+  final String id;
+  final String label;
+  final bool available;
+}
 
 /// Details pane with distinct authoring flows for prompts, skills, and MCP.
 class ResourceEditor extends StatefulWidget {
@@ -35,6 +49,8 @@ class ResourceEditor extends StatefulWidget {
     this.onSyncUpdate,
     this.onResolveSkillSource,
     this.onOpenExternalLink,
+    this.onDirtyChanged,
+    this.skillAgents = defaultSkillDeliveryAgents,
     super.key,
   });
 
@@ -48,6 +64,7 @@ class ResourceEditor extends StatefulWidget {
     List<String>? tags,
     String? updateUrl,
     String? packagePath,
+    String? skillPackageDigest,
     String? note,
     bool? pinned,
     bool? enabled,
@@ -63,6 +80,7 @@ class ResourceEditor extends StatefulWidget {
     List<String>? tags,
     String? updateUrl,
     String? packagePath,
+    String? skillPackageDigest,
     String? note,
     String? agentSessionName,
     bool? hideInAgentConversation,
@@ -85,6 +103,23 @@ class ResourceEditor extends StatefulWidget {
   final Future<SkillPackageInstallResult> Function(String updateUrl)?
   onResolveSkillSource;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
+  final ValueChanged<bool>? onDirtyChanged;
+  final List<SkillDeliveryAgentOption> skillAgents;
+
+  static const List<SkillDeliveryAgentOption> defaultSkillDeliveryAgents =
+      <SkillDeliveryAgentOption>[
+        SkillDeliveryAgentOption(id: 'codex', label: 'Codex'),
+        SkillDeliveryAgentOption(id: 'claude-code', label: 'Claude Code'),
+        SkillDeliveryAgentOption(id: 'cursor', label: 'Cursor'),
+        SkillDeliveryAgentOption(id: 'gemini', label: 'Gemini CLI'),
+        SkillDeliveryAgentOption(
+          id: 'grok-build',
+          label: 'Grok Build',
+          available: false,
+        ),
+        SkillDeliveryAgentOption(id: 'kiro', label: 'Kiro'),
+        SkillDeliveryAgentOption(id: 'pi', label: 'Pi', available: false),
+      ];
 
   @override
   State<ResourceEditor> createState() => _ResourceEditorState();
@@ -107,6 +142,9 @@ class _ResourceEditorState extends State<ResourceEditor> {
   late final TextEditingController _mcpTokenController;
   late final TextEditingController _mcpRawController;
   Set<String> _selectedTriggerGroupIds = <String>{};
+  Map<String, SkillDeliveryMode> _skillDeliveryByAgent =
+      <String, SkillDeliveryMode>{};
+  Map<String, bool> _skillHooksEnabledByAgent = <String, bool>{};
   bool _pinned = false;
   bool _enabled = true;
   bool _hideInAgentConversation = false;
@@ -120,6 +158,8 @@ class _ResourceEditorState extends State<ResourceEditor> {
   bool _updatingSkill = false;
   bool _skillUpdated = false;
   bool _loading = false;
+  bool _dirty = false;
+  Resource? _locallySubmittedResource;
 
   List<TextEditingController> get _controllers => <TextEditingController>[
     _titleController,
@@ -166,7 +206,13 @@ class _ResourceEditorState extends State<ResourceEditor> {
   @override
   void didUpdateWidget(covariant ResourceEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.resource?.id != widget.resource?.id ||
+    final bool acknowledgesLocalSave =
+        widget.resource != null && widget.resource == _locallySubmittedResource;
+    if (acknowledgesLocalSave) {
+      _locallySubmittedResource = null;
+      return;
+    }
+    if (oldWidget.resource != widget.resource ||
         oldWidget.isCreating != widget.isCreating ||
         oldWidget.initialType != widget.initialType ||
         oldWidget.initialTitle != widget.initialTitle ||
@@ -177,6 +223,9 @@ class _ResourceEditorState extends State<ResourceEditor> {
 
   @override
   void dispose() {
+    if (_dirty) {
+      widget.onDirtyChanged?.call(false);
+    }
     for (final TextEditingController controller in _controllers) {
       controller.dispose();
     }
@@ -203,6 +252,12 @@ class _ResourceEditorState extends State<ResourceEditor> {
     _mcpTokenController.clear();
     _mcpRawController.clear();
     _selectedTriggerGroupIds = <String>{...?resource?.triggerGroupIds};
+    _skillDeliveryByAgent = <String, SkillDeliveryMode>{
+      ...?resource?.skillDeliveryByAgent,
+    };
+    _skillHooksEnabledByAgent = <String, bool>{
+      ...?resource?.skillHooksEnabledByAgent,
+    };
     _pinned = resource?.pinned ?? false;
     _enabled = resource?.enabled ?? true;
     _hideInAgentConversation = resource?.hideInAgentConversation ?? false;
@@ -241,13 +296,25 @@ class _ResourceEditorState extends State<ResourceEditor> {
             resource?.content ?? (creating ? widget.initialContent : '');
     }
     _loading = false;
+    _setDirty(false);
   }
 
   void _markDirty() {
-    if (_loading || !mounted || !_saved) {
+    if (_loading || !mounted) {
       return;
     }
-    setState(() => _saved = false);
+    _setDirty(true);
+    if (_saved) {
+      setState(() => _saved = false);
+    }
+  }
+
+  void _setDirty(bool value) {
+    if (_dirty == value) {
+      return;
+    }
+    _dirty = value;
+    widget.onDirtyChanged?.call(value);
   }
 
   void _loadMcp(McpConfiguration configuration) {
@@ -268,6 +335,9 @@ class _ResourceEditorState extends State<ResourceEditor> {
   @override
   Widget build(BuildContext context) {
     final Resource? resource = widget.resource;
+    final bool hasProjectNative = _skillDeliveryByAgent.values.any(
+      (SkillDeliveryMode mode) => mode == SkillDeliveryMode.nativeProject,
+    );
     if (resource == null && !widget.isCreating) {
       return _EmptyEditor();
     }
@@ -327,12 +397,56 @@ class _ResourceEditorState extends State<ResourceEditor> {
                     const SizedBox(height: 18),
                   ],
                   _buildPrimaryEditor(context),
+                  if (_draftType == ResourceType.skill &&
+                      resource != null) ...<Widget>[
+                    const SizedBox(height: 18),
+                    _SkillDeliveryEditor(
+                      agents: _resolvedSkillAgents(),
+                      deliveryByAgent: _skillDeliveryByAgent,
+                      hooksEnabledByAgent: _skillHooksEnabledByAgent,
+                      impeccable: _skillNameController.text == 'impeccable',
+                      onDeliveryChanged:
+                          (String agentId, SkillDeliveryMode mode) {
+                            _setDirty(true);
+                            setState(() {
+                              _skillDeliveryByAgent[agentId] = mode;
+                              if (mode != SkillDeliveryMode.nativeProject) {
+                                _skillHooksEnabledByAgent.remove(agentId);
+                              }
+                              _saved = false;
+                            });
+                          },
+                      onHookChanged: (String agentId, bool enabled) {
+                        _setDirty(true);
+                        setState(() {
+                          if (enabled) {
+                            _skillHooksEnabledByAgent[agentId] = true;
+                          } else {
+                            _skillHooksEnabledByAgent.remove(agentId);
+                          }
+                          _saved = false;
+                        });
+                      },
+                    ),
+                    if (hasProjectNative) ...<Widget>[
+                      const SizedBox(height: 14),
+                      _TriggerScopeField(
+                        key: const Key('skill-native-project-scope'),
+                        groups: widget.triggerGroups,
+                        selectedIds: _selectedTriggerGroupIds,
+                        onTap: () =>
+                            _selectTriggerGroups(exactProjectOnly: true),
+                        nativeProject: true,
+                      ),
+                    ],
+                  ],
                   if (_draftType.isConfigurableAgentResource) ...<Widget>[
                     const SizedBox(height: 18),
                     _AgentSessionNameField(
                       controller: _agentSessionNameController,
                       hideInAgentConversation: _hideInAgentConversation,
                       onHideInAgentConversationChanged: (bool value) {
+                        _setDirty(true);
                         setState(() {
                           _hideInAgentConversation = value;
                           _saved = false;
@@ -340,12 +454,15 @@ class _ResourceEditorState extends State<ResourceEditor> {
                       },
                     ),
                   ],
-                  const SizedBox(height: 18),
-                  _TriggerScopeField(
-                    groups: widget.triggerGroups,
-                    selectedIds: _selectedTriggerGroupIds,
-                    onTap: _selectTriggerGroups,
-                  ),
+                  if (!(_draftType == ResourceType.skill &&
+                      hasProjectNative)) ...<Widget>[
+                    const SizedBox(height: 18),
+                    _TriggerScopeField(
+                      groups: widget.triggerGroups,
+                      selectedIds: _selectedTriggerGroupIds,
+                      onTap: _selectTriggerGroups,
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   _ResourceOptions(
                     updateUrlController: _updateUrlController,
@@ -357,10 +474,12 @@ class _ResourceEditorState extends State<ResourceEditor> {
                         _draftType != ResourceType.skill,
                     showUpdateLink: _draftType != ResourceType.skill,
                     onPinnedChanged: (bool value) => setState(() {
+                      _setDirty(true);
                       _pinned = value;
                       _saved = false;
                     }),
                     onEnabledChanged: (bool value) => setState(() {
+                      _setDirty(true);
                       _enabled = value;
                       _saved = false;
                     }),
@@ -425,6 +544,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
           controller: _promptController,
           activation: _activation,
           onActivationChanged: (ResourceActivation value) => setState(() {
+            _setDirty(true);
             _activation = value;
             _saved = false;
           }),
@@ -434,6 +554,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
           name: normalizeSkillName(_titleController.text),
           sourceMode: _skillSourceMode,
           onSourceModeChanged: (SkillSourceMode value) => setState(() {
+            _setDirty(true);
             _skillSourceMode = value;
             _saved = false;
             _skillUpdated = false;
@@ -455,6 +576,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
         return _McpEditor(
           transport: _mcpTransport,
           onTransportChanged: (McpTransport value) => setState(() {
+            _setDirty(true);
             _mcpTransport = value;
             _saved = false;
           }),
@@ -476,6 +598,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     if (_draftType == type) {
       return;
     }
+    _setDirty(true);
     setState(() {
       _draftType = type;
       _activation = ResourceActivation.taskMatch;
@@ -541,6 +664,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
       final bool installingOnlineSkill = onlineSkill && resource == null;
       SkillConfiguration? onlineConfiguration;
       String? packagePath = resource?.packagePath;
+      String? skillPackageDigest = resource?.skillPackageDigest;
       if (_draftType == ResourceType.skill && !onlineSkill) {
         packagePath = '';
       }
@@ -561,9 +685,83 @@ class _ResourceEditorState extends State<ResourceEditor> {
         final SkillPackageInstallResult installed = await resolve(updateUrl);
         content = installed.skillDocument;
         packagePath = installed.directoryPath;
+        skillPackageDigest = installed.packageDigest.isEmpty
+            ? null
+            : installed.packageDigest;
         onlineConfiguration = _validateOnlineSkill(content);
       }
       final String title = onlineConfiguration?.name ?? _titleController.text;
+      final String resolvedSkillName = _draftType == ResourceType.skill
+          ? SkillConfiguration.parse(content, fallbackName: title).name
+          : '';
+      final bool hasNativeDelivery = _skillDeliveryByAgent.values.any(
+        (SkillDeliveryMode mode) => mode != SkillDeliveryMode.dynamic,
+      );
+      final bool hasProjectNative = _skillDeliveryByAgent.values.any(
+        (SkillDeliveryMode mode) => mode == SkillDeliveryMode.nativeProject,
+      );
+      final bool hasUserNative = _skillDeliveryByAgent.values.any(
+        (SkillDeliveryMode mode) => mode == SkillDeliveryMode.nativeUser,
+      );
+      if (hasUserNative && hasProjectNative) {
+        throw const FormatException(
+          'One Skill cannot mix user-native and project-native delivery across Agents.',
+        );
+      }
+      if (hasUserNative && _selectedTriggerGroupIds.isNotEmpty) {
+        throw const FormatException(
+          'User-native delivery is global; clear the project trigger scope first.',
+        );
+      }
+      List<String> skillProjectPaths =
+          resource?.skillProjectPaths ?? const <String>[];
+      if (_draftType == ResourceType.skill && hasNativeDelivery) {
+        final String packageRoot = (packagePath ?? '').trim();
+        if (packageRoot.isEmpty ||
+            !File(
+              '$packageRoot${Platform.pathSeparator}SKILL.md',
+            ).existsSync()) {
+          throw const FormatException(
+            'Native delivery requires a complete installed Skill package.',
+          );
+        }
+      }
+      if (_draftType == ResourceType.skill && hasProjectNative) {
+        if (_selectedTriggerGroupIds.isNotEmpty) {
+          skillProjectPaths = resolveStrictSkillProjectPaths(
+            _selectedTriggerGroupIds.toList(growable: false),
+            <String, TriggerGroup>{
+              for (final TriggerGroup group in widget.triggerGroups)
+                group.id: group,
+            },
+          );
+        } else if (resource?.triggerGroupIds.isNotEmpty ?? false) {
+          // Clearing the final UI-managed exact scope must not silently retain
+          // an old native deployment path or its Hook.
+          skillProjectPaths = const <String>[];
+        }
+        if (skillProjectPaths.isEmpty) {
+          throw const FormatException(
+            'Project-native delivery requires an exact project trigger scope.',
+          );
+        }
+      } else if (!hasProjectNative) {
+        skillProjectPaths = const <String>[];
+      }
+      for (final MapEntry<String, bool> hook
+          in _skillHooksEnabledByAgent.entries) {
+        if (!hook.value) {
+          continue;
+        }
+        if (resolvedSkillName != 'impeccable' ||
+            hook.key != 'codex' ||
+            _skillDeliveryByAgent[hook.key] !=
+                SkillDeliveryMode.nativeProject) {
+          throw const FormatException(
+            'Managed Hooks require Impeccable with Codex project-native delivery.',
+          );
+        }
+      }
       if (resource == null) {
         final Future<void> Function({
           required ResourceType type,
@@ -573,6 +771,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
           List<String>? tags,
           String? updateUrl,
           String? packagePath,
+          String? skillPackageDigest,
           String? note,
           String? agentSessionName,
           bool? hideInAgentConversation,
@@ -589,6 +788,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
             content: content,
             updateUrl: updateUrl,
             packagePath: packagePath,
+            skillPackageDigest: skillPackageDigest,
             note: onlineSkill ? _noteController.text : null,
             agentSessionName: _agentSessionNameController.text,
             hideInAgentConversation: _hideInAgentConversation,
@@ -604,6 +804,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
             content: content,
             updateUrl: updateUrl,
             packagePath: packagePath,
+            skillPackageDigest: skillPackageDigest,
             note: onlineSkill ? _noteController.text : null,
             pinned: _pinned,
             enabled: _enabled,
@@ -612,33 +813,38 @@ class _ResourceEditorState extends State<ResourceEditor> {
           );
         }
       } else {
-        await widget.onSave(
-          resource.copyWith(
-            title: title,
-            content: content,
-            updateUrl: updateUrl,
-            packagePath: packagePath,
-            note: onlineSkill ? _noteController.text : resource.note,
-            agentSessionName: _agentSessionNameController.text,
-            hideInAgentConversation: _hideInAgentConversation,
-            pinned: _pinned,
-            enabled: _enabled,
-            activation: _activation,
-            triggerGroupIds: _selectedTriggerGroupIds.toList(growable: false),
-            updatedAt: DateTime.now().toUtc(),
-          ),
+        final Resource updated = resource.copyWith(
+          title: title,
+          content: content,
+          updateUrl: updateUrl,
+          packagePath: packagePath,
+          skillPackageDigest: skillPackageDigest,
+          note: onlineSkill ? _noteController.text : resource.note,
+          agentSessionName: _agentSessionNameController.text,
+          hideInAgentConversation: _hideInAgentConversation,
+          pinned: _pinned,
+          enabled: _enabled,
+          activation: _activation,
+          triggerGroupIds: _selectedTriggerGroupIds.toList(growable: false),
+          strictProjectSkill: hasProjectNative,
+          skillProjectPaths: skillProjectPaths,
+          skillDeliveryByAgent: _skillDeliveryByAgent,
+          skillHooksEnabledByAgent: _skillHooksEnabledByAgent,
+          updatedAt: DateTime.now().toUtc(),
         );
+        _locallySubmittedResource = updated;
+        await widget.onSave(updated);
       }
       if (mounted) {
+        _setDirty(false);
         setState(() => _saved = true);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            duration: const Duration(milliseconds: 1300),
-            content: Text(context.localized('Configuration saved', '配置已保存')),
-          ),
+        _showSnackBarIfAvailable(
+          context.localized('Configuration saved', '配置已保存'),
+          const Duration(milliseconds: 1300),
         );
       }
     } on Object catch (error) {
+      _locallySubmittedResource = null;
       if (mounted) {
         setState(() => _saveError = _friendlySaveError(error));
       }
@@ -647,6 +853,29 @@ class _ResourceEditorState extends State<ResourceEditor> {
         setState(() => _saving = false);
       }
     }
+  }
+
+  List<SkillDeliveryAgentOption> _resolvedSkillAgents() {
+    final Map<String, SkillDeliveryAgentOption> agents =
+        <String, SkillDeliveryAgentOption>{
+          for (final SkillDeliveryAgentOption agent in widget.skillAgents)
+            agent.id: agent,
+        };
+    for (final String id in <String>{
+      ..._skillDeliveryByAgent.keys,
+      ..._skillHooksEnabledByAgent.keys,
+    }) {
+      agents.putIfAbsent(
+        id,
+        () => SkillDeliveryAgentOption(id: id, label: id, available: false),
+      );
+    }
+    final List<SkillDeliveryAgentOption> result = agents.values.toList()
+      ..sort(
+        (SkillDeliveryAgentOption left, SkillDeliveryAgentOption right) =>
+            left.label.toLowerCase().compareTo(right.label.toLowerCase()),
+      );
+    return result;
   }
 
   Future<void> _openSkillSource() async {
@@ -700,15 +929,18 @@ class _ResourceEditorState extends State<ResourceEditor> {
       final SkillPackageInstallResult installed = await resolve(updateUrl);
       final String content = installed.skillDocument;
       final SkillConfiguration skill = _validateOnlineSkill(content);
-      await widget.onSave(
-        resource.copyWith(
-          title: skill.name,
-          content: content,
-          updateUrl: updateUrl,
-          packagePath: installed.directoryPath,
-          updatedAt: DateTime.now().toUtc(),
-        ),
+      final Resource updated = resource.copyWith(
+        title: skill.name,
+        content: content,
+        updateUrl: updateUrl,
+        packagePath: installed.directoryPath,
+        skillPackageDigest: installed.packageDigest.isEmpty
+            ? resource.skillPackageDigest
+            : installed.packageDigest,
+        updatedAt: DateTime.now().toUtc(),
       );
+      _locallySubmittedResource = updated;
+      await widget.onSave(updated);
       _loading = true;
       _skillDocumentController.text = content;
       _titleController.text = skill.name;
@@ -717,16 +949,13 @@ class _ResourceEditorState extends State<ResourceEditor> {
       _loading = false;
       if (mounted) {
         setState(() => _skillUpdated = true);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            duration: const Duration(milliseconds: 1400),
-            content: Text(
-              context.localized('Online Skill updated', '在线 Skill 已更新'),
-            ),
-          ),
+        _showSnackBarIfAvailable(
+          context.localized('Online Skill updated', '在线 Skill 已更新'),
+          const Duration(milliseconds: 1400),
         );
       }
     } on Object catch (error) {
+      _locallySubmittedResource = null;
       if (mounted) {
         setState(() => _saveError = _friendlySaveError(error));
       }
@@ -739,6 +968,15 @@ class _ResourceEditorState extends State<ResourceEditor> {
 
   SkillConfiguration _validateOnlineSkill(String document) =>
       SkillConfiguration.parseOnline(document);
+
+  void _showSnackBarIfAvailable(String message, Duration duration) {
+    if (Scaffold.maybeOf(context) == null) {
+      return;
+    }
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(duration: duration, content: Text(message)));
+  }
 
   String _friendlySaveError(Object error) {
     if (error is StateError) {
@@ -768,6 +1006,16 @@ class _ResourceEditorState extends State<ResourceEditor> {
     }
     if (error is FormatException) {
       if (_draftType == ResourceType.skill) {
+        final String detail = error.message.toString();
+        if (detail.contains('delivery') ||
+            detail.contains('native') ||
+            detail.contains('Hook') ||
+            detail.contains('project trigger scope')) {
+          return context.localized(
+            'Could not apply this Skill delivery policy. $detail',
+            '无法应用此 Skill 交付策略。$detail',
+          );
+        }
         if (_skillSourceMode == SkillSourceMode.local) {
           return context.localized(
             'SKILL.md needs valid name and description fields in its YAML frontmatter.',
@@ -834,7 +1082,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     }
   }
 
-  Future<void> _selectTriggerGroups() async {
+  Future<void> _selectTriggerGroups({bool exactProjectOnly = false}) async {
     final CreateTriggerGroup? create = widget.onCreateTriggerGroup;
     final Future<void> Function(TriggerGroup group)? update =
         widget.onUpdateTriggerGroup;
@@ -851,11 +1099,16 @@ class _ResourceEditorState extends State<ResourceEditor> {
         onCreate: create,
         onUpdate: update,
         onDelete: delete,
+        exactProjectOnly: exactProjectOnly,
       ),
     );
     if (selected == null || !mounted) {
       return;
     }
+    if (setEquals(selected, _selectedTriggerGroupIds)) {
+      return;
+    }
+    _setDirty(true);
     setState(() {
       _selectedTriggerGroupIds = selected;
       _saved = false;
@@ -1713,11 +1966,14 @@ class _TriggerScopeField extends StatelessWidget {
     required this.groups,
     required this.selectedIds,
     required this.onTap,
+    this.nativeProject = false,
+    super.key,
   });
 
   final List<TriggerGroup> groups;
   final Set<String> selectedIds;
   final VoidCallback onTap;
+  final bool nativeProject;
 
   @override
   Widget build(BuildContext context) {
@@ -1729,7 +1985,23 @@ class _TriggerScopeField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _FieldLabel(text: context.localized('Trigger scope', '触发范围')),
+        _FieldLabel(
+          text: nativeProject
+              ? context.localized('Project installation scope', '项目安装范围')
+              : context.localized('Trigger scope', '触发范围'),
+        ),
+        if (nativeProject) ...<Widget>[
+          const SizedBox(height: 4),
+          Text(
+            context.localized(
+              'DingDong copies the complete Skill package into each selected project\'s native directory. The Skill is discovered only when that Agent works in the project.',
+              'DingDong 会把完整 Skill 包复制到每个所选项目的 Agent 原生目录；只有该 Agent 在这些项目中工作时才会发现它。',
+            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          ),
+        ],
         const SizedBox(height: 7),
         Material(
           color: colors.surfaceContainerLow,
@@ -1745,7 +2017,9 @@ class _TriggerScopeField extends StatelessWidget {
                 child: Row(
                   children: <Widget>[
                     Icon(
-                      Icons.filter_alt_outlined,
+                      nativeProject
+                          ? Icons.folder_copy_outlined
+                          : Icons.filter_alt_outlined,
                       size: 16,
                       color: names.isEmpty
                           ? colors.onSurfaceVariant
@@ -1755,10 +2029,15 @@ class _TriggerScopeField extends StatelessWidget {
                     Expanded(
                       child: Text(
                         names.isEmpty
-                            ? context.localized(
-                                'All projects · no restriction',
-                                '所有项目 · 不限制',
-                              )
+                            ? nativeProject
+                                  ? context.localized(
+                                      'No project selected',
+                                      '尚未选择项目',
+                                    )
+                                  : context.localized(
+                                      'All projects · no restriction',
+                                      '所有项目 · 不限制',
+                                    )
                             : names.join('、'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1772,7 +2051,12 @@ class _TriggerScopeField extends StatelessWidget {
                     ),
                     Text(
                       names.isEmpty
-                          ? context.localized('Choose rules', '选择规则')
+                          ? nativeProject
+                                ? context.localized(
+                                    'Configure projects',
+                                    '配置项目',
+                                  )
+                                : context.localized('Choose rules', '选择规则')
                           : context.localized(
                               '${names.length} selected',
                               '已选 ${names.length} 个',
@@ -1793,6 +2077,237 @@ class _TriggerScopeField extends StatelessWidget {
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _SkillDeliveryEditor extends StatelessWidget {
+  const _SkillDeliveryEditor({
+    required this.agents,
+    required this.deliveryByAgent,
+    required this.hooksEnabledByAgent,
+    required this.impeccable,
+    required this.onDeliveryChanged,
+    required this.onHookChanged,
+  });
+
+  final List<SkillDeliveryAgentOption> agents;
+  final Map<String, SkillDeliveryMode> deliveryByAgent;
+  final Map<String, bool> hooksEnabledByAgent;
+  final bool impeccable;
+  final void Function(String agentId, SkillDeliveryMode mode) onDeliveryChanged;
+  final void Function(String agentId, bool enabled) onHookChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final List<SkillDeliveryAgentOption> primaryAgents = agents
+        .where(
+          (SkillDeliveryAgentOption agent) =>
+              agent.available ||
+              (deliveryByAgent[agent.id] ?? SkillDeliveryMode.dynamic) !=
+                  SkillDeliveryMode.dynamic ||
+              (hooksEnabledByAgent[agent.id] ?? false),
+        )
+        .toList(growable: false);
+    final List<SkillDeliveryAgentOption> uninstalledAgents = agents
+        .where(
+          (SkillDeliveryAgentOption agent) =>
+              !agent.available && !primaryAgents.contains(agent),
+        )
+        .toList(growable: false);
+    return DesktopDisclosure(
+      key: const Key('skill-delivery-settings'),
+      initiallyExpanded: true,
+      leading: const Icon(Icons.inventory_2_outlined, size: 16),
+      title: Text(
+        context.localized('Delivery by Agent', '按 Agent 交付'),
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Text(
+            context.localized(
+              'Dynamic loads on demand through DingDong. Native · Global installs in the Agent user directory. Native · Project installs only in selected projects.',
+              '动态通过 DingDong 按需加载；原生 · 全局安装到 Agent 用户目录；原生 · 项目只安装到所选项目。',
+            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          if (primaryAgents.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            _SkillDeliveryAgentList(
+              agents: primaryAgents,
+              deliveryByAgent: deliveryByAgent,
+              hooksEnabledByAgent: hooksEnabledByAgent,
+              impeccable: impeccable,
+              onDeliveryChanged: onDeliveryChanged,
+              onHookChanged: onHookChanged,
+            ),
+          ],
+          if (uninstalledAgents.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            DesktopDisclosure(
+              key: const Key('skill-delivery-uninstalled-agents'),
+              title: Text(
+                context.localized(
+                  'Not installed Agents (${uninstalledAgents.length})',
+                  '未安装的 Agent（${uninstalledAgents.length}）',
+                ),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              child: _SkillDeliveryAgentList(
+                agents: uninstalledAgents,
+                deliveryByAgent: deliveryByAgent,
+                hooksEnabledByAgent: hooksEnabledByAgent,
+                impeccable: impeccable,
+                onDeliveryChanged: onDeliveryChanged,
+                onHookChanged: onHookChanged,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SkillDeliveryAgentList extends StatelessWidget {
+  const _SkillDeliveryAgentList({
+    required this.agents,
+    required this.deliveryByAgent,
+    required this.hooksEnabledByAgent,
+    required this.impeccable,
+    required this.onDeliveryChanged,
+    required this.onHookChanged,
+  });
+
+  final List<SkillDeliveryAgentOption> agents;
+  final Map<String, SkillDeliveryMode> deliveryByAgent;
+  final Map<String, bool> hooksEnabledByAgent;
+  final bool impeccable;
+  final void Function(String agentId, SkillDeliveryMode mode) onDeliveryChanged;
+  final void Function(String agentId, bool enabled) onHookChanged;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[
+      for (int index = 0; index < agents.length; index++) ...<Widget>[
+        if (index > 0) const SizedBox(height: 13),
+        _SkillDeliveryAgentRow(
+          agent: agents[index],
+          delivery:
+              deliveryByAgent[agents[index].id] ?? SkillDeliveryMode.dynamic,
+          hookEnabled: hooksEnabledByAgent[agents[index].id] ?? false,
+          impeccable: impeccable,
+          onDeliveryChanged: onDeliveryChanged,
+          onHookChanged: onHookChanged,
+        ),
+      ],
+    ],
+  );
+}
+
+class _SkillDeliveryAgentRow extends StatelessWidget {
+  const _SkillDeliveryAgentRow({
+    required this.agent,
+    required this.delivery,
+    required this.hookEnabled,
+    required this.impeccable,
+    required this.onDeliveryChanged,
+    required this.onHookChanged,
+  });
+
+  final SkillDeliveryAgentOption agent;
+  final SkillDeliveryMode delivery;
+  final bool hookEnabled;
+  final bool impeccable;
+  final void Function(String agentId, SkillDeliveryMode mode) onDeliveryChanged;
+  final void Function(String agentId, bool enabled) onHookChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                agent.label,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (!agent.available)
+              Text(
+                context.localized('Not installed', '未安装'),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        _FlatChoiceRow<SkillDeliveryMode>(
+          selected: delivery,
+          choices: <_Choice<SkillDeliveryMode>>[
+            _Choice<SkillDeliveryMode>(
+              value: SkillDeliveryMode.dynamic,
+              keyName: 'skill-delivery-${agent.id}-dynamic',
+              label: context.localized('Dynamic', '动态'),
+            ),
+            _Choice<SkillDeliveryMode>(
+              value: SkillDeliveryMode.nativeUser,
+              keyName: 'skill-delivery-${agent.id}-native-user',
+              label: context.localized('Native · User', '原生 · 全局'),
+              enabled: agent.available,
+            ),
+            _Choice<SkillDeliveryMode>(
+              value: SkillDeliveryMode.nativeProject,
+              keyName: 'skill-delivery-${agent.id}-native-project',
+              label: context.localized('Native · Project', '原生 · 项目'),
+              enabled: agent.available,
+            ),
+          ],
+          onSelected: (SkillDeliveryMode mode) =>
+              onDeliveryChanged(agent.id, mode),
+        ),
+        if (agent.id == 'codex' &&
+            impeccable &&
+            delivery == SkillDeliveryMode.nativeProject) ...<Widget>[
+          const SizedBox(height: 5),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  context.localized(
+                    'Impeccable project Hook (approval required in /hooks)',
+                    'Impeccable 项目 Hook（需在 /hooks 中批准）',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              const SizedBox(width: 10),
+              CompactSwitch(
+                key: const Key('skill-hook-codex'),
+                value: hookEnabled,
+                onChanged: (bool value) => onHookChanged('codex', value),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -2036,7 +2551,9 @@ class _FlatChoiceRow<T> extends StatelessWidget {
           Expanded(
             child: DesktopActionButton(
               key: Key(choices[index].keyName),
-              onPressed: () => onSelected(choices[index].value),
+              onPressed: choices[index].enabled
+                  ? () => onSelected(choices[index].value)
+                  : null,
               style: DesktopActionButton.styleFrom(
                 minimumSize: const Size(0, 34),
                 foregroundColor: choices[index].value == selected
@@ -2074,11 +2591,13 @@ final class _Choice<T> {
     required this.value,
     required this.keyName,
     required this.label,
+    this.enabled = true,
   });
 
   final T value;
   final String keyName;
   final String label;
+  final bool enabled;
 }
 
 class _ResponsivePair extends StatelessWidget {

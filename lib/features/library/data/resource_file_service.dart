@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,7 +10,49 @@ final class ResourceFileService {
 
   final File file;
 
-  Future<List<Resource>> readResources() async {
+  static final Object _lockZoneKey = Object();
+  static final Map<String, Future<void>> _barriers = <String, Future<void>>{};
+
+  Future<T> exclusive<T>(Future<T> Function() action) async {
+    final String key = file.absolute.path;
+    final Set<String> held =
+        Zone.current[_lockZoneKey] as Set<String>? ?? const <String>{};
+    if (held.contains(key)) {
+      return action();
+    }
+    final Future<void> previous = _barriers[key] ?? Future<void>.value();
+    final Completer<void> gate = Completer<void>();
+    _barriers[key] = gate.future;
+    await previous;
+    await file.parent.create(recursive: true);
+    final RandomAccessFile lock = await File(
+      '${file.path}.lock',
+    ).open(mode: FileMode.append);
+    try {
+      await lock.lock(FileLock.exclusive);
+      return await runZoned(
+        action,
+        zoneValues: <Object, Object>{
+          _lockZoneKey: <String>{...held, key},
+        },
+      );
+    } finally {
+      try {
+        await lock.unlock();
+      } finally {
+        await lock.close();
+        gate.complete();
+        if (identical(_barriers[key], gate.future)) {
+          unawaited(_barriers.remove(key));
+        }
+      }
+    }
+  }
+
+  Future<List<Resource>> readResources() => exclusive(_readResourcesUnlocked);
+
+  Future<List<Resource>> _readResourcesUnlocked() async {
+    await _restoreInterruptedWrite();
     if (!await file.exists()) {
       return const <Resource>[];
     }
@@ -26,9 +69,14 @@ final class ResourceFileService {
   }
 
   Future<void> writeAtomically(List<Resource> resources) async {
+    await exclusive(() => _writeAtomicallyUnlocked(resources));
+  }
+
+  Future<void> _writeAtomicallyUnlocked(List<Resource> resources) async {
     await file.parent.create(recursive: true);
-    final File temporary = File('${file.path}.tmp');
-    final File backup = File('${file.path}.bak');
+    final String nonce = DateTime.now().microsecondsSinceEpoch.toString();
+    final File temporary = File('${file.path}.$nonce.tmp');
+    final File backup = File('${file.path}.$nonce.bak');
     final String contents = const JsonEncoder.withIndent(
       '  ',
     ).convert(resources.map((Resource resource) => resource.toJson()).toList());
@@ -55,5 +103,30 @@ final class ResourceFileService {
       }
       rethrow;
     }
+  }
+
+  Future<void> _restoreInterruptedWrite() async {
+    if (await file.exists() || !await file.parent.exists()) {
+      return;
+    }
+    final String prefix = '${file.path}.';
+    final List<File> backups = await file.parent
+        .list(followLinks: false)
+        .where(
+          (FileSystemEntity entity) =>
+              entity is File &&
+              entity.path.startsWith(prefix) &&
+              entity.path.endsWith('.bak'),
+        )
+        .cast<File>()
+        .toList();
+    if (backups.isEmpty) {
+      return;
+    }
+    backups.sort(
+      (File left, File right) =>
+          right.lastModifiedSync().compareTo(left.lastModifiedSync()),
+    );
+    await backups.first.rename(file.path);
   }
 }

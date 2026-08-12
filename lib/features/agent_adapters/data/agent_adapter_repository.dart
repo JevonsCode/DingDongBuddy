@@ -424,7 +424,9 @@ const List<String> builtInAgentAdapterIds = <String>[
   'claude-code',
   'cursor',
   'gemini',
+  'grok-build',
   'kiro',
+  'pi',
 ];
 
 Future<Map<String, String>> loadBundledAgentAdapterDocuments() async {

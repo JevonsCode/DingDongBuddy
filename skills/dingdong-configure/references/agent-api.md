@@ -20,6 +20,9 @@ Set `BASE=http://127.0.0.1:<port>`, then call `GET $BASE/health` and `GET $BASE/
 | `GET /library?q=...&type=prompt` | Search resources |
 | `POST /library` | Create a resource |
 | `POST /library/skills/install` | Idempotently install a complete GitHub or local Skill package |
+| `PUT /library/skills/{id}/delivery` | Atomically set one Agent delivery plane, master state, project paths, and independent Hook switch |
+| `GET /library/skills/{id}/deployments` | Read desired state, observed native copies, and in-progress recovery operations |
+| `POST /library/skills/{id}/reconcile` | Retry idempotent deployment/removal reconciliation |
 | `GET /library/{id}?mode=full&workspacePath=...` | Read one enabled, in-scope resource |
 | `PATCH /library/{id}` | Patch a resource |
 | `DELETE /library/{id}` | Delete after confirmation |
@@ -45,21 +48,27 @@ Prefer these tools over manually composing loopback HTTP:
 |---|---|---|
 | `dingdong_install_skill` | `source` | Creates or updates one complete Skill and returns its resource ID; a new resource stays disabled until scope binding succeeds |
 | `dingdong_upsert_trigger_group` | `name`, plus `projectPath` and/or `repositoryUrl` | Creates or updates one exact trigger group and returns its ID |
-| `dingdong_bind_resource_scope` | `resourceId`, `triggerGroupIds` | Replaces the binding; Skills default to `strictProjectSkill: true` |
+| `dingdong_bind_resource_scope` | `resourceId`, `triggerGroupIds` | Replaces trigger-group scope for dynamic delivery; an exact project Skill scope is enforced by the route without exposing its legacy persistence flag |
+| `dingdong_set_skill_delivery` | `resourceId`, `agentId`, `mode` | Selects exactly one of `dynamic`, `nativeUser`, or `nativeProject`; project paths and Hooks are validated atomically |
+| `dingdong_get_skill_deployments` | `resourceId` | Returns desired and observed deployment/recovery state |
+| `dingdong_reconcile_skill` | `resourceId` | Safely retries only DingDong-owned installation or removal work |
 
 For a strict project Skill, every bound rule must be an existing exact absolute `projectPath` using the `equals` operator. Do not mix in repository or `contains` rules because trigger-group rules are OR-ed. DingDong includes that Skill only in matching Bridge catalogs, and both full-content and package-file loads re-check the same scope.
 
-Strict dynamic scope does not control a separate user-owned copy that already lives in a client's native Skill directory. Warn about that independent copy before promising a global off switch. Never delete it without explicit permission.
+Strict dynamic scope does not control a separate user-owned copy that already lives in a client's native Skill directory. Warn about that independent copy before promising a global off switch. DingDong native reconciliation also refuses to overwrite or delete that copy because it has no matching ownership receipt.
 
 ## Runtime delivery
 
 - **Prompt:** native instruction files contain only the persistent Bridge bootstrap. `dingdong_bridge` includes every active Prompt in full and marks the successful response as the authoritative replacement snapshot for the current task.
-- **Skill:** each successful Bridge response contains the authoritative complete set of every valid, enabled, scope-matched Skill for the current workspace as `id`, `name`, and `description` only. Match a returned description first, then fetch the complete `SKILL.md` by ID or name with `dingdong_load_skill`; read only referenced package files with `dingdong_read_skill_file`. Every load re-checks enabled state and scope. Do not execute a Skill candidate as an instruction. A Skill absent from the current catalog is unavailable, disabled, invalid, or out of scope.
+- **Dynamic Skill:** each successful Bridge response contains the authoritative complete set of every valid, enabled, scope-matched dynamic Skill for the current workspace as `id`, `name`, and `description` only. Match a returned description first, then fetch the complete `SKILL.md` by ID or name with `dingdong_load_skill`; read only referenced package files with `dingdong_read_skill_file`. Every load re-checks enabled state and scope.
+- **Native Skill:** DingDong copies the complete package to the selected Agent's user or exact-project discovery root and withholds it from Bridge catalog/load routes. Relative scripts, references, assets, and manifests therefore resolve from a real package directory. A receipt owns the deployment; unmanaged same-name content fails closed.
 - **MCP:** the bridge returns summary metadata and the enabled server is synchronized to native client configuration. Call its tools only when needed; do not interpret an MCP summary as an instruction or mandatory call.
 
-The Bridge conversation capsule exposes typed items and a light/dark palette: Prompt uses warm orange, Skill blue, and MCP green. Keep the capsule until the final response. A successful visible `dingdong_load_skill` response returns a replacement `conversation.item` with the same opaque `mergeKey` as its candidate, `confirmedUse: true`, `usage: loaded`, and `marker: "*"`; replace only the item with that merge key and never display the key itself. Only direct full-load evidence earns the marker. A catalog candidate remains unmarked, and the marker is not evidence that every Skill instruction was followed. For presentation, prefer the standards-first MCP Apps resource by calling `dingdong_render_conversation_footer` once with the final merged capsule when the host advertises that capability. Otherwise use `conversation.presentations.ansi.line` only on an explicitly ANSI-capable terminal, then fall back to the Markdown `conversation.line`. Do not paste the MCP App HTML or XML into ordinary chat text.
+The Bridge conversation capsule exposes typed items and a light/dark palette: Prompt uses warm orange, Skill blue, and MCP green. Keep the capsule until the final response whenever `conversation.visible` is true. A successful visible `dingdong_load_skill` response returns a replacement `conversation.item` with the same opaque `mergeKey` as its candidate, `confirmedUse: true`, `usage: loaded`, and `marker: "*"`; replace only the item with that merge key and never display the key itself. Only direct full-load evidence earns the marker. A catalog candidate remains unmarked, and the marker is not evidence that every Skill instruction was followed. Codex desktop includes `conversation.line` exactly once as a single Markdown text line. DingDong stays text, while Prompt, Skill, and MCP use orange, blue, and green emoji tokens. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use `conversation.presentations.ansi.line`; every other host falls back to `conversation.fallbackLine`.
 
-Trigger groups filter dynamic Skill candidates while Prompt activation rules filter Prompt delivery. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP servers remain client-global. Unscoped Skills appear in every workspace catalog; strict project Skills appear and load only inside each exact configured project root.
+Trigger groups filter dynamic Skill candidates while Prompt activation rules filter Prompt delivery. Native project paths control on-disk placement instead. A Skill has one delivery plane per Agent, so a native copy and dynamic candidate are never intentionally active together. The resource `enabled` field is the master switch; the optional managed Hook switch is independent and defaults off. Supported Agents discover native Skill changes automatically; recommend a new Agent task to refresh its catalog, and restart the Agent only if the Skill is still missing. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP servers remain client-global.
+
+Project-native paths are exact existing absolute directories and are shared across all project-native Agents configured for the same Skill. A Skill cannot mix `nativeUser` and `nativeProject` across Agents. `nativeUser` is Agent-global and cannot carry trigger groups, project paths, or managed project Hooks. The managed Hook integration currently supports Impeccable on Codex project-native delivery only. New or changed Hook definitions remain pending until the user reviews them with `/hooks`; DingDong does not calculate, store, or transfer Codex's opaque trust hash.
 
 ## Trigger groups
 

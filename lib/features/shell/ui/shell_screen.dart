@@ -703,7 +703,7 @@ bool _groupNavigationModifierPressed(
     : keyboard.isAltPressed;
 
 final class _CalloutHidingResourceManagerLauncher
-    implements ResourceManagerLauncher {
+    implements ResourceManagerLauncher, ClipboardCategoryManagerLauncher {
   const _CalloutHidingResourceManagerLauncher({
     required this.launcher,
     required this.onHideWindow,
@@ -725,5 +725,11 @@ final class _CalloutHidingResourceManagerLauncher
       createRequest: createRequest,
       destination: destination,
     );
+  }
+
+  @override
+  Future<void> showClipboardCategories() async {
+    await onHideWindow?.call();
+    await showClipboardCategoryManager(launcher);
   }
 }

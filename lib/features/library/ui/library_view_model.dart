@@ -180,6 +180,7 @@ final class LibraryViewModel extends ChangeNotifier {
 
   Future<void> load() async {
     _resources = await _repository.load();
+    _refreshSelectedResource();
     _triggerGroups = await _triggerGroupStore.load();
     try {
       _importHistory = await _importHistoryStore.load();
@@ -279,6 +280,7 @@ final class LibraryViewModel extends ChangeNotifier {
     List<String>? tags,
     String? updateUrl,
     String? packagePath,
+    String? skillPackageDigest,
     String? note,
     String? agentSessionName,
     bool? hideInAgentConversation,
@@ -297,6 +299,7 @@ final class LibraryViewModel extends ChangeNotifier {
       tags: tags ?? const <String>[],
       updateUrl: updateUrl,
       packagePath: packagePath,
+      skillPackageDigest: skillPackageDigest,
       note: note,
       agentSessionName: agentSessionName,
       hideInAgentConversation: hideInAgentConversation ?? false,
@@ -343,7 +346,7 @@ final class LibraryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> save(Resource resource) async {
+  Future<void> save(Resource resource, {bool select = true}) async {
     final List<Resource> previousResources = _resources;
     final Resource? previousSelected = _selectedResource;
     _resources = <Resource>[
@@ -352,7 +355,11 @@ final class LibraryViewModel extends ChangeNotifier {
     ];
     try {
       await _repository.save(_resources);
-      _selectedResource = resource;
+      if (select) {
+        _selectedResource = resource;
+      } else if (_selectedResource?.id == resource.id) {
+        _selectedResource = resource;
+      }
       notifyListeners();
     } on Object {
       _resources = previousResources;

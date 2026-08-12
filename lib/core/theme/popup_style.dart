@@ -10,7 +10,7 @@ abstract final class PopupStyle {
   static const Color field = Color(0xFFF0EFEC);
   static const Color border = Color(0xFFDCDDDC);
   static const Color textPrimary = Color(0xFF1B242C);
-  static const Color textSecondary = Color(0xFF6D7274);
+  static const Color textSecondary = Color(0xFF606568);
   static const Color textTertiary = Color(0xFFA09F9A);
   static const Color accent = Color(0xFF2B5877);
   static const Color accentSoft = Color(0xFFE7F0F5);
@@ -49,11 +49,11 @@ abstract final class PopupStyle {
   );
 
   static const PopupPalette dark = PopupPalette(
-    background: Color(0xFF182126),
-    surface: Color(0xFF222D34),
-    surfaceSoft: Color(0xFF1E2930),
-    field: Color(0xFF2A363E),
-    border: Color(0xFF3B4A53),
+    background: Color(0xFF202C33),
+    surface: Color(0xFF293840),
+    surfaceSoft: Color(0xFF25333B),
+    field: Color(0xFF31424C),
+    border: Color(0xFF445761),
     textPrimary: Color(0xFFEDF2F4),
     textSecondary: Color(0xFFABB8BE),
     textTertiary: Color(0xFF74848C),

@@ -17,7 +17,6 @@ import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart'
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
-import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
@@ -353,6 +352,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                       showShortcutHint: showShortcutHints,
                       showGroupShortcutHints: showGroupShortcutHints,
                       contextMenuGateway: contextMenuGateway,
+                      resourceManagerLauncher: resourceManagerLauncher,
                       onGroupShortcutStartIndexChanged:
                           _handleGroupShortcutStartIndexChanged,
                       onToggleFilters: _toggleFilters,
@@ -394,6 +394,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                           _ClipboardKindFilters(
                             viewModel: viewModel,
                             showResetShortcutHint: false,
+                            resourceManagerLauncher: resourceManagerLauncher,
                           ),
                           if (viewModel.groups.isNotEmpty) ...<Widget>[
                             const SizedBox(height: 8),

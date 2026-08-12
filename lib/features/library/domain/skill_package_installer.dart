@@ -3,20 +3,48 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
+import 'package:dingdong/features/library/domain/skill_package_digest.dart';
 import 'package:path/path.dart' as path;
 
 final class SkillPackageInstallResult {
   const SkillPackageInstallResult({
     required this.skillDocument,
     required this.directoryPath,
+    this.packageDigest = '',
+    this.createdArtifact = false,
+    this.manifest = const <SkillPackageManifestEntry>[],
   });
 
   final String skillDocument;
   final String directoryPath;
+  final String packageDigest;
+  final bool createdArtifact;
+  final List<SkillPackageManifestEntry> manifest;
+}
+
+final class SkillPackageManifestEntry {
+  const SkillPackageManifestEntry({
+    required this.relativePath,
+    required this.executable,
+    required this.size,
+  });
+
+  final String relativePath;
+  final bool executable;
+  final int size;
 }
 
 abstract interface class SkillPackageInstaller {
   Future<SkillPackageInstallResult> install(Uri source);
+}
+
+abstract interface class ResourceKeyedSkillPackageInstaller {
+  Future<SkillPackageInstallResult> installForResource(
+    Uri source, {
+    required String resourceId,
+  });
+
+  Future<void> rollback(SkillPackageInstallResult result);
 }
 
 /// Parses an HTTPS URL, file URI, or absolute local Skill package path.
@@ -39,9 +67,46 @@ Uri? parseSkillPackageSource(String source, {path.Context? pathContext}) {
   return Uri.tryParse(value);
 }
 
+/// Returns the stable source identity used to make Skill installation
+/// idempotent. Revisions identify artifacts, not separate logical Skills.
+Future<String> skillPackageSourceKey(Uri source) async {
+  if (source.scheme == 'file') {
+    final String sourcePath = source.toFilePath();
+    final String directoryPath =
+        path.basename(sourcePath).toLowerCase() == 'skill.md'
+        ? path.dirname(sourcePath)
+        : sourcePath;
+    String canonicalPath;
+    try {
+      canonicalPath = await Directory(directoryPath).resolveSymbolicLinks();
+    } on FileSystemException {
+      canonicalPath = path.normalize(path.absolute(directoryPath));
+    }
+    return Uri.file(canonicalPath, windows: Platform.isWindows).toString();
+  }
+  final _GitHubSkillSource parsed = _GitHubSkillSource.parse(source);
+  final List<String> repositorySegments = parsed.cloneUri.pathSegments;
+  if (repositorySegments.length != 2) {
+    throw const FormatException('Invalid GitHub Skill repository path.');
+  }
+  final String repository = repositorySegments[1]
+      .replaceFirst(RegExp(r'\.git$'), '')
+      .toLowerCase();
+  return Uri(
+    scheme: 'github',
+    host: 'github.com',
+    pathSegments: <String>[
+      repositorySegments[0].toLowerCase(),
+      repository,
+      ...parsed.directory,
+    ],
+  ).toString();
+}
+
 /// Installs a complete GitHub Skill directory, including scripts, references,
 /// assets and other sibling files. Downloads are staged and replaced atomically.
-final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
+final class GitHubSkillPackageInstaller
+    implements SkillPackageInstaller, ResourceKeyedSkillPackageInstaller {
   GitHubSkillPackageInstaller(
     this.root, {
     HttpClient? client,
@@ -55,9 +120,21 @@ final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
   final bool preferGit;
 
   @override
-  Future<SkillPackageInstallResult> install(Uri source) async {
+  Future<SkillPackageInstallResult> install(Uri source) =>
+      _install(source, resourceId: null);
+
+  @override
+  Future<SkillPackageInstallResult> installForResource(
+    Uri source, {
+    required String resourceId,
+  }) => _install(source, resourceId: resourceId);
+
+  Future<SkillPackageInstallResult> _install(
+    Uri source, {
+    required String? resourceId,
+  }) async {
     if (source.scheme == 'file') {
-      return _installLocal(source);
+      return _installLocal(source, resourceId: resourceId);
     }
     final _GitHubSkillSource parsed = _GitHubSkillSource.parse(source);
     await root.create(recursive: true);
@@ -78,30 +155,8 @@ final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
         );
       }
       final String document = await skillFile.readAsString();
-      final SkillConfiguration skill = SkillConfiguration.parseOnline(document);
-      final Directory destination = Directory(path.join(root.path, skill.name));
-      final Directory backup = Directory('${destination.path}.bak');
-      if (await backup.exists()) {
-        await backup.delete(recursive: true);
-      }
-      if (await destination.exists()) {
-        await destination.rename(backup.path);
-      }
-      try {
-        await staging.rename(destination.path);
-        if (await backup.exists()) {
-          await backup.delete(recursive: true);
-        }
-      } on Object {
-        if (!await destination.exists() && await backup.exists()) {
-          await backup.rename(destination.path);
-        }
-        rethrow;
-      }
-      return SkillPackageInstallResult(
-        skillDocument: document,
-        directoryPath: destination.path,
-      );
+      SkillConfiguration.parseOnline(document);
+      return _commitArtifact(staging, document, resourceId: resourceId);
     } on Object {
       if (await staging.exists()) {
         await staging.delete(recursive: true);
@@ -110,7 +165,10 @@ final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
     }
   }
 
-  Future<SkillPackageInstallResult> _installLocal(Uri source) async {
+  Future<SkillPackageInstallResult> _installLocal(
+    Uri source, {
+    String? resourceId,
+  }) async {
     final String sourcePath = source.toFilePath();
     final FileSystemEntityType sourceType = await FileSystemEntity.type(
       sourcePath,
@@ -143,35 +201,138 @@ final class GitHubSkillPackageInstaller implements SkillPackageInstaller {
         );
       }
       final String document = await skillFile.readAsString();
-      final SkillConfiguration skill = SkillConfiguration.parseOnline(document);
-      final Directory destination = Directory(path.join(root.path, skill.name));
-      final Directory backup = Directory('${destination.path}.bak');
-      if (await backup.exists()) {
-        await backup.delete(recursive: true);
-      }
-      if (await destination.exists()) {
-        await destination.rename(backup.path);
-      }
-      try {
-        await staging.rename(destination.path);
-        if (await backup.exists()) {
-          await backup.delete(recursive: true);
-        }
-      } on Object {
-        if (!await destination.exists() && await backup.exists()) {
-          await backup.rename(destination.path);
-        }
-        rethrow;
-      }
-      return SkillPackageInstallResult(
-        skillDocument: document,
-        directoryPath: destination.path,
-      );
+      SkillConfiguration.parseOnline(document);
+      return _commitArtifact(staging, document, resourceId: resourceId);
     } on Object {
       if (await staging.exists()) {
         await staging.delete(recursive: true);
       }
       rethrow;
+    }
+  }
+
+  Future<SkillPackageInstallResult> _commitArtifact(
+    Directory staging,
+    String document, {
+    required String? resourceId,
+  }) async {
+    final _CanonicalSkillPackage package = await _canonicalPackage(staging);
+    final String digest = package.digest;
+    final String digestDirectoryName = digest.replaceFirst('sha256:', '');
+    final String identity = _artifactIdentity(resourceId);
+    final Directory parent = Directory(path.join(root.path, identity));
+    final Directory destination = Directory(
+      path.join(parent.path, digestDirectoryName),
+    );
+    if (await destination.exists()) {
+      final String? existingDigest = await _readPackageDigest(destination);
+      if (existingDigest == digest) {
+        await staging.delete(recursive: true);
+        return SkillPackageInstallResult(
+          skillDocument: document,
+          directoryPath: destination.path,
+          packageDigest: digest,
+          manifest: package.manifest,
+        );
+      }
+      await _replaceCorruptedArtifact(
+        staging: staging,
+        destination: destination,
+        expectedDigest: digest,
+      );
+      return SkillPackageInstallResult(
+        skillDocument: document,
+        directoryPath: destination.path,
+        packageDigest: digest,
+        manifest: package.manifest,
+      );
+    }
+    await parent.create(recursive: true);
+    try {
+      await staging.rename(destination.path);
+    } on Object {
+      if (await destination.exists()) {
+        await staging.delete(recursive: true);
+        return SkillPackageInstallResult(
+          skillDocument: document,
+          directoryPath: destination.path,
+          packageDigest: digest,
+          manifest: package.manifest,
+        );
+      }
+      rethrow;
+    }
+    return SkillPackageInstallResult(
+      skillDocument: document,
+      directoryPath: destination.path,
+      packageDigest: digest,
+      createdArtifact: true,
+      manifest: package.manifest,
+    );
+  }
+
+  Future<String?> _readPackageDigest(Directory directory) async {
+    try {
+      return (await _canonicalPackage(directory)).digest;
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<void> _replaceCorruptedArtifact({
+    required Directory staging,
+    required Directory destination,
+    required String expectedDigest,
+  }) async {
+    final Directory reservedBackup = await destination.parent.createTemp(
+      '.dingdong-corrupt-',
+    );
+    final String backupPath = reservedBackup.path;
+    await reservedBackup.delete();
+    final Directory backup = await destination.rename(backupPath);
+    bool activated = false;
+    try {
+      await staging.rename(destination.path);
+      activated = true;
+      final String? installedDigest = await _readPackageDigest(destination);
+      if (installedDigest != expectedDigest) {
+        throw StateError('The repaired Skill artifact failed verification.');
+      }
+      await backup.delete(recursive: true);
+    } on Object {
+      if (activated && await destination.exists()) {
+        await destination.delete(recursive: true);
+      }
+      if (await backup.exists() && !await destination.exists()) {
+        await backup.rename(destination.path);
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> rollback(SkillPackageInstallResult result) async {
+    if (!result.createdArtifact) {
+      return;
+    }
+    final String rootPath = path.canonicalize(root.absolute.path);
+    final String artifactPath = path.canonicalize(
+      File(result.directoryPath).absolute.path,
+    );
+    if (!path.isWithin(rootPath, artifactPath) ||
+        path.basename(artifactPath) !=
+            result.packageDigest.replaceFirst('sha256:', '')) {
+      throw StateError('Refusing to roll back an unmanaged Skill artifact.');
+    }
+    final Directory artifact = Directory(artifactPath);
+    if (await artifact.exists()) {
+      await artifact.delete(recursive: true);
+    }
+    final Directory parent = artifact.parent;
+    if (path.isWithin(rootPath, parent.path) &&
+        await parent.exists() &&
+        await parent.list().isEmpty) {
+      await parent.delete();
     }
   }
 
@@ -446,6 +607,72 @@ bool _safeName(String value) =>
     !value.contains('/') &&
     !value.contains(r'\');
 
+String _artifactIdentity(String? resourceId) {
+  final String? trimmed = resourceId?.trim();
+  if (trimmed == null || trimmed.isEmpty) {
+    return '.staged';
+  }
+  if (!_safeName(trimmed) ||
+      !RegExp(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$').hasMatch(trimmed)) {
+    throw const FormatException('Resource ID is not safe for Skill storage.');
+  }
+  return trimmed;
+}
+
+final class _CanonicalSkillPackage {
+  const _CanonicalSkillPackage({required this.digest, required this.manifest});
+
+  final String digest;
+  final List<SkillPackageManifestEntry> manifest;
+}
+
+Future<_CanonicalSkillPackage> _canonicalPackage(Directory directory) async {
+  final List<File> files = <File>[];
+  await for (final FileSystemEntity entity in directory.list(
+    recursive: true,
+    followLinks: false,
+  )) {
+    if (entity is Link) {
+      throw const FormatException(
+        'Skill packages with symbolic links are not supported.',
+      );
+    }
+    if (entity is File) {
+      files.add(entity);
+    }
+  }
+  files.sort((File left, File right) {
+    final String leftPath = path
+        .relative(left.path, from: directory.path)
+        .replaceAll(path.separator, '/');
+    final String rightPath = path
+        .relative(right.path, from: directory.path)
+        .replaceAll(path.separator, '/');
+    return leftPath.compareTo(rightPath);
+  });
+
+  final List<SkillPackageManifestEntry> manifest =
+      <SkillPackageManifestEntry>[];
+  for (final File file in files) {
+    final String relative = path
+        .relative(file.path, from: directory.path)
+        .replaceAll(path.separator, '/');
+    final FileStat stat = await file.stat();
+    final int executableBits = Platform.isWindows ? 0 : stat.mode & 0x49;
+    manifest.add(
+      SkillPackageManifestEntry(
+        relativePath: relative,
+        executable: executableBits != 0,
+        size: stat.size,
+      ),
+    );
+  }
+  return _CanonicalSkillPackage(
+    digest: await computeSkillPackageDigest(directory),
+    manifest: List<SkillPackageManifestEntry>.unmodifiable(manifest),
+  );
+}
+
 Future<void> _clearDirectory(Directory directory) async {
   await for (final FileSystemEntity entity in directory.list()) {
     await entity.delete(recursive: true);
@@ -472,7 +699,21 @@ Future<void> _copyPackageDirectory(
       budget
         ?..add(length)
         ..addFile();
+      final int sourceMode = (await entity.stat()).mode;
       await entity.copy(target);
+      if (!Platform.isWindows) {
+        final int permissions = sourceMode & 0x1ff;
+        final ProcessResult chmod = await Process.run('chmod', <String>[
+          permissions.toRadixString(8),
+          target,
+        ]);
+        if (chmod.exitCode != 0) {
+          throw FileSystemException(
+            'Could not preserve Skill file permissions.',
+            target,
+          );
+        }
+      }
     } else if (entity is Link) {
       throw const FormatException(
         'Skill packages with symbolic links are not supported.',
