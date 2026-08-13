@@ -1,9 +1,11 @@
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
 
+export 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 export 'package:dingdong/features/settings/domain/app_settings.dart';
 export 'package:dingdong/features/settings/domain/global_hot_key.dart';
 export 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
@@ -42,6 +44,8 @@ final class SettingsRepository {
       _backend.read(_workspaceShortcutsKey),
       _backend.read(_groupRepeatedAgentSessionsKey),
       _backend.read(_lifecycleTelemetryPreferenceKey),
+      _backend.read(_notifySubagentActivityKey),
+      _backend.read(_conversationFooterSymbolsKey),
     ]);
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -59,6 +63,8 @@ final class SettingsRepository {
       apiPort: values[10] is int ? values[10]! as int : 2333,
       mcpAccessSeen: values[11] is bool ? values[11]! as bool : false,
       rememberAgentActivity: values[12] is bool ? values[12]! as bool : true,
+      notifySubagentActivity: values[22] is bool ? values[22]! as bool : false,
+      conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
       agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
       agentActivityCountHours: values[14] is int ? values[14]! as int : 24,
       hideDockIcon: values[15] is bool ? values[15]! as bool : false,
@@ -105,6 +111,14 @@ final class SettingsRepository {
       _backend.write(_apiPortKey, settings.apiPort),
       _backend.write(_mcpAccessSeenKey, settings.mcpAccessSeen),
       _backend.write(_rememberAgentActivityKey, settings.rememberAgentActivity),
+      _backend.write(
+        _notifySubagentActivityKey,
+        settings.notifySubagentActivity,
+      ),
+      _backend.write(
+        _conversationFooterSymbolsKey,
+        settings.conversationFooterSymbols.encode(),
+      ),
       _backend.write(_agentActivityMaxItemsKey, settings.agentActivityMaxItems),
       _backend.write(
         _agentActivityCountHoursKey,
@@ -147,6 +161,10 @@ const String _customSoundPathKey = 'dingdong.customSoundPath';
 const String _apiPortKey = 'dingdong.api.port';
 const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';
 const String _rememberAgentActivityKey = 'dingdong.agentActivity.remember';
+const String _notifySubagentActivityKey =
+    'dingdong.agentActivity.notifySubagents';
+const String _conversationFooterSymbolsKey =
+    'dingdong.agentApi.conversationFooterSymbols';
 const String _agentActivityMaxItemsKey = 'dingdong.agentActivity.maxItems';
 const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
 const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';

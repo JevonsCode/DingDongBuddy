@@ -1,3 +1,5 @@
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+
 const int _maximumConversationFooterItems = 24;
 const int _maximumConversationFooterLabelCharacters = 32;
 const int _maximumConversationFooterTitleCharacters = 64;
@@ -18,7 +20,9 @@ const Map<String, Map<String, String>> dingDongConversationFooterPalette =
 Map<String, Object?> buildDingDongConversationFooter({
   required Iterable<Map<String, Object?>> items,
   String label = 'DingDong',
+  ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
 }) {
+  final ConversationFooterSymbols normalizedSymbols = symbols.sanitized();
   final String normalizedLabel = _boundedFooterText(
     label,
     maximumCharacters: _maximumConversationFooterLabelCharacters,
@@ -26,7 +30,12 @@ Map<String, Object?> buildDingDongConversationFooter({
   );
   final List<Map<String, Object?>> normalizedItems = items
       .take(_maximumConversationFooterItems)
-      .map(normalizeDingDongConversationFooterItem)
+      .map(
+        (Map<String, Object?> item) => normalizeDingDongConversationFooterItem(
+          item,
+          symbols: normalizedSymbols,
+        ),
+      )
       .whereType<Map<String, Object?>>()
       .toList(growable: false);
   final List<String> titles = normalizedItems
@@ -40,10 +49,10 @@ Map<String, Object?> buildDingDongConversationFooter({
       : '${_markdownSafeFooterText(normalizedLabel)} · $markdownTokens';
   final String fallbackLine = normalizedItems.isEmpty
       ? ''
-      : '$normalizedLabel · ${normalizedItems.map(_plainFooterToken).join(' | ')}';
+      : '$normalizedLabel · ${normalizedItems.map((Map<String, Object?> item) => _plainFooterToken(item, normalizedSymbols)).join(' | ')}';
   final String ansiLine = normalizedItems.isEmpty
       ? ''
-      : '\u001B[2m$normalizedLabel\u001B[0m · ${normalizedItems.map(_ansiFooterToken).join(' | ')}';
+      : '\u001B[2m$normalizedLabel\u001B[0m · ${normalizedItems.map((Map<String, Object?> item) => _ansiFooterToken(item, normalizedSymbols)).join(' | ')}';
   final Map<String, Object?> capsule = <String, Object?>{
     'label': normalizedLabel,
     'items': normalizedItems,
@@ -84,8 +93,9 @@ Map<String, Object?> buildDingDongConversationFooter({
 /// A Skill receives `*` only when the item carries the complete evidence shape
 /// returned by a successful `dingdong_load_skill` call.
 Map<String, Object?>? normalizeDingDongConversationFooterItem(
-  Map<String, Object?> item,
-) {
+  Map<String, Object?> item, {
+  ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
+}) {
   final String type = (item['type'] as String? ?? '').trim().toLowerCase();
   if (!dingDongConversationFooterPalette.containsKey(type)) {
     return null;
@@ -114,6 +124,7 @@ Map<String, Object?>? normalizeDingDongConversationFooterItem(
     _ => 'available',
   };
   final String marker = confirmedSkillUse ? '*' : '';
+  final String markdownMarker = confirmedSkillUse ? r'\*' : '';
   return <String, Object?>{
     'title': title,
     'type': type,
@@ -123,11 +134,14 @@ Map<String, Object?>? normalizeDingDongConversationFooterItem(
     if (skill) 'confirmedUse': confirmedSkillUse,
     if (skill) 'marker': marker,
     'lineToken':
-        '${_markdownTypeIndicator(type)} ${_markdownSafeFooterText(title)}$marker',
+        '${_markdownTypeIndicator(type, symbols.sanitized())} ${_markdownSafeFooterText(title)}$markdownMarker',
   };
 }
 
-String _ansiFooterToken(Map<String, Object?> item) {
+String _ansiFooterToken(
+  Map<String, Object?> item,
+  ConversationFooterSymbols symbols,
+) {
   final String type = item['type']! as String;
   final String color = switch (type) {
     'prompt' => '178',
@@ -136,20 +150,19 @@ String _ansiFooterToken(Map<String, Object?> item) {
     _ => '250',
   };
   final String marker = item['marker'] as String? ?? '';
-  return '\u001B[38;5;${color}m${item['title']}$marker\u001B[0m';
+  return '\u001B[38;5;${color}m${symbols.forType(type)} ${item['title']}$marker\u001B[0m';
 }
 
-String _plainFooterToken(Map<String, Object?> item) {
+String _plainFooterToken(
+  Map<String, Object?> item,
+  ConversationFooterSymbols symbols,
+) {
   final String marker = item['marker'] as String? ?? '';
-  return '${_markdownTypeIndicator(item['type']! as String)} ${item['title']}$marker';
+  return '${symbols.forType(item['type']! as String)} ${item['title']}$marker';
 }
 
-String _markdownTypeIndicator(String type) => switch (type) {
-  'prompt' => '🟠',
-  'skill' => '🔵',
-  'mcp' => '🟢',
-  _ => '⚪',
-};
+String _markdownTypeIndicator(String type, ConversationFooterSymbols symbols) =>
+    _markdownSafeFooterText(symbols.forType(type));
 
 String _boundedFooterText(
   String value, {
@@ -175,6 +188,7 @@ String _markdownSafeFooterText(String value) => value
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
+    .replaceAll('`', r'\`')
     .replaceAll('*', r'\*')
     .replaceAll('_', r'\_')
     .replaceAll('[', r'\[')

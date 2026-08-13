@@ -52,4 +52,26 @@ void main() {
     expect(styles, contains('.defaults-grid'));
     expect(styles, contains('.defaults-panel table'));
   });
+
+  test('website and READMEs explain the Agent reply resource receipt', () {
+    final String website = File('docs/index.html').readAsStringSync();
+    final String english = File('README.md').readAsStringSync();
+    final String chinese = File('README.zh.md').readAsStringSync();
+
+    expect(website, contains('class="conversation-receipt"'));
+    expect(
+      website,
+      contains('Every final reply leaves a little resource receipt.'),
+    );
+    expect(website, contains('每次答完，都留一张资源小票'));
+    expect(website, contains('not necessarily called'));
+    expect(website, contains('不代表工具已实际调用'));
+    expect(
+      english,
+      contains('### A resource receipt at the end of each reply'),
+    );
+    expect(english, contains('not that a tool was actually called'));
+    expect(chinese, contains('### 每次回复末尾，都有一张资源小票'));
+    expect(chinese, contains('不代表工具已实际调用'));
+  });
 }

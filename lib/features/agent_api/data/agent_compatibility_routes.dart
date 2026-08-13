@@ -4,6 +4,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -15,6 +16,7 @@ final class AgentCompatibilityRoutes {
     this.clipboardStore,
     this.triggerGroupStore,
     this.querySkillDeploymentPresence,
+    this.loadConversationFooterSymbols,
     DateTime Function()? now,
     Uri? baseUri,
   }) : _now = now ?? _utcNow,
@@ -24,6 +26,8 @@ final class AgentCompatibilityRoutes {
   final ClipboardStore? clipboardStore;
   final TriggerGroupStore? triggerGroupStore;
   final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
+  final Future<ConversationFooterSymbols> Function()?
+  loadConversationFooterSymbols;
   final DateTime Function() _now;
   Uri _baseUri;
 
@@ -46,6 +50,7 @@ final class AgentCompatibilityRoutes {
           resourceStore,
           triggerGroupStore: triggerGroupStore,
           querySkillDeploymentPresence: querySkillDeploymentPresence,
+          loadConversationFooterSymbols: loadConversationFooterSymbols,
           now: _now,
         ).respond(
           jsonEncode(<String, Object?>{

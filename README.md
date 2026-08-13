@@ -9,13 +9,18 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>Send clipboard items and Agent alerts to your trusted devices</strong>
+  <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>Keep connected Agent alerts in one place, with a sound you choose</strong>
 </p>
 
 DingDong is a local desktop companion for content-heavy Agent work. It keeps
 clipboard history searchable, manages reusable Agent resources in one place,
-connects them to supported clients, and brings completion alerts and selected
-clipboard items to a trusted phone through the mobile PWA.
+connects them to supported clients, and gathers their alerts with a desktop
+sound you choose. Important results and selected clipboard items can also reach
+a trusted phone through the mobile PWA.
+
+At the end of a supported Agent's final reply, DingDong can add a compact
+resource receipt: active Prompts, matching Skills, and available MCP connections
+stay visible, and a `*` appears only when a Skill was fully loaded for that task.
 
 ## What DingDong manages
 
@@ -26,6 +31,7 @@ clipboard items to a trusted phone through the mobile PWA.
 | Skill | Complete packages with `SKILL.md`, scripts, references, and assets; summary-first discovery and on-demand loading |
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
+| Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a Skill loaded during this task |
 | Connected devices | One phone can keep multiple computers paired and online, with per-computer Clipboard, file, draft, and Agent reminder isolation |
 
 Clipboard and resource data stay on this computer by default. The lightweight
@@ -54,10 +60,25 @@ flowchart LR
 | Skill | The bridge returns the complete matching catalog as ID, name, and description only | Match the description, call `dingdong_load_skill`, then read only referenced package files with `dingdong_read_skill_file` |
 | MCP | Enabled servers are synchronized into native client configuration; the bridge returns summary metadata | Treat MCP entries as available tools, not instructions, and call a tool only when the task needs it |
 
+### A resource receipt at the end of each reply
+
+After the Bridge is connected, supported Agents append one compact resource
+line to the final reply, showing the Prompts active for this task, matching
+Skills, and available MCP connections:
+
+```text
+DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub
+```
+
+An `*` after a Skill means the full Skill was loaded during this task; without
+it, the Skill is only a candidate. An MCP marker means the connection was
+available, not that a tool was actually called. Customize all three symbols
+under **Settings → Agent reply footer**.
+
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.4.2.”
+- “Use this project's release workflow, run every check, and prepare version 1.4.3.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with
@@ -186,6 +207,7 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | Clipboard monitoring | Off | On / off |
 | Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |
 | Completion sound | DingDong Classic | Built-in, custom, system, or muted |
+| Agent reply footer symbols | ♥ / ♦ / ♠ | Customize Prompt, Skill, and MCP separately |
 | Local Agent API port | `2333` | `1024`–`65535`; restart required |
 
 ## Privacy and local data

@@ -91,11 +91,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       'dingdong_set_skill_delivery' => _setSkillDelivery(arguments),
       'dingdong_get_skill_deployments' => _skillDeployments(arguments),
       'dingdong_reconcile_skill' => _reconcileSkill(arguments),
-      'dingdong_notify' => _transport.request(
-        method: 'POST',
-        path: '/ding',
-        body: arguments,
-      ),
+      'dingdong_notify' => _notify(arguments),
       _ => throw ArgumentError.value(name, 'name', 'Unknown DingDong tool'),
     };
   }
@@ -231,6 +227,26 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       _lastBridgeSource = requestedSource.isEmpty ? 'Agent' : requestedSource;
     }
     return response;
+  }
+
+  Future<Map<String, Object?>> _notify(Map<String, Object?> arguments) {
+    final Map<String, Object?> body = Map<String, Object?>.of(arguments);
+    if ((body['conversationId'] as String? ?? '').trim().isEmpty) {
+      final String? conversationId = _conversationIdResolver()?.trim();
+      if (conversationId != null && conversationId.isNotEmpty) {
+        body['conversationId'] = conversationId;
+      }
+    }
+    if ((body['source'] as String? ?? '').trim().isEmpty) {
+      final String? source = _lastBridgeSource ?? _sourceResolver()?.trim();
+      if (source != null && source.isNotEmpty) {
+        body['source'] = source;
+      }
+    }
+    if ((body['workspacePath'] as String? ?? '').trim().isEmpty) {
+      body['workspacePath'] = _currentDirectory();
+    }
+    return _transport.request(method: 'POST', path: '/ding', body: body);
   }
 
   Future<Map<String, Object?>> _contextualGet({

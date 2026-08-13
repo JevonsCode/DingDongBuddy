@@ -1022,7 +1022,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.4.3'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.4.4'),
       );
       addTearDown(settings.dispose);
       await settings.load();

@@ -20,6 +20,7 @@ import 'package:dingdong/features/settings/ui/sound_choices.dart';
 import 'package:dingdong/features/settings/ui/system_usage_section.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 part 'settings_fields.dart';
 part 'settings_sections.dart';
@@ -676,6 +677,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             settings: settings,
                             soundFileGateway: widget.soundFileGateway,
                             soundPreviewGateway: widget.soundPreviewGateway,
+                          ),
+                          _ConversationFooterSettingsSection(
+                            viewModel: widget.viewModel,
+                            settings: settings,
                           ),
                           _SettingsSection(
                             title: 'Agent API',

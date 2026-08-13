@@ -361,6 +361,36 @@ void main() {
       BuiltInResourceInstaller.currentVersion,
     );
   });
+
+  test('version twelve refreshes configurable footer instructions', () async {
+    final DateTime originalTime = DateTime.utc(2026, 8, 12);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      builtInDingDongConfigureSkill(
+        'fixed emoji footer instructions',
+        originalTime,
+      ).copyWith(enabled: true, hideInAgentConversation: true),
+    ]);
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 11;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      now: () => DateTime.utc(2026, 8, 13),
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isTrue);
+
+    final Resource skill = (await store.load()).single;
+    expect(skill.content, await _loadConfigureSkill());
+    expect(skill.enabled, isTrue);
+    expect(skill.hideInAgentConversation, isTrue);
+    expect(skill.updatedAt, DateTime.utc(2026, 8, 13));
+    expect(
+      preferences.values[BuiltInResourceInstaller.preferenceKey],
+      BuiltInResourceInstaller.currentVersion,
+    );
+  });
 }
 
 Future<String> _loadConfigureSkill() =>

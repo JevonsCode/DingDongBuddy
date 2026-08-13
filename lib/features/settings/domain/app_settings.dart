@@ -1,3 +1,4 @@
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
@@ -89,9 +90,11 @@ final class AppSettings {
     this.allowAgentClipboardContent = false,
     this.lifecycleTelemetryEnabled = true,
     this.rememberAgentActivity = true,
+    this.notifySubagentActivity = false,
     this.groupRepeatedAgentSessions = true,
     this.agentActivityMaxItems = 500,
     this.agentActivityCountHours = 24,
+    this.conversationFooterSymbols = ConversationFooterSymbols.defaultValue,
     this.selectedSound = 'default',
     this.customSoundPath,
     this.mcpAccessSeen = false,
@@ -113,9 +116,11 @@ final class AppSettings {
   final bool allowAgentClipboardContent;
   final bool lifecycleTelemetryEnabled;
   final bool rememberAgentActivity;
+  final bool notifySubagentActivity;
   final bool groupRepeatedAgentSessions;
   final int agentActivityMaxItems;
   final int agentActivityCountHours;
+  final ConversationFooterSymbols conversationFooterSymbols;
   final String selectedSound;
   final String? customSoundPath;
   final bool mcpAccessSeen;
@@ -138,9 +143,11 @@ final class AppSettings {
       allowAgentClipboardContent: allowAgentClipboardContent,
       lifecycleTelemetryEnabled: lifecycleTelemetryEnabled,
       rememberAgentActivity: rememberAgentActivity,
+      notifySubagentActivity: notifySubagentActivity,
       groupRepeatedAgentSessions: groupRepeatedAgentSessions,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
+      conversationFooterSymbols: conversationFooterSymbols.sanitized(),
       selectedSound: _preferenceSoundValues.contains(selectedSound)
           ? selectedSound
           : 'default',
@@ -166,9 +173,11 @@ final class AppSettings {
     bool? allowAgentClipboardContent,
     bool? lifecycleTelemetryEnabled,
     bool? rememberAgentActivity,
+    bool? notifySubagentActivity,
     bool? groupRepeatedAgentSessions,
     int? agentActivityMaxItems,
     int? agentActivityCountHours,
+    ConversationFooterSymbols? conversationFooterSymbols,
     String? selectedSound,
     Object? customSoundPath = _notSet,
     bool? mcpAccessSeen,
@@ -194,12 +203,16 @@ final class AppSettings {
           lifecycleTelemetryEnabled ?? this.lifecycleTelemetryEnabled,
       rememberAgentActivity:
           rememberAgentActivity ?? this.rememberAgentActivity,
+      notifySubagentActivity:
+          notifySubagentActivity ?? this.notifySubagentActivity,
       groupRepeatedAgentSessions:
           groupRepeatedAgentSessions ?? this.groupRepeatedAgentSessions,
       agentActivityMaxItems:
           agentActivityMaxItems ?? this.agentActivityMaxItems,
       agentActivityCountHours:
           agentActivityCountHours ?? this.agentActivityCountHours,
+      conversationFooterSymbols:
+          conversationFooterSymbols ?? this.conversationFooterSymbols,
       selectedSound: selectedSound ?? this.selectedSound,
       customSoundPath: identical(customSoundPath, _notSet)
           ? this.customSoundPath

@@ -118,6 +118,65 @@ void main() {
     expect(controller.activities.single.task, '第一项任务');
   });
 
+  test('filtered completion discards only its matching running task', () {
+    final ActivityController controller = ActivityController();
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: 'Main task',
+      startedAt: DateTime.utc(2026, 8, 13, 9),
+      conversationId: 'main-thread',
+    );
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: 'Subagent task',
+      startedAt: DateTime.utc(2026, 8, 13, 9, 1),
+      conversationId: 'subagent-thread',
+    );
+
+    expect(
+      controller.discardActiveRun(
+        source: 'Codex',
+        target: const AgentConversationTarget(
+          client: AgentClient.codex,
+          conversationId: 'subagent-thread',
+        ),
+      ),
+      isTrue,
+    );
+
+    expect(controller.activeRuns, hasLength(1));
+    expect(controller.activeRuns.single.task, 'Main task');
+    expect(controller.activities, isEmpty);
+    expect(controller.unseenCount, 0);
+    expect(controller.recentCount, 0);
+  });
+
+  test('filtered subagent completion never discards a main task', () {
+    final ActivityController controller = ActivityController();
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: 'Main task',
+      startedAt: DateTime.utc(2026, 8, 13, 9),
+      workspacePath: '/workspace',
+      conversationId: 'main-thread',
+    );
+
+    expect(
+      controller.discardActiveRun(
+        source: 'Codex',
+        target: const AgentConversationTarget(
+          client: AgentClient.codex,
+          conversationId: 'subagent-thread',
+          workspacePath: '/workspace',
+        ),
+      ),
+      isFalse,
+    );
+
+    expect(controller.activeRuns, hasLength(1));
+    expect(controller.activeRuns.single.task, 'Main task');
+  });
+
   test('conversation ids are isolated between known Agent clients', () {
     var id = 0;
     final ActivityController controller = ActivityController(

@@ -8,6 +8,7 @@ import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
@@ -185,6 +186,49 @@ void main() {
       expect(suppressed.json['status'], 'suppressed');
     },
   );
+
+  test('Codex completion deduplication does not cross conversation IDs', () async {
+    int notificationCount = 0;
+    int suppressedCount = 0;
+    DateTime now = DateTime.utc(2026, 7, 17, 12);
+    final AgentRouter router = AgentRouter(
+      onDing: (DingRequest request) => notificationCount += 1,
+      onSuppressedDing: (DingRequest request) => suppressedCount += 1,
+      now: () => now,
+    );
+
+    await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body:
+            '{"message":"Subagent done","source":"Codex","conversationId":"subagent-thread"}',
+      ),
+    );
+    now = now.add(const Duration(seconds: 1));
+    final HttpResponseData mainFallback = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body:
+            '{"message":"Main done","source":"codex","fallback":true,"conversationId":"main-thread"}',
+      ),
+    );
+    now = now.add(const Duration(seconds: 1));
+    final HttpResponseData subagentFallback = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body:
+            '{"message":"Subagent hook","source":"Codex","fallback":true,"conversationId":"subagent-thread"}',
+      ),
+    );
+
+    expect(mainFallback.json['status'], 'triggered');
+    expect(subagentFallback.json['status'], 'suppressed');
+    expect(notificationCount, 2);
+    expect(suppressedCount, 1);
+  });
 
   test('fallback-only notifications are never deduplicated', () async {
     int notificationCount = 0;
@@ -634,9 +678,9 @@ void main() {
       );
       expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
       const String markdownLine =
-          'DingDong · 🟠 代码审查与发布流... | 🔵 部署自动化助手 | 🟢 生产环境监控连接';
+          'DingDong · ♥ 代码审查与发布流... | ♦ 部署自动化助手 | ♠ 生产环境监控连接';
       const String ansiLine =
-          '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m代码审查与发布流...\u001B[0m | \u001B[38;5;69m部署自动化助手\u001B[0m | \u001B[38;5;71m生产环境监控连接\u001B[0m';
+          '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m♥ 代码审查与发布流...\u001B[0m | \u001B[38;5;69m♦ 部署自动化助手\u001B[0m | \u001B[38;5;71m♠ 生产环境监控连接\u001B[0m';
       expect(response.json['conversation'], <String, Object?>{
         'visible': true,
         'capsule': <String, Object?>{
@@ -648,7 +692,7 @@ void main() {
               'tone': 'prompt',
               'usage': 'active',
               'mergeKey': 'prompt:prompt',
-              'lineToken': '🟠 代码审查与发布流...',
+              'lineToken': '♥ 代码审查与发布流...',
             },
             <String, Object?>{
               'title': '部署自动化助手',
@@ -658,7 +702,7 @@ void main() {
               'confirmedUse': false,
               'marker': '',
               'mergeKey': 'skill:skill',
-              'lineToken': '🔵 部署自动化助手',
+              'lineToken': '♦ 部署自动化助手',
             },
             <String, Object?>{
               'title': '生产环境监控连接',
@@ -666,7 +710,7 @@ void main() {
               'tone': 'mcp',
               'usage': 'available',
               'mergeKey': 'mcp:mcp',
-              'lineToken': '🟢 生产环境监控连接',
+              'lineToken': '♠ 生产环境监控连接',
             },
           ],
           'palette': _expectedConversationPalette,
@@ -697,6 +741,101 @@ void main() {
       expect(
         (await store.load()).first.lastUsedAt,
         now.add(const Duration(hours: 1)),
+      );
+    },
+  );
+
+  test(
+    'conversation footer symbol settings apply live across Bridge routes',
+    () async {
+      final DateTime now = DateTime.utc(2026, 8, 13);
+      ConversationFooterSymbols symbols =
+          ConversationFooterSymbols.defaultValue;
+      final AgentRouter router = AgentRouter(
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'footer-prompt',
+            type: ResourceType.prompt,
+            title: 'Prompt',
+            content: 'Always provide the footer.',
+            activation: ResourceActivation.always,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'footer-skill',
+            type: ResourceType.skill,
+            title: 'Footer Skill',
+            agentSessionName: 'Footer',
+            content:
+                '---\nname: footer-skill\ndescription: Use for footer work\n---\n\n# Footer',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'footer-mcp',
+            type: ResourceType.mcp,
+            title: 'MCP',
+            content: '{"command":"footer-mcp"}',
+            tags: const <String>['footer'],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+        loadConversationFooterSymbols: () async => symbols,
+      );
+
+      final HttpResponseData defaultResponse = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"footer","source":"Codex"}',
+        ),
+      );
+      expect(
+        (defaultResponse.json['conversation'] as Map<String, Object?>)['line'],
+        'DingDong · ♥ Prompt | ♦ Footer | ♠ MCP',
+      );
+
+      symbols = const ConversationFooterSymbols(
+        prompt: '◇',
+        skill: '◆',
+        mcp: '●',
+      );
+      final HttpResponseData postResponse = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"footer","source":"Codex"}',
+        ),
+      );
+      final HttpResponseData compatibilityResponse = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/agent/bridge?task=footer&source=Codex',
+        ),
+      );
+      for (final HttpResponseData response in <HttpResponseData>[
+        postResponse,
+        compatibilityResponse,
+      ]) {
+        expect(
+          (response.json['conversation'] as Map<String, Object?>)['line'],
+          'DingDong · ◇ Prompt | ◆ Footer | ● MCP',
+        );
+      }
+
+      final HttpResponseData skillResponse = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/agent/skills/load?name=footer-skill&source=Codex',
+        ),
+      );
+      final Map<String, Object?> skillConversation =
+          skillResponse.json['conversation']! as Map<String, Object?>;
+      expect(
+        (skillConversation['item'] as Map<String, Object?>)['lineToken'],
+        r'◆ Footer\*',
       );
     },
   );
@@ -813,9 +952,9 @@ void main() {
       ),
     );
 
-    const String markdownLine = 'DingDong · 🟠 提示词 | 🔵 技能加载名 | 🟢 MCP titl...';
+    const String markdownLine = 'DingDong · ♥ 提示词 | ♦ 技能加载名 | ♠ MCP titl...';
     const String ansiLine =
-        '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m提示词\u001B[0m | \u001B[38;5;69m技能加载名\u001B[0m | \u001B[38;5;71mMCP titl...\u001B[0m';
+        '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m♥ 提示词\u001B[0m | \u001B[38;5;69m♦ 技能加载名\u001B[0m | \u001B[38;5;71m♠ MCP titl...\u001B[0m';
     expect(response.json['conversation'], <String, Object?>{
       'visible': true,
       'capsule': <String, Object?>{
@@ -827,7 +966,7 @@ void main() {
             'tone': 'prompt',
             'usage': 'active',
             'mergeKey': 'prompt:prompt-session-name',
-            'lineToken': '🟠 提示词',
+            'lineToken': '♥ 提示词',
           },
           <String, Object?>{
             'title': '技能加载名',
@@ -837,7 +976,7 @@ void main() {
             'confirmedUse': false,
             'marker': '',
             'mergeKey': 'skill:skill-session-name',
-            'lineToken': '🔵 技能加载名',
+            'lineToken': '♦ 技能加载名',
           },
           <String, Object?>{
             'title': 'MCP titl...',
@@ -845,7 +984,7 @@ void main() {
             'tone': 'mcp',
             'usage': 'available',
             'mergeKey': 'mcp:mcp-title-fallback',
-            'lineToken': '🟢 MCP titl...',
+            'lineToken': '♠ MCP titl...',
           },
         ],
         'palette': _expectedConversationPalette,
@@ -923,7 +1062,7 @@ void main() {
         containsPair('id', 'hidden-prompt'),
       );
       expect(conversation['titles'], <String>['Visible ...']);
-      expect(conversation['line'], 'DingDong · 🟢 Visible ...');
+      expect(conversation['line'], 'DingDong · ♠ Visible ...');
       final HttpResponseData hiddenLoad = await router.route(
         const HttpRequestData(
           method: 'GET',
@@ -2043,7 +2182,7 @@ void main() {
       expect(usedSkillItem['marker'], '*');
       expect(usedSkillItem['mergeKey'], candidateSkillItem['mergeKey']);
       expect(usedSkillItem['mergeKey'], 'skill:$resourceId');
-      expect(usedSkillItem['lineToken'], endsWith('*'));
+      expect(usedSkillItem['lineToken'], endsWith(r'\*'));
       expect(unrelatedLoad.statusCode, 404);
     },
   );

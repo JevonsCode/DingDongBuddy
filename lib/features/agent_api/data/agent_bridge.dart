@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.da
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
@@ -43,6 +45,7 @@ final class AgentBridge {
     DateTime Function()? now,
     this.querySkillDeploymentPresence,
     this.onTaskStarted,
+    this.loadConversationFooterSymbols,
   }) : _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
        _now = now ?? DateTime.now;
 
@@ -50,7 +53,9 @@ final class AgentBridge {
   final TriggerGroupStore _triggerGroupStore;
   final DateTime Function() _now;
   final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
-  final void Function(AgentBridgeTaskStart start)? onTaskStarted;
+  final FutureOr<void> Function(AgentBridgeTaskStart start)? onTaskStarted;
+  final Future<ConversationFooterSymbols> Function()?
+  loadConversationFooterSymbols;
 
   static const int _maximumSkillPackageFiles = 200;
   static const int _maximumSkillFileBytes = 5 * 1024 * 1024;
@@ -81,7 +86,7 @@ final class AgentBridge {
       );
       if (task.isNotEmpty) {
         try {
-          onTaskStarted?.call(
+          await onTaskStarted?.call(
             AgentBridgeTaskStart(
               task: task,
               source: source,
@@ -208,8 +213,11 @@ final class AgentBridge {
             (Map<String, Object?> item) => (item['title'] as String).isNotEmpty,
           )
           .toList(growable: false);
+      final ConversationFooterSymbols footerSymbols =
+          await _loadConversationFooterSymbols();
       final Map<String, Object?> conversation = buildDingDongConversationFooter(
         items: conversationItems,
+        symbols: footerSymbols,
       );
 
       List<Map<String, Object?>> items(ResourceType type) {
@@ -331,9 +339,12 @@ final class AgentBridge {
         await store.save(resources);
       }
       final Map<String, Object?> package = await _packageSummary(tracked);
+      final ConversationFooterSymbols footerSymbols =
+          await _loadConversationFooterSymbols();
       final Map<String, Object?> conversationItem =
           normalizeDingDongConversationFooterItem(
             _conversationCapsuleItem(tracked, confirmedSkillUse: true),
+            symbols: footerSymbols,
           )!;
       return HttpResponseData(
         statusCode: 200,
@@ -369,6 +380,16 @@ final class AgentBridge {
           'message': 'Invalid Skill load request',
         },
       );
+    }
+  }
+
+  Future<ConversationFooterSymbols> _loadConversationFooterSymbols() async {
+    try {
+      return (await loadConversationFooterSymbols?.call() ??
+              ConversationFooterSymbols.defaultValue)
+          .sanitized();
+    } on Object {
+      return ConversationFooterSymbols.defaultValue;
     }
   }
 
@@ -708,16 +729,8 @@ Map<String, Object?> _conversationCapsuleItem(
     'mergeKey': '${resource.type.name}:${resource.id}',
     if (skill) 'confirmedUse': confirmedSkillUse,
     if (skill) 'marker': marker,
-    'lineToken': '${_conversationTypeIndicator(resource.type)} $title$marker',
   };
 }
-
-String _conversationTypeIndicator(ResourceType type) => switch (type) {
-  ResourceType.prompt => '🟠',
-  ResourceType.skill => '🔵',
-  ResourceType.mcp => '🟢',
-  _ => '⚪',
-};
 
 String _displayResourceTitle(String value) {
   final String normalized = value.trim().replaceAll(RegExp(r'\s+'), ' ');

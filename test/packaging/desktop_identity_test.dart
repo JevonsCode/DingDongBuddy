@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.4.2 from pubspec', () {
+  test('desktop hosts consume application version 1.4.3 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,26 +77,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.4.2+50'));
+    expect(pubspec, contains('version: 1.4.3+51'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.4.2';"),
+      contains("const String currentAppVersion = '1.4.3';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '50';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '51';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.4.2'"),
+      contains("'version': '1.4.3'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.4.2'"),
+      contains("'version': '1.4.3'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,4,2,50'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.4.2"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,4,3,51'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.4.3"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -434,7 +434,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.4.2</span>'));
+    expect(website, contains('<span class="demo-version">v1.4.3</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -451,7 +451,10 @@ void main() {
     expect(website, contains('class="conversation-grid"'));
     expect(website, contains('"hero.title.clipboard": "清晰管理剪贴板列表"'));
     expect(website, contains('"hero.title.resources": "统一管理提示词、Skill、MCP"'));
-    expect(website, contains('"hero.title.alerts": "Agent 做完，电脑和手机都能提醒你"'));
+    expect(
+      website,
+      contains('"hero.title.alerts": "接入的 Agent，提醒都归一处；叮咚哪一声，你来定"'),
+    );
     expect(website, contains('id="devices"'));
     expect(website, contains('class="device-showcase"'));
     expect(
@@ -468,8 +471,8 @@ void main() {
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
     expect(website, contains('快捷键帮你高效处理内容工作'));
-    expect(website, contains('开启电脑声音，需求交给 AI，做完会用声音提醒你'));
-    expect(website, contains('你就可以先去摸摸鱼，毕竟在 AI 时代，人的精力才是最大资产 🫣'));
+    expect(website, contains('让每个接入的 Agent，都用你挑的声音回来报到'));
+    expect(website, contains('先去喝口水，等熟悉的那一声把你叫回来。'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
@@ -540,19 +543,19 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.4.2"'));
-    expect(releaseMetadata, contains('"latestBuild": "50"'));
-    expect(releaseMetadata, contains('Keeps DingDong running on Windows'));
+    expect(releaseMetadata, contains('"latestVersion": "1.4.3"'));
+    expect(releaseMetadata, contains('"latestBuild": "51"'));
+    expect(releaseMetadata, contains('Adds a Subagent notifications switch'));
     expect(
       releaseMetadata,
-      contains('Adds automatic and manual PWA update checks'),
+      contains('Adds customizable Prompt, Skill, and MCP symbols'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.4.2-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.4.3-windows-x64-beta-Setup.exe'),
     );
   });
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
@@ -33,5 +35,39 @@ void main() {
     expect(observed?.repositoryUrl, 'https://example.test/dingdong.git');
     expect(observed?.conversationId, 'thread-42');
     expect(observed?.startedAt, now);
+  });
+
+  test('Bridge waits for asynchronous lifecycle filtering', () async {
+    final Completer<void> classification = Completer<void>();
+    var recorded = false;
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(),
+      onAgentTaskStarted: (AgentBridgeTaskStart start) async {
+        await classification.future;
+        recorded = true;
+      },
+    );
+
+    var responseCompleted = false;
+    final Future<void> response = router
+        .route(
+          const HttpRequestData(
+            method: 'POST',
+            uri: '/agent/bridge',
+            body:
+                '{"task":"background work","source":"Codex","conversationId":"thread-42"}',
+          ),
+        )
+        .then<void>((_) {
+          responseCompleted = true;
+        });
+    await Future<void>.delayed(Duration.zero);
+
+    expect(recorded, isFalse);
+    expect(responseCompleted, isFalse);
+
+    classification.complete();
+    await response;
+    expect(recorded, isTrue);
   });
 }

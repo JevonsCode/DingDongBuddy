@@ -1,3 +1,4 @@
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
@@ -11,6 +12,7 @@ import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void testWidgetsOnPlatform(
@@ -93,6 +95,33 @@ void main() {
 
     expect(find.text('Dynamic'), findsOneWidget);
     expect(find.text('Today'), findsNothing);
+  });
+
+  testWidgets('subagent notification setting uses Chinese copy', (
+    WidgetTester tester,
+  ) async {
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
+        localizationsDelegates: const <LocalizationsDelegate<Object>>[
+          DingDongLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: SettingsScreen(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('子智能体提醒'), findsOneWidget);
+    expect(find.text('关闭后，子智能体动态不显示提醒，也不播放叮咚声音。'), findsOneWidget);
   });
 
   testWidgetsOnPlatform(
@@ -190,6 +219,37 @@ void main() {
       );
       expect(
         find.byKey(const Key('settings-agent-activity-hours')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-notify-subagent-activity')),
+        findsOneWidget,
+      );
+      expect(find.text('Subagent notifications'), findsOneWidget);
+      expect(
+        find.text(
+          'When off, subagent activity shows no notification or DingDong sound.',
+        ),
+        findsOneWidget,
+      );
+      final CompactSwitchListTile subagentNotificationSwitch = tester.widget(
+        find.byKey(const Key('settings-notify-subagent-activity')),
+      );
+      expect(subagentNotificationSwitch.value, isFalse);
+      subagentNotificationSwitch.onChanged!(true);
+      await tester.pumpAndSettle();
+      expect(model.settings.notifySubagentActivity, isTrue);
+      expect(backend.values['dingdong.agentActivity.notifySubagents'], isTrue);
+      expect(
+        find.byKey(const Key('settings-conversation-symbol-prompt')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-conversation-symbol-skill')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-conversation-symbol-mcp')),
         findsOneWidget,
       );
       expect(find.byKey(const Key('settings-api-port')), findsOneWidget);
@@ -421,6 +481,88 @@ void main() {
 
     expect(reopened.settings.clipboardMaxItems, 5000);
     expect(reopened.settings.clipboardMaxAgeDays, 190);
+  });
+
+  testWidgets('conversation footer symbols preview, persist, and reset', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1000, 820);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    addTearDown(model.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(viewModel: model)),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder prompt = find.byKey(
+      const Key('settings-conversation-symbol-prompt'),
+    );
+    final Finder skill = find.byKey(
+      const Key('settings-conversation-symbol-skill'),
+    );
+    final Finder mcp = find.byKey(
+      const Key('settings-conversation-symbol-mcp'),
+    );
+    expect(tester.widget<TextField>(prompt).controller!.text, '♥');
+    expect(tester.widget<TextField>(skill).controller!.text, '♦');
+    expect(tester.widget<TextField>(mcp).controller!.text, '♠');
+    expect(find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP'), findsOneWidget);
+
+    await tester.ensureVisible(prompt);
+    await tester.enterText(prompt, '◇');
+    await tester.pumpAndSettle();
+    await tester.enterText(skill, '◆');
+    await tester.pumpAndSettle();
+    await tester.enterText(mcp, '●');
+    await tester.pumpAndSettle();
+
+    const ConversationFooterSymbols custom = ConversationFooterSymbols(
+      prompt: '◇',
+      skill: '◆',
+      mcp: '●',
+    );
+    expect(model.settings.conversationFooterSymbols, custom);
+    expect(
+      ConversationFooterSymbols.parse(
+        backend.values['dingdong.agentApi.conversationFooterSymbols'],
+      ),
+      custom,
+    );
+    expect(find.text('DingDong · ◇ Prompt | ◆ Skill* | ● MCP'), findsOneWidget);
+
+    final SettingsViewModel reopened = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    addTearDown(reopened.dispose);
+    await reopened.load();
+    expect(reopened.settings.conversationFooterSymbols, custom);
+
+    final Finder reset = find.byKey(
+      const Key('settings-conversation-symbols-reset'),
+    );
+    await tester.ensureVisible(reset);
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    expect(
+      model.settings.conversationFooterSymbols,
+      ConversationFooterSymbols.defaultValue,
+    );
+    expect(tester.widget<TextField>(prompt).controller!.text, '♥');
+    expect(tester.widget<TextField>(skill).controller!.text, '♦');
+    expect(tester.widget<TextField>(mcp).controller!.text, '♠');
+    expect(find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP'), findsOneWidget);
+    expect(
+      ConversationFooterSymbols.parse(
+        backend.values['dingdong.agentApi.conversationFooterSymbols'],
+      ),
+      ConversationFooterSymbols.defaultValue,
+    );
   });
 
   testWidgets('sound picker keeps the DingDong family and supports preview', (

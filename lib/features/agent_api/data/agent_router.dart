@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
@@ -19,6 +20,7 @@ import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/library_routes.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/agent_api/data/trigger_group_routes.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -36,7 +38,7 @@ final class AgentRouter {
   AgentRouter({
     void Function(DingRequest request)? onDing,
     void Function(DingRequest request)? onSuppressedDing,
-    void Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
+    FutureOr<void> Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
     ClipboardCaptureService? clipboardCaptureService,
     ClipboardGateway? clipboardGateway,
     ClipboardStore? clipboardStore,
@@ -48,6 +50,7 @@ final class AgentRouter {
     String Function()? idGenerator,
     DateTime Function()? now,
     Future<bool> Function()? allowAgentClipboardContent,
+    Future<ConversationFooterSymbols> Function()? loadConversationFooterSymbols,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
   }) : _onDing = onDing ?? _ignoreDing,
@@ -94,6 +97,7 @@ final class AgentRouter {
                triggerGroupStore: triggerGroupStore,
                querySkillDeploymentPresence:
                    skillDeploymentStore?.queryPresence,
+               loadConversationFooterSymbols: loadConversationFooterSymbols,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -122,11 +126,14 @@ final class AgentRouter {
        _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? DateTime.now,
        _allowAgentClipboardContent =
-           allowAgentClipboardContent ?? _denyClipboardContent;
+           allowAgentClipboardContent ?? _denyClipboardContent,
+       _loadConversationFooterSymbols =
+           loadConversationFooterSymbols ?? _defaultConversationFooterSymbols;
 
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
-  final void Function(AgentBridgeTaskStart start)? _onAgentTaskStarted;
+  final FutureOr<void> Function(AgentBridgeTaskStart start)?
+  _onAgentTaskStarted;
   final ClipboardCaptureService? _clipboardCaptureService;
   final ClipboardGateway? _clipboardGateway;
   final ClipboardRoutes? _clipboardRoutes;
@@ -143,7 +150,10 @@ final class AgentRouter {
   final String Function() _idGenerator;
   final DateTime Function() _now;
   final Future<bool> Function() _allowAgentClipboardContent;
-  final Map<String?, DateTime> _recentPrimaryDings = <String?, DateTime>{};
+  final Future<ConversationFooterSymbols> Function()
+  _loadConversationFooterSymbols;
+  final Map<_NotificationDeduplicationKey, DateTime> _recentPrimaryDings =
+      <_NotificationDeduplicationKey, DateTime>{};
 
   static const Duration _completionHookDeduplicationWindow = Duration(
     seconds: 5,
@@ -210,13 +220,26 @@ final class AgentRouter {
         final DingRequest dingRequest = DingRequest.parse(
           request.body,
         ).copyWith(receivedAt: now.toUtc());
-        final String? sourceKey = _notificationSourceKey(dingRequest.source);
-        _recentPrimaryDings.removeWhere((String? _, DateTime recordedAt) {
+        final _NotificationDeduplicationKey notificationKey =
+            _notificationDeduplicationKey(dingRequest);
+        _recentPrimaryDings.removeWhere((
+          _NotificationDeduplicationKey _,
+          DateTime recordedAt,
+        ) {
           final Duration age = now.difference(recordedAt);
           return age.isNegative || age >= _completionHookDeduplicationWindow;
         });
         if (dingRequest.fallback) {
-          final DateTime? primaryDingAt = _recentPrimaryDings.remove(sourceKey);
+          DateTime? primaryDingAt = _recentPrimaryDings.remove(notificationKey);
+          if (primaryDingAt == null && notificationKey.conversationId != null) {
+            // Older clients may send the primary notification without a
+            // conversation ID. Preserve that compatibility without letting
+            // identified Codex conversations consume each other's entries.
+            primaryDingAt = _recentPrimaryDings.remove((
+              source: notificationKey.source,
+              conversationId: null,
+            ));
+          }
           if (primaryDingAt != null) {
             _onSuppressedDing(dingRequest);
             return HttpResponseData(
@@ -228,7 +251,7 @@ final class AgentRouter {
             );
           }
         } else {
-          _recentPrimaryDings[sourceKey] = now;
+          _recentPrimaryDings[notificationKey] = now;
         }
         _onDing(dingRequest);
         return HttpResponseData(
@@ -269,6 +292,7 @@ final class AgentRouter {
         querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
         now: _now,
         onTaskStarted: _onAgentTaskStarted,
+        loadConversationFooterSymbols: _loadConversationFooterSymbols,
       ).respond(request.body);
     }
     if (request.method == 'GET' &&
@@ -283,6 +307,7 @@ final class AgentRouter {
         triggerGroupStore: _triggerGroupStore,
         querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
         now: _now,
+        loadConversationFooterSymbols: _loadConversationFooterSymbols,
       ).loadSkill(request.parsedUri.queryParameters);
     }
     if (request.method == 'GET' &&
@@ -592,9 +617,31 @@ final class AgentRouter {
 
 String? _notificationSourceKey(String? source) => source?.trim().toLowerCase();
 
+typedef _NotificationDeduplicationKey = ({
+  String? source,
+  String? conversationId,
+});
+
+_NotificationDeduplicationKey _notificationDeduplicationKey(
+  DingRequest request,
+) {
+  final String? rawConversationId = request.conversationTarget?.conversationId;
+  final String? conversationId =
+      rawConversationId == null || rawConversationId.trim().isEmpty
+      ? null
+      : rawConversationId.trim();
+  return (
+    source: _notificationSourceKey(request.source),
+    conversationId: conversationId,
+  );
+}
+
 void _ignoreDing(DingRequest request) {}
 
 Future<bool> _denyClipboardContent() async => false;
+
+Future<ConversationFooterSymbols> _defaultConversationFooterSymbols() async =>
+    ConversationFooterSymbols.defaultValue;
 
 bool _requestsClipboardContent(HttpRequestData request) {
   final Uri uri = request.parsedUri;

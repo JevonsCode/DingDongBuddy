@@ -794,7 +794,8 @@ mcp:
       expect(contents, contains('Do not use an image'));
       expect(contents, contains('conversation.presentations.ansi.line'));
       expect(contents, contains('conversation.fallbackLine'));
-      expect(contents, contains('orange, blue, and green emoji tokens'));
+      expect(contents, contains('symbols already supplied in'));
+      expect(contents, contains('user-configurable'));
       expect(contents, contains('confirmedUse'));
       expect(contents, contains('mergeKey'));
       expect(contents, contains('not that every instruction was followed'));

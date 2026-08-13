@@ -70,6 +70,46 @@ void main() {
   });
 
   test(
+    'subagent activity notifications default off and persist opt-in',
+    () async {
+      final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(backend),
+      );
+      await model.load();
+
+      expect(model.settings.notifySubagentActivity, isFalse);
+      await model.setNotifySubagentActivity(true);
+
+      expect(model.settings.notifySubagentActivity, isTrue);
+      expect(backend.values['dingdong.agentActivity.notifySubagents'], isTrue);
+    },
+  );
+
+  test('conversation footer symbols update and persist immediately', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    await model.load();
+
+    await model.setConversationFooterSymbol(prompt: '◆');
+    await model.setConversationFooterSymbol(skill: '●');
+    await model.setConversationFooterSymbol(mcp: '▲');
+
+    expect(
+      model.settings.conversationFooterSymbols,
+      const ConversationFooterSymbols(prompt: '◆', skill: '●', mcp: '▲'),
+    );
+    expect(
+      ConversationFooterSymbols.parse(
+        backend.values['dingdong.agentApi.conversationFooterSymbols'],
+      ),
+      model.settings.conversationFooterSymbols,
+    );
+  });
+
+  test(
     'reload applies settings saved by the dedicated settings window',
     () async {
       final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
@@ -404,10 +444,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.4.3',
+        latestVersion: '1.4.4',
         latestBuild: '51',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.3'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.4'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -423,11 +463,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.4.3');
+    expect(model.releaseStatus.latestVersion, '1.4.4');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.4.3'),
+      Uri.parse('https://example.com/dingdong/releases/1.4.4'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);

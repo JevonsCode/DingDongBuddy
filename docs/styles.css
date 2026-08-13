@@ -1957,6 +1957,66 @@ h3 {
   line-height: 1.5;
 }
 
+.conversation-receipt {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
+  gap: 22px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 18px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-medium);
+  background: var(--accent-soft);
+}
+
+.conversation-receipt h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.conversation-receipt-copy > p {
+  max-width: 68ch;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.conversation-receipt-copy > .conversation-receipt-note {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.conversation-receipt-sample {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.conversation-receipt-sample span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.conversation-receipt-sample code {
+  display: block;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .defaults-section {
   padding: 54px 0 24px;
 }
@@ -2642,6 +2702,7 @@ footer span {
   .device-showcase,
   .resource-map,
   .conversation-heading,
+  .conversation-receipt,
   .defaults-grid,
   .setup-card,
   .api-band,

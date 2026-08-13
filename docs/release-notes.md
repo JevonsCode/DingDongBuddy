@@ -1,53 +1,63 @@
-# DingDong 1.4.2
+# DingDong 1.4.3
 
-DingDong 1.4.2 keeps the Windows background process alive when auxiliary
-windows are closed and adds a safe update path for the linked-phone PWA.
+DingDong 1.4.3 makes connected Agent alerts calmer by default and makes the
+resource trail at the end of supported Agent replies easier to understand and
+personalize.
 
-## Close Windows windows without quitting DingDong
+## Keep background workers quiet by default
 
-- Closing Settings, Resource Manager, Device Link, or the development panel now
-  hides that window instead of terminating the DingDong process.
-- Title-bar close controls and close actions inside Settings and Resource
-  Manager follow the same hide-on-close policy.
-- Process termination remains reserved for the explicit Quit command, so tray
-  reminders and background connections continue running after a window closes.
-- Shared platform behavior and regression coverage keep all auxiliary windows
-  consistent without changing macOS behavior.
+- A new **Subagent notifications** switch is off by default. Positively
+  identified Codex subagents no longer create a desktop alert, DingDong sound,
+  activity entry, unread state, or linked-device update unless you opt in.
+- Subagent task starts are filtered through the same preference, and a filtered
+  completion cleans up only its exact running conversation without touching a
+  main-thread task.
+- Main Agent conversations continue normally. If Codex metadata is unavailable,
+  DingDong fails open instead of risking a missed main-thread reminder.
+- Exact `thread/read` classification finds background workers that Codex omits
+  from the default thread list and caches stable thread identity after a
+  successful read.
 
-## Update the PWA without scanning again
+## See the resource receipt after a reply
 
-- The PWA checks for a newer application shell after launch, when returning to
-  the foreground, and through a new manual upgrade button in Device Settings.
-- A no-cache version descriptor and service-worker update check make a newly
-  deployed shell discoverable without waiting for stale cached metadata.
-- Before applying an update, DingDong preserves all saved computer pairings;
-  the refreshed PWA reconnects without requiring another QR-code scan.
-- The settings dialog reports update progress, current version, offline retry,
-  and failure states while leaving pairing data untouched.
+- Supported Agents can append a compact DingDong line showing the Prompts
+  active for the task, matching Skills, and MCP connections that were available.
+- A `*` appears only after the full Skill was loaded in that task. An MCP name
+  means the connection was available, not that a tool was necessarily called.
+- Prompt, Skill, and MCP symbols can now be customized independently in
+  **Settings → Agent reply footer**, with a live preview, persistent values, and
+  one-click reset.
+- The website and bilingual READMEs now describe DingDong as one place for
+  connected Agent alerts, with a desktop sound chosen by the user and a clear
+  resource receipt at the end of supported replies.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.4.2 修复了 Windows 辅助窗口被关闭时误退出整个后台进程的问题，并为
-关联手机 PWA 增加了安全的升级入口。
+DingDong 1.4.3 默认让接入 Agent 的提醒更安静，也让支持的 Agent 在回复末尾留下的
+资源轨迹更容易看懂和自定义。
 
-## 关闭 Windows 窗口但不退出 DingDong
+## 子智能体默认安静工作
 
-- 关闭设置、资源管理、设备连接或开发测试面板时，现在只会隐藏对应窗口，不再终止
-  DingDong 进程。
-- 标题栏关闭按钮，以及设置和资源管理中的关闭操作，统一遵循“关闭即隐藏”策略。
-- 只有显式选择“退出”才会终止进程，因此窗口关闭后，托盘提醒与后台连接仍会继续
-  运行。
-- 共用的平台策略与回归测试保证所有辅助窗口行为一致，同时不改变 macOS 行为。
+- 新增“**子智能体提醒**”开关，默认关闭。只有明确识别为 Codex 子智能体的事件才会
+  被过滤；开启前，它们不会产生桌面提醒、叮咚声、动态记录、未读状态或关联设备同步。
+- 子智能体任务开始也遵循同一设置；完成事件被过滤时，只会清理精确匹配的运行会话，
+  不会误伤主智能体任务。
+- 主智能体对话继续正常提醒。Codex 元数据不可用时，DingDong 会放行事件，避免漏掉
+  主线程的重要结果。
+- 使用精确的 `thread/read` 识别默认线程列表里看不到的后台 worker；成功读取后会缓存
+  稳定的线程身份。
 
-## PWA 升级后无需重新扫码
+## 回复末尾看懂这轮用了什么资源
 
-- PWA 会在启动后、重新回到前台时检查新应用壳，也可以在设备设置中点击“手动升级”。
-- 无缓存版本描述文件与 Service Worker 更新检查可以及时发现新部署版本，不受旧缓存
-  元数据影响。
-- 应用更新前会保存所有已连接电脑；刷新后的 PWA 会自动恢复连接，不需要重新扫描
-  二维码。
-- 设置界面会显示当前版本、升级进度、离线重试与失败状态，且不会改动配对数据。
+- 支持的 Agent 可以在完整回复末尾附上一行 DingDong，展示本轮生效的 Prompt、匹配到
+  的 Skill 和当时可用的 MCP 连接。
+- 只有本轮完整加载过的 Skill 才带 `*`；MCP 名称表示连接可用，不代表工具一定实际
+  调用过。
+- 可在“**设置 → Agent 回复尾部**”中分别自定义 Prompt、Skill 和 MCP 符号，支持实时
+  预览、持久保存和一键恢复默认值。
+- 官网与中英文 README 也更新为“接入的 Agent 提醒一处收好，桌面叮咚声由你挑”，并
+  补充回复末尾资源小票的真实语义。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

@@ -11,6 +11,51 @@ final class CodexThreadInspector {
   CodexThreadInspector({required this.connectionFactory});
 
   final CodexAppServerConnectionFactory connectionFactory;
+  final Map<String, CodexThreadInspection> _threadReadCache =
+      <String, CodexThreadInspection>{};
+  final Map<String, Future<CodexThreadInspection>> _threadReadRequests =
+      <String, Future<CodexThreadInspection>>{};
+
+  /// Reads one exact Codex thread, including background workers that are
+  /// intentionally absent from the default `thread/list` result.
+  ///
+  /// Thread identity metadata is stable once Codex can read the thread, so
+  /// successful results are cached. Concurrent reads for the same id also
+  /// share one App Server request. Unavailable or malformed results are not
+  /// cached, allowing a later request to recover.
+  Future<CodexThreadInspection> inspectThreadId(String threadId) async {
+    final String normalizedId = threadId.trim();
+    if (normalizedId.isEmpty) {
+      return const CodexThreadInspection.unavailable();
+    }
+
+    final CodexThreadInspection? cached = _threadReadCache[normalizedId];
+    if (cached != null) {
+      return cached;
+    }
+    final Future<CodexThreadInspection>? pending =
+        _threadReadRequests[normalizedId];
+    if (pending != null) {
+      return pending;
+    }
+
+    final Future<CodexThreadInspection> request = _readThread(normalizedId);
+    _threadReadRequests[normalizedId] = request;
+    try {
+      final CodexThreadInspection result = await request;
+      if (result.exists) {
+        _threadReadCache[normalizedId] = result;
+      }
+      return result;
+    } finally {
+      if (identical(_threadReadRequests[normalizedId], request)) {
+        _threadReadRequests.removeWhere(
+          (String id, Future<CodexThreadInspection> value) =>
+              id == normalizedId && identical(value, request),
+        );
+      }
+    }
+  }
 
   Future<bool> isOpenable(String threadId) async {
     final String normalizedId = threadId.trim();
@@ -100,13 +145,79 @@ final class CodexThreadInspector {
       await connection?.close();
     }
   }
+
+  Future<CodexThreadInspection> _readThread(String threadId) async {
+    CodexAppServerConnection? connection;
+    try {
+      connection = await connectionFactory.open();
+      final Map<String, Object?> response = await connection.request(
+        'thread/read',
+        <String, Object?>{'threadId': threadId, 'includeTurns': false},
+      );
+      final Map<Object?, Object?>? thread = _threadReadPayload(response);
+      if (thread == null) {
+        return const CodexThreadInspection.unavailable();
+      }
+      final Object? rawId = thread['id'];
+      if (rawId != null && (rawId is! String || rawId.trim() != threadId)) {
+        return const CodexThreadInspection.unavailable();
+      }
+      return CodexThreadInspection(
+        threadId: threadId,
+        exists: true,
+        isSubagent: _isBackgroundThread(thread),
+      );
+    } on Object {
+      // Fail open for notification delivery. Unknown metadata must not hide a
+      // user-thread reminder, and failures remain retryable because they are
+      // not placed in the successful-read cache.
+      return const CodexThreadInspection.unavailable();
+    } finally {
+      await connection?.close();
+    }
+  }
+}
+
+/// Result of an exact Codex `thread/read` lookup.
+final class CodexThreadInspection {
+  const CodexThreadInspection({
+    required this.threadId,
+    required this.exists,
+    required this.isSubagent,
+  });
+
+  const CodexThreadInspection.unavailable()
+    : threadId = '',
+      exists = false,
+      isSubagent = false;
+
+  final String threadId;
+  final bool exists;
+  final bool isSubagent;
+
+  bool get isOpenable => exists && !isSubagent;
+}
+
+Map<Object?, Object?>? _threadReadPayload(Map<String, Object?> response) {
+  final Object? wrapped = response['thread'];
+  if (wrapped is Map<Object?, Object?> && wrapped.isNotEmpty) {
+    return wrapped;
+  }
+  if (response['id'] is String) {
+    return response;
+  }
+  return null;
 }
 
 bool _isBackgroundThread(Map<Object?, Object?> thread) {
   return _hasText(thread['parentThreadId']) ||
       _hasText(thread['agentRole']) ||
       _hasText(thread['agentNickname']) ||
-      thread['ephemeral'] == true;
+      thread['ephemeral'] == true ||
+      _isSubagentThreadSource(thread['threadSource']);
 }
 
 bool _hasText(Object? value) => value is String && value.trim().isNotEmpty;
+
+bool _isSubagentThreadSource(Object? value) =>
+    value is String && value.trim().toLowerCase().startsWith('subagent');

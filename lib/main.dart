@@ -22,6 +22,7 @@ import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gate
 import 'package:dingdong/features/agent_adapters/data/codex_thread_inspector.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
+import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -189,6 +190,37 @@ Future<void> main(List<String> arguments) async {
         workspacePath: start.workspacePath,
         repositoryUrl: start.repositoryUrl,
         conversationId: start.conversationId,
+      );
+    },
+    isSubagentConversation: (AgentConversationTarget target) async {
+      if (target.client != AgentClient.codex) {
+        return false;
+      }
+      final String threadId = target.conversationId?.trim() ?? '';
+      if (threadId.isEmpty) {
+        return false;
+      }
+      return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
+    },
+    isSubagentNotification: (DingRequest request) async {
+      final AgentConversationTarget? target = request.conversationTarget;
+      if (target == null || target.client != AgentClient.codex) {
+        return false;
+      }
+      final String threadId = target.conversationId?.trim() ?? '';
+      if (threadId.isEmpty) {
+        return false;
+      }
+      return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
+    },
+    onFilteredNotification: (DingRequest request) async {
+      final AgentConversationTarget? target = request.conversationTarget;
+      if (target == null) {
+        return;
+      }
+      activityController.discardActiveRun(
+        source: request.source ?? 'Agent',
+        target: target,
       );
     },
     onNotification: (request) async {

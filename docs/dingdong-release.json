@@ -1,33 +1,34 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.4.2",
-  "latestBuild": "50",
-  "publishedAt": "2026-08-12T17:46:41Z",
+  "latestVersion": "1.4.3",
+  "latestBuild": "51",
+  "publishedAt": "2026-08-13T03:38:54Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.2/DingDong-1.4.2-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.2/DingDong-1.4.2-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.2/DingDong-1.4.2-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Keeps DingDong running on Windows when Settings, Resource Manager, Device Link, or the development panel is closed.",
-    "Hides auxiliary Windows windows on title-bar, settings, and Resource Manager close actions while reserving process termination for explicit Quit.",
-    "Adds automatic and manual PWA update checks that refresh the application shell without replacing saved computer pairings.",
-    "Publishes a no-cache PWA version descriptor and preserves paired computers before applying an available shell update.",
+    "Adds a Subagent notifications switch that is off by default, keeping background-worker activity and DingDong sounds quiet until enabled.",
+    "Filters positively identified Codex subagent starts and completions before desktop alerts, activity history, unread state, and linked-device sync while main-thread and unknown events remain visible.",
+    "Adds customizable Prompt, Skill, and MCP symbols with a live Agent reply footer preview, persistence, and one-click reset.",
+    "Documents the reply resource receipt: active Prompts, matching Skills, and available MCP connections, with * reserved for Skills fully loaded in the current task.",
+    "Refreshes the website and bilingual READMEs around one place for connected Agent alerts and a desktop sound chosen by the user.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

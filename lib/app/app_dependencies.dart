@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
@@ -48,6 +49,87 @@ final class NotificationDeliveryFailure {
 
 typedef NotificationDeliveryFailureObserver =
     void Function(NotificationDeliveryFailure failure);
+
+typedef SubagentNotificationDetector =
+    Future<bool> Function(DingRequest request);
+
+typedef SubagentConversationDetector =
+    Future<bool> Function(AgentConversationTarget target);
+
+/// Applies the user's subagent reminder preference before any delivery route
+/// can play a sound, flash a window, record activity, or sync to a companion.
+Future<bool> shouldDeliverAgentNotification({
+  required DingRequest request,
+  required AppSettings settings,
+  SubagentNotificationDetector? isSubagentNotification,
+}) async {
+  if (settings.notifySubagentActivity || isSubagentNotification == null) {
+    return true;
+  }
+  try {
+    return !await isSubagentNotification(request);
+  } on Object {
+    // An unavailable Agent metadata service must not hide a main-thread
+    // completion. Only positively identified subagents are filtered.
+    return true;
+  }
+}
+
+Future<bool> shouldRecordAgentTaskStart({
+  required AgentBridgeTaskStart start,
+  required AppSettings settings,
+  SubagentConversationDetector? isSubagentConversation,
+}) async {
+  if (settings.notifySubagentActivity || isSubagentConversation == null) {
+    return true;
+  }
+  final String? conversationId = start.conversationId?.trim();
+  if (conversationId == null || conversationId.isEmpty) {
+    return true;
+  }
+  final AgentConversationTarget target = AgentConversationTarget(
+    client: AgentClient.fromSource(start.source),
+    conversationId: conversationId,
+    workspacePath: start.workspacePath,
+  );
+  try {
+    return !await isSubagentConversation(target);
+  } on Object {
+    return true;
+  }
+}
+
+/// Resolves the saved sound and fans out only notifications allowed by the
+/// subagent preference. Both primary and deduplicated hook deliveries use this
+/// same boundary so no reminder side effect can bypass the setting.
+Future<void> deliverAgentNotification({
+  required DingRequest request,
+  required AppSettings settings,
+  required Future<void> Function(DingRequest request) nativeDelivery,
+  Future<void> Function(DingRequest request)? companionDelivery,
+  Future<void> Function(DingRequest request)? onFiltered,
+  SubagentNotificationDetector? isSubagentNotification,
+  NotificationDeliveryFailureObserver? onFailure,
+}) async {
+  if (!await shouldDeliverAgentNotification(
+    request: request,
+    settings: settings,
+    isSubagentNotification: isSubagentNotification,
+  )) {
+    await onFiltered?.call(request);
+    return;
+  }
+  final DingRequest resolvedRequest = request.sound == DingSound.defaultSound
+      ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
+      : request;
+  await deliverNotificationIndependently(
+    nativeDelivery: () => nativeDelivery(resolvedRequest),
+    companionDelivery: companionDelivery == null
+        ? null
+        : () => companionDelivery(resolvedRequest),
+    onFailure: onFailure,
+  );
+}
 
 /// Runs desktop attention and the companion/mobile callback independently.
 /// A failure on either route is reported without cancelling the other route.
@@ -137,8 +219,11 @@ final class AppDependencies {
     void Function(ClipboardRecord record)? onClipboardCaptured,
     Future<void> Function(DingRequest request)? onNotification,
     Future<void> Function(DingRequest request)? onSuppressedNotification,
+    Future<void> Function(DingRequest request)? onFilteredNotification,
     void Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
     NotificationDeliveryFailureObserver? onNotificationDeliveryFailure,
+    SubagentNotificationDetector? isSubagentNotification,
+    SubagentConversationDetector? isSubagentConversation,
     PreferencesBackend? preferencesBackend,
   }) async {
     final AppDataPaths paths = AppDataPaths.current();
@@ -222,36 +307,46 @@ final class AppDependencies {
     final NativeNotificationGateway notificationGateway =
         NativeNotificationGateway();
     final AgentRouter router = AgentRouter(
-      onAgentTaskStarted: onAgentTaskStarted,
+      onAgentTaskStarted: (AgentBridgeTaskStart start) async {
+        final AppSettings settings = await settingsRepository.load();
+        if (!await shouldRecordAgentTaskStart(
+          start: start,
+          settings: settings,
+          isSubagentConversation: isSubagentConversation,
+        )) {
+          return;
+        }
+        onAgentTaskStarted?.call(start);
+      },
       onDing: (request) => unawaited(() async {
         final AppSettings settings = await settingsRepository.load();
-        final resolvedRequest = request.sound == DingSound.defaultSound
-            ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
-            : request;
-        await deliverNotificationIndependently(
-          nativeDelivery: () => notificationGateway.trigger(
-            resolvedRequest,
-            customSoundPath: settings.customSoundPath,
-          ),
-          companionDelivery: onNotification == null
-              ? null
-              : () => onNotification(resolvedRequest),
+        await deliverAgentNotification(
+          request: request,
+          settings: settings,
+          nativeDelivery: (DingRequest resolvedRequest) =>
+              notificationGateway.trigger(
+                resolvedRequest,
+                customSoundPath: settings.customSoundPath,
+              ),
+          companionDelivery: onNotification,
+          onFiltered: onFilteredNotification,
+          isSubagentNotification: isSubagentNotification,
           onFailure: onNotificationDeliveryFailure,
         );
       }()),
       onSuppressedDing: (request) => unawaited(() async {
         final AppSettings settings = await settingsRepository.load();
-        final resolvedRequest = request.sound == DingSound.defaultSound
-            ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
-            : request;
-        await deliverNotificationIndependently(
-          nativeDelivery: () => notificationGateway.trigger(
-            resolvedRequest,
-            customSoundPath: settings.customSoundPath,
-          ),
-          companionDelivery: onSuppressedNotification == null
-              ? null
-              : () => onSuppressedNotification(resolvedRequest),
+        await deliverAgentNotification(
+          request: request,
+          settings: settings,
+          nativeDelivery: (DingRequest resolvedRequest) =>
+              notificationGateway.trigger(
+                resolvedRequest,
+                customSoundPath: settings.customSoundPath,
+              ),
+          companionDelivery: onSuppressedNotification,
+          onFiltered: onFilteredNotification,
+          isSubagentNotification: isSubagentNotification,
           onFailure: onNotificationDeliveryFailure,
         );
       }()),
@@ -260,6 +355,8 @@ final class AppDependencies {
       clipboardStore: clipboardStore,
       allowAgentClipboardContent: () async =>
           (await settingsRepository.load()).allowAgentClipboardContent,
+      loadConversationFooterSymbols: () async =>
+          (await settingsRepository.load()).conversationFooterSymbols,
       resourceStore: resourceStore,
       triggerGroupStore: triggerGroupStore,
       skillPackageInstaller: skillPackageInstaller,

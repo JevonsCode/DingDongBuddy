@@ -19,6 +19,25 @@ void main() {
     expect(transport.body?['message'], 'Finished');
   });
 
+  test('notify adds Agent context used for subagent filtering', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async => null,
+      conversationIdResolver: () => 'subagent-thread-1',
+      sourceResolver: () => 'Codex',
+    );
+
+    await executor.execute('dingdong_notify', <String, Object?>{
+      'message': 'Waiting for approval',
+    });
+
+    expect(transport.body?['conversationId'], 'subagent-thread-1');
+    expect(transport.body?['source'], 'Codex');
+    expect(transport.body?['workspacePath'], '/workspace/dingdong');
+  });
+
   test(
     'asset search maps bounded arguments to library query parameters',
     () async {

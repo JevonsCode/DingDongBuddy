@@ -267,6 +267,38 @@ final class ActivityController extends ChangeNotifier {
     );
   }
 
+  /// Removes a running lifecycle item when its completion is intentionally
+  /// filtered, without creating history, unread state, or a completion count.
+  bool discardActiveRun({
+    required String source,
+    required AgentConversationTarget target,
+  }) {
+    final AgentConversationTarget matchTarget = _targetForSource(
+      source: source,
+      target: target,
+    )!;
+    final String? conversationId = _trimmed(matchTarget.conversationId);
+    if (conversationId == null) {
+      return false;
+    }
+    final int index = _activeRuns.indexWhere((AgentTaskRun run) {
+      final AgentConversationTarget? runTarget = run.conversationTarget;
+      return _trimmed(runTarget?.conversationId) == conversationId &&
+          runTarget?.client == matchTarget.client;
+    });
+    if (index < 0) {
+      return false;
+    }
+    _activeRuns = _activeRuns
+        .asMap()
+        .entries
+        .where((MapEntry<int, AgentTaskRun> entry) => entry.key != index)
+        .map((MapEntry<int, AgentTaskRun> entry) => entry.value)
+        .toList(growable: false);
+    notifyListeners();
+    return true;
+  }
+
   /// Records a completion hook that was deduplicated at the transport layer.
   ///
   /// When grouping is enabled, it updates the matching conversation item

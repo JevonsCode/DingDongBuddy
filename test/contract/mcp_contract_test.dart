@@ -39,7 +39,10 @@ void main() {
       expect(result['instructions'], contains('conversation.visible'));
       expect(result['instructions'], contains('single Markdown text line'));
       expect(result['instructions'], contains('keep DingDong as text'));
-      expect(result['instructions'], contains('Prompt, Skill, and MCP emoji'));
+      expect(
+        result['instructions'],
+        contains('symbols supplied in conversation.line'),
+      );
       expect(
         result['instructions'],
         contains('conversation.presentations.ansi.line'),

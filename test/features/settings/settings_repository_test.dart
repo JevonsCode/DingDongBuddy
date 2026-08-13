@@ -11,6 +11,7 @@ void main() {
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.allowAgentClipboardContent, isFalse);
+    expect(settings.notifySubagentActivity, isFalse);
     expect(settings.groupRepeatedAgentSessions, isTrue);
     expect(settings.lifecycleTelemetryEnabled, isTrue);
     expect(settings.agentActivityMaxItems, 500);
@@ -19,6 +20,23 @@ void main() {
     expect(settings.trayNotificationColor, TrayNotificationColor.orange);
     expect(settings.globalHotKey, GlobalHotKey.defaultValue);
     expect(settings.workspaceShortcuts, WorkspaceShortcuts.defaultValue);
+    expect(
+      settings.conversationFooterSymbols,
+      ConversationFooterSymbols.defaultValue,
+    );
+  });
+
+  test('subagent notification preference survives copyWith and sanitizing', () {
+    final AppSettings enabled = const AppSettings().copyWith(
+      notifySubagentActivity: true,
+    );
+
+    expect(enabled.notifySubagentActivity, isTrue);
+    expect(enabled.sanitized().notifySubagentActivity, isTrue);
+    expect(
+      enabled.copyWith(notifySubagentActivity: false).notifySubagentActivity,
+      isFalse,
+    );
   });
 
   test('supports a build-specific default tray notification color', () async {
@@ -28,6 +46,20 @@ void main() {
     ).load();
 
     expect(settings.trayNotificationColor, TrayNotificationColor.pink);
+  });
+
+  test('invalid conversation footer symbols fall back to defaults', () async {
+    final AppSettings settings = await SettingsRepository(
+      MemoryPreferencesBackend(<String, Object>{
+        'dingdong.agentApi.conversationFooterSymbols':
+            '{"prompt":"|","skill":"*","mcp":"two"}',
+      }),
+    ).load();
+
+    expect(
+      settings.conversationFooterSymbols,
+      ConversationFooterSymbols.defaultValue,
+    );
   });
 
   test(
@@ -65,6 +97,7 @@ void main() {
           'dingdong.onboarding.mcpAccessSeen': true,
           'dingdong.api.port': 70000,
           'dingdong.agentActivity.remember': false,
+          'dingdong.agentActivity.notifySubagents': true,
           'dingdong.agentActivity.groupRepeatedSessions': false,
           'dingdong.agentActivity.maxItems': 9000,
           'dingdong.agentActivity.countHours': 0,
@@ -82,6 +115,12 @@ void main() {
             library: WorkspaceShortcut(key: 'L', primary: true),
             clipboard: WorkspaceShortcut(key: 'C', primary: true),
           ).encode(),
+          'dingdong.agentApi.conversationFooterSymbols':
+              const ConversationFooterSymbols(
+                prompt: '◆',
+                skill: '●',
+                mcp: '▲',
+              ).encode(),
         });
 
     final settings = await SettingsRepository(backend).load();
@@ -99,6 +138,7 @@ void main() {
     expect(settings.mcpAccessSeen, isTrue);
     expect(settings.apiPort, 2333);
     expect(settings.rememberAgentActivity, isFalse);
+    expect(settings.notifySubagentActivity, isTrue);
     expect(settings.groupRepeatedAgentSessions, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
     expect(settings.agentActivityCountHours, 1);
@@ -117,6 +157,10 @@ void main() {
         clipboard: WorkspaceShortcut(key: 'C', primary: true),
       ),
     );
+    expect(
+      settings.conversationFooterSymbols,
+      const ConversationFooterSymbols(prompt: '◆', skill: '●', mcp: '▲'),
+    );
   });
 
   test('saves settings with the native app preference contract', () async {
@@ -133,6 +177,7 @@ void main() {
       allowAgentClipboardContent: true,
       lifecycleTelemetryEnabled: false,
       rememberAgentActivity: false,
+      notifySubagentActivity: true,
       groupRepeatedAgentSessions: false,
       agentActivityMaxItems: 320,
       agentActivityCountHours: 48,
@@ -148,6 +193,11 @@ void main() {
       customSoundPath: '/tmp/quiet.wav',
       mcpAccessSeen: true,
       apiPort: 2444,
+      conversationFooterSymbols: ConversationFooterSymbols(
+        prompt: '◇',
+        skill: '○',
+        mcp: '▽',
+      ),
     );
 
     await repository.save(settings);
@@ -162,6 +212,7 @@ void main() {
     expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
     expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'disabled');
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
+    expect(backend.values['dingdong.agentActivity.notifySubagents'], isTrue);
     expect(
       backend.values['dingdong.agentActivity.groupRepeatedSessions'],
       isFalse,
@@ -182,5 +233,11 @@ void main() {
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
     expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
     expect(backend.values['dingdong.api.port'], 2444);
+    expect(
+      ConversationFooterSymbols.parse(
+        backend.values['dingdong.agentApi.conversationFooterSymbols'],
+      ),
+      settings.conversationFooterSymbols,
+    );
   });
 }
