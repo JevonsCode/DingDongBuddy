@@ -452,10 +452,64 @@ void main() {
     expect(website, contains('class="conversation-grid"'));
     expect(website, contains('"hero.title.clipboard": "清晰管理剪贴板列表"'));
     expect(website, contains('"hero.title.resources": "统一管理提示词、Skill、MCP"'));
+    expect(website, contains('"hero.title.alerts": "统一收集 Agent 的提醒"'));
     expect(
       website,
-      contains('"hero.title.alerts": "接入的 Agent，提醒都归一处；叮咚哪一声，你来定"'),
+      contains('"hero.title.alerts": "Collect Agent alerts in one place."'),
     );
+    expect(
+      website.indexOf('class="actions"'),
+      lessThan(website.indexOf('class="conversation-receipt"')),
+    );
+    expect(
+      website.indexOf('class="conversation-receipt"'),
+      lessThan(website.indexOf('class="product-stage"')),
+    );
+    expect(website, contains('class="terminal-demo-intro"'));
+    expect(website, contains('class="terminal-demo-prompt"'));
+    expect(website, contains('class="terminal-demo-output"'));
+    expect(website, contains('class="terminal-demo-dingdong"'));
+    expect(website, contains('class="terminal-demo-status"'));
+    expect(website, contains('id="terminal-demo-input"'));
+    expect(website, contains('id="terminal-demo-form"'));
+    expect(website, contains('id="terminal-demo-submitted" hidden'));
+    expect(website, contains('role="log" aria-live="polite"'));
+    expect(website, contains('const terminalDemoReplies = {'));
+    expect(website, contains('const submitTerminalDemo = (event) => {'));
+    expect(
+      website,
+      contains(
+        'terminalDemoForm.addEventListener("submit", submitTerminalDemo)',
+      ),
+    );
+    expect(website, isNot(contains('chatFooter.sampleInputPlaceholder')));
+    expect(website, isNot(contains('data-i18n-placeholder')));
+    expect(websiteStyles, contains('--terminal-copy-size: 13px;'));
+    expect(website, contains('♥ 项目规范'));
+    expect(website, contains('♦ 界面加固*'));
+    expect(website, contains('♠ 测试工具*'));
+    expect(websiteStyles, contains('.lede {'));
+    expect(websiteStyles, contains('max-width: 680px;'));
+    expect(
+      website.indexOf('class="terminal-demo-output"'),
+      lessThan(website.indexOf('class="terminal-demo-prompt"')),
+    );
+    expect(
+      website.indexOf('class="terminal-demo-prompt"'),
+      lessThan(website.indexOf('class="terminal-demo-status"')),
+    );
+    expect(
+      website,
+      contains('data-i18n-aria-label="chatFooter.sampleInputLabel"'),
+    );
+    expect(website, isNot(contains('data-i18n="chatFooter.samplePrompt"')));
+    expect(website, isNot(contains('chatFooter.samplePromptReady')));
+    expect(
+      website,
+      contains('"chatFooter.sampleAnswer": "已经改好了，页面布局和本地预览都检查过了。"'),
+    );
+    expect(website, isNot(contains('chatFooter.sampleLabel')));
+    expect(website, isNot(contains('chatFooter.sampleReceiptLabel')));
     expect(website, contains('id="devices"'));
     expect(website, contains('class="device-showcase"'));
     expect(

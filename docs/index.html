@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard, Agent resources, and alerts in one place</title>
     <meta name="description" content="Manage clipboard history, Agent resources, and alerts from connected Agents in one place, choose your desktop sound, and see a resource receipt at the end of supported Agent replies.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260813-v2">
+    <link rel="stylesheet" href="./styles.css?v=20260813-v11">
   </head>
   <body>
     <header class="site-header">
@@ -39,7 +39,7 @@
           <h1 class="hero-title">
             <span data-i18n="hero.title.clipboard">Keep clipboard history clear.</span>
             <span data-i18n="hero.title.resources">Manage Prompts, Skills, and MCP in one place.</span>
-            <span data-i18n="hero.title.alerts">Connected Agent alerts, all in one place — with the DingDong sound you choose.</span>
+            <span data-i18n="hero.title.alerts">Collect Agent alerts in one place.</span>
           </h1>
           <p class="lede" data-i18n="hero.lede">
             Keep clipboard history easy to find and manage Prompts, Skills, and MCP servers once. DingDong gathers alerts from connected Agents, lets you choose the desktop sound, and sends selected content and important results to trusted devices.
@@ -58,6 +58,34 @@
               <img src="./assets/symbols/github.svg" alt="">
               <span data-i18n="hero.star">Star DingDongBuddy</span>
             </a>
+          </div>
+          <div class="conversation-receipt" role="group" aria-labelledby="hero-receipt-title">
+            <div class="conversation-receipt-copy">
+              <h4 id="hero-receipt-title" data-i18n="chatFooter.title">Every final reply leaves a little resource receipt.</h4>
+              <p data-i18n="chatFooter.body">Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.</p>
+              <p class="conversation-receipt-note" data-i18n="chatFooter.note">An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.</p>
+            </div>
+            <div class="conversation-receipt-sample">
+              <div class="terminal-demo-intro">
+                <p><strong>agent</strong> <span>DingDong</span></p>
+                <p data-i18n="chatFooter.sampleHint">Ask normally. DingDong shows the resources used after the answer.</p>
+              </div>
+              <div class="terminal-demo-output" id="terminal-demo-output" role="log" aria-live="polite" aria-busy="false">
+                <p class="terminal-demo-submitted" id="terminal-demo-submitted" hidden></p>
+                <p id="terminal-demo-answer" data-i18n="chatFooter.sampleAnswer">Done — I fixed the layout and verified the local preview.</p>
+                <code class="terminal-demo-dingdong" id="terminal-demo-dingdong"></code>
+              </div>
+              <form class="terminal-demo-prompt" id="terminal-demo-form">
+                <span aria-hidden="true">›</span>
+                <input id="terminal-demo-input" type="text" maxlength="180" autocomplete="off" spellcheck="false" aria-describedby="terminal-demo-hint" data-i18n-aria-label="chatFooter.sampleInputLabel">
+                <button type="submit" data-i18n="chatFooter.sampleSend" aria-label="Send demo message" data-i18n-aria-label="chatFooter.sampleSendAria">Send</button>
+              </form>
+              <span class="terminal-demo-input-hint" id="terminal-demo-hint" data-i18n="chatFooter.sampleInputHint">Press Enter to run a simulated reply.</span>
+              <div class="terminal-demo-status">
+                <span>~/DingDongBuddy</span>
+                <span data-i18n="chatFooter.sampleStatus">Agent · connected</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -293,17 +321,6 @@
             <p class="user-message" data-i18n="examples.mcpMessage">“Use my GitHub tools to find why the latest main workflow failed.”</p>
             <p class="example-result" data-i18n="examples.mcpResult">The configured MCP is available, and its tools are called only when needed.</p>
           </article>
-        </div>
-        <div class="conversation-receipt">
-          <div class="conversation-receipt-copy">
-            <h4 data-i18n="chatFooter.title">Every final reply leaves a little resource receipt.</h4>
-            <p data-i18n="chatFooter.body">Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.</p>
-            <p class="conversation-receipt-note" data-i18n="chatFooter.note">An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.</p>
-          </div>
-          <div class="conversation-receipt-sample">
-            <span data-i18n="chatFooter.sampleLabel">Illustrative line</span>
-            <code data-i18n="chatFooter.sample">DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub*</code>
-          </div>
         </div>
       </section>
 
@@ -701,7 +718,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "hero.eyebrow": "Clipboard · Agent resources · trusted devices",
           "hero.title.clipboard": "Keep clipboard history clear.",
           "hero.title.resources": "Manage Prompts, Skills, and MCP in one place.",
-          "hero.title.alerts": "Connected Agent alerts, all in one place — with the DingDong sound you choose.",
+          "hero.title.alerts": "Collect Agent alerts in one place.",
           "hero.lede": "Keep clipboard history easy to find and manage Prompts, Skills, and MCP servers once. DingDong gathers alerts from connected Agents, lets you choose the desktop sound, and sends selected content and important results to trusted devices.",
           "hero.finish": "Everything close at hand, with a ring when work is ready.",
           "hero.download": "Download latest",
@@ -794,8 +811,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.title": "Every final reply leaves a little resource receipt.",
           "chatFooter.body": "Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.",
           "chatFooter.note": "An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.",
-          "chatFooter.sampleLabel": "Illustrative line",
-          "chatFooter.sample": "DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub*",
+          "chatFooter.sampleHint": "Ask normally. DingDong shows the resources used after the answer.",
+          "chatFooter.sampleInputLabel": "Demo Agent message",
+          "chatFooter.sampleInputHint": "Press Enter to run a simulated reply.",
+          "chatFooter.sampleSend": "Send",
+          "chatFooter.sampleSendAria": "Send demo message",
+          "chatFooter.sampleThinking": "Thinking…",
+          "chatFooter.sampleAnswer": "Done — I fixed the layout and verified the local preview.",
+          "chatFooter.samplePromptResource": "♥ Project rules",
+          "chatFooter.sampleSkillResource": "♦ Release flow*",
+          "chatFooter.sampleMcpResource": "♠ GitHub*",
+          "chatFooter.sampleStatus": "Agent · connected",
           "defaults.eyebrow": "Keyboard and settings reference",
           "defaults.title": "Shortcuts help you move through content work faster.",
           "defaults.body": "The global Clipboard shortcut and all three workspace shortcuts can be recorded in Settings and take effect immediately. The table shows DingDong’s defaults.",
@@ -932,7 +958,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "hero.eyebrow": "剪贴板 · Agent 资源 · 可信设备",
           "hero.title.clipboard": "清晰管理剪贴板列表",
           "hero.title.resources": "统一管理提示词、Skill、MCP",
-          "hero.title.alerts": "接入的 Agent，提醒都归一处；叮咚哪一声，你来定",
+          "hero.title.alerts": "统一收集 Agent 的提醒",
           "hero.lede": "剪贴板记录清晰可查，Prompt、Skill 和 MCP 只维护一份；接入的 Agent 有结果都由 DingDong 收好，桌面提示声随你选，重要内容也能送到可信设备。",
           "hero.finish": "东西随手能找到，任务有结果也不会错过",
           "hero.download": "下载 DingDong",
@@ -1025,8 +1051,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.title": "每次答完，都留一张资源小票",
           "chatFooter.body": "支持的 Agent 会在完整回复末尾附上一行 DingDong，列出本轮生效的 Prompt、匹配到的 Skill 和可用 MCP；完整加载过的 Skill 或实际调用过的 MCP，名称后会出现 *。",
           "chatFooter.note": "MCP 后的 * 表示调用过，但不表示调用成功。Prompt 不加 *，因为送达无法证明模型在语义上实际遵循；三种符号都能在设置里自定义。",
-          "chatFooter.sampleLabel": "界面示意",
-          "chatFooter.sample": "DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub*",
+          "chatFooter.sampleHint": "正常告诉 Agent 要做什么，DingDong 会在答案后显示本轮用到的资源。",
+          "chatFooter.sampleInputLabel": "演示 Agent 消息",
+          "chatFooter.sampleInputHint": "按 Enter 运行一段模拟回复。",
+          "chatFooter.sampleSend": "发送",
+          "chatFooter.sampleSendAria": "发送演示消息",
+          "chatFooter.sampleThinking": "Thinking…",
+          "chatFooter.sampleAnswer": "已经改好了，页面布局和本地预览都检查过了。",
+          "chatFooter.samplePromptResource": "♥ 项目规范",
+          "chatFooter.sampleSkillResource": "♦ 发布流程*",
+          "chatFooter.sampleMcpResource": "♠ GitHub*",
+          "chatFooter.sampleStatus": "Agent · 已接入",
           "defaults.eyebrow": "快捷键与设置参考",
           "defaults.title": "快捷键帮你高效处理内容工作",
           "defaults.body": "全局剪贴板快捷键和三个工作区快捷键都可以在设置中录入并立即生效；下面列出 DingDong 的默认组合。",
@@ -1252,6 +1287,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoCopyAction = document.getElementById("demo-copy-action");
       const demoCopyValue = document.getElementById("demo-copy-value");
       const demoMascot = document.getElementById("demo-mascot");
+      const terminalDemoForm = document.getElementById("terminal-demo-form");
+      const terminalDemoInput = document.getElementById("terminal-demo-input");
+      const terminalDemoOutput = document.getElementById("terminal-demo-output");
+      const terminalDemoSubmitted = document.getElementById("terminal-demo-submitted");
+      const terminalDemoAnswer = document.getElementById("terminal-demo-answer");
+      const terminalDemoDingDong = document.getElementById("terminal-demo-dingdong");
       const agentSetupPrompt = document.getElementById("agent-setup-prompt");
       const agentPromptCopy = document.getElementById("agent-prompt-copy");
       const agentPromptCopyLabel = document.getElementById("agent-prompt-copy-label");
@@ -1282,6 +1323,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       let currentSoundAudio = null;
       let currentSoundCard = null;
       let agentPromptCopyTimer = null;
+      let terminalDemoTimer = null;
+      let terminalDemoReplyIndex = 0;
       let releaseDownloads = null;
       let releaseDownloadsFailed = false;
       const demoState = {
@@ -1303,6 +1346,117 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         if (className) element.className = className;
         if (text !== undefined) element.textContent = text;
         return element;
+      };
+
+      const terminalDemoReplies = {
+        en: [
+          {
+            answer: "Done — I fixed the layout and verified the local preview.",
+            resources: [
+              ["prompt", "♥ Project rules"],
+              ["skill", "♦ Release flow*"],
+              ["mcp", "♠ GitHub*"]
+            ]
+          },
+          {
+            answer: "I reviewed the interaction, tightened the responsive state, and checked keyboard input.",
+            resources: [
+              ["prompt", "♥ Product voice"],
+              ["skill", "♦ UI hardening*"],
+              ["mcp", "♠ Browser*"]
+            ]
+          },
+          {
+            answer: "The copy is updated, the example is localized, and the checks are passing.",
+            resources: [
+              ["prompt", "♥ Writing guide"],
+              ["skill", "♦ Localization*"],
+              ["mcp", "♠ Test runner*"]
+            ]
+          }
+        ],
+        zh: [
+          {
+            answer: "已经改好了，页面布局和本地预览都检查过了。",
+            resources: [
+              ["prompt", "♥ 项目规范"],
+              ["skill", "♦ 发布流程*"],
+              ["mcp", "♠ GitHub*"]
+            ]
+          },
+          {
+            answer: "交互已经补齐，窄屏和键盘输入状态也一起检查过了。",
+            resources: [
+              ["prompt", "♥ 产品语气"],
+              ["skill", "♦ 界面加固*"],
+              ["mcp", "♠ Browser*"]
+            ]
+          },
+          {
+            answer: "文案已更新，中英文示例保持同步，相关检查也通过了。",
+            resources: [
+              ["prompt", "♥ 文案规范"],
+              ["skill", "♦ 本地化流程*"],
+              ["mcp", "♠ 测试工具*"]
+            ]
+          }
+        ]
+      };
+
+      const renderTerminalDemoReceipt = (resources) => {
+        const spacer = () => document.createTextNode(" ");
+        const parts = [
+          createDemoElement("span", "", "DingDong"),
+          spacer(),
+          createDemoElement("b", "", "·"),
+          spacer()
+        ];
+        resources.forEach(([type, title], index) => {
+          if (index > 0) parts.push(spacer(), createDemoElement("b", "", "|"), spacer());
+          parts.push(createDemoElement("span", `is-${type}`, title));
+        });
+        terminalDemoDingDong.replaceChildren(...parts);
+      };
+
+      const renderTerminalDemoReply = (index = 0) => {
+        const replies = terminalDemoReplies[demoState.language];
+        const reply = replies[index % replies.length];
+        terminalDemoAnswer.textContent = reply.answer;
+        renderTerminalDemoReceipt(reply.resources);
+      };
+
+      const setTerminalDemoThinking = (thinking) => {
+        terminalDemoOutput.classList.toggle("is-thinking", thinking);
+        terminalDemoOutput.setAttribute("aria-busy", String(thinking));
+        terminalDemoInput.disabled = thinking;
+        terminalDemoForm.querySelector("button").disabled = thinking;
+        if (thinking) {
+          terminalDemoAnswer.textContent = copy[demoState.language]["chatFooter.sampleThinking"];
+          terminalDemoDingDong.replaceChildren();
+        } else {
+          terminalDemoForm.querySelector("button").textContent = copy[demoState.language]["chatFooter.sampleSend"];
+        }
+      };
+
+      const submitTerminalDemo = (event) => {
+        event.preventDefault();
+        const message = terminalDemoInput.value.trim();
+        if (!message || terminalDemoOutput.getAttribute("aria-busy") === "true") {
+          terminalDemoInput.focus();
+          return;
+        }
+        window.clearTimeout(terminalDemoTimer);
+        terminalDemoSubmitted.textContent = `› ${message}`;
+        terminalDemoSubmitted.hidden = false;
+        setTerminalDemoThinking(true);
+        terminalDemoForm.querySelector("button").textContent = copy[demoState.language]["chatFooter.sampleThinking"];
+        terminalDemoTimer = window.setTimeout(() => {
+          terminalDemoReplyIndex = (terminalDemoReplyIndex + 1) % terminalDemoReplies[demoState.language].length;
+          renderTerminalDemoReply(terminalDemoReplyIndex);
+          terminalDemoInput.value = "";
+          setTerminalDemoThinking(false);
+          terminalDemoInput.focus();
+        }, 900);
       };
 
       const createDemoSymbol = (name, className = "") => {
@@ -1807,6 +1961,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           const value = copy[lang][node.dataset.i18nAriaLabel];
           if (value) node.setAttribute("aria-label", value);
         });
+        window.clearTimeout(terminalDemoTimer);
+        setTerminalDemoThinking(false);
+        terminalDemoReplyIndex = 0;
+        terminalDemoSubmitted.hidden = true;
+        renderTerminalDemoReply(terminalDemoReplyIndex);
         resetAgentPromptCopy();
         buttons.forEach((button) => button.classList.toggle("active", button.dataset.lang === lang));
         if (currentSoundCard) {
@@ -1845,6 +2004,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       });
 
       demoCopyAction.addEventListener("click", copyDemoSample);
+      terminalDemoForm.addEventListener("submit", submitTerminalDemo);
       agentPromptCopy.addEventListener("click", copyAgentSetupPrompt);
       demoMascot.addEventListener("click", () => {
         demoMascot.classList.remove("is-shaking");
