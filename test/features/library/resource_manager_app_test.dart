@@ -16,12 +16,100 @@ import 'package:dingdong/features/library/domain/resource_manager_launcher.dart'
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('Windows resource manager close hides without exiting', (
+    WidgetTester tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    const MethodChannel channels = MethodChannel(
+      'mixin.one/desktop_multi_window/channels',
+    );
+    const MethodChannel registry = MethodChannel(
+      'mixin.one/desktop_multi_window',
+    );
+    const MethodChannel windowManager = MethodChannel('window_manager');
+    final TestDefaultBinaryMessenger messenger =
+        tester.binding.defaultBinaryMessenger;
+    final List<MethodCall> windowCalls = <MethodCall>[];
+    messenger.setMockMethodCallHandler(channels, (_) async => null);
+    messenger.setMockMethodCallHandler(registry, (MethodCall call) async {
+      if (call.method == 'getWindowDefinition') {
+        return <String, String>{
+          'windowId': 'resource-close-test',
+          'windowArgument': '',
+        };
+      }
+      return null;
+    });
+    messenger.setMockMethodCallHandler(windowManager, (MethodCall call) async {
+      windowCalls.add(call);
+      return null;
+    });
+    addTearDown(() {
+      messenger.setMockMethodCallHandler(channels, null);
+      messenger.setMockMethodCallHandler(registry, null);
+      messenger.setMockMethodCallHandler(windowManager, null);
+    });
+    final LibraryViewModel library = LibraryViewModel(InMemoryResourceStore());
+    await library.load();
+    final ClipboardViewModel clipboard = ClipboardViewModel(
+      InMemoryClipboardStore(),
+    )..load();
+    final ActivityController activity = ActivityController();
+    final IssueCenterController issues = IssueCenterController();
+    addTearDown(activity.dispose);
+    addTearDown(issues.dispose);
+
+    await tester.pumpWidget(
+      ResourceManagerApp(
+        viewModel: library,
+        clipboardViewModel: clipboard,
+        activityController: activity,
+        issueCenterController: issues,
+        settings: const AppSettings(language: AppLanguagePreference.chinese),
+        windowController: WindowController.fromWindowId('resource-close-test'),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      windowCalls,
+      contains(
+        isA<MethodCall>()
+            .having(
+              (MethodCall call) => call.method,
+              'method',
+              'setPreventClose',
+            )
+            .having(
+              (MethodCall call) => call.arguments,
+              'arguments',
+              <String, Object?>{'isPreventClose': true},
+            ),
+      ),
+    );
+    windowCalls.clear();
+
+    await _sendWindowManagerEvent(messenger, 'close');
+    await tester.pump();
+
+    expect(windowCalls.map((MethodCall call) => call.method), contains('hide'));
+    expect(
+      windowCalls.map((MethodCall call) => call.method),
+      isNot(contains('destroy')),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   testWidgets(
     'resource manager opens recent agents and resumes conversations',
@@ -421,6 +509,21 @@ void main() {
     expect(find.text('Claude Code · superpowers'), findsOneWidget);
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
   });
+}
+
+Future<void> _sendWindowManagerEvent(
+  TestDefaultBinaryMessenger messenger,
+  String eventName,
+) async {
+  final Completer<void> handled = Completer<void>();
+  await messenger.handlePlatformMessage(
+    'window_manager',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall('onEvent', <String, Object?>{'eventName': eventName}),
+    ),
+    (_) => handled.complete(),
+  );
+  await handled.future;
 }
 
 Future<void> _sendWindowMethod(

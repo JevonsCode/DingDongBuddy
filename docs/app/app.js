@@ -48,6 +48,9 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
+const currentPwaVersion = "1.4.2";
+const currentPwaShellVersion = 23;
+const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const directVibrationPattern = [300, 100, 300, 100, 600];
 const agentLaunchIntentKey = "agent-launch-intent";
 const agentLaunchIntentTtlMs = 5 * 60 * 1000;
@@ -75,6 +78,10 @@ const state = {
   installStatus: "idle",
   installRequestedAt: Number(localStorage.getItem(storageKeys.installRequest)) || 0,
   installVerificationTimer: null,
+  pwaUpdateAvailable: null,
+  pwaUpdateCheckInProgress: false,
+  pwaUpdateStatusMessage: `当前版本 ${currentPwaVersion} · 联网时自动保持最新`,
+  lastPwaUpdateCheckAt: 0,
   pushMutationTail: Promise.resolve(),
   pendingPair: null,
 };
@@ -215,6 +222,8 @@ const elements = Object.fromEntries(
     "vibration-support-label",
     "vibration-test",
     "vibration-test-result",
+    "pwa-update-button",
+    "pwa-update-status",
     "icon-style-soft",
     "icon-style-white",
     "icon-style-note",
@@ -258,6 +267,7 @@ async function boot(scannedPair) {
   initializeInstallState();
   registerServiceWorker().then((registration) => {
     state.serviceWorkerRegistration = registration;
+    checkPwaUpdate({ force: true, silent: true }).catch(() => {});
   });
   navigator.serviceWorker?.addEventListener("message", (event) => {
     if (event.data?.type === "content-tab.open") {
@@ -395,6 +405,7 @@ function wireInteractions() {
       !wantsAgentNotifications(session.pair);
     renderIconStyleChoices();
     renderAgentNotificationStatus();
+    renderPwaUpdateStatus();
     elements["settings-dialog"].showModal();
   });
   elements["enable-notifications"].addEventListener("click", async () => {
@@ -425,6 +436,10 @@ function wireInteractions() {
     await sendSettings(session);
   });
   elements["vibration-test"].addEventListener("click", testDeviceVibration);
+  elements["pwa-update-button"].addEventListener(
+    "click",
+    upgradePwaManually,
+  );
   elements["icon-style-soft"].addEventListener("click", () => {
     setIconStyle("soft");
   });
@@ -1734,6 +1749,17 @@ function renderAgentNotificationStatus() {
         ? "默认开启 · 正在连接推送通道"
         : "默认开启 · 等待系统授权"
       : "已关闭";
+}
+
+function renderPwaUpdateStatus() {
+  elements["pwa-update-status"].textContent = state.pwaUpdateStatusMessage;
+  elements["pwa-update-button"].disabled = state.pwaUpdateCheckInProgress;
+  elements["pwa-update-button"].textContent =
+    state.pwaUpdateStatusMessage.startsWith("正在升级")
+      ? "升级中…"
+      : state.pwaUpdateCheckInProgress
+        ? "检查中…"
+        : "手动升级";
 }
 
 function renderConnectionState(session = activeSession()) {
@@ -3459,6 +3485,7 @@ function handleVisibilityChange() {
   if (document.visibilityState !== "visible") return;
   const session = activeSession();
   refreshInstallState().catch(() => {});
+  checkPwaUpdate({ silent: true }).catch(() => {});
   if (!("Notification" in window) || !elements["notification-help-dialog"].open) {
     render();
     return;
@@ -3497,9 +3524,89 @@ async function registerServiceWorker() {
   try {
     return await navigator.serviceWorker.register("./service-worker.js", {
       scope: "./",
+      updateViaCache: "none",
     });
   } catch {
     return null;
+  }
+}
+
+async function fetchPwaVersion() {
+  const url = new URL("./version.json", location.href);
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error(`PWA version check failed: ${response.status}`);
+  const value = await response.json();
+  if (
+    typeof value?.version !== "string" ||
+    !Number.isSafeInteger(value?.shell) ||
+    value.shell < 1
+  ) {
+    throw new Error("PWA version descriptor is invalid");
+  }
+  return value;
+}
+
+async function checkPwaUpdate({ force = false, silent = false } = {}) {
+  const now = Date.now();
+  if (
+    state.pwaUpdateCheckInProgress ||
+    (!force && now - state.lastPwaUpdateCheckAt < pwaUpdateCheckIntervalMs)
+  ) {
+    return state.pwaUpdateAvailable;
+  }
+
+  state.pwaUpdateCheckInProgress = true;
+  if (!silent) state.pwaUpdateStatusMessage = "正在检查 PWA 更新…";
+  renderPwaUpdateStatus();
+
+  try {
+    const registration =
+      state.serviceWorkerRegistration ||
+      (await navigator.serviceWorker?.getRegistration("./"));
+    const [version] = await Promise.all([
+      fetchPwaVersion(),
+      registration?.update(),
+    ]);
+    state.lastPwaUpdateCheckAt = now;
+    state.pwaUpdateAvailable =
+      version.shell > currentPwaShellVersion ? version : null;
+    state.pwaUpdateStatusMessage = state.pwaUpdateAvailable
+      ? `发现新版本 ${version.version}，可立即升级`
+      : `已是最新版本 · ${currentPwaVersion}`;
+    return state.pwaUpdateAvailable;
+  } catch {
+    state.pwaUpdateStatusMessage = silent
+      ? `当前版本 ${currentPwaVersion} · 联网后自动重试`
+      : "检查失败，请确认网络后重试";
+    return null;
+  } finally {
+    state.pwaUpdateCheckInProgress = false;
+    renderPwaUpdateStatus();
+  }
+}
+
+async function upgradePwaManually() {
+  const version = await checkPwaUpdate({ force: true });
+  if (!version) {
+    showToast(
+      state.pwaUpdateStatusMessage.startsWith("已是最新版本")
+        ? "已经是最新版本"
+        : "暂时无法升级，请稍后重试",
+    );
+    return;
+  }
+
+  state.pwaUpdateCheckInProgress = true;
+  state.pwaUpdateStatusMessage = `正在升级到 ${version.version}…`;
+  renderPwaUpdateStatus();
+  try {
+    await persistPairingsForWorker();
+    await state.serviceWorkerRegistration?.update();
+    location.reload();
+  } catch {
+    state.pwaUpdateCheckInProgress = false;
+    state.pwaUpdateStatusMessage = "升级失败，配对信息未受影响，请重试";
+    renderPwaUpdateStatus();
   }
 }
 

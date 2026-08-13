@@ -1,4 +1,4 @@
-const cacheName = "dingdong-app-shell-v22";
+const cacheName = "dingdong-app-shell-v23";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const notificationVibrationPattern = [250, 100, 250, 100, 450];
@@ -23,6 +23,7 @@ self.addEventListener("install", (event) => {
           `${base}pairing-state.js`,
           `${base}content-navigation.js`,
           `${base}manifest.webmanifest`,
+          `${base}version.json`,
           `${assets}dingdong-icon.png`,
           `${assets}dingdong-pwa-192.png`,
           `${assets}dingdong-pwa-512.png`,
@@ -60,6 +61,10 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/v1/")) return;
+  if (url.pathname.endsWith("/version.json")) {
+    event.respondWith(fetch(request));
+    return;
+  }
   const isApplicationShell =
     request.mode === "navigate" ||
     (url.pathname.startsWith(new URL(self.registration.scope).pathname) &&

@@ -10,6 +10,7 @@ import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
+import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/data/agent_launcher_configuration_store.dart';
@@ -718,6 +719,7 @@ Future<void> _runDeviceLinkManagerWindow(
   final bool chinese = _usesChineseLabels(settings.language);
 
   await windowManager.ensureInitialized();
+  await preventWindowsAuxiliaryWindowClose();
   final WindowOptions options = WindowOptions(
     size: const Size(820, 720),
     minimumSize: const Size(620, 580),
@@ -777,6 +779,7 @@ Future<void> _runSettingsWindow(
   );
 
   await windowManager.ensureInitialized();
+  await preventWindowsAuxiliaryWindowClose();
   final WindowOptions options = WindowOptions(
     size: const Size(620, 680),
     minimumSize: const Size(620, 560),
@@ -814,6 +817,7 @@ Future<void> _runDevelopmentTestPanelWindow(
 ) async {
   final AppDataPaths paths = AppDataPaths.current();
   await windowManager.ensureInitialized();
+  await preventWindowsAuxiliaryWindowClose();
   if (!paths.development) {
     await windowManager.destroy();
     return;
@@ -1414,6 +1418,7 @@ Future<void> _runResourceManagerWindow(
   );
 
   await windowManager.ensureInitialized();
+  await preventWindowsAuxiliaryWindowClose();
   final WindowOptions options = WindowOptions(
     size: const Size(1080, 752),
     minimumSize: const Size(980, 680),

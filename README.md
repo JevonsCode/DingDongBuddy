@@ -57,7 +57,7 @@ flowchart LR
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.4.1.”
+- “Use this project's release workflow, run every check, and prepare version 1.4.2.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with
@@ -72,6 +72,10 @@ each device can be disconnected, reconnected, or deleted independently. Scan
 another computer to add it without replacing the existing pairing. The phone
 keeps every computer connected when possible and lets you switch the active
 computer from the online status beside the header.
+
+The PWA checks for a fresh application shell while online. Its device settings
+also provide a manual upgrade action; applying an update preserves all saved
+pairings, so ordinary upgrades do not require scanning the QR code again.
 
 - **Computer → phone:** enable automatic delivery per device to send only new
   clipboard items copied after pairing. Existing history is sent only when you

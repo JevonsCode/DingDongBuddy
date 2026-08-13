@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
+import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/platform/multi_window_device_link_manager.dart';
@@ -27,10 +28,14 @@ final class DeviceLinkManagerApp extends StatefulWidget {
   State<DeviceLinkManagerApp> createState() => _DeviceLinkManagerAppState();
 }
 
-class _DeviceLinkManagerAppState extends State<DeviceLinkManagerApp> {
+class _DeviceLinkManagerAppState extends State<DeviceLinkManagerApp>
+    with
+        WindowListener,
+        WindowsAuxiliaryWindowCloseBehavior<DeviceLinkManagerApp> {
   @override
   void initState() {
     super.initState();
+    enableWindowsHideOnClose();
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         switch (call.method) {

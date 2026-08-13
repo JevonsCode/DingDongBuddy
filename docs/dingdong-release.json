@@ -1,33 +1,33 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.4.1",
-  "latestBuild": "49",
-  "publishedAt": "2026-08-12T16:09:42Z",
+  "latestVersion": "1.4.2",
+  "latestBuild": "50",
+  "publishedAt": "2026-08-12T17:46:41Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.1/DingDong-1.4.1-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.2/DingDong-1.4.2-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.1/DingDong-1.4.1-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.2/DingDong-1.4.2-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.1/DingDong-1.4.1-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.2/DingDong-1.4.2-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Shows one running item per Agent chat on linked phones instead of treating every turn as a separate running task.",
-    "Falls back to the Agent client and normalized workspace only when a stable conversation ID is unavailable.",
-    "Keeps distinct known conversations and different Agent clients isolated while replacing stale turn-level entries with the latest task.",
-    "Adds activity-controller and phone-snapshot regression coverage for eight consecutive turns in one Codex chat.",
+    "Keeps DingDong running on Windows when Settings, Resource Manager, Device Link, or the development panel is closed.",
+    "Hides auxiliary Windows windows on title-bar, settings, and Resource Manager close actions while reserving process termination for explicit Quit.",
+    "Adds automatic and manual PWA update checks that refresh the application shell without replacing saved computer pairings.",
+    "Publishes a no-cache PWA version descriptor and preserves paired computers before applying an available shell update.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

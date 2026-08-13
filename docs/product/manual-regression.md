@@ -1,4 +1,4 @@
-# DingDong 1.4.1 Manual Regression Checklist
+# DingDong 1.4.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -153,6 +153,10 @@ and macOS golden images; the items below exercise real operating-system state.
 - Show a fresh QR code on the computer, scan it with Android Chrome, confirm the
   pairing, refresh the page, and reopen the installed PWA if present. The saved
   pairing reconnects without scanning again.
+- In the PWA device settings, verify **PWA 更新** shows the current version and
+  exposes **手动升级**. With the current deployment it reports the latest
+  version without re-pairing. With a newer deployment it refreshes to the new
+  shell, restores every saved computer, and reconnects without scanning again.
 - Pair a second computer from the same phone without deleting or replacing the
   first. Both computers remain independently connected when available. The
   header shows a green online dot plus the online-computer count; opening it
@@ -522,8 +526,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.4.1` build `49` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.4.1.49` and product name `DingDong`.
+- The macOS release app metadata is version `1.4.2` build `50` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.4.2.50` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -531,7 +535,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.4.1` and that exact commit SHA; every
+  `/v1/health` must report version `1.4.2` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

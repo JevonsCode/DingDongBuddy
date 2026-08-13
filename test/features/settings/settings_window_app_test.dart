@@ -8,12 +8,88 @@ import 'package:dingdong/features/settings/domain/settings_window_launcher.dart'
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('Windows settings close hides the window without exiting', (
+    WidgetTester tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    const String windowId = 'settings-close-test';
+    const MethodChannel windows = MethodChannel(
+      'mixin.one/desktop_multi_window',
+    );
+    const MethodChannel channels = MethodChannel(
+      'mixin.one/desktop_multi_window/channels',
+    );
+    const MethodChannel windowManager = MethodChannel('window_manager');
+    final TestDefaultBinaryMessenger messenger =
+        tester.binding.defaultBinaryMessenger;
+    final List<MethodCall> windowCalls = <MethodCall>[];
+    messenger.setMockMethodCallHandler(windows, (MethodCall call) async {
+      if (call.method == 'getWindowDefinition') {
+        return <String, String>{'windowId': windowId, 'windowArgument': ''};
+      }
+      return null;
+    });
+    messenger.setMockMethodCallHandler(channels, (_) async => null);
+    messenger.setMockMethodCallHandler(windowManager, (MethodCall call) async {
+      windowCalls.add(call);
+      return null;
+    });
+    addTearDown(() async {
+      messenger.setMockMethodCallHandler(windows, null);
+      messenger.setMockMethodCallHandler(channels, null);
+      messenger.setMockMethodCallHandler(windowManager, null);
+    });
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+
+    await tester.pumpWidget(
+      SettingsWindowApp(
+        viewModel: model,
+        windowController: WindowController.fromWindowId(windowId),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      windowCalls,
+      contains(
+        isA<MethodCall>()
+            .having(
+              (MethodCall call) => call.method,
+              'method',
+              'setPreventClose',
+            )
+            .having(
+              (MethodCall call) => call.arguments,
+              'arguments',
+              <String, Object?>{'isPreventClose': true},
+            ),
+      ),
+    );
+    windowCalls.clear();
+
+    await _sendWindowManagerEvent(messenger, 'close');
+    await tester.pump();
+
+    expect(windowCalls.map((MethodCall call) => call.method), contains('hide'));
+    expect(
+      windowCalls.map((MethodCall call) => call.method),
+      isNot(contains('destroy')),
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   testWidgets('reopening the settings window refreshes release metadata', (
     WidgetTester tester,
@@ -81,6 +157,21 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+}
+
+Future<void> _sendWindowManagerEvent(
+  TestDefaultBinaryMessenger messenger,
+  String eventName,
+) async {
+  final Completer<void> handled = Completer<void>();
+  await messenger.handlePlatformMessage(
+    'window_manager',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall('onEvent', <String, Object?>{'eventName': eventName}),
+    ),
+    (_) => handled.complete(),
+  );
+  await handled.future;
 }
 
 Future<void> _sendWindowMethod(

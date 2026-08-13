@@ -50,6 +50,9 @@ const serviceWorkerSource = readFileSync(
   new URL("../../docs/app/service-worker.js", import.meta.url),
   "utf8",
 );
+const pwaVersion = JSON.parse(
+  readFileSync(new URL("../../docs/app/version.json", import.meta.url), "utf8"),
+);
 const desktopSessionSource = readFileSync(
   new URL(
     "../../lib/features/device_link/data/device_link_session.dart",
@@ -193,7 +196,24 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v22/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v23/);
+});
+
+test("PWA settings can check and apply an update without replacing pairings", () => {
+  assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
+  assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
+  assert.match(appSource, /const currentPwaVersion = "1\.4\.2"/);
+  assert.match(appSource, /const currentPwaShellVersion = 23/);
+  assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
+  assert.match(appSource, /updateViaCache: "none"/);
+  assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
+  assert.match(appSource, /checkPwaUpdate\(\{ silent: true \}\)/);
+  assert.match(appSource, /registration\?\.update\(\)/);
+  assert.match(appSource, /await persistPairingsForWorker\(\)/);
+  assert.match(appSource, /location\.reload\(\)/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v23/);
+  assert.match(serviceWorkerSource, /version\.json/);
+  assert.deepEqual(pwaVersion, { version: "1.4.2", shell: 23 });
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {

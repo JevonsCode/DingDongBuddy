@@ -4,6 +4,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -68,7 +69,10 @@ class ResourceManagerApp extends StatefulWidget {
   State<ResourceManagerApp> createState() => _ResourceManagerAppState();
 }
 
-class _ResourceManagerAppState extends State<ResourceManagerApp> {
+class _ResourceManagerAppState extends State<ResourceManagerApp>
+    with
+        WindowListener,
+        WindowsAuxiliaryWindowCloseBehavior<ResourceManagerApp> {
   int _selectedIndex = 0;
   int _clipboardCategoryRequestRevision = 0;
   final GlobalKey<LibraryScreenState> _libraryScreenKey =
@@ -78,6 +82,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp> {
   @override
   void initState() {
     super.initState();
+    enableWindowsHideOnClose();
     _selectedIndex = widget.initialDestination.index;
     _clipboardCategoryRequestRevision = widget.openClipboardCategoriesOnLaunch
         ? 1

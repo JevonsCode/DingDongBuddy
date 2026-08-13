@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
+import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/shell/domain/development_test_action.dart';
@@ -30,10 +31,14 @@ class DevelopmentTestPanelApp extends StatefulWidget {
       _DevelopmentTestPanelAppState();
 }
 
-class _DevelopmentTestPanelAppState extends State<DevelopmentTestPanelApp> {
+class _DevelopmentTestPanelAppState extends State<DevelopmentTestPanelApp>
+    with
+        WindowListener,
+        WindowsAuxiliaryWindowCloseBehavior<DevelopmentTestPanelApp> {
   @override
   void initState() {
     super.initState();
+    enableWindowsHideOnClose();
     final WindowController? controller = widget.windowController;
     if (controller != null) {
       unawaited(

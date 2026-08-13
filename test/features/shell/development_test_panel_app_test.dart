@@ -1,7 +1,12 @@
+import 'dart:async';
+
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/shell/domain/development_test_action.dart';
 import 'package:dingdong/features/shell/ui/development_test_panel_app.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -11,6 +16,71 @@ void main() {
     }
     expect(DevelopmentTestAction.fromId('unknown'), isNull);
     expect(DevelopmentTestAction.fromId(null), isNull);
+  });
+
+  testWidgets('Windows DEV panel close hides without exiting', (
+    WidgetTester tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    const String windowId = 'dev-panel-close-test';
+    const MethodChannel registry = MethodChannel(
+      'mixin.one/desktop_multi_window',
+    );
+    const MethodChannel channels = MethodChannel(
+      'mixin.one/desktop_multi_window/channels',
+    );
+    const MethodChannel windowManager = MethodChannel('window_manager');
+    final TestDefaultBinaryMessenger messenger =
+        tester.binding.defaultBinaryMessenger;
+    final List<MethodCall> windowCalls = <MethodCall>[];
+    messenger.setMockMethodCallHandler(registry, (MethodCall call) async {
+      if (call.method == 'getWindowDefinition') {
+        return <String, String>{'windowId': windowId, 'windowArgument': ''};
+      }
+      return null;
+    });
+    messenger.setMockMethodCallHandler(channels, (_) async => null);
+    messenger.setMockMethodCallHandler(windowManager, (MethodCall call) async {
+      windowCalls.add(call);
+      return null;
+    });
+    addTearDown(() {
+      messenger.setMockMethodCallHandler(registry, null);
+      messenger.setMockMethodCallHandler(channels, null);
+      messenger.setMockMethodCallHandler(windowManager, null);
+    });
+
+    await tester.pumpWidget(
+      DevelopmentTestPanelApp(
+        settings: const AppSettings(),
+        animationsSupported: false,
+        onRun: (_) async {},
+        windowController: WindowController.fromWindowId(windowId),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      windowCalls.any(
+        (MethodCall call) =>
+            call.method == 'setPreventClose' &&
+            (call.arguments as Map<Object?, Object?>)['isPreventClose'] == true,
+      ),
+      isTrue,
+    );
+    windowCalls.clear();
+    await _sendWindowManagerEvent(messenger, 'close');
+    await tester.pump();
+    expect(windowCalls.map((MethodCall call) => call.method), contains('hide'));
+    expect(
+      windowCalls.map((MethodCall call) => call.method),
+      isNot(contains('destroy')),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('DEV test panel exposes and triggers integration actions', (
@@ -114,4 +184,19 @@ void main() {
 
     expect(find.textContaining('其余集成测试仍可使用'), findsOneWidget);
   });
+}
+
+Future<void> _sendWindowManagerEvent(
+  TestDefaultBinaryMessenger messenger,
+  String eventName,
+) async {
+  final Completer<void> handled = Completer<void>();
+  await messenger.handlePlatformMessage(
+    'window_manager',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall('onEvent', <String, Object?>{'eventName': eventName}),
+    ),
+    (_) => handled.complete(),
+  );
+  await handled.future;
 }

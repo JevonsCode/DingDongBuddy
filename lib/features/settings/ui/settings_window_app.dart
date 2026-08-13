@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
+import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
@@ -38,12 +39,16 @@ class SettingsWindowApp extends StatefulWidget {
   State<SettingsWindowApp> createState() => _SettingsWindowAppState();
 }
 
-class _SettingsWindowAppState extends State<SettingsWindowApp> {
+class _SettingsWindowAppState extends State<SettingsWindowApp>
+    with
+        WindowListener,
+        WindowsAuxiliaryWindowCloseBehavior<SettingsWindowApp> {
   late final SettingsNavigationController _navigationController;
 
   @override
   void initState() {
     super.initState();
+    enableWindowsHideOnClose();
     _navigationController = SettingsNavigationController(
       initialDestination: widget.initialDestination,
     );
