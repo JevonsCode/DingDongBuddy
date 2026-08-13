@@ -118,7 +118,26 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       'API | Agent connections',
                       'API | Agent 连接',
                     ),
-                    showBadge: !widget.settingsViewModel.settings.mcpAccessSeen,
+                    badge:
+                        widget
+                            .settingsViewModel
+                            .settings
+                            .requiresAgentSetupUpdate
+                        ? _MetricCardBadge(
+                            key: const Key('today-agent-setup-update-badge'),
+                            label: context.localized('UPDATE', '需要更新'),
+                            semanticLabel: context.localized(
+                              'Agent setup needs update',
+                              'Agent 接入需要更新',
+                            ),
+                            tone: _MetricCardBadgeTone.attention,
+                          )
+                        : !widget.settingsViewModel.settings.mcpAccessSeen
+                        ? const _MetricCardBadge(
+                            key: Key('today-mcp-badge'),
+                            label: 'MCP',
+                          )
+                        : null,
                     onTap: widget.onOpenAgentApi,
                   ),
                 ),

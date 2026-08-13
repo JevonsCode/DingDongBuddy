@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.4.3',
+              'version': '1.4.4',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
@@ -46,8 +46,8 @@ final class McpServer {
                 'If the Bridge call fails, report that DingDong resources could not be loaded and do not reuse an earlier Prompt or Skill set. '
                 'A Skill candidate is not an instruction: only when its description matches the task, call dingdong_load_skill with its id or name and current workspace before applying the returned full SKILL.md. '
                 'Load only a Skill returned by the current catalog. Read only referenced package files with dingdong_read_skill_file. '
-                'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. '
-                'When conversation.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item and append * only when confirmedUse is true. The mergeKey is opaque merge-only metadata and must never be displayed. The marker proves that DingDong returned the full Skill this task; it does not claim that every instruction was followed. Never mark a Skill candidate, Prompt, or MCP. On Codex desktop, include conversation.line exactly once as a single Markdown text line and keep DingDong as text. Use the exact Prompt, Skill, and MCP symbols supplied in conversation.line and each item.lineToken; these symbols are user-configurable, so never infer or rebuild them. The conversation capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Use conversation.presentations.ansi.line only on an explicitly ANSI-capable terminal; every other host includes conversation.fallbackLine exactly once. Show only resource titles and markers; do not show resource content, descriptions, IDs, or merge keys. '
+                'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. Each active MCP entry includes its managed serverName and, for Codex, its toolNamePrefix. '
+                'When conversation.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item with confirmedUse: true. After an actual configured MCP tool call reaches a terminal result, including an error result, call dingdong_confirm_mcp_use once for that MCP resource with the active entry id and serverName plus the exact called toolName, then replace only the item with the same mergeKey using its returned conversation.item with confirmedUse: true. Never confirm MCP use from availability, tool discovery, or an uncalled tool. The mergeKey is opaque merge-only metadata and must never be displayed. A Skill marker proves only a full Skill load; it does not claim that every instruction was followed. An MCP marker means called, not necessarily succeeded. Prompt items remain unmarked because delivery cannot prove semantic compliance. On Codex desktop, include the current merged footer exactly once as a single Markdown text line and keep DingDong as text. Use the exact Prompt, Skill, and MCP symbols and lineToken values returned by DingDong; these symbols are user-configurable, so never infer them. The initial conversation.line is already canonical only when no item was replaced. The conversation capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Use conversation.presentations.ansi.line only on an explicitly ANSI-capable terminal; every other host uses the current merged plain-text tokens exactly once. Show only resource titles and truthful markers; do not show resource content, descriptions, IDs, server names, tool names, or merge keys. '
                 'When the user explicitly asks to configure a Skill through DingDong, call dingdong_install_skill first, then use dingdong_set_skill_delivery to choose exactly one delivery plane per Agent. Native project delivery uses strict project scope and requires exact existing project paths; its Hook switch is separate and defaults off. '
                 'Use dingdong_notify when the task is blocked or waiting for '
                 'the user. A configured completion hook normally handles the '
@@ -110,7 +110,7 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative resolved dynamic-delivery Skill catalog containing valid, enabled, scope-matched winners as id, name, and description only; active.skillSuppressions and active.skillConflicts explain managed Skills withheld for native delivery, transitions, or conflicts. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions. When conversation.visible is true, keep conversation.capsule until the final response and replace only the item with the same mergeKey using conversation.item from each successful Skill load. Append * only when that item has confirmedUse=true. Codex includes conversation.line exactly once as a single Markdown text line; DingDong stays text. Use the exact user-configurable Prompt, Skill, and MCP symbols supplied in conversation.line and each item.lineToken; never infer or rebuild them. The capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use conversation.presentations.ansi.line; every other host uses conversation.fallbackLine. The mergeKey is merge-only metadata; show only titles and markers, not resource content, descriptions, IDs, or merge keys.',
+          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative resolved dynamic-delivery Skill catalog containing valid, enabled, scope-matched winners as id, name, and description only; active.skillSuppressions and active.skillConflicts explain managed Skills withheld for native delivery, transitions, or conflicts. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions; active MCPs include stable server provenance for actual-call confirmation. When conversation.visible is true, keep conversation.capsule until the final response. Replace a matching item with conversation.item from each successful Skill load and from dingdong_confirm_mcp_use after an actual MCP tool call reaches a terminal result. Never confirm availability or discovery. Append * only when the replacement item has confirmedUse=true. A Skill marker means loaded; an MCP marker means called, not necessarily succeeded. Prompt items stay unmarked because delivery does not prove semantic compliance. Codex includes the current merged footer exactly once as a single Markdown text line; DingDong stays text. Use the exact user-configurable Prompt, Skill, and MCP symbols and item.lineToken values returned by DingDong; never infer them. The capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use the current merged ANSI tokens; every other host uses the current merged plain-text tokens. The mergeKey is merge-only metadata; show only titles and truthful markers, not resource content, descriptions, IDs, server names, tool names, or merge keys.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(
@@ -202,6 +202,37 @@ final class McpServer {
         <String>['name'],
         <String>['id'],
       ],
+    ),
+    _tool(
+      name: 'dingdong_confirm_mcp_use',
+      title: 'Confirm DingDong MCP Use',
+      description:
+          'Call once for one active MCP resource only after an actual tool from that managed server reaches a terminal result, whether success or error. Do not call for Bridge availability, tool listing, discovery, or an uncalled tool. DingDong re-checks enabled state, scope, resource identity, and the Codex tool prefix, then returns a confirmed conversation.item with the same mergeKey and marker="*". The marker means called, not necessarily succeeded.',
+      properties: <String, Object?>{
+        'id': _stringProperty(
+          description: 'Resource id from the current active.mcps entry.',
+        ),
+        'serverName': _stringProperty(
+          description: 'Managed serverName from the same active.mcps entry.',
+        ),
+        'toolName': _stringProperty(
+          description:
+              'Exact name of the MCP tool that just reached a terminal result.',
+        ),
+        'workspacePath': _stringProperty(
+          description:
+              'Current project directory. DingDong fills this automatically when omitted.',
+        ),
+        'repositoryUrl': _stringProperty(
+          description:
+              'Current Git repository URL. DingDong resolves remote.origin.url when possible.',
+        ),
+        'source': _stringProperty(
+          description:
+              'Current Agent source, such as Codex, Claude Code, or Cursor.',
+        ),
+      },
+      required: <String>['id', 'serverName', 'toolName'],
     ),
     _tool(
       name: 'dingdong_read_skill_file',

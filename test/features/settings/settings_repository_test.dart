@@ -1,12 +1,12 @@
+import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('uses expanded clipboard and recent Agent defaults', () async {
-    final AppSettings settings = await SettingsRepository(
-      MemoryPreferencesBackend(),
-    ).load();
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final AppSettings settings = await SettingsRepository(backend).load();
 
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);
@@ -23,6 +23,39 @@ void main() {
     expect(
       settings.conversationFooterSymbols,
       ConversationFooterSymbols.defaultValue,
+    );
+    expect(settings.agentSetupAcknowledgedRevision, currentAgentSetupRevision);
+    expect(settings.requiresAgentSetupUpdate, isFalse);
+    expect(
+      backend.values['dingdong.agentApi.acknowledgedSetupRevision'],
+      currentAgentSetupRevision,
+    );
+  });
+
+  test('setup revision migration preserves legacy connected installs', () {
+    expect(
+      resolveAcknowledgedAgentSetupRevision(
+        storedValue: null,
+        hasSeenAgentAccess: false,
+        requiredRevision: 3,
+      ),
+      3,
+    );
+    expect(
+      resolveAcknowledgedAgentSetupRevision(
+        storedValue: null,
+        hasSeenAgentAccess: true,
+        requiredRevision: 3,
+      ),
+      firstTrackedAgentSetupRevision,
+    );
+    expect(
+      resolveAcknowledgedAgentSetupRevision(
+        storedValue: 2,
+        hasSeenAgentAccess: true,
+        requiredRevision: 3,
+      ),
+      2,
     );
   });
 
@@ -192,6 +225,7 @@ void main() {
       selectedSound: 'muted',
       customSoundPath: '/tmp/quiet.wav',
       mcpAccessSeen: true,
+      agentSetupAcknowledgedRevision: 0,
       apiPort: 2444,
       conversationFooterSymbols: ConversationFooterSymbols(
         prompt: '◇',
@@ -232,6 +266,7 @@ void main() {
     expect(backend.values['dingdong.selectedSound'], 'muted');
     expect(backend.values['dingdong.customSoundPath'], '/tmp/quiet.wav');
     expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
+    expect(backend.values['dingdong.agentApi.acknowledgedSetupRevision'], 0);
     expect(backend.values['dingdong.api.port'], 2444);
     expect(
       ConversationFooterSymbols.parse(

@@ -448,13 +448,15 @@ class _ShellScreenState extends State<ShellScreen> {
 
   Future<void> _openAgentApi() async {
     final bool firstOpen = !widget.settingsViewModel.settings.mcpAccessSeen;
+    final bool requiresSetupUpdate =
+        widget.settingsViewModel.settings.requiresAgentSetupUpdate;
     if (firstOpen) {
       await widget.settingsViewModel.markMcpAccessSeen();
     }
     if (!mounted) {
       return;
     }
-    setState(() => _focusMcpOnOpen = firstOpen);
+    setState(() => _focusMcpOnOpen = firstOpen || requiresSetupUpdate);
     widget.controller.open(3);
   }
 

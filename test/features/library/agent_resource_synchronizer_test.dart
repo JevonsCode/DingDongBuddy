@@ -785,6 +785,7 @@ mcp:
       expect(contents, contains('authoritative Skill catalog'));
       expect(contents, contains('every valid, enabled, scope-matched Skill'));
       expect(contents, contains('dingdong_load_skill'));
+      expect(contents, contains('dingdong_confirm_mcp_use'));
       expect(contents, contains('dingdong_read_skill_file'));
       expect(contents, contains('Call configured MCP tools only when'));
       expect(contents, contains('conversation.visible'));
@@ -792,11 +793,14 @@ mcp:
       expect(contents, contains('exactly once'));
       expect(contents, contains('keep `DingDong` as text'));
       expect(contents, contains('Do not use an image'));
-      expect(contents, contains('conversation.presentations.ansi.line'));
-      expect(contents, contains('conversation.fallbackLine'));
-      expect(contents, contains('symbols already supplied in'));
+      expect(contents, contains('current merged ANSI tokens'));
+      expect(contents, contains('current merged plain-text tokens'));
+      expect(contents, contains('symbols and item `lineToken` values'));
       expect(contents, contains('user-configurable'));
       expect(contents, contains('confirmedUse'));
+      expect(contents, contains('MCP `*` means a tool was called'));
+      expect(contents, contains('Prompt items remain unmarked'));
+      expect(contents, contains('toolNamePrefix'));
       expect(contents, contains('mergeKey'));
       expect(contents, contains('not that every instruction was followed'));
       expect(contents, isNot(contains('dingdong_render_conversation_footer')));

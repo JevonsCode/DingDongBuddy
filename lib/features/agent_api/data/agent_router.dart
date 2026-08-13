@@ -311,6 +311,19 @@ final class AgentRouter {
       ).loadSkill(request.parsedUri.queryParameters);
     }
     if (request.method == 'GET' &&
+        request.parsedUri.path == '/agent/mcps/confirm-use') {
+      final ResourceStore? store = _resourceStore;
+      if (store == null) {
+        return _resourceUnavailable();
+      }
+      return AgentBridge(
+        store,
+        triggerGroupStore: _triggerGroupStore,
+        now: _now,
+        loadConversationFooterSymbols: _loadConversationFooterSymbols,
+      ).confirmMcpUse(request.parsedUri.queryParameters);
+    }
+    if (request.method == 'GET' &&
         request.parsedUri.path == '/agent/skills/file') {
       final ResourceStore? store = _resourceStore;
       if (store == null) {

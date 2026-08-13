@@ -20,7 +20,7 @@ a trusted phone through the mobile PWA.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
-stay visible, and a `*` appears only when a Skill was fully loaded for that task.
+stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 
 ## What DingDong manages
 
@@ -31,7 +31,7 @@ stay visible, and a `*` appears only when a Skill was fully loaded for that task
 | Skill | Complete packages with `SKILL.md`, scripts, references, and assets; summary-first discovery and on-demand loading |
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
-| Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a Skill loaded during this task |
+| Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
 | Connected devices | One phone can keep multiple computers paired and online, with per-computer Clipboard, file, draft, and Agent reminder isolation |
 
 Clipboard and resource data stay on this computer by default. The lightweight
@@ -58,7 +58,7 @@ flowchart LR
 | --- | --- | --- |
 | Prompt | `dingdong_bridge` returns every enabled, scope-matched Prompt in full at the start of a task | Treat each successful bridge response as the authoritative replacement snapshot and apply all returned Prompts |
 | Skill | The bridge returns the complete matching catalog as ID, name, and description only | Match the description, call `dingdong_load_skill`, then read only referenced package files with `dingdong_read_skill_file` |
-| MCP | Enabled servers are synchronized into native client configuration; the bridge returns summary metadata | Treat MCP entries as available tools, not instructions, and call a tool only when the task needs it |
+| MCP | Enabled servers are synchronized into native client configuration; the bridge returns summary metadata plus stable server provenance | Treat MCP entries as available tools, not instructions; after a real call, send one `dingdong_confirm_mcp_use` receipt so the footer can mark it truthfully |
 
 ### A resource receipt at the end of each reply
 
@@ -67,18 +67,19 @@ line to the final reply, showing the Prompts active for this task, matching
 Skills, and available MCP connections:
 
 ```text
-DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub
+DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub*
 ```
 
 An `*` after a Skill means the full Skill was loaded during this task; without
-it, the Skill is only a candidate. An MCP marker means the connection was
-available, not that a tool was actually called. Customize all three symbols
-under **Settings → Agent reply footer**.
+it, the Skill is only a candidate. An `*` after an MCP means one of its tools
+was actually called; it does not claim the call succeeded. Prompt items stay
+unmarked because delivery is observable but semantic compliance is not.
+Customize all three symbols under **Settings → Agent reply footer**.
 
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.4.3.”
+- “Use this project's release workflow, run every check, and prepare version 1.4.4.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with

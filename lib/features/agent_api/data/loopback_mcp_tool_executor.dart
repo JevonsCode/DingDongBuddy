@@ -67,6 +67,11 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
         arguments: arguments,
         keys: const <String>['id', 'name', 'source'],
       ),
+      'dingdong_confirm_mcp_use' => _contextualGet(
+        path: '/agent/mcps/confirm-use',
+        arguments: arguments,
+        keys: const <String>['id', 'serverName', 'toolName', 'source'],
+      ),
       'dingdong_read_skill_file' => _contextualGet(
         path: '/agent/skills/file',
         arguments: arguments,

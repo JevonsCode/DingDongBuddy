@@ -4,6 +4,7 @@ const int _maximumConversationFooterItems = 24;
 const int _maximumConversationFooterLabelCharacters = 32;
 const int _maximumConversationFooterTitleCharacters = 64;
 const int _maximumConversationFooterMergeKeyCharacters = 160;
+const int _maximumConversationFooterServerNameCharacters = 96;
 
 const Map<String, Map<String, String>> dingDongConversationFooterPalette =
     <String, Map<String, String>>{
@@ -57,6 +58,8 @@ Map<String, Object?> buildDingDongConversationFooter({
     'label': normalizedLabel,
     'items': normalizedItems,
     'palette': dingDongConversationFooterPalette,
+    'confirmedUseMarker': '*',
+    // Retained for Agents configured before MCP call confirmation existed.
     'confirmedSkillUseMarker': '*',
     'titles': titles,
     // Keep the original nested flag for already-configured Agents while the
@@ -90,8 +93,8 @@ Map<String, Object?> buildDingDongConversationFooter({
 
 /// Removes presentation-controlled fields and recomputes truthful markers.
 ///
-/// A Skill receives `*` only when the item carries the complete evidence shape
-/// returned by a successful `dingdong_load_skill` call.
+/// A Skill receives `*` only after a successful full load. An MCP receives it
+/// only after `dingdong_confirm_mcp_use` returns a scoped replacement item.
 Map<String, Object?>? normalizeDingDongConversationFooterItem(
   Map<String, Object?> item, {
   ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
@@ -108,6 +111,7 @@ Map<String, Object?>? normalizeDingDongConversationFooterItem(
     return null;
   }
   final bool skill = type == 'skill';
+  final bool mcp = type == 'mcp';
   final String mergeKey = _boundedFooterText(
     item['mergeKey'] as String? ?? '',
     maximumCharacters: _maximumConversationFooterMergeKeyCharacters,
@@ -117,25 +121,45 @@ Map<String, Object?>? normalizeDingDongConversationFooterItem(
       item['confirmedUse'] == true &&
       item['usage'] == 'loaded' &&
       item['marker'] == '*';
+  final bool confirmedMcpUse =
+      mcp &&
+      item['confirmedUse'] == true &&
+      item['usage'] == 'called' &&
+      item['marker'] == '*';
+  final bool confirmedUse = confirmedSkillUse || confirmedMcpUse;
+  final String serverName = mcp
+      ? _normalizedMcpServerName(item['serverName'])
+      : '';
   final String usage = switch (type) {
     'prompt' => 'active',
     'skill' => confirmedSkillUse ? 'loaded' : 'candidate',
-    'mcp' => 'available',
+    'mcp' => confirmedMcpUse ? 'called' : 'available',
     _ => 'available',
   };
-  final String marker = confirmedSkillUse ? '*' : '';
-  final String markdownMarker = confirmedSkillUse ? r'\*' : '';
+  final String marker = confirmedUse ? '*' : '';
+  final String markdownMarker = confirmedUse ? r'\*' : '';
   return <String, Object?>{
     'title': title,
     'type': type,
     'tone': type,
     'usage': usage,
     if (mergeKey.isNotEmpty) 'mergeKey': mergeKey,
-    if (skill) 'confirmedUse': confirmedSkillUse,
-    if (skill) 'marker': marker,
+    if (mcp && serverName.isNotEmpty) 'serverName': serverName,
+    if (skill || mcp) 'confirmedUse': confirmedUse,
+    if (skill || mcp) 'marker': marker,
     'lineToken':
         '${_markdownTypeIndicator(type, symbols.sanitized())} ${_markdownSafeFooterText(title)}$markdownMarker',
   };
+}
+
+String _normalizedMcpServerName(Object? value) {
+  final String serverName = (value as String? ?? '').trim().toLowerCase();
+  if (serverName.isEmpty ||
+      serverName.length > _maximumConversationFooterServerNameCharacters ||
+      !RegExp(r'^[a-z0-9]+(?:-[a-z0-9]+)*$').hasMatch(serverName)) {
+    return '';
+  }
+  return serverName;
 }
 
 String _ansiFooterToken(

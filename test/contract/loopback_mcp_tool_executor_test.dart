@@ -221,6 +221,34 @@ void main() {
     });
   });
 
+  test('MCP use confirmation keeps provenance and Agent context', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      transport,
+      currentDirectory: () => '/workspace/dingdong',
+      repositoryUrlResolver: (_) async =>
+          'https://github.com/example/dingdong.git',
+    );
+
+    await executor.execute('dingdong_confirm_mcp_use', <String, Object?>{
+      'id': 'figma-id',
+      'serverName': 'dingdong-figma-abcdef',
+      'toolName': 'mcp__dingdong_figma_abcdef__get_metadata',
+      'source': 'Codex',
+    });
+
+    expect(transport.method, 'GET');
+    expect(transport.path, '/agent/mcps/confirm-use');
+    expect(transport.query, <String, String>{
+      'id': 'figma-id',
+      'serverName': 'dingdong-figma-abcdef',
+      'toolName': 'mcp__dingdong_figma_abcdef__get_metadata',
+      'source': 'Codex',
+      'workspacePath': '/workspace/dingdong',
+      'repositoryUrl': 'https://github.com/example/dingdong.git',
+    });
+  });
+
   test('Skill installation maps to the dedicated write route', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);

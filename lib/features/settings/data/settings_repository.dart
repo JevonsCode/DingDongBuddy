@@ -1,3 +1,4 @@
+import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
@@ -46,7 +47,20 @@ final class SettingsRepository {
       _backend.read(_lifecycleTelemetryPreferenceKey),
       _backend.read(_notifySubagentActivityKey),
       _backend.read(_conversationFooterSymbolsKey),
+      _backend.read(_agentSetupAcknowledgedRevisionKey),
     ]);
+    final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
+    final int agentSetupAcknowledgedRevision =
+        resolveAcknowledgedAgentSetupRevision(
+          storedValue: values[24],
+          hasSeenAgentAccess: mcpAccessSeen,
+        );
+    if (values[24] is! int) {
+      await _backend.write(
+        _agentSetupAcknowledgedRevisionKey,
+        agentSetupAcknowledgedRevision,
+      );
+    }
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
       language: AppLanguagePreference.parse(values[1]),
@@ -61,7 +75,8 @@ final class SettingsRepository {
       selectedSound: values[8] is String ? values[8]! as String : 'default',
       customSoundPath: values[9] as String?,
       apiPort: values[10] is int ? values[10]! as int : 2333,
-      mcpAccessSeen: values[11] is bool ? values[11]! as bool : false,
+      mcpAccessSeen: mcpAccessSeen,
+      agentSetupAcknowledgedRevision: agentSetupAcknowledgedRevision,
       rememberAgentActivity: values[12] is bool ? values[12]! as bool : true,
       notifySubagentActivity: values[22] is bool ? values[22]! as bool : false,
       conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
@@ -110,6 +125,10 @@ final class SettingsRepository {
           : _backend.write(_customSoundPathKey, settings.customSoundPath!),
       _backend.write(_apiPortKey, settings.apiPort),
       _backend.write(_mcpAccessSeenKey, settings.mcpAccessSeen),
+      _backend.write(
+        _agentSetupAcknowledgedRevisionKey,
+        settings.agentSetupAcknowledgedRevision,
+      ),
       _backend.write(_rememberAgentActivityKey, settings.rememberAgentActivity),
       _backend.write(
         _notifySubagentActivityKey,
@@ -160,6 +179,8 @@ const String _selectedSoundKey = 'dingdong.selectedSound';
 const String _customSoundPathKey = 'dingdong.customSoundPath';
 const String _apiPortKey = 'dingdong.api.port';
 const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';
+const String _agentSetupAcknowledgedRevisionKey =
+    'dingdong.agentApi.acknowledgedSetupRevision';
 const String _rememberAgentActivityKey = 'dingdong.agentActivity.remember';
 const String _notifySubagentActivityKey =
     'dingdong.agentActivity.notifySubagents';

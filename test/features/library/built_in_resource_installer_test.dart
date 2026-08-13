@@ -171,6 +171,8 @@ void main() {
     );
     expect(document, isNot(contains('Bridge `limit`')));
     expect(document, contains('dingdong_read_skill_file'));
+    expect(document, contains('dingdong_confirm_mcp_use'));
+    expect(document, contains('Prompt items remain unmarked'));
   });
 
   test('bundled Skill documents Agent launcher configuration', () async {
@@ -386,6 +388,37 @@ void main() {
     expect(skill.enabled, isTrue);
     expect(skill.hideInAgentConversation, isTrue);
     expect(skill.updatedAt, DateTime.utc(2026, 8, 13));
+    expect(
+      preferences.values[BuiltInResourceInstaller.preferenceKey],
+      BuiltInResourceInstaller.currentVersion,
+    );
+  });
+
+  test('version thirteen refreshes MCP call receipt instructions', () async {
+    final DateTime originalTime = DateTime.utc(2026, 8, 13);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      builtInDingDongConfigureSkill(
+        'Skill-only footer receipt instructions',
+        originalTime,
+      ).copyWith(enabled: true, hideInAgentConversation: true),
+    ]);
+    final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+      ..values[BuiltInResourceInstaller.preferenceKey] = 12;
+    final BuiltInResourceInstaller installer = BuiltInResourceInstaller(
+      store,
+      preferences,
+      now: () => DateTime.utc(2026, 8, 13, 12),
+      skillDocumentLoader: _loadConfigureSkill,
+    );
+
+    expect(await installer.install(), isTrue);
+
+    final Resource skill = (await store.load()).single;
+    expect(skill.content, await _loadConfigureSkill());
+    expect(skill.content, contains('dingdong_confirm_mcp_use'));
+    expect(skill.enabled, isTrue);
+    expect(skill.hideInAgentConversation, isTrue);
+    expect(skill.updatedAt, DateTime.utc(2026, 8, 13, 12));
     expect(
       preferences.values[BuiltInResourceInstaller.preferenceKey],
       BuiltInResourceInstaller.currentVersion,

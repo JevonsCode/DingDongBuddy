@@ -11,6 +11,7 @@ import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
+import 'package:dingdong/features/library/domain/managed_mcp_identity.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
@@ -59,6 +60,7 @@ final class AgentBridge {
 
   static const int _maximumSkillPackageFiles = 200;
   static const int _maximumSkillFileBytes = 5 * 1024 * 1024;
+  static const int _maximumReportedMcpToolNameCharacters = 256;
 
   Future<HttpResponseData> respond(String body) async {
     try {
@@ -226,10 +228,17 @@ final class AgentBridge {
             .map((Resource resource) {
               final bool contentIncluded =
                   type == ResourceType.prompt || expand == 'all';
+              final String mcpServerName = type == ResourceType.mcp
+                  ? managedMcpServerName(title: resource.title, id: resource.id)
+                  : '';
               return <String, Object?>{
                 ...(contentIncluded
                     ? resource.toApiJson()
                     : resource.toSummaryApiJson()),
+                if (mcpServerName.isNotEmpty) 'serverName': mcpServerName,
+                if (mcpServerName.isNotEmpty &&
+                    resolveAgentAdapterId(source) == 'codex')
+                  'toolNamePrefix': codexMcpToolPrefix(mcpServerName),
                 'contentIncluded': contentIncluded,
               };
             })
@@ -390,6 +399,106 @@ final class AgentBridge {
           .sanitized();
     } on Object {
       return ConversationFooterSymbols.defaultValue;
+    }
+  }
+
+  /// Returns a marked footer replacement after the Agent reports one real MCP
+  /// tool invocation. Availability or tool discovery alone is not evidence.
+  Future<HttpResponseData> confirmMcpUse(Map<String, String> query) async {
+    try {
+      final String id = (query['id'] ?? '').trim();
+      final String serverName = (query['serverName'] ?? '')
+          .trim()
+          .toLowerCase();
+      final String toolName = (query['toolName'] ?? '').trim();
+      final TriggerContext context = _contextFromStrings(query);
+      if (id.isEmpty || serverName.isEmpty || toolName.isEmpty) {
+        return const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'MCP id, serverName, and toolName are required',
+          },
+        );
+      }
+      if (toolName.length > _maximumReportedMcpToolNameCharacters) {
+        return const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'MCP toolName is too long',
+          },
+        );
+      }
+      if (resolveAgentAdapterId(context.source) == 'codex' &&
+          !toolName.startsWith(codexMcpToolPrefix(serverName))) {
+        return const HttpResponseData(
+          statusCode: 400,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'MCP toolName does not match its Codex server prefix',
+          },
+        );
+      }
+      final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
+        await _triggerGroupStore.load(),
+      );
+      final List<Resource> matches = (await _store.load())
+          .where(
+            (Resource resource) =>
+                resource.id == id &&
+                resource.type == ResourceType.mcp &&
+                resource.enabled &&
+                resourceMatchesScope(resource, context, triggerGroupsById) &&
+                managedMcpServerName(title: resource.title, id: resource.id) ==
+                    serverName,
+          )
+          .toList(growable: false);
+      if (matches.isEmpty) {
+        return const HttpResponseData(
+          statusCode: 404,
+          json: <String, Object?>{
+            'status': 'error',
+            'message': 'MCP is disabled, out of scope, or not found',
+          },
+        );
+      }
+      final Resource resource = matches.single;
+      final ConversationFooterSymbols footerSymbols =
+          await _loadConversationFooterSymbols();
+      final Map<String, Object?> conversationItem =
+          normalizeDingDongConversationFooterItem(
+            _conversationCapsuleItem(resource, confirmedMcpUse: true),
+            symbols: footerSymbols,
+          )!;
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'ok',
+          'context': _contextJson(context),
+          'mcp': <String, Object?>{
+            'id': resource.id,
+            'title': resource.title,
+            'serverName': serverName,
+            'toolName': toolName,
+          },
+          if (_isVisibleInAgentConversation(resource))
+            'conversation': <String, Object?>{
+              'item': conversationItem,
+              'evidence': 'agent-reported-mcp-tool-call-result',
+              'markerMeaning': 'called-not-necessarily-succeeded',
+              'merge': 'replace-same-merge-key-in-final-capsule',
+            },
+        },
+      );
+    } on Object {
+      return const HttpResponseData(
+        statusCode: 400,
+        json: <String, Object?>{
+          'status': 'error',
+          'message': 'Invalid MCP use confirmation request',
+        },
+      );
     }
   }
 
@@ -709,13 +818,17 @@ bool _isVisibleInAgentConversation(Resource resource) =>
 Map<String, Object?> _conversationCapsuleItem(
   Resource resource, {
   bool confirmedSkillUse = false,
+  bool confirmedMcpUse = false,
 }) {
   final String title = _displayResourceTitle(
     _conversationResourceName(resource),
   );
   final String type = resource.type.name;
   final bool skill = resource.type == ResourceType.skill;
-  final String marker = skill && confirmedSkillUse ? '*' : '';
+  final bool mcp = resource.type == ResourceType.mcp;
+  final bool confirmedUse =
+      (skill && confirmedSkillUse) || (mcp && confirmedMcpUse);
+  final String marker = confirmedUse ? '*' : '';
   return <String, Object?>{
     'title': title,
     'type': type,
@@ -723,12 +836,17 @@ Map<String, Object?> _conversationCapsuleItem(
     'usage': switch (resource.type) {
       ResourceType.prompt => 'active',
       ResourceType.skill => confirmedSkillUse ? 'loaded' : 'candidate',
-      ResourceType.mcp => 'available',
+      ResourceType.mcp => confirmedMcpUse ? 'called' : 'available',
       _ => 'available',
     },
     'mergeKey': '${resource.type.name}:${resource.id}',
-    if (skill) 'confirmedUse': confirmedSkillUse,
-    if (skill) 'marker': marker,
+    if (mcp)
+      'serverName': managedMcpServerName(
+        title: resource.title,
+        id: resource.id,
+      ),
+    if (skill || mcp) 'confirmedUse': confirmedUse,
+    if (skill || mcp) 'marker': marker,
   };
 }
 

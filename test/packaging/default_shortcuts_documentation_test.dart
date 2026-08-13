@@ -64,14 +64,16 @@ void main() {
       contains('Every final reply leaves a little resource receipt.'),
     );
     expect(website, contains('每次答完，都留一张资源小票'));
-    expect(website, contains('not necessarily called'));
-    expect(website, contains('不代表工具已实际调用'));
+    expect(website, contains('not necessarily succeeded'));
+    expect(website, contains('不表示调用成功'));
     expect(
       english,
       contains('### A resource receipt at the end of each reply'),
     );
-    expect(english, contains('not that a tool was actually called'));
+    expect(english, contains('does not claim the call succeeded'));
+    expect(english, contains('semantic compliance is not'));
     expect(chinese, contains('### 每次回复末尾，都有一张资源小票'));
-    expect(chinese, contains('不代表工具已实际调用'));
+    expect(chinese, contains('不表示调用成功'));
+    expect(chinese, contains('Prompt 不加 `*`'));
   });
 }

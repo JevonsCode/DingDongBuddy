@@ -121,6 +121,43 @@ void main() {
     },
     tags: <String>['golden'],
   );
+
+  testWidgets(
+    'Agent setup update is visible in Dynamic and actionable at the prompt',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController();
+      addTearDown(controller.dispose);
+      final SettingsRepository settings = SettingsRepository(
+        MemoryPreferencesBackend(<String, Object>{
+          'dingdong.onboarding.mcpAccessSeen': true,
+          'dingdong.agentApi.acknowledgedSetupRevision': 0,
+        }),
+      );
+
+      await tester.pumpWidget(
+        DingDongApp(
+          key: const ValueKey<String>('agent-setup-update'),
+          agentBaseUri: Uri.parse('http://127.0.0.1:2333'),
+          settingsRepository: settings,
+          shellController: controller,
+          now: () => DateTime(2026, 8, 13, 15, 30),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _precacheImages(tester);
+
+      await _capture(tester, 'agent_setup_update_today');
+
+      await tester.tap(find.byKey(const Key('today-agent-api')));
+      await tester.pumpAndSettle();
+      await _capture(tester, 'agent_setup_update_prompt');
+    },
+    tags: <String>['golden'],
+  );
 }
 
 ClipboardRecord _clipboardRecord({

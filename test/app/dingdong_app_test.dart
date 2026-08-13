@@ -10,6 +10,7 @@ import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -40,14 +41,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.4.3', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.4.4', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.4.3')), findsOneWidget);
-    expect(find.text('v1.4.3'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.4.4')), findsOneWidget);
+    expect(find.text('v1.4.4'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -121,6 +122,72 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('today-mcp-badge')), findsNothing);
   });
+
+  testWidgets(
+    'Agent setup update badge stays until the user confirms the new prompt',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final MemoryPreferencesBackend backend =
+          MemoryPreferencesBackend(<String, Object>{
+            'dingdong.onboarding.mcpAccessSeen': true,
+            'dingdong.agentApi.acknowledgedSetupRevision': 0,
+          });
+      final ShellController controller = ShellController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        DingDongApp(
+          settingsRepository: SettingsRepository(backend),
+          shellController: controller,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('today-agent-setup-update-badge')),
+        findsOneWidget,
+      );
+      expect(find.text('UPDATE'), findsOneWidget);
+      expect(find.byKey(const Key('today-mcp-badge')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('today-agent-api')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('agent-api-setup-update-notice')),
+        findsOneWidget,
+      );
+      expect(backend.values['dingdong.agentApi.acknowledgedSetupRevision'], 0);
+
+      final Finder confirm = find.byKey(
+        const Key('agent-api-mark-setup-updated'),
+      );
+      await tester.ensureVisible(confirm);
+      await tester.pumpAndSettle();
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+
+      expect(
+        backend.values['dingdong.agentApi.acknowledgedSetupRevision'],
+        currentAgentSetupRevision,
+      );
+      expect(
+        find.byKey(const Key('agent-api-setup-update-notice')),
+        findsNothing,
+      );
+
+      controller.open(0);
+      await tester.pump();
+      expect(
+        find.byKey(const Key('today-agent-setup-update-badge')),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('Dynamic cards use compact desktop row heights', (
     WidgetTester tester,

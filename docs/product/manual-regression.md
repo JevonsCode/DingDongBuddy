@@ -1,4 +1,4 @@
-# DingDong 1.4.3 Manual Regression Checklist
+# DingDong 1.4.4 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -386,15 +386,24 @@ and macOS golden images; the items below exercise real operating-system state.
   Prompts, candidate Skills, and available MCPs. Repeating the Bridge call
   replaces the prior snapshot by stable merge key instead of appending duplicate
   labels or retaining resources that are no longer active.
-- Codex desktop includes `conversation.line` exactly once as a single Markdown
-  text line. `DingDong` remains text; use the exact user-configurable Prompt,
-  Skill, and MCP symbols already supplied by the Bridge. No image, MCP Apps
-  tool call, or outer tool card is created.
-- Explicitly ANSI-capable terminals use the ANSI presentation. Every other host
-  shows `conversation.fallbackLine` exactly once with the `DingDong` text label.
+- Codex desktop includes the current merged footer exactly once as a single
+  Markdown text line. `DingDong` remains text; use the exact user-configurable
+  symbols and item `lineToken` values supplied by the Bridge or replacement
+  receipt. No image, MCP Apps renderer, or outer tool card is created.
+- Explicitly ANSI-capable terminals use current merged ANSI tokens. Every other
+  host shows the current merged plain-text tokens exactly once with the
+  `DingDong` text label.
 - A candidate Skill has no `*` marker. After `dingdong_load_skill` succeeds,
   replace the same merge-key item with the returned loaded item and verify it
   gains exactly one `*` marker without creating a second footer entry.
+- An available MCP has no `*` marker. After one real tool call returns from that
+  MCP, call `dingdong_confirm_mcp_use` once with the Bridge `id`, `serverName`,
+  and exact `toolName`; replace the same merge-key item and verify it gains one
+  `*`. A successful, error-result call is marked, while availability, tool
+  discovery, a mismatched Codex prefix, and an out-of-scope MCP are not.
+- Prompt items stay unmarked: Bridge delivery is observable, but semantic
+  compliance is not. Verify the footer never infers Prompt use from the final
+  prose alone.
 - In Settings → Agent reply footer, verify the initial Prompt, Skill, and MCP
   symbols are `♥`, `♦`, and `♠`. Change all three symbols, call both Bridge
   routes and load one Skill, then verify every line uses the new values without
@@ -530,8 +539,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.4.3` build `51` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.4.3.51` and product name `DingDong`.
+- The macOS release app metadata is version `1.4.4` build `52` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.4.4.52` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -539,7 +548,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.4.3` and that exact commit SHA; every
+  `/v1/health` must report version `1.4.4` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

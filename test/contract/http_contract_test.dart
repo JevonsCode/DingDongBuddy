@@ -677,6 +677,14 @@ void main() {
         containsPair('description', 'Build and release Flutter applications'),
       );
       expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
+      expect(
+        mcps.single,
+        containsPair('serverName', 'dingdong-untitled-skill-mcp'),
+      );
+      expect(
+        mcps.single,
+        containsPair('toolNamePrefix', 'mcp__dingdong_untitled_skill_mcp__'),
+      );
       const String markdownLine =
           'DingDong · ♥ 代码审查与发布流... | ♦ 部署自动化助手 | ♠ 生产环境监控连接';
       const String ansiLine =
@@ -710,10 +718,14 @@ void main() {
               'tone': 'mcp',
               'usage': 'available',
               'mergeKey': 'mcp:mcp',
+              'serverName': 'dingdong-untitled-skill-mcp',
+              'confirmedUse': false,
+              'marker': '',
               'lineToken': '♠ 生产环境监控连接',
             },
           ],
           'palette': _expectedConversationPalette,
+          'confirmedUseMarker': '*',
           'confirmedSkillUseMarker': '*',
           'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
           'visible': true,
@@ -837,8 +849,98 @@ void main() {
         (skillConversation['item'] as Map<String, Object?>)['lineToken'],
         r'◆ Footer\*',
       );
+
+      final HttpResponseData mcpResponse = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri:
+              '/agent/mcps/confirm-use?id=footer-mcp&serverName=dingdong-mcp-footer&toolName=mcp__dingdong_mcp_footer__read&source=Codex',
+        ),
+      );
+      final Map<String, Object?> mcpConversation =
+          mcpResponse.json['conversation']! as Map<String, Object?>;
+      expect(mcpResponse.statusCode, 200);
+      expect(
+        mcpConversation['evidence'],
+        'agent-reported-mcp-tool-call-result',
+      );
+      expect(
+        (mcpConversation['item'] as Map<String, Object?>),
+        containsPair('lineToken', r'● MCP\*'),
+      );
+      expect(
+        (mcpConversation['item'] as Map<String, Object?>),
+        containsPair('usage', 'called'),
+      );
     },
   );
+
+  test('MCP use confirmation validates tool provenance and current scope', () async {
+    final DateTime now = DateTime.utc(2026, 8, 13);
+    final AgentRouter router = AgentRouter(
+      resourceStore: InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'scoped-mcp-abcdef',
+          type: ResourceType.mcp,
+          title: 'Figma',
+          content: '{"command":"figma-mcp"}',
+          triggerGroupIds: const <String>['checkout'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+      triggerGroupStore: InMemoryTriggerGroupStore(<TriggerGroup>[
+        TriggerGroup(
+          id: 'checkout',
+          name: 'Checkout',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.equals,
+              value: '/work/checkout',
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+
+    const String baseQuery =
+        'id=scoped-mcp-abcdef&serverName=dingdong-figma-scoped&source=Codex';
+    final HttpResponseData wrongPrefix = await router.route(
+      const HttpRequestData(
+        method: 'GET',
+        uri:
+            '/agent/mcps/confirm-use?$baseQuery&workspacePath=%2Fwork%2Fcheckout&toolName=mcp__another_server__read',
+      ),
+    );
+    final HttpResponseData outsideScope = await router.route(
+      const HttpRequestData(
+        method: 'GET',
+        uri:
+            '/agent/mcps/confirm-use?$baseQuery&workspacePath=%2Fwork%2Fother&toolName=mcp__dingdong_figma_scoped__read',
+      ),
+    );
+    final HttpResponseData confirmed = await router.route(
+      const HttpRequestData(
+        method: 'GET',
+        uri:
+            '/agent/mcps/confirm-use?$baseQuery&workspacePath=%2Fwork%2Fcheckout&toolName=mcp__dingdong_figma_scoped__read',
+      ),
+    );
+
+    expect(wrongPrefix.statusCode, 400);
+    expect(outsideScope.statusCode, 404);
+    expect(confirmed.statusCode, 200);
+    final Map<String, Object?> item =
+        ((confirmed.json['conversation'] as Map<String, Object?>)['item']
+            as Map<String, Object?>);
+    expect(item['usage'], 'called');
+    expect(item['confirmedUse'], isTrue);
+    expect(item['marker'], '*');
+    expect(item['lineToken'], r'♠ Figma\*');
+  });
 
   test('Bridge returns every applicable resource without count caps', () async {
     final DateTime now = DateTime.utc(2026, 7, 28);
@@ -984,10 +1086,14 @@ void main() {
             'tone': 'mcp',
             'usage': 'available',
             'mergeKey': 'mcp:mcp-title-fallback',
+            'serverName': 'dingdong-mcp-title-mcptit',
+            'confirmedUse': false,
+            'marker': '',
             'lineToken': '♠ MCP titl...',
           },
         ],
         'palette': _expectedConversationPalette,
+        'confirmedUseMarker': '*',
         'confirmedSkillUseMarker': '*',
         'titles': <String>['提示词', '技能加载名', 'MCP titl...'],
         'visible': true,
@@ -2723,6 +2829,16 @@ void main() {
       expect(
         (manifest.json['entrypoints'] as Map<String, Object?>)['bridge'],
         '/agent/bridge?source=AGENT&task=TASK',
+      );
+      expect(manifest.json['features'], contains('mcpUseConfirmation'));
+      expect(
+        (manifest.json['endpoints'] as List<Object?>).any(
+          (Object? endpoint) =>
+              endpoint is Map<String, Object?> &&
+              endpoint['method'] == 'GET' &&
+              endpoint['path'] == '/agent/mcps/confirm-use',
+        ),
+        isTrue,
       );
     },
   );

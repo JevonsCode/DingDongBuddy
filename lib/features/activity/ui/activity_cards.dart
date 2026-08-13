@@ -342,7 +342,7 @@ class _MetricCard extends StatelessWidget {
     required this.value,
     required this.label,
     required this.onTap,
-    this.showBadge = false,
+    this.badge,
     super.key,
   });
 
@@ -350,13 +350,17 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final String label;
   final VoidCallback onTap;
-  final bool showBadge;
+  final _MetricCardBadge? badge;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '$label, $value',
+      label: <String>[
+        label,
+        value,
+        if (badge != null) badge!.semanticLabel,
+      ].join(', '),
       child: ExcludeSemantics(
         child: Material(
           color: PopupStyle.of(context).surface,
@@ -419,9 +423,9 @@ class _MetricCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (showBadge)
+                  if (badge != null)
                     Positioned(
-                      key: const Key('today-mcp-badge'),
+                      key: badge!.key,
                       top: 6,
                       right: 6,
                       child: Container(
@@ -430,23 +434,40 @@ class _MetricCard extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: PopupStyle.of(context).accent,
+                          color: badge!.tone == _MetricCardBadgeTone.attention
+                              ? PopupStyle.of(context).warmTagSurface
+                              : PopupStyle.of(context).accent,
                           borderRadius: BorderRadius.circular(4),
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: PopupStyle.of(
-                                context,
-                              ).accent.withValues(alpha: 0.20),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          border: badge!.tone == _MetricCardBadgeTone.attention
+                              ? Border.all(
+                                  color: PopupStyle.of(
+                                    context,
+                                  ).warmAccent.withValues(alpha: 0.28),
+                                )
+                              : null,
+                          boxShadow:
+                              badge!.tone == _MetricCardBadgeTone.attention
+                              ? null
+                              : <BoxShadow>[
+                                  BoxShadow(
+                                    color: PopupStyle.of(
+                                      context,
+                                    ).accent.withValues(alpha: 0.20),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                         ),
                         child: Text(
-                          'MCP',
+                          badge!.label,
                           style: TextStyle(
-                            color: PopupStyle.of(context).background,
-                            fontSize: 9,
+                            color: badge!.tone == _MetricCardBadgeTone.attention
+                                ? PopupStyle.of(context).warmAccent
+                                : PopupStyle.of(context).background,
+                            fontSize:
+                                badge!.tone == _MetricCardBadgeTone.attention
+                                ? 9.5
+                                : 9,
                             height: 1,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.2,
@@ -462,6 +483,23 @@ class _MetricCard extends StatelessWidget {
       ),
     );
   }
+}
+
+enum _MetricCardBadgeTone { accent, attention }
+
+@immutable
+class _MetricCardBadge {
+  const _MetricCardBadge({
+    required this.key,
+    required this.label,
+    String? semanticLabel,
+    this.tone = _MetricCardBadgeTone.accent,
+  }) : semanticLabel = semanticLabel ?? label;
+
+  final Key key;
+  final String label;
+  final String semanticLabel;
+  final _MetricCardBadgeTone tone;
 }
 
 class _EnabledResourceCard extends StatelessWidget {

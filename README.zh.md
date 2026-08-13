@@ -17,7 +17,7 @@ Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent �
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
-Prompt、匹配到的 Skill 和可用 MCP 一眼可见；只有本轮完整加载过的 Skill 才带 `*`。
+Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
 
 ## DingDong 管理什么
 
@@ -28,7 +28,7 @@ Prompt、匹配到的 Skill 和可用 MCP 一眼可见；只有本轮完整加�
 | Skill | 管理包含 `SKILL.md`、脚本、参考资料和资源文件的完整 Package；先发现简介，再按需加载 |
 | MCP | 只维护一份 Server 配置，同步到匹配的 Agent 客户端，并保留无关配置 |
 | Agent 动态 | 在本机记录完成、阻塞和决策提醒，保留未读状态、重复次数和历史，并播放可配置提示声 |
-| Agent 回复尾部 | 用一行资源小票展示本轮生效的 Prompt、匹配 Skill 和可用 MCP；`*` 表示该 Skill 本轮已加载 |
+| Agent 回复尾部 | 用一行资源小票展示本轮生效的 Prompt、匹配 Skill 和可用 MCP；`*` 表示 Skill 已加载或 MCP 已调用 |
 | 连接设备 | 一部手机可同时保存并连接多台电脑；每台电脑的剪贴板、文件、草稿和 Agent 提醒彼此隔离 |
 
 剪贴板和资源数据默认只保存在这台电脑上；轻量连接中继不会保存剪贴板或文件正文。
@@ -54,7 +54,7 @@ flowchart LR
 | --- | --- | --- |
 | Prompt | 每个任务开始时，`dingdong_bridge` 返回所有已启用且作用域匹配的完整 Prompt | 把每次成功 Bridge 响应视为权威替换快照，自动应用其中全部 Prompt |
 | Skill | Bridge 只返回完整匹配目录中的 ID、名称和简介 | 先匹配简介，再调用 `dingdong_load_skill`；只通过 `dingdong_read_skill_file` 读取 Skill 明确引用的配套文件 |
-| MCP | 已启用 Server 会同步到原生客户端配置；Bridge 只返回摘要 | MCP 是可用工具，不是每轮都要执行的指令；任务真正需要时再调用 |
+| MCP | 已启用 Server 会同步到原生客户端配置；Bridge 返回摘要和稳定的 Server 来源信息 | MCP 是可用工具而不是指令；真实调用后发送一次 `dingdong_confirm_mcp_use` 回执，让 footer 准确标记 |
 
 ### 每次回复末尾，都有一张资源小票
 
@@ -62,17 +62,18 @@ flowchart LR
 Prompt、匹配到的 Skill 和可用的 MCP：
 
 ```text
-DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub
+DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub*
 ```
 
-Skill 名称后的 `*` 表示本轮已成功加载完整 Skill；没有 `*` 则只是候选。
-MCP 标识表示连接可用，不代表工具已实际调用。Prompt、Skill 和 MCP 的符号都可在
-“**设置 → Agent 回复尾部**”中自定义。
+Skill 名称后的 `*` 表示本轮已加载完整 Skill；没有 `*` 则只是候选。MCP 名称后的
+`*` 表示本轮确实调用过它的工具，但不表示调用成功。Prompt 不加 `*`，因为系统能
+观察到送达，却无法可靠判断模型是否在语义上真正遵循。Prompt、Skill 和 MCP 的符号
+都可在“**设置 → Agent 回复尾部**”中自定义。
 
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.4.3。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.4.4。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
 用户明确授权后，Agent 也可以使用 `dingdong_install_skill`、

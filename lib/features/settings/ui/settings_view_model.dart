@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
@@ -422,6 +423,15 @@ final class SettingsViewModel extends ChangeNotifier
   Future<void> markMcpAccessSeen() async {
     if (_settings.mcpAccessSeen) return;
     _settings = _settings.copyWith(mcpAccessSeen: true);
+    notifyListeners();
+    await _save();
+  }
+
+  Future<void> markAgentSetupUpdated() async {
+    if (!_settings.requiresAgentSetupUpdate) return;
+    _settings = _settings.copyWith(
+      agentSetupAcknowledgedRevision: currentAgentSetupRevision,
+    );
     notifyListeners();
     await _save();
   }

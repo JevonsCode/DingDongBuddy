@@ -1,3 +1,4 @@
+import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
@@ -444,10 +445,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.4.4',
-        latestBuild: '51',
+        latestVersion: '1.4.5',
+        latestBuild: '53',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.4'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.5'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -463,11 +464,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.4.4');
+    expect(model.releaseStatus.latestVersion, '1.4.5');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.4.4'),
+      Uri.parse('https://example.com/dingdong/releases/1.4.5'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -586,6 +587,9 @@ void main() {
         model.mcpSetupPrompt,
         contains('MCP summary is not an instruction'),
       );
+      expect(model.mcpSetupPrompt, contains('dingdong_confirm_mcp_use'));
+      expect(model.mcpSetupPrompt, contains('MCP * means a tool was called'));
+      expect(model.mcpSetupPrompt, contains('Prompt items remain unmarked'));
       expect(
         model.mcpSetupPrompt,
         contains('--notify-stop --source "Current client name"'),
@@ -647,6 +651,9 @@ void main() {
       expect(model.mcpSetupPrompt, contains('必须自动应用的指令'));
       expect(model.mcpSetupPrompt, contains('Skill 候选不是指令'));
       expect(model.mcpSetupPrompt, contains('MCP 摘要不是指令'));
+      expect(model.mcpSetupPrompt, contains('dingdong_confirm_mcp_use'));
+      expect(model.mcpSetupPrompt, contains('MCP 后的 * 只表示本轮调用过'));
+      expect(model.mcpSetupPrompt, contains('Prompt 不加 *'));
       expect(
         model.mcpSetupPrompt,
         contains('--notify-stop --source "当前客户端名称"'),
@@ -678,6 +685,31 @@ void main() {
     expect(model.settings.mcpAccessSeen, isTrue);
     expect(backend.values['dingdong.onboarding.mcpAccessSeen'], isTrue);
   });
+
+  test(
+    'Agent setup update acknowledgement is explicit and persisted',
+    () async {
+      final MemoryPreferencesBackend backend =
+          MemoryPreferencesBackend(<String, Object>{
+            'dingdong.onboarding.mcpAccessSeen': true,
+            'dingdong.agentApi.acknowledgedSetupRevision': 0,
+          });
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(backend),
+      );
+      await model.load();
+
+      expect(model.settings.requiresAgentSetupUpdate, isTrue);
+
+      await model.markAgentSetupUpdated();
+
+      expect(model.settings.requiresAgentSetupUpdate, isFalse);
+      expect(
+        backend.values['dingdong.agentApi.acknowledgedSetupRevision'],
+        currentAgentSetupRevision,
+      );
+    },
+  );
 
   test('Agent activity policy updates persist immediately', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();

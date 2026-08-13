@@ -135,7 +135,8 @@ Representative routes are:
 - Health and discovery: `GET /health`, `GET /agent/manifest`
 - Completion notification: `POST /ding`
 - Resource library: `GET|POST /library`, `PATCH|DELETE /library/{id}`
-- Dynamic delivery: `POST /agent/bridge`, `GET /agent/skills/load`
+- Dynamic delivery: `POST /agent/bridge`, `GET /agent/skills/load`,
+  `GET /agent/mcps/confirm-use`
 - Clipboard metadata: `GET /clipboard/history`, `GET /clipboard/overview`
 - Clipboard actions: `POST /clipboard/capture`,
   `POST /clipboard/restore/{id}`, `POST /clipboard/promote/{id}`

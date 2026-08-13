@@ -1,34 +1,34 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.4.3",
-  "latestBuild": "51",
-  "publishedAt": "2026-08-13T03:38:54Z",
+  "latestVersion": "1.4.4",
+  "latestBuild": "52",
+  "publishedAt": "2026-08-13T08:12:21Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.4/DingDong-1.4.4-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.4/DingDong-1.4.4-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.4/DingDong-1.4.4-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Adds a Subagent notifications switch that is off by default, keeping background-worker activity and DingDong sounds quiet until enabled.",
-    "Filters positively identified Codex subagent starts and completions before desktop alerts, activity history, unread state, and linked-device sync while main-thread and unknown events remain visible.",
-    "Adds customizable Prompt, Skill, and MCP symbols with a live Agent reply footer preview, persistence, and one-click reset.",
-    "Documents the reply resource receipt: active Prompts, matching Skills, and available MCP connections, with * reserved for Skills fully loaded in the current task.",
-    "Refreshes the website and bilingual READMEs around one place for connected Agent alerts and a desktop sound chosen by the user.",
+    "Marks an MCP with * only after one of its tools was actually called; the marker records the call, not whether it succeeded.",
+    "Keeps Prompt items unmarked because delivery is observable while semantic compliance cannot be verified reliably.",
+    "Validates each MCP-use receipt against the managed server identity, Codex tool prefix, enabled state, and current project scope before updating the reply footer.",
+    "Adds a revision-aware Agent setup reminder so existing connections can receive the new MCP confirmation instructions without interrupting first-time users.",
+    "Refreshes the built-in DingDong configuration Skill, Agent bootstrap text, API documentation, and website examples for truthful Skill and MCP usage markers.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

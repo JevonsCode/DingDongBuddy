@@ -472,6 +472,7 @@ const List<String> _features = <String>[
   'skillDeploymentReconciliation',
   'dynamicSkillCatalog',
   'scopedSkillLoading',
+  'mcpUseConfirmation',
 ];
 
 const List<Map<String, String>> _endpoints = <Map<String, String>>[
@@ -482,6 +483,7 @@ const List<Map<String, String>> _endpoints = <Map<String, String>>[
   <String, String>{'method': 'POST', 'path': '/agent/bridge'},
   <String, String>{'method': 'GET', 'path': '/agent/skills/load'},
   <String, String>{'method': 'GET', 'path': '/agent/skills/file'},
+  <String, String>{'method': 'GET', 'path': '/agent/mcps/confirm-use'},
   <String, String>{'method': 'GET', 'path': '/agent/context'},
   <String, String>{'method': 'GET', 'path': '/library'},
   <String, String>{'method': 'POST', 'path': '/library'},

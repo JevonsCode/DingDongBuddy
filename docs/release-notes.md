@@ -1,63 +1,55 @@
-# DingDong 1.4.3
+# DingDong 1.4.4
 
-DingDong 1.4.3 makes connected Agent alerts calmer by default and makes the
-resource trail at the end of supported Agent replies easier to understand and
-personalize.
+DingDong 1.4.4 makes the resource receipt at the end of supported Agent replies
+truthful about MCP use and helps existing Agent connections pick up the new
+protocol.
 
-## Keep background workers quiet by default
+## Know when an MCP was actually called
 
-- A new **Subagent notifications** switch is off by default. Positively
-  identified Codex subagents no longer create a desktop alert, DingDong sound,
-  activity entry, unread state, or linked-device update unless you opt in.
-- Subagent task starts are filtered through the same preference, and a filtered
-  completion cleans up only its exact running conversation without touching a
-  main-thread task.
-- Main Agent conversations continue normally. If Codex metadata is unavailable,
-  DingDong fails open instead of risking a missed main-thread reminder.
-- Exact `thread/read` classification finds background workers that Codex omits
-  from the default thread list and caches stable thread identity after a
-  successful read.
+- An MCP now receives `*` only after one of its configured tools reaches a
+  terminal result. Availability and tool discovery alone never add the marker.
+- The MCP marker means **called**, not necessarily **succeeded**. Error results
+  still prove that a real call took place.
+- DingDong validates each call receipt against the managed resource ID, server
+  identity, Codex tool prefix, enabled state, and current project scope before
+  replacing the matching footer item.
+- Prompt items stay unmarked. DingDong can observe delivery, but it cannot
+  reliably prove whether a model followed a Prompt semantically.
 
-## See the resource receipt after a reply
+## Refresh existing Agent connections safely
 
-- Supported Agents can append a compact DingDong line showing the Prompts
-  active for the task, matching Skills, and MCP connections that were available.
-- A `*` appears only after the full Skill was loaded in that task. An MCP name
-  means the connection was available, not that a tool was necessarily called.
-- Prompt, Skill, and MCP symbols can now be customized independently in
-  **Settings → Agent reply footer**, with a live preview, persistent values, and
-  one-click reset.
-- The website and bilingual READMEs now describe DingDong as one place for
-  connected Agent alerts, with a desktop sound chosen by the user and a clear
-  resource receipt at the end of supported replies.
+- Existing installations that have already opened Agent access now show a
+  revision-aware update badge and setup notice when the connection instructions
+  change.
+- The Agent setup panel can copy the current instructions and mark that revision
+  as updated; brand-new installations start at the latest revision without a
+  false warning.
+- The built-in DingDong configuration Skill, managed Agent bootstrap, API
+  reference, website, and bilingual READMEs now describe the same Skill-load and
+  MCP-call evidence rules.
 
 Intel macOS and Windows packages remain marked as beta.
 
 ---
 
-DingDong 1.4.3 默认让接入 Agent 的提醒更安静，也让支持的 Agent 在回复末尾留下的
-资源轨迹更容易看懂和自定义。
+DingDong 1.4.4 让支持的 Agent 在回复末尾留下的资源小票可以真实反映 MCP 调用，
+并帮助已有 Agent 连接及时拿到新协议。
 
-## 子智能体默认安静工作
+## MCP 真实调用后才加星号
 
-- 新增“**子智能体提醒**”开关，默认关闭。只有明确识别为 Codex 子智能体的事件才会
-  被过滤；开启前，它们不会产生桌面提醒、叮咚声、动态记录、未读状态或关联设备同步。
-- 子智能体任务开始也遵循同一设置；完成事件被过滤时，只会清理精确匹配的运行会话，
-  不会误伤主智能体任务。
-- 主智能体对话继续正常提醒。Codex 元数据不可用时，DingDong 会放行事件，避免漏掉
-  主线程的重要结果。
-- 使用精确的 `thread/read` 识别默认线程列表里看不到的后台 worker；成功读取后会缓存
-  稳定的线程身份。
+- MCP 只有在其已配置工具拿到最终结果后才会带 `*`；仅仅可用、列出工具或发现工具
+  都不会加星号。
+- MCP 的 `*` 表示“调用过”，不表示“调用成功”；错误结果仍然能证明真实调用发生过。
+- DingDong 会按托管资源 ID、Server 身份、Codex 工具前缀、启用状态与当前项目作用域
+  校验调用回执，再替换资源小票中的对应条目。
+- Prompt 继续不加 `*`：系统可以观察到送达，却无法可靠证明模型在语义上真正遵循。
 
-## 回复末尾看懂这轮用了什么资源
+## 安全刷新已有 Agent 接入
 
-- 支持的 Agent 可以在完整回复末尾附上一行 DingDong，展示本轮生效的 Prompt、匹配到
-  的 Skill 和当时可用的 MCP 连接。
-- 只有本轮完整加载过的 Skill 才带 `*`；MCP 名称表示连接可用，不代表工具一定实际
-  调用过。
-- 可在“**设置 → Agent 回复尾部**”中分别自定义 Prompt、Skill 和 MCP 符号，支持实时
-  预览、持久保存和一键恢复默认值。
-- 官网与中英文 README 也更新为“接入的 Agent 提醒一处收好，桌面叮咚声由你挑”，并
-  补充回复末尾资源小票的真实语义。
+- 已经打开过 Agent 接入的旧安装会在接入协议升级时看到版本化更新角标与提示；全新
+  安装直接采用最新版，不会产生误提醒。
+- Agent 接入面板可复制最新指令并标记该版本已更新。
+- 内置 DingDong 配置 Skill、托管 Agent 引导、API 文档、官网与中英文 README 统一
+  使用相同的 Skill 加载和 MCP 调用证据规则。
 
 Intel macOS 与 Windows 安装包继续标记为 beta。

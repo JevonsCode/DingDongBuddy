@@ -1,3 +1,4 @@
+import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
@@ -98,6 +99,7 @@ final class AppSettings {
     this.selectedSound = 'default',
     this.customSoundPath,
     this.mcpAccessSeen = false,
+    this.agentSetupAcknowledgedRevision = currentAgentSetupRevision,
     this.apiPort = 2333,
   });
 
@@ -124,7 +126,11 @@ final class AppSettings {
   final String selectedSound;
   final String? customSoundPath;
   final bool mcpAccessSeen;
+  final int agentSetupAcknowledgedRevision;
   final int apiPort;
+
+  bool get requiresAgentSetupUpdate =>
+      agentSetupAcknowledgedRevision < currentAgentSetupRevision;
 
   AppSettings sanitized() {
     return AppSettings(
@@ -153,6 +159,9 @@ final class AppSettings {
           : 'default',
       customSoundPath: _trimmedOrNull(customSoundPath),
       mcpAccessSeen: mcpAccessSeen,
+      agentSetupAcknowledgedRevision: agentSetupAcknowledgedRevision < 0
+          ? 0
+          : agentSetupAcknowledgedRevision,
       apiPort: apiPort >= 1024 && apiPort <= 65535 ? apiPort : 2333,
     );
   }
@@ -181,6 +190,7 @@ final class AppSettings {
     String? selectedSound,
     Object? customSoundPath = _notSet,
     bool? mcpAccessSeen,
+    int? agentSetupAcknowledgedRevision,
     int? apiPort,
   }) {
     return AppSettings(
@@ -218,6 +228,8 @@ final class AppSettings {
           ? this.customSoundPath
           : customSoundPath as String?,
       mcpAccessSeen: mcpAccessSeen ?? this.mcpAccessSeen,
+      agentSetupAcknowledgedRevision:
+          agentSetupAcknowledgedRevision ?? this.agentSetupAcknowledgedRevision,
       apiPort: apiPort ?? this.apiPort,
     ).sanitized();
   }

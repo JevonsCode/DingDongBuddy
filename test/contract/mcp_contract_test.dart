@@ -31,6 +31,7 @@ void main() {
       expect(result['instructions'], contains('active.skillSuppressions'));
       expect(result['instructions'], contains('duplicate-name conflict'));
       expect(result['instructions'], contains('dingdong_load_skill'));
+      expect(result['instructions'], contains('dingdong_confirm_mcp_use'));
       expect(result['instructions'], contains('dingdong_read_skill_file'));
       expect(
         result['instructions'],
@@ -41,14 +42,16 @@ void main() {
       expect(result['instructions'], contains('keep DingDong as text'));
       expect(
         result['instructions'],
-        contains('symbols supplied in conversation.line'),
+        contains('symbols and lineToken values returned by DingDong'),
       );
       expect(
         result['instructions'],
         contains('conversation.presentations.ansi.line'),
       );
-      expect(result['instructions'], contains('conversation.fallbackLine'));
-      expect(result['instructions'], contains('confirmedUse is true'));
+      expect(result['instructions'], contains('merged plain-text tokens'));
+      expect(result['instructions'], contains('confirmedUse'));
+      expect(result['instructions'], contains('MCP marker means called'));
+      expect(result['instructions'], contains('Prompt items remain unmarked'));
       expect(result['instructions'], contains('same mergeKey'));
       expect(result['instructions'], contains('must never be displayed'));
       expect(
@@ -89,6 +92,7 @@ void main() {
           'dingdong_search_assets',
           'dingdong_get_asset',
           'dingdong_load_skill',
+          'dingdong_confirm_mcp_use',
           'dingdong_read_skill_file',
           'dingdong_recommend_mcp',
           'dingdong_install_skill',
@@ -139,6 +143,8 @@ void main() {
       expect(bridge['description'], contains('DingDong stays text'));
       expect(bridge['description'], contains('ANSI'));
       expect(bridge['description'], contains('confirmedUse=true'));
+      expect(bridge['description'], contains('dingdong_confirm_mcp_use'));
+      expect(bridge['description'], contains('MCP marker means called'));
       expect(bridge['description'], isNot(contains('iframe')));
       expect(bridge['description'], isNot(contains('render tool')));
       expect(properties, isNot(contains('limit')));
@@ -184,6 +190,23 @@ void main() {
         (toolNamed('dingdong_read_skill_file')['inputSchema']
             as Map<String, Object?>)['required'],
         <String>['path'],
+      );
+      final Map<String, Object?> confirmMcpSchema =
+          toolNamed('dingdong_confirm_mcp_use')['inputSchema']
+              as Map<String, Object?>;
+      expect(confirmMcpSchema['required'], <String>[
+        'id',
+        'serverName',
+        'toolName',
+      ]);
+      expect(
+        toolNamed('dingdong_confirm_mcp_use')['description'],
+        allOf(
+          contains('terminal result'),
+          contains('Do not call for Bridge availability'),
+          contains('marker="*"'),
+          contains('not necessarily succeeded'),
+        ),
       );
       expect(
         ((toolNamed('dingdong_get_asset')['inputSchema']

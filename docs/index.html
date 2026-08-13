@@ -80,7 +80,7 @@
                 </button>
                 <div class="demo-title-lockup">
                   <strong>DingDong</strong>
-                  <span class="demo-version">v1.4.3</span>
+                  <span class="demo-version">v1.4.4</span>
                 </div>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
@@ -285,7 +285,7 @@
           </article>
           <article class="conversation-example">
             <span class="example-kind">Skill</span>
-            <p class="user-message" data-i18n="examples.skillMessage">“Use this project’s release workflow, run every check, and prepare version 1.4.3.”</p>
+            <p class="user-message" data-i18n="examples.skillMessage">“Use this project’s release workflow, run every check, and prepare version 1.4.4.”</p>
             <p class="example-result" data-i18n="examples.skillResult">The Agent matches the Skill description, then loads its full workflow and files.</p>
           </article>
           <article class="conversation-example">
@@ -297,12 +297,12 @@
         <div class="conversation-receipt">
           <div class="conversation-receipt-copy">
             <h4 data-i18n="chatFooter.title">Every final reply leaves a little resource receipt.</h4>
-            <p data-i18n="chatFooter.body">Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * appears only when that Skill was fully loaded for this task.</p>
-            <p class="conversation-receipt-note" data-i18n="chatFooter.note">An MCP name means “available,” not necessarily called. The Prompt, Skill, and MCP symbols are customizable in Settings.</p>
+            <p data-i18n="chatFooter.body">Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.</p>
+            <p class="conversation-receipt-note" data-i18n="chatFooter.note">An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.</p>
           </div>
           <div class="conversation-receipt-sample">
             <span data-i18n="chatFooter.sampleLabel">Illustrative line</span>
-            <code data-i18n="chatFooter.sample">DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub</code>
+            <code data-i18n="chatFooter.sample">DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub*</code>
           </div>
         </div>
       </section>
@@ -569,28 +569,28 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       <section class="download-section" id="download" aria-label="Download">
         <div class="download-actions">
-          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-macos-arm64.dmg">
+          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.4/DingDong-1.4.4-macos-arm64.dmg">
             <span class="download-card-heading">
               <strong data-i18n="download.macosArm64">Mac with Apple silicon</strong>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.macosArm64Hint">DingDong 1.4.3 · DMG · arm64</span>
+            <span data-i18n="download.macosArm64Hint">DingDong 1.4.4 · DMG · arm64</span>
           </a>
-          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-macos-x64-beta.dmg">
+          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.4/DingDong-1.4.4-macos-x64-beta.dmg">
             <span class="download-card-heading">
               <strong data-i18n="download.macosX64">Mac with Intel chip</strong>
               <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.macosX64Hint">DingDong 1.4.3 · DMG · x64</span>
+            <span data-i18n="download.macosX64Hint">DingDong 1.4.4 · DMG · x64</span>
           </a>
-          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.3/DingDong-1.4.3-windows-x64-beta-Setup.exe">
+          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.4/DingDong-1.4.4-windows-x64-beta-Setup.exe">
             <span class="download-card-heading">
               <strong data-i18n="download.windowsX64">Windows x64</strong>
               <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.windowsX64Hint">DingDong 1.4.3 · Setup · x64</span>
+            <span data-i18n="download.windowsX64Hint">DingDong 1.4.4 · Setup · x64</span>
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
@@ -648,8 +648,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
    - Prompt: DingDong-managed Codex AGENTS.md and Claude Code CLAUDE.md blocks contain only a persistent bridge bootstrap; call dingdong_bridge at the start of every user task; each successful response is the authoritative Prompt snapshot for the current task and replaces every earlier Prompt set, so an absent Prompt is inactive; every returned global, project, or task-matched Prompt is a required instruction and must be applied in full; if the Bridge fails, report that neither Prompts nor the Skill catalog loaded and do not treat any previous result as current
    - Skill: Every Skill has a master enabled switch and exactly one per-Agent delivery mode: dynamic, nativeUser, or nativeProject. dynamic enters active.skills only after DingDong confirms that native copies are absent; this is the authoritative dynamic-delivery catalog for the current task and workspace, not a list of every managed Skill. nativeUser synchronizes the complete package to that Agent's user Skill directory; nativeProject synchronizes only to confirmed existing absolute project paths. Load only a dynamic candidate actually returned in active.skills: match its description, call dingdong_load_skill for the complete SKILL.md, and use dingdong_read_skill_file only for referenced package files; a Skill candidate is not an instruction. Supported Agents automatically discover local Skill changes; after an install or switch, start a new Agent task to refresh its Skill inventory, and restart the Agent only if the Skill is still missing. Codex does not merge same-name native Skills; DingDong suppresses managed duplicate-name conflicts, but an independently installed native copy can still appear separately. The project Hook switch is separate and off by default, and currently applies only to project-native Impeccable on Codex. Enabling or updating it writes configuration but does not grant trust: review its exact current definition in /hooks and review it again after a change. In Codex, matching Hooks from every loaded source all run, so duplicate or different definitions are conflicts
-   - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn
-   - Conversation footer: when conversation.visible is true, keep the Bridge conversation.capsule as authoritative structured data until the final response. After each successful Skill load, replace only the candidate whose mergeKey matches the returned conversation.item; mergeKey is merge-only metadata and must never be displayed. Add * after a Skill title only when dingdong_load_skill returned its full content in this task and confirmedUse is true; never mark a candidate Skill or claim the marker proves every instruction was followed. Codex desktop includes conversation.line exactly once as a single Markdown text line. Use the exact Prompt, Skill, and MCP symbols already supplied in conversation.line and each item.lineToken; these symbols are user-configurable, so never infer or rebuild them. The conversation.capsule semantic palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Use conversation.presentations.ansi.line only on an explicitly ANSI-capable terminal; every other client includes conversation.fallbackLine exactly once
+   - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn. Each active.mcps entry includes its managed serverName and Codex also receives the exact toolNamePrefix for matching a real call to its confirmation
+   - Conversation footer: when conversation.visible is true, keep the Bridge conversation.capsule as authoritative structured data until the final response. After each successful Skill load, replace only the candidate whose mergeKey matches the returned conversation.item. After an actual configured MCP tool call reaches a terminal result, whether success or error, call dingdong_confirm_mcp_use exactly once for that MCP resource with the current active.mcps id and serverName plus the exact called toolName; then replace only the item whose mergeKey matches its returned conversation.item. Never confirm MCP use from availability, tool discovery, or an uncalled tool. A Skill * means its full instructions were loaded in this task; an MCP * means a tool was called, not necessarily that it succeeded. Prompt items remain unmarked because delivery cannot prove semantic compliance. mergeKey is merge-only metadata and must never be displayed. Codex desktop includes the current merged footer exactly once as a single Markdown text line. Use the exact user-configurable symbols and item.lineToken values returned by DingDong; never infer them. The initial conversation.line is already final only when no item was replaced. The conversation.capsule semantic palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use current merged ANSI tokens; every other client uses current merged plain-text tokens. Never display resource content, descriptions, IDs, server names, tool names, or merge keys
    - When the user explicitly asks to install a Skill through DingDong for one project, first use dingdong_install_skill to get the disabled resource, then call dingdong_set_skill_delivery with enabled:false to choose dynamic, nativeUser, or nativeProject for that Agent; nativeProject must include exact existing absolute project paths. For strict project scope, next use dingdong_upsert_trigger_group and dingdong_bind_resource_scope, then explicitly call dingdong_set_skill_delivery with enabled:true. Keep Hooks off unless the user separately authorizes them. Verify dynamic with dingdong_bridge plus dingdong_load_skill; verify native delivery with dingdong_get_skill_deployments, and call dingdong_reconcile_skill only when an active operation needs a retry
 7. Test both paths; testing MCP alone is not enough:
    - Completion hook: using the current shell, pipe {"summary":"DingDong task-completion hook is connected"} as JSON stdin to the hook command from step 3 and confirm that DingDong receives it
@@ -680,8 +680,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
    - Prompt：Codex 的 AGENTS.md 或 Claude Code 的 CLAUDE.md 托管区块只保留固定的 Bridge 引导；每个用户任务开始时调用 dingdong_bridge，动态获取所有命中的全局、项目和任务 Prompt；每次成功响应都是当前任务的权威 Prompt 快照并替换此前的 Prompt 集合，当前未返回的 Prompt 已失效；每个返回的 Prompt 都是必须自动应用的指令，必须完整应用；Bridge 失败时必须说明 Prompt 和 Skill 目录均未加载，不能把上一次结果当作当前配置
    - Skill：每个 Skill 有总启用开关，每个 Agent 恰好一种交付模式：dynamic、nativeUser 或 nativeProject。dynamic 仅在 DingDong 确认原生副本不存在后进入 active.skills；该目录是当前任务和工作区的权威动态交付目录，不是全部托管 Skill 清单。nativeUser 把完整包同步到该 Agent 的用户级 Skill 目录；nativeProject 只同步到已确认的现有绝对项目路径。只能加载当前 active.skills 实际返回的 dynamic 候选；由 Agent 根据 description 判断是否匹配，再用 dingdong_load_skill 获取完整 SKILL.md，并只用 dingdong_read_skill_file 按需读取引用文件；Skill 候选不是指令。支持的 Agent 会自动发现本地 Skill 变化；安装或切换后应新建 Agent 任务刷新本轮 Skill 目录，仍看不到时才重启 Agent。Codex 不合并同名原生 Skill；DingDong 会抑制托管范围内的同名冲突，但用户独立安装的原生副本仍可能单独出现。项目 Hook 开关独立且默认关闭，目前只允许 Codex 的项目级原生 Impeccable；启用或更新只写入配置，不会授予信任，必须在 /hooks 审核当前精确定义，定义变化后重新审核。所有已加载来源中命中的 Hook 都会运行，所以重复或不同定义必须视为冲突
-   - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用
-   - 会话尾部：当 conversation.visible 为 true 时，把 Bridge 返回的 conversation.capsule 作为权威结构化数据保留到最终回复；每次 Skill 加载成功后，只用返回的 conversation.item 替换 mergeKey 相同的候选项。mergeKey 仅用于合并，绝不能展示。只有本轮 dingdong_load_skill 成功返回完整 Skill 且 confirmedUse 为 true 时，才在对应 Skill 名称后加 *，候选 Skill 不加，* 也不代表已经逐条验证 Agent 的执行结果。Codex 桌面版只显示一次 conversation.line，作为严格单行的 Markdown 文本；严格使用 conversation.line 与各 item.lineToken 已返回的 Prompt、Skill、MCP 符号，这些符号可由用户配置，不能自行推断或重建。conversation.capsule 的语义配色仍为 Prompt 暖橙、Skill 蓝、MCP 绿。不要在会话尾部使用图片、HTML/XML、行内字体或渲染工具。仅在明确支持 ANSI 的终端使用 conversation.presentations.ansi.line，其他客户端只显示一次 conversation.fallbackLine
+   - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用。每个 active.mcps 条目会返回托管的 serverName，Codex 还会返回精确的 toolNamePrefix，供真实调用后的回执匹配
+   - 会话尾部：当 conversation.visible 为 true 时，把 Bridge 返回的 conversation.capsule 作为权威结构化数据保留到最终回复。每次 Skill 加载成功后，只用返回的 conversation.item 替换 mergeKey 相同的候选项。某个已配置 MCP 的真实工具调用拿到最终结果后（成功或错误结果都算调用），立即对该 MCP 只调用一次 dingdong_confirm_mcp_use，传入当前 active.mcps 条目的 id、serverName 和刚调用的完整 toolName，再用返回的 conversation.item 替换 mergeKey 相同的项；仅可用、工具发现或未调用都不能确认。Skill 后的 * 只表示本轮完整加载；MCP 后的 * 只表示本轮调用过，不表示调用成功。Prompt 不加 *，因为送达无法证明模型在语义上实际遵循。mergeKey 仅用于合并，绝不能展示。Codex 桌面版只显示一次当前合并后的严格单行 Markdown footer；必须使用 DingDong 返回的可配置符号和各 item.lineToken，不能自行推断。没有任何替换时，初始 conversation.line 已经是最终行。conversation.capsule 的语义配色仍为 Prompt 暖橙、Skill 蓝、MCP 绿。不要在会话尾部使用图片、HTML/XML、行内字体或渲染工具。明确支持 ANSI 的终端使用当前合并后的 ANSI token，其他客户端使用当前合并后的纯文本 token。不得展示资源内容、描述、ID、serverName、toolName 或 mergeKey
    - 用户明确要求“通过 DingDong 给某项目安装 Skill”时，先用 dingdong_install_skill 获取默认关闭的资源，再用 dingdong_set_skill_delivery 的 enabled:false 选择该 Agent 的 dynamic、nativeUser 或 nativeProject；nativeProject 必须同时传入准确的现有绝对项目路径。需要严格项目作用域（strict project scope）时，再调用 dingdong_upsert_trigger_group 和 dingdong_bind_resource_scope，最后用 dingdong_set_skill_delivery 明确 enabled:true。Hook 保持关闭，除非用户单独授权。dynamic 用 dingdong_bridge 和 dingdong_load_skill 验证；原生模式用 dingdong_get_skill_deployments 验证，存在活动操作时才调用 dingdong_reconcile_skill
 7. 分别验证两条链路，不能只验证 MCP：
    - 结束 Hook：用当前 shell 把 {"summary":"DingDong 任务结束提醒已接入"} 作为 JSON 标准输入传给第 3 步的 Hook 命令，确认 DingDong 收到这条提醒
@@ -787,15 +787,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.body": "These examples assume the matching resources have already been enabled and scoped in DingDong.",
           "examples.promptMessage": "“Review this page against our project’s UI rules and fix the problems.”",
           "examples.promptResult": "The project Prompt is applied automatically before the Agent starts.",
-          "examples.skillMessage": "“Use this project’s release workflow, run every check, and prepare version 1.4.3.”",
+          "examples.skillMessage": "“Use this project’s release workflow, run every check, and prepare version 1.4.4.”",
           "examples.skillResult": "The Agent matches the Skill description, then loads its full workflow and files.",
           "examples.mcpMessage": "“Use my GitHub tools to find why the latest main workflow failed.”",
           "examples.mcpResult": "The configured MCP is available, and its tools are called only when needed.",
           "chatFooter.title": "Every final reply leaves a little resource receipt.",
-          "chatFooter.body": "Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * appears only when that Skill was fully loaded for this task.",
-          "chatFooter.note": "An MCP name means ‘available,’ not necessarily called. The Prompt, Skill, and MCP symbols are customizable in Settings.",
+          "chatFooter.body": "Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.",
+          "chatFooter.note": "An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.",
           "chatFooter.sampleLabel": "Illustrative line",
-          "chatFooter.sample": "DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub",
+          "chatFooter.sample": "DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub*",
           "defaults.eyebrow": "Keyboard and settings reference",
           "defaults.title": "Shortcuts help you move through content work faster.",
           "defaults.body": "The global Clipboard shortcut and all three workspace shortcuts can be recorded in Settings and take effect immediately. The table shows DingDong’s defaults.",
@@ -900,11 +900,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "Prefer scripts? There is a local API too.",
           "api.body": "Check DingDong's status, search resources, read a clipboard overview, or open the page you need.",
           "download.macosArm64": "Mac with Apple silicon",
-          "download.macosArm64Hint": "DingDong 1.4.3 · DMG · arm64",
+          "download.macosArm64Hint": "DingDong 1.4.4 · DMG · arm64",
           "download.macosX64": "Mac with Intel chip",
-          "download.macosX64Hint": "DingDong 1.4.3 · DMG · x64",
+          "download.macosX64Hint": "DingDong 1.4.4 · DMG · x64",
           "download.windowsX64": "Windows x64",
-          "download.windowsX64Hint": "DingDong 1.4.3 · Setup · x64",
+          "download.windowsX64Hint": "DingDong 1.4.4 · Setup · x64",
           "download.beta": "Beta",
           "download.recommended": "Recommended",
           "download.macHelp": "Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.",
@@ -1018,15 +1018,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.body": "以下是配置并启用相应资源后的对话示例。",
           "examples.promptMessage": "“按这个项目的 UI 规范检查页面，把发现的问题直接改好。”",
           "examples.promptResult": "项目 Prompt 会在 Agent 开始工作前自动生效。",
-          "examples.skillMessage": "“按这个项目的发布流程跑完所有检查，准备发布 1.4.3。”",
+          "examples.skillMessage": "“按这个项目的发布流程跑完所有检查，准备发布 1.4.4。”",
           "examples.skillResult": "Agent 会先匹配 Skill 简介，再加载完整流程和配套文件。",
           "examples.mcpMessage": "“用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”",
           "examples.mcpResult": "对应 MCP 已在客户端就绪，Agent 只在真正查询时调用工具。",
           "chatFooter.title": "每次答完，都留一张资源小票",
-          "chatFooter.body": "支持的 Agent 会在完整回复末尾附上一行 DingDong，列出本轮生效的 Prompt、匹配到的 Skill 和可用 MCP；只有本轮完整加载过的 Skill，名称后才会出现 *。",
-          "chatFooter.note": "MCP 名称只表示“可用”，不代表工具已实际调用；Prompt、Skill 和 MCP 的符号都能在设置里自定义。",
+          "chatFooter.body": "支持的 Agent 会在完整回复末尾附上一行 DingDong，列出本轮生效的 Prompt、匹配到的 Skill 和可用 MCP；完整加载过的 Skill 或实际调用过的 MCP，名称后会出现 *。",
+          "chatFooter.note": "MCP 后的 * 表示调用过，但不表示调用成功。Prompt 不加 *，因为送达无法证明模型在语义上实际遵循；三种符号都能在设置里自定义。",
           "chatFooter.sampleLabel": "界面示意",
-          "chatFooter.sample": "DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub",
+          "chatFooter.sample": "DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub*",
           "defaults.eyebrow": "快捷键与设置参考",
           "defaults.title": "快捷键帮你高效处理内容工作",
           "defaults.body": "全局剪贴板快捷键和三个工作区快捷键都可以在设置中录入并立即生效；下面列出 DingDong 的默认组合。",
@@ -1131,11 +1131,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "喜欢写脚本？也留了本地 API",
           "api.body": "查状态、找资源、看剪贴板概览，或者直接打开需要的页面。",
           "download.macosArm64": "Mac（Apple 芯片）",
-          "download.macosArm64Hint": "DingDong 1.4.3 · DMG · arm64",
+          "download.macosArm64Hint": "DingDong 1.4.4 · DMG · arm64",
           "download.macosX64": "Mac（Intel 芯片）",
-          "download.macosX64Hint": "DingDong 1.4.3 · DMG · x64",
+          "download.macosX64Hint": "DingDong 1.4.4 · DMG · x64",
           "download.windowsX64": "Windows x64",
-          "download.windowsX64Hint": "DingDong 1.4.3 · Setup · x64",
+          "download.windowsX64Hint": "DingDong 1.4.4 · Setup · x64",
           "download.beta": "Beta",
           "download.recommended": "推荐",
           "download.macHelp": "需要 macOS 13 或更高版本。不确定 Mac 类型？打开苹果菜单  → 关于本机：显示“芯片”是 Apple 芯片，显示“处理器”是 Intel。",
@@ -1189,7 +1189,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { id: "files", label: "Files" }
             ],
             items: [
-              { id: "image", kind: "IMG", icon: "image", category: "images", title: "DingDong 1.4.3 interface.png", body: "PNG · image · 271 KB", time: "17:04" },
+              { id: "image", kind: "IMG", icon: "image", category: "images", title: "DingDong 1.4.4 interface.png", body: "PNG · image · 271 KB", time: "17:04" },
               { id: "path", kind: "PATH", icon: "path", category: "text", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", icon: "command", category: "text", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", icon: "link", category: "links", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -1233,7 +1233,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { id: "files", label: "文件" }
             ],
             items: [
-              { id: "image", kind: "图片", icon: "image", category: "images", title: "DingDong 1.4.3 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
+              { id: "image", kind: "图片", icon: "image", category: "images", title: "DingDong 1.4.4 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
               { id: "path", kind: "路径", icon: "path", category: "text", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", icon: "command", category: "text", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", icon: "link", category: "links", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },

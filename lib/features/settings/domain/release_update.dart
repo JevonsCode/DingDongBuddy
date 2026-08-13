@@ -111,8 +111,8 @@ List<int> _versionParts(String value) {
       .toList(growable: false);
 }
 
-const String currentAppVersion = '1.4.3';
-const String currentAppBuild = '51';
+const String currentAppVersion = '1.4.4';
+const String currentAppBuild = '52';
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',
 );
