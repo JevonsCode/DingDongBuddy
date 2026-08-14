@@ -1,6 +1,7 @@
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 
-/// One locally observed Agent completion shown in the Dynamic workspace.
+/// One locally observed Agent update shown in the Dynamic workspace.
 final class AgentActivity {
   const AgentActivity({
     required this.id,
@@ -12,6 +13,7 @@ final class AgentActivity {
     this.detail,
     this.startedAt,
     this.repeatCount = 1,
+    this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
   });
 
@@ -26,6 +28,7 @@ final class AgentActivity {
       detail: _trimmed(json['detail']),
       startedAt: _dateTime(json['startedAt']),
       repeatCount: _repeatCount(json['repeatCount']),
+      notificationKind: AgentNotificationKind.parse(json['notificationKind']),
       conversationTarget: json['conversationTarget'] is Map
           ? AgentConversationTarget.fromJson(
               Map<String, Object?>.from(json['conversationTarget']! as Map),
@@ -43,7 +46,11 @@ final class AgentActivity {
   final String? detail;
   final DateTime? startedAt;
   final int repeatCount;
+  final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
+
+  bool get needsUserAttention =>
+      notificationKind == AgentNotificationKind.attention;
 
   AgentActivity seen() => AgentActivity(
     id: id,
@@ -55,6 +62,7 @@ final class AgentActivity {
     detail: detail,
     startedAt: startedAt,
     repeatCount: repeatCount,
+    notificationKind: notificationKind,
     conversationTarget: conversationTarget,
   );
 
@@ -66,6 +74,7 @@ final class AgentActivity {
     String? detail,
     DateTime? startedAt,
     AgentConversationTarget? conversationTarget,
+    AgentNotificationKind? notificationKind,
     bool preserveLifecycle = false,
   }) {
     final AgentConversationTarget? mergedTarget =
@@ -84,6 +93,7 @@ final class AgentActivity {
       detail: detail ?? (preserveLifecycle ? this.detail : null),
       startedAt: preserveLifecycle ? this.startedAt : startedAt,
       repeatCount: repeatCount + 1,
+      notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: mergedTarget,
     );
   }
@@ -99,6 +109,7 @@ final class AgentActivity {
         detail: detail,
         startedAt: startedAt,
         repeatCount: repeatCount,
+        notificationKind: notificationKind,
         conversationTarget: conversationTarget?.merge(target) ?? target,
       );
 
@@ -112,6 +123,8 @@ final class AgentActivity {
     if (detail != null) 'detail': detail,
     if (startedAt != null) 'startedAt': startedAt!.toUtc().toIso8601String(),
     'repeatCount': repeatCount,
+    if (notificationKind != AgentNotificationKind.completion)
+      'notificationKind': notificationKind.apiValue,
     if (conversationTarget != null)
       'conversationTarget': conversationTarget!.toJson(),
   };

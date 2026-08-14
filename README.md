@@ -79,7 +79,7 @@ Customize all three symbols under **Settings → Agent reply footer**.
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.4.4.”
+- “Use this project's release workflow, run every check, and prepare version 1.4.5.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can also configure project-scoped Skills after explicit user approval with

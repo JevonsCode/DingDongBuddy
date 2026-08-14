@@ -91,6 +91,8 @@ final class AppSettings {
     this.allowAgentClipboardContent = false,
     this.lifecycleTelemetryEnabled = true,
     this.rememberAgentActivity = true,
+    this.notifyAgentCompletion = true,
+    this.notifyAgentAttention = true,
     this.notifySubagentActivity = false,
     this.groupRepeatedAgentSessions = true,
     this.agentActivityMaxItems = 500,
@@ -118,6 +120,8 @@ final class AppSettings {
   final bool allowAgentClipboardContent;
   final bool lifecycleTelemetryEnabled;
   final bool rememberAgentActivity;
+  final bool notifyAgentCompletion;
+  final bool notifyAgentAttention;
   final bool notifySubagentActivity;
   final bool groupRepeatedAgentSessions;
   final int agentActivityMaxItems;
@@ -149,6 +153,8 @@ final class AppSettings {
       allowAgentClipboardContent: allowAgentClipboardContent,
       lifecycleTelemetryEnabled: lifecycleTelemetryEnabled,
       rememberAgentActivity: rememberAgentActivity,
+      notifyAgentCompletion: notifyAgentCompletion,
+      notifyAgentAttention: notifyAgentAttention,
       notifySubagentActivity: notifySubagentActivity,
       groupRepeatedAgentSessions: groupRepeatedAgentSessions,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
@@ -182,6 +188,8 @@ final class AppSettings {
     bool? allowAgentClipboardContent,
     bool? lifecycleTelemetryEnabled,
     bool? rememberAgentActivity,
+    bool? notifyAgentCompletion,
+    bool? notifyAgentAttention,
     bool? notifySubagentActivity,
     bool? groupRepeatedAgentSessions,
     int? agentActivityMaxItems,
@@ -213,6 +221,9 @@ final class AppSettings {
           lifecycleTelemetryEnabled ?? this.lifecycleTelemetryEnabled,
       rememberAgentActivity:
           rememberAgentActivity ?? this.rememberAgentActivity,
+      notifyAgentCompletion:
+          notifyAgentCompletion ?? this.notifyAgentCompletion,
+      notifyAgentAttention: notifyAgentAttention ?? this.notifyAgentAttention,
       notifySubagentActivity:
           notifySubagentActivity ?? this.notifySubagentActivity,
       groupRepeatedAgentSessions:

@@ -93,6 +93,39 @@ void main() {
     expect(transport.body?['detail'], '已经完成资源同步并安装到本机：\n全量测试通过\n应用正在运行');
   });
 
+  test(
+    'Stop hook marks a response waiting for confirmation as attention',
+    () async {
+      final _RecordingTransport transport = _RecordingTransport();
+
+      await CompletionHookNotifier(transport).notify(
+        jsonEncode(<String, Object?>{
+          'hook_event_name': 'Stop',
+          'last_assistant_message': '本地修改已经完成，但还没有提交。你确认后我再回复 MR。',
+        }),
+      );
+
+      expect(transport.body?['message'], '本地修改已经完成，但还没有提交。你确认后我再回复 MR。');
+      expect(transport.body?['notificationKind'], 'attention');
+    },
+  );
+
+  test(
+    'SessionEnd remains a completion even if the transcript mentions input',
+    () async {
+      final _RecordingTransport transport = _RecordingTransport();
+
+      await CompletionHookNotifier(transport).notify(
+        jsonEncode(<String, Object?>{
+          'hook_event_name': 'SessionEnd',
+          'last_assistant_message': '任务完成，等待你确认是否归档。',
+        }),
+      );
+
+      expect(transport.body?.containsKey('notificationKind'), isFalse);
+    },
+  );
+
   test('DingDong bridge line is skipped in the recent Agent summary', () async {
     final _RecordingTransport transport = _RecordingTransport();
 

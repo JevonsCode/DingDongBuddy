@@ -77,6 +77,7 @@ final class SettingsViewModel extends ChangeNotifier
   bool _applicationUpdaterSupported = false;
   bool _isPollingApplicationUpdater = false;
   Timer? _applicationUpdatePollTimer;
+  Timer? _backgroundReleaseUpdateCheckTimer;
   bool? _isQuickPastePermissionGranted;
   bool _isPresentingQuickPastePermissionGrant = false;
   SystemUsageSnapshot? _systemUsage;
@@ -368,6 +369,18 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setNotifyAgentCompletion(bool value) async {
+    _settings = _settings.copyWith(notifyAgentCompletion: value);
+    notifyListeners();
+    await _save();
+  }
+
+  Future<void> setNotifyAgentAttention(bool value) async {
+    _settings = _settings.copyWith(notifyAgentAttention: value);
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setNotifySubagentActivity(bool value) async {
     _settings = _settings.copyWith(notifySubagentActivity: value);
     notifyListeners();
@@ -438,7 +451,7 @@ final class SettingsViewModel extends ChangeNotifier
 
   Future<void> checkForUpdates() async {
     final ReleaseMetadataSource? source = _releaseMetadataSource;
-    if (source == null || _releaseStatus.isChecking) {
+    if (_disposed || source == null || _releaseStatus.isChecking) {
       return;
     }
     _releaseStatus = _releaseStatus.checking();
@@ -448,7 +461,26 @@ final class SettingsViewModel extends ChangeNotifier
     } on Object catch (error) {
       _releaseStatus = _releaseStatus.failed(error.toString(), _now());
     }
-    notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
+  /// Keeps the main popup's version indicator fresh while the app is hidden.
+  ///
+  /// The first check is still performed by the application startup flow. This
+  /// timer only retries in the background, so a temporary network failure does
+  /// not leave the update dot stale until the next restart or settings visit.
+  void startBackgroundReleaseUpdateChecks() {
+    if (_disposed ||
+        _releaseMetadataSource == null ||
+        _backgroundReleaseUpdateCheckTimer != null) {
+      return;
+    }
+    _backgroundReleaseUpdateCheckTimer = Timer.periodic(
+      backgroundReleaseUpdateCheckInterval,
+      (_) => unawaited(checkForUpdates()),
+    );
   }
 
   /// Starts the native one-click flow. The native helper downloads, verifies,
@@ -621,6 +653,8 @@ final class SettingsViewModel extends ChangeNotifier
 
   Future<void> shutdown() async {
     _applicationUpdatePollTimer?.cancel();
+    _backgroundReleaseUpdateCheckTimer?.cancel();
+    _backgroundReleaseUpdateCheckTimer = null;
     await _clipboardMonitoring?.stop();
   }
 
@@ -628,6 +662,7 @@ final class SettingsViewModel extends ChangeNotifier
   void dispose() {
     _disposed = true;
     _applicationUpdatePollTimer?.cancel();
+    _backgroundReleaseUpdateCheckTimer?.cancel();
     super.dispose();
   }
 

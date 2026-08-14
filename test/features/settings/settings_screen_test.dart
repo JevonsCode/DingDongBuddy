@@ -225,6 +225,33 @@ void main() {
         find.byKey(const Key('settings-notify-subagent-activity')),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const Key('settings-notify-agent-completion')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-notify-agent-attention')),
+        findsOneWidget,
+      );
+      final CompactSwitchListTile completionNotificationSwitch = tester.widget(
+        find.byKey(const Key('settings-notify-agent-completion')),
+      );
+      expect(completionNotificationSwitch.value, isTrue);
+      completionNotificationSwitch.onChanged!(false);
+      await tester.pumpAndSettle();
+      expect(model.settings.notifyAgentCompletion, isFalse);
+      expect(
+        backend.values['dingdong.agentActivity.notifyCompletions'],
+        isFalse,
+      );
+      final CompactSwitchListTile attentionNotificationSwitch = tester.widget(
+        find.byKey(const Key('settings-notify-agent-attention')),
+      );
+      expect(attentionNotificationSwitch.value, isTrue);
+      attentionNotificationSwitch.onChanged!(false);
+      await tester.pumpAndSettle();
+      expect(model.settings.notifyAgentAttention, isFalse);
+      expect(backend.values['dingdong.agentActivity.notifyAttention'], isFalse);
       expect(find.text('Subagent notifications'), findsOneWidget);
       expect(
         find.text(

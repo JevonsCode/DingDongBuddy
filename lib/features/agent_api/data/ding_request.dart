@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 
 /// Sound values retained for compatibility with existing API clients.
 enum DingSound {
@@ -57,6 +58,7 @@ final class DingRequest {
     this.sound = DingSound.defaultSound,
     this.flashCount = 8,
     this.fallback = false,
+    this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
     this.receivedAt,
   });
@@ -71,6 +73,7 @@ final class DingRequest {
     final String? detail = _trimmedOrNull(json['detail'] as String?);
     final int requestedFlashCount = json['flashCount'] as int? ?? 8;
     final String? source = _trimmedOrNull(json['source'] as String?);
+    final Object? notificationKind = json['notificationKind'] ?? json['kind'];
     return DingRequest(
       message: message,
       detail: detail,
@@ -78,6 +81,7 @@ final class DingRequest {
       sound: DingSound.parse(json['sound']),
       flashCount: requestedFlashCount.clamp(2, 30),
       fallback: json['fallback'] == true,
+      notificationKind: AgentNotificationKind.parse(notificationKind),
       conversationTarget: _conversationTarget(json, source),
     );
   }
@@ -88,10 +92,15 @@ final class DingRequest {
   final DingSound sound;
   final int flashCount;
   final bool fallback;
+  final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
   final DateTime? receivedAt;
 
-  DingRequest copyWith({DingSound? sound, DateTime? receivedAt}) {
+  DingRequest copyWith({
+    DingSound? sound,
+    AgentNotificationKind? notificationKind,
+    DateTime? receivedAt,
+  }) {
     return DingRequest(
       message: message,
       detail: detail,
@@ -99,6 +108,7 @@ final class DingRequest {
       sound: sound ?? this.sound,
       flashCount: flashCount,
       fallback: fallback,
+      notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: conversationTarget,
       receivedAt: receivedAt ?? this.receivedAt,
     );

@@ -17,6 +17,7 @@ void main() {
     expect(transport.method, 'POST');
     expect(transport.path, '/ding');
     expect(transport.body?['message'], 'Finished');
+    expect(transport.body?['notificationKind'], 'attention');
   });
 
   test('notify adds Agent context used for subagent filtering', () async {

@@ -234,6 +234,41 @@ main {
   padding: 16px 16px 154px;
 }
 
+.pwa-launcher-view {
+  display: flex;
+  min-height: calc(100dvh - 120px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pwa-launcher-view > img {
+  width: 112px;
+  height: 112px;
+  margin-bottom: 19px;
+  object-fit: contain;
+  border-radius: 26px;
+  background: var(--accent-soft);
+}
+
+.pwa-launcher-view h2 {
+  margin-top: 7px;
+  font-size: 23px;
+}
+
+.pwa-launcher-view p:not(.eyebrow) {
+  max-width: 340px;
+  margin-top: 9px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.pwa-launcher-view .primary-button {
+  margin-top: 24px;
+}
+
 .pair-view,
 .empty-view {
   display: flex;
@@ -246,6 +281,7 @@ main {
 
 .pair-view[hidden],
 .empty-view[hidden],
+#pwa-launcher-view[hidden],
 #content-view[hidden],
 .composer[hidden],
 [hidden] {

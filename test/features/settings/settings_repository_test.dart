@@ -11,6 +11,8 @@ void main() {
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.allowAgentClipboardContent, isFalse);
+    expect(settings.notifyAgentCompletion, isTrue);
+    expect(settings.notifyAgentAttention, isTrue);
     expect(settings.notifySubagentActivity, isFalse);
     expect(settings.groupRepeatedAgentSessions, isTrue);
     expect(settings.lifecycleTelemetryEnabled, isTrue);
@@ -72,6 +74,18 @@ void main() {
     );
   });
 
+  test('Agent notification preferences survive copyWith and sanitizing', () {
+    final AppSettings disabled = const AppSettings().copyWith(
+      notifyAgentCompletion: false,
+      notifyAgentAttention: false,
+    );
+
+    expect(disabled.notifyAgentCompletion, isFalse);
+    expect(disabled.notifyAgentAttention, isFalse);
+    expect(disabled.sanitized().notifyAgentCompletion, isFalse);
+    expect(disabled.sanitized().notifyAgentAttention, isFalse);
+  });
+
   test('supports a build-specific default tray notification color', () async {
     final AppSettings settings = await SettingsRepository(
       MemoryPreferencesBackend(),
@@ -130,6 +144,8 @@ void main() {
           'dingdong.onboarding.mcpAccessSeen': true,
           'dingdong.api.port': 70000,
           'dingdong.agentActivity.remember': false,
+          'dingdong.agentActivity.notifyCompletions': false,
+          'dingdong.agentActivity.notifyAttention': false,
           'dingdong.agentActivity.notifySubagents': true,
           'dingdong.agentActivity.groupRepeatedSessions': false,
           'dingdong.agentActivity.maxItems': 9000,
@@ -171,6 +187,8 @@ void main() {
     expect(settings.mcpAccessSeen, isTrue);
     expect(settings.apiPort, 2333);
     expect(settings.rememberAgentActivity, isFalse);
+    expect(settings.notifyAgentCompletion, isFalse);
+    expect(settings.notifyAgentAttention, isFalse);
     expect(settings.notifySubagentActivity, isTrue);
     expect(settings.groupRepeatedAgentSessions, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
@@ -210,6 +228,8 @@ void main() {
       allowAgentClipboardContent: true,
       lifecycleTelemetryEnabled: false,
       rememberAgentActivity: false,
+      notifyAgentCompletion: false,
+      notifyAgentAttention: false,
       notifySubagentActivity: true,
       groupRepeatedAgentSessions: false,
       agentActivityMaxItems: 320,
@@ -246,6 +266,8 @@ void main() {
     expect(backend.values['dingdong.agentApi.allowClipboardContent'], isTrue);
     expect(backend.values['dingdong.telemetry.lifecycleConsent'], 'disabled');
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
+    expect(backend.values['dingdong.agentActivity.notifyCompletions'], isFalse);
+    expect(backend.values['dingdong.agentActivity.notifyAttention'], isFalse);
     expect(backend.values['dingdong.agentActivity.notifySubagents'], isTrue);
     expect(
       backend.values['dingdong.agentActivity.groupRepeatedSessions'],

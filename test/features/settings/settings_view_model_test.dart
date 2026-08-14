@@ -8,6 +8,7 @@ import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -86,6 +87,24 @@ void main() {
       expect(backend.values['dingdong.agentActivity.notifySubagents'], isTrue);
     },
   );
+
+  test('Agent notification choices persist independently', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    await model.load();
+
+    expect(model.settings.notifyAgentCompletion, isTrue);
+    expect(model.settings.notifyAgentAttention, isTrue);
+    await model.setNotifyAgentCompletion(false);
+    await model.setNotifyAgentAttention(false);
+
+    expect(model.settings.notifyAgentCompletion, isFalse);
+    expect(model.settings.notifyAgentAttention, isFalse);
+    expect(backend.values['dingdong.agentActivity.notifyCompletions'], isFalse);
+    expect(backend.values['dingdong.agentActivity.notifyAttention'], isFalse);
+  });
 
   test('conversation footer symbols update and persist immediately', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
@@ -445,10 +464,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.4.5',
+        latestVersion: '1.4.6',
         latestBuild: '53',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.5'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.6'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -464,15 +483,56 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.4.5');
+    expect(model.releaseStatus.latestVersion, '1.4.6');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.4.5'),
+      Uri.parse('https://example.com/dingdong/releases/1.4.6'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
   });
+
+  test(
+    'background release checks run every seven hours and refresh the status',
+    () {
+      fakeAsync((FakeAsync time) {
+        final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
+          ReleaseMetadata(
+            app: 'DingDong',
+            latestVersion: '1.4.6',
+            website: Uri.parse('https://example.com/dingdong'),
+            releasePage: Uri.parse('https://example.com/dingdong/releases'),
+          ),
+        );
+        final SettingsViewModel model = SettingsViewModel(
+          SettingsRepository(MemoryPreferencesBackend()),
+          releaseMetadataSource: source,
+        );
+
+        expect(backgroundReleaseUpdateCheckInterval, const Duration(hours: 7));
+        model.startBackgroundReleaseUpdateChecks();
+
+        time.elapse(const Duration(hours: 6, minutes: 59));
+        time.flushMicrotasks();
+        expect(source.fetchCount, 0);
+
+        time.elapse(const Duration(minutes: 1));
+        time.flushMicrotasks();
+        expect(source.fetchCount, 1);
+        expect(model.releaseStatus.isUpdateAvailable, isTrue);
+
+        time.elapse(backgroundReleaseUpdateCheckInterval);
+        time.flushMicrotasks();
+        expect(source.fetchCount, 2);
+
+        model.dispose();
+        time.elapse(backgroundReleaseUpdateCheckInterval);
+        time.flushMicrotasks();
+        expect(source.fetchCount, 2);
+      });
+    },
+  );
 
   test('one-click updater starts and exposes native progress', () async {
     final _FakeApplicationUpdater updater = _FakeApplicationUpdater();
@@ -851,9 +911,13 @@ final class _FakeReleaseMetadataSource implements ReleaseMetadataSource {
   _FakeReleaseMetadataSource(this.metadata);
 
   final ReleaseMetadata metadata;
+  int fetchCount = 0;
 
   @override
-  Future<ReleaseMetadata> fetch() async => metadata;
+  Future<ReleaseMetadata> fetch() async {
+    fetchCount += 1;
+    return metadata;
+  }
 }
 
 final class _FakeExternalLinkGateway implements ExternalLinkGateway {

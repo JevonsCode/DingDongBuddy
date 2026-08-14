@@ -36,6 +36,7 @@ const storageKeys = {
   iconStyle: "dingdong.icon-style.v1",
   pendingPair: "dingdong.pending-pair.v1",
   installRequest: "dingdong.install-request.v1",
+  pwaInstalled: "dingdong.pwa-installed.v1",
 };
 const maximumFileBytes = 25 * 1024 * 1024;
 const maximumRelayFrameBytes = 256 * 1024;
@@ -48,9 +49,11 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.4.4";
-const currentPwaShellVersion = 25;
+const currentPwaVersion = "1.4.5";
+const currentPwaShellVersion = 26;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
+const notificationPermissionSettleIntervalMs = 160;
+const notificationPermissionSettleAttempts = 10;
 const directVibrationPattern = [300, 100, 300, 100, 600];
 const agentLaunchIntentKey = "agent-launch-intent";
 const agentLaunchIntentTtlMs = 5 * 60 * 1000;
@@ -84,6 +87,9 @@ const state = {
   lastPwaUpdateCheckAt: 0,
   pushMutationTail: Promise.resolve(),
   pendingPair: null,
+  notificationPermissionStatus: "checking",
+  notificationPermissionCheck: null,
+  notificationPermissionHasResolved: false,
 };
 
 function createDeviceSession(pair) {
@@ -149,6 +155,7 @@ function pairingRegistrySnapshot() {
 
 const elements = Object.fromEntries(
   [
+    "app-header",
     "connection-label",
     "device-status-button",
     "online-dot",
@@ -159,6 +166,8 @@ const elements = Object.fromEntries(
     "install-app-title",
     "install-app-copy",
     "install-app-button",
+    "pwa-launcher-view",
+    "open-pwa-app-button",
     "install-dialog",
     "install-dialog-eyebrow",
     "install-dialog-title",
@@ -176,6 +185,8 @@ const elements = Object.fromEntries(
     "offline-copy",
     "reconnect-button",
     "notification-onboarding",
+    "notification-onboarding-title",
+    "notification-onboarding-copy",
     "enable-notifications",
     "notification-help-dialog",
     "notification-help-eyebrow",
@@ -252,7 +263,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
 });
 window.addEventListener("appinstalled", () => {
   state.installPrompt = null;
-  markInstallRequested();
+  markInstallVerified();
   refreshInstallState().catch(() => {});
 });
 document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -265,6 +276,7 @@ async function boot(scannedPair) {
   wireInteractions();
   initializeLaunchQueue();
   initializeInstallState();
+  const installStateReady = refreshInstallState();
   registerServiceWorker().then((registration) => {
     state.serviceWorkerRegistration = registration;
     checkPwaUpdate({ force: true, silent: true }).catch(() => {});
@@ -280,6 +292,7 @@ async function boot(scannedPair) {
       return;
     }
     if (event.data?.type === "agent.completed") {
+      if (!notificationsCanRunInCurrentSurface()) return;
       const session = sessionForRoom(event.data.room);
       if (session) {
         receiveAgentEvent(event.data.message, {
@@ -289,6 +302,7 @@ async function boot(scannedPair) {
       }
     }
     if (event.data?.type === "push.health") {
+      if (!notificationsCanRunInCurrentSurface()) return;
       const session = sessionForRoom(event.data.room);
       if (!session) return;
       if (event.data.notificationEpoch !== session.pair.notificationEpoch) return;
@@ -306,6 +320,12 @@ async function boot(scannedPair) {
       if (sessionIsActive(session)) renderAgentNotificationStatus();
     }
   });
+  await installStateReady;
+  if (isBrowserPwaLauncher()) {
+    render();
+    return;
+  }
+  refreshNotificationPermission();
   await upgradeDefaultIdentityName();
   await restorePairingsFromWorker();
   await restoreAgentLaunchIntent();
@@ -338,9 +358,9 @@ async function boot(scannedPair) {
     for (const session of state.sessions.values()) {
       if (!session.pair.manualDisconnect) connect(session);
       if (
+        notificationsCanRunInCurrentSurface() &&
         wantsAgentNotifications(session.pair) &&
-        "Notification" in window &&
-        Notification.permission === "granted"
+        notificationPermission() === "granted"
       ) {
         enableAgentNotifications({
           session,
@@ -363,6 +383,7 @@ async function boot(scannedPair) {
 function wireInteractions() {
   initializeFeedPager();
   elements["install-app-button"].addEventListener("click", installApp);
+  elements["open-pwa-app-button"].addEventListener("click", openPwaApp);
   elements["notification-recheck"].addEventListener(
     "click",
     recheckAgentNotifications,
@@ -867,7 +888,7 @@ async function confirmPairing() {
   savePairings();
   render();
   const notificationSetup =
-    !isIos() || isStandalone()
+    notificationsCanRunInCurrentSurface() && (!isIos() || isStandalone())
       ? enableAgentNotifications({ session, markPreference: false })
       : Promise.resolve(false);
   connect(session);
@@ -1429,6 +1450,7 @@ function sortAgentEvents(session) {
 
 function notifyAgentCompletion(message, session) {
   if (
+    !notificationsCanRunInCurrentSurface() ||
     !wantsAgentNotifications(session?.pair) ||
     notificationPermission() !== "granted" ||
     !("serviceWorker" in navigator)
@@ -1684,9 +1706,19 @@ function requestFile(item, session = activeSession()) {
 
 function render() {
   renderInstallPromotion();
+  const browserPwaLauncher = isBrowserPwaLauncher();
+  elements["app-header"].hidden = browserPwaLauncher;
+  elements["pwa-launcher-view"].hidden = !browserPwaLauncher;
   const session = activeSession();
   const hasPair = Boolean(session);
   const confirmingPair = Boolean(state.pendingPair);
+  if (browserPwaLauncher) {
+    elements["pair-view"].hidden = true;
+    elements["empty-view"].hidden = true;
+    elements["content-view"].hidden = true;
+    elements.composer.hidden = true;
+    return;
+  }
   elements["pair-view"].hidden = !confirmingPair;
   elements["empty-view"].hidden = confirmingPair || state.sessions.size > 0;
   elements["content-view"].hidden = confirmingPair || !hasPair;
@@ -1705,11 +1737,21 @@ function render() {
     updateSendButton();
     requestAnimationFrame(refreshFeedPagerLayout);
     const notificationsActive = agentNotificationsActive(session);
+    const permissionChecking = notificationPermission() === "checking";
     elements["notification-onboarding"].hidden =
-      notificationsActive && session.notificationDeliveryHealthy !== false;
-    elements["enable-notifications"].textContent = notificationsActive
-      ? "检查"
-      : "开启";
+      (notificationsActive && session.notificationDeliveryHealthy !== false);
+    elements["notification-onboarding-title"].textContent = permissionChecking
+      ? "正在检查通知权限"
+      : "让完成后提醒";
+    elements["notification-onboarding-copy"].textContent = permissionChecking
+      ? "请稍候，DingDong 正在确认系统通知权限。"
+      : "Agent 完成后，即使收起 DingDong 也能收到通知。";
+    elements["enable-notifications"].textContent = permissionChecking
+      ? "检查中…"
+      : notificationsActive
+        ? "检查"
+        : "开启";
+    elements["enable-notifications"].disabled = permissionChecking;
     renderAgentNotificationStatus();
   } else {
     elements["connection-label"].textContent = "等待连接";
@@ -1721,7 +1763,68 @@ function render() {
 }
 
 function notificationPermission() {
-  return "Notification" in window ? Notification.permission : "unsupported";
+  return state.notificationPermissionStatus;
+}
+
+function normalizeNotificationPermission(permission) {
+  if (permission === "granted" || permission === "denied") return permission;
+  if (permission === "prompt" || permission === "default") return "default";
+  return "unsupported";
+}
+
+async function readNotificationPermission({ settle = false } = {}) {
+  if (!("Notification" in window)) return "unsupported";
+  const directPermission = () =>
+    normalizeNotificationPermission(Notification.permission);
+  let currentPermission = directPermission();
+  if (currentPermission !== "default") return currentPermission;
+  let permissionStatus = null;
+  try {
+    permissionStatus = await navigator.permissions?.query({
+      name: "notifications",
+    });
+    if (permissionStatus?.state === "granted") return "granted";
+    if (permissionStatus?.state === "denied") return "denied";
+  } catch {}
+  if (!settle) return currentPermission;
+  for (let attempt = 0; attempt < notificationPermissionSettleAttempts; attempt += 1) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, notificationPermissionSettleIntervalMs),
+    );
+    currentPermission = directPermission();
+    if (currentPermission !== "default") return currentPermission;
+    if (permissionStatus?.state === "granted") return "granted";
+    if (permissionStatus?.state === "denied") return "denied";
+  }
+  return currentPermission;
+}
+
+function refreshNotificationPermission({ force = false } = {}) {
+  if (state.notificationPermissionCheck && !force) {
+    return state.notificationPermissionCheck;
+  }
+  state.notificationPermissionStatus = "checking";
+  renderAgentNotificationStatus();
+  const check = readNotificationPermission({
+    settle: !state.notificationPermissionHasResolved,
+  })
+    .then((permission) => {
+      state.notificationPermissionStatus = permission;
+      return permission;
+    })
+    .catch(() => {
+      state.notificationPermissionStatus = "unsupported";
+      return state.notificationPermissionStatus;
+    })
+    .finally(() => {
+      if (state.notificationPermissionCheck === check) {
+        state.notificationPermissionCheck = null;
+      }
+      state.notificationPermissionHasResolved = true;
+      render();
+    });
+  state.notificationPermissionCheck = check;
+  return check;
 }
 
 function agentNotificationsActive(session = activeSession()) {
@@ -1736,19 +1839,24 @@ function renderAgentNotificationStatus() {
   const session = activeSession();
   if (!session) return;
   const desired = wantsAgentNotifications(session.pair);
+  const permission = notificationPermission();
+  const permissionChecking = permission === "checking";
   elements["agent-notification-toggle"].checked = desired;
-  elements["vibration-toggle"].disabled = !desired;
-  elements["agent-notification-status"].textContent = agentNotificationsActive(session)
-    ? session.notificationDeliveryHealthy === true
-      ? "已开启 · 浏览器已创建通知"
-      : session.notificationDeliveryHealthy === false
-        ? "已开启 · 后台送达未通过"
-        : "已开启 · 等待送达验证"
-    : desired
-      ? notificationPermission() === "granted"
-        ? "默认开启 · 正在连接推送通道"
-        : "默认开启 · 等待系统授权"
-      : "已关闭";
+  elements["agent-notification-toggle"].disabled = permissionChecking;
+  elements["vibration-toggle"].disabled = !desired || permissionChecking;
+  elements["agent-notification-status"].textContent = permissionChecking
+    ? "正在检查通知权限…"
+    : agentNotificationsActive(session)
+      ? session.notificationDeliveryHealthy === true
+        ? "已开启 · 浏览器已创建通知"
+        : session.notificationDeliveryHealthy === false
+          ? "已开启 · 后台送达未通过"
+          : "已开启 · 等待送达验证"
+      : desired
+        ? permission === "granted"
+          ? "默认开启 · 正在连接推送通道"
+          : "默认开启 · 等待系统授权"
+        : "已关闭";
 }
 
 function renderPwaUpdateStatus() {
@@ -2116,7 +2224,8 @@ async function enableAgentNotifications({
   showHelp = true,
   syncEnabledToDesktop = true,
 } = {}) {
-  if (!session) return false;
+  if (!session || !notificationsCanRunInCurrentSurface()) return false;
+  await refreshNotificationPermission();
   const generation = session.notificationGeneration + 1;
   session.notificationGeneration = generation;
   if (sendTest) session.notificationVerificationInProgress = true;
@@ -2153,11 +2262,18 @@ async function enableAgentNotifications({
       }
       return false;
     }
-    let permission = Notification.permission;
+    let permission = notificationPermission();
     if (permission !== "granted" && requestPermission) {
       try {
-        permission = await Notification.requestPermission();
+        permission = normalizeNotificationPermission(
+          await Notification.requestPermission(),
+        );
+        state.notificationPermissionStatus = permission;
+        renderAgentNotificationStatus();
       } catch {
+        state.notificationPermissionStatus = normalizeNotificationPermission(
+          Notification.permission,
+        );
         if (showHelp && sessionIsActive(session)) {
           await showNotificationPermissionHelp("default", "permission");
         }
@@ -3103,6 +3219,14 @@ function isStandalone() {
   );
 }
 
+function isBrowserPwaLauncher() {
+  return !isStandalone() && state.installStatus === "installed";
+}
+
+function notificationsCanRunInCurrentSurface() {
+  return !isBrowserPwaLauncher();
+}
+
 function isMobileBrowser() {
   return (
     navigator.userAgentData?.mobile === true ||
@@ -3116,6 +3240,11 @@ function initializeInstallState() {
     markInstallVerified();
     return;
   }
+  if (localStorage.getItem(storageKeys.pwaInstalled) === "true") {
+    state.installStatus = "installed";
+    stopBrowserRuntimeForInstalledPwa();
+    return;
+  }
   if (!state.installRequestedAt) return;
   state.installStatus =
     Date.now() - state.installRequestedAt < installVerificationTimeoutMs
@@ -3125,7 +3254,8 @@ function initializeInstallState() {
 }
 
 function renderInstallPromotion() {
-  const hidden = !isMobileBrowser() || isStandalone();
+  const hidden =
+    !isMobileBrowser() || isStandalone() || isBrowserPwaLauncher();
   elements["install-app-banner"].hidden = hidden;
   if (hidden) return;
 
@@ -3240,6 +3370,14 @@ async function installApp() {
   });
 }
 
+function openPwaApp() {
+  const target = new URL("./", window.location.href);
+  target.search = window.location.search;
+  target.hash = window.location.hash;
+  const opened = window.open(target.href, "_blank", "noopener,noreferrer");
+  if (!opened) window.location.assign(target.href);
+}
+
 function markInstallRequested() {
   if (state.installStatus === "installed") return;
   state.installRequestedAt = Date.now();
@@ -3252,6 +3390,8 @@ function markInstallRequested() {
 function markInstallVerified() {
   clearInstallRequest();
   state.installStatus = "installed";
+  localStorage.setItem(storageKeys.pwaInstalled, "true");
+  stopBrowserRuntimeForInstalledPwa();
   renderInstallPromotion();
 }
 
@@ -3268,7 +3408,7 @@ async function refreshInstallState() {
     markInstallVerified();
     return true;
   }
-  if (isAndroid() && typeof navigator.getInstalledRelatedApps === "function") {
+  if (typeof navigator.getInstalledRelatedApps === "function") {
     try {
       const applications = await navigator.getInstalledRelatedApps();
       if (applications.some(isCurrentWebApp)) {
@@ -3277,6 +3417,7 @@ async function refreshInstallState() {
       }
     } catch {}
   }
+  if (state.installStatus === "installed") return true;
   if (
     state.installRequestedAt &&
     Date.now() - state.installRequestedAt >= installVerificationTimeoutMs
@@ -3289,6 +3430,15 @@ async function refreshInstallState() {
   }
   scheduleInstallVerification();
   return false;
+}
+
+function stopBrowserRuntimeForInstalledPwa() {
+  if (isStandalone() || !isBrowserPwaLauncher()) return;
+  for (const session of state.sessions.values()) {
+    invalidateNotificationOperations(session);
+    closeConnection(session);
+  }
+  document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
 }
 
 function isCurrentWebApp(application) {
@@ -3330,8 +3480,7 @@ function showInstallDialog({ eyebrow, title, instructions }) {
 
 async function showNotificationPermissionHelp(permission, stage, error) {
   const session = activeSession();
-  const actualPermission =
-    "Notification" in window ? Notification.permission : "unsupported";
+  const actualPermission = notificationPermission();
   const subscription = await currentPushSubscription();
   if (actualPermission === "granted" && subscription) {
     await readPushStatus().catch(() => {});
@@ -3342,7 +3491,12 @@ async function showNotificationPermissionHelp(permission, stage, error) {
   let reason = "DingDong 读取到的网页通知权限还不是“允许”。";
   let note = "";
 
-  if (permission === "unsupported" || stage === "capability") {
+  if (permission === "checking") {
+    eyebrow = "通知设置";
+    title = "正在读取通知权限";
+    reason = "DingDong 正在向系统确认当前通知权限，请稍候。";
+    steps.push("请保持当前页面打开，读取完成后状态会自动更新。", "如果系统权限已允许，DingDong 会继续检查推送通道。");
+  } else if (permission === "unsupported" || stage === "capability") {
     title = "这个浏览器缺少推送能力";
     reason = "当前环境没有同时提供通知、Service Worker 和 Push API。";
     steps.push("请用最新版 Safari（iPhone / iPad）或 Chrome、Edge 等支持 Web Push 的浏览器打开。", "连接和内容传递仍然可以继续使用。");
@@ -3457,6 +3611,7 @@ async function showNotificationPermissionHelp(permission, stage, error) {
 
 function notificationPermissionLabel(permission) {
   return {
+    checking: "检查中…",
     granted: "已允许",
     denied: "已拒绝",
     default: "尚未允许",
@@ -3481,11 +3636,16 @@ async function currentPushSubscription() {
   }
 }
 
-function handleVisibilityChange() {
+async function handleVisibilityChange() {
   if (document.visibilityState !== "visible") return;
   const session = activeSession();
   refreshInstallState().catch(() => {});
+  await refreshNotificationPermission({ force: true });
   checkPwaUpdate({ silent: true }).catch(() => {});
+  if (!notificationsCanRunInCurrentSurface()) {
+    render();
+    return;
+  }
   if (!("Notification" in window) || !elements["notification-help-dialog"].open) {
     render();
     return;
@@ -3494,7 +3654,7 @@ function handleVisibilityChange() {
     session &&
     !session.notificationCheckInProgress &&
     wantsAgentNotifications(session.pair) &&
-    Notification.permission === "granted" &&
+    notificationPermission() === "granted" &&
     !agentNotificationsActive(session)
   ) {
     enableAgentNotifications({
@@ -3513,7 +3673,7 @@ function handleVisibilityChange() {
     });
     return;
   }
-  showNotificationPermissionHelp(Notification.permission, "permission").catch(
+  showNotificationPermissionHelp(notificationPermission(), "permission").catch(
     () => {},
   );
   render();

@@ -14,7 +14,7 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="app-header">
+      <header id="app-header" class="app-header">
         <div class="brand-lockup">
           <div id="app-mascot-frame" class="mascot-frame" data-icon-style="soft">
             <img src="../assets/dingdong-icon.png" alt="" />
@@ -51,7 +51,17 @@
         </button>
       </section>
 
-      <main>
+      <main id="app-main">
+        <section id="pwa-launcher-view" class="pwa-launcher-view" hidden>
+          <img src="../assets/dingdong-pwa-192.png" alt="DingDong" />
+          <p class="eyebrow">DingDong App</p>
+          <h2>请使用 DingDong App</h2>
+          <p>检测到你已经安装了 DingDong。浏览器页面不接收通知，请从 App 模式继续使用。</p>
+          <button id="open-pwa-app-button" class="primary-button" type="button">
+            打开 DingDong App
+          </button>
+        </section>
+
         <section id="pair-view" class="pair-view" hidden>
           <img class="pair-mascot" src="../assets/dingdong-thinking-icon.png" alt="DingDong" />
           <p class="eyebrow">新的连接</p>
@@ -92,8 +102,8 @@
           <div id="notification-onboarding" class="notification-onboarding" hidden>
             <img src="../assets/dingdong-mobile-alert-icon.png" alt="" />
             <div>
-              <strong>让完成后提醒</strong>
-              <span>Agent 完成后，即使收起 DingDong 也能收到通知。</span>
+              <strong id="notification-onboarding-title">让完成后提醒</strong>
+              <span id="notification-onboarding-copy">Agent 完成后，即使收起 DingDong 也能收到通知。</span>
             </div>
             <button id="enable-notifications" class="small-button accent" type="button">开启</button>
           </div>
@@ -255,7 +265,9 @@
         <div class="setting-row">
           <div>
             <strong>Agent 完成提醒</strong>
-            <span id="agent-notification-status">默认开启，等待系统授权</span>
+            <span id="agent-notification-status" role="status" aria-live="polite">
+              默认开启，等待系统授权
+            </span>
           </div>
           <label class="switch-control">
             <input id="agent-notification-toggle" type="checkbox" />
@@ -285,7 +297,7 @@
           <div>
             <strong>PWA 更新</strong>
             <span id="pwa-update-status" role="status" aria-live="polite">
-              当前版本 1.4.4 · 联网时自动保持最新
+              当前版本 1.4.5 · 联网时自动保持最新
             </span>
           </div>
           <button id="pwa-update-button" class="small-button" type="button">

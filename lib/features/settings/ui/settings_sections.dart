@@ -18,10 +18,38 @@ class _NotificationSettingsSection extends StatelessWidget {
     return _SettingsSection(
       title: context.localized('Notifications', '通知'),
       description: context.localized(
-        'Choose how DingDong looks and sounds when an Agent completes a task.',
-        '选择 Agent 完成任务时 DingDong 的提示颜色和声音。',
+        'Choose which Agent events should notify you, then customize the alert sound and color.',
+        '选择哪些 Agent 事件需要提醒，再自定义提示声音和颜色。',
       ),
       children: <Widget>[
+        CompactSwitchListTile(
+          key: const Key('settings-notify-agent-completion'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            context.localized('Agent completion notifications', 'Agent 完成提醒'),
+          ),
+          subtitle: Text(
+            context.localized(
+              'Notify when an Agent finishes its current task turn.',
+              'Agent 完成本轮任务时提醒。',
+            ),
+          ),
+          value: settings.notifyAgentCompletion,
+          onChanged: viewModel.setNotifyAgentCompletion,
+        ),
+        CompactSwitchListTile(
+          key: const Key('settings-notify-agent-attention'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.localized('Needs your input', '需要你处理')),
+          subtitle: Text(
+            context.localized(
+              'Notify when an Agent is waiting for confirmation, a choice, or your takeover.',
+              'Agent 等待确认、选择或需要你接管时提醒。',
+            ),
+          ),
+          value: settings.notifyAgentAttention,
+          onChanged: viewModel.setNotifyAgentAttention,
+        ),
         CompactSwitchListTile(
           key: const Key('settings-notify-subagent-activity'),
           contentPadding: EdgeInsets.zero,

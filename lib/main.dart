@@ -230,6 +230,7 @@ Future<void> main(List<String> arguments) async {
         detail: request.detail,
         completedAt: request.receivedAt,
         conversationTarget: request.conversationTarget,
+        notificationKind: request.notificationKind,
       );
       final target = request.conversationTarget;
       if (target != null) {
@@ -253,6 +254,7 @@ Future<void> main(List<String> arguments) async {
           source: request.source ?? 'Agent',
           message: request.message,
           target: target,
+          notificationKind: request.notificationKind,
         );
       }
       if (target != null) {
@@ -374,6 +376,7 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await settingsViewModel.load();
+  settingsViewModel.startBackgroundReleaseUpdateChecks();
   unawaited(settingsViewModel.checkForUpdates());
   final DesktopShellService desktopShellService = DesktopShellService(
     gateway: shellGateway,

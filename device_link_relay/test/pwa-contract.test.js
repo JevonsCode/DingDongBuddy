@@ -196,14 +196,14 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v25/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v26/);
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1\.4\.4"/);
-  assert.match(appSource, /const currentPwaShellVersion = 25/);
+  assert.match(appSource, /const currentPwaVersion = "1\.4\.5"/);
+  assert.match(appSource, /const currentPwaShellVersion = 26/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -211,9 +211,9 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v25/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v26/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.4.4", shell: 25 });
+  assert.deepEqual(pwaVersion, { version: "1.4.5", shell: 26 });
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
@@ -649,12 +649,15 @@ test("the mobile page exposes a real PWA install experience", () => {
   );
   assert.match(pageSource, /id="install-app-banner"/);
   assert.match(pageSource, /id="install-app-button"/);
+  assert.match(pageSource, /id="pwa-launcher-view"/);
+  assert.match(pageSource, /id="open-pwa-app-button"/);
+  assert.match(pageSource, /浏览器页面不接收通知/);
   assert.match(pageSource, /添加到主屏幕（可选）/);
   assert.match(pageSource, /不添加也能直接连接和传内容/);
   assert.match(appSource, /"beforeinstallprompt"/);
   assert.match(appSource, /await prompt\.prompt\(\)/);
   assert.match(appSource, /"appinstalled"/);
-  assert.match(appSource, /markInstallRequested\(\)/);
+  assert.match(appSource, /markInstallVerified\(\)/);
   assert.match(appSource, /navigator\.getInstalledRelatedApps\(\)/);
   assert.match(appSource, /applications\.some\(isCurrentWebApp\)/);
   assert.match(appSource, /installedManifestUrl !== manifestUrl/);
@@ -662,11 +665,45 @@ test("the mobile page exposes a real PWA install experience", () => {
   assert.match(appSource, /function clearInstallRequest\(\)/);
   assert.match(appSource, /localStorage\.removeItem\(storageKeys\.installRequest\)/);
   assert.match(appSource, /state\.installStatus = "installed"/);
+  assert.match(appSource, /function isBrowserPwaLauncher\(\)/);
+  assert.match(appSource, /function openPwaApp\(\)/);
+  assert.match(appSource, /await installStateReady/);
+  assert.match(appSource, /if \(isBrowserPwaLauncher\(\)\)/);
+  assert.match(appSource, /stopBrowserRuntimeForInstalledPwa/);
   assert.match(appSource, /Chrome 没有完成添加/);
   assert.match(appSource, /Macintosh[\s\S]*navigator\.maxTouchPoints > 1/);
   assert.doesNotMatch(appSource, /state\.installStatus = "accepted"/);
   assert.doesNotMatch(appSource, /等小米把图标放好/);
   assert.doesNotMatch(appSource, /应用抽屉/);
+});
+
+test("an installed PWA turns the browser page into a launcher and disables browser notifications", () => {
+  assert.match(appSource, /elements\["pwa-launcher-view"\]\.hidden = !browserPwaLauncher/);
+  assert.match(appSource, /elements\["app-header"\]\.hidden = browserPwaLauncher/);
+  assert.match(appSource, /elements\["content-view"\]\.hidden = true/);
+  assert.match(
+    appSource,
+    /if \(!session \|\| !notificationsCanRunInCurrentSurface\(\)\) return false;/,
+  );
+  assert.match(
+    appSource,
+    /notificationsCanRunInCurrentSurface\(\) && \(!isIos\(\) \|\| isStandalone\(\)\)/,
+  );
+  assert.match(
+    appSource,
+    /!notificationsCanRunInCurrentSurface\(\) \|\|\s*!wantsAgentNotifications/,
+  );
+});
+
+test("PWA notification permission stays in a loading state until the async check completes", () => {
+  assert.match(appSource, /notificationPermissionStatus: "checking"/);
+  assert.match(appSource, /function refreshNotificationPermission\(\{ force = false \} = \{\}\)/);
+  assert.match(appSource, /state\.notificationPermissionStatus = "checking"/);
+  assert.match(appSource, /permissionChecking[\s\S]*正在检查通知权限…/);
+  assert.match(appSource, /notificationPermissionSettleAttempts = 10/);
+  assert.match(appSource, /setTimeout\(resolve, notificationPermissionSettleIntervalMs\)/);
+  assert.match(appSource, /checking: "检查中…"/);
+  assert.match(appSource, /await refreshNotificationPermission\(\{ force: true \}\)/);
 });
 
 test("notification diagnostics are platform-aware and never require closing all overlays", () => {

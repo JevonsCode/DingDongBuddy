@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
 
-/// Delivers the durable completion notification used by Agent stop hooks.
+/// Delivers the durable Agent stop notification and classifies pending input.
 final class CompletionHookNotifier {
   CompletionHookNotifier(this._transport);
 
@@ -17,6 +18,10 @@ final class CompletionHookNotifier {
     final Map<String, Object?> input = _decodeInput(hookInput);
     final String source = _source(input, sourceOverride: sourceOverride);
     final String? completionMessage = await _completionMessage(input);
+    final AgentNotificationKind notificationKind = _notificationKind(
+      input,
+      completionMessage,
+    );
     final String? summary = _oneLineSummary(completionMessage);
     final String? detail = _notificationDetail(completionMessage);
     final String? conversationId = _firstText(input, const <String>[
@@ -43,11 +48,90 @@ final class CompletionHookNotifier {
         'source': source,
         'flashCount': 4,
         'fallback': true,
+        if (notificationKind != AgentNotificationKind.completion)
+          'notificationKind': notificationKind.apiValue,
         'conversationId': ?conversationId,
         'workspacePath': ?workspacePath,
       },
     );
   }
+}
+
+AgentNotificationKind _notificationKind(
+  Map<String, Object?> input,
+  String? message,
+) {
+  final Object? explicit =
+      input['notificationKind'] ?? input['notification_type'] ?? input['kind'];
+  if (explicit is String && explicit.trim().isNotEmpty) {
+    return AgentNotificationKind.parse(explicit);
+  }
+  final String eventName = (input['hook_event_name'] as String? ?? '')
+      .trim()
+      .toLowerCase();
+  if (eventName == 'sessionend') {
+    return AgentNotificationKind.completion;
+  }
+  return _needsUserAttention(message)
+      ? AgentNotificationKind.attention
+      : AgentNotificationKind.completion;
+}
+
+bool _needsUserAttention(String? message) {
+  if (message == null || message.trim().isEmpty) {
+    return false;
+  }
+  final String normalized = message
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim()
+      .toLowerCase();
+  const List<String> chineseMarkers = <String>[
+    '请确认',
+    '等待确认',
+    '等你确认',
+    '你确认后',
+    '请确定',
+    '需要先确定',
+    '请先选择',
+    '请选择',
+    '需要你',
+    '等你回复',
+    '等待你的回复',
+    '请回复',
+    '请接管',
+    '等待授权',
+    '未提交',
+    '未推送',
+    '尚未提交',
+    '尚未推送',
+    '还没有提交',
+    '还没有推送',
+  ];
+  if (chineseMarkers.any(normalized.contains)) {
+    return true;
+  }
+  const List<String> englishMarkers = <String>[
+    'please confirm',
+    'awaiting your confirmation',
+    'waiting for your confirmation',
+    'need your confirmation',
+    'need your approval',
+    'need your input',
+    'please choose',
+    'please select',
+    'please reply',
+    'please take over',
+    'not committed',
+    'not pushed',
+    'not published',
+    'still needs your',
+  ];
+  if (englishMarkers.any(normalized.contains)) {
+    return true;
+  }
+  return RegExp(
+    r'(?:是否|要不要|do you want|would you like).{0,40}[?？]',
+  ).hasMatch(normalized);
 }
 
 Map<String, Object?> _decodeInput(String input) {

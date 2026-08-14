@@ -5,6 +5,7 @@ import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
@@ -56,13 +57,16 @@ typedef SubagentNotificationDetector =
 typedef SubagentConversationDetector =
     Future<bool> Function(AgentConversationTarget target);
 
-/// Applies the user's subagent reminder preference before any delivery route
-/// can play a sound, flash a window, record activity, or sync to a companion.
+/// Applies the user's reminder preferences before any delivery route can play
+/// a sound, flash a window, record activity, or sync to a companion.
 Future<bool> shouldDeliverAgentNotification({
   required DingRequest request,
   required AppSettings settings,
   SubagentNotificationDetector? isSubagentNotification,
 }) async {
+  if (!_isNotificationKindEnabled(request.notificationKind, settings)) {
+    return false;
+  }
   if (settings.notifySubagentActivity || isSubagentNotification == null) {
     return true;
   }
@@ -74,6 +78,14 @@ Future<bool> shouldDeliverAgentNotification({
     return true;
   }
 }
+
+bool _isNotificationKindEnabled(
+  AgentNotificationKind kind,
+  AppSettings settings,
+) => switch (kind) {
+  AgentNotificationKind.completion => settings.notifyAgentCompletion,
+  AgentNotificationKind.attention => settings.notifyAgentAttention,
+};
 
 Future<bool> shouldRecordAgentTaskStart({
   required AgentBridgeTaskStart start,

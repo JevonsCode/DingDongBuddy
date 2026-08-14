@@ -1,5 +1,6 @@
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -39,6 +40,22 @@ void main() {
     expect(completion.activity.startedAt, startedAt);
     expect(completion.activity.completedAt, completedAt);
     expect(completion.activity.detail, '包含开始与结束时间。');
+  });
+
+  test('activity preserves a response waiting for user input', () {
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'attention-1',
+    );
+
+    final AgentCompletionRecord record = controller.record(
+      source: 'Codex',
+      message: '等待你确认下一步操作',
+      notificationKind: AgentNotificationKind.attention,
+    );
+
+    expect(record.activity.notificationKind, AgentNotificationKind.attention);
+    expect(record.activity.needsUserAttention, isTrue);
+    expect(controller.recentCount, 0);
   });
 
   test(

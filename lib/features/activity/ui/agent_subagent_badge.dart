@@ -57,6 +57,45 @@ final class AgentSubagentBadge extends StatelessWidget {
   }
 }
 
+/// Compact marker for a response that is waiting for the user's input.
+final class AgentAttentionBadge extends StatelessWidget {
+  const AgentAttentionBadge({this.compact = false, super.key});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color foreground = PopupStyle.of(context).accent;
+    return Tooltip(
+      message: context.localized('Needs your input', '等待你的确认'),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: PopupStyle.of(context).accentSoft,
+          borderRadius: BorderRadius.circular(compact ? 4 : 5),
+          border: Border.all(color: foreground.withValues(alpha: 0.22)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 4 : 5,
+            vertical: compact ? 1.5 : 2,
+          ),
+          child: Text(
+            compact ? 'input' : 'needs input',
+            key: const Key('agent-attention-badge-label'),
+            style: TextStyle(
+              color: foreground,
+              fontSize: compact ? 8 : 9,
+              height: 1.1,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Non-interactive marker for a conversation target that cannot be resolved.
 ///
 /// The target may be missing from the local Agent index or may not be

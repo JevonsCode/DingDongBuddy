@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_dependencies.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
@@ -32,6 +33,50 @@ void main() {
         isTrue,
       );
     });
+
+    test('respects the completion notification switch', () async {
+      expect(
+        await shouldDeliverAgentNotification(
+          request: const DingRequest(),
+          settings: const AppSettings(notifyAgentCompletion: false),
+        ),
+        isFalse,
+      );
+    });
+
+    test('respects the attention notification switch', () async {
+      expect(
+        await shouldDeliverAgentNotification(
+          request: const DingRequest(
+            notificationKind: AgentNotificationKind.attention,
+          ),
+          settings: const AppSettings(notifyAgentAttention: false),
+        ),
+        isFalse,
+      );
+    });
+
+    test(
+      'does not classify a disabled notification kind as subagent work',
+      () async {
+        var detectorCalls = 0;
+
+        expect(
+          await shouldDeliverAgentNotification(
+            request: const DingRequest(
+              notificationKind: AgentNotificationKind.attention,
+            ),
+            settings: const AppSettings(notifyAgentAttention: false),
+            isSubagentNotification: (_) async {
+              detectorCalls += 1;
+              return false;
+            },
+          ),
+          isFalse,
+        );
+        expect(detectorCalls, 0);
+      },
+    );
 
     test(
       'opt-in delivers subagent notifications without classification',

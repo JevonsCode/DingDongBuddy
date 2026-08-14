@@ -48,6 +48,8 @@ final class SettingsRepository {
       _backend.read(_notifySubagentActivityKey),
       _backend.read(_conversationFooterSymbolsKey),
       _backend.read(_agentSetupAcknowledgedRevisionKey),
+      _backend.read(_notifyAgentCompletionKey),
+      _backend.read(_notifyAgentAttentionKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -78,6 +80,8 @@ final class SettingsRepository {
       mcpAccessSeen: mcpAccessSeen,
       agentSetupAcknowledgedRevision: agentSetupAcknowledgedRevision,
       rememberAgentActivity: values[12] is bool ? values[12]! as bool : true,
+      notifyAgentCompletion: values[25] is bool ? values[25]! as bool : true,
+      notifyAgentAttention: values[26] is bool ? values[26]! as bool : true,
       notifySubagentActivity: values[22] is bool ? values[22]! as bool : false,
       conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
       agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
@@ -130,6 +134,8 @@ final class SettingsRepository {
         settings.agentSetupAcknowledgedRevision,
       ),
       _backend.write(_rememberAgentActivityKey, settings.rememberAgentActivity),
+      _backend.write(_notifyAgentCompletionKey, settings.notifyAgentCompletion),
+      _backend.write(_notifyAgentAttentionKey, settings.notifyAgentAttention),
       _backend.write(
         _notifySubagentActivityKey,
         settings.notifySubagentActivity,
@@ -182,6 +188,10 @@ const String _mcpAccessSeenKey = 'dingdong.onboarding.mcpAccessSeen';
 const String _agentSetupAcknowledgedRevisionKey =
     'dingdong.agentApi.acknowledgedSetupRevision';
 const String _rememberAgentActivityKey = 'dingdong.agentActivity.remember';
+const String _notifyAgentCompletionKey =
+    'dingdong.agentActivity.notifyCompletions';
+const String _notifyAgentAttentionKey =
+    'dingdong.agentActivity.notifyAttention';
 const String _notifySubagentActivityKey =
     'dingdong.agentActivity.notifySubagents';
 const String _conversationFooterSymbolsKey =

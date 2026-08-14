@@ -1,4 +1,4 @@
-# DingDong 1.4.4 Manual Regression Checklist
+# DingDong 1.4.5 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -539,8 +539,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.4.4` build `52` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.4.4.52` and product name `DingDong`.
+- The macOS release app metadata is version `1.4.5` build `53` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.4.5.53` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -548,7 +548,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.4.4` and that exact commit SHA; every
+  `/v1/health` must report version `1.4.5` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

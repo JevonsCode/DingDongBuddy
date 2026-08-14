@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:flutter/foundation.dart';
 
@@ -23,7 +24,7 @@ final class AgentCompletionRecord {
   final String notificationId;
 }
 
-/// Bounded, durable Agent completion feed and recent-count state.
+/// Bounded, durable Agent update feed and recent-count state.
 final class ActivityController extends ChangeNotifier {
   ActivityController({
     AgentActivityStore? store,
@@ -183,6 +184,7 @@ final class ActivityController extends ChangeNotifier {
     String? detail,
     DateTime? completedAt,
     AgentConversationTarget? conversationTarget,
+    AgentNotificationKind notificationKind = AgentNotificationKind.completion,
   }) {
     final DateTime resolvedCompletedAt = (completedAt ?? _now()).toUtc();
     final String normalizedSource = _normalizedSource(source);
@@ -223,6 +225,7 @@ final class ActivityController extends ChangeNotifier {
         startedAt: run?.startedAt,
         completedAt: resolvedCompletedAt,
         conversationTarget: resolvedTarget,
+        notificationKind: notificationKind,
       );
       _activities = <AgentActivity>[
         repeated,
@@ -252,11 +255,14 @@ final class ActivityController extends ChangeNotifier {
       startedAt: run?.startedAt,
       completedAt: resolvedCompletedAt,
       unseen: true,
+      notificationKind: notificationKind,
       conversationTarget: resolvedTarget,
     );
     _activities = <AgentActivity>[activity, ..._activities.take(_maxItems - 1)];
-    _completionTimes = <DateTime>[resolvedCompletedAt, ..._completionTimes];
-    _trimCompletionTimes();
+    if (notificationKind == AgentNotificationKind.completion) {
+      _completionTimes = <DateTime>[resolvedCompletedAt, ..._completionTimes];
+      _trimCompletionTimes();
+    }
     _loaded = true;
     _persist();
     _scheduleRecentCountRefresh();
@@ -310,6 +316,7 @@ final class ActivityController extends ChangeNotifier {
     required String source,
     required String message,
     AgentConversationTarget? target,
+    AgentNotificationKind notificationKind = AgentNotificationKind.completion,
   }) {
     final String normalizedSource = source.trim().isEmpty
         ? 'Agent'
@@ -322,6 +329,7 @@ final class ActivityController extends ChangeNotifier {
         source: normalizedSource,
         message: normalizedMessage,
         conversationTarget: target,
+        notificationKind: notificationKind,
       );
       return;
     }
@@ -346,6 +354,7 @@ final class ActivityController extends ChangeNotifier {
       message: normalizedMessage,
       completedAt: completedAt,
       conversationTarget: target,
+      notificationKind: notificationKind,
       preserveLifecycle: true,
     );
     _activities = <AgentActivity>[

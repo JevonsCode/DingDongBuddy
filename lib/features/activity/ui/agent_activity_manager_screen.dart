@@ -222,6 +222,10 @@ class _ActivityHistoryRow extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
+                        if (activity.needsUserAttention) ...<Widget>[
+                          const SizedBox(width: 7),
+                          const AgentAttentionBadge(compact: true),
+                        ],
                         if (activity.repeatCount > 1) ...<Widget>[
                           const SizedBox(width: 6),
                           Tooltip(

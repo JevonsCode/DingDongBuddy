@@ -236,6 +236,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
 
   Future<Map<String, Object?>> _notify(Map<String, Object?> arguments) {
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
+    body.putIfAbsent('notificationKind', () => 'attention');
     if ((body['conversationId'] as String? ?? '').trim().isEmpty) {
       final String? conversationId = _conversationIdResolver()?.trim();
       if (conversationId != null && conversationId.isNotEmpty) {

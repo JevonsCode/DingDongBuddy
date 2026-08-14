@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -225,15 +226,19 @@ final class DeviceLinkController extends ChangeNotifier
     required AgentActivity activity,
     required String notificationId,
   }) async {
+    final bool needsUserAttention =
+        request.notificationKind == AgentNotificationKind.attention;
     for (final LinkedDevice device in _devices) {
       final Map<String, Object?> message = <String, Object?>{
         'type': 'agent.completed',
         'id': notificationId,
         'activityId': activity.id,
-        'title': 'Agent 完成啦',
+        'title': needsUserAttention ? 'Agent 需要你处理' : 'Agent 完成啦',
         'source': activity.source,
         'summary': activity.message,
         'detail': request.detail ?? activity.detail ?? activity.message,
+        'notificationKind': request.notificationKind.apiValue,
+        'needsUserAttention': needsUserAttention,
         'unseen': activity.unseen,
         if (activity.task != null) 'task': activity.task,
         if (activity.startedAt != null)

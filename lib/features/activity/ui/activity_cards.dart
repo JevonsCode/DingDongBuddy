@@ -221,6 +221,12 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                                   ),
                                 ),
                               ),
+                              if (widget
+                                  .activity
+                                  .needsUserAttention) ...<Widget>[
+                                const SizedBox(width: 5),
+                                const AgentAttentionBadge(compact: true),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 3),
