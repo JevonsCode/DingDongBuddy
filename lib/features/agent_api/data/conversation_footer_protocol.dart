@@ -1,4 +1,5 @@
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 
 const int _maximumConversationFooterItems = 24;
 const int _maximumConversationFooterLabelCharacters = 32;
@@ -22,6 +23,7 @@ Map<String, Object?> buildDingDongConversationFooter({
   required Iterable<Map<String, Object?>> items,
   String label = 'DingDong',
   ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
+  ConversationTokenUsage? tokenUsage,
 }) {
   final ConversationFooterSymbols normalizedSymbols = symbols.sanitized();
   final String normalizedLabel = _boundedFooterText(
@@ -45,15 +47,21 @@ Map<String, Object?> buildDingDongConversationFooter({
   final String markdownTokens = normalizedItems
       .map((Map<String, Object?> item) => item['lineToken']! as String)
       .join(' | ');
+  final String tokenUsageText = tokenUsage == null
+      ? ''
+      : '${formatCompactConversationTokenCount(tokenUsage.totalTokens)} Token';
+  final String tokenUsageSuffix = tokenUsageText.isEmpty
+      ? ''
+      : ' · $tokenUsageText';
   final String markdownLine = normalizedItems.isEmpty
       ? ''
-      : '${_markdownSafeFooterText(normalizedLabel)} · $markdownTokens';
+      : '${_markdownSafeFooterText(normalizedLabel)} · $markdownTokens$tokenUsageSuffix';
   final String fallbackLine = normalizedItems.isEmpty
       ? ''
-      : '$normalizedLabel · ${normalizedItems.map((Map<String, Object?> item) => _plainFooterToken(item, normalizedSymbols)).join(' | ')}';
+      : '$normalizedLabel · ${normalizedItems.map((Map<String, Object?> item) => _plainFooterToken(item, normalizedSymbols)).join(' | ')}$tokenUsageSuffix';
   final String ansiLine = normalizedItems.isEmpty
       ? ''
-      : '\u001B[2m$normalizedLabel\u001B[0m · ${normalizedItems.map((Map<String, Object?> item) => _ansiFooterToken(item, normalizedSymbols)).join(' | ')}';
+      : '\u001B[2m$normalizedLabel\u001B[0m · ${normalizedItems.map((Map<String, Object?> item) => _ansiFooterToken(item, normalizedSymbols)).join(' | ')}${tokenUsageText.isEmpty ? '' : ' · \u001B[2m$tokenUsageText\u001B[0m'}';
   final Map<String, Object?> capsule = <String, Object?>{
     'label': normalizedLabel,
     'items': normalizedItems,
@@ -65,6 +73,7 @@ Map<String, Object?> buildDingDongConversationFooter({
     // Keep the original nested flag for already-configured Agents while the
     // top-level flag remains the preferred shape for new integrations.
     'visible': normalizedItems.isNotEmpty,
+    if (tokenUsage != null) 'tokenUsage': tokenUsage.toJson(),
   };
 
   return <String, Object?>{

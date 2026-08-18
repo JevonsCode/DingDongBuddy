@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -35,6 +36,12 @@ void main() {
               conversationId: 'thread-1',
               workspacePath: '/workspace/dingdong',
             ),
+            tokenUsage: const ConversationTokenUsage(
+              source: ConversationTokenUsageSource.codex,
+              totalTokens: 12345,
+              inputTokens: 12000,
+              outputTokens: 345,
+            ),
           ),
         ],
         completionTimes: <DateTime>[
@@ -51,6 +58,7 @@ void main() {
     expect(restored.activities.single.startedAt, startedAt);
     expect(restored.activities.single.unseen, isTrue);
     expect(restored.activities.single.repeatCount, 2);
+    expect(restored.activities.single.tokenUsage?.totalTokens, 12345);
     expect(
       restored.activities.single.conversationTarget?.conversationId,
       'thread-1',

@@ -202,6 +202,19 @@ Future<void> main(List<String> arguments) async {
       }
       return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
     },
+    isCodexVoiceNotification: (DingRequest request) async {
+      final AgentConversationTarget? target = request.conversationTarget;
+      if (target == null || target.client != AgentClient.codex) {
+        return false;
+      }
+      final String threadId = target.conversationId?.trim() ?? '';
+      if (threadId.isEmpty) {
+        return false;
+      }
+      return (await codexThreadInspector.inspectThreadId(
+        threadId,
+      )).isRealtimeVoice;
+    },
     isSubagentNotification: (DingRequest request) async {
       final AgentConversationTarget? target = request.conversationTarget;
       if (target == null || target.client != AgentClient.codex) {
@@ -231,6 +244,7 @@ Future<void> main(List<String> arguments) async {
         completedAt: request.receivedAt,
         conversationTarget: request.conversationTarget,
         notificationKind: request.notificationKind,
+        tokenUsage: request.tokenUsage,
       );
       final target = request.conversationTarget;
       if (target != null) {
@@ -255,6 +269,7 @@ Future<void> main(List<String> arguments) async {
           message: request.message,
           target: target,
           notificationKind: request.notificationKind,
+          tokenUsage: request.tokenUsage,
         );
       }
       if (target != null) {

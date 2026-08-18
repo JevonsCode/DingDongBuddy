@@ -13,8 +13,10 @@ void main() {
     expect(settings.allowAgentClipboardContent, isFalse);
     expect(settings.notifyAgentCompletion, isTrue);
     expect(settings.notifyAgentAttention, isTrue);
+    expect(settings.notifyCodexVoiceActivity, isFalse);
     expect(settings.notifySubagentActivity, isFalse);
     expect(settings.groupRepeatedAgentSessions, isTrue);
+    expect(settings.showConversationTokenUsage, isFalse);
     expect(settings.lifecycleTelemetryEnabled, isTrue);
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
@@ -86,6 +88,21 @@ void main() {
     expect(disabled.sanitized().notifyAgentAttention, isFalse);
   });
 
+  test('Codex voice notifications survive copyWith and sanitizing', () {
+    final AppSettings enabled = const AppSettings().copyWith(
+      notifyCodexVoiceActivity: true,
+    );
+
+    expect(enabled.notifyCodexVoiceActivity, isTrue);
+    expect(enabled.sanitized().notifyCodexVoiceActivity, isTrue);
+    expect(
+      enabled
+          .copyWith(notifyCodexVoiceActivity: false)
+          .notifyCodexVoiceActivity,
+      isFalse,
+    );
+  });
+
   test('supports a build-specific default tray notification color', () async {
     final AppSettings settings = await SettingsRepository(
       MemoryPreferencesBackend(),
@@ -146,6 +163,7 @@ void main() {
           'dingdong.agentActivity.remember': false,
           'dingdong.agentActivity.notifyCompletions': false,
           'dingdong.agentActivity.notifyAttention': false,
+          'dingdong.agentActivity.notifyCodexVoice': true,
           'dingdong.agentActivity.notifySubagents': true,
           'dingdong.agentActivity.groupRepeatedSessions': false,
           'dingdong.agentActivity.maxItems': 9000,
@@ -189,6 +207,7 @@ void main() {
     expect(settings.rememberAgentActivity, isFalse);
     expect(settings.notifyAgentCompletion, isFalse);
     expect(settings.notifyAgentAttention, isFalse);
+    expect(settings.notifyCodexVoiceActivity, isTrue);
     expect(settings.notifySubagentActivity, isTrue);
     expect(settings.groupRepeatedAgentSessions, isFalse);
     expect(settings.agentActivityMaxItems, 5000);
@@ -230,8 +249,10 @@ void main() {
       rememberAgentActivity: false,
       notifyAgentCompletion: false,
       notifyAgentAttention: false,
+      notifyCodexVoiceActivity: true,
       notifySubagentActivity: true,
       groupRepeatedAgentSessions: false,
+      showConversationTokenUsage: true,
       agentActivityMaxItems: 320,
       agentActivityCountHours: 48,
       hideDockIcon: true,
@@ -268,10 +289,15 @@ void main() {
     expect(backend.values['dingdong.agentActivity.remember'], isFalse);
     expect(backend.values['dingdong.agentActivity.notifyCompletions'], isFalse);
     expect(backend.values['dingdong.agentActivity.notifyAttention'], isFalse);
+    expect(backend.values['dingdong.agentActivity.notifyCodexVoice'], isTrue);
     expect(backend.values['dingdong.agentActivity.notifySubagents'], isTrue);
     expect(
       backend.values['dingdong.agentActivity.groupRepeatedSessions'],
       isFalse,
+    );
+    expect(
+      backend.values['dingdong.agentApi.showConversationTokenUsage'],
+      isTrue,
     );
     expect(backend.values['dingdong.agentActivity.maxItems'], 320);
     expect(backend.values['dingdong.agentActivity.countHours'], 48);

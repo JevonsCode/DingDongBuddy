@@ -6,6 +6,7 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:flutter/foundation.dart';
 
 const int defaultAgentActivityMaxItems = 500;
@@ -185,6 +186,7 @@ final class ActivityController extends ChangeNotifier {
     DateTime? completedAt,
     AgentConversationTarget? conversationTarget,
     AgentNotificationKind notificationKind = AgentNotificationKind.completion,
+    ConversationTokenUsage? tokenUsage,
   }) {
     final DateTime resolvedCompletedAt = (completedAt ?? _now()).toUtc();
     final String normalizedSource = _normalizedSource(source);
@@ -226,6 +228,7 @@ final class ActivityController extends ChangeNotifier {
         completedAt: resolvedCompletedAt,
         conversationTarget: resolvedTarget,
         notificationKind: notificationKind,
+        tokenUsage: tokenUsage,
       );
       _activities = <AgentActivity>[
         repeated,
@@ -257,6 +260,7 @@ final class ActivityController extends ChangeNotifier {
       unseen: true,
       notificationKind: notificationKind,
       conversationTarget: resolvedTarget,
+      tokenUsage: tokenUsage,
     );
     _activities = <AgentActivity>[activity, ..._activities.take(_maxItems - 1)];
     if (notificationKind == AgentNotificationKind.completion) {
@@ -317,6 +321,7 @@ final class ActivityController extends ChangeNotifier {
     required String message,
     AgentConversationTarget? target,
     AgentNotificationKind notificationKind = AgentNotificationKind.completion,
+    ConversationTokenUsage? tokenUsage,
   }) {
     final String normalizedSource = source.trim().isEmpty
         ? 'Agent'
@@ -330,6 +335,7 @@ final class ActivityController extends ChangeNotifier {
         message: normalizedMessage,
         conversationTarget: target,
         notificationKind: notificationKind,
+        tokenUsage: tokenUsage,
       );
       return;
     }
@@ -355,6 +361,7 @@ final class ActivityController extends ChangeNotifier {
       completedAt: completedAt,
       conversationTarget: target,
       notificationKind: notificationKind,
+      tokenUsage: tokenUsage,
       preserveLifecycle: true,
     );
     _activities = <AgentActivity>[

@@ -7,6 +7,7 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:flutter/material.dart';
 
 /// Full-detail Agent completion history for the manager window.
@@ -14,11 +15,13 @@ class AgentActivityManagerScreen extends StatelessWidget {
   const AgentActivityManagerScreen({
     required this.controller,
     required this.conversationLauncher,
+    this.showConversationTokenUsage = false,
     super.key,
   });
 
   final ActivityController controller;
   final AgentConversationLauncher conversationLauncher;
+  final bool showConversationTokenUsage;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +94,8 @@ class AgentActivityManagerScreen extends StatelessWidget {
                             _ActivityHistoryRow(
                               activity: activities[index],
                               conversationLauncher: conversationLauncher,
+                              showConversationTokenUsage:
+                                  showConversationTokenUsage,
                               onOpen: (AgentConversationTarget target) =>
                                   unawaited(_openConversation(context, target)),
                             ),
@@ -158,11 +163,13 @@ class _ActivityHistoryRow extends StatelessWidget {
   const _ActivityHistoryRow({
     required this.activity,
     required this.conversationLauncher,
+    required this.showConversationTokenUsage,
     required this.onOpen,
   });
 
   final AgentActivity activity;
   final AgentConversationLauncher conversationLauncher;
+  final bool showConversationTokenUsage;
   final ValueChanged<AgentConversationTarget> onOpen;
 
   @override
@@ -229,10 +236,17 @@ class _ActivityHistoryRow extends StatelessWidget {
                         if (activity.repeatCount > 1) ...<Widget>[
                           const SizedBox(width: 6),
                           Tooltip(
-                            message: context.localized(
-                              '${activity.repeatCount} notifications for this conversation',
-                              '此会话已提醒 ${activity.repeatCount} 次',
-                            ),
+                            message:
+                                showConversationTokenUsage &&
+                                    activity.tokenUsage != null
+                                ? context.localized(
+                                    'This conversation has notified you ${activity.repeatCount} times and used ${formatExactConversationTokenCount(activity.tokenUsage!.totalTokens)} tokens.',
+                                    '本轮会话已经提醒 ${activity.repeatCount} 次，共消耗 ${formatExactConversationTokenCount(activity.tokenUsage!.totalTokens)} Token',
+                                  )
+                                : context.localized(
+                                    '${activity.repeatCount} notifications for this conversation',
+                                    '此会话已提醒 ${activity.repeatCount} 次',
+                                  ),
                             child: ActivityRepeatCount(
                               key: Key(
                                 'agent-activity-manager-repeat-count-${activity.id}',

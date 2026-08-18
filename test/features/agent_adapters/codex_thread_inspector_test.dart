@@ -204,6 +204,62 @@ void main() {
     expect(factory.pendingRequestCount, 0);
   });
 
+  test('exact read recognizes a Codex realtime voice thread preview', () async {
+    final _ScriptedConnectionFactory factory = _ScriptedConnectionFactory(
+      <_ExpectedRequest>[
+        _ExpectedRequest(
+          method: 'thread/read',
+          params: const <String, Object?>{
+            'threadId': 'voice-thread-1',
+            'includeTurns': false,
+          },
+          response: const <String, Object?>{
+            'thread': <String, Object?>{
+              'id': 'voice-thread-1',
+              'preview': '<realtime_delegation>\n  <input>Hello</input>',
+              'threadSource': 'user',
+            },
+          },
+        ),
+      ],
+    );
+
+    final CodexThreadInspection result = await CodexThreadInspector(
+      connectionFactory: factory,
+    ).inspectThreadId('voice-thread-1');
+
+    expect(result.isRealtimeVoice, isTrue);
+    expect(result.isSubagent, isFalse);
+    expect(result.isOpenable, isTrue);
+  });
+
+  test('exact read does not classify a normal preview as voice', () async {
+    final _ScriptedConnectionFactory factory = _ScriptedConnectionFactory(
+      <_ExpectedRequest>[
+        _ExpectedRequest(
+          method: 'thread/read',
+          params: const <String, Object?>{
+            'threadId': 'typed-thread-1',
+            'includeTurns': false,
+          },
+          response: const <String, Object?>{
+            'thread': <String, Object?>{
+              'id': 'typed-thread-1',
+              'preview': 'Please update the settings screen.',
+              'threadSource': 'user',
+            },
+          },
+        ),
+      ],
+    );
+
+    final CodexThreadInspection result = await CodexThreadInspector(
+      connectionFactory: factory,
+    ).inspectThreadId('typed-thread-1');
+
+    expect(result.isRealtimeVoice, isFalse);
+  });
+
   test('exact read failure stays fail-open and retryable', () async {
     final _ScriptedConnectionFactory factory = _ScriptedConnectionFactory(
       <_ExpectedRequest>[

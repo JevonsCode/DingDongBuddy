@@ -90,6 +90,7 @@ class _AgentActivityCard extends StatefulWidget {
     required this.activity,
     required this.animate,
     required this.isSubagent,
+    required this.showConversationTokenUsage,
     this.onTap,
     super.key,
   });
@@ -97,6 +98,7 @@ class _AgentActivityCard extends StatefulWidget {
   final AgentActivity activity;
   final bool animate;
   final bool isSubagent;
+  final bool showConversationTokenUsage;
   final VoidCallback? onTap;
 
   @override
@@ -250,10 +252,17 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                         child: Align(
                           alignment: Alignment.bottomCenter,
                           child: Tooltip(
-                            message: context.localized(
-                              '${widget.activity.repeatCount} notifications for this conversation',
-                              '此会话已提醒 ${widget.activity.repeatCount} 次',
-                            ),
+                            message:
+                                widget.showConversationTokenUsage &&
+                                    widget.activity.tokenUsage != null
+                                ? context.localized(
+                                    'This conversation has notified you ${widget.activity.repeatCount} times and used ${formatExactConversationTokenCount(widget.activity.tokenUsage!.totalTokens)} tokens.',
+                                    '本轮会话已经提醒 ${widget.activity.repeatCount} 次，共消耗 ${formatExactConversationTokenCount(widget.activity.tokenUsage!.totalTokens)} Token',
+                                  )
+                                : context.localized(
+                                    '${widget.activity.repeatCount} notifications for this conversation',
+                                    '此会话已提醒 ${widget.activity.repeatCount} 次',
+                                  ),
                             child: ActivityRepeatCount(
                               key: Key(
                                 'activity-repeat-count-${widget.activity.id}',

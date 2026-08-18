@@ -1,4 +1,4 @@
-# DingDong 1.4.5 Manual Regression Checklist
+# DingDong 1.4.6 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -332,7 +332,7 @@ and macOS golden images; the items below exercise real operating-system state.
   resource when one is recorded.
 - An enabled Claude Code plugin with the same Skill name produces a warning
   rather than blocking synchronization.
-- Agent access shows the five bundled Adapters and defaults to an evidence
+- Agent access shows the seven bundled Adapters and defaults to an evidence
   summary. Detected/not-detected directory badges are explicit, and the page
   says that directory detection or a declared path does not verify MCP, Hook,
   Bridge, authentication, or completion callbacks.
@@ -348,8 +348,31 @@ and macOS golden images; the items below exercise real operating-system state.
   changed after it was read, writes atomically, and verifies the saved result by
   reading it back. Incrementing only usage count or last-used time does not
   rewrite the native configuration; explicitly saving the resource still does.
+- Managed Prompt, JSON/TOML MCP, Adapter, Resource, Trigger Group, and internal
+  state writes serialize concurrent DingDong writers, reject stale snapshots,
+  validate unique sibling files before replacement, preserve POSIX permissions,
+  and read the final target back. Strict JSON inputs reject duplicate object
+  keys, including keys that become equal after Unicode unescaping.
+- The Resource Manager list shows a quiet **Usage** column immediately after
+  **Scope** at desktop widths and hides both at narrow widths. Prompt rows show
+  activation count; Skill rows show candidate delivery and confirmed full-load
+  counts; MCP rows show candidate delivery and confirmed real-call counts.
+  Hovering the compact values exposes their exact meaning and most recent
+  timestamps. Opening an existing item repeats the same type-specific metrics,
+  with timestamps, beside **Configuration details** and stacks them below the
+  heading at narrow widths. Legacy MCP match counts migrate to candidate count
+  and never impersonate confirmed calls.
+- A Trigger Group change that also rewrites Resource scope is guarded by a
+  restrictive-permission transaction journal. Simulate interruption after only
+  one file changes, then verify the next mutation deterministically completes
+  or rolls back the pending transaction before applying new work.
 - An Adapter path that leaves the home directory directly or through a symbolic
   link remains visible as invalid and blocks synchronization.
+- With Pi installed, set `PI_EXECUTABLE` to its absolute path and run
+  `flutter test test/integration/pi_agent_adapter_integration_test.dart`.
+  Verify DingDong deploys the complete project-native package, Pi RPC reports
+  `skill:pi-reviewer` with project scope, and disabling the resource removes the
+  receipt-owned copy.
 - The list remains responsive with 10,000 resources.
 
 ## Agent API and MCP
@@ -382,6 +405,11 @@ and macOS golden images; the items below exercise real operating-system state.
   unknown IDs and unavailable deployment state have no synchronization side
   effect.
 - `dingdong_bridge` remains summary-first and does not include clipboard content by default.
+- When Bridge receives a workspace path but no repository URL, it resolves the
+  workspace's Git `remote.origin.url`. SSH/SCP and HTTPS forms of the same
+  host/repository match one repository trigger; a different repository does
+  not. Latin task terms match complete tokens (`API` does not match `rapid`),
+  while CJK task terms retain natural substring matching.
 - A Bridge response exposes one `conversation` capsule for visible active
   Prompts, candidate Skills, and available MCPs. Repeating the Bridge call
   replaces the prior snapshot by stable merge key instead of appending duplicate
@@ -408,6 +436,13 @@ and macOS golden images; the items below exercise real operating-system state.
   symbols are `♥`, `♦`, and `♠`. Change all three symbols, call both Bridge
   routes and load one Skill, then verify every line uses the new values without
   a restart. Restore defaults and verify the preview returns to `♥`, `♦`, `♠`.
+- **Show conversation Token usage** is off by default. When enabled, a Bridge
+  response for a supported Codex, Claude Code, or Pi conversation appends one
+  compact exact total after the resource footer, for example
+  `DingDong · ♥ · 12.4K Token`. Unsupported clients, missing session evidence,
+  malformed logs, and resolver failures omit the suffix instead of estimating.
+  With the switch off, Bridge and completion notifications do not read local
+  conversation usage files.
 - With **Allow Agents to read clipboard content** off, metadata queries remain
   available but content reads, API capture, collection, and promotion are
   rejected. Enabling it takes effect without a restart; sensitive records still
@@ -425,6 +460,12 @@ and macOS golden images; the items below exercise real operating-system state.
   watermark, and do not increase the recent-Agent count. A newly revealed
   unread watermark is pale orange; after acknowledgement it returns to the
   low-contrast gray used by older items.
+- With conversation Token usage enabled and an exact supported snapshot
+  available, hovering `×N` reports both values: `This conversation has
+  notified you N times and used X tokens.` The Chinese locale uses
+  `本轮会话已经提醒 N 次，共消耗 X Token`. The visible watermark remains
+  only `×N`; when usage is disabled or unavailable, the previous repeat-only
+  tooltip remains.
 - **Settings → Recent Agents → Group repeated sessions** can disable grouping;
   when disabled, repeated notifications appear as separate items and increase
   the count. The choice persists after restart.
@@ -539,8 +580,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.4.5` build `53` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.4.5.53` and product name `DingDong`.
+- The macOS release app metadata is version `1.4.6` build `54` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.4.6.54` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -548,7 +589,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.4.5` and that exact commit SHA; every
+  `/v1/health` must report version `1.4.6` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

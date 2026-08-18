@@ -931,6 +931,79 @@ mcp:
     },
   );
 
+  test('concurrent JSON MCP synchronization is idempotent', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-concurrent-mcp-sync-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File config = File('${temp.path}/mcp.json')
+      ..writeAsStringSync(
+        '{"theme":"dark","mcpServers":{"personal":{"command":"mine"}}}',
+      );
+    AgentResourceSynchronizer synchronizer(String suffix) =>
+        AgentResourceSynchronizer(
+          packageRoot: Directory('${temp.path}/packages-$suffix'),
+          skillRoots: const <Directory>[],
+          mcpTargets: <AgentMcpTarget>[
+            AgentMcpTarget(config, AgentMcpConfigKind.cursorJson),
+          ],
+          managedStateFile: File('${temp.path}/state-$suffix.json'),
+        );
+    final Resource resource = _resource(
+      type: ResourceType.mcp,
+      content: '{"type":"stdio","command":"npx","args":["server"]}',
+    );
+
+    await Future.wait(<Future<List<AppIssue>>>[
+      synchronizer('first').sync(<Resource>[resource]),
+      synchronizer('second').sync(<Resource>[resource]),
+    ]);
+
+    final Map<String, Object?> root =
+        jsonDecode(await config.readAsString()) as Map<String, Object?>;
+    expect(root['theme'], 'dark');
+    final Map<String, Object?> servers =
+        root['mcpServers'] as Map<String, Object?>;
+    expect(servers['personal'], isNotNull);
+    expect(servers.keys, hasLength(2));
+  });
+
+  test('JSON MCP synchronization rejects duplicate object keys', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-duplicate-json-mcp-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    const String original =
+        '{"mcpServers":{"personal":{"command":"one"},'
+        '"personal":{"command":"two"}}}';
+    final File config = File('${temp.path}/mcp.json')
+      ..writeAsStringSync(original);
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: const <Directory>[],
+      mcpTargets: <AgentMcpTarget>[
+        AgentMcpTarget(config, AgentMcpConfigKind.cursorJson),
+      ],
+      managedStateFile: File('${temp.path}/state.json'),
+    );
+    final Resource resource = _resource(
+      type: ResourceType.mcp,
+      content: '{"type":"stdio","command":"npx","args":["server"]}',
+    );
+
+    await expectLater(
+      synchronizer.sync(<Resource>[resource]),
+      throwsA(
+        isA<FormatException>().having(
+          (FormatException error) => error.message,
+          'message',
+          contains('Duplicate JSON key'),
+        ),
+      ),
+    );
+    expect(await config.readAsString(), original);
+  });
+
   test('writes each Agent native HTTP MCP shape', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-sync-',
@@ -1142,10 +1215,20 @@ command = "second"
     );
 
     await store.save(<Resource>[
-      resource.copyWith(usageCount: 1, lastUsedAt: DateTime.utc(2026, 8, 4)),
+      resource.copyWith(
+        candidateCount: 4,
+        lastCandidateAt: DateTime.utc(2026, 8, 3),
+        usageCount: 1,
+        lastUsedAt: DateTime.utc(2026, 8, 4),
+        invocationCount: 2,
+        lastInvokedAt: DateTime.utc(2026, 8, 5),
+      ),
     ]);
 
-    expect((await base.load()).single.usageCount, 1);
+    final Resource tracked = (await base.load()).single;
+    expect(tracked.candidateCount, 4);
+    expect(tracked.usageCount, 1);
+    expect(tracked.invocationCount, 2);
     expect(codex.readAsStringSync(), original);
     expect(changeCount, 1);
   });
@@ -1208,7 +1291,9 @@ command = "second"
       });
 
       final Resource editable = (await second.load()).single;
+      await first.recordCandidates(<String>{original.id}, now);
       await first.recordUsage(<String>{original.id}, now);
+      await first.recordInvocation(<String>{original.id}, now);
       await second.save(<Resource>[
         editable.copyWith(
           title: 'Fresh title edit',
@@ -1217,8 +1302,12 @@ command = "second"
       ]);
       latest = (await first.load()).single;
       expect(latest.title, 'Fresh title edit');
+      expect(latest.candidateCount, 1);
+      expect(latest.lastCandidateAt, now);
       expect(latest.usageCount, 1);
       expect(latest.lastUsedAt, now);
+      expect(latest.invocationCount, 1);
+      expect(latest.lastInvokedAt, now);
       expect(latest.skillDeliveryByAgent, <String, SkillDeliveryMode>{
         'codex': SkillDeliveryMode.dynamic,
       });

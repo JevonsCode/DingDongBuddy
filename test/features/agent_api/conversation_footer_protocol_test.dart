@@ -1,5 +1,6 @@
 import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -177,5 +178,40 @@ void main() {
     expect(capsule['visible'], isFalse);
     expect(conversation['line'], isEmpty);
     expect(conversation['fallbackLine'], isEmpty);
+  });
+
+  test('exact token usage is appended after the resource footer', () {
+    final Map<String, Object?> conversation = buildDingDongConversationFooter(
+      items: <Map<String, Object?>>[
+        <String, Object?>{'title': 'Reply marker', 'type': 'prompt'},
+      ],
+      tokenUsage: const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.codex,
+        totalTokens: 12500,
+        inputTokens: 12000,
+        outputTokens: 450,
+      ),
+    );
+    final Map<String, Object?> capsule =
+        conversation['capsule']! as Map<String, Object?>;
+
+    expect(conversation['line'], 'DingDong · ♥ Reply marker · 12.5K Token');
+    expect(
+      conversation['fallbackLine'],
+      'DingDong · ♥ Reply marker · 12.5K Token',
+    );
+    expect(conversation['ansiLine'], contains('12.5K Token'));
+    expect(
+      capsule['tokenUsage'],
+      containsPair('source', ConversationTokenUsageSource.codex.apiValue),
+    );
+  });
+
+  test('token formatting stays compact in the footer and exact in hover', () {
+    expect(formatCompactConversationTokenCount(842), '842');
+    expect(formatCompactConversationTokenCount(1200), '1.2K');
+    expect(formatCompactConversationTokenCount(12000), '12K');
+    expect(formatCompactConversationTokenCount(1240000), '1.2M');
+    expect(formatExactConversationTokenCount(12456789), '12,456,789');
   });
 }

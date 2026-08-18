@@ -166,6 +166,7 @@ final class CodexThreadInspector {
         threadId: threadId,
         exists: true,
         isSubagent: _isBackgroundThread(thread),
+        isRealtimeVoice: _isRealtimeVoiceThread(thread),
       );
     } on Object {
       // Fail open for notification delivery. Unknown metadata must not hide a
@@ -184,16 +185,19 @@ final class CodexThreadInspection {
     required this.threadId,
     required this.exists,
     required this.isSubagent,
+    required this.isRealtimeVoice,
   });
 
   const CodexThreadInspection.unavailable()
     : threadId = '',
       exists = false,
-      isSubagent = false;
+      isSubagent = false,
+      isRealtimeVoice = false;
 
   final String threadId;
   final bool exists;
   final bool isSubagent;
+  final bool isRealtimeVoice;
 
   bool get isOpenable => exists && !isSubagent;
 }
@@ -215,6 +219,14 @@ bool _isBackgroundThread(Map<Object?, Object?> thread) {
       _hasText(thread['agentNickname']) ||
       thread['ephemeral'] == true ||
       _isSubagentThreadSource(thread['threadSource']);
+}
+
+bool _isRealtimeVoiceThread(Map<Object?, Object?> thread) {
+  final Object? preview = thread['preview'];
+  if (preview is! String) {
+    return false;
+  }
+  return preview.trimLeft().toLowerCase().startsWith('<realtime_delegation>');
 }
 
 bool _hasText(Object? value) => value is String && value.trim().isNotEmpty;

@@ -9,7 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('subagent notification preference', () {
+  group('Agent notification preferences', () {
     const DingRequest request = DingRequest(source: 'Codex');
 
     test('suppresses a positively identified subagent by default', () async {
@@ -33,6 +33,62 @@ void main() {
         isTrue,
       );
     });
+
+    test(
+      'suppresses a positively identified Codex voice task by default',
+      () async {
+        expect(
+          await shouldDeliverAgentNotification(
+            request: request,
+            settings: const AppSettings(),
+            isCodexVoiceNotification: (_) async => true,
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test('keeps ordinary Codex tasks visible by default', () async {
+      expect(
+        await shouldDeliverAgentNotification(
+          request: request,
+          settings: const AppSettings(),
+          isCodexVoiceNotification: (_) async => false,
+        ),
+        isTrue,
+      );
+    });
+
+    test('voice opt-in skips Codex voice classification', () async {
+      var detectorCalls = 0;
+
+      expect(
+        await shouldDeliverAgentNotification(
+          request: request,
+          settings: const AppSettings(notifyCodexVoiceActivity: true),
+          isCodexVoiceNotification: (_) async {
+            detectorCalls += 1;
+            return true;
+          },
+        ),
+        isTrue,
+      );
+      expect(detectorCalls, 0);
+    });
+
+    test(
+      'voice classification failure does not hide an Agent completion',
+      () async {
+        expect(
+          await shouldDeliverAgentNotification(
+            request: request,
+            settings: const AppSettings(),
+            isCodexVoiceNotification: (_) async => throw StateError('offline'),
+          ),
+          isTrue,
+        );
+      },
+    );
 
     test('respects the completion notification switch', () async {
       expect(
@@ -60,6 +116,7 @@ void main() {
       'does not classify a disabled notification kind as subagent work',
       () async {
         var detectorCalls = 0;
+        var voiceDetectorCalls = 0;
 
         expect(
           await shouldDeliverAgentNotification(
@@ -67,6 +124,10 @@ void main() {
               notificationKind: AgentNotificationKind.attention,
             ),
             settings: const AppSettings(notifyAgentAttention: false),
+            isCodexVoiceNotification: (_) async {
+              voiceDetectorCalls += 1;
+              return false;
+            },
             isSubagentNotification: (_) async {
               detectorCalls += 1;
               return false;
@@ -75,6 +136,7 @@ void main() {
           isFalse,
         );
         expect(detectorCalls, 0);
+        expect(voiceDetectorCalls, 0);
       },
     );
 

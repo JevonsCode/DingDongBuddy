@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,14 +6,18 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
+import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
+import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
@@ -74,7 +79,7 @@ void main() {
         method: 'POST',
         uri: '/ding',
         body:
-            '{"message":" Deploy complete ","source":" Codex ","sound":"system","flashCount":99,"conversationId":"thread-1","workspacePath":"/workspace/dingdong"}',
+            '{"message":" Deploy complete ","source":" Codex ","sound":"system","flashCount":99,"conversationId":"thread-1","workspacePath":"/workspace/dingdong","tokenUsage":{"source":"codex","totalTokens":12500,"inputTokens":12000,"outputTokens":500}}',
       ),
     );
 
@@ -88,6 +93,60 @@ void main() {
     expect(received?.flashCount, 30);
     expect(received?.conversationTarget?.conversationId, 'thread-1');
     expect(received?.conversationTarget?.workspacePath, '/workspace/dingdong');
+    expect(received?.tokenUsage?.totalTokens, 12500);
+  });
+
+  test('POST /ding reads local usage only when display is enabled', () async {
+    var loads = 0;
+    ConversationTokenUsageRequest? usageRequest;
+    DingRequest? enabledRequest;
+    Future<ConversationTokenUsage?> loadUsage(
+      ConversationTokenUsageRequest request,
+    ) async {
+      loads += 1;
+      usageRequest = request;
+      return const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.claudeCode,
+        totalTokens: 24680,
+      );
+    }
+
+    await AgentRouter(
+      onDing: (_) {},
+      loadShowConversationTokenUsage: () async => false,
+      loadConversationTokenUsage: loadUsage,
+    ).route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body:
+            '{"source":"Claude Code","conversationId":"claude-1","transcriptPath":"/home/user/.claude/projects/claude-1.jsonl"}',
+      ),
+    );
+    expect(loads, 0);
+
+    await AgentRouter(
+      onDing: (DingRequest request) => enabledRequest = request,
+      loadShowConversationTokenUsage: () async => true,
+      loadConversationTokenUsage: loadUsage,
+    ).route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body:
+            '{"source":"Claude Code","conversationId":"claude-1","workspacePath":"/workspace/project","transcriptPath":"/home/user/.claude/projects/claude-1.jsonl"}',
+      ),
+    );
+
+    expect(loads, 1);
+    expect(usageRequest?.source, 'Claude Code');
+    expect(usageRequest?.conversationId, 'claude-1');
+    expect(usageRequest?.workspacePath, '/workspace/project');
+    expect(
+      usageRequest?.transcriptPath,
+      '/home/user/.claude/projects/claude-1.jsonl',
+    );
+    expect(enabledRequest?.tokenUsage?.totalTokens, 24680);
   });
 
   test(
@@ -748,12 +807,73 @@ void main() {
       });
       expect(
         (await store.load()).map((Resource item) => item.usageCount),
-        <int>[1, 0, 1],
+        <int>[1, 0, 0],
+      );
+      expect(
+        (await store.load()).map((Resource item) => item.candidateCount),
+        <int>[0, 1, 1],
+      );
+      expect(
+        (await store.load()).map((Resource item) => item.invocationCount),
+        <int>[0, 0, 0],
       );
       expect(
         (await store.load()).first.lastUsedAt,
         now.add(const Duration(hours: 1)),
       );
+      expect(
+        (await store.load())
+            .skip(1)
+            .map((Resource item) => item.lastCandidateAt),
+        <DateTime?>[
+          now.add(const Duration(hours: 1)),
+          now.add(const Duration(hours: 1)),
+        ],
+      );
+    },
+  );
+
+  test(
+    'task matching does not treat Latin substrings as whole terms',
+    () async {
+      final DateTime now = DateTime.utc(2026, 8, 18);
+      final AgentRouter router = AgentRouter(
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'api-policy',
+            type: ResourceType.prompt,
+            title: 'API policy',
+            content: 'Validate API requests.',
+            tags: const <String>['api'],
+            activation: ResourceActivation.taskMatch,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'rapid-policy',
+            type: ResourceType.prompt,
+            title: 'Rapid rollout policy',
+            content: 'Describe rapid rollout decisions.',
+            activation: ResourceActivation.taskMatch,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+      );
+
+      final HttpResponseData response = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"Fix API request","source":"Codex"}',
+        ),
+      );
+      final List<Object?> prompts =
+          (response.json['active'] as Map<String, Object?>)['prompts']
+              as List<Object?>;
+
+      expect(prompts, hasLength(1));
+      expect((prompts.single as Map<String, Object?>)['id'], 'api-policy');
     },
   );
 
@@ -877,18 +997,19 @@ void main() {
 
   test('MCP use confirmation validates tool provenance and current scope', () async {
     final DateTime now = DateTime.utc(2026, 8, 13);
+    final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'scoped-mcp-abcdef',
+        type: ResourceType.mcp,
+        title: 'Figma',
+        content: '{"command":"figma-mcp"}',
+        triggerGroupIds: const <String>['checkout'],
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
     final AgentRouter router = AgentRouter(
-      resourceStore: InMemoryResourceStore(<Resource>[
-        Resource(
-          id: 'scoped-mcp-abcdef',
-          type: ResourceType.mcp,
-          title: 'Figma',
-          content: '{"command":"figma-mcp"}',
-          triggerGroupIds: const <String>['checkout'],
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ]),
+      resourceStore: resources,
       triggerGroupStore: InMemoryTriggerGroupStore(<TriggerGroup>[
         TriggerGroup(
           id: 'checkout',
@@ -940,6 +1061,11 @@ void main() {
     expect(item['confirmedUse'], isTrue);
     expect(item['marker'], '*');
     expect(item['lineToken'], r'♠ Figma\*');
+    expect((await resources.load()).single.invocationCount, 1);
+    expect(
+      confirmed.json['mcp'] as Map<String, Object?>,
+      containsPair('invocationCount', 1),
+    );
   });
 
   test('Bridge returns every applicable resource without count caps', () async {
@@ -1948,6 +2074,351 @@ void main() {
     expect(group.rules.single.operator, TriggerRuleOperator.equals);
     expect(group.rules.single.value, 'Codex');
   });
+
+  test(
+    'Bridge resolves and normalizes repository scope from workspace',
+    () async {
+      final Directory project = Directory.systemTemp.createTempSync(
+        'dingdong-repository-scope-',
+      );
+      final Directory unrelated = Directory.systemTemp.createTempSync(
+        'dingdong-unrelated-scope-',
+      );
+      addTearDown(() => project.deleteSync(recursive: true));
+      addTearDown(() => unrelated.deleteSync(recursive: true));
+      expect(
+        (await Process.run('git', <String>[
+          'init',
+        ], workingDirectory: project.path)).exitCode,
+        0,
+      );
+      expect(
+        (await Process.run('git', <String>[
+          'remote',
+          'add',
+          'origin',
+          'git@github.com:acme/checkout.git',
+        ], workingDirectory: project.path)).exitCode,
+        0,
+      );
+      final DateTime now = DateTime.utc(2026, 8, 18);
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'repository-policy',
+          type: ResourceType.prompt,
+          title: 'Repository policy',
+          content: 'Apply only in the checkout repository.',
+          activation: ResourceActivation.always,
+          triggerGroupIds: const <String>['checkout-repository'],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore(
+        <TriggerGroup>[
+          TriggerGroup(
+            id: 'checkout-repository',
+            name: 'Checkout repository',
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.repositoryUrl,
+                operator: TriggerRuleOperator.equals,
+                value: 'https://github.com/acme/checkout',
+              ),
+            ],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        now: () => now,
+      );
+
+      final HttpResponseData matching = await router.route(
+        HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: jsonEncode(<String, Object?>{
+            'task': 'review checkout',
+            'workspacePath': project.path,
+            'source': 'Pi',
+          }),
+        ),
+      );
+      final HttpResponseData nonMatching = await router.route(
+        HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: jsonEncode(<String, Object?>{
+            'task': 'review checkout',
+            'workspacePath': unrelated.path,
+            'source': 'Pi',
+          }),
+        ),
+      );
+
+      expect(matching.statusCode, 200);
+      expect(
+        (matching.json['context'] as Map<String, Object?>)['repositoryUrl'],
+        'git@github.com:acme/checkout.git',
+      );
+      expect(
+        (matching.json['context']
+            as Map<String, Object?>)['matchedTriggerGroupIds'],
+        <String>['checkout-repository'],
+      );
+      expect(
+        ((matching.json['active'] as Map<String, Object?>)['prompts'] as List),
+        hasLength(1),
+      );
+      expect(
+        ((nonMatching.json['active'] as Map<String, Object?>)['prompts']
+            as List),
+        isEmpty,
+      );
+    },
+  );
+
+  test('concurrent trigger-group writes preserve both API requests', () async {
+    final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+    var nextId = 0;
+    final AgentRouter router = AgentRouter(
+      triggerGroupStore: groups,
+      idGenerator: () => 'scope-${++nextId}',
+      now: () => DateTime.utc(2026, 8, 18),
+    );
+
+    final List<HttpResponseData>
+    responses = await Future.wait(<Future<HttpResponseData>>[
+      router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library/trigger-groups',
+          body:
+              '{"name":"Codex","rules":[{"field":"source","operator":"equals","value":"Codex"}]}',
+        ),
+      ),
+      router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library/trigger-groups',
+          body:
+              '{"name":"Pi","rules":[{"field":"source","operator":"equals","value":"Pi"}]}',
+        ),
+      ),
+    ]);
+
+    expect(
+      responses.map((HttpResponseData response) => response.statusCode),
+      everyElement(201),
+    );
+    expect(
+      (await groups.load()).map((TriggerGroup group) => group.name).toSet(),
+      <String>{'Codex', 'Pi'},
+    );
+  });
+
+  test(
+    'trigger-group updates do not overwrite a concurrent resource mutation',
+    () async {
+      final Directory firstProject = Directory.systemTemp.createTempSync(
+        'dingdong-scope-first-',
+      );
+      final Directory secondProject = Directory.systemTemp.createTempSync(
+        'dingdong-scope-second-',
+      );
+      addTearDown(() => firstProject.deleteSync(recursive: true));
+      addTearDown(() => secondProject.deleteSync(recursive: true));
+      final DateTime now = DateTime.utc(2026, 8, 18);
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'reviewer',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content:
+              '---\nname: reviewer\ndescription: Original description\n---\n',
+          strictProjectSkill: true,
+          triggerGroupIds: const <String>['project'],
+          skillProjectPaths: <String>[firstProject.path],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore(
+        <TriggerGroup>[
+          TriggerGroup(
+            id: 'project',
+            name: 'Project',
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.projectPath,
+                operator: TriggerRuleOperator.equals,
+                value: firstProject.path,
+              ),
+            ],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        now: () => now.add(const Duration(minutes: 1)),
+      );
+      final Completer<void> resourceRead = Completer<void>();
+      final Completer<void> releaseResourceWrite = Completer<void>();
+
+      final Future<void> editResource = resources.exclusiveMutation(() async {
+        final List<Resource> current = await resources.load();
+        resourceRead.complete();
+        await releaseResourceWrite.future;
+        await resources.save(<Resource>[
+          current.single.copyWith(
+            content:
+                '---\nname: reviewer\ndescription: Updated description\n---\n',
+          ),
+        ]);
+      });
+      await resourceRead.future;
+      final Future<HttpResponseData> moveScope = router.route(
+        HttpRequestData(
+          method: 'PATCH',
+          uri: '/library/trigger-groups/project',
+          body: jsonEncode(<String, Object?>{
+            'rules': <Object?>[
+              <String, Object?>{
+                'field': 'projectPath',
+                'operator': 'equals',
+                'value': secondProject.path,
+              },
+            ],
+          }),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      releaseResourceWrite.complete();
+
+      await editResource;
+      expect((await moveScope).statusCode, 200);
+      final Resource result = (await resources.load()).single;
+      expect(result.content, contains('Updated description'));
+      expect(result.skillProjectPaths, <String>[
+        secondProject.resolveSymbolicLinksSync(),
+      ]);
+    },
+  );
+
+  test(
+    'an interrupted scope transaction is recovered before the next write',
+    () async {
+      final Directory directory = Directory.systemTemp.createTempSync(
+        'dingdong-scope-transaction-',
+      );
+      final Directory firstProject = Directory('${directory.path}/first')
+        ..createSync();
+      final Directory secondProject = Directory('${directory.path}/second')
+        ..createSync();
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final String firstPath = firstProject.resolveSymbolicLinksSync();
+      final String secondPath = secondProject.resolveSymbolicLinksSync();
+      final ResourceRepository baseResources = ResourceRepository(
+        ResourceFileService(File('${directory.path}/resources.json')),
+      );
+      final TriggerGroupRepository groups = TriggerGroupRepository(
+        TriggerGroupFileService(File('${directory.path}/trigger-groups.json')),
+      );
+      final DateTime now = DateTime.utc(2026, 8, 18);
+      await baseResources.save(<Resource>[
+        Resource(
+          id: 'reviewer',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content:
+              '---\nname: reviewer\ndescription: Review one project\n---\n',
+          strictProjectSkill: true,
+          triggerGroupIds: const <String>['project'],
+          skillProjectPaths: <String>[firstPath],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      await groups.save(<TriggerGroup>[
+        TriggerGroup(
+          id: 'project',
+          name: 'Project',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.equals,
+              value: firstPath,
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final _FailingAfterWriteResourceStore interruptedResources =
+          _FailingAfterWriteResourceStore(baseResources);
+      final AgentRouter interrupted = AgentRouter(
+        resourceStore: interruptedResources,
+        triggerGroupStore: groups,
+        now: () => now.add(const Duration(minutes: 1)),
+      );
+
+      final HttpResponseData failed = await interrupted.route(
+        HttpRequestData(
+          method: 'PATCH',
+          uri: '/library/trigger-groups/project',
+          body: jsonEncode(<String, Object?>{
+            'rules': <Object?>[
+              <String, Object?>{
+                'field': 'projectPath',
+                'operator': 'equals',
+                'value': secondPath,
+              },
+            ],
+          }),
+        ),
+      );
+      expect(failed.statusCode, 400, reason: failed.json.toString());
+      expect(interruptedResources.saveCount, 2, reason: failed.json.toString());
+      expect((await baseResources.load()).single.skillProjectPaths, <String>[
+        secondPath,
+      ]);
+
+      final AgentRouter recovered = AgentRouter(
+        resourceStore: baseResources,
+        triggerGroupStore: groups,
+        idGenerator: () => 'codex',
+        now: () => now.add(const Duration(minutes: 2)),
+      );
+      final HttpResponseData nextWrite = await recovered.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/library/trigger-groups',
+          body:
+              '{"name":"Codex","rules":[{"field":"source","operator":"equals","value":"Codex"}]}',
+        ),
+      );
+
+      expect(nextWrite.statusCode, 201);
+      expect((await baseResources.load()).single.skillProjectPaths, <String>[
+        firstPath,
+      ]);
+      expect(
+        (await groups.load())
+            .singleWhere((TriggerGroup group) => group.id == 'project')
+            .rules
+            .single
+            .value,
+        firstPath,
+      );
+    },
+  );
 
   test('strict Skill scope binds only exact existing project paths', () async {
     final Directory project = Directory.systemTemp.createTempSync(
@@ -3074,6 +3545,36 @@ final class _UnmodifiableLoadResourceStore implements ResourceStore {
 
   @override
   Future<void> save(List<Resource> resources) => _delegate.save(resources);
+}
+
+final class _FailingAfterWriteResourceStore
+    implements ResourceStore, ExclusiveResourceStore, ResourceFileLocator {
+  _FailingAfterWriteResourceStore(this._delegate);
+
+  final ResourceRepository _delegate;
+  var _saveCount = 0;
+
+  int get saveCount => _saveCount;
+
+  @override
+  File get resourceFile => _delegate.resourceFile;
+
+  @override
+  Future<T> exclusiveMutation<T>(Future<T> Function() action) =>
+      _delegate.exclusiveMutation(action);
+
+  @override
+  Future<List<Resource>> load() => _delegate.load();
+
+  @override
+  Future<void> save(List<Resource> resources) async {
+    _saveCount += 1;
+    if (_saveCount == 1) {
+      await _delegate.save(resources);
+      throw StateError('Simulated interruption after the resource write.');
+    }
+    throw StateError('Simulated failed rollback.');
+  }
 }
 
 final class _StaticClipboardGateway

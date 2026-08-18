@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 
 /// Sound values retained for compatibility with existing API clients.
 enum DingSound {
@@ -60,6 +61,8 @@ final class DingRequest {
     this.fallback = false,
     this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
+    this.tokenUsage,
+    this.transcriptPath,
     this.receivedAt,
   });
 
@@ -83,6 +86,11 @@ final class DingRequest {
       fallback: json['fallback'] == true,
       notificationKind: AgentNotificationKind.parse(notificationKind),
       conversationTarget: _conversationTarget(json, source),
+      tokenUsage: ConversationTokenUsage.tryParse(json['tokenUsage']),
+      transcriptPath: _firstTrimmed(<Object?>[
+        json['transcriptPath'],
+        json['transcript_path'],
+      ]),
     );
   }
 
@@ -94,11 +102,14 @@ final class DingRequest {
   final bool fallback;
   final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
+  final ConversationTokenUsage? tokenUsage;
+  final String? transcriptPath;
   final DateTime? receivedAt;
 
   DingRequest copyWith({
     DingSound? sound,
     AgentNotificationKind? notificationKind,
+    ConversationTokenUsage? tokenUsage,
     DateTime? receivedAt,
   }) {
     return DingRequest(
@@ -110,6 +121,8 @@ final class DingRequest {
       fallback: fallback,
       notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: conversationTarget,
+      tokenUsage: tokenUsage ?? this.tokenUsage,
+      transcriptPath: transcriptPath,
       receivedAt: receivedAt ?? this.receivedAt,
     );
   }
@@ -142,7 +155,7 @@ AgentConversationTarget? _conversationTarget(
     conversationId: conversationId,
     workspacePath: workspacePath,
   );
-  return target.hasDestination ? target : null;
+  return target.hasDestination || conversationId != null ? target : null;
 }
 
 String? _firstTrimmed(List<Object?> values) {

@@ -296,6 +296,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                         AgentActivityManagerScreen(
                           controller: widget.activityController,
                           conversationLauncher: _agentConversationLauncher,
+                          showConversationTokenUsage:
+                              widget.settings.showConversationTokenUsage,
                         ),
                       ResourceManagerDestination.agentAdapters =>
                         widget.agentAdapterController == null

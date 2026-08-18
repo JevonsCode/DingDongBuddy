@@ -52,6 +52,47 @@ void main() {
   });
 
   test(
+    'candidate and confirmed invocation metadata migrate and round-trip',
+    () {
+      final DateTime now = DateTime.utc(2026, 8, 18);
+      final Resource legacy = Resource.fromJson(<String, Object?>{
+        'id': 'legacy-mcp',
+        'type': 'mcp',
+        'group': 'MCP',
+        'title': 'Legacy MCP',
+        'content': '{"command":"legacy"}',
+        'usageCount': 24,
+        'lastUsedAt': now.toIso8601String(),
+        'createdAt': now.toIso8601String(),
+        'updatedAt': now.toIso8601String(),
+      });
+      expect(legacy.candidateCount, 24);
+      expect(legacy.lastCandidateAt, now);
+      expect(legacy.invocationCount, 0);
+      expect(legacy.lastInvokedAt, isNull);
+
+      final Resource tracked = legacy.copyWith(
+        candidateCount: 27,
+        lastCandidateAt: now,
+        invocationCount: 3,
+        lastInvokedAt: now,
+      );
+      final Map<String, Object?> json = tracked.toJson();
+
+      expect(json['usageCount'], 24);
+      expect(json['candidateCount'], 27);
+      expect(json['lastCandidateAt'], now.toIso8601String());
+      expect(json['invocationCount'], 3);
+      expect(json['lastInvokedAt'], now.toIso8601String());
+      expect(Resource.fromJson(json), tracked);
+      expect(tracked.toApiJson()['candidateCount'], 27);
+      expect(tracked.toSummaryApiJson()['candidateCount'], 27);
+      expect(tracked.toApiJson()['invocationCount'], 3);
+      expect(tracked.toSummaryApiJson()['invocationCount'], 3);
+    },
+  );
+
+  test(
     'legacy Skills default every Agent to dynamic delivery with hooks off',
     () {
       final Resource resource = Resource.fromJson(<String, Object?>{

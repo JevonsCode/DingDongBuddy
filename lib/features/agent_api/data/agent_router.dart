@@ -13,6 +13,7 @@ import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_collection_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_workflow_routes.dart';
+import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/desktop_control_routes.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
@@ -51,6 +52,8 @@ final class AgentRouter {
     DateTime Function()? now,
     Future<bool> Function()? allowAgentClipboardContent,
     Future<ConversationFooterSymbols> Function()? loadConversationFooterSymbols,
+    Future<bool> Function()? loadShowConversationTokenUsage,
+    ConversationTokenUsageLoader? loadConversationTokenUsage,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
   }) : _onDing = onDing ?? _ignoreDing,
@@ -98,6 +101,8 @@ final class AgentRouter {
                querySkillDeploymentPresence:
                    skillDeploymentStore?.queryPresence,
                loadConversationFooterSymbols: loadConversationFooterSymbols,
+               loadShowConversationTokenUsage: loadShowConversationTokenUsage,
+               loadConversationTokenUsage: loadConversationTokenUsage,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -128,7 +133,10 @@ final class AgentRouter {
        _allowAgentClipboardContent =
            allowAgentClipboardContent ?? _denyClipboardContent,
        _loadConversationFooterSymbols =
-           loadConversationFooterSymbols ?? _defaultConversationFooterSymbols;
+           loadConversationFooterSymbols ?? _defaultConversationFooterSymbols,
+       _loadShowConversationTokenUsage =
+           loadShowConversationTokenUsage ?? _hideConversationTokenUsage,
+       _loadConversationTokenUsage = loadConversationTokenUsage;
 
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
@@ -152,6 +160,8 @@ final class AgentRouter {
   final Future<bool> Function() _allowAgentClipboardContent;
   final Future<ConversationFooterSymbols> Function()
   _loadConversationFooterSymbols;
+  final Future<bool> Function() _loadShowConversationTokenUsage;
+  final ConversationTokenUsageLoader? _loadConversationTokenUsage;
   final Map<_NotificationDeduplicationKey, DateTime> _recentPrimaryDings =
       <_NotificationDeduplicationKey, DateTime>{};
 
@@ -217,9 +227,9 @@ final class AgentRouter {
     if (request.method == 'POST' && request.parsedUri.path == '/ding') {
       try {
         final DateTime now = _now();
-        final DingRequest dingRequest = DingRequest.parse(
-          request.body,
-        ).copyWith(receivedAt: now.toUtc());
+        final DingRequest dingRequest = await _withConversationTokenUsage(
+          DingRequest.parse(request.body).copyWith(receivedAt: now.toUtc()),
+        );
         final _NotificationDeduplicationKey notificationKey =
             _notificationDeduplicationKey(dingRequest);
         _recentPrimaryDings.removeWhere((
@@ -293,6 +303,8 @@ final class AgentRouter {
         now: _now,
         onTaskStarted: _onAgentTaskStarted,
         loadConversationFooterSymbols: _loadConversationFooterSymbols,
+        loadShowConversationTokenUsage: _loadShowConversationTokenUsage,
+        loadConversationTokenUsage: _loadConversationTokenUsage,
       ).respond(request.body);
     }
     if (request.method == 'GET' &&
@@ -626,7 +638,31 @@ final class AgentRouter {
       return false;
     }
   }
+
+  Future<DingRequest> _withConversationTokenUsage(DingRequest request) async {
+    if (request.tokenUsage != null || _loadConversationTokenUsage == null) {
+      return request;
+    }
+    try {
+      if (!await _loadShowConversationTokenUsage()) {
+        return request;
+      }
+      final ConversationTokenUsageRequest usageRequest =
+          ConversationTokenUsageRequest(
+            source: request.source ?? 'Agent',
+            conversationId: request.conversationTarget?.conversationId,
+            workspacePath: request.conversationTarget?.workspacePath,
+            transcriptPath: request.transcriptPath,
+          );
+      final usage = await _loadConversationTokenUsage(usageRequest);
+      return usage == null ? request : request.copyWith(tokenUsage: usage);
+    } on Object {
+      return request;
+    }
+  }
 }
+
+Future<bool> _hideConversationTokenUsage() async => false;
 
 String? _notificationSourceKey(String? source) => source?.trim().toLowerCase();
 

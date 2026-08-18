@@ -216,6 +216,8 @@ void main() {
           type: ResourceType.prompt,
           title: 'First row',
           content: 'First summary',
+          usageCount: 12,
+          lastUsedAt: now,
           createdAt: now,
           updatedAt: now,
         ),
@@ -224,6 +226,22 @@ void main() {
           type: ResourceType.mcp,
           title: 'Second row',
           content: '{}',
+          candidateCount: 9,
+          lastCandidateAt: now,
+          invocationCount: 7,
+          lastInvokedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'continuous-third',
+          type: ResourceType.skill,
+          title: 'Third row',
+          content: '---\nname: third\ndescription: Third skill\n---\n',
+          candidateCount: 5,
+          lastCandidateAt: now,
+          usageCount: 3,
+          lastUsedAt: now,
           createdAt: now,
           updatedAt: now,
         ),
@@ -235,7 +253,57 @@ void main() {
     expect(find.byKey(const Key('resource-list-header')), findsOneWidget);
     expect(find.text('Type'), findsOneWidget);
     expect(find.text('Resource'), findsOneWidget);
+    expect(find.text('Scope'), findsOneWidget);
+    expect(find.text('Usage'), findsOneWidget);
     expect(find.text('Status'), findsOneWidget);
+    final Finder firstScope = find.byKey(
+      const Key('resource-scope-cell-continuous-first'),
+    );
+    final Finder firstUsage = find.byKey(
+      const Key('resource-usage-continuous-first'),
+    );
+    final Finder secondUsage = find.byKey(
+      const Key('resource-usage-continuous-second'),
+    );
+    final Finder thirdUsage = find.byKey(
+      const Key('resource-usage-continuous-third'),
+    );
+    expect(
+      tester.getTopLeft(firstUsage).dx - tester.getTopRight(firstScope).dx,
+      0,
+    );
+    expect(
+      find.descendant(of: firstUsage, matching: find.text('Activated 12')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: secondUsage, matching: find.text('Candidate 9')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: secondUsage, matching: find.text('Called 7')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: thirdUsage, matching: find.text('Candidate 5')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: thirdUsage, matching: find.text('Loaded 3')),
+      findsOneWidget,
+    );
+    final Tooltip promptUsageTooltip = tester.widget<Tooltip>(
+      find.descendant(of: firstUsage, matching: find.byType(Tooltip)),
+    );
+    final Tooltip mcpUsageTooltip = tester.widget<Tooltip>(
+      find.descendant(of: secondUsage, matching: find.byType(Tooltip)),
+    );
+    expect(promptUsageTooltip.message, contains('activated 12 times'));
+    expect(
+      mcpUsageTooltip.message,
+      contains('returned as a candidate 9 times'),
+    );
+    expect(mcpUsageTooltip.message, contains('called 7 times'));
     final Rect first = tester.getRect(
       find.byKey(const Key('resource-row-continuous-first')),
     );
@@ -245,6 +313,117 @@ void main() {
     expect(first.left, second.left);
     expect(first.width, second.width);
     expect(second.top - first.top, 58);
+  });
+
+  testWidgets('Skill and MCP details expose candidate and confirmed counts', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1280, 800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 8, 18, 12, 30);
+    final LibraryViewModel model = LibraryViewModel(
+      _MemoryStore(<Resource>[
+        Resource(
+          id: 'detail-skill',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content: '---\nname: reviewer\ndescription: Review changes\n---\n',
+          candidateCount: 8,
+          lastCandidateAt: now,
+          usageCount: 3,
+          lastUsedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'detail-mcp',
+          type: ResourceType.mcp,
+          title: 'Design tools',
+          content: '{"command":"design-tools"}',
+          candidateCount: 11,
+          lastCandidateAt: now,
+          invocationCount: 4,
+          lastInvokedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+    await model.load();
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    await tester.tap(find.byKey(const Key('resource-row-detail-skill')));
+    await tester.pump();
+    expect(
+      find.byKey(const Key('resource-detail-usage-summary')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('resource-usage-detail-candidate-detail-skill')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('resource-usage-detail-loaded-detail-skill')),
+      findsOneWidget,
+    );
+    expect(find.text('8'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('library-editor-back')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('resource-row-detail-mcp')));
+    await tester.pump();
+    expect(
+      find.byKey(const Key('resource-usage-detail-candidate-detail-mcp')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('resource-usage-detail-called-detail-mcp')),
+      findsOneWidget,
+    );
+    expect(find.text('11'), findsOneWidget);
+    expect(find.text('4'), findsOneWidget);
+  });
+
+  testWidgets('usage details stack below the editor heading when narrow', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(560, 700);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final DateTime now = DateTime.utc(2026, 8, 18, 12, 30);
+    final LibraryViewModel model = LibraryViewModel(
+      _MemoryStore(<Resource>[
+        Resource(
+          id: 'narrow-skill',
+          type: ResourceType.skill,
+          title: 'Narrow reviewer',
+          content:
+              '---\nname: narrow-reviewer\ndescription: Review changes\n---\n',
+          candidateCount: 8,
+          lastCandidateAt: now,
+          usageCount: 3,
+          lastUsedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]),
+    );
+    await model.load();
+    model.selectResource(model.allResources.single);
+    await tester.pumpWidget(MaterialApp(home: LibraryScreen(viewModel: model)));
+
+    final Finder heading = find.text('Configuration details');
+    final Finder usage = find.byKey(const Key('resource-detail-usage-summary'));
+    expect(heading, findsOneWidget);
+    expect(usage, findsOneWidget);
+    expect(
+      tester.getTopLeft(usage).dy,
+      greaterThan(tester.getBottomLeft(heading).dy),
+    );
   });
 
   testWidgets('resource status can be toggled without opening the editor', (

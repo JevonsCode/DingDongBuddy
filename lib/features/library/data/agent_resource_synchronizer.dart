@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:dingdong/core/files/safe_managed_file.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/serialization/strict_json.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
@@ -141,7 +143,10 @@ final class AgentResourceSynchronizer {
   final AgentAdapterLoader? _adapterLoader;
   final String? _adapterHomeDirectory;
 
-  Future<List<AppIssue>> sync(List<Resource> resources) async {
+  Future<List<AppIssue>> sync(List<Resource> resources) =>
+      SafeManagedFile(managedStateFile).exclusive(() => _syncLocked(resources));
+
+  Future<List<AppIssue>> _syncLocked(List<Resource> resources) async {
     await _reloadAdapterTargets();
     final List<Resource> skills = resources
         .where((Resource item) => item.type == ResourceType.skill)
@@ -338,8 +343,8 @@ final class AgentResourceSynchronizer {
   Future<void> _syncPrompts(
     File file, {
     required bool includeBridgeRoutingInstructions,
-  }) async {
-    final String current = await file.exists() ? await file.readAsString() : '';
+  }) => SafeManagedFile(file).update((ManagedFileSnapshot snapshot) {
+    final String current = snapshot.contents;
     final String cleaned = current
         .replaceAll(_managedPromptsPattern, '')
         .trimRight();
@@ -385,11 +390,11 @@ final class AgentResourceSynchronizer {
       if (managed.isNotEmpty) managed,
     ].join('\n\n');
     final String normalized = next.isEmpty ? '' : '$next\n';
-    if (normalized == current || (!await file.exists() && normalized.isEmpty)) {
-      return;
+    if (!snapshot.exists && normalized.isEmpty) {
+      return null;
     }
-    await _writeAtomically(file, normalized);
-  }
+    return normalized;
+  });
 
   /// Performs the same checks as sync without changing any Agent files.
   Future<List<AppIssue>> inspect(List<Resource> resources) async {
@@ -799,34 +804,34 @@ final class AgentResourceSynchronizer {
     AgentMcpConfigKind kind,
     List<Resource> resources,
     Set<String> previousNames,
-  ) async {
-    Map<String, Object?> root = <String, Object?>{};
-    if (await file.exists() && (await file.readAsString()).trim().isNotEmpty) {
-      root = Map<String, Object?>.from(
-        jsonDecode(await file.readAsString()) as Map,
-      );
-    }
-    final Map<String, Object?> servers = Map<String, Object?>.from(
-      (root['mcpServers'] as Map?) ?? const <String, Object?>{},
-    )..removeWhere((String key, Object? _) => previousNames.contains(key));
-    for (final Resource resource in resources) {
-      servers[managedMcpServerName(title: resource.title, id: resource.id)] =
-          _jsonMcp(McpConfiguration.parse(resource.content), kind);
-    }
-    await _writeAtomically(
-      file,
-      const JsonEncoder.withIndent(
+  ) => SafeManagedFile(file).update(
+    (ManagedFileSnapshot snapshot) {
+      Map<String, Object?> root = <String, Object?>{};
+      if (snapshot.contents.trim().isNotEmpty) {
+        root = Map<String, Object?>.from(
+          decodeStrictJson(snapshot.contents) as Map,
+        );
+      }
+      final Map<String, Object?> servers = Map<String, Object?>.from(
+        (root['mcpServers'] as Map?) ?? const <String, Object?>{},
+      )..removeWhere((String key, Object? _) => previousNames.contains(key));
+      for (final Resource resource in resources) {
+        servers[managedMcpServerName(title: resource.title, id: resource.id)] =
+            _jsonMcp(McpConfiguration.parse(resource.content), kind);
+      }
+      return const JsonEncoder.withIndent(
         '  ',
-      ).convert(<String, Object?>{...root, 'mcpServers': servers}),
-    );
-  }
+      ).convert(<String, Object?>{...root, 'mcpServers': servers});
+    },
+    validate: (String value) => decodeStrictJson(value) as Map<String, Object?>,
+  );
 
   Future<void> _syncCodex(
     File file,
     List<Resource> resources,
     Set<String> previousNames,
-  ) async {
-    final String current = await file.exists() ? await file.readAsString() : '';
+  ) => SafeManagedFile(file).update((ManagedFileSnapshot snapshot) {
+    final String current = snapshot.contents;
     final Set<String> managedServerNames = <String>{
       ...previousNames,
       ...resources.map(
@@ -881,32 +886,19 @@ final class AgentResourceSynchronizer {
     }
     final String next = '${output.toString().trimRight()}\n';
     _rejectDuplicateTomlTables(next, file.path);
-    if (next == current) {
-      return;
-    }
-    final String latest = await file.exists() ? await file.readAsString() : '';
-    if (latest != current) {
-      throw StateError(
-        'Codex configuration changed during DingDong MCP synchronization; '
-        '${file.path} was not overwritten.',
-      );
-    }
-    await _writeAtomically(file, next);
-    if (await file.readAsString() != next) {
-      throw StateError(
-        'Codex configuration changed immediately after DingDong MCP '
-        'synchronization: ${file.path}.',
-      );
-    }
-  }
+    return next;
+  });
 
   Future<Map<String, Set<String>>> _readManagedMcpState() async {
-    if (!await managedStateFile.exists()) {
+    final ManagedFileSnapshot snapshot = await SafeManagedFile(
+      managedStateFile,
+    ).snapshot();
+    if (!snapshot.exists) {
       return <String, Set<String>>{};
     }
     try {
       final Map<String, Object?> decoded = Map<String, Object?>.from(
-        jsonDecode(await managedStateFile.readAsString()) as Map,
+        decodeStrictJson(snapshot.contents) as Map,
       );
       return <String, Set<String>>{
         for (final MapEntry<String, Object?> entry in decoded.entries)
@@ -920,12 +912,15 @@ final class AgentResourceSynchronizer {
   }
 
   Future<void> _writeManagedMcpState(Map<String, Set<String>> managed) async {
-    await _writeAtomically(
-      managedStateFile,
-      const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-        for (final MapEntry<String, Set<String>> entry in managed.entries)
-          entry.key: entry.value.toList(growable: false)..sort(),
-      }),
+    final String contents = const JsonEncoder.withIndent('  ')
+        .convert(<String, Object?>{
+          for (final MapEntry<String, Set<String>> entry in managed.entries)
+            entry.key: entry.value.toList(growable: false)..sort(),
+        });
+    await SafeManagedFile(managedStateFile).update(
+      (_) => contents,
+      validate: (String value) =>
+          decodeStrictJson(value) as Map<String, Object?>,
     );
   }
 }
@@ -1077,7 +1072,13 @@ _AgentResourceTargets _targetsForAdapters(
 
 /// Adds transactional synchronization without changing callers of ResourceStore.
 final class SynchronizedResourceStore
-    implements ResourceStore, ResourceUsageStore, ExclusiveResourceStore {
+    implements
+        ResourceStore,
+        ResourceCandidateStore,
+        ResourceUsageStore,
+        ResourceInvocationStore,
+        ExclusiveResourceStore,
+        ResourceFileLocator {
   SynchronizedResourceStore(
     this._delegate,
     this._synchronizer, {
@@ -1090,6 +1091,14 @@ final class SynchronizedResourceStore
   final IssueCenterController? issueCenter;
   final void Function()? onChanged;
   List<Resource>? _lastLoaded;
+
+  @override
+  File? get resourceFile {
+    final ResourceStore delegate = _delegate;
+    return delegate is ResourceFileLocator
+        ? (delegate as ResourceFileLocator).resourceFile
+        : null;
+  }
 
   Future<T> _exclusive<T>(Future<T> Function() action) {
     final ResourceStore delegate = _delegate;
@@ -1171,6 +1180,50 @@ final class SynchronizedResourceStore
               ? resource.copyWith(
                   usageCount: resource.usageCount + 1,
                   lastUsedAt: usedAt,
+                )
+              : resource,
+        )
+        .toList(growable: false);
+    await _delegate.save(updated);
+    _lastLoaded = List<Resource>.of(updated);
+    onChanged?.call();
+    return updated;
+  });
+
+  @override
+  Future<List<Resource>> recordCandidates(
+    Set<String> resourceIds,
+    DateTime candidateAt,
+  ) => _exclusive(() async {
+    final List<Resource> latest = await _delegate.load();
+    final List<Resource> updated = latest
+        .map(
+          (Resource resource) => resourceIds.contains(resource.id)
+              ? resource.copyWith(
+                  candidateCount: resource.candidateCount + 1,
+                  lastCandidateAt: candidateAt,
+                )
+              : resource,
+        )
+        .toList(growable: false);
+    await _delegate.save(updated);
+    _lastLoaded = List<Resource>.of(updated);
+    onChanged?.call();
+    return updated;
+  });
+
+  @override
+  Future<List<Resource>> recordInvocation(
+    Set<String> resourceIds,
+    DateTime invokedAt,
+  ) => _exclusive(() async {
+    final List<Resource> latest = await _delegate.load();
+    final List<Resource> updated = latest
+        .map(
+          (Resource resource) => resourceIds.contains(resource.id)
+              ? resource.copyWith(
+                  invocationCount: resource.invocationCount + 1,
+                  lastInvokedAt: invokedAt,
                 )
               : resource,
         )
@@ -1633,11 +1686,19 @@ List<Resource> _mergeConcurrentResources({
 
 bool _sameResourceConfiguration(Resource first, Resource second) {
   final Map<String, Object?> firstJson = first.toJson()
+    ..remove('candidateCount')
+    ..remove('lastCandidateAt')
     ..remove('usageCount')
-    ..remove('lastUsedAt');
+    ..remove('lastUsedAt')
+    ..remove('invocationCount')
+    ..remove('lastInvokedAt');
   final Map<String, Object?> secondJson = second.toJson()
+    ..remove('candidateCount')
+    ..remove('lastCandidateAt')
     ..remove('usageCount')
-    ..remove('lastUsedAt');
+    ..remove('lastUsedAt')
+    ..remove('invocationCount')
+    ..remove('lastInvokedAt');
   return jsonEncode(firstJson) == jsonEncode(secondJson);
 }
 
@@ -1646,6 +1707,23 @@ Resource _mergeUsageMetadata(
   Resource latest,
   Resource baseline,
 ) {
+  final bool latestCandidateChanged =
+      latest.candidateCount != baseline.candidateCount ||
+      latest.lastCandidateAt != baseline.lastCandidateAt;
+  final bool candidateCandidateChanged =
+      candidate.candidateCount != baseline.candidateCount ||
+      candidate.lastCandidateAt != baseline.lastCandidateAt;
+  final int candidateCount = latestCandidateChanged && candidateCandidateChanged
+      ? max(latest.candidateCount, candidate.candidateCount)
+      : latestCandidateChanged
+      ? latest.candidateCount
+      : candidate.candidateCount;
+  final DateTime? lastCandidateAt =
+      latestCandidateChanged && candidateCandidateChanged
+      ? _laterDate(latest.lastCandidateAt, candidate.lastCandidateAt)
+      : latestCandidateChanged
+      ? latest.lastCandidateAt
+      : candidate.lastCandidateAt;
   final bool latestChanged =
       latest.usageCount != baseline.usageCount ||
       latest.lastUsedAt != baseline.lastUsedAt;
@@ -1662,12 +1740,42 @@ Resource _mergeUsageMetadata(
       : latestChanged
       ? latest.lastUsedAt
       : candidate.lastUsedAt;
+  final bool latestInvocationChanged =
+      latest.invocationCount != baseline.invocationCount ||
+      latest.lastInvokedAt != baseline.lastInvokedAt;
+  final bool candidateInvocationChanged =
+      candidate.invocationCount != baseline.invocationCount ||
+      candidate.lastInvokedAt != baseline.lastInvokedAt;
+  final int invocationCount =
+      latestInvocationChanged && candidateInvocationChanged
+      ? max(latest.invocationCount, candidate.invocationCount)
+      : latestInvocationChanged
+      ? latest.invocationCount
+      : candidate.invocationCount;
+  final DateTime? lastInvokedAt =
+      latestInvocationChanged && candidateInvocationChanged
+      ? _laterDate(latest.lastInvokedAt, candidate.lastInvokedAt)
+      : latestInvocationChanged
+      ? latest.lastInvokedAt
+      : candidate.lastInvokedAt;
   final Map<String, Object?> json = candidate.toJson();
+  json['candidateCount'] = candidateCount;
+  if (lastCandidateAt != null) {
+    json['lastCandidateAt'] = lastCandidateAt.toIso8601String();
+  } else {
+    json.remove('lastCandidateAt');
+  }
   json['usageCount'] = usageCount;
   if (lastUsedAt != null) {
     json['lastUsedAt'] = lastUsedAt.toIso8601String();
   } else {
     json.remove('lastUsedAt');
+  }
+  json['invocationCount'] = invocationCount;
+  if (lastInvokedAt != null) {
+    json['lastInvokedAt'] = lastInvokedAt.toIso8601String();
+  } else {
+    json.remove('lastInvokedAt');
   }
   return Resource.fromJson(json);
 }
@@ -1693,14 +1801,26 @@ bool _onlyAgentResourceUsageChanged(
   for (int index = 0; index < previous.length; index += 1) {
     usageChanged =
         usageChanged ||
+        previous[index].candidateCount != current[index].candidateCount ||
+        previous[index].lastCandidateAt != current[index].lastCandidateAt ||
         previous[index].usageCount != current[index].usageCount ||
-        previous[index].lastUsedAt != current[index].lastUsedAt;
+        previous[index].lastUsedAt != current[index].lastUsedAt ||
+        previous[index].invocationCount != current[index].invocationCount ||
+        previous[index].lastInvokedAt != current[index].lastInvokedAt;
     final Map<String, Object?> before = previous[index].toJson()
+      ..remove('candidateCount')
+      ..remove('lastCandidateAt')
       ..remove('usageCount')
-      ..remove('lastUsedAt');
+      ..remove('lastUsedAt')
+      ..remove('invocationCount')
+      ..remove('lastInvokedAt');
     final Map<String, Object?> after = current[index].toJson()
+      ..remove('candidateCount')
+      ..remove('lastCandidateAt')
       ..remove('usageCount')
-      ..remove('lastUsedAt');
+      ..remove('lastUsedAt')
+      ..remove('invocationCount')
+      ..remove('lastInvokedAt');
     if (jsonEncode(before) != jsonEncode(after)) {
       return false;
     }
@@ -1712,31 +1832,3 @@ String _toml(String value) => value
     .replaceAll(r'\', r'\\')
     .replaceAll('"', r'\"')
     .replaceAll('\n', r'\n');
-
-Future<void> _writeAtomically(File file, String content) async {
-  await file.parent.create(recursive: true);
-  final File temporary = File('${file.path}.dingdong-tmp');
-  final File backup = File('${file.path}.dingdong-bak');
-  await temporary.writeAsString(content, flush: true);
-  final bool hadFile = await file.exists();
-  try {
-    if (hadFile) {
-      if (await backup.exists()) {
-        await backup.delete();
-      }
-      await file.rename(backup.path);
-    }
-    await temporary.rename(file.path);
-    if (await backup.exists()) {
-      await backup.delete();
-    }
-  } on Object {
-    if (await temporary.exists()) {
-      await temporary.delete();
-    }
-    if (hadFile && await backup.exists() && !await file.exists()) {
-      await backup.rename(file.path);
-    }
-    rethrow;
-  }
-}

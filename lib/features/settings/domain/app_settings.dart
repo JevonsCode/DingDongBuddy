@@ -93,8 +93,10 @@ final class AppSettings {
     this.rememberAgentActivity = true,
     this.notifyAgentCompletion = true,
     this.notifyAgentAttention = true,
+    this.notifyCodexVoiceActivity = false,
     this.notifySubagentActivity = false,
     this.groupRepeatedAgentSessions = true,
+    this.showConversationTokenUsage = false,
     this.agentActivityMaxItems = 500,
     this.agentActivityCountHours = 24,
     this.conversationFooterSymbols = ConversationFooterSymbols.defaultValue,
@@ -122,8 +124,10 @@ final class AppSettings {
   final bool rememberAgentActivity;
   final bool notifyAgentCompletion;
   final bool notifyAgentAttention;
+  final bool notifyCodexVoiceActivity;
   final bool notifySubagentActivity;
   final bool groupRepeatedAgentSessions;
+  final bool showConversationTokenUsage;
   final int agentActivityMaxItems;
   final int agentActivityCountHours;
   final ConversationFooterSymbols conversationFooterSymbols;
@@ -155,8 +159,10 @@ final class AppSettings {
       rememberAgentActivity: rememberAgentActivity,
       notifyAgentCompletion: notifyAgentCompletion,
       notifyAgentAttention: notifyAgentAttention,
+      notifyCodexVoiceActivity: notifyCodexVoiceActivity,
       notifySubagentActivity: notifySubagentActivity,
       groupRepeatedAgentSessions: groupRepeatedAgentSessions,
+      showConversationTokenUsage: showConversationTokenUsage,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
       conversationFooterSymbols: conversationFooterSymbols.sanitized(),
@@ -190,8 +196,10 @@ final class AppSettings {
     bool? rememberAgentActivity,
     bool? notifyAgentCompletion,
     bool? notifyAgentAttention,
+    bool? notifyCodexVoiceActivity,
     bool? notifySubagentActivity,
     bool? groupRepeatedAgentSessions,
+    bool? showConversationTokenUsage,
     int? agentActivityMaxItems,
     int? agentActivityCountHours,
     ConversationFooterSymbols? conversationFooterSymbols,
@@ -224,10 +232,14 @@ final class AppSettings {
       notifyAgentCompletion:
           notifyAgentCompletion ?? this.notifyAgentCompletion,
       notifyAgentAttention: notifyAgentAttention ?? this.notifyAgentAttention,
+      notifyCodexVoiceActivity:
+          notifyCodexVoiceActivity ?? this.notifyCodexVoiceActivity,
       notifySubagentActivity:
           notifySubagentActivity ?? this.notifySubagentActivity,
       groupRepeatedAgentSessions:
           groupRepeatedAgentSessions ?? this.groupRepeatedAgentSessions,
+      showConversationTokenUsage:
+          showConversationTokenUsage ?? this.showConversationTokenUsage,
       agentActivityMaxItems:
           agentActivityMaxItems ?? this.agentActivityMaxItems,
       agentActivityCountHours:

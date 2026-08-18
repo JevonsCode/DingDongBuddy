@@ -32,4 +32,51 @@ void main() {
 
     expect(await repository.load(), <TriggerGroup>[group]);
   });
+
+  test('two repositories serialize trigger-group mutations', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-trigger-groups-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final File file = File('${directory.path}/trigger-groups.json');
+    final TriggerGroupRepository first = TriggerGroupRepository(
+      TriggerGroupFileService(file),
+    );
+    final TriggerGroupRepository second = TriggerGroupRepository(
+      TriggerGroupFileService(file),
+    );
+
+    Future<void> append(TriggerGroupRepository repository, String id) =>
+        repository.exclusiveMutation(() async {
+          final List<TriggerGroup> current = await repository.load();
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          final DateTime now = DateTime.utc(2026, 8, 18);
+          await repository.save(<TriggerGroup>[
+            ...current,
+            TriggerGroup(
+              id: id,
+              name: id,
+              rules: <TriggerRule>[
+                TriggerRule(
+                  field: TriggerRuleField.source,
+                  operator: TriggerRuleOperator.equals,
+                  value: id,
+                ),
+              ],
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ]);
+        });
+
+    await Future.wait(<Future<void>>[
+      append(first, 'codex'),
+      append(second, 'pi'),
+    ]);
+
+    expect(
+      (await first.load()).map((TriggerGroup group) => group.id).toSet(),
+      <String>{'codex', 'pi'},
+    );
+  });
 }

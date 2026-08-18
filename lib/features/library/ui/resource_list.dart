@@ -8,10 +8,12 @@ import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
+import 'package:dingdong/features/library/ui/resource_usage_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 const double _statusColumnWidth = 56;
+const double _usageColumnWidth = 88;
 const double _updatedColumnWidth = 116;
 const double _statusUpdatedGap = 16;
 
@@ -132,6 +134,7 @@ class ResourceList extends StatelessWidget {
 final class _VisibleColumns {
   const _VisibleColumns({
     required this.scope,
+    required this.usage,
     required this.source,
     required this.status,
     required this.updated,
@@ -139,12 +142,14 @@ final class _VisibleColumns {
 
   factory _VisibleColumns.fromWidth(double width) => _VisibleColumns(
     scope: width >= 650,
+    usage: width >= 650,
     source: width >= 760,
     status: width >= 560,
     updated: width >= 860,
   );
 
   final bool scope;
+  final bool usage;
   final bool source;
   final bool status;
   final bool updated;
@@ -192,6 +197,12 @@ class _ResourceListHeader extends StatelessWidget {
               _ColumnLabel(
                 width: 90,
                 label: context.localized('Scope', '作用域'),
+                style: style,
+              ),
+            if (columns.usage)
+              _ColumnLabel(
+                width: _usageColumnWidth,
+                label: context.localized('Usage', '使用'),
                 style: style,
               ),
             if (columns.source)
@@ -398,6 +409,9 @@ class _ResourceRowState extends State<_ResourceRow> {
                   ),
                   if (widget.columns.scope)
                     SizedBox(
+                      key: ValueKey<String>(
+                        'resource-scope-cell-${widget.resource.id}',
+                      ),
                       width: 90,
                       child: widget.resource.isScopedSkill
                           ? Align(
@@ -414,6 +428,14 @@ class _ResourceRowState extends State<_ResourceRow> {
                                 widget.resource.activation,
                               ),
                             ),
+                    ),
+                  if (widget.columns.usage)
+                    SizedBox(
+                      key: ValueKey<String>(
+                        'resource-usage-${widget.resource.id}',
+                      ),
+                      width: _usageColumnWidth,
+                      child: _ResourceUsageCell(resource: widget.resource),
                     ),
                   if (widget.columns.source)
                     SizedBox(
@@ -525,6 +547,18 @@ class _QuietCell extends StatelessWidget {
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
+  );
+}
+
+class _ResourceUsageCell extends StatelessWidget {
+  const _ResourceUsageCell({required this.resource});
+
+  final Resource resource;
+
+  @override
+  Widget build(BuildContext context) => ResourceUsageSummary(
+    resource: resource,
+    style: ResourceUsageSummaryStyle.compact,
   );
 }
 

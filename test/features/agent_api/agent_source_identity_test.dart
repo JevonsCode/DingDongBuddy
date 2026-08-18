@@ -37,6 +37,12 @@ void main() {
         }),
         'Pi',
       );
+      expect(
+        inferAgentSourceFromEnvironment(const <String, String>{
+          'PI_SESSION_ID': 'pi-session-1',
+        }),
+        'Pi',
+      );
     });
 
     test('keeps established Agent session signals deterministic', () {

@@ -1,5 +1,6 @@
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 
 /// One locally observed Agent update shown in the Dynamic workspace.
 final class AgentActivity {
@@ -15,6 +16,7 @@ final class AgentActivity {
     this.repeatCount = 1,
     this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
+    this.tokenUsage,
   });
 
   factory AgentActivity.fromJson(Map<String, Object?> json) {
@@ -34,6 +36,7 @@ final class AgentActivity {
               Map<String, Object?>.from(json['conversationTarget']! as Map),
             )
           : null,
+      tokenUsage: ConversationTokenUsage.tryParse(json['tokenUsage']),
     );
   }
 
@@ -48,6 +51,7 @@ final class AgentActivity {
   final int repeatCount;
   final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
+  final ConversationTokenUsage? tokenUsage;
 
   bool get needsUserAttention =>
       notificationKind == AgentNotificationKind.attention;
@@ -64,6 +68,7 @@ final class AgentActivity {
     repeatCount: repeatCount,
     notificationKind: notificationKind,
     conversationTarget: conversationTarget,
+    tokenUsage: tokenUsage,
   );
 
   AgentActivity repeated({
@@ -75,6 +80,7 @@ final class AgentActivity {
     DateTime? startedAt,
     AgentConversationTarget? conversationTarget,
     AgentNotificationKind? notificationKind,
+    ConversationTokenUsage? tokenUsage,
     bool preserveLifecycle = false,
   }) {
     final AgentConversationTarget? mergedTarget =
@@ -95,6 +101,7 @@ final class AgentActivity {
       repeatCount: repeatCount + 1,
       notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: mergedTarget,
+      tokenUsage: tokenUsage ?? this.tokenUsage,
     );
   }
 
@@ -111,6 +118,7 @@ final class AgentActivity {
         repeatCount: repeatCount,
         notificationKind: notificationKind,
         conversationTarget: conversationTarget?.merge(target) ?? target,
+        tokenUsage: tokenUsage,
       );
 
   Map<String, Object?> toJson() => <String, Object?>{
@@ -127,6 +135,7 @@ final class AgentActivity {
       'notificationKind': notificationKind.apiValue,
     if (conversationTarget != null)
       'conversationTarget': conversationTarget!.toJson(),
+    if (tokenUsage != null) 'tokenUsage': tokenUsage!.toJson(),
   };
 }
 

@@ -10,6 +10,7 @@ import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.d
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
+import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -54,6 +55,9 @@ typedef NotificationDeliveryFailureObserver =
 typedef SubagentNotificationDetector =
     Future<bool> Function(DingRequest request);
 
+typedef CodexVoiceNotificationDetector =
+    Future<bool> Function(DingRequest request);
+
 typedef SubagentConversationDetector =
     Future<bool> Function(AgentConversationTarget target);
 
@@ -62,10 +66,21 @@ typedef SubagentConversationDetector =
 Future<bool> shouldDeliverAgentNotification({
   required DingRequest request,
   required AppSettings settings,
+  CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
 }) async {
   if (!_isNotificationKindEnabled(request.notificationKind, settings)) {
     return false;
+  }
+  if (!settings.notifyCodexVoiceActivity && isCodexVoiceNotification != null) {
+    try {
+      if (await isCodexVoiceNotification(request)) {
+        return false;
+      }
+    } on Object {
+      // Unknown Codex metadata must not hide an ordinary completion. Only a
+      // positively identified voice task is filtered.
+    }
   }
   if (settings.notifySubagentActivity || isSubagentNotification == null) {
     return true;
@@ -120,12 +135,14 @@ Future<void> deliverAgentNotification({
   required Future<void> Function(DingRequest request) nativeDelivery,
   Future<void> Function(DingRequest request)? companionDelivery,
   Future<void> Function(DingRequest request)? onFiltered,
+  CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
   NotificationDeliveryFailureObserver? onFailure,
 }) async {
   if (!await shouldDeliverAgentNotification(
     request: request,
     settings: settings,
+    isCodexVoiceNotification: isCodexVoiceNotification,
     isSubagentNotification: isSubagentNotification,
   )) {
     await onFiltered?.call(request);
@@ -234,6 +251,7 @@ final class AppDependencies {
     Future<void> Function(DingRequest request)? onFilteredNotification,
     void Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
     NotificationDeliveryFailureObserver? onNotificationDeliveryFailure,
+    CodexVoiceNotificationDetector? isCodexVoiceNotification,
     SubagentNotificationDetector? isSubagentNotification,
     SubagentConversationDetector? isSubagentConversation,
     PreferencesBackend? preferencesBackend,
@@ -318,6 +336,8 @@ final class AppDependencies {
         );
     final NativeNotificationGateway notificationGateway =
         NativeNotificationGateway();
+    final LocalConversationTokenUsageResolver tokenUsageResolver =
+        LocalConversationTokenUsageResolver();
     final AgentRouter router = AgentRouter(
       onAgentTaskStarted: (AgentBridgeTaskStart start) async {
         final AppSettings settings = await settingsRepository.load();
@@ -342,6 +362,7 @@ final class AppDependencies {
               ),
           companionDelivery: onNotification,
           onFiltered: onFilteredNotification,
+          isCodexVoiceNotification: isCodexVoiceNotification,
           isSubagentNotification: isSubagentNotification,
           onFailure: onNotificationDeliveryFailure,
         );
@@ -358,6 +379,7 @@ final class AppDependencies {
               ),
           companionDelivery: onSuppressedNotification,
           onFiltered: onFilteredNotification,
+          isCodexVoiceNotification: isCodexVoiceNotification,
           isSubagentNotification: isSubagentNotification,
           onFailure: onNotificationDeliveryFailure,
         );
@@ -369,6 +391,9 @@ final class AppDependencies {
           (await settingsRepository.load()).allowAgentClipboardContent,
       loadConversationFooterSymbols: () async =>
           (await settingsRepository.load()).conversationFooterSymbols,
+      loadShowConversationTokenUsage: () async =>
+          (await settingsRepository.load()).showConversationTokenUsage,
+      loadConversationTokenUsage: tokenUsageResolver.resolve,
       resourceStore: resourceStore,
       triggerGroupStore: triggerGroupStore,
       skillPackageInstaller: skillPackageInstaller,

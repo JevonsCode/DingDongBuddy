@@ -13,6 +13,7 @@ import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:dingdong/features/library/ui/resource_usage_summary.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -347,21 +348,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            resource == null
-                ? context.localized('Add agent configuration', '添加 Agent 配置')
-                : context.localized('Configuration details', '配置详情'),
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            _typeDescription(context, _draftType),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          _ResourceEditorHeading(resource: resource, type: _draftType),
           const SizedBox(height: 17),
           Expanded(
             child: SingleChildScrollView(
@@ -1113,6 +1100,64 @@ class _ResourceEditorState extends State<ResourceEditor> {
       _selectedTriggerGroupIds = selected;
       _saved = false;
     });
+  }
+}
+
+class _ResourceEditorHeading extends StatelessWidget {
+  const _ResourceEditorHeading({required this.resource, required this.type});
+
+  final Resource? resource;
+  final ResourceType type;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          resource == null
+              ? context.localized('Add agent configuration', '添加 Agent 配置')
+              : context.localized('Configuration details', '配置详情'),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          _typeDescription(context, type),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+    final Resource? current = resource;
+    if (current == null) {
+      return heading;
+    }
+    final Widget usage = ResourceUsageSummary(
+      key: const Key('resource-detail-usage-summary'),
+      resource: current,
+      style: ResourceUsageSummaryStyle.detail,
+    );
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth < 600) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[heading, const SizedBox(height: 12), usage],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(child: heading),
+            const SizedBox(width: 20),
+            usage,
+          ],
+        );
+      },
+    );
   }
 }
 

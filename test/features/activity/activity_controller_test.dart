@@ -2,6 +2,7 @@ import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -302,18 +303,27 @@ void main() {
       source: 'Codex',
       message: 'First reminder',
       conversationTarget: target,
+      tokenUsage: const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.codex,
+        totalTokens: 1000,
+      ),
     );
     now = now.add(const Duration(seconds: 2));
     controller.record(
       source: 'Codex',
       message: 'Second reminder',
       conversationTarget: target,
+      tokenUsage: const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.codex,
+        totalTokens: 2500,
+      ),
     );
 
     expect(controller.activities, hasLength(1));
     expect(controller.activities.single.id, 'activity-1');
     expect(controller.activities.single.message, 'Second reminder');
     expect(controller.activities.single.repeatCount, 2);
+    expect(controller.activities.single.tokenUsage?.totalTokens, 2500);
     expect(controller.activities.single.completedAt, now.toUtc());
     expect(controller.recentCount, 1);
   });

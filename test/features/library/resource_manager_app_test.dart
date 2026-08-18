@@ -7,6 +7,7 @@ import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
@@ -155,6 +156,10 @@ void main() {
                 completedAt: DateTime.utc(2026, 7, 21, 10),
                 unseen: false,
                 repeatCount: 2,
+                tokenUsage: const ConversationTokenUsage(
+                  source: ConversationTokenUsageSource.codex,
+                  totalTokens: 1234567,
+                ),
                 conversationTarget: const AgentConversationTarget(
                   client: AgentClient.codex,
                   conversationId: 'thread-1',
@@ -208,7 +213,10 @@ void main() {
           clipboardViewModel: clipboard,
           activityController: activity,
           issueCenterController: issues,
-          settings: const AppSettings(language: AppLanguagePreference.chinese),
+          settings: const AppSettings(
+            language: AppLanguagePreference.chinese,
+            showConversationTokenUsage: true,
+          ),
           windowController: WindowController.fromWindowId(
             'resource-manager-test',
           ),
@@ -299,6 +307,15 @@ void main() {
         ),
       );
       expect(resumableRepeat.left, closeTo(staticRepeat.left, 0.1));
+      final Tooltip repeatTooltip = tester.widget<Tooltip>(
+        find.ancestor(
+          of: find.byKey(
+            const Key('agent-activity-manager-repeat-count-manager-agent'),
+          ),
+          matching: find.byType(Tooltip),
+        ),
+      );
+      expect(repeatTooltip.message, '本轮会话已经提醒 2 次，共消耗 1,234,567 Token');
       expect(
         tester
             .getRect(

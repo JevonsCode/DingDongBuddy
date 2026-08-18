@@ -102,7 +102,21 @@ Grok Build 和 Pi 当前内置 Adapter 只声明各自官方的原生 Skill 目�
   schema 每个层级只能登记一个交付根，因此 DingDong 默认写入隔离的 `.pi` 路径，
   不会盘点、去重或删除那些通用根中的外部 Skill。
 - Pi 只有在项目已被信任时才加载 `.pi/skills`。自动化或无交互验收可使用
-  `pi -p --approve ...`；磁盘部署成功本身不代表 Pi 已接受该项目。
+  `pi -p --approve ...`；磁盘部署成功本身不代表 Pi 已接受该项目。仓库提供可选真实
+  客户端测试：设置 `PI_EXECUTABLE` 后运行
+  `flutter test test/integration/pi_agent_adapter_integration_test.dart`，会在隔离临时目录内
+  验证完整包部署、Pi RPC 项目级发现和禁用清理，不读取模型凭证，也不发起模型请求。
+
+## 会话 Token 用量
+
+会话 Token 不是 Adapter YAML 字段。DingDong 只在用户开启
+**设置 → Agent 回复页脚 → 显示会话 Token 用量** 后，按会话 ID 从本机官方
+会话记录读取可验证的精确累计值。当前只支持 Codex、Claude Code 和 Pi；
+其他 Agent、无法定位会话、记录损坏或格式不明确时不显示，不估算。
+
+页脚使用紧凑值，例如 `12.4K Token`；动态列表将同一会话的最新累计快照
+与通知记录一起保存，悬停 `×N` 可查看精确提醒次数和带千分位的 Token 总量。
+关闭开关后，Bridge 和完成通知链路不读取这些本地会话用量文件。
 
 `detect.directory`、`skills.global`、`mcp.file` 和 `prompt.file` 必须使用 `~`、
 `~/...` 或用户主目录内的绝对路径；DingDong 会解析已有符号链接，真实目标也不能
@@ -144,8 +158,9 @@ DingDong 为每个 ID 自动保存最多三个快照：当前版本、上一个�
    未知字段或重建文件。不要自行猜测迁移。
 6. 只写本文列出的声明式字段。不要加入命令、Shell、Hook、Token、环境变量、工作区
    绝对路径或会话 ID。解析已有符号链接后再次确认所有用户路径仍在主目录内。
-7. 先在同目录写临时文件，验证 YAML 和字段值；替换前重新读取目标，确认检查后没有
-   并发变化，并尽量保留原文件权限。再原子替换并重新读取确认。
+7. 先在同目录创建唯一临时文件，验证 YAML 和字段值；替换前重新读取目标，确认检查后
+   没有并发变化，并保留原文件权限。再原子替换并重新读取确认。不要使用可被并发写入
+   冲突的固定 `.tmp` 或 `.bak` 文件名。
 8. 不要直接编辑 `Agent Adapter History`。DingDong 会在观察到用户文件变更时记录
    快照。
 9. 告知用户实际文件、改动字段，以及该 Agent 的 `detect.directory` 当前是否存在。

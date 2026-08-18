@@ -85,6 +85,62 @@ void main() {
     expect(await stale.userFile!.readAsString(), contains('Codex External'));
   });
 
+  test('concurrent saves from one stale view allow only one winner', () async {
+    final Directory temporary = Directory.systemTemp.createTempSync(
+      'dingdong-agent-adapters-',
+    );
+    addTearDown(() => temporary.deleteSync(recursive: true));
+    final AgentAdapterRepository repository = AgentAdapterRepository(
+      userDirectory: Directory('${temporary.path}/adapters'),
+      historyDirectory: Directory('${temporary.path}/history'),
+      homeDirectory: temporary.path,
+      loadBuiltIns: () async => <String, String>{'codex': _codex},
+    );
+    final AgentAdapterEntry builtIn = (await repository.load()).entries.single;
+    await repository.save(
+      _codex.replaceFirst('Codex', 'Codex Existing'),
+      existing: builtIn,
+    );
+    final AgentAdapterEntry stale = (await repository.load()).entries.single;
+
+    Future<Object?> capture(Future<void> operation) async {
+      try {
+        await operation;
+        return null;
+      } on Object catch (error) {
+        return error;
+      }
+    }
+
+    final List<Object?> outcomes = await Future.wait(<Future<Object?>>[
+      capture(
+        repository.save(
+          _codex.replaceFirst('Codex', 'Codex First'),
+          existing: stale,
+        ),
+      ),
+      capture(
+        repository.save(
+          _codex.replaceFirst('Codex', 'Codex Second'),
+          existing: stale,
+        ),
+      ),
+    ]);
+
+    expect(outcomes.where((Object? value) => value == null), hasLength(1));
+    expect(
+      outcomes.whereType<StateError>(),
+      hasLength(1),
+      reason: 'The loser must report a stale Adapter instead of an I/O race.',
+    );
+    final AgentAdapterCatalog catalog = await repository.load();
+    expect(catalog.entries.single.isValid, isTrue);
+    expect(
+      catalog.entries.single.displayName,
+      anyOf('Codex First', 'Codex Second'),
+    );
+  });
+
   test(
     'external invalid edits remain visible and block effective loading',
     () async {

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dingdong/core/files/safe_managed_file.dart';
+import 'package:dingdong/core/serialization/strict_json.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
@@ -235,11 +237,32 @@ final class AgentAdapterRepository {
         'A user Agent Adapter named "${adapter.id}" already exists.',
       );
     }
-    if (existing != null) {
-      await _requireUnchanged(existing, destination);
+    final String normalized = _normalizedDocument(document);
+    try {
+      await SafeManagedFile(destination).update(
+        (ManagedFileSnapshot snapshot) {
+          if (existing == null) {
+            if (snapshot.exists) {
+              throw FormatException(
+                'A user Agent Adapter named "${adapter.id}" already exists.',
+              );
+            }
+          } else {
+            _requireExpectedSnapshot(existing, snapshot);
+          }
+          return normalized;
+        },
+        validate: (String value) {
+          final AgentAdapter parsed = AgentAdapter.parse(value);
+          parsed.validateForHomeDirectory(homeDirectory);
+        },
+      );
+    } on ManagedFileConflictException {
+      throw StateError(
+        'The Agent Adapter changed outside DingDong. Refresh before saving.',
+      );
     }
-    await _writeAtomically(destination, _normalizedDocument(document));
-    await _recordRevision(adapter.id, _normalizedDocument(document));
+    await _recordRevision(adapter.id, normalized);
   }
 
   Future<void> resetToBuiltIn(AgentAdapterEntry entry) async {
@@ -248,8 +271,16 @@ final class AgentAdapterRepository {
         'This Agent Adapter has no built-in version to restore.',
       );
     }
-    await _requireUnchanged(entry, entry.userFile!);
-    await entry.userFile!.delete();
+    final SafeManagedFile managed = SafeManagedFile(entry.userFile!);
+    final ManagedFileSnapshot snapshot = await managed.snapshot();
+    _requireExpectedSnapshot(entry, snapshot);
+    try {
+      await managed.deleteIfUnchanged(snapshot);
+    } on ManagedFileConflictException {
+      throw StateError(
+        'The Agent Adapter changed outside DingDong. Refresh before saving.',
+      );
+    }
     await _recordRevision(entry.id, entry.builtInDocument!);
   }
 
@@ -257,8 +288,16 @@ final class AgentAdapterRepository {
     if (entry.hasBuiltIn || entry.userFile == null) {
       throw StateError('Only custom Agent Adapters can be deleted.');
     }
-    await _requireUnchanged(entry, entry.userFile!);
-    await entry.userFile!.delete();
+    final SafeManagedFile managed = SafeManagedFile(entry.userFile!);
+    final ManagedFileSnapshot snapshot = await managed.snapshot();
+    _requireExpectedSnapshot(entry, snapshot);
+    try {
+      await managed.deleteIfUnchanged(snapshot);
+    } on ManagedFileConflictException {
+      throw StateError(
+        'The Agent Adapter changed outside DingDong. Refresh before saving.',
+      );
+    }
   }
 
   Stream<void> watch() async* {
@@ -281,26 +320,24 @@ final class AgentAdapterRepository {
         .map((FileSystemEvent _) {});
   }
 
-  Future<void> _requireUnchanged(
+  void _requireExpectedSnapshot(
     AgentAdapterEntry existing,
-    File destination,
-  ) async {
+    ManagedFileSnapshot snapshot,
+  ) {
     if (existing.userFile == null) {
-      if (await destination.exists()) {
+      if (snapshot.exists) {
         throw StateError(
           'The Agent Adapter was created outside DingDong. Refresh before saving.',
         );
       }
       return;
     }
-    if (!await destination.exists()) {
+    if (!snapshot.exists) {
       throw StateError(
         'The Agent Adapter was removed outside DingDong. Refresh before saving.',
       );
     }
-    final String current = _normalizedDocument(
-      await destination.readAsString(),
-    );
+    final String current = _normalizedDocument(snapshot.contents);
     if (current != _normalizedDocument(existing.document)) {
       throw StateError(
         'The Agent Adapter changed outside DingDong. Refresh before saving.',
@@ -320,12 +357,45 @@ final class AgentAdapterRepository {
 
   Future<List<AgentAdapterRevision>> _readHistory(String id) async {
     final File file = _historyFile(id);
-    if (!await file.exists()) {
+    final ManagedFileSnapshot snapshot = await SafeManagedFile(file).snapshot();
+    if (!snapshot.exists) {
       return <AgentAdapterRevision>[];
     }
+    return _decodeHistory(id, snapshot.contents);
+  }
+
+  Future<void> _recordRevision(String id, String document) async {
+    final String normalized = _normalizedDocument(document);
+    await SafeManagedFile(_historyFile(id)).update((
+      ManagedFileSnapshot snapshot,
+    ) {
+      final List<AgentAdapterRevision> revisions = snapshot.exists
+          ? _decodeHistory(id, snapshot.contents)
+          : <AgentAdapterRevision>[];
+      if (revisions.isNotEmpty && revisions.last.document == normalized) {
+        return null;
+      }
+      revisions.add(
+        AgentAdapterRevision(recordedAt: _now().toUtc(), document: normalized),
+      );
+      while (revisions.length > 3) {
+        revisions.removeAt(0);
+      }
+      final String encoded = const JsonEncoder.withIndent('  ')
+          .convert(<String, Object?>{
+            'schemaVersion': 1,
+            'revisions': revisions
+                .map((AgentAdapterRevision revision) => revision.toJson())
+                .toList(growable: false),
+          });
+      return '$encoded\n';
+    }, validate: (String value) => _decodeHistory(id, value));
+  }
+
+  List<AgentAdapterRevision> _decodeHistory(String id, String contents) {
     try {
       final Map<String, Object?> json = Map<String, Object?>.from(
-        jsonDecode(await file.readAsString()) as Map,
+        decodeStrictJson(contents) as Map,
       );
       if (json['schemaVersion'] != 1) {
         throw const FormatException();
@@ -340,28 +410,6 @@ final class AgentAdapterRepository {
     } on Object {
       throw FormatException('Agent Adapter history for "$id" is invalid.');
     }
-  }
-
-  Future<void> _recordRevision(String id, String document) async {
-    final String normalized = _normalizedDocument(document);
-    final List<AgentAdapterRevision> revisions = await _readHistory(id);
-    if (revisions.isNotEmpty && revisions.last.document == normalized) {
-      return;
-    }
-    revisions.add(
-      AgentAdapterRevision(recordedAt: _now().toUtc(), document: normalized),
-    );
-    while (revisions.length > 3) {
-      revisions.removeAt(0);
-    }
-    final String encoded = const JsonEncoder.withIndent('  ')
-        .convert(<String, Object?>{
-          'schemaVersion': 1,
-          'revisions': revisions
-              .map((AgentAdapterRevision revision) => revision.toJson())
-              .toList(growable: false),
-        });
-    await _writeAtomically(_historyFile(id), '$encoded\n');
   }
 
   File _historyFile(String id) {
@@ -391,33 +439,6 @@ String _normalizedDocument(String value) =>
 
 bool _isYamlPath(String value) =>
     const <String>{'.yaml', '.yml'}.contains(path.extension(value));
-
-Future<void> _writeAtomically(File file, String contents) async {
-  await file.parent.create(recursive: true);
-  final File temporary = File('${file.path}.dingdong-tmp');
-  await temporary.writeAsString(contents, flush: true);
-  if (await file.exists()) {
-    final File backup = File('${file.path}.dingdong-bak');
-    if (await backup.exists()) {
-      await backup.delete();
-    }
-    await file.rename(backup.path);
-    try {
-      await temporary.rename(file.path);
-      await backup.delete();
-    } on Object {
-      if (await temporary.exists()) {
-        await temporary.delete();
-      }
-      if (await backup.exists() && !await file.exists()) {
-        await backup.rename(file.path);
-      }
-      rethrow;
-    }
-  } else {
-    await temporary.rename(file.path);
-  }
-}
 
 const List<String> builtInAgentAdapterIds = <String>[
   'codex',

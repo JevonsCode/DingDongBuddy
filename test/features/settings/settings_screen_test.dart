@@ -97,7 +97,7 @@ void main() {
     expect(find.text('Today'), findsNothing);
   });
 
-  testWidgets('subagent notification setting uses Chinese copy', (
+  testWidgets('notification settings use Chinese copy', (
     WidgetTester tester,
   ) async {
     final SettingsViewModel model = SettingsViewModel(
@@ -122,6 +122,8 @@ void main() {
 
     expect(find.text('子智能体提醒'), findsOneWidget);
     expect(find.text('关闭后，子智能体动态不显示提醒，也不播放叮咚声音。'), findsOneWidget);
+    expect(find.text('Codex 语音任务提醒'), findsOneWidget);
+    expect(find.text('关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放叮咚声音。'), findsOneWidget);
   });
 
   testWidgetsOnPlatform(
@@ -233,6 +235,10 @@ void main() {
         find.byKey(const Key('settings-notify-agent-attention')),
         findsOneWidget,
       );
+      expect(
+        find.byKey(const Key('settings-notify-codex-voice-activity')),
+        findsOneWidget,
+      );
       final CompactSwitchListTile completionNotificationSwitch = tester.widget(
         find.byKey(const Key('settings-notify-agent-completion')),
       );
@@ -252,6 +258,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(model.settings.notifyAgentAttention, isFalse);
       expect(backend.values['dingdong.agentActivity.notifyAttention'], isFalse);
+      expect(find.text('Codex voice task notifications'), findsOneWidget);
+      final CompactSwitchListTile voiceNotificationSwitch = tester.widget(
+        find.byKey(const Key('settings-notify-codex-voice-activity')),
+      );
+      expect(voiceNotificationSwitch.value, isFalse);
+      voiceNotificationSwitch.onChanged!(true);
+      await tester.pumpAndSettle();
+      expect(model.settings.notifyCodexVoiceActivity, isTrue);
+      expect(backend.values['dingdong.agentActivity.notifyCodexVoice'], isTrue);
       expect(find.text('Subagent notifications'), findsOneWidget);
       expect(
         find.text(
@@ -589,6 +604,49 @@ void main() {
         backend.values['dingdong.agentApi.conversationFooterSymbols'],
       ),
       ConversationFooterSymbols.defaultValue,
+    );
+  });
+
+  testWidgets('conversation Token switch updates the footer preview', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1000, 820);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+    );
+    addTearDown(model.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(viewModel: model)),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder toggle = find.byKey(
+      const Key('settings-show-conversation-token-usage'),
+    );
+    final Finder compactSwitch = find.descendant(
+      of: toggle,
+      matching: find.byType(CompactSwitch),
+    );
+    await tester.ensureVisible(compactSwitch);
+    await tester.pumpAndSettle();
+    expect(model.settings.showConversationTokenUsage, isFalse);
+    expect(find.textContaining('12.4K Token'), findsNothing);
+
+    await tester.tap(compactSwitch);
+    await tester.pumpAndSettle();
+
+    expect(model.settings.showConversationTokenUsage, isTrue);
+    expect(
+      backend.values['dingdong.agentApi.showConversationTokenUsage'],
+      isTrue,
+    );
+    expect(
+      find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 12.4K Token'),
+      findsOneWidget,
     );
   });
 

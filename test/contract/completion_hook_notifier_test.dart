@@ -214,6 +214,8 @@ void main() {
       );
 
       expect(transport.body?['message'], '已修好任务结束通知，现在会显示一句本轮结果。');
+      expect(transport.body?['transcriptPath'], transcript.path);
+      expect(transport.body, isNot(contains('tokenUsage')));
     },
   );
 }

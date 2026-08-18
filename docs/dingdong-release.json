@@ -1,34 +1,35 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.4.5",
-  "latestBuild": "53",
-  "publishedAt": "2026-08-14T13:27:25Z",
+  "latestVersion": "1.4.6",
+  "latestBuild": "54",
+  "publishedAt": "2026-08-18T17:25:28Z",
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/latest",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.5/DingDong-1.4.5-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.6/DingDong-1.4.6-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.5/DingDong-1.4.5-macos-x64-beta.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.6/DingDong-1.4.6-macos-x64-beta.dmg",
         "beta": true
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.5/DingDong-1.4.5-windows-x64-beta-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.6/DingDong-1.4.6-windows-x64-beta-Setup.exe",
         "beta": true
       }
     }
   },
   "notes": [
-    "Lets users independently choose whether Agent completions, requests for attention, and subagent activity should send notifications.",
-    "Shows waiting-for-input Agent updates as a distinct attention state in the activity feed and device notifications.",
-    "Turns the browser H5 page into a single PWA launcher after installation, so the browser surface no longer receives Agent notifications.",
-    "Keeps PWA notification permission checks in a loading state until the asynchronous browser result settles.",
-    "Retries desktop release metadata checks every seven hours so the version update dot stays current while DingDong is running.",
+    "Shows candidate, loaded, and called counts for managed Prompts, Skills, and MCPs in the library and detail views.",
+    "Shows exact conversation Token usage for supported Codex, Claude Code, and Pi sessions behind an opt-in setting.",
+    "Explains repeated notifications and cumulative Token usage from the Dynamic and Recent Agents hover details.",
+    "Hardens managed Prompt, Skill, MCP, scope, and trigger-group writes with strict parsing, atomic updates, and recoverable transactions.",
+    "Improves repository scope matching and validates managed Agent resources against their exact project identity.",
+    "Adds and verifies Pi project-native Skill discovery while preserving unsupported Agent boundaries without estimates.",
     "Keeps Intel macOS and Windows packages marked as beta."
   ]
 }

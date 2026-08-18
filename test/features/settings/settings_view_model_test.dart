@@ -97,13 +97,17 @@ void main() {
 
     expect(model.settings.notifyAgentCompletion, isTrue);
     expect(model.settings.notifyAgentAttention, isTrue);
+    expect(model.settings.notifyCodexVoiceActivity, isFalse);
     await model.setNotifyAgentCompletion(false);
     await model.setNotifyAgentAttention(false);
+    await model.setNotifyCodexVoiceActivity(true);
 
     expect(model.settings.notifyAgentCompletion, isFalse);
     expect(model.settings.notifyAgentAttention, isFalse);
+    expect(model.settings.notifyCodexVoiceActivity, isTrue);
     expect(backend.values['dingdong.agentActivity.notifyCompletions'], isFalse);
     expect(backend.values['dingdong.agentActivity.notifyAttention'], isFalse);
+    expect(backend.values['dingdong.agentActivity.notifyCodexVoice'], isTrue);
   });
 
   test('conversation footer symbols update and persist immediately', () async {
@@ -128,6 +132,26 @@ void main() {
       model.settings.conversationFooterSymbols,
     );
   });
+
+  test(
+    'conversation token usage display defaults off and persists opt-in',
+    () async {
+      final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(backend),
+      );
+      await model.load();
+
+      expect(model.settings.showConversationTokenUsage, isFalse);
+      await model.setShowConversationTokenUsage(true);
+
+      expect(model.settings.showConversationTokenUsage, isTrue);
+      expect(
+        backend.values['dingdong.agentApi.showConversationTokenUsage'],
+        isTrue,
+      );
+    },
+  );
 
   test(
     'reload applies settings saved by the dedicated settings window',
@@ -464,10 +488,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.4.6',
-        latestBuild: '53',
+        latestVersion: '1.4.7',
+        latestBuild: '55',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.6'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.7'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -483,11 +507,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.4.6');
+    expect(model.releaseStatus.latestVersion, '1.4.7');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.4.6'),
+      Uri.parse('https://example.com/dingdong/releases/1.4.7'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -500,7 +524,7 @@ void main() {
         final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
           ReleaseMetadata(
             app: 'DingDong',
-            latestVersion: '1.4.6',
+            latestVersion: '1.4.7',
             website: Uri.parse('https://example.com/dingdong'),
             releasePage: Uri.parse('https://example.com/dingdong/releases'),
           ),

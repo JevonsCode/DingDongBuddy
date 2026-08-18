@@ -15,7 +15,7 @@ import worker from "../src/worker.js";
 const workerSource = readFileSync(new URL("../src/worker.js", import.meta.url), "utf8");
 
 test("relay room ids are opaque and bounded", () => {
-  assert.match(workerSource, /const serviceVersion = "1\.4\.5"/);
+  assert.match(workerSource, /const serviceVersion = "1\.4\.6"/);
   assert.match(workerSource, /releaseSha: env\.DINGDONG_RELEASE_SHA \|\| null/);
   assert.equal(isValidRoom("Abcd_1234-efgh5678-IJKL"), true);
   assert.equal(isValidRoom("short"), false);

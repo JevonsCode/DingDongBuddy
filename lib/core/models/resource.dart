@@ -96,8 +96,12 @@ final class Resource {
     Map<String, bool> skillHooksEnabledByAgent = const <String, bool>{},
     String? skillPackageDigest,
     this.sortOrder,
+    this.candidateCount = 0,
+    this.lastCandidateAt,
     this.usageCount = 0,
     this.lastUsedAt,
+    this.invocationCount = 0,
+    this.lastInvokedAt,
   }) : group = _trimmedOrNull(group) ?? type.defaultGroup,
        title = title.trim(),
        tags = List<String>.unmodifiable(
@@ -139,6 +143,10 @@ final class Resource {
   factory Resource.fromJson(Map<String, Object?> json) {
     final bool pinned = json['pinned'] as bool? ?? false;
     final ResourceType type = ResourceType.parse(json['type']);
+    final int usageCount = json['usageCount'] as int? ?? 0;
+    final DateTime? lastUsedAt = json['lastUsedAt'] == null
+        ? null
+        : DateTime.parse(json['lastUsedAt'] as String).toUtc();
     final List<String> skillProjectPaths =
         (json['skillProjectPaths'] as List<Object?>? ?? const <Object?>[])
             .map((Object? value) => value as String)
@@ -179,10 +187,18 @@ final class Resource {
       ),
       skillPackageDigest: json['skillPackageDigest'] as String?,
       sortOrder: json['sortOrder'] as int?,
-      usageCount: json['usageCount'] as int? ?? 0,
-      lastUsedAt: json['lastUsedAt'] == null
+      candidateCount:
+          json['candidateCount'] as int? ??
+          (type == ResourceType.mcp ? usageCount : 0),
+      lastCandidateAt: json['lastCandidateAt'] == null
+          ? (type == ResourceType.mcp ? lastUsedAt : null)
+          : DateTime.parse(json['lastCandidateAt'] as String).toUtc(),
+      usageCount: usageCount,
+      lastUsedAt: lastUsedAt,
+      invocationCount: json['invocationCount'] as int? ?? 0,
+      lastInvokedAt: json['lastInvokedAt'] == null
           ? null
-          : DateTime.parse(json['lastUsedAt'] as String).toUtc(),
+          : DateTime.parse(json['lastInvokedAt'] as String).toUtc(),
       createdAt: DateTime.parse(_requiredString(json, 'createdAt')).toUtc(),
       updatedAt: DateTime.parse(_requiredString(json, 'updatedAt')).toUtc(),
     );
@@ -237,8 +253,12 @@ final class Resource {
   bool skillHooksEnabledForAgent(String agentId) =>
       skillHooksEnabledByAgent[agentId.trim()] ?? false;
   final int? sortOrder;
+  final int candidateCount;
+  final DateTime? lastCandidateAt;
   final int usageCount;
   final DateTime? lastUsedAt;
+  final int invocationCount;
+  final DateTime? lastInvokedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -272,9 +292,15 @@ final class Resource {
         'skillHooksEnabledByAgent': skillHooksEnabledByAgent,
       if (skillPackageDigest != null) 'skillPackageDigest': skillPackageDigest,
       if (sortOrder != null) 'sortOrder': sortOrder,
+      'candidateCount': candidateCount,
+      if (lastCandidateAt != null)
+        'lastCandidateAt': lastCandidateAt!.toUtc().toIso8601String(),
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
+      'invocationCount': invocationCount,
+      if (lastInvokedAt != null)
+        'lastInvokedAt': lastInvokedAt!.toUtc().toIso8601String(),
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
     };
@@ -306,9 +332,15 @@ final class Resource {
       },
       if (agentSessionName != null) 'agentSessionName': agentSessionName,
       if (hideInAgentConversation) 'hideInAgentConversation': true,
+      'candidateCount': candidateCount,
+      if (lastCandidateAt != null)
+        'lastCandidateAt': lastCandidateAt!.toUtc().toIso8601String(),
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
+      'invocationCount': invocationCount,
+      if (lastInvokedAt != null)
+        'lastInvokedAt': lastInvokedAt!.toUtc().toIso8601String(),
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
       if (source != null) 'source': source,
@@ -341,9 +373,15 @@ final class Resource {
       },
       if (agentSessionName != null) 'agentSessionName': agentSessionName,
       if (hideInAgentConversation) 'hideInAgentConversation': true,
+      'candidateCount': candidateCount,
+      if (lastCandidateAt != null)
+        'lastCandidateAt': lastCandidateAt!.toUtc().toIso8601String(),
       'usageCount': usageCount,
       if (lastUsedAt != null)
         'lastUsedAt': lastUsedAt!.toUtc().toIso8601String(),
+      'invocationCount': invocationCount,
+      if (lastInvokedAt != null)
+        'lastInvokedAt': lastInvokedAt!.toUtc().toIso8601String(),
       'contentCharacterCount': content.length,
       'createdAt': createdAt.toUtc().toIso8601String(),
       'updatedAt': updatedAt.toUtc().toIso8601String(),
@@ -374,8 +412,12 @@ final class Resource {
     Map<String, bool>? skillHooksEnabledByAgent,
     Object? skillPackageDigest = _unset,
     int? sortOrder,
+    int? candidateCount,
+    DateTime? lastCandidateAt,
     int? usageCount,
     DateTime? lastUsedAt,
+    int? invocationCount,
+    DateTime? lastInvokedAt,
     DateTime? updatedAt,
   }) {
     final bool resolvedPinned = pinned ?? this.pinned;
@@ -411,8 +453,12 @@ final class Resource {
           ? this.skillPackageDigest
           : skillPackageDigest as String?,
       sortOrder: sortOrder ?? this.sortOrder,
+      candidateCount: candidateCount ?? this.candidateCount,
+      lastCandidateAt: lastCandidateAt ?? this.lastCandidateAt,
       usageCount: usageCount ?? this.usageCount,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+      invocationCount: invocationCount ?? this.invocationCount,
+      lastInvokedAt: lastInvokedAt ?? this.lastInvokedAt,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -447,8 +493,12 @@ final class Resource {
             ) &&
             skillPackageDigest == other.skillPackageDigest &&
             sortOrder == other.sortOrder &&
+            candidateCount == other.candidateCount &&
+            lastCandidateAt == other.lastCandidateAt &&
             usageCount == other.usageCount &&
             lastUsedAt == other.lastUsedAt &&
+            invocationCount == other.invocationCount &&
+            lastInvokedAt == other.lastInvokedAt &&
             createdAt == other.createdAt &&
             updatedAt == other.updatedAt;
   }
@@ -477,8 +527,12 @@ final class Resource {
     Object.hashAll(skillHooksEnabledByAgent.entries),
     skillPackageDigest,
     sortOrder,
+    candidateCount,
+    lastCandidateAt,
     usageCount,
     lastUsedAt,
+    invocationCount,
+    lastInvokedAt,
     createdAt,
     updatedAt,
   ]);

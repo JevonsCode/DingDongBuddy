@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
@@ -27,7 +28,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     String? Function()? sourceResolver,
   }) : _currentDirectory = currentDirectory ?? _defaultCurrentDirectory,
        _repositoryUrlResolver =
-           repositoryUrlResolver ?? _defaultRepositoryUrlResolver,
+           repositoryUrlResolver ?? resolveGitRepositoryUrl,
        _conversationIdResolver =
            conversationIdResolver ?? _defaultConversationId,
        _sourceResolver = sourceResolver ?? _defaultAgentSource;
@@ -314,6 +315,7 @@ String? _defaultConversationId() => _firstEnvironmentValue(const <String>[
   'CURSOR_SESSION_ID',
   'GEMINI_SESSION_ID',
   'KIRO_SESSION_ID',
+  'PI_SESSION_ID',
 ]);
 
 String? _defaultAgentSource() =>
@@ -327,23 +329,6 @@ String? _firstEnvironmentValue(List<String> keys) {
     }
   }
   return null;
-}
-
-Future<String?> _defaultRepositoryUrlResolver(String directory) async {
-  try {
-    final ProcessResult result = await Process.run('git', const <String>[
-      'config',
-      '--get',
-      'remote.origin.url',
-    ], workingDirectory: directory).timeout(const Duration(seconds: 1));
-    if (result.exitCode != 0) {
-      return null;
-    }
-    final String value = result.stdout.toString().trim();
-    return value.isEmpty ? null : value;
-  } on Object {
-    return null;
-  }
 }
 
 Map<String, String> _stringQuery(

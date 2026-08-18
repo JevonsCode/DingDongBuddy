@@ -12,6 +12,7 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -196,6 +197,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     key: ValueKey<String>(activity.id),
                     activity: activity,
                     isSubagent: isSubagent,
+                    showConversationTokenUsage: widget
+                        .settingsViewModel
+                        .settings
+                        .showConversationTokenUsage,
                     onTap: _conversationTap(context, activity),
                     animate:
                         activity.unseen &&

@@ -43,6 +43,9 @@ String? inferAgentSourceFromEnvironment(Map<String, String> environment) {
   if (hasValue('KIRO_SESSION_ID')) {
     return 'Kiro';
   }
+  if (hasValue('PI_SESSION_ID')) {
+    return 'Pi';
+  }
   final String aiAgent = (environment['AI_AGENT'] ?? '').trim().toLowerCase();
   final String piFlag = (environment['PI_CODING_AGENT'] ?? '')
       .trim()

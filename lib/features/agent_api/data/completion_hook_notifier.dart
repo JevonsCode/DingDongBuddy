@@ -39,6 +39,10 @@ final class CompletionHookNotifier {
           'workspacePath',
         ]) ??
         _firstWorkspaceRoot(input['workspace_roots']);
+    final String? transcriptPath = _firstText(input, const <String>[
+      'transcript_path',
+      'transcriptPath',
+    ]);
     return _transport.request(
       method: 'POST',
       path: '/ding',
@@ -52,6 +56,7 @@ final class CompletionHookNotifier {
           'notificationKind': notificationKind.apiValue,
         'conversationId': ?conversationId,
         'workspacePath': ?workspacePath,
+        'transcriptPath': ?transcriptPath,
       },
     );
   }

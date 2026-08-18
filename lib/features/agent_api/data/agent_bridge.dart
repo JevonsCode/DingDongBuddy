@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
+import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/managed_mcp_identity.dart';
@@ -47,16 +50,24 @@ final class AgentBridge {
     this.querySkillDeploymentPresence,
     this.onTaskStarted,
     this.loadConversationFooterSymbols,
+    this.loadShowConversationTokenUsage,
+    this.loadConversationTokenUsage,
+    AgentRepositoryUrlResolver? repositoryUrlResolver,
   }) : _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       _repositoryUrlResolver =
+           repositoryUrlResolver ?? resolveGitRepositoryUrl;
 
   final ResourceStore _store;
   final TriggerGroupStore _triggerGroupStore;
   final DateTime Function() _now;
+  final AgentRepositoryUrlResolver _repositoryUrlResolver;
   final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
   final FutureOr<void> Function(AgentBridgeTaskStart start)? onTaskStarted;
   final Future<ConversationFooterSymbols> Function()?
   loadConversationFooterSymbols;
+  final Future<bool> Function()? loadShowConversationTokenUsage;
+  final ConversationTokenUsageLoader? loadConversationTokenUsage;
 
   static const int _maximumSkillPackageFiles = 200;
   static const int _maximumSkillFileBytes = 5 * 1024 * 1024;
@@ -71,9 +82,14 @@ final class AgentBridge {
       final String requestedSource = (request['source'] as String? ?? 'Agent')
           .trim();
       final String source = requestedSource.isEmpty ? 'Agent' : requestedSource;
+      final String conversationId = _firstString(request, const <String>[
+        'conversationId',
+        'sessionId',
+        'threadId',
+      ]);
       final String expand = request['expand'] as String? ?? 'prompts';
       final DateTime startedAt = _now().toUtc();
-      final TriggerContext context = TriggerContext(
+      final TriggerContext context = await _resolveContext(
         projectPath: _firstString(request, const <String>[
           'workspacePath',
           'projectPath',
@@ -95,22 +111,14 @@ final class AgentBridge {
               startedAt: startedAt,
               workspacePath: context.projectPath,
               repositoryUrl: context.repositoryUrl,
-              conversationId: _firstString(request, const <String>[
-                'conversationId',
-                'sessionId',
-                'threadId',
-              ]),
+              conversationId: conversationId,
             ),
           );
         } on Object {
           // Lifecycle observation must never prevent Prompt and Skill delivery.
         }
       }
-      final Set<String> terms = task
-          .toLowerCase()
-          .split(RegExp(r'[^\p{L}\p{N}_-]+', unicode: true))
-          .where((String value) => value.length >= 2)
-          .toSet();
+      final Set<String> terms = _searchTerms(task);
       final List<Resource> resources = await _store.load();
       final List<TriggerGroup> triggerGroups = await _triggerGroupStore.load();
       final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
@@ -163,9 +171,16 @@ final class AgentBridge {
                   ? name
                   : left.resource.id.compareTo(right.resource.id);
             });
-      final Set<String> selectedIds = selected
-          .map((Resource resource) => resource.id)
-          .toSet();
+      final Set<String> selectedIds = <Resource>[
+        ...prompts,
+        ...knowledge,
+      ].map((Resource resource) => resource.id).toSet();
+      final Set<String> candidateIds = <String>{
+        ...mcps.map((Resource resource) => resource.id),
+        ...skillCandidates.map(
+          (DynamicSkillCandidate skill) => skill.resource.id,
+        ),
+      };
       final DateTime usedAt = startedAt;
       List<Resource> updatedResources = resources;
       if (selectedIds.isNotEmpty) {
@@ -182,6 +197,31 @@ final class AgentBridge {
                     ? resource.copyWith(
                         usageCount: resource.usageCount + 1,
                         lastUsedAt: usedAt,
+                      )
+                    : resource,
+              )
+              .toList(growable: false);
+          await store.save(updatedResources);
+        }
+      }
+      if (candidateIds.isNotEmpty) {
+        final ResourceStore store = _store;
+        final ResourceCandidateStore? candidateStore =
+            store is ResourceCandidateStore
+            ? store as ResourceCandidateStore
+            : null;
+        if (candidateStore != null) {
+          updatedResources = await candidateStore.recordCandidates(
+            candidateIds,
+            startedAt,
+          );
+        } else {
+          updatedResources = updatedResources
+              .map(
+                (Resource resource) => candidateIds.contains(resource.id)
+                    ? resource.copyWith(
+                        candidateCount: resource.candidateCount + 1,
+                        lastCandidateAt: startedAt,
                       )
                     : resource,
               )
@@ -217,9 +257,19 @@ final class AgentBridge {
           .toList(growable: false);
       final ConversationFooterSymbols footerSymbols =
           await _loadConversationFooterSymbols();
+      final ConversationTokenUsage? tokenUsage = conversationItems.isEmpty
+          ? null
+          : await _loadTokenUsage(
+              ConversationTokenUsageRequest(
+                source: source,
+                conversationId: conversationId,
+                workspacePath: context.projectPath,
+              ),
+            );
       final Map<String, Object?> conversation = buildDingDongConversationFooter(
         items: conversationItems,
         symbols: footerSymbols,
+        tokenUsage: tokenUsage,
       );
 
       List<Map<String, Object?>> items(ResourceType type) {
@@ -402,16 +452,39 @@ final class AgentBridge {
     }
   }
 
+  Future<ConversationTokenUsage?> _loadTokenUsage(
+    ConversationTokenUsageRequest request,
+  ) async {
+    try {
+      if (await loadShowConversationTokenUsage?.call() != true) {
+        return null;
+      }
+      return await loadConversationTokenUsage?.call(request);
+    } on Object {
+      return null;
+    }
+  }
+
   /// Returns a marked footer replacement after the Agent reports one real MCP
   /// tool invocation. Availability or tool discovery alone is not evidence.
-  Future<HttpResponseData> confirmMcpUse(Map<String, String> query) async {
+  Future<HttpResponseData> confirmMcpUse(Map<String, String> query) {
+    final ResourceStore store = _store;
+    final ExclusiveResourceStore? exclusive = store is ExclusiveResourceStore
+        ? store as ExclusiveResourceStore
+        : null;
+    return exclusive == null
+        ? _confirmMcpUse(query)
+        : exclusive.exclusiveMutation(() => _confirmMcpUse(query));
+  }
+
+  Future<HttpResponseData> _confirmMcpUse(Map<String, String> query) async {
     try {
       final String id = (query['id'] ?? '').trim();
       final String serverName = (query['serverName'] ?? '')
           .trim()
           .toLowerCase();
       final String toolName = (query['toolName'] ?? '').trim();
-      final TriggerContext context = _contextFromStrings(query);
+      final TriggerContext context = await _resolveContextFromStrings(query);
       if (id.isEmpty || serverName.isEmpty || toolName.isEmpty) {
         return const HttpResponseData(
           statusCode: 400,
@@ -443,7 +516,8 @@ final class AgentBridge {
       final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
         await _triggerGroupStore.load(),
       );
-      final List<Resource> matches = (await _store.load())
+      final List<Resource> resources = List<Resource>.of(await _store.load());
+      final List<Resource> matches = resources
           .where(
             (Resource resource) =>
                 resource.id == id &&
@@ -464,11 +538,37 @@ final class AgentBridge {
         );
       }
       final Resource resource = matches.single;
+      final DateTime invokedAt = _now().toUtc();
+      final ResourceStore store = _store;
+      final ResourceInvocationStore? invocationStore =
+          store is ResourceInvocationStore
+          ? store as ResourceInvocationStore
+          : null;
+      late final Resource tracked;
+      if (invocationStore != null) {
+        final List<Resource> updated = await invocationStore.recordInvocation(
+          <String>{resource.id},
+          invokedAt,
+        );
+        tracked = updated.firstWhere(
+          (Resource candidate) => candidate.id == resource.id,
+        );
+      } else {
+        final int resourceIndex = resources.indexWhere(
+          (Resource candidate) => candidate.id == resource.id,
+        );
+        tracked = resource.copyWith(
+          invocationCount: resource.invocationCount + 1,
+          lastInvokedAt: invokedAt,
+        );
+        resources[resourceIndex] = tracked;
+        await store.save(resources);
+      }
       final ConversationFooterSymbols footerSymbols =
           await _loadConversationFooterSymbols();
       final Map<String, Object?> conversationItem =
           normalizeDingDongConversationFooterItem(
-            _conversationCapsuleItem(resource, confirmedMcpUse: true),
+            _conversationCapsuleItem(tracked, confirmedMcpUse: true),
             symbols: footerSymbols,
           )!;
       return HttpResponseData(
@@ -477,10 +577,12 @@ final class AgentBridge {
           'status': 'ok',
           'context': _contextJson(context),
           'mcp': <String, Object?>{
-            'id': resource.id,
-            'title': resource.title,
+            'id': tracked.id,
+            'title': tracked.title,
             'serverName': serverName,
             'toolName': toolName,
+            'invocationCount': tracked.invocationCount,
+            'lastInvokedAt': tracked.lastInvokedAt!.toIso8601String(),
           },
           if (_isVisibleInAgentConversation(resource))
             'conversation': <String, Object?>{
@@ -613,7 +715,7 @@ final class AgentBridge {
   Future<_SkillLookup> _lookupSkill(Map<String, String> query) async {
     final String id = (query['id'] ?? '').trim();
     final String name = (query['name'] ?? '').trim().toLowerCase();
-    final TriggerContext context = _contextFromStrings(query);
+    final TriggerContext context = await _resolveContextFromStrings(query);
     if (id.isEmpty && name.isEmpty) {
       return _SkillLookup.error(
         context,
@@ -762,6 +864,44 @@ final class AgentBridge {
       'files': visible,
     };
   }
+
+  Future<TriggerContext> _resolveContextFromStrings(
+    Map<String, String> values,
+  ) {
+    final String source = _firstNonEmptyString(values, const <String>[
+      'source',
+    ]);
+    return _resolveContext(
+      projectPath: _firstNonEmptyString(values, const <String>[
+        'workspacePath',
+        'projectPath',
+        'cwd',
+      ]),
+      repositoryUrl: _firstNonEmptyString(values, const <String>[
+        'repositoryUrl',
+        'repository',
+        'projectUrl',
+      ]),
+      source: source.isEmpty ? 'Agent' : source,
+    );
+  }
+
+  Future<TriggerContext> _resolveContext({
+    required String projectPath,
+    required String repositoryUrl,
+    required String source,
+  }) async {
+    String resolvedRepository = repositoryUrl.trim();
+    if (resolvedRepository.isEmpty && projectPath.trim().isNotEmpty) {
+      resolvedRepository =
+          (await _repositoryUrlResolver(projectPath.trim()))?.trim() ?? '';
+    }
+    return TriggerContext(
+      projectPath: projectPath.trim(),
+      repositoryUrl: resolvedRepository,
+      source: source,
+    );
+  }
 }
 
 String _firstString(Map<String, Object?> values, List<String> keys) {
@@ -784,8 +924,28 @@ bool _matches(Resource resource, Set<String> terms) {
     ...resource.tags,
     resource.content,
   ].join(' ').toLowerCase();
-  return terms.any(haystack.contains);
+  final Set<String> searchableTerms = _searchTerms(haystack);
+  return terms.any(
+    (String term) => _usesNaturalSubstringMatching(term)
+        ? haystack.contains(term)
+        : searchableTerms.contains(term),
+  );
 }
+
+Set<String> _searchTerms(String value) {
+  final Iterable<String> tokens = value
+      .toLowerCase()
+      .split(RegExp(r'[^\p{L}\p{N}_-]+', unicode: true))
+      .where((String term) => term.length >= 2);
+  return <String>{
+    ...tokens,
+    for (final String token in tokens)
+      ...token.split(RegExp('[_-]+')).where((String part) => part.length >= 2),
+  };
+}
+
+bool _usesNaturalSubstringMatching(String term) =>
+    term.runes.any((int rune) => rune > 0x7F);
 
 bool _isActive(Resource resource, Set<String> terms) {
   return switch (resource.activation) {
@@ -860,23 +1020,6 @@ String _displayResourceTitle(String value) {
     return normalized;
   }
   return '${String.fromCharCodes(characters.take(_maximumConversationTitleCharacters))}...';
-}
-
-TriggerContext _contextFromStrings(Map<String, String> values) {
-  final String source = _firstNonEmptyString(values, const <String>['source']);
-  return TriggerContext(
-    projectPath: _firstNonEmptyString(values, const <String>[
-      'workspacePath',
-      'projectPath',
-      'cwd',
-    ]),
-    repositoryUrl: _firstNonEmptyString(values, const <String>[
-      'repositoryUrl',
-      'repository',
-      'projectUrl',
-    ]),
-    source: source.isEmpty ? 'Agent' : source,
-  );
 }
 
 String _firstNonEmptyString(Map<String, String> values, List<String> keys) {

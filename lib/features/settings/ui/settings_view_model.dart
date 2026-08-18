@@ -381,6 +381,12 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setNotifyCodexVoiceActivity(bool value) async {
+    _settings = _settings.copyWith(notifyCodexVoiceActivity: value);
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setNotifySubagentActivity(bool value) async {
     _settings = _settings.copyWith(notifySubagentActivity: value);
     notifyListeners();
@@ -389,6 +395,12 @@ final class SettingsViewModel extends ChangeNotifier
 
   Future<void> setGroupRepeatedAgentSessions(bool value) async {
     _settings = _settings.copyWith(groupRepeatedAgentSessions: value);
+    notifyListeners();
+    await _save();
+  }
+
+  Future<void> setShowConversationTokenUsage(bool value) async {
+    _settings = _settings.copyWith(showConversationTokenUsage: value);
     notifyListeners();
     await _save();
   }

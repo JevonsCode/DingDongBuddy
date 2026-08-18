@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dingdong/core/identities/repository_identity.dart';
 import 'package:path/path.dart' as path;
 
 /// Context passed by an Agent when it asks DingDong for resources.
@@ -169,8 +170,10 @@ String _normalized(
   required bool resolveExistingProjectPath,
 }) {
   final String trimmed = value.trim();
-  if (field == TriggerRuleField.repositoryUrl ||
-      field == TriggerRuleField.source) {
+  if (field == TriggerRuleField.repositoryUrl) {
+    return canonicalRepositoryIdentity(trimmed);
+  }
+  if (field == TriggerRuleField.source) {
     return trimmed.toLowerCase();
   }
   String normalized = trimmed.replaceAll(r'\', '/');

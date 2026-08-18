@@ -11,6 +11,7 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
+import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -41,14 +42,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.4.5', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.4.6', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.4.5')), findsOneWidget);
-    expect(find.text('v1.4.5'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.4.6')), findsOneWidget);
+    expect(find.text('v1.4.6'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -592,6 +593,10 @@ void main() {
       message:
           'A deliberately long completion message that should be truncated in the compact Dynamic card instead of pushing the time or open action out of bounds.',
       conversationTarget: target,
+      tokenUsage: const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.codex,
+        totalTokens: 1000,
+      ),
     );
     activityController.record(
       source:
@@ -599,10 +604,21 @@ void main() {
       message:
           'A second long completion message for the same conversation, represented by the same item.',
       conversationTarget: target,
+      tokenUsage: const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.codex,
+        totalTokens: 1234567,
+      ),
     );
 
     await tester.pumpWidget(
-      DingDongApp(activityController: activityController),
+      DingDongApp(
+        activityController: activityController,
+        settingsRepository: SettingsRepository(
+          MemoryPreferencesBackend(<String, Object>{
+            'dingdong.agentApi.showConversationTokenUsage': true,
+          }),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -611,6 +627,16 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('×2'), findsOneWidget);
+    final Tooltip repeatTooltip = tester.widget<Tooltip>(
+      find.ancestor(
+        of: find.byKey(const Key('activity-repeat-count-repeated-long-agent')),
+        matching: find.byType(Tooltip),
+      ),
+    );
+    expect(
+      repeatTooltip.message,
+      'This conversation has notified you 2 times and used 1,234,567 tokens.',
+    );
     final Rect cardRect = tester.getRect(
       find.byKey(const Key('activity-repeated-long-agent')),
     );

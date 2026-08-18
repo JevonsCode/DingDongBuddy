@@ -1,3 +1,75 @@
+# DingDong 1.4.6
+
+DingDong 1.4.6 makes managed Agent resources observable, adds exact
+conversation Token usage for supported clients, and hardens global and
+project-scoped configuration updates.
+
+## See how managed resources are used
+
+- Resource Library cards and detail views now show the evidence DingDong can
+  actually observe: Prompt activation, Skill candidacy and full loading, and
+  MCP candidacy and real tool calls.
+- Counts and latest timestamps stay attached to each resource, so users can
+  distinguish availability from confirmed loading or invocation without
+  opening another management tab.
+
+## Show exact conversation Token usage when requested
+
+- A new setting, off by default, appends a compact exact session total to the
+  DingDong reply footer for supported Codex, Claude Code, and Pi conversations.
+- Repeated Agent reminders keep the compact `×N` mark; hovering it shows the
+  exact reminder count and cumulative Token total. Unsupported or unverifiable
+  clients are omitted instead of estimated.
+- When the setting is off, DingDong does not read local conversation usage
+  files.
+
+## Make managed configuration safer
+
+- Prompt, Skill, MCP, scope, and trigger-group persistence now uses strict JSON
+  parsing, atomic compare-and-update writes, repository identity normalization,
+  and a recoverable transaction journal for cross-file changes.
+- Agent synchronization rejects unsafe or ambiguous paths and preserves
+  unrelated user configuration during concurrent updates.
+- Pi project-native Skill discovery is covered by a real client integration
+  test, while unsupported MCP and Bridge capabilities remain explicitly
+  disabled.
+
+Intel macOS and Windows packages remain marked as beta.
+
+---
+
+# DingDong 1.4.6
+
+DingDong 1.4.6 让受管 Agent 资源的使用证据可见，为已支持的客户端增加
+精确会话 Token 用量，并加固全局与项目作用域的配置更新链路。
+
+## 看清受管资源如何被使用
+
+- 资源库列表与详情会展示 DingDong 能真实观测的证据：Prompt 激活、
+  Skill 进入候选与完整加载、MCP 进入候选与真实工具调用。
+- 次数和最近时间直接跟随资源展示，无需新开 Tab 就能分辨“可用”、
+  “已加载”和“已调用”。
+
+## 按需展示精确会话 Token
+
+- 新增默认关闭的设置开关；开启后，Codex、Claude Code 和 Pi 的已支持会话
+  会在 DingDong 回复页脚后显示紧凑的精确累计用量。
+- 重复提醒继续保持简洁的 `×N`；悬停时同时展示精确提醒次数和累计
+  Token。不支持或无法验证的 Agent 不会估算。
+- 关闭开关时，DingDong 不读取本地会话用量文件。
+
+## 让受管配置更安全
+
+- Prompt、Skill、MCP、作用域与触发组的持久化现在使用严格 JSON 解析、
+  原子比较更新、仓库身份归一化，以及可恢复的跨文件事务日志。
+- Agent 同步会拒绝不安全或含糊路径，并在并发更新时保留无关的用户配置。
+- Pi 项目原生 Skill 发现已纳入真实客户端集成测试；不支持的 MCP 和
+  Bridge 能力继续明确保持关闭。
+
+Intel macOS 与 Windows 安装包继续标记为 beta。
+
+---
+
 # DingDong 1.4.5
 
 DingDong 1.4.5 gives users finer control over Agent notifications, keeps the

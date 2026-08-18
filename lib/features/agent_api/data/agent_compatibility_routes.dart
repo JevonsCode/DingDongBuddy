@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
+import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
@@ -17,6 +18,8 @@ final class AgentCompatibilityRoutes {
     this.triggerGroupStore,
     this.querySkillDeploymentPresence,
     this.loadConversationFooterSymbols,
+    this.loadShowConversationTokenUsage,
+    this.loadConversationTokenUsage,
     DateTime Function()? now,
     Uri? baseUri,
   }) : _now = now ?? _utcNow,
@@ -28,6 +31,8 @@ final class AgentCompatibilityRoutes {
   final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
   final Future<ConversationFooterSymbols> Function()?
   loadConversationFooterSymbols;
+  final Future<bool> Function()? loadShowConversationTokenUsage;
+  final ConversationTokenUsageLoader? loadConversationTokenUsage;
   final DateTime Function() _now;
   Uri _baseUri;
 
@@ -51,6 +56,8 @@ final class AgentCompatibilityRoutes {
           triggerGroupStore: triggerGroupStore,
           querySkillDeploymentPresence: querySkillDeploymentPresence,
           loadConversationFooterSymbols: loadConversationFooterSymbols,
+          loadShowConversationTokenUsage: loadShowConversationTokenUsage,
+          loadConversationTokenUsage: loadConversationTokenUsage,
           now: _now,
         ).respond(
           jsonEncode(<String, Object?>{
@@ -64,6 +71,11 @@ final class AgentCompatibilityRoutes {
                 '',
             'repositoryUrl':
                 query['repositoryUrl'] ?? query['repository'] ?? '',
+            'conversationId':
+                query['conversationId'] ??
+                query['sessionId'] ??
+                query['threadId'] ??
+                '',
           }),
         ),
       '/agent/toolkit' => _toolkit(),

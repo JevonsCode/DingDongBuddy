@@ -51,6 +51,21 @@ class _NotificationSettingsSection extends StatelessWidget {
           onChanged: viewModel.setNotifyAgentAttention,
         ),
         CompactSwitchListTile(
+          key: const Key('settings-notify-codex-voice-activity'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            context.localized('Codex voice task notifications', 'Codex 语音任务提醒'),
+          ),
+          subtitle: Text(
+            context.localized(
+              'When off, tasks started in Codex voice mode do not notify or play a DingDong sound.',
+              '关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放叮咚声音。',
+            ),
+          ),
+          value: settings.notifyCodexVoiceActivity,
+          onChanged: viewModel.setNotifyCodexVoiceActivity,
+        ),
+        CompactSwitchListTile(
           key: const Key('settings-notify-subagent-activity'),
           contentPadding: EdgeInsets.zero,
           title: Text(context.localized('Subagent notifications', '子智能体提醒')),
@@ -177,10 +192,25 @@ class _ConversationFooterSettingsSection extends StatelessWidget {
     return _SettingsSection(
       title: context.localized('Agent reply footer', 'Agent 回复尾部'),
       description: context.localized(
-        'Choose the symbols that identify Prompt, Skill, and MCP resources in the final DingDong line.',
-        '自定义 DingDong 最终回复行中标识 Prompt、Skill 和 MCP 的符号。',
+        'Configure the final DingDong resource line and optionally append exact session usage.',
+        '配置 DingDong 最终资源行，并可选择追加精确的本轮会话用量。',
       ),
       children: <Widget>[
+        CompactSwitchListTile(
+          key: const Key('settings-show-conversation-token-usage'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            context.localized('Show conversation Token usage', '显示会话 Token 用量'),
+          ),
+          subtitle: Text(
+            context.localized(
+              'Shown only when Codex, Claude Code, or Pi provides exact local usage. Unsupported Agents are not estimated.',
+              '仅在 Codex、Claude Code 或 Pi 可提供本机精确用量时显示；不支持的 Agent 不做估算。',
+            ),
+          ),
+          value: settings.showConversationTokenUsage,
+          onChanged: viewModel.setShowConversationTokenUsage,
+        ),
         _SettingRow(
           label: context.localized('Prompt symbol', 'Prompt 符号'),
           child: _ConversationFooterSymbolField(
@@ -236,7 +266,8 @@ class _ConversationFooterSettingsSection extends StatelessWidget {
             children: <Widget>[
               SelectableText(
                 'DingDong · ${symbols.prompt} Prompt | '
-                '${symbols.skill} Skill* | ${symbols.mcp} MCP',
+                '${symbols.skill} Skill* | ${symbols.mcp} MCP'
+                '${settings.showConversationTokenUsage ? ' · 12.4K Token' : ''}',
                 key: const Key('settings-conversation-footer-preview'),
                 style: Theme.of(context).textTheme.bodySmall,
               ),

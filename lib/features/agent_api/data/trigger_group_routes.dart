@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
+import 'package:dingdong/features/library/data/configuration_transaction_journal.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:path/path.dart' as path;
 
 /// Public CRUD for reusable project, repository, and Agent-source scopes.
 final class TriggerGroupRoutes {
@@ -31,7 +34,19 @@ final class TriggerGroupRoutes {
     },
   );
 
-  Future<HttpResponseData> create(String body) async {
+  Future<HttpResponseData> create(String body) =>
+      _withMutationLock(() => _create(body));
+
+  Future<HttpResponseData> upsert(String body) =>
+      _withMutationLock(() => _upsert(body));
+
+  Future<HttpResponseData> update(String id, String body) =>
+      _withMutationLock(() => _update(id, body));
+
+  Future<HttpResponseData> delete(String id) =>
+      _withMutationLock(() => _delete(id));
+
+  Future<HttpResponseData> _create(String body) async {
     try {
       final Map<String, Object?> payload = _decode(body);
       final String name = (payload['name'] as String? ?? '').trim();
@@ -58,7 +73,7 @@ final class TriggerGroupRoutes {
     }
   }
 
-  Future<HttpResponseData> upsert(String body) async {
+  Future<HttpResponseData> _upsert(String body) async {
     try {
       final Map<String, Object?> payload = _decode(body);
       final String name = (payload['name'] as String? ?? '').trim();
@@ -91,7 +106,9 @@ final class TriggerGroupRoutes {
       if (invalid != null) {
         return invalid;
       }
-      final List<TriggerGroup> groups = await store.load();
+      final List<TriggerGroup> groups = List<TriggerGroup>.of(
+        await store.load(),
+      );
       final List<int> matches = <int>[
         for (var index = 0; index < groups.length; index += 1)
           if (groups[index].name.toLowerCase() == name.toLowerCase()) index,
@@ -150,8 +167,8 @@ final class TriggerGroupRoutes {
     }
   }
 
-  Future<HttpResponseData> update(String id, String body) async {
-    final List<TriggerGroup> groups = await store.load();
+  Future<HttpResponseData> _update(String id, String body) async {
+    final List<TriggerGroup> groups = List<TriggerGroup>.of(await store.load());
     final int index = groups.indexWhere((TriggerGroup group) => group.id == id);
     if (index < 0) {
       return _notFound();
@@ -202,7 +219,7 @@ final class TriggerGroupRoutes {
     }
   }
 
-  Future<HttpResponseData> delete(String id) async {
+  Future<HttpResponseData> _delete(String id) async {
     final List<TriggerGroup> groups = await store.load();
     if (!groups.any((TriggerGroup group) => group.id == id)) {
       return _notFound();
@@ -336,26 +353,149 @@ final class TriggerGroupRoutes {
     required List<TriggerGroup> proposedGroups,
     required _ResourceMutation? resourceMutation,
   }) async {
+    final bool changesResources =
+        resourceMutation != null && resourceMutation.affectedCount > 0;
+    final ConfigurationTransactionJournal? journal = changesResources
+        ? _transactionJournal()
+        : null;
+    final ConfigurationTransactionRecord? transaction =
+        journal == null || resourceMutation == null
+        ? null
+        : ConfigurationTransactionRecord(
+            mode: ConfigurationTransactionMode.commit,
+            resourceFilePath: _resourceFile()!.absolute.path,
+            triggerGroupFilePath: _triggerGroupFile()!.absolute.path,
+            previousResources: resourceMutation.previous,
+            proposedResources: resourceMutation.proposed,
+            previousGroups: previousGroups,
+            proposedGroups: proposedGroups,
+          );
+    if (journal != null && transaction != null) {
+      await journal.write(transaction);
+    }
     try {
       await store.save(proposedGroups);
-      if (resourceMutation != null && resourceMutation.affectedCount > 0) {
+      if (changesResources) {
         await resourceMutation.store.save(resourceMutation.proposed);
       }
     } on Object catch (error, stackTrace) {
+      var rollbackComplete = true;
       try {
         await store.save(previousGroups);
       } on Object {
-        // Preserve the original failure.
+        rollbackComplete = false;
       }
-      if (resourceMutation != null && resourceMutation.affectedCount > 0) {
+      if (changesResources) {
         try {
           await resourceMutation.store.save(resourceMutation.previous);
         } on Object {
-          // Preserve the original failure.
+          rollbackComplete = false;
+        }
+      }
+      if (journal != null && transaction != null) {
+        if (rollbackComplete) {
+          await journal.clear();
+        } else {
+          try {
+            await journal.write(
+              transaction.copyWith(mode: ConfigurationTransactionMode.rollback),
+            );
+          } on Object {
+            // The original commit intent remains recoverable if changing the
+            // journal mode fails.
+          }
         }
       }
       Error.throwWithStackTrace(error, stackTrace);
     }
+    await journal?.clear();
+  }
+
+  Future<T> _withMutationLock<T>(Future<T> Function() action) {
+    Future<T> recoverThenAct() async {
+      await _recoverPendingTransaction();
+      return action();
+    }
+
+    Future<T> withTriggerGroupLock() {
+      final TriggerGroupStore current = store;
+      if (current is ExclusiveTriggerGroupStore) {
+        return (current as ExclusiveTriggerGroupStore).exclusiveMutation(
+          recoverThenAct,
+        );
+      }
+      return recoverThenAct();
+    }
+
+    final ResourceStore? resources = resourceStore;
+    if (resources is ExclusiveResourceStore) {
+      return (resources as ExclusiveResourceStore).exclusiveMutation(
+        withTriggerGroupLock,
+      );
+    }
+    return withTriggerGroupLock();
+  }
+
+  Future<void> _recoverPendingTransaction() async {
+    final ConfigurationTransactionJournal? journal = _transactionJournal();
+    final ResourceStore? resources = resourceStore;
+    final File? resourceFile = _resourceFile();
+    final File? triggerFile = _triggerGroupFile();
+    if (journal == null ||
+        resources == null ||
+        resourceFile == null ||
+        triggerFile == null) {
+      return;
+    }
+    final ConfigurationTransactionRecord? transaction = await journal.read();
+    if (transaction == null) {
+      return;
+    }
+    if (transaction.resourceFilePath != resourceFile.absolute.path ||
+        transaction.triggerGroupFilePath != triggerFile.absolute.path) {
+      throw StateError(
+        'DingDong configuration transaction targets do not match the active stores.',
+      );
+    }
+    final bool rollback =
+        transaction.mode == ConfigurationTransactionMode.rollback;
+    await store.save(
+      rollback ? transaction.previousGroups : transaction.proposedGroups,
+    );
+    await resources.save(
+      rollback ? transaction.previousResources : transaction.proposedResources,
+    );
+    await journal.clear();
+  }
+
+  ConfigurationTransactionJournal? _transactionJournal() {
+    final File? resourceFile = _resourceFile();
+    final File? triggerFile = _triggerGroupFile();
+    if (resourceFile == null || triggerFile == null) {
+      return null;
+    }
+    return ConfigurationTransactionJournal(
+      File(
+        path.join(
+          triggerFile.parent.path,
+          '.dingdong-configuration-transaction.json',
+        ),
+      ),
+    );
+  }
+
+  File? _resourceFile() {
+    final ResourceStore? resources = resourceStore;
+    return resources is ResourceFileLocator
+        ? (resources as ResourceFileLocator).resourceFile
+        : null;
+  }
+
+  File? _triggerGroupFile() {
+    final TriggerGroupStore groups = store;
+    return groups is TriggerGroupFileLocator
+        ? (groups as TriggerGroupFileLocator).triggerGroupFile
+        : null;
   }
 }
 

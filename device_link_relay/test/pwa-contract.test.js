@@ -196,14 +196,14 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v26/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v27/);
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1\.4\.5"/);
-  assert.match(appSource, /const currentPwaShellVersion = 26/);
+  assert.match(appSource, /const currentPwaVersion = "1\.4\.6"/);
+  assert.match(appSource, /const currentPwaShellVersion = 27/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -211,9 +211,9 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v26/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v27/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.4.5", shell: 26 });
+  assert.deepEqual(pwaVersion, { version: "1.4.6", shell: 27 });
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
