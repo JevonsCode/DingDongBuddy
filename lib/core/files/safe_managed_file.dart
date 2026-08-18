@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:path/path.dart' as path;
+
 typedef ManagedFileTransform =
     FutureOr<String?> Function(ManagedFileSnapshot snapshot);
 typedef ManagedFileValidator = void Function(String contents);
@@ -245,17 +247,18 @@ final class SafeManagedFile {
     if (await file.exists() || !await file.parent.exists()) {
       return;
     }
-    final String name = file.path;
+    final String name = path.normalize(file.absolute.path);
     final List<File> backups = await file.parent
         .list(followLinks: false)
         .where((FileSystemEntity entity) {
           if (entity is! File) {
             return false;
           }
-          return entity.path == '$name.bak' ||
-              entity.path == '$name.dingdong-bak' ||
-              (entity.path.startsWith('$name.') &&
-                  entity.path.contains('.dingdong-bak.'));
+          final String candidatePath = path.normalize(entity.absolute.path);
+          return candidatePath == '$name.bak' ||
+              candidatePath == '$name.dingdong-bak' ||
+              (candidatePath.startsWith('$name.') &&
+                  candidatePath.contains('.dingdong-bak.'));
         })
         .cast<File>()
         .toList();
