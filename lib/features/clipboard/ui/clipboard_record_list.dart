@@ -107,10 +107,7 @@ class _ClipboardListState extends State<_ClipboardList> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.localized(
-              'This content is no longer available or could not be opened.',
-              '该内容已不存在或无法打开。',
-            ),
+            context.l10n.thisContentIsNoLongerAvailableOrCouldNotBeOpened,
           ),
         ),
       );
@@ -197,7 +194,7 @@ class _ClipboardListState extends State<_ClipboardList> {
             bottom: 12,
             child: DesktopIconButton(
               key: const Key('clipboard-scroll-to-top'),
-              tooltip: context.localized('Back to top', '回到顶部'),
+              tooltip: context.l10n.backToTop,
               onPressed: _scrollToTop,
               icon: const Icon(Icons.arrow_upward_rounded, size: 16),
               size: 30,
@@ -230,9 +227,9 @@ Future<void> _showNativeClipboardContextMenu(
     await gateway.show(
       x: position.dx,
       y: position.dy,
-      useChinese: Localizations.localeOf(context).languageCode == 'zh',
       isDark: Theme.of(context).brightness == Brightness.dark,
       items: clipboardContextMenuItems(
+        strings: context.l10n,
         includePaste: true,
         canPasteAsPlainText: record.canPasteAsPlainText,
         includeShare: includeShare,
@@ -278,69 +275,65 @@ Future<void> _showClipboardContextMenu(
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.paste,
             symbol: 'clipboard',
-            label: context.localized('Paste', '粘贴'),
+            label: context.l10n.paste,
           ),
           if (record.canPasteAsPlainText)
             DesktopMenuItem<_ClipboardAction>(
               value: _ClipboardAction.pastePlainText,
               symbol: 'text',
-              label: context.localized('Paste as Plain Text', '粘贴为纯文本'),
+              label: context.l10n.pasteAsPlainText,
             ),
           const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.details,
             symbol: 'details',
-            label: context.localized('Details', '查看详情'),
+            label: context.l10n.details,
           ),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.copy,
             symbol: 'copy',
-            label: context.localized('Copy', '复制'),
+            label: context.l10n.copy,
           ),
           if (includePin)
             DesktopMenuItem<_ClipboardAction>(
               value: _ClipboardAction.togglePinned,
               symbol: 'archive',
-              label: context.localized(
-                record.pinned ? 'Unpin' : 'Pin',
-                record.pinned ? '取消置顶' : '置顶',
-              ),
+              label: record.pinned ? context.l10n.unpin : context.l10n.pin,
             ),
           const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.addTitle,
             symbol: 'add_title',
-            label: context.localized(
-              record.title.trim().isEmpty ? 'Add title' : 'Edit title',
-              record.title.trim().isEmpty ? '添加标题' : '修改标题',
-            ),
+            label: record.title.trim().isEmpty
+                ? context.l10n.addTitle
+                : context.l10n.editTitle,
           ),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.editText,
             symbol: 'edit',
-            label: context.localized('Edit text', '编辑文本'),
+            label: context.l10n.editText,
           ),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.promotePrompt,
             symbol: 'prompt',
-            label: context.localized('Save as prompt', '保存为提示词'),
+            label: context.l10n.saveAsPrompt,
           ),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.archiveTo,
             symbol: 'archive_to',
-            label: context.localized('Archive to…', '归档到…'),
+            label: context.l10n.archiveTo,
           ),
           if (includeShare)
             DesktopMenuItem<_ClipboardAction>(
               value: _ClipboardAction.share,
               symbol: 'link',
-              label: context.localized('Send to device', '发送到设备'),
+              label: context.l10n.sendToDevice,
             ),
           const DesktopMenuDivider<_ClipboardAction>(),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.delete,
             symbol: 'delete',
-            label: context.localized('Delete', '删除'),
+            label: context.l10n.delete,
             destructive: true,
           ),
         ],

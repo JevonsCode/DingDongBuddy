@@ -38,6 +38,11 @@ jobs:
 
           version="$(git show "$TESTED_SHA:pubspec.yaml" | sed -n 's/^version: \([^+]*\).*/\1/p')"
           tag="v$version"
+          prerelease="$(git show "$TESTED_SHA:docs/dingdong-release.json" | jq -r '.prerelease // false')"
+          if [ "$prerelease" != "true" ] && [ "$prerelease" != "false" ]; then
+            echo "docs/dingdong-release.json prerelease must be true or false."
+            exit 1
+          fi
 
           device_link_origin="https://dingdong.xn--m8txu.com"
           deployed_version="$(curl --fail --silent --show-error "$device_link_origin/v1/health" \
@@ -103,4 +108,5 @@ jobs:
           gh workflow run release.yml \
             --repo "$GITHUB_REPOSITORY" \
             --ref "$tag" \
-            -f tag="$tag"
+            -f tag="$tag" \
+            -f prerelease="$prerelease"

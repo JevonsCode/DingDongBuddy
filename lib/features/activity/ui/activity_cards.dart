@@ -27,7 +27,7 @@ class _RecentAgentCount extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              context.localized('$hours h · $count', '$hours 小时 · $count'),
+              context.l10n.hoursHCount(hours, count),
               style: TextStyle(
                 color: PopupStyle.of(context).textSecondary,
                 fontSize: 10,
@@ -49,7 +49,7 @@ class _RecentAgentMoreButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: context.localized('View all recent agents', '查看全部最近 Agent'),
+      message: context.l10n.viewAllRecentAgents,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -63,7 +63,7 @@ class _RecentAgentMoreButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text(
-                  context.localized('More', '更多'),
+                  context.l10n.more,
                   style: TextStyle(
                     color: PopupStyle.of(context).accent,
                     fontSize: 9,
@@ -255,14 +255,20 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                             message:
                                 widget.showConversationTokenUsage &&
                                     widget.activity.tokenUsage != null
-                                ? context.localized(
-                                    'This conversation has notified you ${widget.activity.repeatCount} times and used ${formatExactConversationTokenCount(widget.activity.tokenUsage!.totalTokens)} tokens.',
-                                    '本轮会话已经提醒 ${widget.activity.repeatCount} 次，共消耗 ${formatExactConversationTokenCount(widget.activity.tokenUsage!.totalTokens)} Token',
-                                  )
-                                : context.localized(
-                                    '${widget.activity.repeatCount} notifications for this conversation',
-                                    '此会话已提醒 ${widget.activity.repeatCount} 次',
-                                  ),
+                                ? context.l10n
+                                      .thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3(
+                                        widget.activity.repeatCount,
+                                        formatExactConversationTokenCount(
+                                          widget
+                                              .activity
+                                              .tokenUsage!
+                                              .totalTokens,
+                                        ),
+                                      )
+                                : context.l10n
+                                      .repeatcountNotificationsForThisConversation(
+                                        widget.activity.repeatCount,
+                                      ),
                             child: ActivityRepeatCount(
                               key: Key(
                                 'activity-repeat-count-${widget.activity.id}',
@@ -313,10 +319,7 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                     ] else if (widget.onTap != null) ...<Widget>[
                       const SizedBox(width: 7),
                       Tooltip(
-                        message: context.localized(
-                          'Open Agent conversation',
-                          '打开 Agent 对话',
-                        ),
+                        message: context.l10n.openAgentConversation,
                         child: Icon(
                           Icons.open_in_new_rounded,
                           key: Key('activity-open-conversation'),
@@ -369,128 +372,135 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: <String>[
-        label,
-        value,
-        if (badge != null) badge!.semanticLabel,
-      ].join(', '),
-      child: ExcludeSemantics(
-        child: Material(
-          color: PopupStyle.of(context).surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: PopupStyle.of(context).border),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 72,
-              child: Stack(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            PopupSymbolIcon(
-                              symbol,
-                              size: 18,
-                              color: PopupStyle.of(context).accent,
-                            ),
-                            const SizedBox(width: 7),
-                            Flexible(
-                              child: Text(
-                                value,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: PopupStyle.of(context).textPrimary,
-                                  fontSize: 15,
-                                  height: 1,
-                                  fontWeight: FontWeight.w800,
+    final List<String> completeLabel = <String>[
+      label,
+      value,
+      if (badge != null) badge!.semanticLabel,
+    ];
+    return Tooltip(
+      message: completeLabel.join(' · '),
+      excludeFromSemantics: true,
+      child: Semantics(
+        button: true,
+        label: completeLabel.join(', '),
+        child: ExcludeSemantics(
+          child: Material(
+            color: PopupStyle.of(context).surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: PopupStyle.of(context).border),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                height: 72,
+                child: Stack(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              PopupSymbolIcon(
+                                symbol,
+                                size: 18,
+                                color: PopupStyle.of(context).accent,
+                              ),
+                              const SizedBox(width: 7),
+                              Flexible(
+                                child: Text(
+                                  value,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: PopupStyle.of(context).textPrimary,
+                                    fontSize: 15,
+                                    height: 1,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 7),
-                        Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: PopupStyle.of(context).textSecondary,
-                            fontSize: 10,
-                            height: 1,
-                            fontWeight: FontWeight.w600,
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 7),
+                          Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: PopupStyle.of(context).textSecondary,
+                              fontSize: 10,
+                              height: 1,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (badge != null)
-                    Positioned(
-                      key: badge!.key,
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: badge!.tone == _MetricCardBadgeTone.attention
-                              ? PopupStyle.of(context).warmTagSurface
-                              : PopupStyle.of(context).accent,
-                          borderRadius: BorderRadius.circular(4),
-                          border: badge!.tone == _MetricCardBadgeTone.attention
-                              ? Border.all(
-                                  color: PopupStyle.of(
-                                    context,
-                                  ).warmAccent.withValues(alpha: 0.28),
-                                )
-                              : null,
-                          boxShadow:
-                              badge!.tone == _MetricCardBadgeTone.attention
-                              ? null
-                              : <BoxShadow>[
-                                  BoxShadow(
+                    if (badge != null)
+                      Positioned(
+                        key: badge!.key,
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badge!.tone == _MetricCardBadgeTone.attention
+                                ? PopupStyle.of(context).warmTagSurface
+                                : PopupStyle.of(context).accent,
+                            borderRadius: BorderRadius.circular(4),
+                            border:
+                                badge!.tone == _MetricCardBadgeTone.attention
+                                ? Border.all(
                                     color: PopupStyle.of(
                                       context,
-                                    ).accent.withValues(alpha: 0.20),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                        ),
-                        child: Text(
-                          badge!.label,
-                          style: TextStyle(
-                            color: badge!.tone == _MetricCardBadgeTone.attention
-                                ? PopupStyle.of(context).warmAccent
-                                : PopupStyle.of(context).background,
-                            fontSize:
+                                    ).warmAccent.withValues(alpha: 0.28),
+                                  )
+                                : null,
+                            boxShadow:
                                 badge!.tone == _MetricCardBadgeTone.attention
-                                ? 9.5
-                                : 9,
-                            height: 1,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.2,
+                                ? null
+                                : <BoxShadow>[
+                                    BoxShadow(
+                                      color: PopupStyle.of(
+                                        context,
+                                      ).accent.withValues(alpha: 0.20),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                          ),
+                          child: Text(
+                            badge!.label,
+                            style: TextStyle(
+                              color:
+                                  badge!.tone == _MetricCardBadgeTone.attention
+                                  ? PopupStyle.of(context).warmAccent
+                                  : PopupStyle.of(context).background,
+                              fontSize:
+                                  badge!.tone == _MetricCardBadgeTone.attention
+                                  ? 9.5
+                                  : 9,
+                              height: 1,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.2,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -557,7 +567,7 @@ class _EnabledResourceCard extends StatelessWidget {
       ResourceType.clipboard => PopupStyle.of(context).textSecondary,
     };
     final List<String> tags = _enabledResourceTags(context, resource, display);
-    final String scopedLabel = context.localized('Scoped', '有触发范围');
+    final String scopedLabel = context.l10n.scoped;
     final List<String> visibleTags = <String>[
       ...tags.take(2),
       if (resource.isScopedSkill && !tags.take(2).contains(scopedLabel))
@@ -648,31 +658,28 @@ class _EnabledResourceCard extends StatelessWidget {
                 value: _EnabledResourceAction.edit,
                 enabled: onEdit != null,
                 symbol: 'edit',
-                label: context.localized('Edit', '编辑'),
+                label: context.l10n.edit,
               ),
               DesktopMenuItem<_EnabledResourceAction>(
                 value: _EnabledResourceAction.disable,
                 symbol: 'paused',
-                label: context.localized('Disable', '停用'),
+                label: context.l10n.disable,
               ),
             ],
           )
         : switch (await contextMenuGateway!.show(
             x: position.dx,
             y: position.dy,
-            useChinese: Localizations.localeOf(context).languageCode == 'zh',
             isDark: Theme.of(context).brightness == Brightness.dark,
             items: <DesktopContextMenuItem>[
               DesktopContextMenuItem(
                 id: 'edit',
-                englishLabel: 'Edit',
-                chineseLabel: '编辑',
+                label: context.l10n.edit,
                 enabled: onEdit != null,
               ),
-              const DesktopContextMenuItem(
+              DesktopContextMenuItem(
                 id: 'disable',
-                englishLabel: 'Disable',
-                chineseLabel: '停用',
+                label: context.l10n.disable,
               ),
             ],
           )) {
@@ -706,12 +713,11 @@ List<String> _enabledResourceTags(
       ...resource.tags,
     ],
     ResourceType.skill => <String>[
-      context.localized('Skill', '技能'),
-      context.localized(
-        display.variant == ResourceCardVariant.skillOnline ? 'Online' : 'Local',
-        display.variant == ResourceCardVariant.skillOnline ? '在线' : '本地',
-      ),
-      if (resource.isScopedSkill) context.localized('Scoped', '有触发范围'),
+      context.l10n.skill2,
+      display.variant == ResourceCardVariant.skillOnline
+          ? context.l10n.online
+          : context.l10n.local,
+      if (resource.isScopedSkill) context.l10n.scoped,
       ...resource.tags,
     ],
     ResourceType.mcp => <String>['MCP', display.variantLabel, ...resource.tags],

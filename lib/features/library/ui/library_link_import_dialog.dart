@@ -49,7 +49,7 @@ final class _LibraryLinkImportDialogState
     final String url = _controller.text.trim();
     return DesktopAlertDialog(
       maxWidth: 620,
-      title: Text(context.localized('Import from link', '从链接导入')),
+      title: Text(context.l10n.importFromLink),
       content: SizedBox(
         width: 560,
         child: Column(
@@ -57,10 +57,9 @@ final class _LibraryLinkImportDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              context.localized(
-                'Paste a JSON bundle link. DingDong will fetch it, resolve its online resources, and show the sources for review before importing.',
-                '粘贴 JSON 资源包链接。DingDong 会先请求文件、解析其中的在线资源，并在导入前展示来源供你检查。',
-              ),
+              context
+                  .l10n
+                  .pasteAJSONBundleLinkDingDongWillFetchItResolveItsOnline_cb404168,
             ),
             const SizedBox(height: 16),
             DesktopTextField(
@@ -73,10 +72,7 @@ final class _LibraryLinkImportDialogState
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.link_rounded, size: 18),
-                hintText: context.localized(
-                  'https://example.com/dingdong-resources.json',
-                  'https://example.com/dingdong-resources.json',
-                ),
+                hintText: context.l10n.httpsExampleComDingdongResourcesJson,
               ),
             ),
           ],
@@ -85,14 +81,14 @@ final class _LibraryLinkImportDialogState
       actions: <Widget>[
         DesktopActionButton(
           onPressed: () => Navigator.pop(context),
-          label: context.localized('Cancel', '取消'),
+          label: context.l10n.cancel,
           compact: true,
         ),
         DesktopActionButton(
           key: const Key('library-import-link-submit'),
           onPressed: url.isEmpty ? null : _submit,
           icon: const Icon(Icons.cloud_download_outlined, size: 17),
-          label: context.localized('Fetch and review', '请求并检查'),
+          label: context.l10n.fetchAndReview,
           tone: DesktopActionTone.primary,
         ),
       ],

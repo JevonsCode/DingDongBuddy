@@ -54,6 +54,7 @@ final class AgentRouter {
     Future<ConversationFooterSymbols> Function()? loadConversationFooterSymbols,
     Future<bool> Function()? loadShowConversationTokenUsage,
     ConversationTokenUsageLoader? loadConversationTokenUsage,
+    FutureOr<String> Function(String source)? defaultDingMessage,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
   }) : _onDing = onDing ?? _ignoreDing,
@@ -136,7 +137,8 @@ final class AgentRouter {
            loadConversationFooterSymbols ?? _defaultConversationFooterSymbols,
        _loadShowConversationTokenUsage =
            loadShowConversationTokenUsage ?? _hideConversationTokenUsage,
-       _loadConversationTokenUsage = loadConversationTokenUsage;
+       _loadConversationTokenUsage = loadConversationTokenUsage,
+       _defaultDingMessage = defaultDingMessage ?? _englishDefaultDingMessage;
 
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
@@ -162,6 +164,7 @@ final class AgentRouter {
   _loadConversationFooterSymbols;
   final Future<bool> Function() _loadShowConversationTokenUsage;
   final ConversationTokenUsageLoader? _loadConversationTokenUsage;
+  final FutureOr<String> Function(String source) _defaultDingMessage;
   final Map<_NotificationDeduplicationKey, DateTime> _recentPrimaryDings =
       <_NotificationDeduplicationKey, DateTime>{};
 
@@ -227,8 +230,17 @@ final class AgentRouter {
     if (request.method == 'POST' && request.parsedUri.path == '/ding') {
       try {
         final DateTime now = _now();
+        DingRequest parsed = DingRequest.parse(
+          request.body,
+          fallbackMessage: '',
+        ).copyWith(receivedAt: now.toUtc());
+        if (parsed.message.isEmpty) {
+          parsed = parsed.copyWith(
+            message: await _defaultDingMessage(parsed.source ?? 'Agent'),
+          );
+        }
         final DingRequest dingRequest = await _withConversationTokenUsage(
-          DingRequest.parse(request.body).copyWith(receivedAt: now.toUtc()),
+          parsed,
         );
         final _NotificationDeduplicationKey notificationKey =
             _notificationDeduplicationKey(dingRequest);
@@ -663,6 +675,9 @@ final class AgentRouter {
 }
 
 Future<bool> _hideConversationTokenUsage() async => false;
+
+String _englishDefaultDingMessage(String source) =>
+    '$source completed the current task';
 
 String? _notificationSourceKey(String? source) => source?.trim().toLowerCase();
 

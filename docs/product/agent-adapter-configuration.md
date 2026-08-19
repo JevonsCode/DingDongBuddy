@@ -109,14 +109,14 @@ Grok Build 和 Pi 当前内置 Adapter 只声明各自官方的原生 Skill 目�
 
 ## 会话 Token 用量
 
-会话 Token 不是 Adapter YAML 字段。DingDong 只在用户开启
-**设置 → Agent 回复页脚 → 显示会话 Token 用量** 后，按会话 ID 从本机官方
+会话 Token 不是 Adapter YAML 字段。**设置 → Agent 回复页脚 → 显示会话 Token
+用量** 默认开启；开启时 DingDong 按会话 ID 从本机官方
 会话记录读取可验证的精确累计值。当前只支持 Codex、Claude Code 和 Pi；
 其他 Agent、无法定位会话、记录损坏或格式不明确时不显示，不估算。
 
 页脚使用紧凑值，例如 `12.4K Token`；动态列表将同一会话的最新累计快照
 与通知记录一起保存，悬停 `×N` 可查看精确提醒次数和带千分位的 Token 总量。
-关闭开关后，Bridge 和完成通知链路不读取这些本地会话用量文件。
+用户关闭开关后，Bridge 和完成通知链路不读取这些本地会话用量文件。
 
 `detect.directory`、`skills.global`、`mcp.file` 和 `prompt.file` 必须使用 `~`、
 `~/...` 或用户主目录内的绝对路径；DingDong 会解析已有符号链接，真实目标也不能

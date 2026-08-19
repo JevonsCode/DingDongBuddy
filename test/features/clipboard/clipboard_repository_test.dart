@@ -73,6 +73,8 @@ void main() {
       expect(records.single.createdAt, DateTime.utc(2026));
       expect(records.single.sources, <String>['Finder']);
       expect(records.single.copyCount, 1);
+      expect(repository.historyCount(), 1);
+      expect(repository.latestUpdatedAt(), records.single.updatedAt);
     },
   );
 
@@ -113,6 +115,8 @@ void main() {
       expect(stored.source, 'Browser');
       expect(stored.sources, <String>['Terminal', 'Browser']);
       expect(stored.copyCount, 3);
+      expect(reopened.historyCount(), 1);
+      expect(reopened.latestUpdatedAt(), record.updatedAt);
     },
   );
 

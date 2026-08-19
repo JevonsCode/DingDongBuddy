@@ -96,10 +96,7 @@ class ClipboardListTile extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 record.sensitive
-                                    ? context.localized(
-                                        'Sensitive content hidden',
-                                        '敏感内容已隐藏',
-                                      )
+                                    ? context.l10n.sensitiveContentHidden
                                     : record.content.replaceAll('\n', ' '),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -290,7 +287,7 @@ class _CalloutClipboardTile extends StatelessWidget {
                       if (plainTextShortcut) ...<Widget>[
                         const SizedBox(width: 6),
                         Text(
-                          context.localized('Plain text', '纯文本'),
+                          context.l10n.plainText,
                           style: TextStyle(
                             color: PopupStyle.of(context).textSecondary,
                             fontSize: 10,
@@ -322,13 +319,13 @@ class _CalloutClipboardTile extends StatelessWidget {
 
   String _subtitle(BuildContext context) {
     if (record.sensitive) {
-      return context.localized('Sensitive content hidden', '敏感内容已隐藏');
+      return context.l10n.sensitiveContentHidden;
     }
     if (record.kind == ClipboardKind.image) {
       final File? file = _firstExistingFile(record);
       if (file != null) {
         final int kilobytes = file.lengthSync() ~/ 1024;
-        return 'PNG · ${context.localized('Image', '图片')} · $kilobytes KB';
+        return 'PNG · ${context.l10n.image} · $kilobytes KB';
       }
     }
     return record.content.replaceAll('\n', ' ');
@@ -470,19 +467,10 @@ class _SystemContentAction extends StatelessWidget {
       return child;
     }
     final String label = switch (record.kind) {
-      ClipboardKind.image => context.localized(
-        'Preview image with system app',
-        '使用系统应用预览图片',
-      ),
-      ClipboardKind.url => context.localized(
-        'Open link with system browser',
-        '使用系统浏览器打开链接',
-      ),
-      ClipboardKind.path => context.localized(
-        'Open path with system app',
-        '使用系统应用打开路径',
-      ),
-      _ => context.localized('Open file with system app', '使用系统应用打开文件'),
+      ClipboardKind.image => context.l10n.previewImageWithSystemApp,
+      ClipboardKind.url => context.l10n.openLinkWithSystemBrowser,
+      ClipboardKind.path => context.l10n.openPathWithSystemApp,
+      _ => context.l10n.openFileWithSystemApp,
     };
     return Tooltip(
       message: label,

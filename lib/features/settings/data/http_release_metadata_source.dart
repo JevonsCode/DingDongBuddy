@@ -53,9 +53,20 @@ ReleaseMetadata _decode(String body) {
   if (app != 'DingDong') {
     throw const FormatException('Release metadata is for another app');
   }
-  final List<String> notes = (decoded['notes'] as List<Object?>? ?? const [])
-      .whereType<String>()
-      .toList(growable: false);
+  final Object? rawNotes = decoded['notes'];
+  final List<String> notes = rawNotes is List<Object?>
+      ? rawNotes.whereType<String>().toList(growable: false)
+      : const <String>[];
+  final Map<String, List<String>> notesByLanguage =
+      rawNotes is Map<String, Object?>
+      ? <String, List<String>>{
+          for (final MapEntry<String, Object?> entry in rawNotes.entries)
+            if (entry.value is List<Object?>)
+              entry.key.trim().toLowerCase(): List<String>.unmodifiable(
+                (entry.value! as List<Object?>).whereType<String>(),
+              ),
+        }
+      : const <String, List<String>>{};
   return ReleaseMetadata(
     app: app,
     latestVersion: _requiredString(decoded, 'latestVersion'),
@@ -64,6 +75,7 @@ ReleaseMetadata _decode(String body) {
     website: Uri.parse(_requiredString(decoded, 'website')),
     releasePage: Uri.parse(_requiredString(decoded, 'releasePage')),
     notes: List<String>.unmodifiable(notes),
+    notesByLanguage: Map<String, List<String>>.unmodifiable(notesByLanguage),
   );
 }
 

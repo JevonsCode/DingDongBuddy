@@ -184,7 +184,7 @@ final class AgentCompatibilityRoutes {
         'pinnedResources': resources
             .where((Resource item) => item.pinned)
             .length,
-        'clipboard': clipboardStore?.list(limit: 5000).length ?? 0,
+        'clipboard': clipboardStore?.historyCount() ?? 0,
         'byType': <String, int>{
           for (final ResourceType type in ResourceType.values)
             type.name: resources

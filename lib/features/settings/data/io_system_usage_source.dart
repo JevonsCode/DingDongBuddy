@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dingdong/features/settings/domain/system_usage.dart';
 import 'package:path/path.dart' as path;
@@ -113,54 +111,92 @@ final class IoSystemUsageSource implements SystemUsageSource {
     required Map<SystemDataCategory, int> itemCountByCategory,
     Set<String>? managedImages,
   }) {
-    final ResultSet rows = database.select('''
-      SELECT ZCONTENT, ZTAGSDATA,
-        COALESCE(LENGTH(CAST(ZCONTENT AS BLOB)), 0) +
-        COALESCE(LENGTH(CAST(ZGROUP AS BLOB)), 0) +
-        COALESCE(LENGTH(CAST(ZID AS BLOB)), 0) +
-        COALESCE(LENGTH(CAST(ZSOURCE AS BLOB)), 0) +
-        COALESCE(LENGTH(CAST(ZTITLE AS BLOB)), 0) +
-        COALESCE(LENGTH(CAST(ZACTIVATION AS BLOB)), 0) +
-        COALESCE(LENGTH(ZTAGSDATA), 0) +
-        COALESCE(LENGTH(ZHTMLDATA), 0) +
-        COALESCE(LENGTH(ZRTFDATA), 0) AS CONTENT_BYTES
-      FROM $table
-    ''');
-    for (final Row row in rows) {
-      final Set<String> tags = _decodeTags(row['ZTAGSDATA']);
-      final String content = row['ZCONTENT'] as String? ?? '';
-      final int bytes = row['CONTENT_BYTES'] as int? ?? 0;
-      final SystemDataCategory category = archive
-          ? SystemDataCategory.clipboardArchive
-          : tags.contains('image')
-          ? SystemDataCategory.clipboardImages
-          : tags.contains('file') || tags.contains('file-url')
-          ? SystemDataCategory.clipboardFiles
-          : SystemDataCategory.clipboardText;
-      storageByCategory[category] = (storageByCategory[category] ?? 0) + bytes;
-      itemCountByCategory[category] = (itemCountByCategory[category] ?? 0) + 1;
-      if (tags.contains('image') &&
-          tags.contains('file-url') &&
-          _isManagedImagePath(content)) {
-        managedImages?.add(path.normalize(path.absolute(content)));
+    const String contentBytes = '''
+      COALESCE(LENGTH(CAST(ZCONTENT AS BLOB)), 0) +
+      COALESCE(LENGTH(CAST(ZGROUP AS BLOB)), 0) +
+      COALESCE(LENGTH(CAST(ZID AS BLOB)), 0) +
+      COALESCE(LENGTH(CAST(ZSOURCE AS BLOB)), 0) +
+      COALESCE(LENGTH(CAST(ZTITLE AS BLOB)), 0) +
+      COALESCE(LENGTH(CAST(ZACTIVATION AS BLOB)), 0) +
+      COALESCE(LENGTH(ZTAGSDATA), 0) +
+      COALESCE(LENGTH(ZHTMLDATA), 0) +
+      COALESCE(LENGTH(ZRTFDATA), 0)
+    ''';
+    const String imageTag =
+        '''INSTR(CAST(COALESCE(ZTAGSDATA, X'') AS TEXT), '"image"') > 0''';
+    const String fileTag =
+        '''INSTR(CAST(COALESCE(ZTAGSDATA, X'') AS TEXT), '"file"') > 0 OR INSTR(CAST(COALESCE(ZTAGSDATA, X'') AS TEXT), '"file-url"') > 0''';
+    if (archive) {
+      final Row totals = database.select('''
+        SELECT COUNT(*) AS ITEM_COUNT,
+          COALESCE(SUM($contentBytes), 0) AS CONTENT_BYTES
+        FROM $table
+      ''').single;
+      _addMeasurement(
+        category: SystemDataCategory.clipboardArchive,
+        bytes: totals['CONTENT_BYTES'] as int? ?? 0,
+        items: totals['ITEM_COUNT'] as int? ?? 0,
+        storageByCategory: storageByCategory,
+        itemCountByCategory: itemCountByCategory,
+      );
+    } else {
+      final Row totals = database.select('''
+        SELECT
+          COALESCE(SUM(CASE WHEN $imageTag THEN $contentBytes ELSE 0 END), 0) AS IMAGE_BYTES,
+          SUM(CASE WHEN $imageTag THEN 1 ELSE 0 END) AS IMAGE_COUNT,
+          COALESCE(SUM(CASE WHEN NOT ($imageTag) AND ($fileTag) THEN $contentBytes ELSE 0 END), 0) AS FILE_BYTES,
+          SUM(CASE WHEN NOT ($imageTag) AND ($fileTag) THEN 1 ELSE 0 END) AS FILE_COUNT,
+          COALESCE(SUM(CASE WHEN NOT ($imageTag) AND NOT ($fileTag) THEN $contentBytes ELSE 0 END), 0) AS TEXT_BYTES,
+          SUM(CASE WHEN NOT ($imageTag) AND NOT ($fileTag) THEN 1 ELSE 0 END) AS TEXT_COUNT
+        FROM $table
+      ''').single;
+      _addMeasurement(
+        category: SystemDataCategory.clipboardImages,
+        bytes: totals['IMAGE_BYTES'] as int? ?? 0,
+        items: totals['IMAGE_COUNT'] as int? ?? 0,
+        storageByCategory: storageByCategory,
+        itemCountByCategory: itemCountByCategory,
+      );
+      _addMeasurement(
+        category: SystemDataCategory.clipboardFiles,
+        bytes: totals['FILE_BYTES'] as int? ?? 0,
+        items: totals['FILE_COUNT'] as int? ?? 0,
+        storageByCategory: storageByCategory,
+        itemCountByCategory: itemCountByCategory,
+      );
+      _addMeasurement(
+        category: SystemDataCategory.clipboardText,
+        bytes: totals['TEXT_BYTES'] as int? ?? 0,
+        items: totals['TEXT_COUNT'] as int? ?? 0,
+        storageByCategory: storageByCategory,
+        itemCountByCategory: itemCountByCategory,
+      );
+    }
+    if (managedImages != null) {
+      final ResultSet rows = database.select('''
+        SELECT ZCONTENT FROM $table
+        WHERE $imageTag
+          AND INSTR(CAST(COALESCE(ZTAGSDATA, X'') AS TEXT), '"file-url"') > 0
+      ''');
+      for (final Row row in rows) {
+        final String content = row['ZCONTENT'] as String? ?? '';
+        if (_isManagedImagePath(content)) {
+          managedImages.add(path.normalize(path.absolute(content)));
+        }
       }
     }
   }
 
-  Set<String> _decodeTags(Object? value) {
-    final List<int> bytes = switch (value) {
-      final Uint8List data => data,
-      final List<int> data => data,
-      _ => const <int>[],
-    };
-    if (bytes.isEmpty) return const <String>{};
-    try {
-      return (jsonDecode(utf8.decode(bytes)) as List<Object?>)
-          .whereType<String>()
-          .toSet();
-    } on Object {
-      return const <String>{};
-    }
+  void _addMeasurement({
+    required SystemDataCategory category,
+    required int bytes,
+    required int items,
+    required Map<SystemDataCategory, int> storageByCategory,
+    required Map<SystemDataCategory, int> itemCountByCategory,
+  }) {
+    storageByCategory[category] = (storageByCategory[category] ?? 0) + bytes;
+    itemCountByCategory[category] =
+        (itemCountByCategory[category] ?? 0) + items;
   }
 
   bool _isManagedImagePath(String value) {

@@ -6,7 +6,7 @@
     <title>DingDong — Clipboard, Agent resources, and alerts in one place</title>
     <meta name="description" content="Manage clipboard history, Agent resources, and alerts from connected Agents in one place, choose your desktop sound, and see a resource receipt at the end of supported Agent replies.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260813-v11">
+    <link rel="stylesheet" href="./styles.css?v=20260819-v13">
   </head>
   <body>
     <header class="site-header">
@@ -52,7 +52,7 @@
             <p data-i18n="hero.finish">Everything close at hand, with a ring when work is ready.</p>
           </div>
           <div class="actions">
-            <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="hero.download">Download latest</a>
+            <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.0" data-i18n="hero.download">Download 1.5.0 Beta</a>
             <a class="secondary" href="#mcp" data-i18n="hero.connect">Connect your Agent</a>
             <a class="github-star" href="https://github.com/JevonsCode/DingDongBuddy" target="_blank" rel="noopener noreferrer" aria-label="Star DingDongBuddy on GitHub" data-i18n-aria-label="hero.starAria">
               <img src="./assets/symbols/github.svg" alt="">
@@ -62,8 +62,8 @@
           <div class="conversation-receipt" role="group" aria-labelledby="hero-receipt-title">
             <div class="conversation-receipt-copy">
               <h4 id="hero-receipt-title" data-i18n="chatFooter.title">Every final reply leaves a little resource receipt.</h4>
-              <p data-i18n="chatFooter.body">Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.</p>
-              <p class="conversation-receipt-note" data-i18n="chatFooter.note">An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.</p>
+              <p data-i18n="chatFooter.body">Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. Supported sessions can also show exact conversation Token usage.</p>
+              <p class="conversation-receipt-note" data-i18n="chatFooter.note">A Skill * means its full instructions were loaded; an MCP * means its tool was called, not necessarily succeeded. Prompts stay unmarked. Token display is enabled by default and can be turned off in Settings.</p>
             </div>
             <div class="conversation-receipt-sample">
               <div class="terminal-demo-intro">
@@ -108,7 +108,7 @@
                 </button>
                 <div class="demo-title-lockup">
                   <strong>DingDong</strong>
-                  <span class="demo-version">v1.4.6</span>
+                  <span class="demo-version">v1.5.0 Beta</span>
                 </div>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
@@ -164,16 +164,16 @@
 
       <section class="feature-grid">
         <article>
-          <h2 data-i18n="features.library.title">A proper place for each resource</h2>
-          <p data-i18n="features.library.body">Prompts, Skills, and MCP configurations each get the controls they need. Project rules keep each task's suggestions focused.</p>
+          <h2 data-i18n="features.library.title">Manage Skills, Prompts, and MCP together</h2>
+          <p data-i18n="features.library.body">Add, inspect, and enable them in one library, then choose their project or Agent scope.</p>
         </article>
         <article>
-          <h2 data-i18n="features.clipboard.title">Take a few things with you</h2>
-          <p data-i18n="features.clipboard.body">Pair trusted devices, then send only the new Clipboard items or existing records you explicitly choose.</p>
+          <h2 data-i18n="features.clipboard.title">Connect phones and other devices</h2>
+          <p data-i18n="features.clipboard.body">Transfer files and Clipboard content between trusted devices, and receive Agent notifications on your phone.</p>
         </article>
         <article>
-          <h2 data-i18n="features.bridge.title">Find what is duplicated or forgotten</h2>
-          <p data-i18n="features.bridge.body">Ask an Agent to look through the library and point out repeated resources or things you no longer use.</p>
+          <h2 data-i18n="features.bridge.title">Let an Agent configure DingDong</h2>
+          <p data-i18n="features.bridge.body">Tell an Agent which Skill, MCP, or Prompt to add or update and where it should apply; DingDong handles and validates the configuration.</p>
         </article>
         <article>
           <h2 data-i18n="features.notify.title">More Agents, one place to check.</h2>
@@ -313,7 +313,7 @@
           </article>
           <article class="conversation-example">
             <span class="example-kind">Skill</span>
-            <p class="user-message" data-i18n="examples.skillMessage">“Use this project’s release workflow, run every check, and prepare version 1.4.6.”</p>
+            <p class="user-message" data-i18n="examples.skillMessage">“Use this project’s release workflow, run every check, and prepare version 1.5.0.”</p>
             <p class="example-result" data-i18n="examples.skillResult">The Agent matches the Skill description, then loads its full workflow and files.</p>
           </article>
           <article class="conversation-example">
@@ -426,7 +426,7 @@
                   <tr><td data-i18n="settings.shortcut">Open or hide Clipboard</td><td><kbd>⌘⇧V</kbd></td><td data-i18n="settings.shortcutOptions">Configurable; Windows defaults to Ctrl+Shift+V</td></tr>
                   <tr><td data-i18n="settings.startup">Launch at startup</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
                   <tr><td data-i18n="settings.dock">Hide Dock icon (macOS)</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
-                  <tr><td data-i18n="settings.language">Language</td><td data-i18n="value.system">System</td><td data-i18n="settings.languageOptions">System / English / 中文</td></tr>
+                  <tr><td data-i18n="settings.language">Language</td><td data-i18n="value.system">System</td><td data-i18n="settings.languageOptions">System / English / 中文 / Español</td></tr>
                   <tr><td data-i18n="settings.theme">Theme</td><td data-i18n="value.light">Light</td><td data-i18n="settings.themeOptions">System / Light / Dark</td></tr>
                   <tr><td data-i18n="settings.opacity">Window opacity</td><td>90%</td><td>82%–96%</td></tr>
                   <tr><td data-i18n="settings.workspace">Default workspace</td><td data-i18n="value.dynamic">Dynamic</td><td data-i18n="settings.workspaceOptions">Dynamic / Library / Clipboard</td></tr>
@@ -435,6 +435,8 @@
                   <tr><td data-i18n="settings.rememberAgents">Remember Recent Agents</td><td data-i18n="value.on">On</td><td data-i18n="value.onOff">On / off</td></tr>
                   <tr><td data-i18n="settings.agentLimits">Recent Agent limits</td><td data-i18n="settings.agentLimitsDefault">500 details · 24-hour count</td><td data-i18n="settings.agentLimitsOptions">1–5,000 details · 1–8,760 hours</td></tr>
                   <tr><td data-i18n="settings.sound">Completion sound</td><td data-i18n="value.classic">DingDong Classic</td><td data-i18n="settings.soundOptions">Built-in, custom, system, or muted</td></tr>
+                  <tr><td data-i18n="settings.footerSymbols">Agent reply footer symbols</td><td>♥ / ♦ / ♠</td><td data-i18n="settings.footerSymbolOptions">Customize Prompt, Skill, and MCP separately</td></tr>
+                  <tr><td data-i18n="settings.tokenUsage">Conversation Token usage</td><td data-i18n="value.on">On</td><td data-i18n="settings.tokenUsageOptions">Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted</td></tr>
                   <tr><td data-i18n="settings.alertColor">Menu bar alert color (macOS)</td><td data-i18n="value.orange">Orange</td><td data-i18n="settings.alertColorOptions">Orange / Pink / Blue / Green / Purple</td></tr>
                   <tr><td data-i18n="settings.apiPort">Local Agent API port</td><td><code>2333</code></td><td data-i18n="settings.apiPortOptions">1024–65535 · restart required</td></tr>
                 </tbody>
@@ -504,8 +506,8 @@
           <div class="agent-prompt-header">
             <div>
               <p class="agent-prompt-kicker" data-i18n="mcp.promptEyebrow">Let AI handle the setup</p>
-              <h3 id="agent-setup-prompt-title" data-i18n="mcp.promptTitle">Send this prompt to your current Agent</h3>
-              <p data-i18n="mcp.promptBody">It will preserve your existing settings, connect MCP and completion alerts, then verify both paths.</p>
+              <h3 id="agent-setup-prompt-title" data-i18n="mcp.promptTitle">Send this short setup instruction to your current Agent</h3>
+              <p data-i18n="mcp.promptBody">Use the exact MCP path shown in DingDong for the most reliable setup; the instruction stays the same across Agents.</p>
             </div>
             <button
               class="agent-prompt-copy"
@@ -514,7 +516,7 @@
               aria-describedby="agent-prompt-copy-status"
             >
               <img src="./assets/symbols/copy.png" alt="">
-              <span id="agent-prompt-copy-label" data-i18n="mcp.copyPrompt">Copy setup prompt</span>
+              <span id="agent-prompt-copy-label" data-i18n="mcp.copyPrompt">Copy setup instruction</span>
             </button>
           </div>
           <pre
@@ -557,6 +559,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         <div class="tool-grid" aria-label="DingDong MCP tools">
           <article><code>dingdong_bridge</code><p data-i18n="tools.bridge">Ask DingDong what might help with the task at hand.</p></article>
           <article><code>dingdong_search_assets</code><p data-i18n="tools.search">Find prompts, Skills, and MCP configurations by name or keyword.</p></article>
+          <article><code>dingdong_create_resource</code><p data-i18n="tools.create">Create a disabled Prompt or MCP after checking for duplicates.</p></article>
+          <article><code>dingdong_update_resource</code><p data-i18n="tools.update">Update an existing Prompt or MCP while preserving omitted fields.</p></article>
+          <article><code>dingdong_install_skill</code><p data-i18n="tools.installSkill">Install a complete Skill package through the dedicated safe workflow.</p></article>
+          <article><code>dingdong_bind_resource_scope</code><p data-i18n="tools.bindScope">Bind the resource to the project or Agent scope you requested.</p></article>
           <article><code>dingdong_get_asset</code><p data-i18n="tools.asset">Open one resource. Start with the description, then read the full text if needed.</p></article>
           <article><code>dingdong_load_skill</code><p data-i18n="tools.skill">Load the Skill the Agent has decided to use.</p></article>
           <article><code>dingdong_recommend_mcp</code><p data-i18n="tools.recommend">Find an MCP configuration that fits the current task.</p></article>
@@ -586,28 +592,29 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       <section class="download-section" id="download" aria-label="Download">
         <div class="download-actions">
-          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.6/DingDong-1.4.6-macos-arm64.dmg">
+          <a class="download-card" id="macos-arm64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg">
             <span class="download-card-heading">
               <strong data-i18n="download.macosArm64">Mac with Apple silicon</strong>
+              <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.macosArm64Hint">DingDong 1.4.6 · DMG · arm64</span>
+            <span data-i18n="download.macosArm64Hint">DingDong 1.5.0 Beta · DMG · arm64</span>
           </a>
-          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.6/DingDong-1.4.6-macos-x64-beta.dmg">
+          <a class="download-card" id="macos-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64-beta.dmg">
             <span class="download-card-heading">
               <strong data-i18n="download.macosX64">Mac with Intel chip</strong>
               <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.macosX64Hint">DingDong 1.4.6 · DMG · x64</span>
+            <span data-i18n="download.macosX64Hint">DingDong 1.5.0 Beta · DMG · x64</span>
           </a>
-          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.4.6/DingDong-1.4.6-windows-x64-beta-Setup.exe">
+          <a class="download-card" id="windows-x64-download" href="https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-beta-Setup.exe">
             <span class="download-card-heading">
               <strong data-i18n="download.windowsX64">Windows x64</strong>
               <span class="download-badge beta-badge" data-i18n="download.beta">Beta</span>
               <span class="download-badge recommendation-badge" data-i18n="download.recommended" hidden>Recommended</span>
             </span>
-            <span data-i18n="download.windowsX64Hint">DingDong 1.4.6 · Setup · x64</span>
+            <span data-i18n="download.windowsX64Hint">DingDong 1.5.0 Beta · Setup · x64</span>
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
@@ -640,70 +647,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
     <script>
       const agentSetupPrompts = {
-        en: `Connect DingDong on this computer to the current agent or IDE and enable durable task-completion alerts:
-1. Confirm that this session is running locally on the computer where DingDong is installed, and verify that this executable exists and can run. A remote or cloud agent cannot use this local path:
-   /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
-2. Find the user-level (global) MCP configuration actually used by the current client. Preserve every existing entry, then add or repair a STDIO MCP server named dingdong:
-   - command must be this complete executable path: /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
-   - do not add args, environment variables, or a wrapper shell to the MCP server; a path containing spaces must remain one complete command value
-3. Configure the client's native final-response or task-completion hook as a durable setting. Do not merely promise to notify in this conversation. The hook command must be:
-   "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp" --notify-stop --source "Current client name"
-   Use the matching user-level configuration and event:
-   - Codex: a Stop command hook in ~/.codex/config.toml; ensure hooks = true under [features]
-   - Claude Code: a Stop command hook in ~/.claude/settings.json
-   - Cursor: an afterAgentResponse command hook in ~/.cursor/hooks.json
-   - Gemini CLI: an AfterAgent command hook in ~/.gemini/settings.json
-   - Kiro: use ~/.kiro/settings/mcp.json for MCP; prefer a global Stop command hook under ~/.kiro/hooks with Kiro CLI v3, or hooks.stop in the active editable custom Agent on older CLI versions; in the IDE use its native Agent Stop shell-command hook. If this version only supports a project hook, do not modify project files without explicit user permission and report the limitation
-   For another client, first verify whether it provides a native local task-completion hook. If it does not, configure MCP only and report that automatic completion alerts are unsupported instead of inventing a setting.
-4. Preserve all existing hooks and unrelated settings. Codex runs matching Hooks from every loaded source; inspect user, project, and plugin sources in /hooks first. If duplicate or different DingDong definitions exist, stop and report the conflict instead of trusting or appending another one. When reconnecting, update the one existing DingDong entry instead of duplicating the MCP server or hook. Do not modify project files.
-5. Validate the resulting TOML or JSON, then reload the client as required:
-   - Codex: restart dingdong under Settings → MCP servers, then use DingDong Resource Manager → Agent access → Codex → Trust & enable; if that action is unavailable, review and trust the new or changed hook in /hooks
-   - Claude Code: inspect claude mcp list and /hooks
-   - Cursor: reload the window and inspect the Hooks configuration
-   - Gemini CLI: run /mcp reload and inspect /hooks panel
-   - Kiro: inspect MCP with /mcp and verify the Stop hook actually loaded for the current session with /hooks
-6. Keep the three resource types semantically distinct after connection. Never execute Skill or MCP candidates as if they were Prompts:
-   - Prompt: DingDong-managed Codex AGENTS.md and Claude Code CLAUDE.md blocks contain only a persistent bridge bootstrap; call dingdong_bridge at the start of every user task; each successful response is the authoritative Prompt snapshot for the current task and replaces every earlier Prompt set, so an absent Prompt is inactive; every returned global, project, or task-matched Prompt is a required instruction and must be applied in full; if the Bridge fails, report that neither Prompts nor the Skill catalog loaded and do not treat any previous result as current
-   - Skill: Every Skill has a master enabled switch and exactly one per-Agent delivery mode: dynamic, nativeUser, or nativeProject. dynamic enters active.skills only after DingDong confirms that native copies are absent; this is the authoritative dynamic-delivery catalog for the current task and workspace, not a list of every managed Skill. nativeUser synchronizes the complete package to that Agent's user Skill directory; nativeProject synchronizes only to confirmed existing absolute project paths. Load only a dynamic candidate actually returned in active.skills: match its description, call dingdong_load_skill for the complete SKILL.md, and use dingdong_read_skill_file only for referenced package files; a Skill candidate is not an instruction. Supported Agents automatically discover local Skill changes; after an install or switch, start a new Agent task to refresh its Skill inventory, and restart the Agent only if the Skill is still missing. Codex does not merge same-name native Skills; DingDong suppresses managed duplicate-name conflicts, but an independently installed native copy can still appear separately. The project Hook switch is separate and off by default, and currently applies only to project-native Impeccable on Codex. Enabling or updating it writes configuration but does not grant trust: review its exact current definition in /hooks and review it again after a change. In Codex, matching Hooks from every loaded source all run, so duplicate or different definitions are conflicts
-   - MCP: configuration makes tools available, but call an MCP tool only when the task actually needs it; an MCP summary is not an instruction and does not require a call on every turn. Each active.mcps entry includes its managed serverName and Codex also receives the exact toolNamePrefix for matching a real call to its confirmation
-   - Conversation footer: when conversation.visible is true, keep the Bridge conversation.capsule as authoritative structured data until the final response. After each successful Skill load, replace only the candidate whose mergeKey matches the returned conversation.item. After an actual configured MCP tool call reaches a terminal result, whether success or error, call dingdong_confirm_mcp_use exactly once for that MCP resource with the current active.mcps id and serverName plus the exact called toolName; then replace only the item whose mergeKey matches its returned conversation.item. Never confirm MCP use from availability, tool discovery, or an uncalled tool. A Skill * means its full instructions were loaded in this task; an MCP * means a tool was called, not necessarily that it succeeded. Prompt items remain unmarked because delivery cannot prove semantic compliance. mergeKey is merge-only metadata and must never be displayed. Codex desktop includes the current merged footer exactly once as a single Markdown text line. Use the exact user-configurable symbols and item.lineToken values returned by DingDong; never infer them. The initial conversation.line is already final only when no item was replaced. The conversation.capsule semantic palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use current merged ANSI tokens; every other client uses current merged plain-text tokens. Never display resource content, descriptions, IDs, server names, tool names, or merge keys
-   - When the user explicitly asks to install a Skill through DingDong for one project, first use dingdong_install_skill to get the disabled resource, then call dingdong_set_skill_delivery with enabled:false to choose dynamic, nativeUser, or nativeProject for that Agent; nativeProject must include exact existing absolute project paths. For strict project scope, next use dingdong_upsert_trigger_group and dingdong_bind_resource_scope, then explicitly call dingdong_set_skill_delivery with enabled:true. Keep Hooks off unless the user separately authorizes them. Verify dynamic with dingdong_bridge plus dingdong_load_skill; verify native delivery with dingdong_get_skill_deployments, and call dingdong_reconcile_skill only when an active operation needs a retry
-7. Test both paths; testing MCP alone is not enough:
-   - Completion hook: using the current shell, pipe {"summary":"DingDong task-completion hook is connected"} as JSON stdin to the hook command from step 3 and confirm that DingDong receives it
-   - MCP: confirm dingdong_notify appears in the tool list, then call it once with message "DingDong MCP is connected" and source set to the current client name
-8. Finally report only the user-level configuration files changed, whether MCP is available, whether the completion hook is configured (and trusted for Codex), and whether both tests succeeded. If any step fails, preserve the existing configuration and return the original error instead of guessing.`,
-        zh: `请把这台电脑上的 DingDong 接入当前 Agent 或 IDE，并启用持久的任务结束提醒：
-1. 先确认当前会话运行在安装了 DingDong 的本机，并确认下面的可执行文件存在且可运行；远程或云端 Agent 不能使用这条本机路径：
-   /Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
-2. 找到当前客户端实际使用的用户级（全局）MCP 配置。保留其他所有配置，新增或修正一个名为 dingdong 的 STDIO MCP Server：
-   - command 必须是完整的可执行文件路径：/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp
-   - MCP Server 不要添加 args、环境变量或外层 shell；路径中即使有空格，也必须是一个完整的 command 值
-3. 再使用当前客户端原生的“最终回复/任务结束”Hook 写入持久配置，不要只在当前对话里承诺通知。Hook 命令必须是：
-   "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp" --notify-stop --source "当前客户端名称"
-   按客户端使用下面的用户级配置和事件：
-   - Codex：~/.codex/config.toml 的 Stop command Hook；确保 [features] 下 hooks = true
-   - Claude Code：~/.claude/settings.json 的 Stop command Hook
-   - Cursor：~/.cursor/hooks.json 的 afterAgentResponse command Hook
-   - Gemini CLI：~/.gemini/settings.json 的 AfterAgent command Hook
-   - Kiro：MCP 使用 ~/.kiro/settings/mcp.json；Kiro CLI v3 优先使用 ~/.kiro/hooks 下的全局 Stop command Hook，旧版 CLI 使用当前可编辑自定义 Agent 的 hooks.stop；IDE 使用原生 Agent Stop shell-command Hook。若当前版本只支持项目级 Hook，未经用户明确同意不要修改项目文件，并说明限制
-   如果不是以上客户端，先查清它是否有原生的本地任务结束 Hook；没有就只接入 MCP，并明确说明不支持自动结束提醒，不能编造配置。
-4. 保留已有 Hook 和无关设置。Codex 会运行所有已加载来源中命中的 Hook；先用 /hooks 检查用户、项目和插件来源，发现重复或不同的 DingDong 定义时停止并报告冲突，不要继续信任或追加。重复接入时更新唯一的现有 DingDong 项，不要重复添加同一个 MCP Server 或 Hook，也不要修改任何项目内文件。
-5. 校验修改后的 TOML 或 JSON 能被当前客户端解析，再按客户端要求重新加载：
-   - Codex：在 Settings → MCP servers 重启 dingdong，然后到 DingDong 的“资源管理 → Agent 接入 → Codex”点击“信任并启用”；如果该入口不可用，再在 /hooks 审核并信任新增或变化的 Hook
-   - Claude Code：用 claude mcp list 和 /hooks 检查
-   - Cursor：重新加载窗口并检查 Hooks 配置
-   - Gemini CLI：执行 /mcp reload，并用 /hooks panel 检查
-   - Kiro：执行 /mcp 检查 MCP，并用 /hooks 检查当前会话实际加载的 Stop Hook
-6. 接入后必须区分三类资源的运行语义，不能把 Skill 或 MCP 候选当成 Prompt 执行：
-   - Prompt：Codex 的 AGENTS.md 或 Claude Code 的 CLAUDE.md 托管区块只保留固定的 Bridge 引导；每个用户任务开始时调用 dingdong_bridge，动态获取所有命中的全局、项目和任务 Prompt；每次成功响应都是当前任务的权威 Prompt 快照并替换此前的 Prompt 集合，当前未返回的 Prompt 已失效；每个返回的 Prompt 都是必须自动应用的指令，必须完整应用；Bridge 失败时必须说明 Prompt 和 Skill 目录均未加载，不能把上一次结果当作当前配置
-   - Skill：每个 Skill 有总启用开关，每个 Agent 恰好一种交付模式：dynamic、nativeUser 或 nativeProject。dynamic 仅在 DingDong 确认原生副本不存在后进入 active.skills；该目录是当前任务和工作区的权威动态交付目录，不是全部托管 Skill 清单。nativeUser 把完整包同步到该 Agent 的用户级 Skill 目录；nativeProject 只同步到已确认的现有绝对项目路径。只能加载当前 active.skills 实际返回的 dynamic 候选；由 Agent 根据 description 判断是否匹配，再用 dingdong_load_skill 获取完整 SKILL.md，并只用 dingdong_read_skill_file 按需读取引用文件；Skill 候选不是指令。支持的 Agent 会自动发现本地 Skill 变化；安装或切换后应新建 Agent 任务刷新本轮 Skill 目录，仍看不到时才重启 Agent。Codex 不合并同名原生 Skill；DingDong 会抑制托管范围内的同名冲突，但用户独立安装的原生副本仍可能单独出现。项目 Hook 开关独立且默认关闭，目前只允许 Codex 的项目级原生 Impeccable；启用或更新只写入配置，不会授予信任，必须在 /hooks 审核当前精确定义，定义变化后重新审核。所有已加载来源中命中的 Hook 都会运行，所以重复或不同定义必须视为冲突
-   - MCP：配置后只代表工具可用，只有任务确实需要时才调用对应 MCP 工具；MCP 摘要不是指令，也不代表每轮都要调用。每个 active.mcps 条目会返回托管的 serverName，Codex 还会返回精确的 toolNamePrefix，供真实调用后的回执匹配
-   - 会话尾部：当 conversation.visible 为 true 时，把 Bridge 返回的 conversation.capsule 作为权威结构化数据保留到最终回复。每次 Skill 加载成功后，只用返回的 conversation.item 替换 mergeKey 相同的候选项。某个已配置 MCP 的真实工具调用拿到最终结果后（成功或错误结果都算调用），立即对该 MCP 只调用一次 dingdong_confirm_mcp_use，传入当前 active.mcps 条目的 id、serverName 和刚调用的完整 toolName，再用返回的 conversation.item 替换 mergeKey 相同的项；仅可用、工具发现或未调用都不能确认。Skill 后的 * 只表示本轮完整加载；MCP 后的 * 只表示本轮调用过，不表示调用成功。Prompt 不加 *，因为送达无法证明模型在语义上实际遵循。mergeKey 仅用于合并，绝不能展示。Codex 桌面版只显示一次当前合并后的严格单行 Markdown footer；必须使用 DingDong 返回的可配置符号和各 item.lineToken，不能自行推断。没有任何替换时，初始 conversation.line 已经是最终行。conversation.capsule 的语义配色仍为 Prompt 暖橙、Skill 蓝、MCP 绿。不要在会话尾部使用图片、HTML/XML、行内字体或渲染工具。明确支持 ANSI 的终端使用当前合并后的 ANSI token，其他客户端使用当前合并后的纯文本 token。不得展示资源内容、描述、ID、serverName、toolName 或 mergeKey
-   - 用户明确要求“通过 DingDong 给某项目安装 Skill”时，先用 dingdong_install_skill 获取默认关闭的资源，再用 dingdong_set_skill_delivery 的 enabled:false 选择该 Agent 的 dynamic、nativeUser 或 nativeProject；nativeProject 必须同时传入准确的现有绝对项目路径。需要严格项目作用域（strict project scope）时，再调用 dingdong_upsert_trigger_group 和 dingdong_bind_resource_scope，最后用 dingdong_set_skill_delivery 明确 enabled:true。Hook 保持关闭，除非用户单独授权。dynamic 用 dingdong_bridge 和 dingdong_load_skill 验证；原生模式用 dingdong_get_skill_deployments 验证，存在活动操作时才调用 dingdong_reconcile_skill
-7. 分别验证两条链路，不能只验证 MCP：
-   - 结束 Hook：用当前 shell 把 {"summary":"DingDong 任务结束提醒已接入"} 作为 JSON 标准输入传给第 3 步的 Hook 命令，确认 DingDong 收到这条提醒
-   - MCP：确认工具列表里出现 dingdong_notify，然后立即调用一次，message 为“DingDong MCP 已接入”，source 为当前客户端名称
-8. 最后只报告：改了哪些用户级配置文件、MCP 是否可用、结束 Hook 是否已配置（Codex 还要说明是否已信任）、两项测试是否成功。任何一步失败时都保留原有配置并返回原始错误，不要猜测。`
+        en: `Connect the installed DingDong app to the current Agent: use the DingDong MCP path shown in the app to add a user-level STDIO MCP server named dingdong, preserve existing settings, and confirm dingdong_bridge is callable. If this Agent supports a user-level task-completion Hook, enable DingDong completion alerts too.`,
+        zh: `请把已安装的 DingDong 接入当前 Agent：使用软件内显示的 DingDong MCP 路径，添加一个名为 dingdong 的用户级 STDIO MCP，保留现有配置，并确认可以调用 dingdong_bridge。若当前 Agent 支持用户级任务完成 Hook，再启用 DingDong 完成提醒。`
       };
 
       const copy = {
@@ -721,7 +666,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "hero.title.alerts": "Collect Agent alerts in one place.",
           "hero.lede": "Keep clipboard history easy to find and manage Prompts, Skills, and MCP servers once. DingDong gathers alerts from connected Agents, lets you choose the desktop sound, and sends selected content and important results to trusted devices.",
           "hero.finish": "Everything close at hand, with a ring when work is ready.",
-          "hero.download": "Download latest",
+          "hero.download": "Download 1.5.0 Beta",
           "hero.connect": "Connect your Agent",
           "hero.star": "Star DingDongBuddy",
           "hero.starAria": "Star DingDongBuddy on GitHub",
@@ -743,12 +688,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "principles.summary.body": "An Agent sees the name and a short description first. It opens the full prompt or Skill only when it helps.",
           "principles.quiet.title": "Keep your hands on the keyboard",
           "principles.quiet.body": "Press the configurable global shortcut to search, filter, and paste recent items without leaving the app you are already using.",
-          "features.library.title": "A proper place for each resource",
-          "features.library.body": "Prompts, Skills, and MCP configurations each get the controls they need. Project rules keep each task's suggestions focused.",
-          "features.clipboard.title": "Take a few things with you",
-          "features.clipboard.body": "Pair trusted devices, then send only the new Clipboard items or existing records you explicitly choose.",
-          "features.bridge.title": "Find what is duplicated or forgotten",
-          "features.bridge.body": "Ask an Agent to look through the library and point out repeated resources or things you no longer use.",
+          "features.library.title": "Manage Skills, Prompts, and MCP together",
+          "features.library.body": "Add, inspect, and enable them in one library, then choose their project or Agent scope.",
+          "features.clipboard.title": "Connect phones and other devices",
+          "features.clipboard.body": "Transfer files and Clipboard content between trusted devices, and receive Agent notifications on your phone.",
+          "features.bridge.title": "Let an Agent configure DingDong",
+          "features.bridge.body": "Tell an Agent which Skill, MCP, or Prompt to add or update and where it should apply; DingDong handles and validates the configuration.",
           "features.notify.title": "More Agents, one place to check.",
           "features.notify.body": "Collect alerts from connected Agents in DingDong, then choose the sound that means ‘time to check in.’",
           "devices.eyebrow": "Connected devices · Multiple computers",
@@ -804,13 +749,13 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.body": "These examples assume the matching resources have already been enabled and scoped in DingDong.",
           "examples.promptMessage": "“Review this page against our project’s UI rules and fix the problems.”",
           "examples.promptResult": "The project Prompt is applied automatically before the Agent starts.",
-          "examples.skillMessage": "“Use this project’s release workflow, run every check, and prepare version 1.4.6.”",
+          "examples.skillMessage": "“Use this project’s release workflow, run every check, and prepare version 1.5.0.”",
           "examples.skillResult": "The Agent matches the Skill description, then loads its full workflow and files.",
           "examples.mcpMessage": "“Use my GitHub tools to find why the latest main workflow failed.”",
           "examples.mcpResult": "The configured MCP is available, and its tools are called only when needed.",
           "chatFooter.title": "Every final reply leaves a little resource receipt.",
-          "chatFooter.body": "Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. A * marks a fully loaded Skill or an MCP that was actually called.",
-          "chatFooter.note": "An MCP * means called, not necessarily succeeded. Prompts stay unmarked because delivery cannot prove semantic compliance. All three symbols are customizable in Settings.",
+          "chatFooter.body": "Supported Agents append a DingDong line showing active Prompts, matching Skills, and available MCP connections. Supported sessions can also show exact conversation Token usage.",
+          "chatFooter.note": "A Skill * means its full instructions were loaded; an MCP * means its tool was called, not necessarily succeeded. Prompts stay unmarked. Token display is enabled by default and can be turned off in Settings.",
           "chatFooter.sampleHint": "Ask normally. DingDong shows the resources used after the answer.",
           "chatFooter.sampleInputLabel": "Demo Agent message",
           "chatFooter.sampleInputHint": "Press Enter to run a simulated reply.",
@@ -850,7 +795,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.startup": "Launch at startup",
           "settings.dock": "Hide Dock icon (macOS)",
           "settings.language": "Language",
-          "settings.languageOptions": "System / English / 中文",
+          "settings.languageOptions": "System / English / 中文 / Español",
           "settings.theme": "Theme",
           "settings.themeOptions": "System / Light / Dark",
           "settings.opacity": "Window opacity",
@@ -866,6 +811,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.agentLimitsOptions": "1–5,000 details · 1–8,760 hours",
           "settings.sound": "Completion sound",
           "settings.soundOptions": "Built-in, custom, system, or muted",
+          "settings.footerSymbols": "Agent reply footer symbols",
+          "settings.footerSymbolOptions": "Customize Prompt, Skill, and MCP separately",
+          "settings.tokenUsage": "Conversation Token usage",
+          "settings.tokenUsageOptions": "Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted",
           "settings.alertColor": "Menu bar alert color (macOS)",
           "settings.alertColorOptions": "Orange / Pink / Blue / Green / Purple",
           "settings.apiPort": "Local Agent API port",
@@ -903,12 +852,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.title": "Connect once. Use it from every Agent.",
           "mcp.body": "Keep one managed Skill package and choose dynamic, user-native, or project-native delivery per Agent. MCP servers connect through native configuration.",
           "mcp.promptEyebrow": "Let AI handle the setup",
-          "mcp.promptTitle": "Send this prompt to your current Agent",
-          "mcp.promptBody": "It will preserve your existing settings, connect MCP and completion alerts, then verify both paths.",
-          "mcp.copyPrompt": "Copy setup prompt",
+          "mcp.promptTitle": "Send this short setup instruction to your current Agent",
+          "mcp.promptBody": "Use the exact MCP path shown in DingDong for the most reliable setup; the instruction stays the same across Agents.",
+          "mcp.copyPrompt": "Copy setup instruction",
           "mcp.promptCopied": "Copied",
-          "mcp.promptReady": "Ready to copy",
-          "mcp.promptSuccess": "Setup prompt copied. Paste it into your Agent.",
+          "mcp.promptReady": "Short instruction, ready to copy",
+          "mcp.promptSuccess": "Setup instruction copied. Paste it into your Agent.",
           "mcp.promptError": "Could not copy automatically. Select the prompt and copy it manually.",
           "mcp.agentPrompt": agentSetupPrompts.en,
           "mcp.installTitle": "Prefer manual setup?",
@@ -918,6 +867,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.step3": "Keep one library instead of making a separate copy for every Agent.",
           "tools.bridge": "Ask DingDong what might help with the task at hand.",
           "tools.search": "Find prompts, Skills, and MCP configurations by name or keyword.",
+          "tools.create": "Create a disabled Prompt or MCP after checking for duplicates.",
+          "tools.update": "Update an existing Prompt or MCP while preserving omitted fields.",
+          "tools.installSkill": "Install a complete Skill package through the dedicated safe workflow.",
+          "tools.bindScope": "Bind the resource to the project or Agent scope you requested.",
           "tools.asset": "Open one resource. Start with the description, then read the full text if needed.",
           "tools.skill": "Load the Skill the Agent has decided to use.",
           "tools.recommend": "Find an MCP configuration that fits the current task.",
@@ -926,11 +879,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "Prefer scripts? There is a local API too.",
           "api.body": "Check DingDong's status, search resources, read a clipboard overview, or open the page you need.",
           "download.macosArm64": "Mac with Apple silicon",
-          "download.macosArm64Hint": "DingDong 1.4.6 · DMG · arm64",
+          "download.macosArm64Hint": "DingDong 1.5.0 Beta · DMG · arm64",
           "download.macosX64": "Mac with Intel chip",
-          "download.macosX64Hint": "DingDong 1.4.6 · DMG · x64",
+          "download.macosX64Hint": "DingDong 1.5.0 Beta · DMG · x64",
           "download.windowsX64": "Windows x64",
-          "download.windowsX64Hint": "DingDong 1.4.6 · Setup · x64",
+          "download.windowsX64Hint": "DingDong 1.5.0 Beta · Setup · x64",
           "download.beta": "Beta",
           "download.recommended": "Recommended",
           "download.macHelp": "Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.",
@@ -961,7 +914,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "hero.title.alerts": "统一收集 Agent 的提醒",
           "hero.lede": "剪贴板记录清晰可查，Prompt、Skill 和 MCP 只维护一份；接入的 Agent 有结果都由 DingDong 收好，桌面提示声随你选，重要内容也能送到可信设备。",
           "hero.finish": "东西随手能找到，任务有结果也不会错过",
-          "hero.download": "下载 DingDong",
+          "hero.download": "下载 1.5.0 Beta",
           "hero.connect": "查看 MCP 接入",
           "hero.star": "Star DingDongBuddy",
           "hero.starAria": "在 GitHub 上 Star DingDongBuddy",
@@ -983,12 +936,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "principles.summary.body": "先给名称和简介，真要用时再取正文。上下文更清爽，你也更容易看懂它拿了什么。",
           "principles.quiet.title": "常用动作不必找按钮",
           "principles.quiet.body": "按下可自定义的全局快捷键，搜索、筛选和粘贴都在一个面板里完成。",
-          "features.library.title": "提示词、Skill、MCP，各放各的位置",
-          "features.library.body": "不同内容用不同方式添加和查看；还可以按项目决定哪些自动启用。",
-          "features.clipboard.title": "带走几条，不必搬整个库",
-          "features.clipboard.body": "配对自己的可信设备，只自动发送新内容；连接前的历史由你主动选择后再发送。",
-          "features.bridge.title": "重复和吃灰的，让 Agent 帮你找",
-          "features.bridge.body": "让 Agent 看一遍资源库，告诉你哪些重复了，哪些已经很久没用。",
+          "features.library.title": "统一管理 Skill、提示词与 MCP",
+          "features.library.body": "在一个资源库里添加、查看和启用，并按项目或 Agent 决定作用范围。",
+          "features.clipboard.title": "连接手机等其他设备",
+          "features.clipboard.body": "在可信设备间传输文件和剪贴板内容，并在手机上接收 Agent 通知。",
+          "features.bridge.title": "让 Agent 帮你配置 DingDong",
+          "features.bridge.body": "直接告诉 Agent 要添加或修改哪个 Skill、MCP、提示词以及作用范围，DingDong 会完成配置并校验。",
           "features.notify.title": "Agent 再多，提醒也不乱跑",
           "features.notify.body": "把接入的 Agent 提醒收在一起，再挑一个你一听就知道“该回来看看了”的声音。",
           "devices.eyebrow": "连接设备 · 多电脑连接",
@@ -1044,13 +997,13 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.body": "以下是配置并启用相应资源后的对话示例。",
           "examples.promptMessage": "“按这个项目的 UI 规范检查页面，把发现的问题直接改好。”",
           "examples.promptResult": "项目 Prompt 会在 Agent 开始工作前自动生效。",
-          "examples.skillMessage": "“按这个项目的发布流程跑完所有检查，准备发布 1.4.6。”",
+          "examples.skillMessage": "“按这个项目的发布流程跑完所有检查，准备发布 1.5.0。”",
           "examples.skillResult": "Agent 会先匹配 Skill 简介，再加载完整流程和配套文件。",
           "examples.mcpMessage": "“用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”",
           "examples.mcpResult": "对应 MCP 已在客户端就绪，Agent 只在真正查询时调用工具。",
           "chatFooter.title": "每次答完，都留一张资源小票",
-          "chatFooter.body": "支持的 Agent 会在完整回复末尾附上一行 DingDong，列出本轮生效的 Prompt、匹配到的 Skill 和可用 MCP；完整加载过的 Skill 或实际调用过的 MCP，名称后会出现 *。",
-          "chatFooter.note": "MCP 后的 * 表示调用过，但不表示调用成功。Prompt 不加 *，因为送达无法证明模型在语义上实际遵循；三种符号都能在设置里自定义。",
+          "chatFooter.body": "支持的 Agent 会在完整回复末尾附上一行 DingDong，列出本轮生效的 Prompt、匹配到的 Skill 和可用 MCP；支持的会话还会显示准确的 Token 用量。",
+          "chatFooter.note": "Skill 后的 * 表示已加载完整指令；MCP 后的 * 表示工具调用过，不表示调用成功。Prompt 不加 *。Token 默认显示，也可以在设置里关闭。",
           "chatFooter.sampleHint": "正常告诉 Agent 要做什么，DingDong 会在答案后显示本轮用到的资源。",
           "chatFooter.sampleInputLabel": "演示 Agent 消息",
           "chatFooter.sampleInputHint": "按 Enter 运行一段模拟回复。",
@@ -1090,7 +1043,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.startup": "开机启动",
           "settings.dock": "隐藏 Dock 图标（macOS）",
           "settings.language": "语言",
-          "settings.languageOptions": "跟随系统 / English / 中文",
+          "settings.languageOptions": "跟随系统 / English / 中文 / Español",
           "settings.theme": "主题",
           "settings.themeOptions": "跟随系统 / 浅色 / 深色",
           "settings.opacity": "窗口透明度",
@@ -1106,6 +1059,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.agentLimitsOptions": "1–5000 条 · 1–8760 小时",
           "settings.sound": "完成提示音",
           "settings.soundOptions": "内置、自定义、系统声音或静音",
+          "settings.footerSymbols": "Agent 回复尾部符号",
+          "settings.footerSymbolOptions": "Prompt、Skill 和 MCP 可分别自定义",
+          "settings.tokenUsage": "会话 Token 用量",
+          "settings.tokenUsageOptions": "只显示 Codex、Claude Code、Pi 已支持会话的准确值；不支持时省略",
           "settings.alertColor": "菜单栏提醒颜色（macOS）",
           "settings.alertColorOptions": "橙黄 / 粉色 / 蓝色 / 绿色 / 紫色",
           "settings.apiPort": "本地 Agent API 端口",
@@ -1143,12 +1100,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.title": "接一次，几个 Agent 都能用",
           "mcp.body": "Skill 包只维护一份，并可按 Agent 选择动态、用户级原生或项目级原生交付；MCP 则写入原生配置。",
           "mcp.promptEyebrow": "交给 AI 配置",
-          "mcp.promptTitle": "把这段提示词发给当前 Agent",
-          "mcp.promptBody": "它会保留已有设置，接好 MCP 和任务结束提醒，并分别完成验证。",
-          "mcp.copyPrompt": "复制接入提示词",
+          "mcp.promptTitle": "把这段简短接入指令发给当前 Agent",
+          "mcp.promptBody": "使用 DingDong 软件内显示的准确 MCP 路径最可靠；不同 Agent 使用同一段简短指令。",
+          "mcp.copyPrompt": "复制接入指令",
           "mcp.promptCopied": "已复制",
-          "mcp.promptReady": "提示词可直接复制",
-          "mcp.promptSuccess": "接入提示词已复制，粘贴给 Agent 就可以了。",
+          "mcp.promptReady": "简短指令，可直接复制",
+          "mcp.promptSuccess": "接入指令已复制，粘贴给 Agent 就可以了。",
           "mcp.promptError": "自动复制失败，请选中提示词手动复制。",
           "mcp.agentPrompt": agentSetupPrompts.zh,
           "mcp.installTitle": "想手动配置？",
@@ -1158,6 +1115,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.step3": "资源只维护一份，不用给每个 Agent 再抄一遍",
           "tools.bridge": "每个任务开始先问 DingDong：这次可能用到什么？",
           "tools.search": "按关键词和类型查找提示词、Skill 和 MCP 配置",
+          "tools.create": "搜索去重后，新建一条默认关闭的 Prompt 或 MCP",
+          "tools.update": "只修改已有 Prompt 或 MCP 的指定字段，保留其他配置",
+          "tools.installSkill": "通过专用安全流程安装完整 Skill 包",
+          "tools.bindScope": "把资源绑定到用户要求的项目或 Agent 作用域",
           "tools.asset": "打开一条资源；先看简介，需要时再读正文",
           "tools.skill": "确定要用哪个 Skill 后再载入",
           "tools.recommend": "按手头的任务找合适的 MCP",
@@ -1166,11 +1127,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "api.title": "喜欢写脚本？也留了本地 API",
           "api.body": "查状态、找资源、看剪贴板概览，或者直接打开需要的页面。",
           "download.macosArm64": "Mac（Apple 芯片）",
-          "download.macosArm64Hint": "DingDong 1.4.6 · DMG · arm64",
+          "download.macosArm64Hint": "DingDong 1.5.0 Beta · DMG · arm64",
           "download.macosX64": "Mac（Intel 芯片）",
-          "download.macosX64Hint": "DingDong 1.4.6 · DMG · x64",
+          "download.macosX64Hint": "DingDong 1.5.0 Beta · DMG · x64",
           "download.windowsX64": "Windows x64",
-          "download.windowsX64Hint": "DingDong 1.4.6 · Setup · x64",
+          "download.windowsX64Hint": "DingDong 1.5.0 Beta · Setup · x64",
           "download.beta": "Beta",
           "download.recommended": "推荐",
           "download.macHelp": "需要 macOS 13 或更高版本。不确定 Mac 类型？打开苹果菜单  → 关于本机：显示“芯片”是 Apple 芯片，显示“处理器”是 Intel。",
@@ -1224,7 +1185,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { id: "files", label: "Files" }
             ],
             items: [
-              { id: "image", kind: "IMG", icon: "image", category: "images", title: "DingDong 1.4.6 interface.png", body: "PNG · image · 271 KB", time: "17:04" },
+              { id: "image", kind: "IMG", icon: "image", category: "images", title: "DingDong 1.5.0 Beta interface.png", body: "PNG · image · 271 KB", time: "17:04" },
               { id: "path", kind: "PATH", icon: "path", category: "text", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "CMD", icon: "command", category: "text", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", icon: "link", category: "links", title: "Latest DingDong release", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -1268,7 +1229,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               { id: "files", label: "文件" }
             ],
             items: [
-              { id: "image", kind: "图片", icon: "image", category: "images", title: "DingDong 1.4.6 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
+              { id: "image", kind: "图片", icon: "image", category: "images", title: "DingDong 1.5.0 Beta 界面.png", body: "PNG · 图片 · 271 KB", time: "17:04" },
               { id: "path", kind: "路径", icon: "path", category: "text", title: "Path: /clipboard/history", body: "/clipboard/history?filter=command&limit=10", time: "16:56" },
               { id: "command", kind: "命令", icon: "command", category: "text", title: "Command: run desktop tests", body: "make test && make package-macos", time: "16:55" },
               { id: "release", kind: "URL", icon: "link", category: "links", title: "DingDong 最新版本", body: "github.com/JevonsCode/DingDongBuddy/releases/latest", time: "16:48" },
@@ -1352,6 +1313,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         en: [
           {
             answer: "Done — I fixed the layout and verified the local preview.",
+            token: "12.4K Token",
             resources: [
               ["prompt", "♥ Project rules"],
               ["skill", "♦ Release flow*"],
@@ -1360,6 +1322,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           },
           {
             answer: "I reviewed the interaction, tightened the responsive state, and checked keyboard input.",
+            token: "18.7K Token",
             resources: [
               ["prompt", "♥ Product voice"],
               ["skill", "♦ UI hardening*"],
@@ -1368,6 +1331,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           },
           {
             answer: "The copy is updated, the example is localized, and the checks are passing.",
+            token: "9.8K Token",
             resources: [
               ["prompt", "♥ Writing guide"],
               ["skill", "♦ Localization*"],
@@ -1378,6 +1342,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         zh: [
           {
             answer: "已经改好了，页面布局和本地预览都检查过了。",
+            token: "12.4K Token",
             resources: [
               ["prompt", "♥ 项目规范"],
               ["skill", "♦ 发布流程*"],
@@ -1386,6 +1351,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           },
           {
             answer: "交互已经补齐，窄屏和键盘输入状态也一起检查过了。",
+            token: "18.7K Token",
             resources: [
               ["prompt", "♥ 产品语气"],
               ["skill", "♦ 界面加固*"],
@@ -1394,6 +1360,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           },
           {
             answer: "文案已更新，中英文示例保持同步，相关检查也通过了。",
+            token: "9.8K Token",
             resources: [
               ["prompt", "♥ 文案规范"],
               ["skill", "♦ 本地化流程*"],
@@ -1403,7 +1370,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         ]
       };
 
-      const renderTerminalDemoReceipt = (resources) => {
+      const renderTerminalDemoReceipt = (resources, token) => {
         const spacer = () => document.createTextNode(" ");
         const parts = [
           createDemoElement("span", "", "DingDong"),
@@ -1415,6 +1382,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           if (index > 0) parts.push(spacer(), createDemoElement("b", "", "|"), spacer());
           parts.push(createDemoElement("span", `is-${type}`, title));
         });
+        if (token) {
+          parts.push(
+            spacer(),
+            createDemoElement("b", "", "·"),
+            spacer(),
+            createDemoElement("span", "is-token", token)
+          );
+        }
         terminalDemoDingDong.replaceChildren(...parts);
       };
 
@@ -1422,7 +1397,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         const replies = terminalDemoReplies[demoState.language];
         const reply = replies[index % replies.length];
         terminalDemoAnswer.textContent = reply.answer;
-        renderTerminalDemoReceipt(reply.resources);
+        renderTerminalDemoReceipt(reply.resources, reply.token);
       };
 
       const setTerminalDemoThinking = (thinking) => {

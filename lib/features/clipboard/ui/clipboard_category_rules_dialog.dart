@@ -105,24 +105,16 @@ class _DialogHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return DesktopDialogHeader(
       onBack: editing ? onBack : null,
-      backTooltip: context.localized('Back to categories', '返回分类列表'),
+      backTooltip: context.l10n.backToCategories,
       onClose: onClose,
-      closeTooltip: context.localized('Close', '关闭'),
+      closeTooltip: context.l10n.close,
       title: Text(
-        editing
-            ? context.localized('Category rule', '分类规则')
-            : context.localized('Clipboard categories', '剪贴板分类'),
+        editing ? context.l10n.categoryRule : context.l10n.clipboardCategories,
       ),
       subtitle: Text(
         editing
-            ? context.localized(
-                'Define what content belongs in this category.',
-                '设置进入这个分类的内容条件。',
-              )
-            : context.localized(
-                'Rules run from top to bottom; the first match wins.',
-                '规则从上到下匹配，首个命中分类生效。',
-              ),
+            ? context.l10n.defineWhatContentBelongsInThisCategory
+            : context.l10n.rulesRunFromTopToBottomTheFirstMatchWins,
       ),
       showDivider: false,
     );
@@ -160,10 +152,7 @@ class _RuleList extends StatelessWidget {
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
-                  context.localized(
-                    'Priority · first match wins',
-                    '匹配顺序 · 上方优先',
-                  ),
+                  context.l10n.priorityFirstMatchWins,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -181,7 +170,7 @@ class _RuleList extends StatelessWidget {
                 height: 30,
                 compact: true,
                 icon: const Icon(Icons.add_rounded, size: 14),
-                label: context.localized('New category', '新建分类'),
+                label: context.l10n.newCategory,
                 tone: DesktopActionTone.soft,
               ),
             ],
@@ -262,23 +251,23 @@ Future<void> _confirmDeleteRule(
       await showDialog<bool>(
         context: context,
         builder: (BuildContext dialogContext) => DesktopAlertDialog(
-          title: Text(context.localized('Delete this category?', '删除这个分类？')),
+          title: Text(context.l10n.deleteThisCategory),
           content: Text(
-            context.localized(
-              '“${_ruleName(context, rule)}” and its matching conditions will be removed. Clipboard items are not deleted.',
-              '“${_ruleName(context, rule)}”及其匹配条件将被移除，剪贴板条目不会被删除。',
-            ),
+            context.l10n
+                .ruleAndItsMatchingConditionsWillBeRemovedClipboardItems_48d9a089(
+                  _ruleName(context, rule),
+                ),
           ),
           actions: <Widget>[
             DesktopActionButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              label: context.localized('Cancel', '取消'),
+              label: context.l10n.cancel,
               compact: true,
             ),
             DesktopActionButton(
               key: const Key('clipboard-category-delete-confirm'),
               onPressed: () => Navigator.pop(dialogContext, true),
-              label: context.localized('Delete category', '删除分类'),
+              label: context.l10n.deleteCategory,
               tone: DesktopActionTone.danger,
             ),
           ],
@@ -307,7 +296,7 @@ class _EmptyRuleList extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            context.localized('No categories yet', '还没有分类'),
+            context.l10n.noCategoriesYet,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -315,10 +304,7 @@ class _EmptyRuleList extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            context.localized(
-              'Create one to start organizing clipboard items.',
-              '新建分类后即可开始自动整理剪贴板。',
-            ),
+            context.l10n.createOneToStartOrganizingClipboardItems,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colors.onSurfaceVariant,
               fontSize: 10.5,
@@ -330,7 +316,7 @@ class _EmptyRuleList extends StatelessWidget {
             height: 30,
             compact: true,
             icon: const Icon(Icons.add_rounded, size: 13),
-            label: context.localized('New category', '新建分类'),
+            label: context.l10n.newCategory,
             tone: DesktopActionTone.soft,
           ),
         ],
@@ -383,10 +369,7 @@ class _RuleRow extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 Tooltip(
-                  message: context.localized(
-                    'Priority ${index + 1} · drag to reorder',
-                    '优先级 ${index + 1} · 拖动排序',
-                  ),
+                  message: context.l10n.priorityIndexDragToReorder(index + 1),
                   child: ReorderableDragStartListener(
                     index: index,
                     child: SizedBox(
@@ -492,8 +475,8 @@ class _RuleRow extends StatelessWidget {
                         child: Center(
                           child: Tooltip(
                             message: rule.enabled
-                                ? context.localized('Disable category', '停用分类')
-                                : context.localized('Enable category', '启用分类'),
+                                ? context.l10n.disableCategory
+                                : context.l10n.enableCategory,
                             child: CompactSwitch(
                               value: rule.enabled,
                               onChanged: onEnabledChanged,
@@ -504,7 +487,7 @@ class _RuleRow extends StatelessWidget {
                       const SizedBox(width: 2),
                       DesktopIconButton(
                         key: Key('clipboard-category-edit-${rule.id}'),
-                        tooltip: context.localized('Edit', '编辑'),
+                        tooltip: context.l10n.edit,
                         onPressed: onEdit,
                         size: 28,
                         iconSize: 13,
@@ -517,7 +500,7 @@ class _RuleRow extends StatelessWidget {
                       const SizedBox(width: 2),
                       DesktopIconButton(
                         key: Key('clipboard-category-delete-${rule.id}'),
-                        tooltip: context.localized('Delete', '删除'),
+                        tooltip: context.l10n.delete,
                         onPressed: onDelete,
                         size: 28,
                         iconSize: 13,
@@ -560,10 +543,10 @@ Color _ruleAccent(ColorScheme colors, ClipboardCategoryRule rule) =>
 
 String _ruleName(BuildContext context, ClipboardCategoryRule rule) =>
     switch (rule.id) {
-      'links' => context.localized('Links', '链接'),
-      'images' => context.localized('Images', '图片'),
-      'files' => context.localized('Files', '文件'),
-      'text' => context.localized('Text', '文本'),
+      'links' => context.l10n.links,
+      'images' => context.l10n.images,
+      'files' => context.l10n.files,
+      'text' => context.l10n.text,
       _ => rule.name,
     };
 
@@ -624,21 +607,18 @@ class _RuleEditorState extends State<_RuleEditor> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           _RuleField(
-            label: context.localized('Category name', '分类名称'),
+            label: context.l10n.categoryName,
             child: DesktopTextField(
               key: const Key('clipboard-category-name'),
               controller: _name,
               decoration: InputDecoration(
-                hintText: context.localized(
-                  'For example: Project links',
-                  '例如：项目链接',
-                ),
+                hintText: context.l10n.forExampleProjectLinks,
               ),
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            context.localized('Content types', '内容类型'),
+            context.l10n.contentTypes,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
               fontSize: 11.5,
@@ -677,17 +657,16 @@ class _RuleEditorState extends State<_RuleEditor> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        context.localized('Advanced matching', '高级匹配'),
+                        context.l10n.advancedMatching,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        context.localized(
-                          'Use regular expressions only when type and length are not enough.',
-                          '仅在类型和长度条件不足时使用正则表达式。',
-                        ),
+                        context
+                            .l10n
+                            .useRegularExpressionsOnlyWhenTypeAndLengthAreNotEnough,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 10.5,
@@ -707,8 +686,8 @@ class _RuleEditorState extends State<_RuleEditor> {
                     size: 15,
                   ),
                   label: _showAdvanced
-                      ? context.localized('Hide', '收起')
-                      : context.localized('Show', '展开'),
+                      ? context.l10n.hideMessage
+                      : context.l10n.showMessage,
                   compact: true,
                 ),
               ],
@@ -719,7 +698,7 @@ class _RuleEditorState extends State<_RuleEditor> {
               _sourcePattern.text.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
             _RuleField(
-              label: context.localized('Content regular expression', '内容正则'),
+              label: context.l10n.contentRegularExpression,
               child: DesktopTextField(
                 key: const Key('clipboard-category-content-regex'),
                 controller: _contentPattern,
@@ -730,10 +709,7 @@ class _RuleEditorState extends State<_RuleEditor> {
             ),
             const SizedBox(height: 10),
             _RuleField(
-              label: context.localized(
-                'Source application regular expression',
-                '来源应用正则',
-              ),
+              label: context.l10n.sourceApplicationRegularExpression,
               child: DesktopTextField(
                 key: const Key('clipboard-category-source-regex'),
                 controller: _sourcePattern,
@@ -748,7 +724,7 @@ class _RuleEditorState extends State<_RuleEditor> {
             children: <Widget>[
               Expanded(
                 child: _RuleField(
-                  label: context.localized('Minimum characters', '最少字符数'),
+                  label: context.l10n.minimumCharacters,
                   child: DesktopTextField(
                     controller: _minLength,
                     keyboardType: TextInputType.number,
@@ -758,7 +734,7 @@ class _RuleEditorState extends State<_RuleEditor> {
               const SizedBox(width: 10),
               Expanded(
                 child: _RuleField(
-                  label: context.localized('Maximum characters', '最多字符数'),
+                  label: context.l10n.maximumCharacters,
                   child: DesktopTextField(
                     controller: _maxLength,
                     keyboardType: TextInputType.number,
@@ -772,7 +748,7 @@ class _RuleEditorState extends State<_RuleEditor> {
             children: <Widget>[
               Expanded(
                 child: _RuleToggle(
-                  label: context.localized('Case sensitive', '区分大小写'),
+                  label: context.l10n.caseSensitive,
                   value: _caseSensitive,
                   onChanged: (bool value) =>
                       setState(() => _caseSensitive = value),
@@ -781,7 +757,7 @@ class _RuleEditorState extends State<_RuleEditor> {
               const SizedBox(width: 10),
               Expanded(
                 child: _RuleToggle(
-                  label: context.localized('Enabled', '启用'),
+                  label: context.l10n.enabled,
                   value: _enabled,
                   onChanged: (bool value) => setState(() => _enabled = value),
                 ),
@@ -807,7 +783,7 @@ class _RuleEditorState extends State<_RuleEditor> {
                 key: const Key('clipboard-category-save'),
                 onPressed: _save,
                 height: 36,
-                label: context.localized('Save category', '保存分类'),
+                label: context.l10n.saveCategory,
                 tone: DesktopActionTone.primary,
               ),
             ),
@@ -841,26 +817,15 @@ class _RuleEditorState extends State<_RuleEditor> {
 
 String _localizedValidationError(BuildContext context, String error) =>
     switch (error) {
-      'Category name is required.' => context.localized(
-        'Category name is required.',
-        '请输入分类名称。',
-      ),
-      'Minimum length cannot be negative.' => context.localized(
-        'Minimum length cannot be negative.',
-        '最少字符数不能为负数。',
-      ),
-      'Maximum length cannot be negative.' => context.localized(
-        'Maximum length cannot be negative.',
-        '最多字符数不能为负数。',
-      ),
-      'Minimum length cannot exceed maximum length.' => context.localized(
-        'Minimum length cannot exceed maximum length.',
-        '最少字符数不能大于最多字符数。',
-      ),
-      'Regular expression is invalid.' => context.localized(
-        'Regular expression is invalid.',
-        '正则表达式格式不正确。',
-      ),
+      'Category name is required.' => context.l10n.categoryNameIsRequired,
+      'Minimum length cannot be negative.' =>
+        context.l10n.minimumLengthCannotBeNegative,
+      'Maximum length cannot be negative.' =>
+        context.l10n.maximumLengthCannotBeNegative,
+      'Minimum length cannot exceed maximum length.' =>
+        context.l10n.minimumLengthCannotExceedMaximumLength,
+      'Regular expression is invalid.' =>
+        context.l10n.regularExpressionIsInvalid,
       _ => error,
     };
 
@@ -947,16 +912,12 @@ String _ruleSummary(BuildContext context, ClipboardCategoryRule rule) {
       rule.kinds
           .map((ClipboardKind kind) => _kindLabel(context, kind))
           .join(' · '),
-    if (rule.contentPattern.isNotEmpty)
-      context.localized('Content regex', '内容正则'),
-    if (rule.sourcePattern.isNotEmpty)
-      context.localized('Source regex', '来源正则'),
+    if (rule.contentPattern.isNotEmpty) context.l10n.contentRegex,
+    if (rule.sourcePattern.isNotEmpty) context.l10n.sourceRegex,
     if (rule.minCharacters != null || rule.maxCharacters != null)
-      context.localized('Length range', '长度范围'),
+      context.l10n.lengthRange,
   ];
-  return parts.isEmpty
-      ? context.localized('Matches everything', '匹配全部内容')
-      : parts.join(' · ');
+  return parts.isEmpty ? context.l10n.matchesEverything : parts.join(' · ');
 }
 
 IconData _kindIcon(ClipboardKind kind) => switch (kind) {
@@ -972,13 +933,13 @@ IconData _kindIcon(ClipboardKind kind) => switch (kind) {
 };
 
 String _kindLabel(BuildContext context, ClipboardKind kind) => switch (kind) {
-  ClipboardKind.text => context.localized('Text', '文本'),
-  ClipboardKind.url => context.localized('Link', '链接'),
-  ClipboardKind.command => context.localized('Command', '命令'),
-  ClipboardKind.code => context.localized('Code', '代码'),
+  ClipboardKind.text => context.l10n.text,
+  ClipboardKind.url => context.l10n.link,
+  ClipboardKind.command => context.l10n.command2,
+  ClipboardKind.code => context.l10n.code,
   ClipboardKind.json => 'JSON',
-  ClipboardKind.path => context.localized('Path', '路径'),
-  ClipboardKind.email => context.localized('Email', '邮箱'),
-  ClipboardKind.file => context.localized('File', '文件'),
-  ClipboardKind.image => context.localized('Image', '图片'),
+  ClipboardKind.path => context.l10n.path,
+  ClipboardKind.email => context.l10n.email,
+  ClipboardKind.file => context.l10n.file,
+  ClipboardKind.image => context.l10n.image,
 };

@@ -107,10 +107,7 @@ class _ClipboardPermissionBannerState extends State<_ClipboardPermissionBanner>
               child: _bursting
                   ? Semantics(
                       liveRegion: true,
-                      label: context.localized(
-                        'Quick paste permission granted',
-                        '快捷粘贴权限已开启',
-                      ),
+                      label: context.l10n.quickPastePermissionGranted,
                       child: ExcludeSemantics(
                         child: _PermissionBannerBurst(
                           animation: _burstController,
@@ -180,10 +177,7 @@ class _ClipboardPermissionSurface extends StatelessWidget {
           const SizedBox(width: 9),
           Expanded(
             child: Text(
-              context.localized(
-                'Quick paste needs Accessibility permission.',
-                '快捷粘贴需要辅助功能权限。',
-              ),
+              context.l10n.quickPasteNeedsAccessibilityPermission,
               style: const TextStyle(
                 fontSize: 11.5,
                 height: 1.2,
@@ -199,7 +193,7 @@ class _ClipboardPermissionSurface extends StatelessWidget {
             onPressed: interactive
                 ? viewModel.openQuickPastePermissionSettings
                 : null,
-            label: context.localized('Open settings', '前往开启'),
+            label: context.l10n.openSettings,
             compact: true,
             minWidth: 84,
             height: 32,

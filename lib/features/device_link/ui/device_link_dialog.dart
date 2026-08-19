@@ -114,7 +114,7 @@ class _WorkspaceHeader extends StatelessWidget {
               Semantics(
                 header: true,
                 child: Text(
-                  context.localized('Connected devices', '连接设备'),
+                  context.l10n.connectedDevices,
                   key: const Key('device-link-manager-title'),
                   style: Theme.of(
                     context,
@@ -123,10 +123,7 @@ class _WorkspaceHeader extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                context.localized(
-                  'Pair a trusted device and choose what this computer sends.',
-                  '连接可信设备，并选择这台电脑可以发送的内容。',
-                ),
+                context.l10n.pairATrustedDeviceAndChooseWhatThisComputerSends,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -150,7 +147,7 @@ class _CountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Semantics(
-      label: context.localized('$count paired devices', '已连接 $count 台设备'),
+      label: context.l10n.countPairedDevices(count),
       child: ExcludeSemantics(
         child: Container(
           key: const Key('device-link-device-count'),
@@ -187,7 +184,7 @@ class _DevicesColumn extends StatelessWidget {
         _LocalDeviceCard(controller: controller),
         const SizedBox(height: 18),
         _SectionTitle(
-          title: context.localized('Your devices', '已连接设备'),
+          title: context.l10n.yourDevices,
           trailing: '${controller.devices.length}',
         ),
         const SizedBox(height: 9),
@@ -226,7 +223,7 @@ final class DeviceShareDialog extends StatelessWidget {
           width: 400,
           maxHeight: 520,
           header: DesktopDialogHeader(
-            title: Text(context.localized('Send to device', '发送到设备')),
+            title: Text(context.l10n.sendToDevice),
             subtitle: Text(
               record.title.trim().isEmpty ? record.kind.name : record.title,
               maxLines: 1,
@@ -242,15 +239,12 @@ final class DeviceShareDialog extends StatelessWidget {
                     const Icon(Icons.devices_other_rounded, size: 36),
                     const SizedBox(height: 12),
                     Text(
-                      context.localized(
-                        'No device is online. Connect one first.',
-                        '当前没有在线设备，请先连接设备。',
-                      ),
+                      context.l10n.noDeviceIsOnlineConnectOneFirst,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     DesktopActionButton(
-                      label: context.localized('Got it', '知道了'),
+                      label: context.l10n.gotIt,
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -278,22 +272,17 @@ final class DeviceShareDialog extends StatelessWidget {
                           if (!context.mounted) return;
                           final String message;
                           if (error is DeviceLinkTextTooLargeException) {
-                            message = context.localized(
-                              'Text is larger than 128 KiB and was not sent.',
-                              '文本超过 128 KiB，未发送。',
-                            );
+                            message = context
+                                .l10n
+                                .textIsLargerThan128KiBAndWasNotSent;
                           } else if (error
                               is DeviceLinkFrameTooLargeException) {
-                            message = context.localized(
-                              'The encrypted message is larger than the '
-                                  '256 KiB relay limit and was not sent.',
-                              '内容加密后超过 256 KiB 中继上限，未发送。',
-                            );
+                            message = context
+                                .l10n
+                                .theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c;
                           } else {
-                            message = context.localized(
-                              'The device disconnected before sending.',
-                              '发送前设备已断开。',
-                            );
+                            message =
+                                context.l10n.theDeviceDisconnectedBeforeSending;
                           }
                           ScaffoldMessenger.of(
                             context,
@@ -353,7 +342,7 @@ class _LocalDeviceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  context.localized('This computer · Host', '这台电脑 · 主机'),
+                  context.l10n.thisComputerHost,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -429,50 +418,35 @@ class _DeviceCard extends StatelessWidget {
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 10),
-            _SectionLabel(label: context.localized('Settings', '设备设置')),
+            _SectionLabel(label: context.l10n.settings),
             const SizedBox(height: 4),
             _DeviceSettingRow(
               key: Key('device-auto-send-${device.id}'),
-              title: context.localized('Auto send clipboard', '自动发送剪贴板'),
-              subtitle: context.localized(
-                'This computer → ${device.name}',
-                '这台电脑 → ${device.name}',
-              ),
-              semanticLabel: context.localized(
-                'Auto send clipboard from this computer to ${device.name}',
-                '自动将剪贴板从这台电脑发送到 ${device.name}',
-              ),
+              title: context.l10n.autoSendClipboard,
+              subtitle: context.l10n.thisComputerName(device.name),
+              semanticLabel: context.l10n
+                  .autoSendClipboardFromThisComputerToName(device.name),
               value: device.autoSendClipboard,
               onChanged: (bool value) =>
                   unawaited(controller.setAutoSendClipboard(device.id, value)),
             ),
             _DeviceSettingRow(
               key: Key('device-agent-notifications-${device.id}'),
-              title: context.localized('Agent completion', 'Agent 完成提醒'),
+              title: context.l10n.agentCompletion,
               subtitle: device.receiveAgentNotifications
                   ? device.vibrationEnabled
-                        ? context.localized(
-                            'Enabled · Phone vibration is on',
-                            '已开启 · 手机端震动已开',
-                          )
-                        : context.localized(
-                            'Enabled · Phone vibration is off',
-                            '已开启 · 手机端震动已关',
-                          )
-                  : context.localized(
-                      'Completion notifications are off for this device',
-                      '此设备的完成提醒已关闭',
-                    ),
-              semanticLabel: context.localized(
-                'Agent completion notifications for ${device.name}',
-                '${device.name} 的 Agent 完成提醒',
+                        ? context.l10n.enabledPhoneVibrationIsOn
+                        : context.l10n.enabledPhoneVibrationIsOff
+                  : context.l10n.completionNotificationsAreOffForThisDevice,
+              semanticLabel: context.l10n.agentCompletionNotificationsForName(
+                device.name,
               ),
               value: device.receiveAgentNotifications,
               onChanged: (bool value) =>
                   unawaited(controller.setAgentNotifications(device.id, value)),
             ),
             const SizedBox(height: 8),
-            _SectionLabel(label: context.localized('Connection', '连接操作')),
+            _SectionLabel(label: context.l10n.connection),
             const SizedBox(height: 7),
             Row(
               children: <Widget>[
@@ -480,10 +454,10 @@ class _DeviceCard extends StatelessWidget {
                   child: DesktopActionButton(
                     key: Key('device-connection-${device.id}'),
                     label: connecting
-                        ? context.localized('Stop connecting', '停止连接')
+                        ? context.l10n.stopConnecting
                         : connected
-                        ? context.localized('Disconnect', '断开连接')
-                        : context.localized('Reconnect', '重新连接'),
+                        ? context.l10n.disconnect
+                        : context.l10n.reconnect,
                     icon: active
                         ? Icons.link_off_rounded
                         : Icons.refresh_rounded,
@@ -498,7 +472,7 @@ class _DeviceCard extends StatelessWidget {
                 const SizedBox(width: 7),
                 DesktopActionButton(
                   key: Key('device-delete-${device.id}'),
-                  label: context.localized('Delete', '删除'),
+                  label: context.l10n.delete,
                   icon: Icons.delete_outline_rounded,
                   compact: true,
                   tone: DesktopActionTone.danger,
@@ -516,20 +490,19 @@ class _DeviceCard extends StatelessWidget {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(context.localized('Delete this device?', '删除这个设备？')),
+        title: Text(context.l10n.deleteThisDevice),
         content: Text(
-          context.localized(
-            'Trust and directional settings will be revoked. Pair again to reconnect.',
-            '将撤销信任和方向设置；下次连接需要重新扫码。',
-          ),
+          context
+              .l10n
+              .trustAndDirectionalSettingsWillBeRevokedPairAgainTo_f59587ea,
         ),
         actions: <Widget>[
           DesktopActionButton(
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             onPressed: () => Navigator.pop(context, false),
           ),
           DesktopActionButton(
-            label: context.localized('Delete', '删除'),
+            label: context.l10n.delete,
             tone: DesktopActionTone.danger,
             onPressed: () => Navigator.pop(context, true),
           ),
@@ -623,21 +596,19 @@ class _PairingStart extends StatelessWidget {
                   Semantics(
                     header: true,
                     child: Text(
-                      context.localized('Connect a new device', '连接新设备'),
+                      context.l10n.connectANewDevice,
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     controller.canPair
-                        ? context.localized(
-                            'Create a QR code, then scan it with the device you trust.',
-                            '生成二维码，再用你信任的设备扫码。',
-                          )
-                        : context.localized(
-                            'The DEV PWA endpoint is not configured in this build.',
-                            '这个构建尚未配置 DEV PWA 地址。',
-                          ),
+                        ? context
+                              .l10n
+                              .createAQRCodeThenScanItWithTheDeviceYouTrust
+                        : context
+                              .l10n
+                              .theDEVPWAEndpointIsNotConfiguredInThisBuild,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -650,11 +621,8 @@ class _PairingStart extends StatelessWidget {
         const SizedBox(height: 16),
         DesktopActionButton(
           key: const Key('device-begin-pairing'),
-          label: context.localized('Show pairing QR', '显示连接二维码'),
-          semanticLabel: context.localized(
-            'Show QR code to pair a trusted device',
-            '显示二维码以连接可信设备',
-          ),
+          label: context.l10n.showPairingQR,
+          semanticLabel: context.l10n.showQRCodeToPairATrustedDevice,
           icon: Icons.qr_code_2_rounded,
           tone: DesktopActionTone.primary,
           autofocus: controller.canPair,
@@ -689,7 +657,7 @@ class _PairingQr extends StatelessWidget {
               child: Semantics(
                 header: true,
                 child: Text(
-                  context.localized('Scan to connect', '扫码连接'),
+                  context.l10n.scanToConnect,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -711,9 +679,8 @@ class _PairingQr extends StatelessWidget {
               child: Semantics(
                 key: const Key('device-pairing-qr'),
                 image: true,
-                label: context.localized(
-                  'Pairing QR code for ${controller.localDevice.name}',
-                  '${controller.localDevice.name} 的连接二维码',
+                label: context.l10n.pairingQRCodeForName(
+                  controller.localDevice.name,
                 ),
                 child: ExcludeSemantics(
                   child: Container(
@@ -741,10 +708,7 @@ class _PairingQr extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          context.localized(
-            'Scan with the device you want to trust.',
-            '请使用要信任的设备扫码。',
-          ),
+          context.l10n.scanWithTheDeviceYouWantToTrust,
           textAlign: TextAlign.center,
           style: Theme.of(
             context,
@@ -753,8 +717,8 @@ class _PairingQr extends StatelessWidget {
         const SizedBox(height: 12),
         DesktopActionButton(
           key: const Key('device-cancel-pairing'),
-          label: context.localized('Cancel pairing', '取消连接'),
-          semanticLabel: context.localized('Cancel device pairing', '取消设备连接'),
+          label: context.l10n.cancelPairing,
+          semanticLabel: context.l10n.cancelDevicePairing,
           icon: Icons.close_rounded,
           onPressed: () => unawaited(controller.cancelPairing()),
         ),
@@ -779,14 +743,12 @@ class _SecurityNote extends StatelessWidget {
         Expanded(
           child: Text(
             pairingVisible
-                ? context.localized(
-                    'The key stays in the QR. WebRTC is preferred; the encrypted relay fallback stores no content.',
-                    '密钥只存在于二维码中；优先使用 WebRTC 直连，加密中继不保存内容。',
-                  )
-                : context.localized(
-                    'WebRTC is preferred; the end-to-end encrypted relay fallback stores no clipboard, file, or Agent content.',
-                    '优先使用 WebRTC 直连；端到端加密中继不保存剪贴板、文件或 Agent 内容。',
-                  ),
+                ? context
+                      .l10n
+                      .theKeyStaysInTheQRWebRTCIsPreferredTheEncryptedRelay_ca235c45
+                : context
+                      .l10n
+                      .webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3,
             key: const Key('device-connection-mode-note'),
             style: Theme.of(
               context,
@@ -816,15 +778,12 @@ class _EmptyDevicesCard extends StatelessWidget {
           const Icon(Icons.devices_other_rounded, size: 32),
           const SizedBox(height: 8),
           Text(
-            context.localized('No connected devices yet', '还没有已连接设备'),
+            context.l10n.noConnectedDevicesYet,
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 3),
           Text(
-            context.localized(
-              'Pairing does not copy content by itself.',
-              '完成连接后也不会自动复制内容。',
-            ),
+            context.l10n.pairingDoesNotCopyContentByItself,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall,
           ),
@@ -1105,15 +1064,9 @@ final class _StatusPalette {
 
 String _statusLabel(BuildContext context, DeviceConnectionStatus status) {
   return switch (status) {
-    DeviceConnectionStatus.connecting => context.localized(
-      'Connecting…',
-      '连接中…',
-    ),
-    DeviceConnectionStatus.connected => context.localized('Online', '在线'),
-    DeviceConnectionStatus.error => context.localized(
-      'Connection error',
-      '连接异常',
-    ),
-    DeviceConnectionStatus.disconnected => context.localized('Offline', '离线'),
+    DeviceConnectionStatus.connecting => context.l10n.connecting,
+    DeviceConnectionStatus.connected => context.l10n.online,
+    DeviceConnectionStatus.error => context.l10n.connectionError,
+    DeviceConnectionStatus.disconnected => context.l10n.offline,
   };
 }

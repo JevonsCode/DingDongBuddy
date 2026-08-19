@@ -96,6 +96,29 @@ void main() {
     expect(received?.tokenUsage?.totalTokens, 12500);
   });
 
+  test(
+    'POST /ding resolves a missing headless message in the app locale',
+    () async {
+      DingRequest? received;
+      final AgentRouter router = AgentRouter(
+        defaultDingMessage: (String source) =>
+            '$source completó la tarea actual',
+        onDing: (DingRequest request) => received = request,
+      );
+
+      final response = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/ding',
+          body: '{"source":"Codex","fallback":true}',
+        ),
+      );
+
+      expect(response.statusCode, 200);
+      expect(received?.message, 'Codex completó la tarea actual');
+    },
+  );
+
   test('POST /ding reads local usage only when display is enabled', () async {
     var loads = 0;
     ConversationTokenUsageRequest? usageRequest;

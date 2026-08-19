@@ -20,60 +20,55 @@ class ReleaseSettingsSection extends StatelessWidget {
         final ReleaseStatus status = viewModel.releaseStatus;
         final ApplicationUpdateStatus installStatus =
             viewModel.applicationUpdateStatus;
+        final List<String> releaseNotes = status.notesFor(
+          context.l10n.localeName,
+        );
         return Padding(
           padding: const EdgeInsets.only(bottom: 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                context.localized('Version', '版本'),
+                context.l10n.version,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                context.localized(
-                  'DingDong $currentAppVersion · Desktop',
-                  'DingDong $currentAppVersion · 桌面版',
+                context.l10n.dingdongCurrentAppVersionDesktop(
+                  currentAppVersion,
                 ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
               const Divider(),
               _VersionRow(
-                label: context.localized('Current', '当前版本'),
+                label: context.l10n.current,
                 value: '${status.currentVersion} (${status.currentBuild})',
               ),
               _VersionRow(
-                label: context.localized('Latest', '最新版本'),
-                value:
-                    status.latestVersion ?? context.localized('Unknown', '未知'),
+                label: context.l10n.latest,
+                value: status.latestVersion ?? context.l10n.unknown,
               ),
               const SizedBox(height: 8),
               const Divider(),
               CompactSwitchListTile(
                 key: const Key('settings-anonymous-telemetry'),
                 contentPadding: EdgeInsets.zero,
-                title: Text(
-                  context.localized(
-                    'Anonymous install and update statistics',
-                    '匿名安装与更新统计',
-                  ),
-                ),
+                title: Text(context.l10n.anonymousInstallAndUpdateStatistics),
                 subtitle: Text(
-                  context.localized(
-                    'On by default. Sends one event after installation or a version update with a random installation ID, app version, operating system, and architecture. No activity, feature usage, clipboard content, files, or Agent messages are sent. The implementation is open source, and you can turn this off at any time.',
-                    '默认开启。仅在安装或版本更新后发送一次统计，内容包括随机安装 ID、应用版本、操作系统和处理器架构；不发送活跃状态、功能使用、剪贴板内容、文件或 Agent 消息。实现代码开源，并可随时关闭。',
-                  ),
+                  context
+                      .l10n
+                      .onByDefaultSendsOneEventAfterInstallationOrAVersion_153fb4ab,
                 ),
                 value: viewModel.settings.lifecycleTelemetryEnabled,
                 onChanged: viewModel.setLifecycleTelemetryEnabled,
               ),
-              if (status.isUpdateAvailable == true && status.notes.isNotEmpty)
+              if (status.isUpdateAvailable == true && releaseNotes.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: status.notes
+                    children: releaseNotes
                         .map(
                           (String note) => Padding(
                             padding: const EdgeInsets.only(bottom: 4),
@@ -138,31 +133,31 @@ class ReleaseSettingsSection extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(context.localized('Check', '检查更新')),
+                    label: Text(context.l10n.check2),
                   ),
                   _ReleaseActionButton(
                     buttonKey: const Key('settings-open-website'),
                     onPressed: viewModel.openWebsite,
                     icon: const Icon(Icons.language_rounded, size: 18),
-                    label: Text(context.localized('Website', '官网')),
+                    label: Text(context.l10n.website),
                   ),
                   _ReleaseActionButton(
                     buttonKey: const Key('settings-open-release'),
                     onPressed: viewModel.openReleasePage,
                     icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                    label: Text(context.localized('Release', '发布页')),
+                    label: Text(context.l10n.release),
                   ),
                   _ReleaseActionButton(
                     buttonKey: const Key('settings-report-problem'),
                     onPressed: viewModel.reportProblem,
                     icon: const Icon(Icons.bug_report_outlined, size: 18),
-                    label: Text(context.localized('Report a problem', '上报问题')),
+                    label: Text(context.l10n.reportAProblem),
                   ),
                   _ReleaseActionButton(
                     buttonKey: const Key('settings-request-feature'),
                     onPressed: viewModel.requestFeature,
                     icon: const Icon(Icons.lightbulb_outline, size: 18),
-                    label: Text(context.localized('Request a feature', '提出需求')),
+                    label: Text(context.l10n.requestAFeature),
                   ),
                 ],
               ),
@@ -209,10 +204,9 @@ class _MacOsUpdatePermissionNotice extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                context.localized(
-                  'After updating, you will need to grant DingDong\'s macOS permissions again in System Settings.',
-                  '更新完成后，需要在 macOS“系统设置”中重新授予 DingDong 相关权限。',
-                ),
+                context
+                    .l10n
+                    .afterUpdatingYouWillNeedToGrantDingDongSMacOSPermissions_20660ff5,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colors.onTertiaryContainer,
                 ),
@@ -260,39 +254,36 @@ String _statusText(
 ) {
   switch (installStatus.phase) {
     case ApplicationUpdatePhase.checking:
-      return context.localized('Preparing update…', '正在准备更新…');
+      return context.l10n.preparingUpdate;
     case ApplicationUpdatePhase.downloading:
       final int? percent = installStatus.progress == null
           ? null
           : (installStatus.progress! * 100).round();
       return percent == null
-          ? context.localized('Downloading update…', '正在下载更新…')
-          : context.localized(
-              'Downloading update… $percent%',
-              '正在下载更新… $percent%',
-            );
+          ? context.l10n.downloadingUpdate
+          : context.l10n.downloadingUpdatePercent(percent);
     case ApplicationUpdatePhase.extracting:
-      return context.localized('Verifying update…', '正在校验更新…');
+      return context.l10n.verifyingUpdate;
     case ApplicationUpdatePhase.installing:
-      return context.localized('Installing and restarting…', '正在安装并重启…');
+      return context.l10n.installingAndRestarting;
     case ApplicationUpdatePhase.failed:
-      return context.localized('Update failed', '更新失败');
+      return context.l10n.updateFailed;
     case ApplicationUpdatePhase.current:
-      return context.localized("You're up to date", '已是最新版本');
+      return context.l10n.youReUpToDate;
     case ApplicationUpdatePhase.idle:
     case ApplicationUpdatePhase.unsupported:
       break;
   }
   if (status.isChecking) {
-    return context.localized('Checking for updates…', '正在检查更新…');
+    return context.l10n.checkingForUpdates;
   }
   if (status.errorMessage != null) {
-    return context.localized('Update check failed', '更新检查失败');
+    return context.l10n.updateCheckFailed;
   }
   return switch (status.isUpdateAvailable) {
-    true => context.localized('A new version is available', '有新版本可用'),
-    false => context.localized("You're up to date", '已是最新版本'),
-    null => context.localized('No update metadata yet', '尚未获取更新信息'),
+    true => context.l10n.aNewVersionIsAvailable,
+    false => context.l10n.youReUpToDate,
+    null => context.l10n.noUpdateMetadataYet,
   };
 }
 
@@ -302,10 +293,10 @@ String _updateButtonText(
   ApplicationUpdateStatus installStatus,
 ) {
   if (installStatus.isBusy) {
-    return context.localized('Updating…', '正在更新…');
+    return context.l10n.updating2;
   }
   final String version = status.latestVersion ?? '';
-  return context.localized('Update to $version', '更新到 $version');
+  return context.l10n.updateToVersion(version);
 }
 
 class _VersionRow extends StatelessWidget {

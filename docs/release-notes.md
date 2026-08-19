@@ -1,3 +1,113 @@
+# DingDong 1.5.0 Beta
+
+DingDong 1.5.0 Beta makes Agent resource use visible, adds exact conversation
+Token totals where client evidence supports them, and moves the desktop app to
+a centralized English, Simplified Chinese, and Spanish localization system.
+
+## See what Prompts, Skills, and MCPs actually did
+
+- Resource cards and configuration details show separate candidate, loaded,
+  and real-call counts instead of combining availability with confirmed use.
+- The Dynamic view explains repeated `×N` reminders and cumulative Token use
+  on hover. Truncated summary cards also reveal their complete text on hover.
+- Exact conversation Token totals are enabled by default for supported Codex,
+  Claude Code, and Pi sessions. Unsupported or unverifiable clients are omitted
+  instead of estimated.
+
+## Let Agents configure DingDong safely
+
+- A concise “connect DingDong to the current Agent” instruction replaces the
+  older client-by-client setup prompt.
+- Managed tools can search, create, update, and scope Prompt and MCP resources;
+  complete Skills continue through their dedicated package installation flow.
+- Strict parsing, atomic writes, project identity checks, and recoverable
+  transactions protect managed Prompt, Skill, MCP, scope, and trigger changes.
+
+## Use the app in three languages with less overhead
+
+- User-facing Flutter copy is centralized and generated for English,
+  Simplified Chinese, and Spanish, including native macOS windows, tray menus,
+  permission dialogs, setup text, and language-aware update notes.
+- Settings can open DingDong-managed data and image-cache locations; clearing
+  only removes DingDong's own cache and never deletes external source files.
+- SQL-side aggregation, count queries, and bounded conversation-log scans lower
+  transient memory use on large histories while preserving exact results.
+- The website and mobile PWA now demonstrate Token usage, Agent-managed
+  resources, and the 1.5.0 Beta download channel. The PWA shell advances to 28.
+
+This GitHub release is a prerelease. All three desktop packages are Beta; the
+existing stable `latest` channel remains on DingDong 1.4.6.
+
+---
+
+# DingDong 1.5.0 Beta
+
+DingDong 1.5.0 Beta 让 Agent 资源的真实使用过程可见，在客户端证据可靠时展示
+精确会话 Token 总量，并把桌面端迁移到统一管理的英语、简体中文与西班牙语架构。
+
+## 看清 Prompt、Skill 与 MCP 真的做了什么
+
+- 资源卡片和配置详情分别展示候选、加载与真实调用次数，不再把“可用”和“已使用”
+  混在一起。
+- 动态页悬停说明 `×N` 重复提醒次数与累计 Token 用量；被省略的顶部摘要也可悬停
+  查看完整内容。
+- Codex、Claude Code 与 Pi 的已支持会话默认显示准确 Token 总量；不支持或无法验证
+  的客户端会省略，不进行估算。
+
+## 让 Agent 安全配置 DingDong
+
+- 用一句简短的“把 DingDong 接入当前 Agent”替代过去逐客户端展开的长提示词。
+- 托管工具可以搜索、创建、修改 Prompt 和 MCP 并绑定作用域；完整 Skill 仍走专用
+  Package 安装流程。
+- 严格解析、原子写入、项目身份校验与可恢复事务共同保护 Prompt、Skill、MCP、
+  作用域和触发组修改。
+
+## 三种语言，更低运行开销
+
+- Flutter 用户文案集中管理并生成英语、简体中文、西班牙语版本，覆盖 macOS 原生窗口、
+  托盘菜单、权限弹窗、接入文案与按当前语言显示的更新日志。
+- 设置可以打开 DingDong 自己的数据与图片缓存位置；清理只删除 DingDong 自有缓存，
+  不会删除外部来源文件。
+- SQL 聚合、COUNT 查询与有界会话日志扫描降低大历史记录下的瞬时内存占用，同时保持
+  结果准确。
+- 官网与手机 PWA 同步展示 Token 用量、Agent 管理资源和 1.5.0 Beta 下载入口；PWA
+  Shell 升级到 28。
+
+本次 GitHub Release 是预发布，三个桌面安装包都属于 Beta；现有正式版 `latest`
+通道仍保留在 DingDong 1.4.6。
+
+---
+
+# DingDong 1.5.0 Beta
+
+DingDong 1.5.0 Beta hace visible el uso real de los recursos de Agent, muestra
+el total exacto de Tokens cuando el cliente aporta evidencia compatible y
+centraliza la interfaz en inglés, chino simplificado y español.
+
+## Recursos observables y configuración segura
+
+- Las tarjetas y los detalles separan candidatos, cargas y llamadas reales de
+  Prompt, Skill y MCP.
+- Actividad explica `×N`, el total acumulado de Tokens y el texto completo al
+  pasar el puntero; Codex, Claude Code y Pi muestran datos exactos compatibles.
+- Los Agents pueden buscar, crear, actualizar y limitar Prompt y MCP; los Skills
+  completos conservan su flujo seguro de instalación de paquetes.
+
+## Localización y menor uso de memoria
+
+- Los textos de Flutter, las ventanas nativas de macOS, los menús, los permisos
+  y las notas de versión siguen ahora el idioma elegido.
+- Ajustes puede abrir las carpetas administradas por DingDong y limpiar solo su
+  propia caché, sin borrar archivos externos.
+- Las agregaciones SQL y el análisis acotado de registros reducen la memoria
+  temporal en historiales grandes.
+- El sitio y la PWA muestran el canal 1.5.0 Beta; la PWA avanza a Shell 28.
+
+Esta versión de GitHub es una versión preliminar. Los tres paquetes de
+escritorio son Beta y el canal estable `latest` continúa en DingDong 1.4.6.
+
+---
+
 # DingDong 1.4.6
 
 DingDong 1.4.6 makes managed Agent resources observable, adds exact

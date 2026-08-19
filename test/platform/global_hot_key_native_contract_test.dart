@@ -35,6 +35,9 @@ void main() {
     final String assistant = File(
       'macos/Runner/AccessibilityPermissionAssistant.swift',
     ).readAsStringSync();
+    final String chinese = File(
+      'macos/Runner/zh-Hans.lproj/AccessibilityPermissionAssistant.strings',
+    ).readAsStringSync();
 
     expect(appDelegate, contains('accessibilityPermissionAssistant.show()'));
     expect(
@@ -51,8 +54,12 @@ void main() {
     expect(assistant, contains('.fileURL'));
     expect(assistant, contains('NSFilenamesPboardType'));
     expect(assistant, contains('com.apple.pasteboard.promised-file-url'));
-    expect(assistant, contains('先拖一次让它可用'));
-    expect(assistant, contains('删除后再拖一次并打开开关'));
+    expect(
+      assistant,
+      contains('ddAccessibilityString("disabled_remove_guide")'),
+    );
+    expect(chinese, contains('先拖一次让它可用'));
+    expect(chinese, contains('删除后再拖一次并打开开关'));
     expect(assistant, contains('RoundedVisualEffectContainer'));
     expect(assistant, contains('effectView.layer?.mask = effectMask'));
   });

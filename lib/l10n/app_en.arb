@@ -1,0 +1,4019 @@
+{
+  "@@locale": "en",
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "Display name for the English language option."
+  },
+  "languageChinese": "Chinese",
+  "@languageChinese": {
+    "description": "Display name for the Chinese language option."
+  },
+  "languageSpanish": "Spanish",
+  "@languageSpanish": {
+    "description": "Display name for the Spanish language option."
+  },
+  "aNewVersionIsAvailable": "A new version is available",
+  "@aNewVersionIsAvailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aSelectedLocalPathResourceCouldNotBeSharedError": "A selected local-path resource could not be shared: {error}",
+  "@aSelectedLocalPathResourceCouldNotBeSharedError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "aSkillMeansItsFullInstructionsWereLoadedForThisTaskAnMCP_240facd9": "A Skill * means its full instructions were loaded for this task. An MCP * means one of its tools was called, not that the call succeeded. Prompts stay unmarked.",
+  "@aSkillMeansItsFullInstructionsWereLoadedForThisTaskAnMCP_240facd9": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aToolConnectionWhoseMCPToolsAreCalledOnlyWhenTheTask_08282426": "A tool connection whose MCP tools are called only when the task requires them.",
+  "@aToolConnectionWhoseMCPToolsAreCalledOnlyWhenTheTask_08282426": {
+    "description": "DingDong built-in interface copy."
+  },
+  "actionCountTimes": "{action} {count} {times}",
+  "@actionCountTimes": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "action": {
+        "type": "Object",
+        "description": "Value from `action`."
+      },
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      },
+      "times": {
+        "type": "Object",
+        "description": "Value from `metric.count == 1 ? 'time' : 'times'`."
+      }
+    }
+  },
+  "activated": "Activated",
+  "@activated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "activated2": "activated",
+  "@activated2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "adapterVersionHistory": "Adapter version history",
+  "@adapterVersionHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addALocalNoteAboutHowYouUseThisSkill": "Add a local note about how you use this Skill.",
+  "@addALocalNoteAboutHowYouUseThisSkill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addAgentConfiguration": "Add agent configuration",
+  "@addAgentConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addAtLeastOneCompleteRule": "Add at least one complete rule.",
+  "@addAtLeastOneCompleteRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addOneOrMoreExistingAbsoluteProjectDirectories": "Add one or more existing absolute project directories.",
+  "@addOneOrMoreExistingAbsoluteProjectDirectories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addProject": "Add project",
+  "@addProject": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addRule": "Add rule",
+  "@addRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addTitle": "Add title",
+  "@addTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addToGroups": "Add to groups",
+  "@addToGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedAPIAndMCPDetails": "Advanced API and MCP details",
+  "@advancedAPIAndMCPDetails": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedCommandsAndTheInstallationPromptTheirPresence_b84b4903": "Advanced commands and the installation prompt. Their presence does not mean an Agent has been verified.",
+  "@advancedCommandsAndTheInstallationPromptTheirPresence_b84b4903": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedMatching": "Advanced matching",
+  "@advancedMatching": {
+    "description": "DingDong built-in interface copy."
+  },
+  "afterTheGlobalShortcutDingDongCanReturnFocusAndPasteThe_5ad1a82a": "After the global shortcut, DingDong can return focus and paste the selected item.",
+  "@afterTheGlobalShortcutDingDongCanReturnFocusAndPasteThe_5ad1a82a": {
+    "description": "DingDong built-in interface copy."
+  },
+  "afterUpdatingYouWillNeedToGrantDingDongSMacOSPermissions_20660ff5": "After updating, you will need to grant DingDong's macOS permissions again in System Settings.",
+  "@afterUpdatingYouWillNeedToGrantDingDongSMacOSPermissions_20660ff5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentActivity": "Agent activity",
+  "@agentActivity": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAlerts": "Agent alerts",
+  "@agentAlerts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAndClipboardItemsCreatedHereAreExplicitDEVTestData_f8625f9f": "Agent and clipboard items created here are explicit DEV test data. Phone-origin samples are simulations, never captured from a real phone clipboard.",
+  "@agentAndClipboardItemsCreatedHereAreExplicitDEVTestData_f8625f9f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompletion": "Agent completion",
+  "@agentCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompletionNotifications": "Agent completion notifications",
+  "@agentCompletionNotifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompletionNotificationsForName": "Agent completion notifications for {name}",
+  "@agentCompletionNotificationsForName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `device.name`."
+      }
+    }
+  },
+  "agentCompletionSignal": "Agent completion signal",
+  "@agentCompletionSignal": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConfigurationFileIsInvalid": "Agent configuration file is invalid",
+  "@agentConfigurationFileIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConnectionCenter": "Agent connection center",
+  "@agentConnectionCenter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConnections": "Agent connections",
+  "@agentConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDecides": "Agent decides",
+  "@agentDecides": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentPluginProvidesTheSameSkill": "Agent plugin provides the same Skill",
+  "@agentPluginProvidesTheSameSkill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentReplyFooter": "Agent reply footer",
+  "@agentReplyFooter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentResourceSyncFailed": "Agent resource sync failed",
+  "@agentResourceSyncFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSessionLoadingName": "Agent session loading name",
+  "@agentSessionLoadingName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSetupNeedsUpdate": "Agent setup needs update",
+  "@agentSetupNeedsUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSetupPrompt": "Agent setup prompt",
+  "@agentSetupPrompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSetupPromptNeedsUpdating": "Agent setup prompt needs updating",
+  "@agentSetupPromptNeedsUpdating": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSource": "Agent source",
+  "@agentSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "all": "All",
+  "@all": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allProjectsNoRestriction": "All projects · no restriction",
+  "@allProjectsNoRestriction": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allSources": "All sources",
+  "@allSources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allowAgentsToReadClipboardContent": "Allow Agents to read clipboard content",
+  "@allowAgentsToReadClipboardContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allowedByTheExplicitSettingsSwitch": "Allowed by the explicit Settings switch",
+  "@allowedByTheExplicitSettingsSwitch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "always": "Always",
+  "@always": {
+    "description": "DingDong built-in interface copy."
+  },
+  "anEnabledAgentPluginProvidesASkillWithTheSameNameBoth_c5e2f5ee": "An enabled Agent plugin provides a Skill with the same name. Both remain available; review which one should be used.",
+  "@anEnabledAgentPluginProvidesASkillWithTheSameNameBoth_c5e2f5ee": {
+    "description": "DingDong built-in interface copy."
+  },
+  "anExistingUserManagedSkillWasPreservedDingDongDidNot_0f7d7c2a": "An existing user-managed Skill was preserved. DingDong did not overwrite it.",
+  "@anExistingUserManagedSkillWasPreservedDingDongDidNot_0f7d7c2a": {
+    "description": "DingDong built-in interface copy."
+  },
+  "anonymousInstallAndUpdateStatistics": "Anonymous install and update statistics",
+  "@anonymousInstallAndUpdateStatistics": {
+    "description": "DingDong built-in interface copy."
+  },
+  "apiAgentConnections": "API | Agent connections",
+  "@apiAgentConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "apiListeningOnHostPort": "API listening on {host}:{port}",
+  "@apiListeningOnHostPort": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "host": {
+        "type": "Object",
+        "description": "Value from `endpoint.host`."
+      },
+      "port": {
+        "type": "Object",
+        "description": "Value from `endpoint.port`."
+      }
+    }
+  },
+  "apiStatusUnverified": "API status unverified",
+  "@apiStatusUnverified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "appearance": "Appearance",
+  "@appearance": {
+    "description": "DingDong built-in interface copy."
+  },
+  "applicationConfiguration": "Application configuration",
+  "@applicationConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "apply": "Apply",
+  "@apply": {
+    "description": "DingDong built-in interface copy."
+  },
+  "archiveTo": "Archive to…",
+  "@archiveTo": {
+    "description": "DingDong built-in interface copy."
+  },
+  "archiveToGroups": "Archive to groups",
+  "@archiveToGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "archivedCopiesRemainUnchanged": "Archived copies remain unchanged.",
+  "@archivedCopiesRemainUnchanged": {
+    "description": "DingDong built-in interface copy."
+  },
+  "argumentsOnePerLine": "Arguments · one per line",
+  "@argumentsOnePerLine": {
+    "description": "DingDong built-in interface copy."
+  },
+  "autoSendClipboard": "Auto send clipboard",
+  "@autoSendClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "autoSendClipboardFromThisComputerToName": "Auto send clipboard from this computer to {name}",
+  "@autoSendClipboardFromThisComputerToName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `device.name`."
+      }
+    }
+  },
+  "availableToInstalledAgents": "Available to installed Agents",
+  "@availableToInstalledAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToCategories": "Back to categories",
+  "@backToCategories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToDynamic": "Back to Dynamic",
+  "@backToDynamic": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToResources": "Back to resources",
+  "@backToResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToTop": "Back to top",
+  "@backToTop": {
+    "description": "DingDong built-in interface copy."
+  },
+  "basicCompletion": "Basic completion",
+  "@basicCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "bearerTokenEnv": "Bearer token env",
+  "@bearerTokenEnv": {
+    "description": "DingDong built-in interface copy."
+  },
+  "blue": "Blue",
+  "@blue": {
+    "description": "DingDong built-in interface copy."
+  },
+  "called": "Called",
+  "@called": {
+    "description": "DingDong built-in interface copy."
+  },
+  "called2": "called",
+  "@called2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cancelDevicePairing": "Cancel device pairing",
+  "@cancelDevicePairing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cancelPairing": "Cancel pairing",
+  "@cancelPairing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "candidate": "Candidate",
+  "@candidate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "captureCurrentClipboard": "Capture current clipboard",
+  "@captureCurrentClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "captureNow": "Capture now",
+  "@captureNow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "captureTextFilesAndImagesWhileDingDongIsRunning": "Capture text, files, and images while DingDong is running.",
+  "@captureTextFilesAndImagesWhileDingDongIsRunning": {
+    "description": "DingDong built-in interface copy."
+  },
+  "caseSensitive": "Case sensitive",
+  "@caseSensitive": {
+    "description": "DingDong built-in interface copy."
+  },
+  "category": "Category",
+  "@category": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryName": "Category name",
+  "@categoryName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryNameIsRequired": "Category name is required.",
+  "@categoryNameIsRequired": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryRule": "Category rule",
+  "@categoryRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "check": "Check",
+  "@check": {
+    "description": "DingDong built-in interface copy."
+  },
+  "check2": "Check",
+  "@check2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "check3": "Check",
+  "@check3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkUnreadCountingOrderingAndRepeatedPhoneDelivery": "Check unread counting, ordering, and repeated phone delivery.",
+  "@checkUnreadCountingOrderingAndRepeatedPhoneDelivery": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkUpdate": "Check update",
+  "@checkUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checking": "Checking",
+  "@checking": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkingForUpdates": "Checking for updates…",
+  "@checkingForUpdates": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkingLocalService": "Checking local service",
+  "@checkingLocalService": {
+    "description": "DingDong built-in interface copy."
+  },
+  "choose": "Choose",
+  "@choose": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseHowDingDongBehavesWhenYouSignIn": "Choose how DingDong behaves when you sign in.",
+  "@chooseHowDingDongBehavesWhenYouSignIn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseRules": "Choose rules",
+  "@chooseRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "Choose which Agent events should notify you, then customize the alert sound and color.",
+  "@chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clean": "Clean",
+  "@clean": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clear": "Clear",
+  "@clear": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearAll": "Clear all",
+  "@clearAll": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearCategory": "Clear {category}?",
+  "@clearCategory": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_categoryLabel(dialogContext, category)`."
+      }
+    }
+  },
+  "clearCustomSound": "Clear custom sound",
+  "@clearCustomSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearSearch": "Clear search",
+  "@clearSearch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearSelection": "Clear selection",
+  "@clearSelection": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearSelection2": "Clear selection",
+  "@clearSelection2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clickAnywhereToCloseEsc": "Click anywhere to close · Esc",
+  "@clickAnywhereToCloseEsc": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clickToEnlargeQRCode": "Click to enlarge QR code",
+  "@clickToEnlargeQRCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboard": "Clipboard",
+  "@clipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardAndDevices": "Clipboard and devices",
+  "@clipboardAndDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardBodyAccess": "Clipboard body access",
+  "@clipboardBodyAccess": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardCategories": "Clipboard categories",
+  "@clipboardCategories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardContent": "Clipboard content",
+  "@clipboardContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardContentStaysMetadataOnlyUnlessExplicitlyEnabled_df1d930e": "Clipboard content stays metadata-only unless explicitly enabled in Settings.",
+  "@clipboardContentStaysMetadataOnlyUnlessExplicitlyEnabled_df1d930e": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardDatabase": "Clipboard database",
+  "@clipboardDatabase": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardDetailsAndCompleteContent": "Clipboard details and complete content",
+  "@clipboardDetailsAndCompleteContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardHistory": "Clipboard history",
+  "@clipboardHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardHistory2": "Clipboard history",
+  "@clipboardHistory2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardHistoryRemainsUnchanged": "Clipboard history remains unchanged.",
+  "@clipboardHistoryRemainsUnchanged": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardItem": "Clipboard item.",
+  "@clipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardSortLabel": "Clipboard sort: {label}",
+  "@clipboardSortLabel": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "label": {
+        "type": "Object",
+        "description": "Value from `label`."
+      }
+    }
+  },
+  "clipboardWorkspace": "Clipboard workspace",
+  "@clipboardWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardWorkspaceShortcut": "Clipboard workspace shortcut",
+  "@clipboardWorkspaceShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "close": "Close",
+  "@close": {
+    "description": "DingDong built-in interface copy."
+  },
+  "closeEnlargedView": "Close enlarged view",
+  "@closeEnlargedView": {
+    "description": "DingDong built-in interface copy."
+  },
+  "code": "Code",
+  "@code": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexSubagent": "Codex subagent",
+  "@codexSubagent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexVoiceTaskNotifications": "Codex voice task notifications",
+  "@codexVoiceTaskNotifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "command": "Command",
+  "@command": {
+    "description": "DingDong built-in interface copy."
+  },
+  "command2": "Command",
+  "@command2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "completionDetailsStayOnThisDeviceCountingMetadata_9920ce29": "Completion details stay on this device. Counting metadata contains timestamps only.",
+  "@completionDetailsStayOnThisDeviceCountingMetadata_9920ce29": {
+    "description": "DingDong built-in interface copy."
+  },
+  "completionHistoryAndRecentCounts": "Completion history and recent counts",
+  "@completionHistoryAndRecentCounts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "completionNotificationsAreOffForThisDevice": "Completion notifications are off for this device",
+  "@completionNotificationsAreOffForThisDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configurationDetails": "Configuration details",
+  "@configurationDetails": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configurationSaved": "Configuration saved",
+  "@configurationSaved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configureProjects": "Configure projects",
+  "@configureProjects": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configureTheFinalDingDongResourceLineAndOptionallyAppend_e6f7cb62": "Configure the final DingDong resource line and optionally append exact session usage.",
+  "@configureTheFinalDingDongResourceLineAndOptionallyAppend_e6f7cb62": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectANewDevice": "Connect a new device",
+  "@connectANewDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectedDevices": "Connected devices",
+  "@connectedDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connecting": "Connecting…",
+  "@connecting": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connection": "Connection",
+  "@connection": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionError": "Connection error",
+  "@connectionError": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionManager": "Connection manager",
+  "@connectionManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionTestFailedError": "Connection test failed: {error}",
+  "@connectionTestFailedError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "connectionType": "Connection type",
+  "@connectionType": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contains": "Contains",
+  "@contains": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contains2": "contains",
+  "@contains2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "content": "Content",
+  "@content": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentQRCode": "Content QR code",
+  "@contentQRCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentRegex": "Content regex",
+  "@contentRegex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentRegularExpression": "Content regular expression",
+  "@contentRegularExpression": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentType": "Content type",
+  "@contentType": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentTypes": "Content types",
+  "@contentTypes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copied": "Copied",
+  "@copied": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copiedCountTimes": "Copied {count} times",
+  "@copiedCountTimes": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "copiedFileReferencesOriginalFilesAreNeverDeleted": "Copied file references; original files are never deleted",
+  "@copiedFileReferencesOriginalFilesAreNeverDeleted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copy": "Copy",
+  "@copy": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copyContent": "Copy content",
+  "@copyContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copyCount": "Copy count",
+  "@copyCount": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copyCount2": "Copy count",
+  "@copyCount2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "coreEndpoints": "Core endpoints",
+  "@coreEndpoints": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotApplyThisSkillDeliveryPolicyDetail": "Could not apply this Skill delivery policy. {detail}",
+  "@couldNotApplyThisSkillDeliveryPolicyDetail": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "detail": {
+        "type": "Object",
+        "description": "Value from `detail`."
+      }
+    }
+  },
+  "couldNotFetchThisUpdateError": "Could not fetch this update: {error}",
+  "@couldNotFetchThisUpdateError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "couldNotImportThisResourceBundleError": "Could not import this resource bundle: {error}",
+  "@couldNotImportThisResourceBundleError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "couldNotOpenThisAgentConversation": "Could not open this Agent conversation.",
+  "@couldNotOpenThisAgentConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotOpenThisSkillSource": "Could not open this Skill source.",
+  "@couldNotOpenThisSkillSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotReachTheSourceCheckYourNetworkAndLinkThenTry_1c1ff9ae": "Could not reach the source. Check your network and link, then try again.",
+  "@couldNotReachTheSourceCheckYourNetworkAndLinkThenTry_1c1ff9ae": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotSaveThisConfigurationCheckTheContentAndTryAgain": "Could not save this configuration. Check the content and try again.",
+  "@couldNotSaveThisConfigurationCheckTheContentAndTryAgain": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotSyncThisResourceToAnInstalledAgentDetail": "Could not sync this resource to an installed Agent. {detail}",
+  "@couldNotSyncThisResourceToAnInstalledAgentDetail": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "detail": {
+        "type": "Object",
+        "description": "Value from `detail`."
+      }
+    }
+  },
+  "countIssuesNeedAttention": "{count} issues need attention",
+  "@countIssuesNeedAttention": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countItems": "{count} items",
+  "@countItems": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countItemsDescription": "{count} items · {description}",
+  "@countItemsDescription": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      },
+      "description": {
+        "type": "Object",
+        "description": "Value from `description`."
+      }
+    }
+  },
+  "countPairedDevices": "{count} paired devices",
+  "@countPairedDevices": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countSelected": "{count} selected",
+  "@countSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countWindowHours": "Count window (hours)",
+  "@countWindowHours": {
+    "description": "DingDong built-in interface copy."
+  },
+  "create": "Create",
+  "@create": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createAComputerRecordAndSendItOnlyToConnectedDevicesWith_41a63724": "Create a computer record and send it only to connected devices with auto-send enabled.",
+  "@createAComputerRecordAndSendItOnlyToConnectedDevicesWith_41a63724": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createAQRCodeThenScanItWithTheDeviceYouTrust": "Create a QR code, then scan it with the device you trust.",
+  "@createAQRCodeThenScanItWithTheDeviceYouTrust": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createASampleAndOpenTheRealTargetDeviceChooser": "Create a sample and open the real target-device chooser.",
+  "@createASampleAndOpenTheRealTargetDeviceChooser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createAndSend": "Create and send",
+  "@createAndSend": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createOneClearlyLabeledDEVCompletion": "Create one clearly labeled DEV completion.",
+  "@createOneClearlyLabeledDEVCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createOneToStartOrganizingClipboardItems": "Create one to start organizing clipboard items.",
+  "@createOneToStartOrganizingClipboardItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createResource": "Create resource",
+  "@createResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdBasicAgentCompletion": "Created: basic Agent completion",
+  "@createdBasicAgentCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdComputerAutoSendSample": "Created: computer auto-send sample",
+  "@createdComputerAutoSendSample": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdRichMobileAgentDetail": "Created: rich mobile Agent detail",
+  "@createdRichMobileAgentDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdSimulatedPhoneFileRow": "Created: simulated phone file row",
+  "@createdSimulatedPhoneFileRow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdSimulatedPhoneTextRow": "Created: simulated phone text row",
+  "@createdSimulatedPhoneTextRow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdThreeAgentCompletions": "Created: three Agent completions",
+  "@createdThreeAgentCompletions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createsRemovableDEVSamplesOrOpensTheRealDeviceWorkflow": "Creates removable DEV samples or opens the real device workflow.",
+  "@createsRemovableDEVSamplesOrOpensTheRealDeviceWorkflow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "curatedContentReusableByAgents": "Curated content reusable by agents",
+  "@curatedContentReusableByAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "current": "Current",
+  "@current": {
+    "description": "DingDong built-in interface copy."
+  },
+  "currentAgentAccessClipboardRulesAndRuntimeState": "Current Agent access, clipboard rules, and runtime state",
+  "@currentAgentAccessClipboardRulesAndRuntimeState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "currentMemory": "Current memory",
+  "@currentMemory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cursorCompatibleFormat": "Cursor-compatible format",
+  "@cursorCompatibleFormat": {
+    "description": "DingDong built-in interface copy."
+  },
+  "customFile": "Custom file",
+  "@customFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "customSound": "Custom sound",
+  "@customSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dark": "Dark",
+  "@dark": {
+    "description": "DingDong built-in interface copy."
+  },
+  "defaultOrder": "Default order",
+  "@defaultOrder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "defaultWorkspace": "Default workspace",
+  "@defaultWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "defineWhatContentBelongsInThisCategory": "Define what content belongs in this category.",
+  "@defineWhatContentBelongsInThisCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteCategory": "Delete category",
+  "@deleteCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteGroup": "Delete group",
+  "@deleteGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteGroup2": "Delete “{group}”?",
+  "@deleteGroup2": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "group": {
+        "type": "Object",
+        "description": "Value from `group`."
+      }
+    }
+  },
+  "deleteName": "Delete “{name}”?",
+  "@deleteName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `group.name`."
+      }
+    }
+  },
+  "deleteSelectedItems": "Delete selected items?",
+  "@deleteSelectedItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteSelectedResources": "Delete selected resources?",
+  "@deleteSelectedResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisArchivedCopy": "Delete this archived copy?",
+  "@deleteThisArchivedCopy": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisCategory": "Delete this category?",
+  "@deleteThisCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisClipboardItem": "Delete this clipboard item?",
+  "@deleteThisClipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisDevice": "Delete this device?",
+  "@deleteThisDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisResource": "Delete this resource?",
+  "@deleteThisResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisResource2": "Delete this resource?",
+  "@deleteThisResource2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deletedHistoryCannotBeRestored": "Deleted history cannot be restored.",
+  "@deletedHistoryCannotBeRestored": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deliveryByAgent": "Delivery by Agent",
+  "@deliveryByAgent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "describeTheBehaviorTheAgentShouldFollow": "Describe the behavior the Agent should follow.",
+  "@describeTheBehaviorTheAgentShouldFollow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "desktopBehaviorHistoryPrivacyAndLocalAgentConnectivity": "Desktop behavior, history privacy, and local agent connectivity.",
+  "@desktopBehaviorHistoryPrivacyAndLocalAgentConnectivity": {
+    "description": "DingDong built-in interface copy."
+  },
+  "desktopNotification": "Desktop notification",
+  "@desktopNotification": {
+    "description": "DingDong built-in interface copy."
+  },
+  "details": "Details",
+  "@details": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongBright": "DingDong Bright",
+  "@dingdongBright": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongChecksAutomaticallyWhenResourcesChangeUseCheckIn_ab07f57c": "DingDong checks automatically when resources change. Use Check in the upper-right corner to run it again.",
+  "@dingdongChecksAutomaticallyWhenResourcesChangeUseCheckIn_ab07f57c": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongClassic": "DingDong Classic",
+  "@dingdongClassic": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongCopiesTheCompleteSkillPackageIntoEachSelected_de26f089": "DingDong copies the complete Skill package into each selected project's native directory. The Skill is discovered only when that Agent works in the project.",
+  "@dingdongCopiesTheCompleteSkillPackageIntoEachSelected_de26f089": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongCrisp": "DingDong Crisp",
+  "@dingdongCrisp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongCurrentAppVersionDesktop": "DingDong {currentAppVersion} · Desktop",
+  "@dingdongCurrentAppVersionDesktop": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "currentAppVersion": {
+        "type": "Object",
+        "description": "Value from `currentAppVersion`."
+      }
+    }
+  },
+  "dingdongDeep": "DingDong Deep",
+  "@dingdongDeep": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongDeviceConnectionManager": "DingDong device connection manager",
+  "@dingdongDeviceConnectionManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongHasRecordedTheseLocalStatisticsSinceDateEarlier_90d48aa0": "DingDong has recorded these local statistics since {date}. Earlier activity is not backfilled, so 0 does not necessarily mean this resource was never used.",
+  "@dingdongHasRecordedTheseLocalStatisticsSinceDateEarlier_90d48aa0": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "date": {
+        "type": "Object",
+        "description": "Value from `date`."
+      }
+    }
+  },
+  "dingdongListensOnlyOnTheLocalLoopbackInterface": "DingDong listens only on the local loopback interface.",
+  "@dingdongListensOnlyOnTheLocalLoopbackInterface": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongOwnedImageCopiesAndRecords": "DingDong-owned image copies and records",
+  "@dingdongOwnedImageCopiesAndRecords": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongPreservedTheExistingAgentFileBecauseItCouldNotBe_6c5484e5": "DingDong preserved the existing Agent file because it could not be parsed safely.",
+  "@dingdongPreservedTheExistingAgentFileBecauseItCouldNotBe_6c5484e5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongResourceManagerWindow": "DingDong resource manager window",
+  "@dingdongResourceManagerWindow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongSettingsWindow": "DingDong settings window",
+  "@dingdongSettingsWindow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongSkillsUseTheSameName": "DingDong Skills use the same name",
+  "@dingdongSkillsUseTheSameName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongSoft": "DingDong Soft",
+  "@dingdongSoft": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disable": "Disable",
+  "@disable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disableCategory": "Disable category",
+  "@disableCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disableResource": "Disable resource",
+  "@disableResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "discardChanges": "Discard changes",
+  "@discardChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "discardUnsavedChanges": "Discard unsaved changes?",
+  "@discardUnsavedChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disconnect": "Disconnect",
+  "@disconnect": {
+    "description": "DingDong built-in interface copy."
+  },
+  "downloadingUpdate": "Downloading update…",
+  "@downloadingUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "downloadingUpdatePercent": "Downloading update… {percent}%",
+  "@downloadingUpdatePercent": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "percent": {
+        "type": "Object",
+        "description": "Value from `percent`."
+      }
+    }
+  },
+  "dynamicLoadsOnDemandThroughDingDongNativeGlobalInstalls_ff4bd6e5": "Dynamic loads on demand through DingDong. Native · Global installs in the Agent user directory. Native · Project installs only in selected projects.",
+  "@dynamicLoadsOnDemandThroughDingDongNativeGlobalInstalls_ff4bd6e5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dynamicMessage": "Dynamic",
+  "@dynamicMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dynamicWorkspace": "Dynamic workspace",
+  "@dynamicWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dynamicWorkspaceShortcut": "Dynamic workspace shortcut",
+  "@dynamicWorkspaceShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGConciseReleaseNotes": "e.g. Concise release notes",
+  "@eGConciseReleaseNotes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGDingDongProjects": "e.g. DingDong projects",
+  "@eGDingDongProjects": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGFigma": "e.g. Figma",
+  "@eGFigma": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGProjectDrafts": "e.g. Project drafts",
+  "@eGProjectDrafts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eachProjectMustBeAnExistingAbsoluteDirectory": "Each project must be an existing absolute directory.",
+  "@eachProjectMustBeAnExistingAbsoluteDirectory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editAndOrganize": "Edit and organize",
+  "@editAndOrganize": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editProjectGroup": "Edit project group",
+  "@editProjectGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editRules": "Edit rules",
+  "@editRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editText": "Edit text",
+  "@editText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editTitle": "Edit title",
+  "@editTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editTriggerGroup": "Edit trigger group",
+  "@editTriggerGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "email": "Email",
+  "@email": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enable": "Enable",
+  "@enable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enableCategory": "Enable category",
+  "@enableCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enableResource": "Enable resource",
+  "@enableResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enableResourcesFromTheLibraryToSeeThemHere": "Enable resources from the library to see them here.",
+  "@enableResourcesFromTheLibraryToSeeThemHere": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabled": "Enabled",
+  "@enabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabled2": "Enabled",
+  "@enabled2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabledPhoneVibrationIsOff": "Enabled · Phone vibration is off",
+  "@enabledPhoneVibrationIsOff": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabledPhoneVibrationIsOn": "Enabled · Phone vibration is on",
+  "@enabledPhoneVibrationIsOn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "endpointsCommandsAndSetupPrompt": "Endpoints, commands, and setup prompt",
+  "@endpointsCommandsAndSetupPrompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enlargeQRCode": "Enlarge QR code",
+  "@enlargeQRCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enterATriggerGroupName": "Enter a trigger-group name.",
+  "@enterATriggerGroupName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enterAValidWebSourceBeforeOpeningIt": "Enter a valid web source before opening it.",
+  "@enterAValidWebSourceBeforeOpeningIt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved": "Enter one visible symbol. Asterisk and vertical bar are reserved.",
+  "@enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "environment": "Environment",
+  "@environment": {
+    "description": "DingDong built-in interface copy."
+  },
+  "equals": "Equals",
+  "@equals": {
+    "description": "DingDong built-in interface copy."
+  },
+  "equals2": "equals",
+  "@equals2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "executablePathNpxUvx": "Executable path, npx, uvx…",
+  "@executablePathNpxUvx": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exerciseRealDingDongIntegrationPathsFromOnePlace": "Exercise real DingDong integration paths from one place.",
+  "@exerciseRealDingDongIntegrationPathsFromOnePlace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exportJSON": "Export JSON",
+  "@exportJSON": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exportedResourceLibraryToPath": "Exported resource library to {path}",
+  "@exportedResourceLibraryToPath": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "path": {
+        "type": "Object",
+        "description": "Value from `path`."
+      }
+    }
+  },
+  "fetchAndReview": "Fetch and review",
+  "@fetchAndReview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fetchLatestContent": "Fetch latest content",
+  "@fetchLatestContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "file": "File",
+  "@file": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fileFromPhone": "File from phone",
+  "@fileFromPhone": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fileHistory": "File history",
+  "@fileHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "files": "Files",
+  "@files": {
+    "description": "DingDong built-in interface copy."
+  },
+  "findIcon": "Find icon",
+  "@findIcon": {
+    "description": "DingDong built-in interface copy."
+  },
+  "forExampleProjectLinks": "For example: Project links",
+  "@forExampleProjectLinks": {
+    "description": "DingDong built-in interface copy."
+  },
+  "general": "General",
+  "@general": {
+    "description": "DingDong built-in interface copy."
+  },
+  "gotIt": "Got it",
+  "@gotIt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "green": "Green",
+  "@green": {
+    "description": "DingDong built-in interface copy."
+  },
+  "group": "Group",
+  "@group": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groupName": "Group name",
+  "@groupName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groupRepeatedSessions": "Group repeated sessions",
+  "@groupRepeatedSessions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groups": "Groups",
+  "@groups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groups2": "Groups",
+  "@groups2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "headers": "Headers",
+  "@headers": {
+    "description": "DingDong built-in interface copy."
+  },
+  "healthCheckFailed": "Health check failed",
+  "@healthCheckFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "healthCheckPassed": "Health check passed",
+  "@healthCheckPassed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideCategoriesAndGroups": "Hide categories and groups",
+  "@hideCategoriesAndGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideDockIcon": "Hide Dock icon",
+  "@hideDockIcon": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideInConversation": "Hide in conversation",
+  "@hideInConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideMessage": "Hide",
+  "@hideMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236": "History stays on this device. Agent access to clipboard content is controlled below.",
+  "@historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236": {
+    "description": "DingDong built-in interface copy."
+  },
+  "horizontalNudge": "Horizontal nudge",
+  "@horizontalNudge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hoursHCount": "{hours} h · {count}",
+  "@hoursHCount": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "hours": {
+        "type": "Object",
+        "description": "Value from `hours`."
+      },
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "httpsExampleComDingdongResourcesJson": "https://example.com/dingdong-resources.json",
+  "@httpsExampleComDingdongResourcesJson": {
+    "description": "DingDong built-in interface copy."
+  },
+  "image": "Image",
+  "@image": {
+    "description": "DingDong built-in interface copy."
+  },
+  "imageCache": "Image cache",
+  "@imageCache": {
+    "description": "DingDong built-in interface copy."
+  },
+  "images": "Images",
+  "@images": {
+    "description": "DingDong built-in interface copy."
+  },
+  "imagesTextAndFilesAreIndependentCleaningThemNeverRemoves_cb27e3f9": "Images, text, and files are independent. Cleaning them never removes permanent archives.",
+  "@imagesTextAndFilesAreIndependentCleaningThemNeverRemoves_cb27e3f9": {
+    "description": "DingDong built-in interface copy."
+  },
+  "impeccableProjectHookApprovalRequiredInHooks": "Impeccable project Hook (approval required in /hooks)",
+  "@impeccableProjectHookApprovalRequiredInHooks": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importFromLink": "Import from link",
+  "@importFromLink": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importHistory": "Import history",
+  "@importHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importJSONFile": "Import JSON file",
+  "@importJSONFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importLengthResources": "Import {length} resources",
+  "@importLengthResources": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.imported.length`."
+      }
+    }
+  },
+  "importedImportedCountSkippedSkippedCount": "Imported {importedCount}; skipped {skippedCount}.",
+  "@importedImportedCountSkippedSkippedCount": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "importedCount": {
+        "type": "Object",
+        "description": "Value from `entry.importedCount`."
+      },
+      "skippedCount": {
+        "type": "Object",
+        "description": "Value from `entry.skippedCount`."
+      }
+    }
+  },
+  "importedKnowledgeAvailableToAgentContext": "Imported knowledge available to Agent context.",
+  "@importedKnowledgeAvailableToAgentContext": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importedLengthSkippedSkippedCountSuffix": "Imported {length}; skipped {skippedCount}.{suffix}",
+  "@importedLengthSkippedSkippedCountSuffix": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.imported.length`."
+      },
+      "skippedCount": {
+        "type": "Object",
+        "description": "Value from `result.skippedCount`."
+      },
+      "suffix": {
+        "type": "Object",
+        "description": "Value from `suffix`."
+      }
+    }
+  },
+  "includeAtLeastOneModifierKey": "Include at least one modifier key.",
+  "@includeAtLeastOneModifierKey": {
+    "description": "DingDong built-in interface copy."
+  },
+  "independentCopiesProtectedFromHistoryCleanup": "Independent copies protected from history cleanup",
+  "@independentCopiesProtectedFromHistoryCleanup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installInAnyOfTheseProjects": "Install in any of these projects",
+  "@installInAnyOfTheseProjects": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installSkill": "Install Skill",
+  "@installSkill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installedFromAnOnlineSource": "Installed from an online source",
+  "@installedFromAnOnlineSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installedSkillPackageSKILLMd": "Installed Skill package · SKILL.md",
+  "@installedSkillPackageSKILLMd": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installingAndRestarting": "Installing and restarting…",
+  "@installingAndRestarting": {
+    "description": "DingDong built-in interface copy."
+  },
+  "instructions": "Instructions",
+  "@instructions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "issuecountIssueSNeedAttention": "{issueCount} issue(s) need attention",
+  "@issuecountIssueSNeedAttention": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "issueCount": {
+        "type": "Object",
+        "description": "Value from `issueCount`."
+      }
+    }
+  },
+  "issues": "Issues",
+  "@issues": {
+    "description": "DingDong built-in interface copy."
+  },
+  "jsonTOMLOrYAMLConfiguration": "JSON, TOML, or YAML configuration",
+  "@jsonTOMLOrYAMLConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepDingDongInTheMenuBarWithoutShowingItInTheDock": "Keep DingDong in the menu bar without showing it in the Dock.",
+  "@keepDingDongInTheMenuBarWithoutShowingItInTheDock": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepEditing": "Keep editing",
+  "@keepEditing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": "Keep the same conversation ID in one item, show ×N, and do not increase the recent count.",
+  "@keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46": "Keep the workspace comfortable in your current desktop environment.",
+  "@keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepThisItemEasyToFindAcrossMultipleGroups": "Keep this item easy to find across multiple groups.",
+  "@keepThisItemEasyToFindAcrossMultipleGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keyboardShortcuts": "Keyboard shortcuts",
+  "@keyboardShortcuts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "knowledge": "Knowledge",
+  "@knowledge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "knowledgeIsCollectedFromImportsAndAgentContextItCannotBe_08bd7ed0": "Knowledge is collected from imports and Agent context; it cannot be newly authored here yet.",
+  "@knowledgeIsCollectedFromImportsAndAgentContextItCannotBe_08bd7ed0": {
+    "description": "DingDong built-in interface copy."
+  },
+  "knownConfigurationIssues": "Known configuration issues",
+  "@knownConfigurationIssues": {
+    "description": "DingDong built-in interface copy."
+  },
+  "language": "Language",
+  "@language": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lastDateTime": "Last {date} {time}",
+  "@lastDateTime": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "date": {
+        "type": "Object",
+        "description": "Value from `date`."
+      },
+      "time": {
+        "type": "Object",
+        "description": "Value from `time`."
+      }
+    }
+  },
+  "lastReceivedFromSourceAtCompletedAt": "Last received from {source} at {completedAt}",
+  "@lastReceivedFromSourceAtCompletedAt": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "source": {
+        "type": "Object",
+        "description": "Value from `activity.source`."
+      },
+      "completedAt": {
+        "type": "Object",
+        "description": "Value from `TimeOfDay.fromDateTime(activity.completedAt.toLocal()).format(context)`."
+      }
+    }
+  },
+  "latest": "Latest",
+  "@latest": {
+    "description": "DingDong built-in interface copy."
+  },
+  "launchAtStartup": "Launch at startup",
+  "@launchAtStartup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "leaveEmptyToUseTheResourceTitle": "Leave empty to use the resource title.",
+  "@leaveEmptyToUseTheResourceTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lengthDuplicates": "{length} duplicates",
+  "@lengthDuplicates": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.duplicateIds.length`."
+      }
+    }
+  },
+  "lengthIDConflicts": "{length} ID conflicts",
+  "@lengthIDConflicts": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.conflictIds.length`."
+      }
+    }
+  },
+  "lengthOnlineSourcesChecked": "{length} online sources checked",
+  "@lengthOnlineSourcesChecked": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.onlineResources.length`."
+      }
+    }
+  },
+  "lengthRange": "Length range",
+  "@lengthRange": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lengthResults": "{length} results",
+  "@lengthResults": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `viewModel.visibleResources.length`."
+      }
+    }
+  },
+  "lengthSelected": "{length} selected",
+  "@lengthSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `_selected.length`."
+      }
+    }
+  },
+  "lengthSources": "{length} sources",
+  "@lengthSources": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `selected.length`."
+      }
+    }
+  },
+  "libraryMessage": "Library",
+  "@libraryMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "libraryWorkspace": "Library workspace",
+  "@libraryWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "libraryWorkspaceShortcut": "Library workspace shortcut",
+  "@libraryWorkspaceShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "light": "Light",
+  "@light": {
+    "description": "DingDong built-in interface copy."
+  },
+  "link": "Link",
+  "@link": {
+    "description": "DingDong built-in interface copy."
+  },
+  "links": "Links",
+  "@links": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loadThisResourceWithoutShowingItsNameInTheAgent_ec7e075b": "Load this resource without showing its name in the Agent conversation.",
+  "@loadThisResourceWithoutShowingItsNameInTheAgent_ec7e075b": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loaded": "Loaded",
+  "@loaded": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loaded2": "loaded",
+  "@loaded2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "local": "Local",
+  "@local": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localAPI": "Local API",
+  "@localAPI": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localAuthoring": "Local authoring",
+  "@localAuthoring": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localData": "Local data",
+  "@localData": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localPort": "Local port",
+  "@localPort": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localServiceUnavailable": "Local service unavailable",
+  "@localServiceUnavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localServiceVerified": "Local service verified",
+  "@localServiceVerified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lowercaseHyphenName": "lowercase-hyphen-name",
+  "@lowercaseHyphenName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maintenance": "Maintenance",
+  "@maintenance": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manage": "Manage",
+  "@manage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manageAgents": "Manage Agents",
+  "@manageAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manageCategories": "Manage categories",
+  "@manageCategories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manual": "Manual",
+  "@manual": {
+    "description": "DingDong built-in interface copy."
+  },
+  "markAsUpdated": "Mark as updated",
+  "@markAsUpdated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchAProjectPathRepositoryOrAgentSource": "Match a project path, repository, or Agent source.",
+  "@matchAProjectPathRepositoryOrAgentSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchAnyOfTheseRules": "Match any of these rules",
+  "@matchAnyOfTheseRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchedByDescriptionThenLoadedAsACompleteSkillPackage_fa102bfe": "Matched by description, then loaded as a complete Skill package only when needed.",
+  "@matchedByDescriptionThenLoadedAsACompleteSkillPackage_fa102bfe": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchesEverything": "Matches everything",
+  "@matchesEverything": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumCharacters": "Maximum characters",
+  "@maximumCharacters": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumDetailedItems": "Maximum detailed items",
+  "@maximumDetailedItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumItems": "Maximum items",
+  "@maximumItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumLengthCannotBeNegative": "Maximum length cannot be negative.",
+  "@maximumLengthCannotBeNegative": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpAccess": "MCP access",
+  "@mcpAccess": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpConfigurationIsInvalid": "MCP configuration is invalid",
+  "@mcpConfigurationIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpFooterSymbol": "MCP footer symbol",
+  "@mcpFooterSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpSymbol": "MCP symbol",
+  "@mcpSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "menuBarAlertColor": "Menu bar alert color",
+  "@menuBarAlertColor": {
+    "description": "DingDong built-in interface copy."
+  },
+  "menuBarIconHiddenByTheCameraHousing": "Menu bar icon hidden by the camera housing",
+  "@menuBarIconHiddenByTheCameraHousing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "menuBarMascot": "Menu-bar mascot",
+  "@menuBarMascot": {
+    "description": "DingDong built-in interface copy."
+  },
+  "metadataOnly": "Metadata only",
+  "@metadataOnly": {
+    "description": "DingDong built-in interface copy."
+  },
+  "minimumCharacters": "Minimum characters",
+  "@minimumCharacters": {
+    "description": "DingDong built-in interface copy."
+  },
+  "minimumLengthCannotBeNegative": "Minimum length cannot be negative.",
+  "@minimumLengthCannotBeNegative": {
+    "description": "DingDong built-in interface copy."
+  },
+  "minimumLengthCannotExceedMaximumLength": "Minimum length cannot exceed maximum length.",
+  "@minimumLengthCannotExceedMaximumLength": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mockAddAPhoneOriginTextRowWithoutReadingAnyPhone_381a76fb": "MOCK: add a phone-origin text row without reading any phone clipboard.",
+  "@mockAddAPhoneOriginTextRowWithoutReadingAnyPhone_381a76fb": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mockCreateASmallLocalFileAndShowItsDeviceSource": "MOCK: create a small local file and show its device source.",
+  "@mockCreateASmallLocalFileAndShowItsDeviceSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "monitorClipboardChanges": "Monitor clipboard changes",
+  "@monitorClipboardChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "more": "More",
+  "@more": {
+    "description": "DingDong built-in interface copy."
+  },
+  "moreActions": "More actions",
+  "@moreActions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "muted": "Muted",
+  "@muted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "myNote": "My note",
+  "@myNote": {
+    "description": "DingDong built-in interface copy."
+  },
+  "name": "Name",
+  "@name": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nameMySkillDescriptionUseWhenInstructions": "---\nname: my-skill\ndescription: Use when…\n---\n\n# Instructions",
+  "@nameMySkillDescriptionUseWhenInstructions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nativeProject": "Native · Project",
+  "@nativeProject": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nativeUser": "Native · User",
+  "@nativeUser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "needsYourInput": "Needs your input",
+  "@needsYourInput": {
+    "description": "DingDong built-in interface copy."
+  },
+  "needsYourInput2": "Needs your input",
+  "@needsYourInput2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "never": "Never",
+  "@never": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newCategory": "New category",
+  "@newCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newConfiguration": "New configuration",
+  "@newConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newGroup": "New group",
+  "@newGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newProjectGroup": "New project group",
+  "@newProjectGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newResource": "New resource",
+  "@newResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newTriggerGroup": "New trigger group",
+  "@newTriggerGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newestFirstClickAResumableItemToReturnToItsConversation": "Newest first. Click a resumable item to return to its conversation.",
+  "@newestFirstClickAResumableItemToReturnToItsConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noAgentCompletionsYet": "No Agent completions yet",
+  "@noAgentCompletionsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noCategoriesYet": "No categories yet",
+  "@noCategoriesYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noConnectedDevicesYet": "No connected devices yet",
+  "@noConnectedDevicesYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noDeviceIsOnlineConnectOneFirst": "No device is online. Connect one first.",
+  "@noDeviceIsOnlineConnectOneFirst": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noIssuesFound": "No issues found",
+  "@noIssuesFound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noKnownIssueThisIsNotAConnectionGuarantee": "No known issue; this is not a connection guarantee",
+  "@noKnownIssueThisIsNotAConnectionGuarantee": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingGroups": "No matching groups",
+  "@noMatchingGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingResources": "No matching resources",
+  "@noMatchingResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingSources": "No matching sources",
+  "@noMatchingSources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingTriggerGroups": "No matching trigger groups",
+  "@noMatchingTriggerGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noProjectGroupsYet": "No project groups yet",
+  "@noProjectGroupsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noProjectSelected": "No project selected",
+  "@noProjectSelected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noRealAgentCompletionHasBeenReceivedYet": "No real Agent completion has been received yet",
+  "@noRealAgentCompletionHasBeenReceivedYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noRecentAgentEvents": "No recent agent events",
+  "@noRecentAgentEvents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noResourceImportsYet": "No resource imports yet.",
+  "@noResourceImportsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noSoundSelected": "No sound selected",
+  "@noSoundSelected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noTriggerGroupsYet": "No trigger groups yet",
+  "@noTriggerGroupsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noUpdateMetadataYet": "No update metadata yet",
+  "@noUpdateMetadataYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notInstalled": "Not installed",
+  "@notInstalled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notInstalledAgentsLength": "Not installed Agents ({length})",
+  "@notInstalledAgentsLength": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `uninstalledAgents.length`."
+      }
+    }
+  },
+  "notVerified": "Not verified",
+  "@notVerified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notify": "Notify",
+  "@notify": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notifyWhenAnAgentFinishesItsCurrentTaskTurn": "Notify when an Agent finishes its current task turn.",
+  "@notifyWhenAnAgentFinishesItsCurrentTaskTurn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notifyWhenAnAgentIsWaitingForConfirmationAChoiceOrYour_825d0876": "Notify when an Agent is waiting for confirmation, a choice, or your takeover.",
+  "@notifyWhenAnAgentIsWaitingForConfirmationAChoiceOrYour_825d0876": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nudgeTheTrayMascotLikeAnOverdueReminder": "Nudge the tray mascot like an overdue reminder.",
+  "@nudgeTheTrayMascotLikeAnOverdueReminder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f": "Off by default. Metadata stays available; sensitive records still require an explicit request when enabled.",
+  "@offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "offline": "Offline",
+  "@offline": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onByDefaultSendsOneEventAfterInstallationOrAVersion_153fb4ab": "On by default. Sends one event after installation or a version update with a random installation ID, app version, operating system, and architecture. No activity, feature usage, clipboard content, files, or Agent messages are sent. The implementation is open source, and you can turn this off at any time.",
+  "@onByDefaultSendsOneEventAfterInstallationOrAVersion_153fb4ab": {
+    "description": "DingDong built-in interface copy."
+  },
+  "oneWayAutoSend": "One-way auto send",
+  "@oneWayAutoSend": {
+    "description": "DingDong built-in interface copy."
+  },
+  "online": "Online",
+  "@online": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlineOnlineTitles": "Online: {onlineTitles}",
+  "@onlineOnlineTitles": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "onlineTitles": {
+        "type": "Object",
+        "description": "Value from `entry.onlineTitles.join('、')`."
+      }
+    }
+  },
+  "onlineSkillUpdated": "Online Skill updated",
+  "@onlineSkillUpdated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlineSync": "Online sync",
+  "@onlineSync": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlineSyncIsNotReadyInThisWindowReopenResourceManagerAnd_2ceb1f90": "Online sync is not ready in this window. Reopen Resource Manager and try again.",
+  "@onlineSyncIsNotReadyInThisWindowReopenResourceManagerAnd_2ceb1f90": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyActiveInItsConfiguredTriggerScope": "Only active in its configured trigger scope",
+  "@onlyActiveInItsConfiguredTriggerScope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyDingDongSLocalFileReferencesAreRemovedOriginalFiles_aea4cfa6": "Only DingDong's local file references are removed. Original files and folders stay untouched.",
+  "@onlyDingDongSLocalFileReferencesAreRemovedOriginalFiles_aea4cfa6": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyExactExistingProjectDirectoriesCanReceiveANative_7c3d0f93": "Only exact, existing project directories can receive a native Skill.",
+  "@onlyExactExistingProjectDirectoriesCanReceiveANative_7c3d0f93": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyImageCopiesInsideDingDongSCacheAreRemovedSource_28dfcaa2": "Only image copies inside DingDong's cache are removed. Source images elsewhere stay untouched.",
+  "@onlyImageCopiesInsideDingDongSCacheAreRemovedSource_28dfcaa2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyTextRecordsStoredByDingDongAreRemoved": "Only text records stored by DingDong are removed.",
+  "@onlyTextRecordsStoredByDingDongAreRemoved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyTheConfiguredPreferredPortIsKnown": "Only the configured preferred port is known.",
+  "@onlyTheConfiguredPreferredPortIsKnown": {
+    "description": "DingDong built-in interface copy."
+  },
+  "open": "Open",
+  "@open": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openAgentConversation": "Open Agent conversation",
+  "@openAgentConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openCategoryLocation": "Open {category} location",
+  "@openCategoryLocation": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_categoryLabel(context, category)`."
+      }
+    }
+  },
+  "openDingDongDataFolder": "Open DingDong data folder",
+  "@openDingDongDataFolder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openDingDongImageCache": "Open DingDong image cache",
+  "@openDingDongImageCache": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openFileWithSystemApp": "Open file with system app",
+  "@openFileWithSystemApp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openForDetailsOrRetry": "Open for details or retry.",
+  "@openForDetailsOrRetry": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openLinkWithSystemBrowser": "Open link with system browser",
+  "@openLinkWithSystemBrowser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openOrHideClipboard": "Open or hide clipboard",
+  "@openOrHideClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openPathWithSystemApp": "Open path with system app",
+  "@openPathWithSystemApp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openPermissionHelper": "Open permission helper",
+  "@openPermissionHelper": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openSettings": "Open settings",
+  "@openSettings": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openSource": "Open source",
+  "@openSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openTheStandaloneQRDeviceSwitchDisconnectAndDelete_441119af": "Open the standalone QR, device, switch, disconnect, and delete surface.",
+  "@openTheStandaloneQRDeviceSwitchDisconnectAndDelete_441119af": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openTitle": "Open {title}",
+  "@openTitle": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "title": {
+        "type": "Object",
+        "description": "Value from `widget.display.title`."
+      }
+    }
+  },
+  "openedConnectionManager": "Opened: connection manager",
+  "@openedConnectionManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openedSendToDeviceChooser": "Opened: send-to-device chooser",
+  "@openedSendToDeviceChooser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "optional": "Optional",
+  "@optional": {
+    "description": "DingDong built-in interface copy."
+  },
+  "optional2": "Optional",
+  "@optional2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "orange": "Orange",
+  "@orange": {
+    "description": "DingDong built-in interface copy."
+  },
+  "organizeClipboardItem": "Organize clipboard item",
+  "@organizeClipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "otherLocalFiles": "Other local files",
+  "@otherLocalFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "otherSettings": "Other settings",
+  "@otherSettings": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pairATrustedDeviceAndChooseWhatThisComputerSends": "Pair a trusted device and choose what this computer sends.",
+  "@pairATrustedDeviceAndChooseWhatThisComputerSends": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pairingDoesNotCopyContentByItself": "Pairing does not copy content by itself.",
+  "@pairingDoesNotCopyContentByItself": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pairingQRCodeForName": "Pairing QR code for {name}",
+  "@pairingQRCodeForName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `controller.localDevice.name`."
+      }
+    }
+  },
+  "paste": "Paste",
+  "@paste": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAGitHubSkillRepositoryFolderOrDirectSKILLMdLink_1ee790e1": "Paste a GitHub Skill repository, folder, or direct SKILL.md link.\nExamples:\nhttps://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste\nhttps://github.com/mattpocock/skills/tree/main/skills/productivity/grilling",
+  "@pasteAGitHubSkillRepositoryFolderOrDirectSKILLMdLink_1ee790e1": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAJSONBundleLinkDingDongWillFetchItResolveItsOnline_cb404168": "Paste a JSON bundle link. DingDong will fetch it, resolve its online resources, and show the sources for review before importing.",
+  "@pasteAJSONBundleLinkDingDongWillFetchItResolveItsOnline_cb404168": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAsPlainText": "Paste as Plain Text",
+  "@pasteAsPlainText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteConfig": "Paste config",
+  "@pasteConfig": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAgentSetupInstructionDescription": "Paste this short instruction into a local Agent. It includes this installation’s exact MCP path, keeps existing settings intact, and adds the completion alert only when supported.",
+  "@pasteAgentSetupInstructionDescription": {
+    "description": "Explains what the short Agent setup instruction changes."
+  },
+  "path": "Path",
+  "@path": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permanentArchives": "Permanent archives",
+  "@permanentArchives": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permanentArchivesAndTheirImageFilesAreProtectedAndWill_889010d8": "Permanent archives and their image files are protected and will stay intact.",
+  "@permanentArchivesAndTheirImageFilesAreProtectedAndWill_889010d8": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permissionGranted": "Permission granted",
+  "@permissionGranted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permissionRequired": "Permission required",
+  "@permissionRequired": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permissionStatusUnavailable": "Permission status unavailable",
+  "@permissionStatusUnavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pin": "Pin",
+  "@pin": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pinInLibrary": "Pin in library",
+  "@pinInLibrary": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pink": "Pink",
+  "@pink": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pinned": "Pinned",
+  "@pinned": {
+    "description": "DingDong built-in interface copy."
+  },
+  "plainText": "Plain text",
+  "@plainText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "portChangesApplyTheNextTimeDingDongStarts": "Port changes apply the next time DingDong starts.",
+  "@portChangesApplyTheNextTimeDingDongStarts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "preferredPortPreferredPortWasUnavailableUsingActualPort": "Preferred port {preferredPort} was unavailable; using {actualPort}.",
+  "@preferredPortPreferredPortWasUnavailableUsingActualPort": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "preferredPort": {
+        "type": "Object",
+        "description": "Value from `preferredPort`."
+      },
+      "actualPort": {
+        "type": "Object",
+        "description": "Value from `actualPort`."
+      }
+    }
+  },
+  "preparingUpdate": "Preparing update…",
+  "@preparingUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pressAShortcut": "Press a shortcut…",
+  "@pressAShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pressToRecordADifferentShortcut": "Press to record a different shortcut",
+  "@pressToRecordADifferentShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "preview": "Preview",
+  "@preview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previewImageWithSystemApp": "Preview image with system app",
+  "@previewImageWithSystemApp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previewRealTrayStatesWithoutCreatingHistoryRecords": "Preview real tray states without creating history records.",
+  "@previewRealTrayStatesWithoutCreatingHistoryRecords": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previewSound": "Preview sound",
+  "@previewSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "priorityFirstMatchWins": "Priority · first match wins",
+  "@priorityFirstMatchWins": {
+    "description": "DingDong built-in interface copy."
+  },
+  "priorityIndexDragToReorder": "Priority {index} · drag to reorder",
+  "@priorityIndexDragToReorder": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "index": {
+        "type": "Object",
+        "description": "Value from `index + 1`."
+      }
+    }
+  },
+  "privateHistoryMetadata": "Private history metadata",
+  "@privateHistoryMetadata": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectDirectory": "Project directory",
+  "@projectDirectory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectDirectoryEquals": "Project directory · Equals",
+  "@projectDirectoryEquals": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectInstallationScope": "Project installation scope",
+  "@projectInstallationScope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectSkillPathIsInvalid": "Project Skill path is invalid",
+  "@projectSkillPathIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "prompt": "Prompt",
+  "@prompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptFooterSymbol": "Prompt footer symbol",
+  "@promptFooterSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptName": "Prompt name",
+  "@promptName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptSymbol": "Prompt symbol",
+  "@promptSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "prompts": "Prompts",
+  "@prompts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptsSkillsMCPResourcesAndTriggerScopes": "Prompts, Skills, MCP resources, and trigger scopes",
+  "@promptsSkillsMCPResourcesAndTriggerScopes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "protectedData": "Protected data",
+  "@protectedData": {
+    "description": "DingDong built-in interface copy."
+  },
+  "protectedDataIsNotClearedHere": "Protected data is not cleared here",
+  "@protectedDataIsNotClearedHere": {
+    "description": "DingDong built-in interface copy."
+  },
+  "purple": "Purple",
+  "@purple": {
+    "description": "DingDong built-in interface copy."
+  },
+  "qrCode": "QR code",
+  "@qrCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quickPasteNeedsAccessibilityPermission": "Quick paste needs Accessibility permission.",
+  "@quickPasteNeedsAccessibilityPermission": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quickPastePermission": "Quick paste permission",
+  "@quickPastePermission": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quickPastePermissionGranted": "Quick paste permission granted",
+  "@quickPastePermissionGranted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "readOnly": "Read-only",
+  "@readOnly": {
+    "description": "DingDong built-in interface copy."
+  },
+  "recentAgents": "Recent agents",
+  "@recentAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "recheckLocalService": "Recheck local service",
+  "@recheckLocalService": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reconnect": "Reconnect",
+  "@reconnect": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reconnectThisAgent": "Reconnect this Agent",
+  "@reconnectThisAgent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "refreshStatus": "Refresh status",
+  "@refreshStatus": {
+    "description": "DingDong built-in interface copy."
+  },
+  "regularExpressionIsInvalid": "Regular expression is invalid.",
+  "@regularExpressionIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "release": "Release",
+  "@release": {
+    "description": "DingDong built-in interface copy."
+  },
+  "rememberAfterRestart": "Remember after restart",
+  "@rememberAfterRestart": {
+    "description": "DingDong built-in interface copy."
+  },
+  "removeFromSelection": "Remove from selection",
+  "@removeFromSelection": {
+    "description": "DingDong built-in interface copy."
+  },
+  "removeRule": "Remove rule",
+  "@removeRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reorder": "Reorder",
+  "@reorder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "repeatcountNotificationsForThisConversation": "{repeatCount} notifications for this conversation",
+  "@repeatcountNotificationsForThisConversation": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "repeatCount": {
+        "type": "Object",
+        "description": "Value from `widget.activity.repeatCount`."
+      }
+    }
+  },
+  "reportAProblem": "Report a problem",
+  "@reportAProblem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "repositoryAddress": "Repository address",
+  "@repositoryAddress": {
+    "description": "DingDong built-in interface copy."
+  },
+  "requestAFeature": "Request a feature",
+  "@requestAFeature": {
+    "description": "DingDong built-in interface copy."
+  },
+  "requiredInstructionsThatAreAppliedAutomaticallyWhenever_7564e51c": "Required instructions that are applied automatically whenever active.",
+  "@requiredInstructionsThatAreAppliedAutomaticallyWhenever_7564e51c": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reset2": "Reset",
+  "@reset2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resetChanges": "Reset changes",
+  "@resetChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resetSemanticLabel": "Reset {semanticLabel}",
+  "@resetSemanticLabel": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "semanticLabel": {
+        "type": "Object",
+        "description": "Value from `widget.semanticLabel`."
+      }
+    }
+  },
+  "resource": "Resource",
+  "@resource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceActions": "Resource actions",
+  "@resourceActions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceLibrary": "Resource library",
+  "@resourceLibrary": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceLibrary2": "Resource library",
+  "@resourceLibrary2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceManager": "Resource manager",
+  "@resourceManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resources": "Resources",
+  "@resources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourcesBecomeAvailableWhenASelectedGroupMatchesThis_ae977468": "Resources become available when a selected group matches this project or Agent source.",
+  "@resourcesBecomeAvailableWhenASelectedGroupMatchesThis_ae977468": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourcesUsingThisGroupWillBecomeUnrestricted": "Resources using this group will become unrestricted.",
+  "@resourcesUsingThisGroupWillBecomeUnrestricted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restart": "Restart",
+  "@restart": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restore": "Restore",
+  "@restore": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restoreDefaults": "Restore defaults",
+  "@restoreDefaults": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restoreOneHistoryItem": "Restore one history item",
+  "@restoreOneHistoryItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "retentionDays": "Retention days",
+  "@retentionDays": {
+    "description": "DingDong built-in interface copy."
+  },
+  "returnedAsACandidate": "returned as a candidate",
+  "@returnedAsACandidate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reviewOnlineResources": "Review online resources",
+  "@reviewOnlineResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reviewResourceSyncAgentConfigurationAndAnythingElseThat_a562ea61": "Review resource sync, Agent configuration, and anything else that needs attention.",
+  "@reviewResourceSyncAgentConfigurationAndAnythingElseThat_a562ea61": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reviewTheSkillBeforeInstallingDingDongSavesTheFullFolder_1375b575": "Review the Skill before installing. DingDong saves the full folder, including scripts and references; updates stay manual.",
+  "@reviewTheSkillBeforeInstallingDingDongSavesTheFullFolder_1375b575": {
+    "description": "DingDong built-in interface copy."
+  },
+  "richMobileDetail": "Rich mobile detail",
+  "@richMobileDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "ruleAndItsMatchingConditionsWillBeRemovedClipboardItems_48d9a089": "“{rule}” and its matching conditions will be removed. Clipboard items are not deleted.",
+  "@ruleAndItsMatchingConditionsWillBeRemovedClipboardItems_48d9a089": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "rule": {
+        "type": "Object",
+        "description": "Value from `_ruleName(context, rule)`."
+      }
+    }
+  },
+  "rulesRunFromTopToBottomTheFirstMatchWins": "Rules run from top to bottom; the first match wins.",
+  "@rulesRunFromTopToBottomTheFirstMatchWins": {
+    "description": "DingDong built-in interface copy."
+  },
+  "run": "Run",
+  "@run": {
+    "description": "DingDong built-in interface copy."
+  },
+  "running": "Running…",
+  "@running": {
+    "description": "DingDong built-in interface copy."
+  },
+  "runningTest": "Running test…",
+  "@runningTest": {
+    "description": "DingDong built-in interface copy."
+  },
+  "runtimeCheck": "Runtime check",
+  "@runtimeCheck": {
+    "description": "DingDong built-in interface copy."
+  },
+  "runtimeStatusUnverified": "Runtime status unverified",
+  "@runtimeStatusUnverified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "save": "Save",
+  "@save": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saveAsPrompt": "Save as prompt",
+  "@saveAsPrompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saveCategory": "Save category",
+  "@saveCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saveGroup": "Save group",
+  "@saveGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saved": "Saved",
+  "@saved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "savedAsSKILLMdNameName": "Saved as SKILL.md · name: {name}",
+  "@savedAsSKILLMdNameName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `name`."
+      }
+    }
+  },
+  "savedYAMLRevisionsCurrentAdaptersStayIntact": "Saved YAML revisions; current Adapters stay intact",
+  "@savedYAMLRevisionsCurrentAdaptersStayIntact": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saving": "Saving…",
+  "@saving": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scanToConnect": "Scan to connect",
+  "@scanToConnect": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scanToShareClickToEnlarge": "Scan to share · Click to enlarge",
+  "@scanToShareClickToEnlarge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scanWithTheDeviceYouWantToTrust": "Scan with the device you want to trust.",
+  "@scanWithTheDeviceYouWantToTrust": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scope": "Scope",
+  "@scope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scoped": "Scoped",
+  "@scoped": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchClipboard": "Search clipboard",
+  "@searchClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchClipboardHistory": "Search clipboard history",
+  "@searchClipboardHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchGroups": "Search groups",
+  "@searchGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchNameOrContent": "Search name or content",
+  "@searchNameOrContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchNamesOrRules": "Search names or rules",
+  "@searchNamesOrRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchPromptsSkillsAndMCP": "Search prompts, skills, and MCP",
+  "@searchPromptsSkillsAndMCP": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchResources": "Search resources",
+  "@searchResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchSources": "Search sources",
+  "@searchSources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "seeWhatDingDongStoresLocallyAndCleanOnlyTheHistoryYou_a955b365": "See what DingDong stores locally and clean only the history you choose.",
+  "@seeWhatDingDongStoresLocallyAndCleanOnlyTheHistoryYou_a955b365": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAConfigurationToInspectOrEdit": "Select a configuration to inspect or edit",
+  "@selectAConfigurationToInspectOrEdit": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAll": "Select all",
+  "@selectAll": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAnItemToPreview": "Select an item to preview",
+  "@selectAnItemToPreview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectItem": "Select item",
+  "@selectItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectItem2": "Select item",
+  "@selectItem2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectioncountResourcesSelected": "{selectionCount} resources selected",
+  "@selectioncountResourcesSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "selectionCount": {
+        "type": "Object",
+        "description": "Value from `selectionCount`."
+      }
+    }
+  },
+  "selectioncountSelected": "{selectionCount} selected",
+  "@selectioncountSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "selectionCount": {
+        "type": "Object",
+        "description": "Value from `selectionCount`."
+      }
+    }
+  },
+  "semanticlabelWaitingForAShortcut": "{semanticLabel}, waiting for a shortcut",
+  "@semanticlabelWaitingForAShortcut": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "semanticLabel": {
+        "type": "Object",
+        "description": "Value from `widget.semanticLabel`."
+      }
+    }
+  },
+  "send3": "Send 3",
+  "@send3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendTestNotification": "Send test notification",
+  "@sendTestNotification": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendTheOneLineSetupRequestToEachAffectedAgentMarkIt_3a68e15f": "Send the one-line setup request to each affected Agent. Mark it complete after the Agent verifies both MCP and completion alerts.",
+  "@sendTheOneLineSetupRequestToEachAffectedAgentMarkIt_3a68e15f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendToDevice": "Send to device",
+  "@sendToDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendToDeviceDialog": "Send to device dialog",
+  "@sendToDeviceDialog": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sensitiveContentHidden": "Sensitive content hidden",
+  "@sensitiveContentHidden": {
+    "description": "DingDong built-in interface copy."
+  },
+  "serverName": "Server name",
+  "@serverName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "serverURL": "Server URL",
+  "@serverURL": {
+    "description": "DingDong built-in interface copy."
+  },
+  "serviceHealth": "Service health",
+  "@serviceHealth": {
+    "description": "DingDong built-in interface copy."
+  },
+  "setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb": "Set the system-wide panel shortcut and the shortcuts used inside the focused panel.",
+  "@setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb": {
+    "description": "DingDong built-in interface copy."
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "DingDong built-in interface copy."
+  },
+  "settings2": "Settings",
+  "@settings2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sharedDatabaseFiles": "Shared database files",
+  "@sharedDatabaseFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "shortcutReady": "{shortcut} ready",
+  "@shortcutReady": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "shortcut": {
+        "type": "Object",
+        "description": "Value from `shortcut`."
+      }
+    }
+  },
+  "showCategoriesAndGroups": "Show categories and groups",
+  "@showCategoriesAndGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showCategoriesAndGroupsFiltersActive": "Show categories and groups (filters active)",
+  "@showCategoriesAndGroupsFiltersActive": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showConversationTokenUsage": "Show conversation Token usage",
+  "@showConversationTokenUsage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showMessage": "Show",
+  "@showMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showPairingQR": "Show pairing QR",
+  "@showPairingQR": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showQRCodeToPairATrustedDevice": "Show QR code to pair a trusted device",
+  "@showQRCodeToPairATrustedDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showTheSleepingMascotBrieflyThenRestoreTheCurrentState": "Show the sleeping mascot briefly, then restore the current state.",
+  "@showTheSleepingMascotBrieflyThenRestoreTheCurrentState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": "Shown only when Codex, Claude Code, or Pi provides exact local usage. Unsupported Agents are not estimated.",
+  "@shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skill": "Skill",
+  "@skill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skill2": "Skill",
+  "@skill2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillConfigurationIsInvalid": "Skill configuration is invalid",
+  "@skillConfigurationIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillFooterSymbol": "Skill footer symbol",
+  "@skillFooterSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillMdContent": "SKILL.md content",
+  "@skillMdContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillMdNeedsValidNameAndDescriptionFieldsInItsYAML_c05294f5": "SKILL.md needs valid name and description fields in its YAML frontmatter.",
+  "@skillMdNeedsValidNameAndDescriptionFieldsInItsYAML_c05294f5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillName": "Skill name",
+  "@skillName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillNameConflict": "Skill name conflict",
+  "@skillNameConflict": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillPackageIsMissing": "Skill package is missing",
+  "@skillPackageIsMissing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillSource": "Skill source",
+  "@skillSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillSymbol": "Skill symbol",
+  "@skillSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skills": "Skills",
+  "@skills": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skippedcountResourcesAlreadyExistAndWillBeSkippedOr_6aa841ce": "{skippedCount} resources already exist and will be skipped or flagged as conflicts.",
+  "@skippedcountResourcesAlreadyExistAndWillBeSkippedOr_6aa841ce": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "skippedCount": {
+        "type": "Object",
+        "description": "Value from `result.skippedCount`."
+      }
+    }
+  },
+  "sleepingState": "Sleeping state",
+  "@sleepingState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sound": "Sound",
+  "@sound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "source": "Source",
+  "@source": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceApplicationRegularExpression": "Source application regular expression",
+  "@sourceApplicationRegularExpression": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceFilterSummary": "Source filter: {summary}",
+  "@sourceFilterSummary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "summary": {
+        "type": "Object",
+        "description": "Value from `summary`."
+      }
+    }
+  },
+  "sourceRegex": "Source regex",
+  "@sourceRegex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceURL": "Source URL",
+  "@sourceURL": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sources": "Sources",
+  "@sources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "startDingDongAfterYouSignInToThisComputer": "Start DingDong after you sign in to this computer.",
+  "@startDingDongAfterYouSignInToThisComputer": {
+    "description": "DingDong built-in interface copy."
+  },
+  "status": "Status",
+  "@status": {
+    "description": "DingDong built-in interface copy."
+  },
+  "stopConnecting": "Stop connecting",
+  "@stopConnecting": {
+    "description": "DingDong built-in interface copy."
+  },
+  "subagentNotifications": "Subagent notifications",
+  "@subagentNotifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "system": "System",
+  "@system": {
+    "description": "DingDong built-in interface copy."
+  },
+  "systemSound": "System sound",
+  "@systemSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "tagsAndAliases": "Tags and aliases",
+  "@tagsAndAliases": {
+    "description": "DingDong built-in interface copy."
+  },
+  "taskMatch": "Task match",
+  "@taskMatch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "testAConciseSummaryPlusALongerMobileDetailBody": "Test a concise summary plus a longer mobile detail body.",
+  "@testAConciseSummaryPlusALongerMobileDetailBody": {
+    "description": "DingDong built-in interface copy."
+  },
+  "testNotificationSent": "Test notification sent",
+  "@testNotificationSent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "testPanel": "Test Panel",
+  "@testPanel": {
+    "description": "DingDong built-in interface copy."
+  },
+  "text": "Text",
+  "@text": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textFromPhone": "Text from phone",
+  "@textFromPhone": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textHistory": "Text history",
+  "@textHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textIsLargerThan128KiBAndWasNotSent": "Text is larger than 128 KiB and was not sent.",
+  "@textIsLargerThan128KiBAndWasNotSent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textLinksCodeCommandsAndRichText": "Text, links, code, commands, and rich text",
+  "@textLinksCodeCommandsAndRichText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67": "The bundled bridge exposes prompts, skills, MCP references, and notifications through JSON-RPC.",
+  "@theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCommandBelowUsesTheActualEndpointWhenTheRuntime_0a3909c7": "The command below uses the actual endpoint when the runtime supplied one.",
+  "@theCommandBelowUsesTheActualEndpointWhenTheRuntime_0a3909c7": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCompleteSkillPackageCouldNotBeFoundReinstallOrUpdate_2a4648b6": "The complete Skill package could not be found. Reinstall or update its source.",
+  "@theCompleteSkillPackageCouldNotBeFoundReinstallOrUpdate_2a4648b6": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theDEVPWAEndpointIsNotConfiguredInThisBuild": "The DEV PWA endpoint is not configured in this build.",
+  "@theDEVPWAEndpointIsNotConfiguredInThisBuild": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theDeviceDisconnectedBeforeSending": "The device disconnected before sending.",
+  "@theDeviceDisconnectedBeforeSending": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c": "The encrypted message is larger than the 256 KiB relay limit and was not sent.",
+  "@theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theHealthEndpointRespondedSuccessfully": "The /health endpoint responded successfully.",
+  "@theHealthEndpointRespondedSuccessfully": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "The helper opens Accessibility and places a draggable DingDong beside it. If “−” works, remove the old entry before dragging. If “−” is disabled, drag once to make it available, remove the entry, then drag again and turn DingDong on.",
+  "@theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e": "The installed package is read-only. Review the source before updating.",
+  "@theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theKeyStaysInTheQRWebRTCIsPreferredTheEncryptedRelay_ca235c45": "The key stays in the QR. WebRTC is preferred; the encrypted relay fallback stores no content.",
+  "@theKeyStaysInTheQRWebRTCIsPreferredTheEncryptedRelay_ca235c45": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theRuntimeEndpointDidNotPassItsHealthCheck": "The runtime endpoint did not pass its health check.",
+  "@theRuntimeEndpointDidNotPassItsHealthCheck": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theSKILLMdMetadataCouldNotBeParsedReviewTheResource_d8ef0c36": "The SKILL.md metadata could not be parsed. Review the resource before enabling it.",
+  "@theSKILLMdMetadataCouldNotBeParsedReviewTheResource_d8ef0c36": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theScopedProjectDirectoryNoLongerExistsOrIsNotAnAbsolute_78de1cff": "The scoped project directory no longer exists or is not an absolute path.",
+  "@theScopedProjectDirectoryNoLongerExistsOrIsNotAnAbsolute_78de1cff": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theSourceDidNotReturnAUsableSKILLMdCheckTheRepository_8db02039": "The source did not return a usable SKILL.md. Check the repository path and access.",
+  "@theSourceDidNotReturnAUsableSKILLMdCheckTheRepository_8db02039": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theTestFailedCheckTheConnectionAndSystemPermissions": "The test failed. Check the connection and system permissions.",
+  "@theTestFailedCheckTheConnectionAndSystemPermissions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52": "These resources will be loaded from the internet. Check the source links before importing them.",
+  "@theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisComputerHost": "This computer · Host",
+  "@thisComputerHost": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisComputerName": "This computer → {name}",
+  "@thisComputerName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `device.name`."
+      }
+    }
+  },
+  "thisConflictsWithAnotherDingDongOrSystemShortcut": "This conflicts with another DingDong or system shortcut.",
+  "@thisConflictsWithAnotherDingDongOrSystemShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisContentIsNoLongerAvailableOrCouldNotBeOpened": "This content is no longer available or could not be opened.",
+  "@thisContentIsNoLongerAvailableOrCouldNotBeOpened": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisContentNoLongerExistsOrCannotBeOpened": "This content no longer exists or cannot be opened.",
+  "@thisContentNoLongerExistsOrCannotBeOpened": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3": "This conversation has notified you {repeatCount} times and used {totalTokens} tokens.",
+  "@thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "repeatCount": {
+        "type": "Object",
+        "description": "Value from `widget.activity.repeatCount`."
+      },
+      "totalTokens": {
+        "type": "Object",
+        "description": "Value from `formatExactConversationTokenCount(widget.activity.tokenUsage!.totalTokens)`."
+      }
+    }
+  },
+  "thisGroupContainsCountArchivedCopiesCopiesWithNoOther_d4ba7c7d": "This group contains {count, plural, =1{1 archived copy} other{{count} archived copies}}. Copies with no other group are deleted. Clipboard history is never changed.",
+  "@thisGroupContainsCountArchivedCopiesCopiesWithNoOther_d4ba7c7d": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "thisMCPResourceCannotBeWrittenToAgentConfigurationUntil_ad7aa3e0": "This MCP resource cannot be written to Agent configuration until its format is corrected.",
+  "@thisMCPResourceCannotBeWrittenToAgentConfigurationUntil_ad7aa3e0": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisOnlineSkillDoesNotHaveAnAvailableSource": "This online Skill does not have an available source.",
+  "@thisOnlineSkillDoesNotHaveAnAvailableSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisRemovesCategoryHistoryCategory2CurrentResourcesAnd_a27899ae": "This removes {category} history ({category2}). Current resources and configuration stay intact.",
+  "@thisRemovesCategoryHistoryCategory2CurrentResourcesAnd_a27899ae": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_categoryLabel(dialogContext, category)`."
+      },
+      "category2": {
+        "type": "Object",
+        "description": "Value from `_formatBytes(dialogContext, usage?.bytesFor(category))`."
+      }
+    }
+  },
+  "thisRemovesLengthResourcesFromTheLocalLibrary": "This removes {length} resources from the local library.",
+  "@thisRemovesLengthResourcesFromTheLocalLibrary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `ids.length`."
+      }
+    }
+  },
+  "thisRemovesOnlyThisPartOfClipboardHistoryCategory": "This removes only this part of clipboard history ({category}).",
+  "@thisRemovesOnlyThisPartOfClipboardHistoryCategory": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_formatBytes(dialogContext, usage?.bytesFor(category))`."
+      }
+    }
+  },
+  "thisRemovesTheResourceFromTheSharedAgentLibrary": "This removes the resource from the shared agent library.",
+  "@thisRemovesTheResourceFromTheSharedAgentLibrary": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisRemovesTitleFromTheLocalResourceLibrary": "This removes “{title}” from the local resource library.",
+  "@thisRemovesTitleFromTheLocalResourceLibrary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "title": {
+        "type": "Object",
+        "description": "Value from `resource.title`."
+      }
+    }
+  },
+  "threeAlertBurst": "Three-alert burst",
+  "@threeAlertBurst": {
+    "description": "DingDong built-in interface copy."
+  },
+  "title": "Title",
+  "@title": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trayMascotPreviewsAreUnavailableOnThisPlatformTheOther_ab13b937": "Tray mascot previews are unavailable on this platform; the other integration tests remain available.",
+  "@trayMascotPreviewsAreUnavailableOnThisPlatformTheOther_ab13b937": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggerGroups": "Trigger groups",
+  "@triggerGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggerScope": "Trigger scope",
+  "@triggerScope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggeredHorizontalNudge": "Triggered: horizontal nudge",
+  "@triggeredHorizontalNudge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggeredSleepingState": "Triggered: sleeping state",
+  "@triggeredSleepingState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustAndDirectionalSettingsWillBeRevokedPairAgainTo_f59587ea": "Trust and directional settings will be revoked. Pair again to reconnect.",
+  "@trustAndDirectionalSettingsWillBeRevokedPairAgainTo_f59587ea": {
+    "description": "DingDong built-in interface copy."
+  },
+  "twoDingDongResourcesResolveToTheSameSkillDestination_aac6ae3f": "Two DingDong resources resolve to the same Skill destination. Rename or disable one of them.",
+  "@twoDingDongResourcesResolveToTheSameSkillDestination_aac6ae3f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "type": "Type",
+  "@type": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unavailable": "Unavailable",
+  "@unavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "uncategorized": "Uncategorized",
+  "@uncategorized": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unknown": "Unknown",
+  "@unknown": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unknownAgentConversation": "Unknown Agent conversation",
+  "@unknownAgentConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unpin": "Unpin",
+  "@unpin": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unrecognizedLocalFilesAreKept": "Unrecognized local files are kept",
+  "@unrecognizedLocalFilesAreKept": {
+    "description": "DingDong built-in interface copy."
+  },
+  "untitledClipboardItem": "Untitled clipboard item",
+  "@untitledClipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "upTo7CharactersThisNameIsShownFirstInTheAgent_b892681f": "Up to 7 characters. This name is shown first in the Agent conversation; an empty value falls back to the title.",
+  "@upTo7CharactersThisNameIsShownFirstInTheAgent_b892681f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "update": "UPDATE",
+  "@update": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateCheckFailed": "Update check failed",
+  "@updateCheckFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateFailed": "Update failed",
+  "@updateFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateLink": "Update link",
+  "@updateLink": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateToVersion": "Update to {version}",
+  "@updateToVersion": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "version": {
+        "type": "Object",
+        "description": "Value from `version`."
+      }
+    }
+  },
+  "updated": "Updated",
+  "@updated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updated2": "Updated",
+  "@updated2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updated3": "Updated",
+  "@updated3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updatedTitleFromItsSource": "Updated {title} from its source.",
+  "@updatedTitleFromItsSource": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "title": {
+        "type": "Object",
+        "description": "Value from `updated.title`."
+      }
+    }
+  },
+  "updating": "Updating…",
+  "@updating": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updating2": "Updating…",
+  "@updating2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usage": "Usage",
+  "@usage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usage2": "Usage",
+  "@usage2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usage3": "Usage",
+  "@usage3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "useALetterNumberF1F12ArrowSpaceOrReturn": "Use a letter, number, F1–F12, arrow, Space, or Return.",
+  "@useALetterNumberF1F12ArrowSpaceOrReturn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "useAValidSTDIOOrStreamableHTTPMCPConfiguration": "Use a valid STDIO or Streamable HTTP MCP configuration.",
+  "@useAValidSTDIOOrStreamableHTTPMCPConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "useRegularExpressionsOnlyWhenTypeAndLengthAreNotEnough": "Use regular expressions only when type and length are not enough.",
+  "@useRegularExpressionsOnlyWhenTypeAndLengthAreNotEnough": {
+    "description": "DingDong built-in interface copy."
+  },
+  "used": "Used",
+  "@used": {
+    "description": "DingDong built-in interface copy."
+  },
+  "used2": "used",
+  "@used2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usesTheRealLocalDingRouteUnreadBadgeNativeAlertAnd_63a64edd": "Uses the real local /ding route, unread badge, native alert, and connected-phone delivery.",
+  "@usesTheRealLocalDingRouteUnreadBadgeNativeAlertAnd_63a64edd": {
+    "description": "DingDong built-in interface copy."
+  },
+  "verifyTheLocalServiceAndInspectRealAgentSignals": "Verify the local service and inspect real Agent signals.",
+  "@verifyTheLocalServiceAndInspectRealAgentSignals": {
+    "description": "DingDong built-in interface copy."
+  },
+  "verifyingUpdate": "Verifying update…",
+  "@verifyingUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "version": "Version",
+  "@version": {
+    "description": "DingDong built-in interface copy."
+  },
+  "viewAllRecentAgents": "View all recent agents",
+  "@viewAllRecentAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "viewResource": "View resource",
+  "@viewResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "visibleForReferenceOnlyTheseItemsCannotBeClearedHere": "Visible for reference only. These items cannot be cleared here.",
+  "@visibleForReferenceOnlyTheseItemsCannotBeClearedHere": {
+    "description": "DingDong built-in interface copy."
+  },
+  "waitingForTheLoopbackHealthResponse": "Waiting for the loopback health response.",
+  "@waitingForTheLoopbackHealthResponse": {
+    "description": "DingDong built-in interface copy."
+  },
+  "webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": "WebRTC is preferred; the end-to-end encrypted relay fallback stores no clipboard, file, or Agent content.",
+  "@webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "website": "Website",
+  "@website": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory": "When disabled, the next launch starts with an empty Agent history.",
+  "@whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenItApplies": "When it applies",
+  "@whenItApplies": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98": "When off, subagent activity shows no notification or DingDong sound.",
+  "@whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958": "When off, tasks started in Codex voice mode do not notify or play a DingDong sound.",
+  "@whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenToUse": "When to use",
+  "@whenToUse": {
+    "description": "DingDong built-in interface copy."
+  },
+  "windowOpacity": "Window opacity",
+  "@windowOpacity": {
+    "description": "DingDong built-in interface copy."
+  },
+  "workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968": "Workspace shortcuts apply only while the panel is focused. Defaults: Control+Q/W/E on macOS, Alt+Q/W/E on Windows.",
+  "@workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968": {
+    "description": "DingDong built-in interface copy."
+  },
+  "youReUpToDate": "You're up to date",
+  "@youReUpToDate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "yourDevices": "Your devices",
+  "@yourDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "yourEditsHaveNotBeenSavedLeavingThisPageWillDiscardThem": "Your edits have not been saved. Leaving this page will discard them.",
+  "@yourEditsHaveNotBeenSavedLeavingThisPageWillDiscardThem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "custom": "Custom",
+  "@custom": {
+    "description": "DingDong built-in interface copy."
+  },
+  "builtIn": "Built in",
+  "@builtIn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "invalidConfiguration": "Invalid configuration",
+  "@invalidConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loadExternal": "Load external",
+  "@loadExternal": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryNotChecked": "Directory not checked",
+  "@directoryNotChecked": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryNotDetected": "Directory not detected",
+  "@directoryNotDetected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryDetected": "Directory detected",
+  "@directoryDetected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unsaved": "Unsaved",
+  "@unsaved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newAgent": "New Agent",
+  "@newAgent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newLabel": "New",
+  "@newLabel": {
+    "description": "DingDong built-in interface copy."
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "DingDong built-in interface copy."
+  },
+  "versionComparison": "Version comparison",
+  "@versionComparison": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedConfig": "Advanced config",
+  "@advancedConfig": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisAdapter": "Delete this Adapter?",
+  "@deleteThisAdapter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restoreBuiltInVersion": "Restore built-in version?",
+  "@restoreBuiltInVersion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notChecked": "Not checked",
+  "@notChecked": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notDetected": "Not detected",
+  "@notDetected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "detected": "Detected",
+  "@detected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "managedButDisabled": "Managed but disabled",
+  "@managedButDisabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "managedAndEnabled": "Managed and enabled",
+  "@managedAndEnabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustedButDisabled": "Trusted but disabled",
+  "@trustedButDisabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustedAndEnabled": "Trusted and enabled",
+  "@trustedAndEnabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkingCodex": "Checking Codex…",
+  "@checkingCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustEnable": "Trust & enable",
+  "@trustEnable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkAgain": "Check again",
+  "@checkAgain": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notDeclared": "Not declared",
+  "@notDeclared": {
+    "description": "DingDong built-in interface copy."
+  },
+  "declared": "Declared",
+  "@declared": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillPaths": "Skill paths",
+  "@skillPaths": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpConfigurationPath": "MCP configuration path",
+  "@mcpConfigurationPath": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDirectory": "Agent directory",
+  "@agentDirectory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "invalid": "Invalid",
+  "@invalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "valid": "Valid",
+  "@valid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "adapterDocument": "Adapter document",
+  "@adapterDocument": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configurationEvidence": "Configuration evidence",
+  "@configurationEvidence": {
+    "description": "DingDong built-in interface copy."
+  },
+  "storedOnThisDevice": "Stored on this device",
+  "@storedOnThisDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAccess": "Agent access",
+  "@agentAccess": {
+    "description": "DingDong built-in interface copy."
+  },
+  "workspace": "WORKSPACE",
+  "@workspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "userOverride": "User override",
+  "@userOverride": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAnAgentAdapterOrCreateOne": "Select an Agent Adapter or create one.",
+  "@selectAnAgentAdapterOrCreateOne": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theFileChangedOutsideDingDongWhileYouHaveUnsavedEdits": "The file changed outside DingDong while you have unsaved edits.",
+  "@theFileChangedOutsideDingDongWhileYouHaveUnsavedEdits": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryDetectionAndDeclaredPathsVerifyRuntimeConnectionsSeparately": "Directory detection and declared paths; verify runtime connections separately",
+  "@directoryDetectionAndDeclaredPathsVerifyRuntimeConnectionsSeparately": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConnectionConfiguration": "Agent connection configuration",
+  "@agentConnectionConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aComparisonAppearsAfterTheNextSavedOrExternalEdit": "A comparison appears after the next saved or external edit.",
+  "@aComparisonAppearsAfterTheNextSavedOrExternalEdit": {
+    "description": "DingDong built-in interface copy."
+  },
+  "twoVersionsAgo": "Two versions ago",
+  "@twoVersionsAgo": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previousVersion": "Previous version",
+  "@previousVersion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newAgentAdapter": "New Agent Adapter",
+  "@newAgentAdapter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCustomYAMLFileWillBeDeletedAgentResourcesWillStopSyncing": "The custom YAML file will be deleted. Agent resources will stop syncing to this client.",
+  "@theCustomYAMLFileWillBeDeletedAgentResourcesWillStopSyncing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theUserOverrideWillBeRemovedItsSnapshotsRemainInLocalHistory": "The user override will be removed. Its snapshots remain in local history.",
+  "@theUserOverrideWillBeRemovedItsSnapshotsRemainInLocalHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionHasNotBeenInferred": "Connection has not been inferred",
+  "@connectionHasNotBeenInferred": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDirectoryDetectedDoesNotVerifyConnections": "What is known: DingDong found the declared Agent directory. A detected directory or declared path does not verify MCP, Hook, Bridge, authentication, or completion callbacks. Use Agent connections to verify the running local API and real completion signals.",
+  "@agentDirectoryDetectedDoesNotVerifyConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDirectoryNotDetectedDoesNotVerifyConnections": "What is known: DingDong did not find the declared Agent directory. A detected directory or declared path does not verify MCP, Hook, Bridge, authentication, or completion callbacks. Use Agent connections to verify the running local API and real completion signals.",
+  "@agentDirectoryNotDetectedDoesNotVerifyConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexDidNotReturnAVerifiableHookState": "Codex did not return a verifiable Hook state.",
+  "@codexDidNotReturnAVerifiableHookState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisHookIsManagedAndDisabledDingDongCannotChangeIt": "This Hook is managed and disabled; DingDong cannot change it.",
+  "@thisHookIsManagedAndDisabledDingDongCannotChangeIt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisManagedHookIsEnabledAndCanRunAfterTaskCompletion": "This managed Hook is enabled and can run after task completion.",
+  "@thisManagedHookIsEnabledAndCanRunAfterTaskCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCurrentHashIsTrustedButThisHookIsDisabled": "The current hash is trusted, but this Hook is disabled.",
+  "@theCurrentHashIsTrustedButThisHookIsDisabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexCanRunDingDongAfterATaskCompletes": "Codex can run DingDong after a task completes.",
+  "@codexCanRunDingDongAfterATaskCompletes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theHookChangedAfterItsLastReviewCheckTheCurrentCommandAnd": "The Hook changed after its last review. Check the current command and hash before trusting it again.",
+  "@theHookChangedAfterItsLastReviewCheckTheCurrentCommandAnd": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexIsBlockingThisHookUntilItsExactCurrentHashIsTrusted": "Codex is blocking this Hook until its exact current hash is trusted.",
+  "@codexIsBlockingThisHookUntilItsExactCurrentHashIsTrusted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aDingDongHookExistsButItsCommandDoesNotExactlyMatchThis": "A DingDong Hook exists, but its command does not exactly match this installed app. It was not trusted.",
+  "@aDingDongHookExistsButItsCommandDoesNotExactlyMatchThis": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theExpectedDingDongStopHookIsNotConfiguredInCodex": "The expected DingDong Stop Hook is not configured in Codex.",
+  "@theExpectedDingDongStopHookIsNotConfiguredInCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisCodexBuildCouldNotBeReachedThroughAppServerUseHooks": "This Codex build could not be reached through App Server. Use /hooks to review the Hook.",
+  "@thisCodexBuildCouldNotBeReachedThroughAppServerUseHooks": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectRefreshToReadTheCurrentStateFromCodex": "Select refresh to read the current state from Codex.",
+  "@selectRefreshToReadTheCurrentStateFromCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "readingTheCurrentHookDefinitionAndTrustStateFromCodex": "Reading the current Hook definition and trust state from Codex.",
+  "@readingTheCurrentHookDefinitionAndTrustStateFromCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "verificationFailed": "Verification failed",
+  "@verificationFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "changedSinceReview": "Changed since review",
+  "@changedSinceReview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustRequired": "Trust required",
+  "@trustRequired": {
+    "description": "DingDong built-in interface copy."
+  },
+  "commandMismatch": "Command mismatch",
+  "@commandMismatch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hookNotConfigured": "Hook not configured",
+  "@hookNotConfigured": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexUnavailable": "Codex unavailable",
+  "@codexUnavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyTheExactHookShownAboveAndItsCurrentHashWillBe": "Only the exact Hook shown above and its current hash will be trusted. A future change requires another review.",
+  "@onlyTheExactHookShownAboveAndItsCurrentHashWillBe": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexCompletionHook": "Codex completion Hook",
+  "@codexCompletionHook": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisAdapterDoesNotDeclareBothGlobalAndProjectSkillPaths": "This Adapter does not declare both global and project Skill paths.",
+  "@thisAdapterDoesNotDeclareBothGlobalAndProjectSkillPaths": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisAdapterDoesNotDeclareAPromptFile": "This Adapter does not declare a prompt file.",
+  "@thisAdapterDoesNotDeclareAPromptFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptConfigurationPath": "Prompt configuration path",
+  "@promptConfigurationPath": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisAdapterDoesNotDeclareAnMCPFile": "This Adapter does not declare an MCP file.",
+  "@thisAdapterDoesNotDeclareAnMCPFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unavailableBecauseTheAdapterIsInvalid": "Unavailable because the Adapter is invalid.",
+  "@unavailableBecauseTheAdapterIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "yamlStructureAndDeclaredPathsPassedValidation": "YAML structure and declared paths passed validation.",
+  "@yamlStructureAndDeclaredPathsPassedValidation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "detectionIsNotConnectionVerification": "Detection is not connection verification",
+  "@detectionIsNotConnectionVerification": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAdapterCatalogSummary": "{configurationCount} configurations · {detectedCount} directories detected",
+  "@agentAdapterCatalogSummary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "configurationCount": {
+        "type": "Object",
+        "description": "Value from `entries.length`."
+      },
+      "detectedCount": {
+        "type": "Object",
+        "description": "Value from `detected`."
+      }
+    }
+  },
+  "agentAdapterCatalogSummaryWithInvalid": "{configurationCount} configurations · {detectedCount} directories detected · {invalidCount} invalid",
+  "@agentAdapterCatalogSummaryWithInvalid": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "configurationCount": {
+        "type": "Object",
+        "description": "Value from `entries.length`."
+      },
+      "detectedCount": {
+        "type": "Object",
+        "description": "Value from `detected`."
+      },
+      "invalidCount": {
+        "type": "Object",
+        "description": "Value from `invalid`."
+      }
+    }
+  },
+  "openClipboard": "Open Clipboard",
+  "@openClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openConnectedDevices": "Open Connected Devices",
+  "@openConnectedDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardMonitoringOn": "Clipboard Monitoring On",
+  "@clipboardMonitoringOn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardMonitoringPaused": "Clipboard Monitoring Paused",
+  "@clipboardMonitoringPaused": {
+    "description": "DingDong built-in interface copy."
+  },
+  "stopMonitoring": "Stop Monitoring",
+  "@stopMonitoring": {
+    "description": "DingDong built-in interface copy."
+  },
+  "startMonitoring": "Start Monitoring",
+  "@startMonitoring": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quitDingDong": "Quit DingDong",
+  "@quitDingDong": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quitDingDongDev": "Quit DingDong DEV",
+  "@quitDingDongDev": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingDongUnreadCount": "DingDong · {count} unread",
+  "@dingDongUnreadCount": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Unread item count."
+      }
+    }
+  },
+  "connectedDevicesWindowTitle": "DingDong · Connected Devices",
+  "@connectedDevicesWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "settingsWindowTitle": "DingDong · Settings",
+  "@settingsWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "developmentTestPanelWindowTitle": "DingDong DEV · Test Panel",
+  "@developmentTestPanelWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceManagerWindowTitle": "DingDong · Resource Manager",
+  "@resourceManagerWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectDingDongToCurrentAgent": "Connect ‘{commandPath}’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If user-level task-completion Hooks are supported, add a Hook command for that event using the same executable with ‘--notify-stop --source \"<current Agent name>\"’, then verify the alert.",
+  "@connectDingDongToCurrentAgent": {
+    "description": "Short actionable setup instruction copied by the user.",
+    "placeholders": {
+      "commandPath": {
+        "type": "String",
+        "description": "Absolute path to the bundled DingDong MCP executable."
+      }
+    }
+  },
+  "about": "About",
+  "@about": {
+    "description": "DingDong built-in interface copy."
+  },
+  "timeSingular": "time",
+  "@timeSingular": {
+    "description": "Singular unit for a resource usage count."
+  },
+  "timePlural": "times",
+  "@timePlural": {
+    "description": "Plural unit for a resource usage count."
+  },
+  "agentNeedsYourAttention": "Agent needs your attention",
+  "@agentNeedsYourAttention": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompleted": "Agent completed",
+  "@agentCompleted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mobileDevice": "Mobile device",
+  "@mobileDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sharedFile": "Shared file",
+  "@sharedFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fromDevice": "From {name}",
+  "@fromDevice": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Runtime value for name."
+      }
+    }
+  },
+  "dingDongComputer": "DingDong computer",
+  "@dingDongComputer": {
+    "description": "DingDong built-in interface copy."
+  },
+  "currentTask": "Current task",
+  "@currentTask": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceCompletedCurrentTask": "{source} completed the current task",
+  "@sourceCompletedCurrentTask": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "source": {
+        "type": "Object",
+        "description": "Runtime value for source."
+      }
+    }
+  },
+  "devAgentCompletedMessage": "DEV test: Agent completed the current task",
+  "@devAgentCompletedMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devAgentCompletedDetail": "This basic completion alert was created by the test panel. It is not a real Agent task result.",
+  "@devAgentCompletedDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devCrossDeviceTaskCompletedMessage": "DEV test: cross-device task completed",
+  "@devCrossDeviceTaskCompletedMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devCrossDeviceTaskCompletedDetail": "This simulated completion detail tests long mobile card text, source, completion time, and vibration settings. It is not a real Agent task result.",
+  "@devCrossDeviceTaskCompletedDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devRepeatedAlertMessage": "DEV test: repeated alert {index}/3",
+  "@devRepeatedAlertMessage": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "index": {
+        "type": "Object",
+        "description": "Runtime value for index."
+      }
+    }
+  },
+  "devRepeatedAlertDetail": "Tests unread counts, chronological order, and repeated mobile delivery. This is simulated test data.",
+  "@devRepeatedAlertDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneTextSampleTitle": "DEV phone text sample",
+  "@devPhoneTextSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneTextSampleContent": "DingDong DEV test: this text simulates content pasted into the phone input and sent explicitly.",
+  "@devPhoneTextSampleContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devTestPhoneSource": "From DEV test phone",
+  "@devTestPhoneSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devAutoSyncSampleTitle": "DEV computer auto-sync sample",
+  "@devAutoSyncSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devAutoSyncSampleContent": "DingDong DEV test: created on this computer and sent only to connected devices with auto-sync enabled.",
+  "@devAutoSyncSampleContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devTestPanelSource": "DingDong DEV test panel",
+  "@devTestPanelSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devManualSendSampleTitle": "DEV manual-send sample",
+  "@devManualSendSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devManualSendSampleContent": "DingDong DEV test: choose a connected device and send this item explicitly.",
+  "@devManualSendSampleContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneFileBody": "DingDong DEV test file\n\nThis local sample was created by the test panel to simulate choosing a file on a phone and sending it explicitly.\nIt did not come from a real phone and contains no real user content.\n",
+  "@devPhoneFileBody": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneFileSampleTitle": "DingDong DEV phone file sample.txt",
+  "@devPhoneFileSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAPI": "Agent API",
+  "@agentAPI": {
+    "description": "DingDong built-in interface copy."
+  },
+  "audioFiles": "Audio files",
+  "@audioFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseSoundFile": "Choose sound",
+  "@chooseSoundFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importThisFolder": "Import this folder",
+  "@importThisFolder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importAction": "Import",
+  "@importAction": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exportAction": "Export",
+  "@exportAction": {
+    "description": "DingDong built-in interface copy."
+  },
+  "jsonFiles": "JSON files",
+  "@jsonFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "jsonFile": "JSON file",
+  "@jsonFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryRuleKeywordsExample": "command, alias:build",
+  "@categoryRuleKeywordsExample": {
+    "description": "Technical example shown in the Clipboard tags and aliases field."
+  },
+  "httpsOrGitHubFileURL": "HTTPS or GitHub file URL",
+  "@httpsOrGitHubFileURL": {
+    "description": "DingDong built-in interface copy."
+  }
+}

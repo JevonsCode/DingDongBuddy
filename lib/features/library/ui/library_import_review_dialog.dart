@@ -43,7 +43,7 @@ final class LibraryImportReviewDialog extends StatelessWidget {
     return DesktopAlertDialog(
       maxWidth: 680,
       scrollable: true,
-      title: Text(context.localized('Review online resources', '检查在线资源')),
+      title: Text(context.l10n.reviewOnlineResources),
       content: SizedBox(
         width: 620,
         height: 390,
@@ -51,10 +51,9 @@ final class LibraryImportReviewDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              context.localized(
-                'These resources will be loaded from the internet. Check the source links before importing them.',
-                '以下资源会从互联网加载。请先检查来源链接，确认无误后再导入。',
-              ),
+              context
+                  .l10n
+                  .theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52,
             ),
             if (result.skippedCount > 0) ...<Widget>[
               const SizedBox(height: 10),
@@ -69,10 +68,10 @@ final class LibraryImportReviewDialog extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  context.localized(
-                    '${result.skippedCount} resources already exist and will be skipped or flagged as conflicts.',
-                    '发现 ${result.skippedCount} 项已有资源，导入时会跳过或标记为冲突。',
-                  ),
+                  context.l10n
+                      .skippedcountResourcesAlreadyExistAndWillBeSkippedOr_6aa841ce(
+                        result.skippedCount,
+                      ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -97,17 +96,14 @@ final class LibraryImportReviewDialog extends StatelessWidget {
       actions: <Widget>[
         DesktopActionButton(
           onPressed: () => Navigator.pop(context, false),
-          label: context.localized('Cancel', '取消'),
+          label: context.l10n.cancel,
           compact: true,
         ),
         DesktopActionButton(
           key: const Key('library-import-review-confirm'),
           onPressed: () => Navigator.pop(context, true),
           icon: const Icon(Icons.download_outlined, size: 17),
-          label: context.localized(
-            'Import ${result.imported.length} resources',
-            '导入 ${result.imported.length} 项资源',
-          ),
+          label: context.l10n.importLengthResources(result.imported.length),
           tone: DesktopActionTone.primary,
         ),
       ],
@@ -162,7 +158,7 @@ final class _OnlineResourceRow extends StatelessWidget {
           const SizedBox(width: 8),
           DesktopIconButton(
             key: Key('library-import-review-open-${resource.id}'),
-            tooltip: context.localized('Open source', '打开来源'),
+            tooltip: context.l10n.openSource,
             onPressed: onOpenExternalLink == null || uri == null
                 ? null
                 : () => onOpenExternalLink!(uri),

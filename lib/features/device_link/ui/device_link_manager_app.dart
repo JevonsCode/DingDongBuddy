@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
@@ -8,7 +9,6 @@ import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/platform/multi_window_device_link_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Root application hosted by the dedicated connection-manager engine.
@@ -60,7 +60,8 @@ class _DeviceLinkManagerAppState extends State<DeviceLinkManagerApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DingDong · 连接设备',
+      onGenerateTitle: (BuildContext context) =>
+          context.l10n.connectedDevicesWindowTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.desktopPanelLight(),
       darkTheme: AppTheme.desktopPanelDark(),
@@ -69,26 +70,14 @@ class _DeviceLinkManagerAppState extends State<DeviceLinkManagerApp>
         AppThemePreference.light => ThemeMode.light,
         AppThemePreference.dark => ThemeMode.dark,
       },
-      locale: switch (widget.settings.language) {
-        AppLanguagePreference.system => null,
-        AppLanguagePreference.english => const Locale('en'),
-        AppLanguagePreference.chinese => const Locale('zh'),
-      },
-      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-      localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        DingDongLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      locale: configuredAppLocale(widget.settings.language),
+      supportedLocales: DingDongLocalizations.supportedLocales,
+      localizationsDelegates: DingDongLocalizations.localizationsDelegates,
       home: Builder(
         builder: (BuildContext context) => Semantics(
           container: true,
           explicitChildNodes: true,
-          label: context.localized(
-            'DingDong device connection manager',
-            'DingDong 设备连接管理窗口',
-          ),
+          label: context.l10n.dingdongDeviceConnectionManager,
           child: DeviceLinkManagerScreen(controller: widget.controller),
         ),
       ),

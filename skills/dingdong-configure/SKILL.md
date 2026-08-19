@@ -28,7 +28,7 @@ The bridge also returns a compact canonical `conversation.capsule` plus text pre
 ## Workflow
 
 1. Prefer the native DingDong MCP tools. If the write tools are unavailable, locate the active loopback port, call `GET /health`, then inspect `GET /agent/capabilities` and use the equivalent HTTP endpoints.
-2. Read before writing. Call `dingdong_search_assets` and inspect existing scopes before creating anything; update or reuse a matching object instead of duplicating it.
+2. Read before writing. Call `dingdong_search_assets` and inspect existing scopes before creating anything; update or reuse a matching object instead of duplicating it. Use `dingdong_create_resource` only for a new Prompt or MCP, `dingdong_update_resource` for an existing Prompt or MCP, and `dingdong_install_skill` for a Skill package.
 3. Model the request:
    - Store behavioral policy as a `prompt`.
    - Store reusable procedures as a `skill` with valid `SKILL.md` content and an optional complete package.
@@ -37,6 +37,8 @@ The bridge also returns a compact canonical `conversation.capsule` plus text pre
    - Model where a resource applies with a trigger group, then attach its ID through `triggerGroupIds`.
 4. Create or patch the trigger group before attaching it to a resource. Never invent an unknown trigger-group ID.
 5. Verify with `dingdong_bridge` using representative task text, `workspacePath`, `repositoryUrl`, and `source` when relevant. Check both a matching and non-matching context.
+
+For a new Prompt or MCP, keep it disabled while creating and binding its requested scope, then enable it with `dingdong_update_resource`. Preserve omitted fields during updates. Never create a second resource when search returns the intended existing item.
 
 ## Skill Delivery and Switches
 

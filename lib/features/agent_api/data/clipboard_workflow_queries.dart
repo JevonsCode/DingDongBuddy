@@ -121,7 +121,7 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
           'hiddenSensitiveItems': hidden,
         },
         'counts': <String, Object?>{
-          'totalClipboard': _store.list(limit: 5000).length,
+          'totalClipboard': _store.historyCount(),
           'matched': matched.length,
           'visible': visible.length,
           'returned': returned.length,

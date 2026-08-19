@@ -18,7 +18,7 @@ void main() {
       'report_draft__v1_.txt',
     );
     expect(sanitizeDeviceLinkFileName('name. . '), 'name');
-    expect(sanitizeDeviceLinkFileName('...'), '共享文件');
+    expect(sanitizeDeviceLinkFileName('...'), 'Shared file');
   });
 
   test('Windows device names are prefixed even when they have extensions', () {

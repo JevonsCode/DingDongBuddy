@@ -59,6 +59,8 @@ void main() {
         contains('does not claim that every instruction was followed'),
       );
       expect(result['instructions'], contains('dingdong_install_skill'));
+      expect(result['instructions'], contains('dingdong_create_resource'));
+      expect(result['instructions'], contains('dingdong_update_resource'));
       expect(result['instructions'], contains('strict project scope'));
       expect(result['instructions'], contains('completion hook'));
       expect(result['instructions'], contains('dingdong_notify'));
@@ -90,6 +92,8 @@ void main() {
         <String>[
           'dingdong_bridge',
           'dingdong_search_assets',
+          'dingdong_create_resource',
+          'dingdong_update_resource',
           'dingdong_get_asset',
           'dingdong_load_skill',
           'dingdong_confirm_mcp_use',
@@ -156,6 +160,23 @@ void main() {
           toolNamed('dingdong_install_skill')['inputSchema']
               as Map<String, Object?>;
       expect(installSchema['required'], <String>['source']);
+      final Map<String, Object?> createSchema =
+          toolNamed('dingdong_create_resource')['inputSchema']
+              as Map<String, Object?>;
+      expect(createSchema['required'], <String>['type', 'title', 'content']);
+      expect(
+        ((createSchema['properties'] as Map<String, Object?>)['type']
+            as Map<String, Object?>)['enum'],
+        <String>['prompt', 'mcp'],
+      );
+      final Map<String, Object?> updateSchema =
+          toolNamed('dingdong_update_resource')['inputSchema']
+              as Map<String, Object?>;
+      expect(updateSchema['required'], <String>['resourceId']);
+      expect(
+        toolNamed('dingdong_update_resource')['description'],
+        allOf(contains('Prompt or MCP'), contains('Preserve omitted fields')),
+      );
       final Map<String, Object?> loadSchema =
           toolNamed('dingdong_load_skill')['inputSchema']
               as Map<String, Object?>;

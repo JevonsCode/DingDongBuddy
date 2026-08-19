@@ -67,14 +67,9 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
           icon: Icons.folder_open_rounded,
           color: colors.primary,
         ),
-        title: Text(context.localized('Archive to groups', '归档到分组')),
-        subtitle: Text(
-          context.localized(
-            'Keep this item easy to find across multiple groups.',
-            '一个条目可以同时归档到多个分组，方便之后查找。',
-          ),
-        ),
-        closeTooltip: context.localized('Close', '关闭'),
+        title: Text(context.l10n.archiveToGroups),
+        subtitle: Text(context.l10n.keepThisItemEasyToFindAcrossMultipleGroups),
+        closeTooltip: context.l10n.close,
         onClose: () => Navigator.pop(context),
       ),
       body: Column(
@@ -83,13 +78,10 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
         children: <Widget>[
           if (groups.isNotEmpty) ...<Widget>[
             _DialogSectionLabel(
-              title: context.localized('Groups', '选择分组'),
+              title: context.l10n.groups2,
               trailing: _selected.isEmpty
-                  ? context.localized('Optional', '可多选')
-                  : context.localized(
-                      '${_selected.length} selected',
-                      '已选 ${_selected.length} 个',
-                    ),
+                  ? context.l10n.optional
+                  : context.l10n.lengthSelected(_selected.length),
             ),
             const SizedBox(height: 8),
             if (groups.length > 5) ...<Widget>[
@@ -103,8 +95,8 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
                 borderColor: colors.outlineVariant,
                 focusBorderColor: colors.primary,
                 onChanged: (String value) => setState(() => _query = value),
-                hintText: context.localized('Search groups', '搜索分组'),
-                clearTooltip: context.localized('Clear search', '清除搜索'),
+                hintText: context.l10n.searchGroups,
+                clearTooltip: context.l10n.clearSearch,
               ),
               const SizedBox(height: 8),
             ],
@@ -137,8 +129,8 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
           ],
           const SizedBox(height: 18),
           _DialogSectionLabel(
-            title: context.localized('New group', '新建分组'),
-            trailing: context.localized('Optional', '可选'),
+            title: context.l10n.newGroup,
+            trailing: context.l10n.optional2,
           ),
           const SizedBox(height: 8),
           DesktopTextField(
@@ -148,7 +140,7 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _submit(),
             decoration: InputDecoration(
-              hintText: context.localized('e.g. Project drafts', '例如：项目草稿'),
+              hintText: context.l10n.eGProjectDrafts,
               prefixIcon: Icon(
                 Icons.add_rounded,
                 size: 18,
@@ -171,14 +163,14 @@ class _ClipboardGroupDialogState extends State<ClipboardGroupDialog> {
           DesktopActionButton(
             height: 36,
             onPressed: () => Navigator.pop(context),
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             tone: DesktopActionTone.neutral,
           ),
           DesktopActionButton(
             key: const Key('clipboard-save-groups'),
             height: 36,
             onPressed: _submit,
-            label: context.localized('Add to groups', '加入分组'),
+            label: context.l10n.addToGroups,
             tone: DesktopActionTone.primary,
           ),
         ],
@@ -332,7 +324,7 @@ class _NoMatchingGroups extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        context.localized('No matching groups', '没有匹配的分组'),
+        context.l10n.noMatchingGroups,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: colors.onSurfaceVariant,
           fontSize: 11,

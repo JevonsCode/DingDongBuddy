@@ -203,7 +203,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
         return Semantics(
           container: true,
           explicitChildNodes: true,
-          label: context.localized('Agent connection center', 'Agent 连接中心'),
+          label: context.l10n.agentConnectionCenter,
           child: CustomScrollView(
             key: const Key('agent-api-scroll'),
             controller: _scrollController,
@@ -267,10 +267,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                               Icons.notifications_none_rounded,
                               size: 17,
                             ),
-                            label: context.localized(
-                              'Send test notification',
-                              '发送测试通知',
-                            ),
+                            label: context.l10n.sendTestNotification,
                             tone: DesktopActionTone.soft,
                           ),
                           if (widget.resourceManagerLauncher != null)
@@ -283,10 +280,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                                 ),
                               ),
                               icon: Icon(Icons.hub_outlined, size: 17),
-                              label: context.localized(
-                                'Manage Agents',
-                                '管理 Agent',
-                              ),
+                              label: context.l10n.manageAgents,
                               tone: DesktopActionTone.neutral,
                             ),
                         ],
@@ -319,11 +313,10 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                       if (_advancedExpanded) ...<Widget>[
                         const SizedBox(height: 14),
                         _SectionTitle(
-                          title: context.localized('Runtime check', '运行时检查'),
-                          description: context.localized(
-                            'The command below uses the actual endpoint when the runtime supplied one.',
-                            '运行时提供了实际地址时，下方命令会使用实际地址。',
-                          ),
+                          title: context.l10n.runtimeCheck,
+                          description: context
+                              .l10n
+                              .theCommandBelowUsesTheActualEndpointWhenTheRuntime_0a3909c7,
                         ),
                         const SizedBox(height: 9),
                         _CommandRow(
@@ -334,11 +327,10 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                         ),
                         const SizedBox(height: 22),
                         _SectionTitle(
-                          title: context.localized('Core endpoints', '核心端点'),
-                          description: context.localized(
-                            'Clipboard content stays metadata-only unless explicitly enabled in Settings.',
-                            '除非在设置中明确允许，否则剪贴板正文只返回元数据。',
-                          ),
+                          title: context.l10n.coreEndpoints,
+                          description: context
+                              .l10n
+                              .clipboardContentStaysMetadataOnlyUnlessExplicitlyEnabled_df1d930e,
                         ),
                         const SizedBox(height: 8),
                         const _EndpointList(),
@@ -349,11 +341,10 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                           children: <Widget>[
                             _SectionTitle(
                               key: const Key('agent-api-mcp-access'),
-                              title: context.localized('MCP access', 'MCP 接入'),
-                              description: context.localized(
-                                'Advanced commands and the installation prompt. Their presence does not mean an Agent has been verified.',
-                                '高级命令与安装提示词；显示这些内容不代表 Agent 已验证。',
-                              ),
+                              title: context.l10n.mcpAccess,
+                              description: context
+                                  .l10n
+                                  .advancedCommandsAndTheInstallationPromptTheirPresence_b84b4903,
                             ),
                             const SizedBox(height: 10),
                             _CommandRow(
@@ -363,10 +354,9 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                             ),
                             const SizedBox(height: 9),
                             Text(
-                              context.localized(
-                                'The bundled bridge exposes prompts, skills, MCP references, and notifications through JSON-RPC.',
-                                '内置桥接通过 JSON-RPC 提供提示词、技能、MCP 引用与通知能力。',
-                              ),
+                              context
+                                  .l10n
+                                  .theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67,
                               style: TextStyle(
                                 color: PopupStyle.of(context).textSecondary,
                                 fontSize: 11,
@@ -420,17 +410,14 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
       if (mounted) {
         setState(() {
           _testFailed = false;
-          _testStatus = context.localized('Test notification sent', '测试通知已发送');
+          _testStatus = context.l10n.testNotificationSent;
         });
       }
     } on Object catch (error) {
       if (mounted) {
         setState(() {
           _testFailed = true;
-          _testStatus = context.localized(
-            'Connection test failed: $error',
-            '连接测试失败：$error',
-          );
+          _testStatus = context.l10n.connectionTestFailedError(error);
         });
       }
     }

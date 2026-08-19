@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
@@ -22,7 +23,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void testWidgetsOnPlatform(
@@ -63,12 +63,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),
-        supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-        localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
         home: ClipboardScreen(viewModel: model, now: () => now),
       ),
     );
@@ -1662,11 +1658,11 @@ void main() {
       isEmpty,
     );
     expect(
-      menuGateway.lastItems.any((item) => item.englishLabel == 'Enable'),
+      menuGateway.lastItems.any((item) => item.label == 'Enable'),
       isFalse,
     );
     expect(
-      menuGateway.lastItems.any((item) => item.englishLabel == 'Disable'),
+      menuGateway.lastItems.any((item) => item.label == 'Disable'),
       isFalse,
     );
     expect(find.byKey(const Key('desktop-context-menu')), findsNothing);
@@ -1763,6 +1759,19 @@ final class _MemoryClipboardStore implements ClipboardStore {
   }) => records.take(limit).toList();
 
   @override
+  DateTime? latestUpdatedAt() => records.isEmpty
+      ? null
+      : records
+            .map((ClipboardRecord record) => record.updatedAt)
+            .reduce(
+              (DateTime left, DateTime right) =>
+                  left.isAfter(right) ? left : right,
+            );
+
+  @override
+  int historyCount() => records.length;
+
+  @override
   void save(ClipboardRecord record) {}
 
   @override
@@ -1783,7 +1792,6 @@ final class _FakeContextMenuGateway implements DesktopContextMenuGateway {
   Future<String?> show({
     required double x,
     required double y,
-    required bool useChinese,
     required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {

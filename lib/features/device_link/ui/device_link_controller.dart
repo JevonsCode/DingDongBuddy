@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
@@ -18,6 +19,7 @@ import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:path/path.dart' as path;
 
 const int deviceLinkMaximumFileBytes = 25 * 1024 * 1024;
@@ -56,6 +58,7 @@ final class DeviceLinkController extends ChangeNotifier
     DeviceLinkSessionFactory sessionFactory = createDeviceLinkSession,
     VoidCallback? onClipboardReceived,
     AgentStateProvider? agentStateProvider,
+    DingDongLocalizations Function()? localizations,
   }) => DeviceLinkController._(
     store: store,
     clipboardStore: clipboardStore,
@@ -65,6 +68,7 @@ final class DeviceLinkController extends ChangeNotifier
     sessionFactory: sessionFactory,
     onClipboardReceived: onClipboardReceived,
     agentStateProvider: agentStateProvider,
+    localizations: localizations,
   );
 
   DeviceLinkController._({
@@ -76,7 +80,10 @@ final class DeviceLinkController extends ChangeNotifier
     required this._sessionFactory,
     this.onClipboardReceived,
     this._agentStateProvider,
-  });
+    DingDongLocalizations Function()? localizations,
+  }) : _localizations =
+           localizations ??
+           (() => lookupDingDongLocalizations(const Locale('en')));
 
   final DeviceLinkStore _store;
   final ClipboardStore _clipboardStore;
@@ -86,6 +93,7 @@ final class DeviceLinkController extends ChangeNotifier
   final DeviceLinkSessionFactory _sessionFactory;
   final VoidCallback? onClipboardReceived;
   final AgentStateProvider? _agentStateProvider;
+  final DingDongLocalizations Function() _localizations;
   final Map<String, _ManagedDeviceSession> _sessionsByRoom =
       <String, _ManagedDeviceSession>{};
   final Map<String, DeviceConnectionStatus> _statuses =
@@ -128,7 +136,7 @@ final class DeviceLinkController extends ChangeNotifier
     if (_started) return;
     _started = true;
     final DeviceLinkDocument? document = await _store.load();
-    _localDevice = document?.localDevice ?? _newLocalIdentity();
+    _localDevice = document?.localDevice ?? _newLocalIdentity(_localizations());
     _devices = List<LinkedDevice>.unmodifiable(
       document?.devices ?? const <LinkedDevice>[],
     );
@@ -233,7 +241,9 @@ final class DeviceLinkController extends ChangeNotifier
         'type': 'agent.completed',
         'id': notificationId,
         'activityId': activity.id,
-        'title': needsUserAttention ? 'Agent 需要你处理' : 'Agent 完成啦',
+        'title': needsUserAttention
+            ? _localizations().agentNeedsYourAttention
+            : _localizations().agentCompleted,
         'source': activity.source,
         'summary': activity.message,
         'detail': request.detail ?? activity.detail ?? activity.message,
@@ -449,7 +459,7 @@ final class DeviceLinkController extends ChangeNotifier
       <String, Object?>{
         'id': activity.id,
         'activityId': activity.id,
-        'title': 'Agent 完成啦',
+        'title': _localizations().agentCompleted,
         'source': _truncateUtf8(activity.source, 96),
         'summary': _truncateUtf8(activity.message, 480),
         'detail': _truncateUtf8(activity.detail ?? activity.message, 1200),
@@ -648,7 +658,8 @@ final class DeviceLinkController extends ChangeNotifier
       if (pairing == null || pairing.payload.room != managed.room) return;
       device = LinkedDevice(
         id: remoteId,
-        name: (remote['name'] as String? ?? '移动设备').trim(),
+        name: (remote['name'] as String? ?? _localizations().mobileDevice)
+            .trim(),
         kind: LinkedDeviceKind.parse(remote['kind']),
         platform: remote['platform'] as String? ?? '',
         room: pairing.payload.room,
@@ -824,7 +835,7 @@ final class DeviceLinkController extends ChangeNotifier
           : classification.title,
       content: content,
       tags: <String>[...classification.tags, 'device-origin:${device.id}'],
-      source: '来自 ${device.name}',
+      source: _localizations().fromDevice(device.name),
       pinned: false,
       enabled: true,
       activation: 'taskMatch',
@@ -843,7 +854,10 @@ final class DeviceLinkController extends ChangeNotifier
     }
     _incomingFiles[transferId] = _IncomingFileUpload(
       deviceId: device.id,
-      name: sanitizeDeviceLinkFileName(message['name'] as String? ?? '共享文件'),
+      name: sanitizeDeviceLinkFileName(
+        message['name'] as String? ?? _localizations().sharedFile,
+        fallback: _localizations().sharedFile,
+      ),
       expectedBytes: size,
     );
   }
@@ -901,7 +915,7 @@ final class DeviceLinkController extends ChangeNotifier
           'file-url',
           'device-origin:${device.id}',
         ],
-        source: '来自 ${device.name}',
+        source: _localizations().fromDevice(device.name),
         pinned: false,
         enabled: true,
         activation: 'taskMatch',
@@ -1062,11 +1076,11 @@ final class _IncomingFileUpload {
   int receivedBytes = 0;
 }
 
-LocalDeviceIdentity _newLocalIdentity() {
+LocalDeviceIdentity _newLocalIdentity(DingDongLocalizations strings) {
   final String name = Platform.localHostname.trim();
   return LocalDeviceIdentity(
     id: 'desktop-${_randomToken(12)}',
-    name: name.isEmpty ? 'DingDong 电脑' : name,
+    name: name.isEmpty ? strings.dingDongComputer : name,
     platform: Platform.operatingSystem,
   );
 }
@@ -1086,8 +1100,10 @@ File? _firstExistingFile(ClipboardRecord record) {
   return null;
 }
 
-String sanitizeDeviceLinkFileName(String value) {
-  const String fallback = '共享文件';
+String sanitizeDeviceLinkFileName(
+  String value, {
+  String fallback = 'Shared file',
+}) {
   final List<String> segments = value.trim().split(RegExp(r'[/\\]+'));
   String base = (segments.isEmpty ? '' : segments.last)
       .replaceAll(RegExp(r'[\x00-\x1f<>:"/\\|?*]'), '_')

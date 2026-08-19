@@ -1,0 +1,7 @@
+"find_menu_bar_icon" = "找回菜单栏图标…";
+"hide_dock_icon" = "隐藏 Dock 图标";
+"recovery_title" = "找回 DingDong 菜单栏图标";
+"recovery_detail" = "如果图标被刘海遮挡，请在 Finder 中选中 DingDong，按 ⌘I，勾选“缩放以适合内建摄像头下方”，然后重新打开 DingDong。图标出现后，按住 ⌘ 拖到右侧；macOS 会记住位置。";
+"show_in_finder" = "在 Finder 中显示";
+"open_system_settings" = "打开系统设置";
+"cancel" = "取消";

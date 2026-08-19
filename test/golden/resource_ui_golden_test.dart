@@ -14,7 +14,6 @@ import 'package:dingdong/features/library/ui/resource_filter_bar.dart';
 import 'package:dingdong/features/library/ui/trigger_group_dialog.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -420,13 +419,8 @@ Widget _testApp(Widget home) {
     debugShowCheckedModeBanner: false,
     theme: AppTheme.desktopPanelLight(),
     locale: const Locale('zh'),
-    supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-    localizationsDelegates: const <LocalizationsDelegate<Object>>[
-      DingDongLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
+    supportedLocales: DingDongLocalizations.supportedLocales,
+    localizationsDelegates: DingDongLocalizations.localizationsDelegates,
     home: Scaffold(body: home),
   );
 }

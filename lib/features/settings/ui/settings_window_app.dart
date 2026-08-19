@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
@@ -11,7 +12,6 @@ import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/settings_screen.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Root application hosted by the dedicated settings Flutter engine.
@@ -89,7 +89,8 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
       builder: (BuildContext context, Widget? child) {
         final AppSettings settings = widget.viewModel.settings;
         return MaterialApp(
-          title: 'DingDong · 设置',
+          onGenerateTitle: (BuildContext context) =>
+              context.l10n.settingsWindowTitle,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.desktopPanelLight(),
           darkTheme: AppTheme.desktopPanelDark(),
@@ -98,26 +99,14 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
             AppThemePreference.light => ThemeMode.light,
             AppThemePreference.dark => ThemeMode.dark,
           },
-          locale: switch (settings.language) {
-            AppLanguagePreference.system => null,
-            AppLanguagePreference.english => const Locale('en'),
-            AppLanguagePreference.chinese => const Locale('zh'),
-          },
-          supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-          localizationsDelegates: const <LocalizationsDelegate<Object>>[
-            DingDongLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+          locale: configuredAppLocale(settings.language),
+          supportedLocales: DingDongLocalizations.supportedLocales,
+          localizationsDelegates: DingDongLocalizations.localizationsDelegates,
           home: Builder(
             builder: (BuildContext context) => Semantics(
               container: true,
               explicitChildNodes: true,
-              label: context.localized(
-                'DingDong settings window',
-                'DingDong 设置窗口',
-              ),
+              label: context.l10n.dingdongSettingsWindow,
               child: SettingsScreen(
                 viewModel: widget.viewModel,
                 navigationController: _navigationController,

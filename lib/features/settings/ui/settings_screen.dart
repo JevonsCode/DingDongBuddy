@@ -175,15 +175,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            context.localized('Settings', '设置'),
+                            context.l10n.settings2,
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            context.localized(
-                              'Desktop behavior, history privacy, and local agent connectivity.',
-                              '管理桌面行为、历史隐私与本地 Agent 连接。',
-                            ),
+                            context
+                                .l10n
+                                .desktopBehaviorHistoryPrivacyAndLocalAgentConnectivity,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           if (widget.viewModel.errorMessage !=
@@ -195,26 +194,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                           const SizedBox(height: 30),
                           _SettingsSection(
-                            title: context.localized('General', '通用'),
-                            description: context.localized(
-                              'Choose how DingDong behaves when you sign in.',
-                              '选择登录系统后 DingDong 的运行方式。',
-                            ),
+                            title: context.l10n.general,
+                            description: context
+                                .l10n
+                                .chooseHowDingDongBehavesWhenYouSignIn,
                             children: <Widget>[
                               CompactSwitchListTile(
                                 key: const Key('settings-launch-at-startup'),
                                 contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context.localized(
-                                    'Launch at startup',
-                                    '开机启动',
-                                  ),
-                                ),
+                                title: Text(context.l10n.launchAtStartup),
                                 subtitle: Text(
-                                  context.localized(
-                                    'Start DingDong after you sign in to this computer.',
-                                    '登录此电脑后自动启动 DingDong。',
-                                  ),
+                                  context
+                                      .l10n
+                                      .startDingDongAfterYouSignInToThisComputer,
                                 ),
                                 value: settings.launchAtStartup,
                                 onChanged: widget.viewModel.setLaunchAtStartup,
@@ -223,27 +215,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 CompactSwitchListTile(
                                   key: const Key('settings-hide-dock-icon'),
                                   contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    context.localized(
-                                      'Hide Dock icon',
-                                      '隐藏 Dock 图标',
-                                    ),
-                                  ),
+                                  title: Text(context.l10n.hideDockIcon),
                                   subtitle: Text(
-                                    context.localized(
-                                      'Keep DingDong in the menu bar without showing it in the Dock.',
-                                      '仅保留菜单栏入口，不在 Dock 中显示 DingDong。',
-                                    ),
+                                    context
+                                        .l10n
+                                        .keepDingDongInTheMenuBarWithoutShowingItInTheDock,
                                   ),
                                   value: settings.hideDockIcon,
                                   onChanged: widget.viewModel.setHideDockIcon,
                                 ),
                               if (defaultTargetPlatform == TargetPlatform.macOS)
                                 _SettingRow(
-                                  label: context.localized(
-                                    'Menu bar icon hidden by the camera housing',
-                                    '菜单栏图标被刘海遮挡',
-                                  ),
+                                  label: context
+                                      .l10n
+                                      .menuBarIconHiddenByTheCameraHousing,
                                   child: DesktopActionButton(
                                     key: const Key(
                                       'settings-menu-bar-recovery',
@@ -252,30 +237,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       widget.viewModel.showMenuBarRecovery(),
                                     ),
                                     icon: Icons.visibility_rounded,
-                                    label: context.localized(
-                                      'Find icon',
-                                      '找回图标',
-                                    ),
+                                    label: context.l10n.findIcon,
                                     tone: DesktopActionTone.soft,
                                   ),
                                 ),
                             ],
                           ),
                           _SettingsSection(
-                            title: context.localized(
-                              'Keyboard shortcuts',
-                              '键盘快捷键',
-                            ),
-                            description: context.localized(
-                              'Set the system-wide panel shortcut and the shortcuts used inside the focused panel.',
-                              '设置面板全局快捷键，以及面板获得焦点时使用的工作区快捷键。',
-                            ),
+                            title: context.l10n.keyboardShortcuts,
+                            description: context
+                                .l10n
+                                .setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb,
                             children: <Widget>[
                               _SettingRow(
-                                label: context.localized(
-                                  'Open or hide clipboard',
-                                  '打开或隐藏剪贴板',
-                                ),
+                                label: context.l10n.openOrHideClipboard,
                                 child: GlobalHotKeyRecorder(
                                   value: settings.globalHotKey,
                                   onChanged: widget.viewModel.setGlobalHotKey,
@@ -287,24 +262,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   bottom: 2,
                                 ),
                                 child: Text(
-                                  context.localized(
-                                    'Workspace shortcuts apply only while the panel is focused. Defaults: Control+Q/W/E on macOS, Alt+Q/W/E on Windows.',
-                                    '工作区快捷键只在面板获得焦点时生效。默认：macOS 为 Control+Q/W/E，Windows 为 Alt+Q/W/E。',
-                                  ),
+                                  context
+                                      .l10n
+                                      .workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968,
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Dynamic workspace',
-                                  '动态工作区',
-                                ),
+                                label: context.l10n.dynamicWorkspace,
                                 child: WorkspaceShortcutRecorder(
                                   settingId: 'today',
-                                  semanticLabel: context.localized(
-                                    'Dynamic workspace shortcut',
-                                    '动态工作区快捷键',
-                                  ),
+                                  semanticLabel:
+                                      context.l10n.dynamicWorkspaceShortcut,
                                   value: settings.workspaceShortcuts.today,
                                   defaultValue: WorkspaceShortcuts.defaultToday,
                                   onChanged: (WorkspaceShortcut value) => widget
@@ -313,16 +282,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Library workspace',
-                                  '资源库工作区',
-                                ),
+                                label: context.l10n.libraryWorkspace,
                                 child: WorkspaceShortcutRecorder(
                                   settingId: 'library',
-                                  semanticLabel: context.localized(
-                                    'Library workspace shortcut',
-                                    '资源库工作区快捷键',
-                                  ),
+                                  semanticLabel:
+                                      context.l10n.libraryWorkspaceShortcut,
                                   value: settings.workspaceShortcuts.library,
                                   defaultValue:
                                       WorkspaceShortcuts.defaultLibrary,
@@ -332,16 +296,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Clipboard workspace',
-                                  '剪贴板工作区',
-                                ),
+                                label: context.l10n.clipboardWorkspace,
                                 child: WorkspaceShortcutRecorder(
                                   settingId: 'clipboard',
-                                  semanticLabel: context.localized(
-                                    'Clipboard workspace shortcut',
-                                    '剪贴板工作区快捷键',
-                                  ),
+                                  semanticLabel:
+                                      context.l10n.clipboardWorkspaceShortcut,
                                   value: settings.workspaceShortcuts.clipboard,
                                   defaultValue:
                                       WorkspaceShortcuts.defaultClipboard,
@@ -357,14 +316,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           SystemUsageSection(viewModel: widget.viewModel),
                           _SettingsSection(
-                            title: context.localized('Appearance', '外观'),
-                            description: context.localized(
-                              'Keep the workspace comfortable in your current desktop environment.',
-                              '根据当前桌面环境调整工作台显示。',
-                            ),
+                            title: context.l10n.appearance,
+                            description: context
+                                .l10n
+                                .keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46,
                             children: <Widget>[
                               _SettingRow(
-                                label: context.localized('Theme', '主题'),
+                                label: context.l10n.theme,
                                 child:
                                     DesktopSegmentedControl<AppThemePreference>(
                                       key: const Key('settings-theme-mode'),
@@ -373,34 +331,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           <DesktopSegment<AppThemePreference>>[
                                             DesktopSegment<AppThemePreference>(
                                               value: AppThemePreference.system,
-                                              label: Text(
-                                                context.localized(
-                                                  'System',
-                                                  '跟随系统',
-                                                ),
-                                              ),
+                                              label: Text(context.l10n.system),
                                             ),
                                             DesktopSegment<AppThemePreference>(
                                               value: AppThemePreference.light,
-                                              label: Text(
-                                                context.localized(
-                                                  'Light',
-                                                  '浅色',
-                                                ),
-                                              ),
+                                              label: Text(context.l10n.light),
                                             ),
                                             DesktopSegment<AppThemePreference>(
                                               value: AppThemePreference.dark,
-                                              label: Text(
-                                                context.localized('Dark', '深色'),
-                                              ),
+                                              label: Text(context.l10n.dark),
                                             ),
                                           ],
                                       onChanged: widget.viewModel.setThemeMode,
                                     ),
                               ),
                               _SettingRow(
-                                label: context.localized('Language', '语言'),
+                                label: context.l10n.language,
                                 child: SizedBox(
                                   width: 190,
                                   child:
@@ -408,7 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         key: const Key('settings-language'),
                                         value: settings.language,
                                         items:
-                                            const <
+                                            <
                                               DesktopSelectItem<
                                                 AppLanguagePreference
                                               >
@@ -416,17 +362,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               DesktopSelectItem(
                                                 value: AppLanguagePreference
                                                     .system,
-                                                label: 'System',
+                                                label: context.l10n.system,
                                               ),
                                               DesktopSelectItem(
                                                 value: AppLanguagePreference
                                                     .english,
-                                                label: 'English',
+                                                label: context
+                                                    .l10n
+                                                    .languageEnglish,
                                               ),
                                               DesktopSelectItem(
                                                 value: AppLanguagePreference
                                                     .chinese,
-                                                label: '中文',
+                                                label: context
+                                                    .l10n
+                                                    .languageChinese,
+                                              ),
+                                              DesktopSelectItem(
+                                                value: AppLanguagePreference
+                                                    .spanish,
+                                                label: context
+                                                    .l10n
+                                                    .languageSpanish,
                                               ),
                                             ],
                                         onChanged: widget.viewModel.setLanguage,
@@ -435,7 +392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                               _SettingRow(
                                 label:
-                                    '${context.localized('Window opacity', '窗口透明度')} · ${(settings.backgroundOpacity * 100).round()}%',
+                                    '${context.l10n.windowOpacity} · ${(settings.backgroundOpacity * 100).round()}%',
                                 child: SizedBox(
                                   width: 220,
                                   child: DesktopSlider(
@@ -450,10 +407,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Default workspace',
-                                  '默认页面',
-                                ),
+                                label: context.l10n.defaultWorkspace,
                                 child:
                                     DesktopSegmentedControl<DefaultWorkspace>(
                                       key: const Key(
@@ -465,28 +419,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             DesktopSegment<DefaultWorkspace>(
                                               value: DefaultWorkspace.today,
                                               label: Text(
-                                                context.localized(
-                                                  'Dynamic',
-                                                  '动态',
-                                                ),
+                                                context.l10n.dynamicMessage,
                                               ),
                                             ),
                                             DesktopSegment<DefaultWorkspace>(
                                               value: DefaultWorkspace.library,
                                               label: Text(
-                                                context.localized(
-                                                  'Library',
-                                                  '资源库',
-                                                ),
+                                                context.l10n.libraryMessage,
                                               ),
                                             ),
                                             DesktopSegment<DefaultWorkspace>(
                                               value: DefaultWorkspace.clipboard,
                                               label: Text(
-                                                context.localized(
-                                                  'Clipboard',
-                                                  '剪贴板',
-                                                ),
+                                                context.l10n.clipboard,
                                               ),
                                             ),
                                           ],
@@ -497,29 +442,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ],
                           ),
                           _SettingsSection(
-                            title: context.localized(
-                              'Clipboard history',
-                              '剪贴板历史',
-                            ),
-                            description: context.localized(
-                              'History stays on this device. Agent access to clipboard content is controlled below.',
-                              '历史仅保存在本机；是否允许 Agent 读取正文由下方开关控制。',
-                            ),
+                            title: context.l10n.clipboardHistory2,
+                            description: context
+                                .l10n
+                                .historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236,
                             children: <Widget>[
                               CompactSwitchListTile(
                                 key: const Key('settings-clipboard-monitoring'),
                                 contentPadding: EdgeInsets.zero,
                                 title: Text(
-                                  context.localized(
-                                    'Monitor clipboard changes',
-                                    '监控剪贴板变化',
-                                  ),
+                                  context.l10n.monitorClipboardChanges,
                                 ),
                                 subtitle: Text(
-                                  context.localized(
-                                    'Capture text, files, and images while DingDong is running.',
-                                    'DingDong 运行期间捕获文本、文件和图片。',
-                                  ),
+                                  context
+                                      .l10n
+                                      .captureTextFilesAndImagesWhileDingDongIsRunning,
                                 ),
                                 value: settings.clipboardMonitoring,
                                 onChanged:
@@ -531,16 +468,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 contentPadding: EdgeInsets.zero,
                                 title: Text(
-                                  context.localized(
-                                    'Allow Agents to read clipboard content',
-                                    '允许 Agent 读取剪贴板正文',
-                                  ),
+                                  context
+                                      .l10n
+                                      .allowAgentsToReadClipboardContent,
                                 ),
                                 subtitle: Text(
-                                  context.localized(
-                                    'Off by default. Metadata stays available; sensitive records still require an explicit request when enabled.',
-                                    '默认关闭。关闭时只返回元数据；开启后，敏感记录仍需调用方明确请求。',
-                                  ),
+                                  context
+                                      .l10n
+                                      .offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f,
                                 ),
                                 value: settings.allowAgentClipboardContent,
                                 onChanged: widget
@@ -548,10 +483,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     .setAllowAgentClipboardContent,
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Maximum items',
-                                  '最大条目数',
-                                ),
+                                label: context.l10n.maximumItems,
                                 child: _NumberField(
                                   key: const Key('settings-retention-items'),
                                   initialValue: settings.clipboardMaxItems,
@@ -564,10 +496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Retention days',
-                                  '保留天数',
-                                ),
+                                label: context.l10n.retentionDays,
                                 child: _NumberField(
                                   key: const Key('settings-retention-days'),
                                   initialValue: settings.clipboardMaxAgeDays,
@@ -581,31 +510,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ],
                           ),
                           _SettingsSection(
-                            title: context.localized(
-                              'Recent agents',
-                              '最近 Agent',
-                            ),
-                            description: context.localized(
-                              'Completion details stay on this device. Counting metadata contains timestamps only.',
-                              '完成详情仅保存在本机；用于统计的元数据只包含完成时间。',
-                            ),
+                            title: context.l10n.recentAgents,
+                            description: context
+                                .l10n
+                                .completionDetailsStayOnThisDeviceCountingMetadata_9920ce29,
                             children: <Widget>[
                               CompactSwitchListTile(
                                 key: const Key(
                                   'settings-agent-activity-group-sessions',
                                 ),
                                 contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context.localized(
-                                    'Group repeated sessions',
-                                    '合并同会话提醒',
-                                  ),
-                                ),
+                                title: Text(context.l10n.groupRepeatedSessions),
                                 subtitle: Text(
-                                  context.localized(
-                                    'Keep the same conversation ID in one item, show ×N, and do not increase the recent count.',
-                                    '相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近 Agent 数量。',
-                                  ),
+                                  context
+                                      .l10n
+                                      .keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb,
                                 ),
                                 value: settings.groupRepeatedAgentSessions,
                                 onChanged: widget
@@ -617,27 +536,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   'settings-agent-activity-remember',
                                 ),
                                 contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context.localized(
-                                    'Remember after restart',
-                                    '重启后保留记录',
-                                  ),
-                                ),
+                                title: Text(context.l10n.rememberAfterRestart),
                                 subtitle: Text(
-                                  context.localized(
-                                    'When disabled, the next launch starts with an empty Agent history.',
-                                    '关闭后，下次启动将从空的 Agent 历史开始。',
-                                  ),
+                                  context
+                                      .l10n
+                                      .whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory,
                                 ),
                                 value: settings.rememberAgentActivity,
                                 onChanged:
                                     widget.viewModel.setRememberAgentActivity,
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Maximum detailed items',
-                                  '详细记录上限',
-                                ),
+                                label: context.l10n.maximumDetailedItems,
                                 child: _NumberField(
                                   key: const Key(
                                     'settings-agent-activity-items',
@@ -652,10 +562,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               _SettingRow(
-                                label: context.localized(
-                                  'Count window (hours)',
-                                  '计数时间范围（小时）',
-                                ),
+                                label: context.l10n.countWindowHours,
                                 child: _NumberField(
                                   key: const Key(
                                     'settings-agent-activity-hours',
@@ -683,14 +590,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             settings: settings,
                           ),
                           _SettingsSection(
-                            title: 'Agent API',
-                            description: context.localized(
-                              'DingDong listens only on the local loopback interface.',
-                              'DingDong 仅监听本机回环地址。',
-                            ),
+                            title: context.l10n.agentAPI,
+                            description: context
+                                .l10n
+                                .dingdongListensOnlyOnTheLocalLoopbackInterface,
                             children: <Widget>[
                               _SettingRow(
-                                label: context.localized('Local port', '本地端口'),
+                                label: context.l10n.localPort,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: <Widget>[
@@ -711,10 +617,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           Icons.restart_alt_rounded,
                                           size: 17,
                                         ),
-                                        label: context.localized(
-                                          'Restart',
-                                          '重启',
-                                        ),
+                                        label: context.l10n.restart,
                                         tone: DesktopActionTone.soft,
                                       ),
                                     ],
@@ -722,10 +625,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                               Text(
-                                context.localized(
-                                  'Port changes apply the next time DingDong starts.',
-                                  '端口修改将在下次启动 DingDong 时生效。',
-                                ),
+                                context
+                                    .l10n
+                                    .portChangesApplyTheNextTimeDingDongStarts,
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],

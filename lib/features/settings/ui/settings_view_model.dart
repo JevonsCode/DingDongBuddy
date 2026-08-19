@@ -36,6 +36,7 @@ final class SettingsViewModel extends ChangeNotifier
     this.mcpCommandPath = 'dingdong-mcp',
     this.systemUsageSource,
     this.systemDataCleaner,
+    this.systemDataLocationGateway,
   }) : _clipboardMonitoring = clipboardMonitoring,
        _launchAtStartup = launchAtStartup,
        _onWindowOpacityChanged = onWindowOpacityChanged,
@@ -68,6 +69,7 @@ final class SettingsViewModel extends ChangeNotifier
   final String mcpCommandPath;
   final SystemUsageSource? systemUsageSource;
   final SystemDataCleaner? systemDataCleaner;
+  final SystemDataLocationGateway? systemDataLocationGateway;
   AppSettings _settings = const AppSettings();
   bool _loaded = false;
   String? _errorMessage;
@@ -105,6 +107,7 @@ final class SettingsViewModel extends ChangeNotifier
   );
   SystemUsageSnapshot? get systemUsage => _systemUsage;
   bool get canClearSystemData => systemDataCleaner != null;
+  bool get canOpenSystemDataLocation => systemDataLocationGateway != null;
   bool get isClearingSystemData => _isClearingSystemData;
   bool get requiresRestart => _loaded && _settings.apiPort != _loadedApiPort;
 
@@ -587,6 +590,19 @@ final class SettingsViewModel extends ChangeNotifier
       notifyListeners();
     }
     return cleared;
+  }
+
+  Future<bool> openSystemDataLocation(SystemDataCategory category) async {
+    final SystemDataLocationGateway? gateway = systemDataLocationGateway;
+    if (gateway == null) return false;
+    try {
+      await gateway.open(category);
+      return true;
+    } on Object {
+      _errorMessage = 'The DingDong data folder could not be opened.';
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> _loadSystemUsage() async {

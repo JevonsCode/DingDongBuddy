@@ -47,7 +47,7 @@ final class CompletionHookNotifier {
       method: 'POST',
       path: '/ding',
       body: <String, Object?>{
-        'message': summary ?? '$source 已完成本轮任务',
+        'message': ?summary,
         if (detail != null && detail != summary) 'detail': detail,
         'source': source,
         'flashCount': 4,

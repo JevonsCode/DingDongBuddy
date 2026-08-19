@@ -7,6 +7,11 @@ on:
         description: Existing tested version tag to publish
         required: true
         type: string
+      prerelease:
+        description: Publish the GitHub release as a prerelease
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -346,15 +351,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          release_title="DingDong ${RELEASE_TAG#v}"
+          release_flags=()
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            release_title="$release_title Beta"
+            release_flags+=(--prerelease)
+          fi
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" dist/* \
               --repo "$GITHUB_REPOSITORY" \
               --clobber
+            gh release edit "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$release_title" \
+              "${release_flags[@]}"
           else
             gh release create "$RELEASE_TAG" dist/* \
               --repo "$GITHUB_REPOSITORY" \
-              --title "DingDong ${RELEASE_TAG#v}" \
-              --notes-file docs/release-notes.md
+              --title "$release_title" \
+              --notes-file docs/release-notes.md \
+              "${release_flags[@]}"
           fi
       - name: Deploy release website
         env:

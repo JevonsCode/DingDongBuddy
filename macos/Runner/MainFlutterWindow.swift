@@ -91,7 +91,6 @@ class MainFlutterWindow: NSWindow {
         }
         result(self.showContextMenu(
           in: view,
-          useChinese: arguments["useChinese"] as? Bool ?? false,
           isDark: arguments["isDark"] as? Bool ?? false,
           entries: entries
         ))
@@ -107,7 +106,6 @@ class MainFlutterWindow: NSWindow {
 
   private func showContextMenu(
     in view: NSView,
-    useChinese: Bool,
     isDark: Bool,
     entries: [[String: Any]]
   ) -> String? {
@@ -124,13 +122,12 @@ class MainFlutterWindow: NSWindow {
         continue
       }
       guard let action = entry["id"] as? String,
-            let english = entry["englishLabel"] as? String,
-            let chinese = entry["chineseLabel"] as? String
+            let label = entry["label"] as? String
       else {
         continue
       }
       let item = NSMenuItem(
-        title: useChinese ? chinese : english,
+        title: label,
         action: #selector(DesktopContextMenuTarget.selectAction(_:)),
         keyEquivalent: ""
       )

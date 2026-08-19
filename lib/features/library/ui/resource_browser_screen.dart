@@ -46,10 +46,7 @@ class ResourceBrowserScreen extends StatelessWidget {
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      context.localized(
-                        'Curated content reusable by agents',
-                        '整理后可被 Agent 复用的内容',
-                      ),
+                      context.l10n.curatedContentReusableByAgents,
                       key: const Key('resource-library-context'),
                       style: TextStyle(
                         color: PopupStyle.of(context).textTertiary,
@@ -68,7 +65,7 @@ class ResourceBrowserScreen extends StatelessWidget {
                       size: 17,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
-                    label: context.localized('Manage', '资源管理'),
+                    label: context.l10n.manage,
                     tone: DesktopActionTone.primary,
                   ),
                 ],
@@ -80,11 +77,8 @@ class ResourceBrowserScreen extends StatelessWidget {
                 key: const Key('resource-search'),
                 onChanged: viewModel.setQuery,
                 height: 38,
-                hintText: context.localized(
-                  'Search prompts, skills, and MCP',
-                  '搜索提示词、Skills 和 MCP',
-                ),
-                clearTooltip: context.localized('Clear search', '清除搜索'),
+                hintText: context.l10n.searchPromptsSkillsAndMCP,
+                clearTooltip: context.l10n.clearSearch,
                 style: TextStyle(fontSize: 12),
                 hintStyle: TextStyle(
                   color: PopupStyle.of(context).textSecondary,

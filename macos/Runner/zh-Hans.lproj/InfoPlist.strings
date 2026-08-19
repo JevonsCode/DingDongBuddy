@@ -1,0 +1,4 @@
+"NSLocalNetworkUsageDescription" = "DingDong 会在本地网络中直接连接你信任的设备，以传输剪贴板内容和文件。";
+"NSDocumentsFolderUsageDescription" = "DingDong 需要访问“文稿”文件夹，以安装完整的本地 Agent Skill 包。";
+"NSDesktopFolderUsageDescription" = "DingDong 需要访问“桌面”文件夹，以安装完整的本地 Agent Skill 包。";
+"NSDownloadsFolderUsageDescription" = "DingDong 需要访问“下载”文件夹，以安装完整的本地 Agent Skill 包。";

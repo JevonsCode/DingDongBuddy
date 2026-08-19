@@ -7,7 +7,7 @@ import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
 
-/// Built-in, copy-only instructions for connecting an external Agent.
+/// Short built-in request for connecting a local Agent.
 class McpSetupCard extends StatefulWidget {
   const McpSetupCard({
     required this.settingsViewModel,
@@ -44,31 +44,37 @@ class _McpSetupCardState extends State<McpSetupCard> {
           const SizedBox(height: 14),
         ],
         Text(
-          context.localized('Agent setup prompt', '给 Agent 的接入提示词'),
+          context.l10n.agentSetupPrompt,
           style: TextStyle(
             color: PopupStyle.of(context).textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
+        const SizedBox(height: 5),
+        Text(
+          context.l10n.pasteAgentSetupInstructionDescription,
+          style: TextStyle(
+            color: PopupStyle.of(context).textSecondary,
+            fontSize: 10.5,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 8),
         Container(
           key: const Key('agent-api-setup-prompt'),
-          constraints: const BoxConstraints(maxHeight: 250),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: PopupStyle.of(context).field,
             borderRadius: BorderRadius.circular(6),
           ),
-          child: SingleChildScrollView(
-            child: SelectableText(
-              widget.settingsViewModel.mcpSetupPrompt,
-              style: TextStyle(
-                color: PopupStyle.of(context).textPrimary,
-                fontFamily: 'monospace',
-                fontSize: 10,
-                height: 1.4,
-              ),
+          child: SelectableText(
+            widget.settingsViewModel.mcpSetupPrompt,
+            style: TextStyle(
+              color: PopupStyle.of(context).textPrimary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
             ),
           ),
         ),
@@ -84,9 +90,7 @@ class _McpSetupCardState extends State<McpSetupCard> {
                 _copied ? Icons.check_rounded : Icons.copy_rounded,
                 size: 16,
               ),
-              label: _copied
-                  ? context.localized('Copied', '已复制')
-                  : context.localized('Copy', '复制'),
+              label: _copied ? context.l10n.copied : context.l10n.copy,
               tone: _copied
                   ? DesktopActionTone.soft
                   : DesktopActionTone.neutral,
@@ -98,7 +102,7 @@ class _McpSetupCardState extends State<McpSetupCard> {
                 onPressed: () =>
                     unawaited(widget.settingsViewModel.markAgentSetupUpdated()),
                 icon: Icons.task_alt_rounded,
-                label: context.localized('Mark as updated', '标记为已更新'),
+                label: context.l10n.markAsUpdated,
                 tone: DesktopActionTone.soft,
                 compact: true,
               ),
@@ -133,10 +137,7 @@ class _AgentSetupUpdateNotice extends StatelessWidget {
     final PopupPalette palette = PopupStyle.of(context);
     return Semantics(
       container: true,
-      label: context.localized(
-        'Agent setup prompt needs updating',
-        'Agent 接入提示词需要更新',
-      ),
+      label: context.l10n.agentSetupPromptNeedsUpdating,
       child: Container(
         key: const Key('agent-api-setup-update-notice'),
         width: double.infinity,
@@ -156,10 +157,7 @@ class _AgentSetupUpdateNotice extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    context.localized(
-                      'Update the Agent setup prompt',
-                      '更新 Agent 接入提示词',
-                    ),
+                    context.l10n.reconnectThisAgent,
                     style: TextStyle(
                       color: palette.warmAccent,
                       fontSize: 11,
@@ -168,10 +166,9 @@ class _AgentSetupUpdateNotice extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    context.localized(
-                      'Send this prompt to every connected Agent. After they reconnect, mark the update as complete below.',
-                      '把这份提示词发给每个已接入的 Agent；它们重新接入完成后，再在下方标记为已更新。',
-                    ),
+                    context
+                        .l10n
+                        .sendTheOneLineSetupRequestToEachAffectedAgentMarkIt_3a68e15f,
                     style: TextStyle(
                       color: palette.textPrimary,
                       fontSize: 10.5,

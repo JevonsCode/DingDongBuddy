@@ -1022,7 +1022,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.4.7'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.5.1'),
       );
       addTearDown(settings.dispose);
       await settings.load();
@@ -1903,7 +1903,6 @@ final class _QueuedContextMenuGateway implements DesktopContextMenuGateway {
   Future<String?> show({
     required double x,
     required double y,
-    required bool useChinese,
     required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {

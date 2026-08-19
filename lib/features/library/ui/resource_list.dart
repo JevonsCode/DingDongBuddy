@@ -104,7 +104,7 @@ class ResourceList extends StatelessWidget {
               DesktopMenuItem<_ResourceRowAction>(
                 value: _ResourceRowAction.delete,
                 symbol: 'delete',
-                label: context.localized('Delete', '删除'),
+                label: context.l10n.delete,
                 destructive: true,
               ),
             ],
@@ -112,14 +112,9 @@ class ResourceList extends StatelessWidget {
         : switch (await contextMenuGateway!.show(
             x: position.dx,
             y: position.dy,
-            useChinese: Localizations.localeOf(context).languageCode == 'zh',
             isDark: Theme.of(context).brightness == Brightness.dark,
-            items: const <DesktopContextMenuItem>[
-              DesktopContextMenuItem(
-                id: 'delete',
-                englishLabel: 'Delete',
-                chineseLabel: '删除',
-              ),
+            items: <DesktopContextMenuItem>[
+              DesktopContextMenuItem(id: 'delete', label: context.l10n.delete),
             ],
           )) {
             'delete' => _ResourceRowAction.delete,
@@ -180,48 +175,36 @@ class _ResourceListHeader extends StatelessWidget {
           children: <Widget>[
             const SizedBox(width: 28),
             const SizedBox(width: 8),
-            _ColumnLabel(
-              width: 94,
-              label: context.localized('Type', '类型'),
-              style: style,
-            ),
+            _ColumnLabel(width: 94, label: context.l10n.type, style: style),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                context.localized('Resource', '资源'),
-                maxLines: 1,
-                style: style,
-              ),
+              child: Text(context.l10n.resource, maxLines: 1, style: style),
             ),
             if (columns.scope)
-              _ColumnLabel(
-                width: 90,
-                label: context.localized('Scope', '作用域'),
-                style: style,
-              ),
+              _ColumnLabel(width: 90, label: context.l10n.scope, style: style),
             if (columns.usage)
               _ColumnLabel(
                 width: _usageColumnWidth,
-                label: context.localized('Usage', '使用'),
+                label: context.l10n.usage,
                 style: style,
+                trailing: const ResourceUsageHelpIcon(
+                  key: Key('resource-usage-help-list'),
+                  iconSize: 12,
+                ),
               ),
             if (columns.source)
-              _ColumnLabel(
-                width: 96,
-                label: context.localized('Source', '来源'),
-                style: style,
-              ),
+              _ColumnLabel(width: 96, label: context.l10n.source, style: style),
             if (columns.status)
               _ColumnLabel(
                 width: _statusColumnWidth,
-                label: context.localized('Status', '状态'),
+                label: context.l10n.status,
                 style: style,
               ),
             if (columns.updated) ...<Widget>[
               const SizedBox(width: _statusUpdatedGap),
               _ColumnLabel(
                 width: _updatedColumnWidth,
-                label: context.localized('Updated', '更新'),
+                label: context.l10n.updated2,
                 style: style,
               ),
             ],
@@ -238,20 +221,29 @@ class _ColumnLabel extends StatelessWidget {
     required this.width,
     required this.label,
     required this.style,
+    this.trailing,
   });
 
   final double width;
   final String label;
   final TextStyle? style;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => SizedBox(
     width: width,
-    child: Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: style,
+    child: Row(
+      children: <Widget>[
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+        if (trailing != null) ...<Widget>[const SizedBox(width: 3), trailing!],
+      ],
     ),
   );
 }
@@ -267,7 +259,7 @@ class _EmptyResourceList extends StatelessWidget {
           Icon(Icons.search_off_rounded, size: 22, color: foreground),
           const SizedBox(height: 9),
           Text(
-            context.localized('No matching resources', '没有匹配的资源'),
+            context.l10n.noMatchingResources,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: foreground),
@@ -327,10 +319,7 @@ class _ResourceRowState extends State<_ResourceRow> {
     return Semantics(
       button: true,
       selected: widget.selectedForAction,
-      label: context.localized(
-        'Open ${widget.display.title}',
-        '打开 ${widget.display.title}',
-      ),
+      label: context.l10n.openTitle(widget.display.title),
       onTap: _open,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -473,7 +462,7 @@ class _ResourceRowState extends State<_ResourceRow> {
                     width: 28,
                     child: widget.resource.pinned
                         ? Tooltip(
-                            message: context.localized('Pinned', '已置顶'),
+                            message: context.l10n.pinned,
                             child: Icon(
                               Icons.push_pin_outlined,
                               size: 14,
@@ -571,8 +560,8 @@ class _ResourceStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String label = enabled
-        ? context.localized('Disable resource', '停用资源')
-        : context.localized('Enable resource', '启用资源');
+        ? context.l10n.disableResource
+        : context.l10n.enableResource;
     return Semantics(
       container: true,
       toggled: enabled,
@@ -599,10 +588,7 @@ class _TriggerScopeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Tooltip(
-      message: context.localized(
-        'Only active in its configured trigger scope',
-        '仅在已配置的触发范围内生效',
-      ),
+      message: context.l10n.onlyActiveInItsConfiguredTriggerScope,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
@@ -615,7 +601,7 @@ class _TriggerScopeBadge extends StatelessWidget {
             Icon(Icons.filter_alt_outlined, size: 11, color: colors.primary),
             const SizedBox(width: 3),
             Text(
-              context.localized('Scoped', '有触发范围'),
+              context.l10n.scoped,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: colors.primary,
                 fontSize: 9,
@@ -647,8 +633,8 @@ class _SelectionButton extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Tooltip(
       message: selected
-          ? context.localized('Remove from selection', '取消选择')
-          : context.localized('Select item', '选择此项'),
+          ? context.l10n.removeFromSelection
+          : context.l10n.selectItem2,
       child: SizedBox.square(
         dimension: 28,
         child: DesktopIconButton(
@@ -698,19 +684,19 @@ String _symbolFor(ResourceType type) {
 
 String _typeName(BuildContext context, ResourceType type) {
   return switch (type) {
-    ResourceType.prompt => context.localized('Prompt', '提示词'),
-    ResourceType.skill => context.localized('Skill', '技能'),
+    ResourceType.prompt => context.l10n.prompt,
+    ResourceType.skill => context.l10n.skill2,
     ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
-    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
+    ResourceType.knowledge => context.l10n.knowledge,
+    ResourceType.clipboard => context.l10n.clipboard,
   };
 }
 
 String _activationLabel(BuildContext context, ResourceActivation activation) {
   return switch (activation) {
-    ResourceActivation.always => context.localized('Always', '始终'),
-    ResourceActivation.taskMatch => context.localized('Task match', '任务匹配'),
-    ResourceActivation.manual => context.localized('Manual', '手动'),
+    ResourceActivation.always => context.l10n.always,
+    ResourceActivation.taskMatch => context.l10n.taskMatch,
+    ResourceActivation.manual => context.l10n.manual,
   };
 }
 

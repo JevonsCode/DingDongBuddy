@@ -1,0 +1,14 @@
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-dir: lib/l10n/generated
+output-localization-file: dingdong_localizations.dart
+output-class: DingDongLocalizations
+preferred-supported-locales:
+  - en
+  - zh
+  - es
+nullable-getter: false
+required-resource-attributes: true
+format: true
+relax-syntax: true
+use-named-parameters: false

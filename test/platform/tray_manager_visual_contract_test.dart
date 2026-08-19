@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tray_manager/tray_manager.dart';
 
@@ -369,12 +371,13 @@ void main() {
     expect(gateway, contains('trayManager.popUpContextMenu()'));
     expect(gateway, contains('DesktopShellCommand.showClipboard'));
     expect(gateway, contains('DesktopShellCommand.showDeviceLinks'));
-    expect(gateway, contains("label: chinese ? '打开连接设备'"));
+    expect(gateway, contains('label: strings.openConnectedDevices'));
+    expect(gateway, isNot(contains('useChinese')));
     expect(gateway, isNot(contains("'清空剪贴板历史'")));
     expect(gateway, isNot(contains("'Clear Clipboard History'")));
-    expect(gateway, contains("label: chinese ? '资源管理' : 'Resource Manager'"));
-    expect(gateway, contains("label: chinese ? '设置' : 'Settings'"));
-    expect(gateway, contains("label: chinese ? '关于' : 'About'"));
+    expect(gateway, contains('label: strings.resourceManager'));
+    expect(gateway, contains('label: strings.settings2'));
+    expect(gateway, contains('label: strings.about'));
     expect(gateway, isNot(contains("'资源管理…'")));
     expect(gateway, isNot(contains("'设置…'")));
     final int resourceManagerIndex = gateway.indexOf(
@@ -398,13 +401,13 @@ void main() {
     final List<DesktopShellCommand> commands = <DesktopShellCommand>[];
     final List<MenuItem> developmentItems = desktopTrayContextMenuItems(
       monitoring: true,
-      chinese: true,
+      strings: lookupDingDongLocalizations(const Locale('zh')),
       developmentBuild: true,
       onCommand: commands.add,
     );
     final List<MenuItem> releaseItems = desktopTrayContextMenuItems(
       monitoring: true,
-      chinese: true,
+      strings: lookupDingDongLocalizations(const Locale('zh')),
       developmentBuild: false,
       onCommand: commands.add,
     );
@@ -421,6 +424,11 @@ void main() {
     expect(
       releaseItems.map((MenuItem item) => item.label),
       isNot(contains('测试面板')),
+    );
+    expect(developmentItems.map((MenuItem item) => item.label), contains('设置'));
+    expect(
+      developmentItems.map((MenuItem item) => item.label),
+      isNot(contains('设备设置')),
     );
 
     developmentItems[1].onClick!(developmentItems[1]);
@@ -471,8 +479,12 @@ void main() {
       final String settings = File(
         'lib/features/settings/ui/settings_screen.dart',
       ).readAsStringSync();
+      final String chinese = File(
+        'macos/Runner/zh-Hans.lproj/AppDelegate.strings',
+      ).readAsStringSync();
 
-      expect(delegate, contains('找回菜单栏图标…'));
+      expect(delegate, contains('ddAppDelegateString("find_menu_bar_icon")'));
+      expect(chinese, contains('找回菜单栏图标…'));
       expect(delegate, contains('showMenuBarRecoveryAssistant()'));
       expect(
         delegate,

@@ -1,0 +1,7 @@
+"title" = "Accessibility permission";
+"subtitle" = "Drag in this DingDong, then turn on the system switch";
+"stale_entry_guide" = "If “−” works: remove the old entry, then drag in this version.";
+"disabled_remove_guide" = "If “−” is disabled: drag once, remove the entry, then drag again and turn it on.";
+"close" = "Close";
+"drag_hint" = "Hold and drag this card into the system list";
+"drag_accessibility_label" = "Drag the current DingDong into the Accessibility list";

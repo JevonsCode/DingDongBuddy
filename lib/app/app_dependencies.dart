@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dingdong/app/app_data_paths.dart';
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -339,6 +340,12 @@ final class AppDependencies {
     final LocalConversationTokenUsageResolver tokenUsageResolver =
         LocalConversationTokenUsageResolver();
     final AgentRouter router = AgentRouter(
+      defaultDingMessage: (String source) async {
+        final AppSettings settings = await settingsRepository.load();
+        return appLocalizationsFor(
+          settings.language,
+        ).sourceCompletedCurrentTask(source);
+      },
       onAgentTaskStarted: (AgentBridgeTaskStart start) async {
         final AppSettings settings = await settingsRepository.load();
         if (!await shouldRecordAgentTaskStart(

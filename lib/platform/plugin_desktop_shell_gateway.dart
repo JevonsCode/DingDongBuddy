@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
@@ -26,11 +27,13 @@ final class PluginDesktopShellGateway
     this.onHideAuxiliaryWindows,
     this.unreadStore,
     bool Function()? clipboardMonitoringState,
-    bool Function()? useChineseLabels,
+    DingDongLocalizations Function()? localizations,
     bool? developmentBuild,
     TrayNotificationColor? trayNotificationColor,
   }) : _clipboardMonitoringState = clipboardMonitoringState ?? (() => false),
-       _useChineseLabels = useChineseLabels ?? (() => false),
+       _localizations =
+           localizations ??
+           (() => lookupDingDongLocalizations(const Locale('en'))),
        _developmentBuild = developmentBuild ?? kDebugMode,
        _trayNotificationColor =
            trayNotificationColor ??
@@ -41,7 +44,7 @@ final class PluginDesktopShellGateway
   final Future<void> Function()? onHideAuxiliaryWindows;
   final TrayUnreadStore? unreadStore;
   final bool Function() _clipboardMonitoringState;
-  final bool Function() _useChineseLabels;
+  final DingDongLocalizations Function() _localizations;
   final bool _developmentBuild;
   static const MethodChannel _hotKeyChannel = MethodChannel(
     'dingdong/global_hotkey',
@@ -267,12 +270,12 @@ final class PluginDesktopShellGateway
 
   Future<void> _rebuildContextMenu() async {
     final bool monitoring = _clipboardMonitoringState();
-    final bool chinese = _useChineseLabels();
+    final DingDongLocalizations strings = _localizations();
     await trayManager.setContextMenu(
       Menu(
         items: desktopTrayContextMenuItems(
           monitoring: monitoring,
-          chinese: chinese,
+          strings: strings,
           developmentBuild: _developmentBuild,
           onCommand: _commands.add,
         ),
@@ -339,10 +342,7 @@ final class PluginDesktopShellGateway
     );
     if (windows) {
       await trayManager.setToolTip(
-        windowsTrayTooltip(
-          unreadCount: unreadCount,
-          useChineseLabels: _useChineseLabels(),
-        ),
+        windowsTrayTooltip(unreadCount: unreadCount, strings: _localizations()),
       );
     }
     if (Platform.isMacOS) {
@@ -630,43 +630,33 @@ String macOSTrayBuddyIconPath({
 @visibleForTesting
 List<MenuItem> desktopTrayContextMenuItems({
   required bool monitoring,
-  required bool chinese,
+  required DingDongLocalizations strings,
   required bool developmentBuild,
   required void Function(DesktopShellCommand command) onCommand,
 }) => <MenuItem>[
   MenuItem(
-    label: chinese ? '打开剪贴板' : 'Open Clipboard',
+    label: strings.openClipboard,
     onClick: (_) => onCommand(DesktopShellCommand.showClipboard),
   ),
   MenuItem(
-    label: chinese ? '打开连接设备' : 'Open Connected Devices',
+    label: strings.openConnectedDevices,
     onClick: (_) => onCommand(DesktopShellCommand.showDeviceLinks),
   ),
   if (developmentBuild)
     MenuItem(
-      label: chinese ? '测试面板' : 'Test Panel',
+      label: strings.testPanel,
       onClick: (_) => onCommand(DesktopShellCommand.showTestPanel),
     ),
   MenuItem.separator(),
   MenuItem.checkbox(
-    label: chinese
-        ? monitoring
-              ? '正在监听剪贴板'
-              : '剪贴板监听已暂停'
-        : monitoring
-        ? 'Clipboard Monitoring On'
-        : 'Clipboard Monitoring Paused',
+    label: monitoring
+        ? strings.clipboardMonitoringOn
+        : strings.clipboardMonitoringPaused,
     checked: monitoring,
     disabled: true,
   ),
   MenuItem(
-    label: chinese
-        ? monitoring
-              ? '停止监听'
-              : '开始监听'
-        : monitoring
-        ? 'Stop Monitoring'
-        : 'Start Monitoring',
+    label: monitoring ? strings.stopMonitoring : strings.startMonitoring,
     onClick: (_) => onCommand(
       monitoring
           ? DesktopShellCommand.stopClipboardMonitoring
@@ -675,26 +665,20 @@ List<MenuItem> desktopTrayContextMenuItems({
   ),
   MenuItem.separator(),
   MenuItem(
-    label: chinese ? '资源管理' : 'Resource Manager',
+    label: strings.resourceManager,
     onClick: (_) => onCommand(DesktopShellCommand.showResourceManager),
   ),
   MenuItem(
-    label: chinese ? '设置' : 'Settings',
+    label: strings.settings2,
     onClick: (_) => onCommand(DesktopShellCommand.showSettings),
   ),
   MenuItem(
-    label: chinese ? '关于' : 'About',
+    label: strings.about,
     onClick: (_) => onCommand(DesktopShellCommand.showAbout),
   ),
   MenuItem.separator(),
   MenuItem(
-    label: chinese
-        ? developmentBuild
-              ? '退出 DingDong DEV'
-              : '退出 DingDong'
-        : developmentBuild
-        ? 'Quit DingDong DEV'
-        : 'Quit DingDong',
+    label: developmentBuild ? strings.quitDingDongDev : strings.quitDingDong,
     onClick: (_) => onCommand(DesktopShellCommand.quit),
   ),
 ];

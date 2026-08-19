@@ -136,7 +136,7 @@ class PopupHeader extends StatelessWidget {
                   if (onConnections != null) ...<Widget>[
                     _HeaderButton(
                       key: const Key('popup-open-connections'),
-                      tooltip: context.localized('Connected devices', '连接设备'),
+                      tooltip: context.l10n.connectedDevices,
                       symbol: 'link',
                       onPressed: onConnections,
                     ),
@@ -144,14 +144,14 @@ class PopupHeader extends StatelessWidget {
                   ],
                   _HeaderButton(
                     key: const Key('popup-open-settings'),
-                    tooltip: context.localized('Settings', '设置'),
+                    tooltip: context.l10n.settings2,
                     symbol: 'settings',
                     onPressed: onSettings,
                   ),
                   const SizedBox(width: 5),
                   _HeaderButton(
                     key: const Key('popup-hide'),
-                    tooltip: context.localized('Hide', '收起'),
+                    tooltip: context.l10n.hideMessage,
                     symbol: 'collapse',
                     onPressed: onHide == null ? null : () => onHide!(),
                   ),
@@ -170,7 +170,7 @@ class PopupHeader extends StatelessWidget {
                     contentKey: const Key('popup-tab-content-0'),
                     selected: selectedIndex == 0,
                     symbol: 'today',
-                    label: context.localized('Dynamic', '动态'),
+                    label: context.l10n.dynamicMessage,
                     shortcut: workspaceShortcuts.today.label(
                       defaultTargetPlatform,
                     ),
@@ -183,7 +183,7 @@ class PopupHeader extends StatelessWidget {
                     contentKey: const Key('popup-tab-content-1'),
                     selected: selectedIndex == 1,
                     symbol: 'library',
-                    label: context.localized('Library', '资源库'),
+                    label: context.l10n.libraryMessage,
                     shortcut: workspaceShortcuts.library.label(
                       defaultTargetPlatform,
                     ),
@@ -196,7 +196,7 @@ class PopupHeader extends StatelessWidget {
                     contentKey: const Key('popup-tab-content-2'),
                     selected: selectedIndex == 2,
                     symbol: 'clipboard',
-                    label: context.localized('Clipboard', '剪贴板'),
+                    label: context.l10n.clipboard,
                     shortcut: workspaceShortcuts.clipboard.label(
                       defaultTargetPlatform,
                     ),
@@ -337,10 +337,7 @@ class _IssueButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    final String label = context.localized(
-      '$count issues need attention',
-      '$count 个问题需要处理',
-    );
+    final String label = context.l10n.countIssuesNeedAttention(count);
     return Semantics(
       button: true,
       label: label,

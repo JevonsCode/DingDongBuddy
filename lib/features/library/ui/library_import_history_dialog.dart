@@ -15,16 +15,12 @@ final class LibraryImportHistoryDialog extends StatelessWidget {
     return DesktopAlertDialog(
       maxWidth: 660,
       scrollable: true,
-      title: Text(context.localized('Import history', '导入历史')),
+      title: Text(context.l10n.importHistory),
       content: SizedBox(
         width: 600,
         height: entries.isEmpty ? 88 : 390,
         child: entries.isEmpty
-            ? Center(
-                child: Text(
-                  context.localized('No resource imports yet.', '还没有资源导入记录。'),
-                ),
-              )
+            ? Center(child: Text(context.l10n.noResourceImportsYet))
             : ListView.separated(
                 itemCount: entries.length,
                 separatorBuilder: (_, _) => const Divider(height: 1),
@@ -39,7 +35,7 @@ final class LibraryImportHistoryDialog extends StatelessWidget {
       actions: <Widget>[
         DesktopActionButton(
           onPressed: () => Navigator.pop(context),
-          label: context.localized('Close', '关闭'),
+          label: context.l10n.close,
           tone: DesktopActionTone.primary,
         ),
       ],
@@ -56,16 +52,13 @@ final class _HistoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final bool isLink = entry.kind == LibraryImportSourceKind.link;
-    final String status = context.localized(
-      'Imported ${entry.importedCount}; skipped ${entry.skippedCount}.',
-      '导入 ${entry.importedCount} 项；跳过 ${entry.skippedCount} 项。',
+    final String status = context.l10n.importedImportedCountSkippedSkippedCount(
+      entry.importedCount,
+      entry.skippedCount,
     );
     final String online = entry.onlineTitles.isEmpty
         ? ''
-        : context.localized(
-            'Online: ${entry.onlineTitles.join('、')}',
-            '在线来源：${entry.onlineTitles.join('、')}',
-          );
+        : context.l10n.onlineOnlineTitles(entry.onlineTitles.join('、'));
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 11),
       child: Row(

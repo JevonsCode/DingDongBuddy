@@ -1,3 +1,4 @@
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
@@ -27,7 +28,7 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1.4.7'), findsOneWidget);
+    expect(find.text('1.5.1'), findsOneWidget);
     expect(find.text('A new version is available'), findsOneWidget);
     expect(find.textContaining('Faster history search'), findsOneWidget);
     expect(find.byKey(const Key('settings-report-problem')), findsOneWidget);
@@ -62,6 +63,39 @@ void main() {
     expect(find.textContaining('Withdrawn analytics'), findsNothing);
   });
 
+  testWidgets('release notes follow the current UI language', (
+    WidgetTester tester,
+  ) async {
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      releaseMetadataSource: const _ReleaseSource(
+        notes: <String>[],
+        notesByLanguage: <String, List<String>>{
+          'en': <String>['English release change'],
+          'zh': <String>['中文版本变更'],
+        },
+      ),
+    );
+    addTearDown(model.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
+        home: SingleChildScrollView(
+          child: ReleaseSettingsSection(viewModel: model),
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.byKey(const Key('settings-check-updates')));
+    await tester.tap(find.byKey(const Key('settings-check-updates')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('中文版本变更'), findsOneWidget);
+    expect(find.textContaining('English release change'), findsNothing);
+  });
+
   testWidgets('available native update installs from one emphasized action', (
     WidgetTester tester,
   ) async {
@@ -94,7 +128,7 @@ void main() {
       find.textContaining('grant DingDong\'s macOS permissions again'),
       findsOneWidget,
     );
-    expect(find.text('Update to 1.4.7'), findsOneWidget);
+    expect(find.text('Update to 1.5.1'), findsOneWidget);
     expect(find.byType(FilledButton), findsNWidgets(6));
     final FilledButton installButton = tester.widget<FilledButton>(
       find.byKey(const Key('settings-install-update')),
@@ -169,19 +203,22 @@ final class _ApplicationUpdater implements ApplicationUpdater {
 
 final class _ReleaseSource implements ReleaseMetadataSource {
   const _ReleaseSource({
-    this.latestVersion = '1.4.7',
+    this.latestVersion = '1.5.1',
     this.notes = const <String>['Faster history search'],
+    this.notesByLanguage = const <String, List<String>>{},
   });
 
   final String latestVersion;
   final List<String> notes;
+  final Map<String, List<String>> notesByLanguage;
 
   @override
   Future<ReleaseMetadata> fetch() async => ReleaseMetadata(
     app: 'DingDong',
     latestVersion: latestVersion,
     website: Uri.parse('https://example.com'),
-    releasePage: Uri.parse('https://example.com/releases/1.4.7'),
+    releasePage: Uri.parse('https://example.com/releases/1.5.1'),
     notes: notes,
+    notesByLanguage: notesByLanguage,
   );
 }

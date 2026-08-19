@@ -16,6 +16,9 @@ DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记�
 Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent 提醒统一收在一起，
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
+> **当前版本：DingDong 1.5.0 Beta。** GitHub 会把它标记为预发布；在这次多语言、
+> 可观测性与性能更新完成更广泛验证前，现有正式版 `latest` 通道仍保留在 1.4.6。
+
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
 
@@ -62,23 +65,25 @@ flowchart LR
 Prompt、匹配到的 Skill 和可用的 MCP：
 
 ```text
-DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub*
+DingDong · ♥ 项目规范 | ♦ 发布流程* | ♠ GitHub* · 12.4K Token
 ```
 
 Skill 名称后的 `*` 表示本轮已加载完整 Skill；没有 `*` 则只是候选。MCP 名称后的
 `*` 表示本轮确实调用过它的工具，但不表示调用成功。Prompt 不加 `*`，因为系统能
 观察到送达，却无法可靠判断模型是否在语义上真正遵循。Prompt、Skill 和 MCP 的符号
-都可在“**设置 → Agent 回复尾部**”中自定义。
+都可在“**设置 → Agent 回复尾部**”中自定义。受支持的 Codex、Claude Code 与 Pi
+会话默认显示准确的 Token 用量，也可以在这里关闭。
 
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.4.6。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.5.0。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
-用户明确授权后，Agent 也可以使用 `dingdong_install_skill`、
-`dingdong_upsert_trigger_group` 和 `dingdong_bind_resource_scope`
-直接配置项目专用 Skill。
+Agent 会先搜索去重，再通过 `dingdong_create_resource` 和
+`dingdong_update_resource` 创建或修改 Prompt、MCP，并绑定用户要求的作用域。
+项目专用 Skill 使用 `dingdong_install_skill`、`dingdong_upsert_trigger_group`、
+`dingdong_bind_resource_scope` 与专用交付工具，避免把完整 Skill 包误当成普通文本修改。
 
 ## 连接设备与手机 PWA
 
@@ -126,9 +131,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
-- [macOS · Intel beta](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
-- [Windows x64 beta](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
+- [macOS · Apple 芯片 · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg)
+- [macOS · Intel · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64-beta.dmg)
+- [Windows x64 · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-beta-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。
@@ -187,7 +192,9 @@ DingDong 使用两条互相独立的原生链路：
 | 剪贴板监听 | 关闭 | 开启 / 关闭 |
 | 剪贴板保留 | 5000 条、120 天 | 20–5000 条；1–730 天 |
 | 完成提示声 | 经典叮咚 | 内置、自定义、系统声音或静音 |
+| 语言 | 跟随系统 | English / 简体中文 / Español |
 | Agent 回复尾部符号 | ♥ / ♦ / ♠ | Prompt、Skill 和 MCP 可分别自定义 |
+| 会话 Token 用量 | 开启 | 只显示 Codex、Claude Code、Pi 已支持会话的准确值；不支持时省略而不估算 |
 | 本地 Agent API 端口 | `2333` | `1024`–`65535`；修改后需要重启 |
 
 ## 隐私与本机数据
@@ -223,13 +230,15 @@ flutter build macos --release
 - `docs/app/` — 可安装的手机 PWA
 - `docs/` — 官网、更新元数据、版本说明和产品文档
 
-更多内容见[架构说明](docs/architecture/ai-companion-architecture.md)。
+更多内容见[架构说明](docs/architecture/ai-companion-architecture.md)。新增或修改用户可见文案前，
+请先阅读[多语言开发说明](docs/product/localization.md)。
 
 ## 发布
 
 `pubspec.yaml` 是版本来源。`main` 上的发布提交必须同步应用版本、
 构建号、MCP Server 信息、官网、`docs/dingdong-release.json`、版本说明、
-回归清单和版本契约测试。最新 `main` 提交通过 Flutter desktop 工作流后，
+回归清单和版本契约测试。版本元数据中的 `prerelease` 控制 GitHub 是否把已测试标签
+发布为 Beta。最新 `main` 提交通过 Flutter desktop 工作流后，
 发布门禁还会要求 PWA / 中继来自同一个提交：可以在配置好受保护的
 `device-link-production` 环境后通过 **Device link Cloudflare** 工作流部署，
 也可以从这个已测试的干净提交用已授权 Wrangler 携带准确 SHA 部署。随后自动化创建

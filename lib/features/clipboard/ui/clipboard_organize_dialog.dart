@@ -60,7 +60,7 @@ final class _ClipboardOrganizeDialogState
   Widget build(BuildContext context) {
     return DesktopAlertDialog(
       maxWidth: 600,
-      title: Text(context.localized('Organize clipboard item', '整理剪贴板条目')),
+      title: Text(context.l10n.organizeClipboardItem),
       content: SizedBox(
         width: 560,
         child: Column(
@@ -69,9 +69,7 @@ final class _ClipboardOrganizeDialogState
             DesktopTextField(
               key: const Key('clipboard-edit-title'),
               controller: _title,
-              decoration: InputDecoration(
-                labelText: context.localized('Title', '标题'),
-              ),
+              decoration: InputDecoration(labelText: context.l10n.title),
             ),
             const SizedBox(height: 12),
             Row(
@@ -80,9 +78,7 @@ final class _ClipboardOrganizeDialogState
                   child: DesktopTextField(
                     key: const Key('clipboard-edit-group'),
                     controller: _group,
-                    decoration: InputDecoration(
-                      labelText: context.localized('Group', '分组'),
-                    ),
+                    decoration: InputDecoration(labelText: context.l10n.group),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -91,8 +87,8 @@ final class _ClipboardOrganizeDialogState
                     key: const Key('clipboard-edit-tags'),
                     controller: _tags,
                     decoration: InputDecoration(
-                      labelText: context.localized('Tags and aliases', '标签与别名'),
-                      hintText: 'command, alias:build',
+                      labelText: context.l10n.tagsAndAliases,
+                      hintText: context.l10n.categoryRuleKeywordsExample,
                     ),
                   ),
                 ),
@@ -108,7 +104,7 @@ final class _ClipboardOrganizeDialogState
                 maxLines: null,
                 textAlignVertical: TextAlignVertical.top,
                 decoration: InputDecoration(
-                  labelText: context.localized('Content', '内容'),
+                  labelText: context.l10n.content,
                   alignLabelWithHint: true,
                 ),
               ),
@@ -119,7 +115,7 @@ final class _ClipboardOrganizeDialogState
       actions: <Widget>[
         DesktopActionButton(
           onPressed: () => Navigator.pop(context),
-          label: context.localized('Cancel', '取消'),
+          label: context.l10n.cancel,
           compact: true,
         ),
         DesktopActionButton(
@@ -144,7 +140,7 @@ final class _ClipboardOrganizeDialogState
               ),
             );
           },
-          label: context.localized('Save', '保存'),
+          label: context.l10n.save,
           tone: DesktopActionTone.primary,
         ),
       ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
@@ -51,7 +52,6 @@ import 'package:dingdong/platform/url_launcher_clipboard_content_launcher.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 /// Root widget for the DingDong desktop application.
 class DingDongApp extends StatefulWidget {
@@ -251,18 +251,9 @@ class _DingDongAppState extends State<DingDongApp> {
             AppThemePreference.light => ThemeMode.light,
             AppThemePreference.dark => ThemeMode.dark,
           },
-          locale: switch (_settingsViewModel.settings.language) {
-            AppLanguagePreference.system => null,
-            AppLanguagePreference.english => const Locale('en'),
-            AppLanguagePreference.chinese => const Locale('zh'),
-          },
-          supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-          localizationsDelegates: const <LocalizationsDelegate<Object>>[
-            DingDongLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+          locale: configuredAppLocale(_settingsViewModel.settings.language),
+          supportedLocales: DingDongLocalizations.supportedLocales,
+          localizationsDelegates: DingDongLocalizations.localizationsDelegates,
           builder: (BuildContext context, Widget? child) {
             final Widget content = DesktopContextMenuScope(
               controller: _desktopContextMenuController,
@@ -301,11 +292,18 @@ class _DingDongAppState extends State<DingDongApp> {
             agentBaseUri: widget.agentBaseUri,
             libraryTransferGateway:
                 widget.libraryTransferGateway ??
-                FileSelectorLibraryTransferGateway(),
+                FileSelectorLibraryTransferGateway(
+                  () =>
+                      appLocalizationsFor(_settingsViewModel.settings.language),
+                ),
             resourceManagerLauncher: widget.resourceManagerLauncher,
             settingsWindowLauncher: widget.settingsWindowLauncher,
             soundFileGateway:
-                widget.soundFileGateway ?? FileSelectorSoundGateway(),
+                widget.soundFileGateway ??
+                FileSelectorSoundGateway(
+                  () =>
+                      appLocalizationsFor(_settingsViewModel.settings.language),
+                ),
             soundPreviewGateway: widget.soundPreviewGateway,
             onStartDragging: widget.onStartDragging,
             onHideWindow: widget.onHideWindow,

@@ -36,7 +36,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.4.6',
+              'version': '1.5.0',
             },
             'instructions':
                 'Call dingdong_bridge with expand="prompts" at the start of each user task. '
@@ -49,6 +49,7 @@ final class McpServer {
                 'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. Each active MCP entry includes its managed serverName and, for Codex, its toolNamePrefix. '
                 'When conversation.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item with confirmedUse: true. After an actual configured MCP tool call reaches a terminal result, including an error result, call dingdong_confirm_mcp_use once for that MCP resource with the active entry id and serverName plus the exact called toolName, then replace only the item with the same mergeKey using its returned conversation.item with confirmedUse: true. Never confirm MCP use from availability, tool discovery, or an uncalled tool. The mergeKey is opaque merge-only metadata and must never be displayed. A Skill marker proves only a full Skill load; it does not claim that every instruction was followed. An MCP marker means called, not necessarily succeeded. Prompt items remain unmarked because delivery cannot prove semantic compliance. On Codex desktop, include the current merged footer exactly once as a single Markdown text line and keep DingDong as text. Use the exact Prompt, Skill, and MCP symbols and lineToken values returned by DingDong; these symbols are user-configurable, so never infer them. The initial conversation.line is already canonical only when no item was replaced. The conversation capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Use conversation.presentations.ansi.line only on an explicitly ANSI-capable terminal; every other host uses the current merged plain-text tokens exactly once. Show only resource titles and truthful markers; do not show resource content, descriptions, IDs, server names, tool names, or merge keys. '
                 'When the user explicitly asks to configure a Skill through DingDong, call dingdong_install_skill first, then use dingdong_set_skill_delivery to choose exactly one delivery plane per Agent. Native project delivery uses strict project scope and requires exact existing project paths; its Hook switch is separate and defaults off. '
+                'When the user asks to configure a Prompt or MCP resource, search first, then use dingdong_create_resource or dingdong_update_resource and bind the requested scope without creating duplicates. '
                 'Use dingdong_notify when the task is blocked or waiting for '
                 'the user. A configured completion hook normally handles the '
                 'final task-complete alert; if the client has no completion '
@@ -151,6 +152,45 @@ final class McpServer {
         'limit': _integerProperty(maximum: 80),
       },
       required: <String>['query'],
+    ),
+    _tool(
+      name: 'dingdong_create_resource',
+      title: 'Create DingDong Resource',
+      description:
+          'Create one Prompt or MCP resource after searching for duplicates. New resources default to disabled so scope can be configured before activation. Use dingdong_install_skill for Skills.',
+      properties: <String, Object?>{
+        'type': _enumProperty(<String>['prompt', 'mcp']),
+        'title': _stringProperty(),
+        'content': _stringProperty(
+          description:
+              'Full Prompt text or MCP configuration JSON accepted by DingDong.',
+        ),
+        'group': _stringProperty(),
+        'tags': _stringArrayProperty(),
+        'enabled': _booleanProperty(),
+        'activation': _enumProperty(<String>['always', 'taskMatch', 'manual']),
+        'agentSessionName': _stringProperty(),
+        'hideInAgentConversation': _booleanProperty(),
+      },
+      required: <String>['type', 'title', 'content'],
+    ),
+    _tool(
+      name: 'dingdong_update_resource',
+      title: 'Update DingDong Resource',
+      description:
+          'Update selected fields on an existing DingDong Prompt or MCP after reading it. Preserve omitted fields. Use dedicated Skill delivery and installation tools for Skills.',
+      properties: <String, Object?>{
+        'resourceId': _stringProperty(),
+        'title': _stringProperty(),
+        'content': _stringProperty(),
+        'group': _stringProperty(),
+        'tags': _stringArrayProperty(),
+        'enabled': _booleanProperty(),
+        'activation': _enumProperty(<String>['always', 'taskMatch', 'manual']),
+        'agentSessionName': _stringProperty(),
+        'hideInAgentConversation': _booleanProperty(),
+      },
+      required: <String>['resourceId'],
     ),
     _tool(
       name: 'dingdong_get_asset',

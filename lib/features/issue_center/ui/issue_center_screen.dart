@@ -70,7 +70,7 @@ final class _IssueHeader extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Text(
-                        context.localized('Issues', '问题'),
+                        context.l10n.issues,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -83,10 +83,9 @@ final class _IssueHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    context.localized(
-                      'Review resource sync, Agent configuration, and anything else that needs attention.',
-                      '集中查看资源同步、Agent 配置及其他需要处理的问题。',
-                    ),
+                    context
+                        .l10n
+                        .reviewResourceSyncAgentConfigurationAndAnythingElseThat_a562ea61,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -105,7 +104,7 @@ final class _IssueHeader extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 1.6),
                     )
                   : const Icon(Icons.refresh_rounded, size: 17),
-              label: context.localized('Check', '检测'),
+              label: context.l10n.check3,
               tone: DesktopActionTone.neutral,
             ),
           ],
@@ -276,7 +275,7 @@ final class _IssueRow extends StatelessWidget {
               key: Key('issue-open-resource-${issue.resourceId}'),
               onPressed: () => onOpenResource(issue.resourceId!),
               icon: const Icon(Icons.arrow_forward_rounded, size: 15),
-              label: context.localized('View resource', '查看资源'),
+              label: context.l10n.viewResource,
               tone: DesktopActionTone.soft,
               compact: true,
             ),
@@ -337,17 +336,16 @@ final class _EmptyIssueState extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                context.localized('No issues found', '没有发现问题'),
+                context.l10n.noIssuesFound,
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 7),
               Text(
-                context.localized(
-                  'DingDong checks automatically when resources change. Use Check in the upper-right corner to run it again.',
-                  '资源发生变化时 DingDong 会自动检查，也可以使用右上角的“检测”重新检查。',
-                ),
+                context
+                    .l10n
+                    .dingdongChecksAutomaticallyWhenResourcesChangeUseCheckIn_ab07f57c,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: colors.onSurfaceVariant,
@@ -364,79 +362,47 @@ final class _EmptyIssueState extends StatelessWidget {
 
 String _localizedIssueTitle(BuildContext context, AppIssue issue) =>
     switch (issue.kind) {
-      AppIssueKind.skillNameConflict => context.localized(
-        'Skill name conflict',
-        'Skill 名称冲突',
-      ),
-      AppIssueKind.managedSkillNameConflict => context.localized(
-        'DingDong Skills use the same name',
-        'DingDong Skill 名称重复',
-      ),
-      AppIssueKind.pluginSkillNameConflict => context.localized(
-        'Agent plugin provides the same Skill',
-        'Agent 插件提供了同名 Skill',
-      ),
-      AppIssueKind.skillPackageMissing => context.localized(
-        'Skill package is missing',
-        'Skill 包缺失',
-      ),
-      AppIssueKind.invalidSkill => context.localized(
-        'Skill configuration is invalid',
-        'Skill 配置无效',
-      ),
-      AppIssueKind.invalidProjectPath => context.localized(
-        'Project Skill path is invalid',
-        '项目 Skill 路径无效',
-      ),
-      AppIssueKind.invalidMcp => context.localized(
-        'MCP configuration is invalid',
-        'MCP 配置无效',
-      ),
-      AppIssueKind.invalidAgentConfig => context.localized(
-        'Agent configuration file is invalid',
-        'Agent 配置文件无效',
-      ),
-      AppIssueKind.syncFailed => context.localized(
-        'Agent resource sync failed',
-        'Agent 资源同步失败',
-      ),
+      AppIssueKind.skillNameConflict => context.l10n.skillNameConflict,
+      AppIssueKind.managedSkillNameConflict =>
+        context.l10n.dingdongSkillsUseTheSameName,
+      AppIssueKind.pluginSkillNameConflict =>
+        context.l10n.agentPluginProvidesTheSameSkill,
+      AppIssueKind.skillPackageMissing => context.l10n.skillPackageIsMissing,
+      AppIssueKind.invalidSkill => context.l10n.skillConfigurationIsInvalid,
+      AppIssueKind.invalidProjectPath => context.l10n.projectSkillPathIsInvalid,
+      AppIssueKind.invalidMcp => context.l10n.mcpConfigurationIsInvalid,
+      AppIssueKind.invalidAgentConfig =>
+        context.l10n.agentConfigurationFileIsInvalid,
+      AppIssueKind.syncFailed => context.l10n.agentResourceSyncFailed,
     };
 
 String _localizedIssueDetail(
   BuildContext context,
   AppIssue issue,
 ) => switch (issue.kind) {
-  AppIssueKind.skillNameConflict => context.localized(
-    'An existing user-managed Skill was preserved. DingDong did not overwrite it.',
-    '已保留用户原有 Skill，DingDong 没有覆盖任何文件。',
-  ),
-  AppIssueKind.managedSkillNameConflict => context.localized(
-    'Two DingDong resources resolve to the same Skill destination. Rename or disable one of them.',
-    '两个 DingDong 资源指向同一 Skill 位置，请改名或停用其中一个。',
-  ),
-  AppIssueKind.pluginSkillNameConflict => context.localized(
-    'An enabled Agent plugin provides a Skill with the same name. Both remain available; review which one should be used.',
-    '已启用的 Agent 插件提供了同名 Skill。两者仍可使用，请确认应该保留或调用哪一个。',
-  ),
-  AppIssueKind.skillPackageMissing => context.localized(
-    'The complete Skill package could not be found. Reinstall or update its source.',
-    '找不到完整 Skill 包，请重新安装或更新来源。',
-  ),
-  AppIssueKind.invalidSkill => context.localized(
-    'The SKILL.md metadata could not be parsed. Review the resource before enabling it.',
-    '无法解析 SKILL.md 元数据，请检查资源内容后再启用。',
-  ),
-  AppIssueKind.invalidProjectPath => context.localized(
-    'The scoped project directory no longer exists or is not an absolute path.',
-    '限定的项目目录不存在，或不是有效的绝对路径。',
-  ),
-  AppIssueKind.invalidMcp => context.localized(
-    'This MCP resource cannot be written to Agent configuration until its format is corrected.',
-    '修正格式前，该 MCP 资源无法写入 Agent 配置。',
-  ),
-  AppIssueKind.invalidAgentConfig => context.localized(
-    'DingDong preserved the existing Agent file because it could not be parsed safely.',
-    'DingDong 无法安全解析该文件，因此保留了原有 Agent 配置。',
-  ),
+  AppIssueKind.skillNameConflict =>
+    context.l10n.anExistingUserManagedSkillWasPreservedDingDongDidNot_0f7d7c2a,
+  AppIssueKind.managedSkillNameConflict =>
+    context.l10n.twoDingDongResourcesResolveToTheSameSkillDestination_aac6ae3f,
+  AppIssueKind.pluginSkillNameConflict =>
+    context.l10n.anEnabledAgentPluginProvidesASkillWithTheSameNameBoth_c5e2f5ee,
+  AppIssueKind.skillPackageMissing =>
+    context
+        .l10n
+        .theCompleteSkillPackageCouldNotBeFoundReinstallOrUpdate_2a4648b6,
+  AppIssueKind.invalidSkill =>
+    context.l10n.theSKILLMdMetadataCouldNotBeParsedReviewTheResource_d8ef0c36,
+  AppIssueKind.invalidProjectPath =>
+    context
+        .l10n
+        .theScopedProjectDirectoryNoLongerExistsOrIsNotAnAbsolute_78de1cff,
+  AppIssueKind.invalidMcp =>
+    context
+        .l10n
+        .thisMCPResourceCannotBeWrittenToAgentConfigurationUntil_ad7aa3e0,
+  AppIssueKind.invalidAgentConfig =>
+    context
+        .l10n
+        .dingdongPreservedTheExistingAgentFileBecauseItCouldNotBe_6c5484e5,
   AppIssueKind.syncFailed => issue.detail,
 };

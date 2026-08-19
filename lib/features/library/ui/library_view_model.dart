@@ -598,7 +598,7 @@ final class LibraryViewModel extends ChangeNotifier {
     final LibraryBundleImportResult result = await prepareBundleJson(contents);
     await commitBundleImport(
       result,
-      source: 'JSON file',
+      source: 'JSON',
       kind: LibraryImportSourceKind.file,
     );
     return result;

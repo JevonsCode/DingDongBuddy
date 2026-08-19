@@ -1,6 +1,16 @@
 import Cocoa
 import ApplicationServices
 
+private func ddAccessibilityString(_ key: String) -> String {
+  NSLocalizedString(
+    key,
+    tableName: "AccessibilityPermissionAssistant",
+    bundle: .main,
+    value: key,
+    comment: ""
+  )
+}
+
 /// Opens the macOS Accessibility privacy pane and presents the current app as
 /// a Finder-style drag source beside System Settings.
 final class AccessibilityPermissionAssistant: NSObject {
@@ -17,12 +27,8 @@ final class AccessibilityPermissionAssistant: NSObject {
     close()
     permissionWasGranted = AXIsProcessTrusted()
 
-    let useChinese = Locale.preferredLanguages.first?
-      .lowercased()
-      .hasPrefix("zh") == true
     let panel = AccessibilityPermissionPanel(
-      appURL: Bundle.main.bundleURL,
-      useChinese: useChinese
+      appURL: Bundle.main.bundleURL
     )
     panel.onClose = { [weak self] in
       self?.close()
@@ -192,7 +198,7 @@ private final class AccessibilityPermissionPanel: NSPanel {
 
   private let panelSize = NSSize(width: 368, height: 212)
 
-  init(appURL: URL, useChinese: Bool) {
+  init(appURL: URL) {
     super.init(
       contentRect: NSRect(origin: .zero, size: panelSize),
       styleMask: [.borderless, .nonactivatingPanel],
@@ -215,11 +221,10 @@ private final class AccessibilityPermissionPanel: NSPanel {
     let background = RoundedVisualEffectContainer(cornerRadius: 18)
     contentView = background
 
-    let header = makeHeader(useChinese: useChinese)
+    let header = makeHeader()
 
     let dragSource = AppBundleDragSourceView(
-      appURL: appURL,
-      useChinese: useChinese
+      appURL: appURL
     )
     dragSource.onDragStateChange = { [weak self] isDragging in
       self?.ignoresMouseEvents = isDragging
@@ -227,15 +232,11 @@ private final class AccessibilityPermissionPanel: NSPanel {
 
     let staleEntryGuide = makeGuideRow(
       symbolName: "minus.circle",
-      text: useChinese
-        ? "“−”可用：先删除旧条目，再拖入当前版本。"
-        : "If “−” works: remove the old entry, then drag in this version."
+      text: ddAccessibilityString("stale_entry_guide")
     )
     let disabledRemoveGuide = makeGuideRow(
       symbolName: "arrow.clockwise.circle",
-      text: useChinese
-        ? "“−”置灰：先拖一次让它可用，删除后再拖一次并打开开关。"
-        : "If “−” is disabled: drag once, remove the entry, then drag again and turn it on."
+      text: ddAccessibilityString("disabled_remove_guide")
     )
     let guideStack = NSStackView(views: [
       staleEntryGuide,
@@ -341,15 +342,15 @@ private final class AccessibilityPermissionPanel: NSPanel {
     setFrame(targetFrame, display: true)
   }
 
-  private func makeHeader(useChinese: Bool) -> NSView {
-    let title = NSTextField(labelWithString: useChinese
-      ? "辅助功能授权"
-      : "Accessibility permission")
+  private func makeHeader() -> NSView {
+    let title = NSTextField(
+      labelWithString: ddAccessibilityString("title")
+    )
     title.font = .systemFont(ofSize: 14.5, weight: .semibold)
 
-    let subtitle = NSTextField(wrappingLabelWithString: useChinese
-      ? "拖入当前 DingDong，再打开系统开关"
-      : "Drag in this DingDong, then turn on the system switch")
+    let subtitle = NSTextField(
+      wrappingLabelWithString: ddAccessibilityString("subtitle")
+    )
     subtitle.font = .systemFont(ofSize: 11.5)
     subtitle.textColor = .secondaryLabelColor
     subtitle.maximumNumberOfLines = 2
@@ -363,7 +364,7 @@ private final class AccessibilityPermissionPanel: NSPanel {
     let closeButton = NSButton(
       image: NSImage(
         systemSymbolName: "xmark.circle.fill",
-        accessibilityDescription: useChinese ? "关闭" : "Close"
+        accessibilityDescription: ddAccessibilityString("close")
       ) ?? NSImage(),
       target: self,
       action: #selector(closePressed)
@@ -502,7 +503,7 @@ private final class AppBundleDragSourceView: NSView, NSDraggingSource {
   private var mouseDownPoint: NSPoint?
   private var hasBegunDragging = false
 
-  init(appURL: URL, useChinese: Bool) {
+  init(appURL: URL) {
     self.appURL = appURL
     super.init(frame: .zero)
 
@@ -524,9 +525,9 @@ private final class AppBundleDragSourceView: NSView, NSDraggingSource {
     name.font = .systemFont(ofSize: 14, weight: .semibold)
     name.lineBreakMode = .byTruncatingTail
 
-    let hint = NSTextField(labelWithString: useChinese
-      ? "按住此卡片拖入系统列表"
-      : "Hold and drag this card into the system list")
+    let hint = NSTextField(
+      labelWithString: ddAccessibilityString("drag_hint")
+    )
     hint.font = .systemFont(ofSize: 10.5)
     hint.textColor = .secondaryLabelColor
 
@@ -565,9 +566,7 @@ private final class AppBundleDragSourceView: NSView, NSDraggingSource {
 
     setAccessibilityElement(true)
     setAccessibilityRole(.button)
-    setAccessibilityLabel(useChinese
-      ? "将当前 DingDong 拖入辅助功能列表"
-      : "Drag the current DingDong into the Accessibility list")
+    setAccessibilityLabel(ddAccessibilityString("drag_accessibility_label"))
   }
 
   required init?(coder: NSCoder) {

@@ -51,26 +51,23 @@ class LibraryScreenState extends State<LibraryScreen> {
           context: context,
           builder: (BuildContext context) => DesktopAlertDialog(
             key: const Key('resource-unsaved-changes-dialog'),
-            title: Text(
-              context.localized('Discard unsaved changes?', '放弃未保存的更改？'),
-            ),
+            title: Text(context.l10n.discardUnsavedChanges),
             content: Text(
-              context.localized(
-                'Your edits have not been saved. Leaving this page will discard them.',
-                '当前编辑尚未保存，离开此页面将放弃这些更改。',
-              ),
+              context
+                  .l10n
+                  .yourEditsHaveNotBeenSavedLeavingThisPageWillDiscardThem,
             ),
             actions: <Widget>[
               DesktopActionButton(
                 key: const Key('resource-keep-editing'),
                 onPressed: () => Navigator.pop(context, false),
-                label: context.localized('Keep editing', '继续编辑'),
+                label: context.l10n.keepEditing,
                 compact: true,
               ),
               DesktopActionButton(
                 key: const Key('resource-discard-changes'),
                 onPressed: () => Navigator.pop(context, true),
-                label: context.localized('Discard changes', '放弃更改'),
+                label: context.l10n.discardChanges,
                 tone: DesktopActionTone.danger,
               ),
             ],
@@ -166,10 +163,9 @@ class LibraryScreenState extends State<LibraryScreen> {
   ) async {
     final bool confirmed = await _showDeleteConfirmation(
       context,
-      title: context.localized('Delete this resource?', '删除此资源？'),
-      message: context.localized(
-        'This removes “${resource.title}” from the local resource library.',
-        '这会从本地资源库中移除“${resource.title}”。',
+      title: context.l10n.deleteThisResource,
+      message: context.l10n.thisRemovesTitleFromTheLocalResourceLibrary(
+        resource.title,
       ),
     );
     if (confirmed) {
@@ -187,10 +183,9 @@ class LibraryScreenState extends State<LibraryScreen> {
     }
     final bool confirmed = await _showDeleteConfirmation(
       context,
-      title: context.localized('Delete selected resources?', '删除所选资源？'),
-      message: context.localized(
-        'This removes ${ids.length} resources from the local library.',
-        '这会从本地资源库中移除 ${ids.length} 项资源。',
+      title: context.l10n.deleteSelectedResources,
+      message: context.l10n.thisRemovesLengthResourcesFromTheLocalLibrary(
+        ids.length,
       ),
     );
     if (confirmed) {
@@ -211,12 +206,12 @@ class LibraryScreenState extends State<LibraryScreen> {
             actions: <Widget>[
               DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                label: context.localized('Cancel', '取消'),
+                label: context.l10n.cancel,
                 compact: true,
               ),
               DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                label: context.localized('Delete', '删除'),
+                label: context.l10n.delete,
                 tone: DesktopActionTone.danger,
               ),
             ],
@@ -257,22 +252,19 @@ class LibraryScreenState extends State<LibraryScreen> {
       context: context,
       builder: (BuildContext context) {
         return DesktopAlertDialog(
-          title: Text(context.localized('Delete this resource?', '删除此资源？')),
+          title: Text(context.l10n.deleteThisResource),
           content: Text(
-            context.localized(
-              'This removes the resource from the shared agent library.',
-              '此操作会将资源从共享 Agent 资源库中移除。',
-            ),
+            context.l10n.thisRemovesTheResourceFromTheSharedAgentLibrary,
           ),
           actions: <Widget>[
             DesktopActionButton(
               onPressed: () => Navigator.pop(context, false),
-              label: context.localized('Cancel', '取消'),
+              label: context.l10n.cancel,
               compact: true,
             ),
             DesktopActionButton(
               onPressed: () => Navigator.pop(context, true),
-              label: context.localized('Delete', '删除'),
+              label: context.l10n.delete,
               tone: DesktopActionTone.danger,
             ),
           ],
@@ -292,12 +284,7 @@ class LibraryScreenState extends State<LibraryScreen> {
       if (path != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              context.localized(
-                'Exported resource library to $path',
-                '资源库已导出到 $path',
-              ),
-            ),
+            content: Text(context.l10n.exportedResourceLibraryToPath(path)),
           ),
         );
       }
@@ -306,9 +293,8 @@ class LibraryScreenState extends State<LibraryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              context.localized(
-                'A selected local-path resource could not be shared: $error',
-                '所选资源包含无法安全分享的本地路径：$error',
+              context.l10n.aSelectedLocalPathResourceCouldNotBeSharedError(
+                error,
               ),
             ),
           ),
@@ -329,7 +315,7 @@ class LibraryScreenState extends State<LibraryScreen> {
       context,
       prepare: () =>
           widget.viewModel.prepareBundleJson(contents, resolveOnline: true),
-      source: 'JSON file',
+      source: context.l10n.jsonFile,
       kind: LibraryImportSourceKind.file,
     );
   }
@@ -386,10 +372,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              context.localized(
-                'Could not import this resource bundle: $error',
-                '无法导入这个资源包：$error',
-              ),
+              context.l10n.couldNotImportThisResourceBundleError(error),
             ),
           ),
         );
@@ -403,36 +386,24 @@ class LibraryScreenState extends State<LibraryScreen> {
   ) {
     final List<String> details = <String>[];
     if (result.duplicateIds.isNotEmpty) {
-      details.add(
-        context.localized(
-          '${result.duplicateIds.length} duplicates',
-          '${result.duplicateIds.length} 项重复',
-        ),
-      );
+      details.add(context.l10n.lengthDuplicates(result.duplicateIds.length));
     }
     if (result.conflictIds.isNotEmpty) {
-      details.add(
-        context.localized(
-          '${result.conflictIds.length} ID conflicts',
-          '${result.conflictIds.length} 项 ID 冲突',
-        ),
-      );
+      details.add(context.l10n.lengthIDConflicts(result.conflictIds.length));
     }
     if (result.onlineResources.isNotEmpty) {
       details.add(
-        context.localized(
-          '${result.onlineResources.length} online sources checked',
-          '已检查 ${result.onlineResources.length} 个在线来源',
-        ),
+        context.l10n.lengthOnlineSourcesChecked(result.onlineResources.length),
       );
     }
     final String suffix = details.isEmpty ? '' : ' · ${details.join(' · ')}';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          context.localized(
-            'Imported ${result.imported.length}; skipped ${result.skippedCount}.$suffix',
-            '已导入 ${result.imported.length} 项；跳过 ${result.skippedCount} 项。$suffix',
+          context.l10n.importedLengthSkippedSkippedCountSuffix(
+            result.imported.length,
+            result.skippedCount,
+            suffix,
           ),
         ),
       ),
@@ -456,10 +427,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              context.localized(
-                'Updated ${updated.title} from its source.',
-                '已从来源更新 ${updated.title}。',
-              ),
+              context.l10n.updatedTitleFromItsSource(updated.title),
             ),
           ),
         );
@@ -468,12 +436,7 @@ class LibraryScreenState extends State<LibraryScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              context.localized(
-                'Could not fetch this update: $error',
-                '无法获取此更新：$error',
-              ),
-            ),
+            content: Text(context.l10n.couldNotFetchThisUpdateError(error)),
           ),
         );
       }
@@ -491,8 +454,7 @@ class _LibraryDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = Theme.of(context).colorScheme;
-    final String title =
-        resource?.title ?? context.localized('New configuration', '新建配置');
+    final String title = resource?.title ?? context.l10n.newConfiguration;
     final TextStyle breadcrumbStyle = theme.textTheme.bodyMedium!.copyWith(
       height: 1,
       color: colors.onSurfaceVariant,
@@ -505,8 +467,8 @@ class _LibraryDetailHeader extends StatelessWidget {
           children: <Widget>[
             DesktopIconButton(
               key: const Key('library-editor-back'),
-              tooltip: context.localized('Back to resources', '返回资源列表'),
-              semanticLabel: context.localized('Back to resources', '返回资源列表'),
+              tooltip: context.l10n.backToResources,
+              semanticLabel: context.l10n.backToResources,
               onPressed: onBack,
               size: 32,
               foregroundColor: colors.onSurfaceVariant,
@@ -518,7 +480,7 @@ class _LibraryDetailHeader extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   Text(
-                    context.localized('Resources', '资源'),
+                    context.l10n.resources,
                     key: const Key('library-breadcrumb-root'),
                     style: breadcrumbStyle,
                   ),
@@ -562,10 +524,7 @@ class _ResourceSelectionBar extends StatelessWidget {
     return Semantics(
       container: true,
       liveRegion: true,
-      label: context.localized(
-        '$selectionCount resources selected',
-        '已选择 $selectionCount 项资源',
-      ),
+      label: context.l10n.selectioncountResourcesSelected(selectionCount),
       child: Container(
         key: const Key('resource-selection-bar'),
         constraints: const BoxConstraints(minHeight: 50),
@@ -580,10 +539,7 @@ class _ResourceSelectionBar extends StatelessWidget {
         child: Row(
           children: <Widget>[
             Text(
-              context.localized(
-                '$selectionCount selected',
-                '已选 $selectionCount 项',
-              ),
+              context.l10n.selectioncountSelected(selectionCount),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -593,7 +549,7 @@ class _ResourceSelectionBar extends StatelessWidget {
               key: const Key('resource-delete-selection'),
               onPressed: onDelete,
               icon: const Icon(Icons.delete_outline_rounded, size: 16),
-              label: context.localized('Delete', '删除'),
+              label: context.l10n.delete,
               compact: true,
               tone: DesktopActionTone.danger,
             ),
@@ -602,7 +558,7 @@ class _ResourceSelectionBar extends StatelessWidget {
               key: const Key('resource-clear-selection'),
               onPressed: onClear,
               icon: const Icon(Icons.close_rounded, size: 15),
-              label: context.localized('Clear selection', '清除选择'),
+              label: context.l10n.clearSelection2,
               compact: true,
               tone: DesktopActionTone.neutral,
             ),

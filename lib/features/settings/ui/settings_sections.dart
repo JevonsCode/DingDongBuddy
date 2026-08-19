@@ -16,23 +16,17 @@ class _NotificationSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SettingsSection(
-      title: context.localized('Notifications', '通知'),
-      description: context.localized(
-        'Choose which Agent events should notify you, then customize the alert sound and color.',
-        '选择哪些 Agent 事件需要提醒，再自定义提示声音和颜色。',
-      ),
+      title: context.l10n.notifications,
+      description: context
+          .l10n
+          .chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4,
       children: <Widget>[
         CompactSwitchListTile(
           key: const Key('settings-notify-agent-completion'),
           contentPadding: EdgeInsets.zero,
-          title: Text(
-            context.localized('Agent completion notifications', 'Agent 完成提醒'),
-          ),
+          title: Text(context.l10n.agentCompletionNotifications),
           subtitle: Text(
-            context.localized(
-              'Notify when an Agent finishes its current task turn.',
-              'Agent 完成本轮任务时提醒。',
-            ),
+            context.l10n.notifyWhenAnAgentFinishesItsCurrentTaskTurn,
           ),
           value: settings.notifyAgentCompletion,
           onChanged: viewModel.setNotifyAgentCompletion,
@@ -40,12 +34,11 @@ class _NotificationSettingsSection extends StatelessWidget {
         CompactSwitchListTile(
           key: const Key('settings-notify-agent-attention'),
           contentPadding: EdgeInsets.zero,
-          title: Text(context.localized('Needs your input', '需要你处理')),
+          title: Text(context.l10n.needsYourInput2),
           subtitle: Text(
-            context.localized(
-              'Notify when an Agent is waiting for confirmation, a choice, or your takeover.',
-              'Agent 等待确认、选择或需要你接管时提醒。',
-            ),
+            context
+                .l10n
+                .notifyWhenAnAgentIsWaitingForConfirmationAChoiceOrYour_825d0876,
           ),
           value: settings.notifyAgentAttention,
           onChanged: viewModel.setNotifyAgentAttention,
@@ -53,14 +46,11 @@ class _NotificationSettingsSection extends StatelessWidget {
         CompactSwitchListTile(
           key: const Key('settings-notify-codex-voice-activity'),
           contentPadding: EdgeInsets.zero,
-          title: Text(
-            context.localized('Codex voice task notifications', 'Codex 语音任务提醒'),
-          ),
+          title: Text(context.l10n.codexVoiceTaskNotifications),
           subtitle: Text(
-            context.localized(
-              'When off, tasks started in Codex voice mode do not notify or play a DingDong sound.',
-              '关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放叮咚声音。',
-            ),
+            context
+                .l10n
+                .whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958,
           ),
           value: settings.notifyCodexVoiceActivity,
           onChanged: viewModel.setNotifyCodexVoiceActivity,
@@ -68,12 +58,11 @@ class _NotificationSettingsSection extends StatelessWidget {
         CompactSwitchListTile(
           key: const Key('settings-notify-subagent-activity'),
           contentPadding: EdgeInsets.zero,
-          title: Text(context.localized('Subagent notifications', '子智能体提醒')),
+          title: Text(context.l10n.subagentNotifications),
           subtitle: Text(
-            context.localized(
-              'When off, subagent activity shows no notification or DingDong sound.',
-              '关闭后，子智能体动态不显示提醒，也不播放叮咚声音。',
-            ),
+            context
+                .l10n
+                .whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98,
           ),
           value: settings.notifySubagentActivity,
           onChanged: viewModel.setNotifySubagentActivity,
@@ -81,7 +70,7 @@ class _NotificationSettingsSection extends StatelessWidget {
         if (defaultTargetPlatform == TargetPlatform.macOS)
           _SettingRow(
             label:
-                '${context.localized('Menu bar alert color', '菜单栏提示颜色')} · '
+                '${context.l10n.menuBarAlertColor} · '
                 '${_trayNotificationColorLabel(context, settings.trayNotificationColor)}',
             child: _TrayNotificationColorPicker(
               value: settings.trayNotificationColor,
@@ -89,7 +78,7 @@ class _NotificationSettingsSection extends StatelessWidget {
             ),
           ),
         _SettingRow(
-          label: context.localized('Sound', '声音'),
+          label: context.l10n.sound,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -102,10 +91,7 @@ class _NotificationSettingsSection extends StatelessWidget {
                       .map(
                         (SoundChoice choice) => DesktopSelectItem<String>(
                           value: choice.value,
-                          label: context.localized(
-                            choice.englishLabel,
-                            choice.chineseLabel,
-                          ),
+                          label: _soundChoiceLabel(context, choice),
                         ),
                       )
                       .toList(growable: false),
@@ -115,7 +101,7 @@ class _NotificationSettingsSection extends StatelessWidget {
               const SizedBox(width: 8),
               DesktopIconButton(
                 key: const Key('settings-preview-sound'),
-                tooltip: context.localized('Preview sound', '试听声音'),
+                tooltip: context.l10n.previewSound,
                 onPressed:
                     soundPreviewGateway == null ||
                         settings.selectedSound == 'muted'
@@ -131,15 +117,14 @@ class _NotificationSettingsSection extends StatelessWidget {
         ),
         if (settings.selectedSound == 'custom')
           _SettingRow(
-            label: context.localized('Custom file', '自定义文件'),
+            label: context.l10n.customFile,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 SizedBox(
                   width: 240,
                   child: Text(
-                    settings.customSoundPath ??
-                        context.localized('No sound selected', '尚未选择声音'),
+                    settings.customSoundPath ?? context.l10n.noSoundSelected,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -150,13 +135,13 @@ class _NotificationSettingsSection extends StatelessWidget {
                   onPressed: soundFileGateway == null
                       ? null
                       : _chooseCustomSound,
-                  label: context.localized('Choose', '选择'),
+                  label: context.l10n.choose,
                   tone: DesktopActionTone.neutral,
                 ),
                 if (settings.customSoundPath != null) ...<Widget>[
                   const SizedBox(width: 6),
                   DesktopIconButton(
-                    tooltip: context.localized('Clear custom sound', '清除自定义声音'),
+                    tooltip: context.l10n.clearCustomSound,
                     onPressed: () => viewModel.setCustomSoundPath(null),
                     icon: const Icon(Icons.close),
                   ),
@@ -176,6 +161,19 @@ class _NotificationSettingsSection extends StatelessWidget {
   }
 }
 
+String _soundChoiceLabel(BuildContext context, SoundChoice choice) =>
+    switch (choice.value) {
+      'default' => context.l10n.dingdongClassic,
+      'dingSoft' => context.l10n.dingdongSoft,
+      'dingBright' => context.l10n.dingdongBright,
+      'dingCrisp' => context.l10n.dingdongCrisp,
+      'dingDeep' => context.l10n.dingdongDeep,
+      'custom' => context.l10n.customSound,
+      'system' => context.l10n.systemSound,
+      'muted' => context.l10n.muted,
+      _ => choice.value,
+    };
+
 class _ConversationFooterSettingsSection extends StatelessWidget {
   const _ConversationFooterSettingsSection({
     required this.viewModel,
@@ -190,102 +188,105 @@ class _ConversationFooterSettingsSection extends StatelessWidget {
     final ConversationFooterSymbols symbols =
         settings.conversationFooterSymbols;
     return _SettingsSection(
-      title: context.localized('Agent reply footer', 'Agent 回复尾部'),
-      description: context.localized(
-        'Configure the final DingDong resource line and optionally append exact session usage.',
-        '配置 DingDong 最终资源行，并可选择追加精确的本轮会话用量。',
-      ),
+      title: context.l10n.agentReplyFooter,
+      description: context
+          .l10n
+          .configureTheFinalDingDongResourceLineAndOptionallyAppend_e6f7cb62,
       children: <Widget>[
         CompactSwitchListTile(
           key: const Key('settings-show-conversation-token-usage'),
           contentPadding: EdgeInsets.zero,
-          title: Text(
-            context.localized('Show conversation Token usage', '显示会话 Token 用量'),
-          ),
+          title: Text(context.l10n.showConversationTokenUsage),
           subtitle: Text(
-            context.localized(
-              'Shown only when Codex, Claude Code, or Pi provides exact local usage. Unsupported Agents are not estimated.',
-              '仅在 Codex、Claude Code 或 Pi 可提供本机精确用量时显示；不支持的 Agent 不做估算。',
-            ),
+            context
+                .l10n
+                .shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397,
           ),
           value: settings.showConversationTokenUsage,
           onChanged: viewModel.setShowConversationTokenUsage,
         ),
         _SettingRow(
-          label: context.localized('Prompt symbol', 'Prompt 符号'),
+          label: context.l10n.promptSymbol,
           child: _ConversationFooterSymbolField(
             fieldKey: const Key('settings-conversation-symbol-prompt'),
-            semanticLabel: context.localized(
-              'Prompt footer symbol',
-              'Prompt 尾部符号',
-            ),
-            semanticHint: context.localized(
-              'Enter one visible symbol. Asterisk and vertical bar are reserved.',
-              '输入一个可见符号。星号和竖线为保留字符。',
-            ),
+            semanticLabel: context.l10n.promptFooterSymbol,
+            semanticHint: context
+                .l10n
+                .enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved,
             value: symbols.prompt,
             onChanged: (String value) =>
                 unawaited(viewModel.setConversationFooterSymbol(prompt: value)),
           ),
         ),
         _SettingRow(
-          label: context.localized('Skill symbol', 'Skill 符号'),
+          label: context.l10n.skillSymbol,
           child: _ConversationFooterSymbolField(
             fieldKey: const Key('settings-conversation-symbol-skill'),
-            semanticLabel: context.localized(
-              'Skill footer symbol',
-              'Skill 尾部符号',
-            ),
-            semanticHint: context.localized(
-              'Enter one visible symbol. Asterisk and vertical bar are reserved.',
-              '输入一个可见符号。星号和竖线为保留字符。',
-            ),
+            semanticLabel: context.l10n.skillFooterSymbol,
+            semanticHint: context
+                .l10n
+                .enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved,
             value: symbols.skill,
             onChanged: (String value) =>
                 unawaited(viewModel.setConversationFooterSymbol(skill: value)),
           ),
         ),
         _SettingRow(
-          label: context.localized('MCP symbol', 'MCP 符号'),
+          label: context.l10n.mcpSymbol,
           child: _ConversationFooterSymbolField(
             fieldKey: const Key('settings-conversation-symbol-mcp'),
-            semanticLabel: context.localized('MCP footer symbol', 'MCP 尾部符号'),
-            semanticHint: context.localized(
-              'Enter one visible symbol. Asterisk and vertical bar are reserved.',
-              '输入一个可见符号。星号和竖线为保留字符。',
-            ),
+            semanticLabel: context.l10n.mcpFooterSymbol,
+            semanticHint: context
+                .l10n
+                .enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved,
             value: symbols.mcp,
             onChanged: (String value) =>
                 unawaited(viewModel.setConversationFooterSymbol(mcp: value)),
           ),
         ),
         _SettingRow(
-          label: context.localized('Preview', '预览'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              SelectableText(
-                'DingDong · ${symbols.prompt} Prompt | '
-                '${symbols.skill} Skill* | ${symbols.mcp} MCP'
-                '${settings.showConversationTokenUsage ? ' · 12.4K Token' : ''}',
-                key: const Key('settings-conversation-footer-preview'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 8),
-              DesktopActionButton(
-                key: const Key('settings-conversation-symbols-reset'),
-                label: context.localized('Restore defaults', '恢复默认'),
-                tone: DesktopActionTone.neutral,
-                compact: true,
-                onPressed: symbols == ConversationFooterSymbols.defaultValue
-                    ? null
-                    : () => unawaited(
-                        viewModel.setConversationFooterSymbols(
-                          ConversationFooterSymbols.defaultValue,
+          label: context.l10n.preview,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                SelectableText(
+                  'DingDong · ${symbols.prompt} Prompt | '
+                  '${symbols.skill} Skill* | ${symbols.mcp} MCP'
+                  '${settings.showConversationTokenUsage ? ' · 12.4K Token' : ''}',
+                  key: const Key('settings-conversation-footer-preview'),
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  context
+                      .l10n
+                      .aSkillMeansItsFullInstructionsWereLoadedForThisTaskAnMCP_240facd9,
+                  key: const Key('settings-conversation-footer-marker-help'),
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DesktopActionButton(
+                  key: const Key('settings-conversation-symbols-reset'),
+                  label: context.l10n.restoreDefaults,
+                  tone: DesktopActionTone.neutral,
+                  compact: true,
+                  onPressed: symbols == ConversationFooterSymbols.defaultValue
+                      ? null
+                      : () => unawaited(
+                          viewModel.setConversationFooterSymbols(
+                            ConversationFooterSymbols.defaultValue,
+                          ),
                         ),
-                      ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -476,10 +477,10 @@ String _trayNotificationColorLabel(
   TrayNotificationColor color,
 ) {
   return switch (color) {
-    TrayNotificationColor.orange => context.localized('Orange', '橙黄'),
-    TrayNotificationColor.pink => context.localized('Pink', '粉色'),
-    TrayNotificationColor.blue => context.localized('Blue', '蓝色'),
-    TrayNotificationColor.green => context.localized('Green', '绿色'),
-    TrayNotificationColor.purple => context.localized('Purple', '紫色'),
+    TrayNotificationColor.orange => context.l10n.orange,
+    TrayNotificationColor.pink => context.l10n.pink,
+    TrayNotificationColor.blue => context.l10n.blue,
+    TrayNotificationColor.green => context.l10n.green,
+    TrayNotificationColor.purple => context.l10n.purple,
   };
 }

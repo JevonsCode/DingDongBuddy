@@ -4,7 +4,6 @@ import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -159,13 +158,8 @@ Future<void> _pumpManager(
     MaterialApp(
       theme: theme,
       locale: locale,
-      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-      localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        DingDongLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      supportedLocales: DingDongLocalizations.supportedLocales,
+      localizationsDelegates: DingDongLocalizations.localizationsDelegates,
       home: DeviceLinkManagerScreen(controller: controller),
     ),
   );

@@ -256,6 +256,13 @@ void main() {
     expect(find.text('Scope'), findsOneWidget);
     expect(find.text('Usage'), findsOneWidget);
     expect(find.text('Status'), findsOneWidget);
+    final Finder usageHelp = find.byKey(const Key('resource-usage-help-list'));
+    expect(usageHelp, findsOneWidget);
+    final Tooltip usageHelpTooltip = tester.widget<Tooltip>(
+      find.descendant(of: usageHelp, matching: find.byType(Tooltip)),
+    );
+    expect(usageHelpTooltip.message, contains('Aug 19, 2026'));
+    expect(usageHelpTooltip.message, contains('0 does not necessarily mean'));
     final Finder firstScope = find.byKey(
       const Key('resource-scope-cell-continuous-first'),
     );
@@ -359,6 +366,21 @@ void main() {
     expect(
       find.byKey(const Key('resource-detail-usage-summary')),
       findsOneWidget,
+    );
+    final Finder detailUsageHelp = find.byKey(
+      const Key('resource-usage-help-detail'),
+    );
+    expect(detailUsageHelp, findsOneWidget);
+    expect(
+      tester
+          .widget<Tooltip>(
+            find.descendant(
+              of: detailUsageHelp,
+              matching: find.byType(Tooltip),
+            ),
+          )
+          .message,
+      contains('Aug 19, 2026'),
     );
     expect(
       find.byKey(const Key('resource-usage-detail-candidate-detail-skill')),
@@ -1438,7 +1460,6 @@ final class _RecordingContextMenuGateway implements DesktopContextMenuGateway {
   Future<String?> show({
     required double x,
     required double y,
-    required bool useChinese,
     required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {

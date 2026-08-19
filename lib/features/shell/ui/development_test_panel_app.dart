@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
@@ -8,7 +9,6 @@ import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/shell/domain/development_test_action.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// DEV-only surface for exercising real desktop and device-link paths.
@@ -64,7 +64,8 @@ class _DevelopmentTestPanelAppState extends State<DevelopmentTestPanelApp>
   Widget build(BuildContext context) {
     final AppSettings settings = widget.settings;
     return MaterialApp(
-      title: 'DingDong DEV · Test Panel',
+      onGenerateTitle: (BuildContext context) =>
+          context.l10n.developmentTestPanelWindowTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.desktopPanelLight(),
       darkTheme: AppTheme.desktopPanelDark(),
@@ -73,18 +74,9 @@ class _DevelopmentTestPanelAppState extends State<DevelopmentTestPanelApp>
         AppThemePreference.light => ThemeMode.light,
         AppThemePreference.dark => ThemeMode.dark,
       },
-      locale: switch (settings.language) {
-        AppLanguagePreference.system => null,
-        AppLanguagePreference.english => const Locale('en'),
-        AppLanguagePreference.chinese => const Locale('zh'),
-      },
-      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-      localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        DingDongLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      locale: configuredAppLocale(settings.language),
+      supportedLocales: DingDongLocalizations.supportedLocales,
+      localizationsDelegates: DingDongLocalizations.localizationsDelegates,
       home: _DevelopmentTestPanel(
         animationsSupported: widget.animationsSupported,
         onRun: widget.onRun,
@@ -157,7 +149,7 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
               children: <Widget>[
                 Expanded(
                   child: Text(
-                    context.localized('Test Panel', '测试面板'),
+                    context.l10n.testPanel,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                 ),
@@ -185,10 +177,7 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             ),
             const SizedBox(height: 8),
             Text(
-              context.localized(
-                'Exercise real DingDong integration paths from one place.',
-                '从一个窗口直接验收 DingDong 的真实集成链路。',
-              ),
+              context.l10n.exerciseRealDingDongIntegrationPathsFromOnePlace,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
@@ -197,31 +186,27 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             _TestDataNotice(colors: colors),
             const SizedBox(height: 22),
             _TestSection(
-              title: context.localized('Menu-bar mascot', '状态小人'),
-              description: context.localized(
-                'Preview real tray states without creating history records.',
-                '预览真实菜单栏状态，不创建历史记录。',
-              ),
+              title: context.l10n.menuBarMascot,
+              description: context
+                  .l10n
+                  .previewRealTrayStatesWithoutCreatingHistoryRecords,
               cards: <Widget>[
                 _TestCard(
-                  title: context.localized('Sleeping state', '睡眠状态'),
-                  description: context.localized(
-                    'Show the sleeping mascot briefly, then restore the current state.',
-                    '短暂显示睡眠小人，然后恢复当前状态。',
-                  ),
-                  buttonLabel: context.localized('Run', '测试'),
+                  title: context.l10n.sleepingState,
+                  description: context
+                      .l10n
+                      .showTheSleepingMascotBrieflyThenRestoreTheCurrentState,
+                  buttonLabel: context.l10n.run,
                   buttonKey: const Key('dev-test-panel-sleeping'),
                   icon: Icons.bedtime_outlined,
                   running: _runningAction == DevelopmentTestAction.traySleeping,
                   onPressed: _callbackFor(DevelopmentTestAction.traySleeping),
                 ),
                 _TestCard(
-                  title: context.localized('Horizontal nudge', '左右摇动'),
-                  description: context.localized(
-                    'Nudge the tray mascot like an overdue reminder.',
-                    '让菜单栏小人左右摇动，模拟超时提醒。',
-                  ),
-                  buttonLabel: context.localized('Run', '测试'),
+                  title: context.l10n.horizontalNudge,
+                  description:
+                      context.l10n.nudgeTheTrayMascotLikeAnOverdueReminder,
+                  buttonLabel: context.l10n.run,
                   buttonKey: const Key('dev-test-panel-nudge'),
                   icon: Icons.swap_horiz_rounded,
                   running: _runningAction == DevelopmentTestAction.trayNudge,
@@ -231,19 +216,16 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             ),
             const SizedBox(height: 24),
             _TestSection(
-              title: context.localized('Agent alerts', 'Agent 提醒'),
-              description: context.localized(
-                'Uses the real local /ding route, unread badge, native alert, and connected-phone delivery.',
-                '走真实本地 /ding、未读角标、系统提醒和已连接手机分发链路。',
-              ),
+              title: context.l10n.agentAlerts,
+              description: context
+                  .l10n
+                  .usesTheRealLocalDingRouteUnreadBadgeNativeAlertAnd_63a64edd,
               cards: <Widget>[
                 _TestCard(
-                  title: context.localized('Basic completion', '基础完成提醒'),
-                  description: context.localized(
-                    'Create one clearly labeled DEV completion.',
-                    '生成一条明确标注为 DEV 的完成提醒。',
-                  ),
-                  buttonLabel: context.localized('Notify', '发送提醒'),
+                  title: context.l10n.basicCompletion,
+                  description:
+                      context.l10n.createOneClearlyLabeledDEVCompletion,
+                  buttonLabel: context.l10n.notify,
                   buttonKey: const Key('dev-test-panel-agent-basic'),
                   icon: Icons.notifications_active_outlined,
                   running:
@@ -253,12 +235,11 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
-                  title: context.localized('Rich mobile detail', '手机长描述'),
-                  description: context.localized(
-                    'Test a concise summary plus a longer mobile detail body.',
-                    '测试简短摘要与手机端较长详情正文。',
-                  ),
-                  buttonLabel: context.localized('Notify', '发送提醒'),
+                  title: context.l10n.richMobileDetail,
+                  description: context
+                      .l10n
+                      .testAConciseSummaryPlusALongerMobileDetailBody,
+                  buttonLabel: context.l10n.notify,
                   buttonKey: const Key('dev-test-panel-agent-rich'),
                   icon: Icons.subject_rounded,
                   running:
@@ -269,12 +250,11 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
-                  title: context.localized('Three-alert burst', '连续三条提醒'),
-                  description: context.localized(
-                    'Check unread counting, ordering, and repeated phone delivery.',
-                    '检查未读数字、列表顺序和手机连续接收。',
-                  ),
-                  buttonLabel: context.localized('Send 3', '发送 3 条'),
+                  title: context.l10n.threeAlertBurst,
+                  description: context
+                      .l10n
+                      .checkUnreadCountingOrderingAndRepeatedPhoneDelivery,
+                  buttonLabel: context.l10n.send3,
                   buttonKey: const Key('dev-test-panel-agent-burst'),
                   icon: Icons.filter_3_rounded,
                   running: _runningAction == DevelopmentTestAction.agentBurst,
@@ -284,19 +264,17 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             ),
             const SizedBox(height: 24),
             _TestSection(
-              title: context.localized('Clipboard and devices', '剪贴板与设备'),
-              description: context.localized(
-                'Creates removable DEV samples or opens the real device workflow.',
-                '创建可删除的 DEV 样例，或打开真实设备流程。',
-              ),
+              title: context.l10n.clipboardAndDevices,
+              description: context
+                  .l10n
+                  .createsRemovableDEVSamplesOrOpensTheRealDeviceWorkflow,
               cards: <Widget>[
                 _TestCard(
-                  title: context.localized('Text from phone', '来自手机的文字'),
-                  description: context.localized(
-                    'MOCK: add a phone-origin text row without reading any phone clipboard.',
-                    'MOCK：添加一条手机来源文字；不会读取手机剪贴板。',
-                  ),
-                  buttonLabel: context.localized('Create', '创建样例'),
+                  title: context.l10n.textFromPhone,
+                  description: context
+                      .l10n
+                      .mockAddAPhoneOriginTextRowWithoutReadingAnyPhone_381a76fb,
+                  buttonLabel: context.l10n.create,
                   buttonKey: const Key('dev-test-panel-phone-text'),
                   icon: Icons.phone_iphone_rounded,
                   running:
@@ -307,12 +285,11 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
-                  title: context.localized('File from phone', '来自手机的文件'),
-                  description: context.localized(
-                    'MOCK: create a small local file and show its device source.',
-                    'MOCK：创建一个小型本地文件并展示设备来源。',
-                  ),
-                  buttonLabel: context.localized('Create', '创建样例'),
+                  title: context.l10n.fileFromPhone,
+                  description: context
+                      .l10n
+                      .mockCreateASmallLocalFileAndShowItsDeviceSource,
+                  buttonLabel: context.l10n.create,
                   buttonKey: const Key('dev-test-panel-phone-file'),
                   icon: Icons.attach_file_rounded,
                   running:
@@ -323,12 +300,11 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
-                  title: context.localized('One-way auto send', '单向自动同步'),
-                  description: context.localized(
-                    'Create a computer record and send it only to connected devices with auto-send enabled.',
-                    '创建电脑记录，只发送给已连接且开启自动同步的设备。',
-                  ),
-                  buttonLabel: context.localized('Create and send', '创建并发送'),
+                  title: context.l10n.oneWayAutoSend,
+                  description: context
+                      .l10n
+                      .createAComputerRecordAndSendItOnlyToConnectedDevicesWith_41a63724,
+                  buttonLabel: context.l10n.createAndSend,
                   buttonKey: const Key('dev-test-panel-auto-send'),
                   icon: Icons.arrow_forward_rounded,
                   running:
@@ -338,12 +314,11 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
-                  title: context.localized('Send to device dialog', '发送到设备弹框'),
-                  description: context.localized(
-                    'Create a sample and open the real target-device chooser.',
-                    '创建样例并打开真实的目标设备选择弹框。',
-                  ),
-                  buttonLabel: context.localized('Open', '打开'),
+                  title: context.l10n.sendToDeviceDialog,
+                  description: context
+                      .l10n
+                      .createASampleAndOpenTheRealTargetDeviceChooser,
+                  buttonLabel: context.l10n.open,
                   buttonKey: const Key('dev-test-panel-manual-share'),
                   icon: Icons.send_to_mobile_outlined,
                   running:
@@ -353,12 +328,11 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
-                  title: context.localized('Connection manager', '连接管理窗口'),
-                  description: context.localized(
-                    'Open the standalone QR, device, switch, disconnect, and delete surface.',
-                    '打开独立二维码、设备、开关、断连和删除窗口。',
-                  ),
-                  buttonLabel: context.localized('Open', '打开'),
+                  title: context.l10n.connectionManager,
+                  description: context
+                      .l10n
+                      .openTheStandaloneQRDeviceSwitchDisconnectAndDelete_441119af,
+                  buttonLabel: context.l10n.open,
                   buttonKey: const Key('dev-test-panel-device-manager'),
                   icon: Icons.devices_other_rounded,
                   running:
@@ -372,10 +346,9 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             const SizedBox(height: 22),
             if (!widget.animationsSupported)
               Text(
-                context.localized(
-                  'Tray mascot previews are unavailable on this platform; the other integration tests remain available.',
-                  '当前平台不支持状态小人预览；其余集成测试仍可使用。',
-                ),
+                context
+                    .l10n
+                    .trayMascotPreviewsAreUnavailableOnThisPlatformTheOther_ab13b937,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -417,10 +390,9 @@ class _TestDataNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              context.localized(
-                'Agent and clipboard items created here are explicit DEV test data. Phone-origin samples are simulations, never captured from a real phone clipboard.',
-                '这里创建的 Agent 与剪贴板条目都是明确的 DEV 测试数据；“手机来源”样例为模拟数据，绝不会读取真实手机剪贴板。',
-              ),
+              context
+                  .l10n
+                  .agentAndClipboardItemsCreatedHereAreExplicitDEVTestData_f8625f9f,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colors.onSurface,
                 height: 1.4,
@@ -539,9 +511,7 @@ class _TestCard extends StatelessWidget {
             child: KeyedSubtree(
               key: buttonKey,
               child: DesktopActionButton(
-                label: running
-                    ? context.localized('Running…', '执行中…')
-                    : buttonLabel,
+                label: running ? context.l10n.running : buttonLabel,
                 tone: DesktopActionTone.soft,
                 onPressed: onPressed,
               ),
@@ -570,12 +540,9 @@ class _ActionStatus extends StatelessWidget {
     final bool running = runningAction != null;
     final Color color = failed ? colors.error : colors.primary;
     final String label = failed
-        ? context.localized(
-            'The test failed. Check the connection and system permissions.',
-            '测试执行失败，请检查连接状态和系统权限。',
-          )
+        ? context.l10n.theTestFailedCheckTheConnectionAndSystemPermissions
         : running
-        ? context.localized('Running test…', '正在执行测试…')
+        ? context.l10n.runningTest
         : _successLabel(context, lastAction!);
     return Container(
       key: const Key('dev-test-panel-action-status'),
@@ -617,45 +584,23 @@ class _ActionStatus extends StatelessWidget {
 
 String _successLabel(BuildContext context, DevelopmentTestAction action) {
   return switch (action) {
-    DevelopmentTestAction.traySleeping => context.localized(
-      'Triggered: sleeping state',
-      '已触发：睡眠状态',
-    ),
-    DevelopmentTestAction.trayNudge => context.localized(
-      'Triggered: horizontal nudge',
-      '已触发：左右摇动',
-    ),
-    DevelopmentTestAction.agentCompletion => context.localized(
-      'Created: basic Agent completion',
-      '已创建：基础 Agent 完成提醒',
-    ),
-    DevelopmentTestAction.agentRichCompletion => context.localized(
-      'Created: rich mobile Agent detail',
-      '已创建：手机端长描述 Agent 提醒',
-    ),
-    DevelopmentTestAction.agentBurst => context.localized(
-      'Created: three Agent completions',
-      '已创建：连续三条 Agent 提醒',
-    ),
-    DevelopmentTestAction.phoneClipboardText => context.localized(
-      'Created: simulated phone text row',
-      '已创建：模拟手机文字记录',
-    ),
-    DevelopmentTestAction.phoneClipboardFile => context.localized(
-      'Created: simulated phone file row',
-      '已创建：模拟手机文件记录',
-    ),
-    DevelopmentTestAction.autoSendClipboard => context.localized(
-      'Created: computer auto-send sample',
-      '已创建：电脑自动同步样例',
-    ),
-    DevelopmentTestAction.manualDeviceShare => context.localized(
-      'Opened: send-to-device chooser',
-      '已打开：发送到设备选择弹框',
-    ),
-    DevelopmentTestAction.openDeviceManager => context.localized(
-      'Opened: connection manager',
-      '已打开：连接管理窗口',
-    ),
+    DevelopmentTestAction.traySleeping => context.l10n.triggeredSleepingState,
+    DevelopmentTestAction.trayNudge => context.l10n.triggeredHorizontalNudge,
+    DevelopmentTestAction.agentCompletion =>
+      context.l10n.createdBasicAgentCompletion,
+    DevelopmentTestAction.agentRichCompletion =>
+      context.l10n.createdRichMobileAgentDetail,
+    DevelopmentTestAction.agentBurst =>
+      context.l10n.createdThreeAgentCompletions,
+    DevelopmentTestAction.phoneClipboardText =>
+      context.l10n.createdSimulatedPhoneTextRow,
+    DevelopmentTestAction.phoneClipboardFile =>
+      context.l10n.createdSimulatedPhoneFileRow,
+    DevelopmentTestAction.autoSendClipboard =>
+      context.l10n.createdComputerAutoSendSample,
+    DevelopmentTestAction.manualDeviceShare =>
+      context.l10n.openedSendToDeviceChooser,
+    DevelopmentTestAction.openDeviceManager =>
+      context.l10n.openedConnectionManager,
   };
 }

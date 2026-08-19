@@ -42,14 +42,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.4.6', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.5.0', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.4.6')), findsOneWidget);
-    expect(find.text('v1.4.6'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.5.0')), findsOneWidget);
+    expect(find.text('v1.5.0'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -223,6 +223,73 @@ void main() {
           .height,
       92,
     );
+  });
+
+  testWidgets('Dynamic metric cards expose complete copy on hover', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(const DingDongApp());
+    await tester.pumpAndSettle();
+
+    final Map<Key, String> expectedMessages = <Key, String>{
+      const Key('today-metric-library'): 'Resource library · 0',
+      const Key('today-open-clipboard'): 'Clipboard history · 0',
+      const Key('today-agent-api'): 'API | Agent connections · Check · MCP',
+    };
+    for (final MapEntry<Key, String> entry in expectedMessages.entries) {
+      final Finder tooltip = find.descendant(
+        of: find.byKey(entry.key),
+        matching: find.byType(Tooltip),
+      );
+      expect(tooltip, findsOneWidget);
+      expect(tester.widget<Tooltip>(tooltip).message, entry.value);
+    }
+
+    final TestGesture mouse = await tester.createGesture(
+      kind: PointerDeviceKind.mouse,
+    );
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('today-metric-library'))),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Resource library · 0'), findsOneWidget);
+  });
+
+  testWidgets('Spanish Dynamic metric cards keep their complete hover copy', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: SettingsRepository(
+          MemoryPreferencesBackend(<String, Object>{'dingdong.language': 'es'}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Map<Key, String> expectedMessages = <Key, String>{
+      const Key('today-metric-library'): 'Biblioteca de recursos · 0',
+      const Key('today-open-clipboard'): 'Historial del portapapeles · 0',
+      const Key('today-agent-api'): 'API | Conexiones Agent · Controlar · MCP',
+    };
+    for (final MapEntry<Key, String> entry in expectedMessages.entries) {
+      final Finder tooltip = find.descendant(
+        of: find.byKey(entry.key),
+        matching: find.byType(Tooltip),
+      );
+      expect(tester.widget<Tooltip>(tooltip).message, entry.value);
+    }
   });
 
   testWidgets('Dynamic marks a rendered Agent seen without a delay', (

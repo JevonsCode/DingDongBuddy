@@ -20,7 +20,7 @@ class ClipboardCopyCount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: context.localized('Copied $count times', '已复制 $count 次'),
+      message: context.l10n.copiedCountTimes(count),
       child: ActivityRepeatCount(
         key: Key('clipboard-copy-count-$recordId'),
         count: count,

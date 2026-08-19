@@ -86,9 +86,15 @@ void main() {
 
   test('private keys and provider credentials are always sensitive', () {
     final Map<String, String> cases = <String, String>{
-      '-----BEGIN ' 'PRIVATE KEY-----\nmaterial': 'private-key',
-      'AKIA' 'ABCDEFGHIJKLMNOP': 'aws-key',
-      'ghp_' 'abcdefghijklmnopqrstuvwxyz123456': 'github-token',
+      '-----BEGIN '
+              'PRIVATE KEY-----\nmaterial':
+          'private-key',
+      'AKIA'
+              'ABCDEFGHIJKLMNOP':
+          'aws-key',
+      'ghp_'
+              'abcdefghijklmnopqrstuvwxyz123456':
+          'github-token',
     };
 
     for (final MapEntry<String, String> entry in cases.entries) {

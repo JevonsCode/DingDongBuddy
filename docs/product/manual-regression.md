@@ -1,4 +1,4 @@
-# DingDong 1.4.6 Manual Regression Checklist
+# DingDong 1.5.0 Beta Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -436,12 +436,12 @@ and macOS golden images; the items below exercise real operating-system state.
   symbols are `♥`, `♦`, and `♠`. Change all three symbols, call both Bridge
   routes and load one Skill, then verify every line uses the new values without
   a restart. Restore defaults and verify the preview returns to `♥`, `♦`, `♠`.
-- **Show conversation Token usage** is off by default. When enabled, a Bridge
+- **Show conversation Token usage** is on by default. When enabled, a Bridge
   response for a supported Codex, Claude Code, or Pi conversation appends one
   compact exact total after the resource footer, for example
   `DingDong · ♥ · 12.4K Token`. Unsupported clients, missing session evidence,
   malformed logs, and resolver failures omit the suffix instead of estimating.
-  With the switch off, Bridge and completion notifications do not read local
+  Turn it off and verify Bridge and completion notifications do not read local
   conversation usage files.
 - With **Allow Agents to read clipboard content** off, metadata queries remain
   available but content reads, API capture, collection, and promotion are
@@ -490,7 +490,16 @@ and macOS golden images; the items below exercise real operating-system state.
 
 ## Settings and notifications
 
-- Language changes immediately update navigation and feature labels.
+- Switch among Follow System, English, Simplified Chinese, and Spanish. The
+  compact popup, Resource Manager, Connected Devices, Settings, DEV panel,
+  native right-click menus, tray menu, window titles, update notes, setup
+  sentence, fallback completion message, and macOS permission/recovery dialogs
+  update to or reopen in the selected language without mixed-language labels.
+- Follow System resolves a supported operating-system language and deliberately
+  falls back to English for every unsupported language.
+- Spanish layouts keep controls readable without clipping or overflow. Product
+  terms such as Prompt, Skill, MCP, Agent, Hook, Bridge, and Token remain
+  consistent across screens.
 - System/light/dark theme and window opacity render without clipped controls.
 - Clipboard retention accepts 20–5,000 items and 1–730 days.
 - Agent clipboard-content access defaults to off and persists after restart.
@@ -580,8 +589,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.4.6` build `54` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.4.6.54` and product name `DingDong`.
+- The macOS release app metadata is version `1.5.0` build `55` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.5.0.55` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -589,7 +598,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.4.6` and that exact commit SHA; every
+  `/v1/health` must report version `1.5.0` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

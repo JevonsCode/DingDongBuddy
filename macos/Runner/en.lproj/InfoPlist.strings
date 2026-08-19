@@ -1,0 +1,4 @@
+"NSLocalNetworkUsageDescription" = "DingDong connects directly to your trusted devices on the local network to transfer clipboard items and files.";
+"NSDocumentsFolderUsageDescription" = "DingDong needs access to install complete local Agent Skill packages from your Documents folder.";
+"NSDesktopFolderUsageDescription" = "DingDong needs access to install complete local Agent Skill packages from your Desktop folder.";
+"NSDownloadsFolderUsageDescription" = "DingDong needs access to install complete local Agent Skill packages from your Downloads folder.";

@@ -8,7 +8,8 @@ import 'package:flutter/foundation.dart';
 enum AppLanguagePreference {
   system(null),
   english('en'),
-  chinese('zh');
+  chinese('zh'),
+  spanish('es');
 
   const AppLanguagePreference(this.storageValue);
 
@@ -96,7 +97,7 @@ final class AppSettings {
     this.notifyCodexVoiceActivity = false,
     this.notifySubagentActivity = false,
     this.groupRepeatedAgentSessions = true,
-    this.showConversationTokenUsage = false,
+    this.showConversationTokenUsage = true,
     this.agentActivityMaxItems = 500,
     this.agentActivityCountHours = 24,
     this.conversationFooterSymbols = ConversationFooterSymbols.defaultValue,

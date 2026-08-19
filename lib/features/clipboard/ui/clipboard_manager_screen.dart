@@ -115,7 +115,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                     Row(
                       children: <Widget>[
                         Text(
-                          context.localized('Clipboard', '剪贴板'),
+                          context.l10n.clipboard,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -148,8 +148,8 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                           label:
                               _selectedIds.length == records.length &&
                                   records.isNotEmpty
-                              ? context.localized('Clear selection', '取消全选')
-                              : context.localized('Select all', '全选'),
+                              ? context.l10n.clearSelection
+                              : context.l10n.selectAll,
                           compact: true,
                         ),
                       ],
@@ -213,7 +213,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                         record: record,
                         categoryLabel:
                             widget.viewModel.categoryFor(record)?.name ??
-                            context.localized('Uncategorized', '未分类'),
+                            context.l10n.uncategorized,
                         selected: _selectedIds.contains(record.id),
                         showReorderHandle: canReorder,
                         showPinnedIndicator: archiveWorkspace,
@@ -286,16 +286,16 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(context.localized('Delete selected items?', '删除所选条目？')),
+        title: Text(context.l10n.deleteSelectedItems),
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            label: context.localized('Delete', '删除'),
+            label: context.l10n.delete,
             tone: DesktopActionTone.danger,
           ),
         ],
@@ -316,10 +316,9 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
               await widget.contextMenuGateway!.show(
                 x: position.dx,
                 y: position.dy,
-                useChinese:
-                    Localizations.localeOf(context).languageCode == 'zh',
                 isDark: Theme.of(context).brightness == Brightness.dark,
                 items: clipboardContextMenuItems(
+                  strings: context.l10n,
                   includeShare: false,
                   includePin: widget.viewModel.showingArchivedRecords,
                   pinned: record.pinned,
@@ -337,9 +336,9 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
       case _ManagerAction.copy:
         await widget.viewModel.copySelected();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.localized('Copied', '已复制'))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.l10n.copied)));
         }
       case _ManagerAction.togglePinned:
         widget.viewModel.togglePinned();
@@ -393,54 +392,49 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         context,
         _ManagerAction.details,
         'details',
-        'Details',
-        '查看详情',
+        context.l10n.details,
       ),
-      _managerMenuItem(context, _ManagerAction.copy, 'copy', 'Copy', '复制'),
+      _managerMenuItem(context, _ManagerAction.copy, 'copy', context.l10n.copy),
       if (widget.viewModel.showingArchivedRecords)
         _managerMenuItem(
           context,
           _ManagerAction.togglePinned,
           'archive',
-          record.pinned ? 'Unpin' : 'Pin',
-          record.pinned ? '取消置顶' : '置顶',
+          record.pinned ? context.l10n.unpin : context.l10n.pin,
         ),
       const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
         context,
         _ManagerAction.addTitle,
         'add_title',
-        record.title.trim().isEmpty ? 'Add title' : 'Edit title',
-        record.title.trim().isEmpty ? '添加标题' : '修改标题',
+        record.title.trim().isEmpty
+            ? context.l10n.addTitle
+            : context.l10n.editTitle,
       ),
       _managerMenuItem(
         context,
         _ManagerAction.editText,
         'edit',
-        'Edit text',
-        '编辑文本',
+        context.l10n.editText,
       ),
       _managerMenuItem(
         context,
         _ManagerAction.archiveTo,
         'archive_to',
-        'Archive to…',
-        '归档到…',
+        context.l10n.archiveTo,
       ),
       _managerMenuItem(
         context,
         _ManagerAction.savePrompt,
         'prompt',
-        'Save as prompt',
-        '保存为提示词',
+        context.l10n.saveAsPrompt,
       ),
       const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
         context,
         _ManagerAction.delete,
         'delete',
-        'Delete',
-        '删除',
+        context.l10n.delete,
         destructive: true,
       ),
     ],
@@ -453,14 +447,14 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         record: record,
         categoryLabel:
             widget.viewModel.categoryFor(record)?.name ??
-            context.localized('Uncategorized', '未分类'),
+            context.l10n.uncategorized,
         onClose: () => Navigator.pop(context),
         onCopy: () async {
           await widget.viewModel.copySelected();
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.localized('Copied', '已复制'))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(context.l10n.copied)));
         },
       ),
     );
@@ -478,11 +472,10 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
       builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(
           titleOnly
-              ? context.localized(
-                  record.title.trim().isEmpty ? 'Add title' : 'Edit title',
-                  record.title.trim().isEmpty ? '添加标题' : '修改标题',
-                )
-              : context.localized('Edit text', '编辑文本'),
+              ? record.title.trim().isEmpty
+                    ? context.l10n.addTitle
+                    : context.l10n.editTitle
+              : context.l10n.editText,
         ),
         content: DesktopTextField(
           controller: controller,
@@ -493,12 +486,12 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            label: context.localized('Save', '保存'),
+            label: context.l10n.save,
             tone: DesktopActionTone.primary,
           ),
         ],
@@ -520,18 +513,16 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
     return await showDialog<bool>(
           context: context,
           builder: (BuildContext context) => DesktopAlertDialog(
-            title: Text(
-              context.localized('Delete this clipboard item?', '删除此剪贴板条目？'),
-            ),
+            title: Text(context.l10n.deleteThisClipboardItem),
             actions: <Widget>[
               DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                label: context.localized('Cancel', '取消'),
+                label: context.l10n.cancel,
                 compact: true,
               ),
               DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                label: context.localized('Delete', '删除'),
+                label: context.l10n.delete,
                 tone: DesktopActionTone.danger,
               ),
             ],
@@ -571,14 +562,13 @@ DesktopMenuItem<_ManagerAction> _managerMenuItem(
   BuildContext context,
   _ManagerAction action,
   String symbol,
-  String english,
-  String chinese, {
+  String label, {
   bool destructive = false,
 }) => DesktopMenuItem<_ManagerAction>(
   key: Key('clipboard-manager-action-${action.name}'),
   value: action,
   symbol: symbol,
-  label: context.localized(english, chinese),
+  label: label,
   destructive: destructive,
 );
 
@@ -596,8 +586,8 @@ class _ManagerSearchField extends StatelessWidget {
       searchIconKey: const Key('clipboard-manager-search-icon'),
       height: _managerSearchControlHeight,
       onChanged: onChanged,
-      hintText: context.localized('Search clipboard history', '搜索剪贴板历史'),
-      clearTooltip: context.localized('Clear search', '清除搜索'),
+      hintText: context.l10n.searchClipboardHistory,
+      clearTooltip: context.l10n.clearSearch,
       backgroundColor: colors.surface,
       borderColor: colors.outlineVariant,
       focusBorderColor: colors.outline,
@@ -627,11 +617,8 @@ class _ClipboardSortDropdown extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final ClipboardSortMode selected = viewModel.sortMode;
     final String label = switch (selected) {
-      ClipboardSortMode.defaultOrder => context.localized(
-        'Default order',
-        '默认排序',
-      ),
-      ClipboardSortMode.copyCount => context.localized('Copy count', '按次数排序'),
+      ClipboardSortMode.defaultOrder => context.l10n.defaultOrder,
+      ClipboardSortMode.copyCount => context.l10n.copyCount2,
     };
     return MenuAnchor(
       menuChildren: <Widget>[
@@ -642,7 +629,7 @@ class _ClipboardSortDropdown extends StatelessWidget {
           ),
           onPressed: () =>
               viewModel.setSortMode(ClipboardSortMode.defaultOrder),
-          child: Text(context.localized('Default order', '默认排序')),
+          child: Text(context.l10n.defaultOrder),
         ),
         MenuItemButton(
           key: const Key('clipboard-manager-sort-copy-count'),
@@ -650,17 +637,14 @@ class _ClipboardSortDropdown extends StatelessWidget {
             selected: selected == ClipboardSortMode.copyCount,
           ),
           onPressed: () => viewModel.setSortMode(ClipboardSortMode.copyCount),
-          child: Text(context.localized('Copy count', '按次数排序')),
+          child: Text(context.l10n.copyCount2),
         ),
       ],
       builder:
           (BuildContext context, MenuController controller, Widget? child) =>
               Semantics(
                 button: true,
-                label: context.localized(
-                  'Clipboard sort: $label',
-                  '剪贴板排序：$label',
-                ),
+                label: context.l10n.clipboardSortLabel(label),
                 child: Container(
                   key: const Key('clipboard-manager-sort'),
                   decoration: _managerControlDecoration(
@@ -817,8 +801,8 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
                   controller: _searchController,
                   focusNode: _searchFocusNode,
                   onChanged: (String value) => setState(() => _query = value),
-                  hintText: context.localized('Search sources', '搜索来源'),
-                  clearTooltip: context.localized('Clear search', '清除搜索'),
+                  hintText: context.l10n.searchSources,
+                  clearTooltip: context.l10n.clearSearch,
                   backgroundColor: colors.surfaceContainerLow,
                   borderColor: colors.outlineVariant.withValues(alpha: 0.72),
                   focusBorderColor: colors.outline,
@@ -827,7 +811,7 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
                 const SizedBox(height: 6),
                 _SourceFilterOption(
                   key: const Key('clipboard-manager-source-all'),
-                  label: context.localized('All sources', '全部来源'),
+                  label: context.l10n.allSources,
                   selected: !hasSelection,
                   onTap: widget.viewModel.clearSources,
                 ),
@@ -846,10 +830,7 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
                           height: 42,
                           child: Center(
                             child: Text(
-                              context.localized(
-                                'No matching sources',
-                                '没有匹配的来源',
-                              ),
+                              context.l10n.noMatchingSources,
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: colors.onSurfaceVariant),
                             ),
@@ -884,10 +865,7 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
                 button: true,
                 selected: hasSelection,
                 expanded: _menuOpen,
-                label: context.localized(
-                  'Source filter: $summary',
-                  '来源筛选：$summary',
-                ),
+                label: context.l10n.sourceFilterSummary(summary),
                 child: AnimatedContainer(
                   key: const Key('clipboard-manager-source-filter'),
                   height: _managerSearchControlHeight,
@@ -956,7 +934,7 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
   ) {
     final Set<String> selected = widget.viewModel.selectedSourceIds;
     if (selected.isEmpty) {
-      return context.localized('All sources', '全部来源');
+      return context.l10n.allSources;
     }
     if (selected.length == 1) {
       for (final ClipboardSourceOption source in sources) {
@@ -965,10 +943,7 @@ class _SourceFilterDropdownState extends State<_SourceFilterDropdown> {
         }
       }
     }
-    return context.localized(
-      '${selected.length} sources',
-      '已选 ${selected.length} 个来源',
-    );
+    return context.l10n.lengthSources(selected.length);
   }
 
   void _handleOpen() {
@@ -1084,7 +1059,7 @@ class _ManagerFilters extends StatelessWidget {
             children: <Widget>[
               _CompactFilterButton(
                 key: const Key('clipboard-manager-category-all'),
-                label: Text(context.localized('All', '全部')),
+                label: Text(context.l10n.all),
                 selected: viewModel.selectedCategoryId == null,
                 onPressed: () => viewModel.setCategory(null),
               ),
@@ -1108,7 +1083,7 @@ class _ManagerFilters extends StatelessWidget {
               ),
               DesktopIconButton(
                 key: const Key('clipboard-manager-categories'),
-                tooltip: context.localized('Manage categories', '管理分类'),
+                tooltip: context.l10n.manageCategories,
                 onPressed: onManageCategories,
                 icon: const Icon(Icons.tune_rounded, size: 16),
               ),
@@ -1213,10 +1188,10 @@ class _CompactFilterButton extends StatelessWidget {
 
 String _categoryLabel(BuildContext context, ClipboardCategoryRule rule) =>
     switch (rule.id) {
-      'text' => context.localized('Text', '文本'),
-      'links' => context.localized('Links', '链接'),
-      'images' => context.localized('Images', '图片'),
-      'files' => context.localized('Files', '文件'),
+      'text' => context.l10n.text,
+      'links' => context.l10n.links,
+      'images' => context.l10n.images,
+      'files' => context.l10n.files,
       _ => rule.name,
     };
 
@@ -1237,23 +1212,17 @@ class _ClipboardDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final String title = record.title.trim().isEmpty
-        ? context.localized('Untitled clipboard item', '未命名剪贴板条目')
+        ? context.l10n.untitledClipboardItem
         : record.title;
     final List<_DetailDatum> overview = <_DetailDatum>[
+      _DetailDatum(label: context.l10n.category, value: categoryLabel),
       _DetailDatum(
-        label: context.localized('Category', '分类'),
-        value: categoryLabel,
-      ),
-      _DetailDatum(
-        label: context.localized('Content type', '内容类型'),
+        label: context.l10n.contentType,
         value: _clipboardKindLabel(context, record.kind),
       ),
+      _DetailDatum(label: context.l10n.copyCount, value: '${record.copyCount}'),
       _DetailDatum(
-        label: context.localized('Copy count', '复制次数'),
-        value: '${record.copyCount}',
-      ),
-      _DetailDatum(
-        label: context.localized('Updated', '更新时间'),
+        label: context.l10n.updated3,
         value: MaterialLocalizations.of(
           context,
         ).formatMediumDate(record.updatedAt.toLocal()),
@@ -1281,14 +1250,9 @@ class _ClipboardDetailsDialog extends StatelessWidget {
           ),
         ),
         title: Text(title),
-        subtitle: Text(
-          context.localized(
-            'Clipboard details and complete content',
-            '剪贴板详情与完整内容',
-          ),
-        ),
+        subtitle: Text(context.l10n.clipboardDetailsAndCompleteContent),
         onClose: onClose,
-        closeTooltip: context.localized('Close', '关闭'),
+        closeTooltip: context.l10n.close,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -1309,7 +1273,7 @@ class _ClipboardDetailsDialog extends StatelessWidget {
             ),
             if (record.groupNames.isNotEmpty) ...<Widget>[
               const SizedBox(height: 18),
-              _DetailSectionLabel(label: context.localized('Groups', '分组')),
+              _DetailSectionLabel(label: context.l10n.groups),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 7,
@@ -1321,7 +1285,7 @@ class _ClipboardDetailsDialog extends StatelessWidget {
             ],
             if (record.sources.isNotEmpty) ...<Widget>[
               const SizedBox(height: 18),
-              _DetailSectionLabel(label: context.localized('Sources', '来源')),
+              _DetailSectionLabel(label: context.l10n.sources),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 7,
@@ -1332,7 +1296,7 @@ class _ClipboardDetailsDialog extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 18),
-            _DetailSectionLabel(label: context.localized('Content', '内容')),
+            _DetailSectionLabel(label: context.l10n.content),
             const SizedBox(height: 8),
             Container(
               key: const Key('clipboard-details-content'),
@@ -1347,7 +1311,7 @@ class _ClipboardDetailsDialog extends StatelessWidget {
               ),
               child: SelectableText(
                 record.sensitive
-                    ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
+                    ? context.l10n.sensitiveContentHidden
                     : record.content,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   height: 1.5,
@@ -1369,14 +1333,14 @@ class _ClipboardDetailsDialog extends StatelessWidget {
         actions: <Widget>[
           DesktopActionButton(
             onPressed: onClose,
-            label: context.localized('Close', '关闭'),
+            label: context.l10n.close,
             compact: true,
           ),
           DesktopActionButton(
             key: const Key('clipboard-details-copy'),
             onPressed: record.sensitive ? null : () => onCopy(),
             icon: const Icon(Icons.copy_rounded, size: 15),
-            label: context.localized('Copy content', '复制内容'),
+            label: context.l10n.copyContent,
             tone: DesktopActionTone.primary,
           ),
         ],
@@ -1450,15 +1414,15 @@ class _DetailSectionLabel extends StatelessWidget {
 
 String _clipboardKindLabel(BuildContext context, ClipboardKind kind) =>
     switch (kind) {
-      ClipboardKind.text => context.localized('Text', '文本'),
-      ClipboardKind.url => context.localized('Link', '链接'),
-      ClipboardKind.command => context.localized('Command', '命令'),
-      ClipboardKind.code => context.localized('Code', '代码'),
+      ClipboardKind.text => context.l10n.text,
+      ClipboardKind.url => context.l10n.link,
+      ClipboardKind.command => context.l10n.command2,
+      ClipboardKind.code => context.l10n.code,
       ClipboardKind.json => 'JSON',
-      ClipboardKind.path => context.localized('Path', '路径'),
-      ClipboardKind.email => context.localized('Email', '邮箱'),
-      ClipboardKind.file => context.localized('File', '文件'),
-      ClipboardKind.image => context.localized('Image', '图片'),
+      ClipboardKind.path => context.l10n.path,
+      ClipboardKind.email => context.l10n.email,
+      ClipboardKind.file => context.l10n.file,
+      ClipboardKind.image => context.l10n.image,
     };
 
 IconData _clipboardKindIcon(ClipboardKind kind) => switch (kind) {
@@ -1516,12 +1480,12 @@ class _BulkToolbar extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          Text(context.localized('$count selected', '已选择 $count 项')),
+          Text(context.l10n.countSelected(count)),
           const SizedBox(width: 12),
           DesktopActionButton(
             key: const Key('clipboard-bulk-archive-to'),
             onPressed: onAssignGroup,
-            label: context.localized('Archive to…', '归档到…'),
+            label: context.l10n.archiveTo,
             tone: DesktopActionTone.soft,
           ),
           const Spacer(),
@@ -1530,7 +1494,7 @@ class _BulkToolbar extends StatelessWidget {
           DesktopActionButton(
             key: const Key('clipboard-bulk-delete'),
             onPressed: onDelete,
-            label: context.localized('Delete', '删除'),
+            label: context.l10n.delete,
             tone: DesktopActionTone.danger,
             compact: true,
           ),
@@ -1637,16 +1601,13 @@ class _ManagerRowState extends State<_ManagerRow> {
                         Semantics(
                           selected: widget.selected,
                           button: true,
-                          label: context.localized('Select item', '选择条目'),
+                          label: context.l10n.selectItem,
                           child: DesktopIconButton(
                             key: Key(
                               'clipboard-manager-select-${widget.record.id}',
                             ),
-                            tooltip: context.localized('Select item', '选择条目'),
-                            semanticLabel: context.localized(
-                              'Select item',
-                              '选择条目',
-                            ),
+                            tooltip: context.l10n.selectItem,
+                            semanticLabel: context.l10n.selectItem,
                             selected: widget.selected,
                             size: 32,
                             onPressed: () => widget.onChanged(!widget.selected),
@@ -1658,7 +1619,7 @@ class _ManagerRowState extends State<_ManagerRow> {
                           ReorderableDragStartListener(
                             index: widget.reorderIndex,
                             child: Tooltip(
-                              message: context.localized('Reorder', '调整顺序'),
+                              message: context.l10n.reorder,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 5,

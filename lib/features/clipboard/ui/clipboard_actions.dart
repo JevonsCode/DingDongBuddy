@@ -53,32 +53,23 @@ extension _ClipboardActions on _ClipboardScreenState {
           builder: (BuildContext context) => DesktopAlertDialog(
             title: Text(
               viewModel.selectedRecordIsArchived
-                  ? context.localized('Delete this archived copy?', '删除这个归档副本？')
-                  : context.localized(
-                      'Delete this clipboard item?',
-                      '删除此剪贴板条目？',
-                    ),
+                  ? context.l10n.deleteThisArchivedCopy
+                  : context.l10n.deleteThisClipboardItem,
             ),
             content: Text(
               viewModel.selectedRecordIsArchived
-                  ? context.localized(
-                      'Clipboard history remains unchanged.',
-                      '剪贴板历史不会受到影响。',
-                    )
-                  : context.localized(
-                      'Archived copies remain unchanged.',
-                      '已有归档副本不会受到影响。',
-                    ),
+                  ? context.l10n.clipboardHistoryRemainsUnchanged
+                  : context.l10n.archivedCopiesRemainUnchanged,
             ),
             actions: <Widget>[
               DesktopActionButton(
                 onPressed: () => Navigator.pop(context, false),
-                label: context.localized('Cancel', '取消'),
+                label: context.l10n.cancel,
                 compact: true,
               ),
               DesktopActionButton(
                 onPressed: () => Navigator.pop(context, true),
-                label: context.localized('Delete', '删除'),
+                label: context.l10n.delete,
                 tone: DesktopActionTone.danger,
               ),
             ],
@@ -98,21 +89,20 @@ extension _ClipboardActions on _ClipboardScreenState {
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
         title: Text(
-          context.localized(
-            record.title.trim().isEmpty ? 'Add title' : 'Edit title',
-            record.title.trim().isEmpty ? '添加标题' : '修改标题',
-          ),
+          record.title.trim().isEmpty
+              ? context.l10n.addTitle
+              : context.l10n.editTitle,
         ),
         content: DesktopTextField(controller: controller, autofocus: true),
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            label: context.localized('Save', '保存'),
+            label: context.l10n.save,
             tone: DesktopActionTone.primary,
           ),
         ],
@@ -136,7 +126,7 @@ extension _ClipboardActions on _ClipboardScreenState {
     final String? content = await showDialog<String>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(context.localized('Edit text', '编辑文本')),
+        title: Text(context.l10n.editText),
         content: DesktopTextField(
           controller: controller,
           autofocus: true,
@@ -146,12 +136,12 @@ extension _ClipboardActions on _ClipboardScreenState {
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context),
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            label: context.localized('Save', '保存'),
+            label: context.l10n.save,
             tone: DesktopActionTone.primary,
           ),
         ],

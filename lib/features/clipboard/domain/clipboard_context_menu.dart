@@ -1,3 +1,4 @@
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 
 /// Commands exposed by the desktop clipboard item's native context menu.
@@ -16,6 +17,7 @@ enum ClipboardContextAction {
 }
 
 List<DesktopContextMenuItem> clipboardContextMenuItems({
+  required DingDongLocalizations strings,
   bool includePaste = false,
   bool canPasteAsPlainText = false,
   bool includeShare = true,
@@ -23,68 +25,32 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
   bool pinned = false,
   bool hasTitle = false,
 }) => <DesktopContextMenuItem>[
-  if (includePaste)
-    const DesktopContextMenuItem(
-      id: 'paste',
-      englishLabel: 'Paste',
-      chineseLabel: '粘贴',
-    ),
+  if (includePaste) DesktopContextMenuItem(id: 'paste', label: strings.paste),
   if (includePaste && canPasteAsPlainText)
-    const DesktopContextMenuItem(
+    DesktopContextMenuItem(
       id: 'pastePlainText',
-      englishLabel: 'Paste as Plain Text',
-      chineseLabel: '粘贴为纯文本',
+      label: strings.pasteAsPlainText,
     ),
   if (includePaste) const DesktopContextMenuItem.separator(),
-  const DesktopContextMenuItem(
-    id: 'details',
-    englishLabel: 'Details',
-    chineseLabel: '查看详情',
-  ),
-  const DesktopContextMenuItem(
-    id: 'copy',
-    englishLabel: 'Copy',
-    chineseLabel: '复制',
-  ),
+  DesktopContextMenuItem(id: 'details', label: strings.details),
+  DesktopContextMenuItem(id: 'copy', label: strings.copy),
   if (includePin)
     DesktopContextMenuItem(
       id: 'togglePinned',
-      englishLabel: pinned ? 'Unpin' : 'Pin',
-      chineseLabel: pinned ? '取消置顶' : '置顶',
+      label: pinned ? strings.unpin : strings.pin,
     ),
   const DesktopContextMenuItem.separator(),
   DesktopContextMenuItem(
     id: 'addTitle',
-    englishLabel: hasTitle ? 'Edit title' : 'Add title',
-    chineseLabel: hasTitle ? '修改标题' : '添加标题',
+    label: hasTitle ? strings.editTitle : strings.addTitle,
   ),
-  const DesktopContextMenuItem(
-    id: 'editText',
-    englishLabel: 'Edit text',
-    chineseLabel: '编辑文本',
-  ),
-  const DesktopContextMenuItem(
-    id: 'saveAsPrompt',
-    englishLabel: 'Save as prompt',
-    chineseLabel: '保存为提示词',
-  ),
-  const DesktopContextMenuItem(
-    id: 'archiveTo',
-    englishLabel: 'Archive to…',
-    chineseLabel: '归档到…',
-  ),
+  DesktopContextMenuItem(id: 'editText', label: strings.editText),
+  DesktopContextMenuItem(id: 'saveAsPrompt', label: strings.saveAsPrompt),
+  DesktopContextMenuItem(id: 'archiveTo', label: strings.archiveTo),
   if (includeShare)
-    const DesktopContextMenuItem(
-      id: 'share',
-      englishLabel: 'Send to Device',
-      chineseLabel: '发送到设备',
-    ),
+    DesktopContextMenuItem(id: 'share', label: strings.sendToDevice),
   const DesktopContextMenuItem.separator(),
-  const DesktopContextMenuItem(
-    id: 'delete',
-    englishLabel: 'Delete',
-    chineseLabel: '删除',
-  ),
+  DesktopContextMenuItem(id: 'delete', label: strings.delete),
 ];
 
 ClipboardContextAction? clipboardActionFromId(String? id) {

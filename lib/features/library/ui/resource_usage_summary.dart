@@ -7,6 +7,38 @@ enum ResourceUsageSummaryStyle { compact, detail }
 
 enum ResourceUsageStage { activated, candidate, loaded, called, used }
 
+final DateTime resourceUsageTrackingStartedAt = DateTime(2026, 8, 19);
+
+String resourceUsageTrackingDescription(BuildContext context) {
+  final String date = DateFormat.yMMMd(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).format(resourceUsageTrackingStartedAt);
+  return context.l10n
+      .dingdongHasRecordedTheseLocalStatisticsSinceDateEarlier_90d48aa0(date);
+}
+
+class ResourceUsageHelpIcon extends StatelessWidget {
+  const ResourceUsageHelpIcon({this.iconSize = 14, super.key});
+
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final String message = resourceUsageTrackingDescription(context);
+    return Tooltip(
+      message: message,
+      child: Semantics(
+        label: message,
+        child: Icon(
+          Icons.help_outline_rounded,
+          size: iconSize,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
 final class ResourceUsageMetric {
   const ResourceUsageMetric({
     required this.stage,
@@ -150,13 +182,23 @@ class _DetailedMetrics extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          context.localized('Usage', '使用统计'),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: colors.onSurfaceVariant,
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              context.l10n.usage2,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const ResourceUsageHelpIcon(
+              key: Key('resource-usage-help-detail'),
+              iconSize: 13,
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Row(
@@ -218,31 +260,29 @@ String _formatCount(BuildContext context, int count) =>
 
 String _label(BuildContext context, ResourceUsageStage stage) =>
     switch (stage) {
-      ResourceUsageStage.activated => context.localized('Activated', '激活'),
-      ResourceUsageStage.candidate => context.localized('Candidate', '候选'),
-      ResourceUsageStage.loaded => context.localized('Loaded', '加载'),
-      ResourceUsageStage.called => context.localized('Called', '调用'),
-      ResourceUsageStage.used => context.localized('Used', '使用'),
+      ResourceUsageStage.activated => context.l10n.activated,
+      ResourceUsageStage.candidate => context.l10n.candidate,
+      ResourceUsageStage.loaded => context.l10n.loaded,
+      ResourceUsageStage.called => context.l10n.called,
+      ResourceUsageStage.used => context.l10n.used,
     };
 
 String _pastAction(BuildContext context, ResourceUsageStage stage) =>
     switch (stage) {
-      ResourceUsageStage.activated => context.localized('activated', '激活'),
-      ResourceUsageStage.candidate => context.localized(
-        'returned as a candidate',
-        '成为候选',
-      ),
-      ResourceUsageStage.loaded => context.localized('loaded', '加载'),
-      ResourceUsageStage.called => context.localized('called', '调用'),
-      ResourceUsageStage.used => context.localized('used', '使用'),
+      ResourceUsageStage.activated => context.l10n.activated2,
+      ResourceUsageStage.candidate => context.l10n.returnedAsACandidate,
+      ResourceUsageStage.loaded => context.l10n.loaded2,
+      ResourceUsageStage.called => context.l10n.called2,
+      ResourceUsageStage.used => context.l10n.used2,
     };
 
 String _description(BuildContext context, ResourceUsageMetric metric) {
   final String count = _formatCount(context, metric.count);
   final String action = _pastAction(context, metric.stage);
-  final String countDescription = context.localized(
-    '$action $count ${metric.count == 1 ? 'time' : 'times'}',
-    '$action $count 次',
+  final String countDescription = context.l10n.actionCountTimes(
+    action,
+    count,
+    metric.count == 1 ? context.l10n.timeSingular : context.l10n.timePlural,
   );
   return '$countDescription · ${_lastLabel(context, metric)}';
 }
@@ -250,7 +290,7 @@ String _description(BuildContext context, ResourceUsageMetric metric) {
 String _lastLabel(BuildContext context, ResourceUsageMetric metric) {
   final DateTime? value = metric.lastAt;
   if (value == null) {
-    return context.localized('Never', '尚无记录');
+    return context.l10n.never;
   }
   final DateTime local = value.toLocal();
   final MaterialLocalizations localizations = MaterialLocalizations.of(context);
@@ -259,5 +299,5 @@ String _lastLabel(BuildContext context, ResourceUsageMetric metric) {
     TimeOfDay.fromDateTime(local),
     alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
   );
-  return context.localized('Last $date $time', '最近 $date $time');
+  return context.l10n.lastDateTime(date, time);
 }

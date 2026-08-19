@@ -1,19 +1,17 @@
 /// Sounds exposed by the current desktop settings surface.
 final class SoundChoice {
-  const SoundChoice(this.value, this.englishLabel, this.chineseLabel);
+  const SoundChoice(this.value);
 
   final String value;
-  final String englishLabel;
-  final String chineseLabel;
 }
 
 const List<SoundChoice> soundChoices = <SoundChoice>[
-  SoundChoice('default', 'DingDong Classic', '经典叮咚'),
-  SoundChoice('dingSoft', 'DingDong Soft', '轻柔叮咚'),
-  SoundChoice('dingBright', 'DingDong Bright', '清亮叮咚'),
-  SoundChoice('dingCrisp', 'DingDong Crisp', '清脆叮咚'),
-  SoundChoice('dingDeep', 'DingDong Deep', '低沉叮咚'),
-  SoundChoice('custom', 'Custom sound', '自定义声音'),
-  SoundChoice('system', 'System sound', '系统声音'),
-  SoundChoice('muted', 'Muted', '静音'),
+  SoundChoice('default'),
+  SoundChoice('dingSoft'),
+  SoundChoice('dingBright'),
+  SoundChoice('dingCrisp'),
+  SoundChoice('dingDeep'),
+  SoundChoice('custom'),
+  SoundChoice('system'),
+  SoundChoice('muted'),
 ];

@@ -826,7 +826,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
         _setDirty(false);
         setState(() => _saved = true);
         _showSnackBarIfAvailable(
-          context.localized('Configuration saved', '配置已保存'),
+          context.l10n.configurationSaved,
           const Duration(milliseconds: 1300),
         );
       }
@@ -872,10 +872,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
         (uri.scheme != 'https' && uri.scheme != 'http') ||
         widget.onOpenExternalLink == null) {
       setState(() {
-        _saveError = context.localized(
-          'Enter a valid web source before opening it.',
-          '请先填写有效的网页来源链接。',
-        );
+        _saveError = context.l10n.enterAValidWebSourceBeforeOpeningIt;
       });
       return;
     }
@@ -884,10 +881,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     } on Object {
       if (mounted) {
         setState(() {
-          _saveError = context.localized(
-            'Could not open this Skill source.',
-            '无法打开这个 Skill 来源。',
-          );
+          _saveError = context.l10n.couldNotOpenThisSkillSource;
         });
       }
     }
@@ -900,10 +894,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
     final String updateUrl = _updateUrlController.text.trim();
     if (resource == null || resolve == null || updateUrl.isEmpty) {
       setState(() {
-        _saveError = context.localized(
-          'This online Skill does not have an available source.',
-          '这个在线 Skill 没有可用的来源链接。',
-        );
+        _saveError = context.l10n.thisOnlineSkillDoesNotHaveAnAvailableSource;
       });
       return;
     }
@@ -937,7 +928,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
       if (mounted) {
         setState(() => _skillUpdated = true);
         _showSnackBarIfAvailable(
-          context.localized('Online Skill updated', '在线 Skill 已更新'),
+          context.l10n.onlineSkillUpdated,
           const Duration(milliseconds: 1400),
         );
       }
@@ -969,27 +960,23 @@ class _ResourceEditorState extends State<ResourceEditor> {
     if (error is StateError) {
       final String detail = error.message.toString();
       if (!detail.contains('unavailable')) {
-        return context.localized(
-          'Could not sync this resource to an installed Agent. $detail',
-          '无法把这个资源同步到已安装的 Agent。$detail',
+        return context.l10n.couldNotSyncThisResourceToAnInstalledAgentDetail(
+          detail,
         );
       }
-      return context.localized(
-        'Online sync is not ready in this window. Reopen Resource Manager and try again.',
-        '当前窗口尚未启用在线同步，请重新打开资源管理后重试。',
-      );
+      return context
+          .l10n
+          .onlineSyncIsNotReadyInThisWindowReopenResourceManagerAnd_2ceb1f90;
     }
     if (error is TimeoutException || error is SocketException) {
-      return context.localized(
-        'Could not reach the source. Check your network and link, then try again.',
-        '无法连接来源链接，请检查网络和链接后重试。',
-      );
+      return context
+          .l10n
+          .couldNotReachTheSourceCheckYourNetworkAndLinkThenTry_1c1ff9ae;
     }
     if (error is HttpException) {
-      return context.localized(
-        'The source did not return a usable SKILL.md. Check the repository path and access.',
-        '来源链接没有返回可用的 SKILL.md，请确认仓库路径和访问权限。',
-      );
+      return context
+          .l10n
+          .theSourceDidNotReturnAUsableSKILLMdCheckTheRepository_8db02039;
     }
     if (error is FormatException) {
       if (_draftType == ResourceType.skill) {
@@ -998,39 +985,24 @@ class _ResourceEditorState extends State<ResourceEditor> {
             detail.contains('native') ||
             detail.contains('Hook') ||
             detail.contains('project trigger scope')) {
-          return context.localized(
-            'Could not apply this Skill delivery policy. $detail',
-            '无法应用此 Skill 交付策略。$detail',
+          return context.l10n.couldNotApplyThisSkillDeliveryPolicyDetail(
+            detail,
           );
         }
         if (_skillSourceMode == SkillSourceMode.local) {
-          return context.localized(
-            'SKILL.md needs valid name and description fields in its YAML frontmatter.',
-            'SKILL.md 的 YAML frontmatter 需要有效的 name 和 description。',
-          );
+          return context
+              .l10n
+              .skillMdNeedsValidNameAndDescriptionFieldsInItsYAML_c05294f5;
         }
-        return context.localized(
-          'Paste a GitHub Skill repository, folder, or direct SKILL.md link.\n'
-              'Examples:\n'
-              'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste\n'
-              'https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling',
-          '请粘贴 GitHub Skill 仓库、文件夹或 SKILL.md 直链。\n'
-              '正确示例：\n'
-              'https://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste\n'
-              'https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling',
-        );
+        return context
+            .l10n
+            .pasteAGitHubSkillRepositoryFolderOrDirectSKILLMdLink_1ee790e1;
       }
       if (_draftType == ResourceType.mcp) {
-        return context.localized(
-          'Use a valid STDIO or Streamable HTTP MCP configuration.',
-          '请填写有效的 STDIO 或 Streamable HTTP MCP 配置。',
-        );
+        return context.l10n.useAValidSTDIOOrStreamableHTTPMCPConfiguration;
       }
     }
-    return context.localized(
-      'Could not save this configuration. Check the content and try again.',
-      '保存失败，请检查内容后重试。',
-    );
+    return context.l10n.couldNotSaveThisConfigurationCheckTheContentAndTryAgain;
   }
 
   String _serializedContent() {
@@ -1116,8 +1088,8 @@ class _ResourceEditorHeading extends StatelessWidget {
       children: <Widget>[
         Text(
           resource == null
-              ? context.localized('Add agent configuration', '添加 Agent 配置')
-              : context.localized('Configuration details', '配置详情'),
+              ? context.l10n.addAgentConfiguration
+              : context.l10n.configurationDetails,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -1175,10 +1147,7 @@ class _EmptyEditor extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            context.localized(
-              'Select a configuration to inspect or edit',
-              '选择一项配置以查看或编辑',
-            ),
+            context.l10n.selectAConfigurationToInspectOrEdit,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -1341,23 +1310,17 @@ class _AgentSessionNameField extends StatelessWidget {
         Row(
           children: <Widget>[
             Expanded(
-              child: _FieldLabel(
-                text: context.localized(
-                  'Agent session loading name',
-                  'Agent 会话加载名称',
-                ),
-              ),
+              child: _FieldLabel(text: context.l10n.agentSessionLoadingName),
             ),
             Tooltip(
-              message: context.localized(
-                'Load this resource without showing its name in the Agent conversation.',
-                '加载这个资源，但不在 Agent 对话中展示它的名称。',
-              ),
+              message: context
+                  .l10n
+                  .loadThisResourceWithoutShowingItsNameInTheAgent_ec7e075b,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
-                    context.localized('Hide in conversation', '会话中隐藏'),
+                    context.l10n.hideInConversation,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -1383,19 +1346,13 @@ class _AgentSessionNameField extends StatelessWidget {
             LengthLimitingTextInputFormatter(maximumAgentSessionNameCharacters),
           ],
           decoration: InputDecoration(
-            hintText: context.localized(
-              'Leave empty to use the resource title.',
-              '留空时使用资源标题。',
-            ),
+            hintText: context.l10n.leaveEmptyToUseTheResourceTitle,
             counterText: '',
           ),
         ),
         const SizedBox(height: 5),
         Text(
-          context.localized(
-            'Up to 7 characters. This name is shown first in the Agent conversation; an empty value falls back to the title.',
-            '最多 7 个字。Agent 会话中优先展示这个名称；留空时回退到资源标题。',
-          ),
+          context.l10n.upTo7CharactersThisNameIsShownFirstInTheAgent_b892681f,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -1421,7 +1378,7 @@ class _PromptEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _FieldLabel(text: context.localized('When it applies', '生效方式')),
+        _FieldLabel(text: context.l10n.whenItApplies),
         const SizedBox(height: 7),
         _FlatChoiceRow<ResourceActivation>(
           selected: activation,
@@ -1429,31 +1386,28 @@ class _PromptEditor extends StatelessWidget {
             _Choice<ResourceActivation>(
               value: ResourceActivation.always,
               keyName: 'resource-activation-always',
-              label: context.localized('Always', '始终'),
+              label: context.l10n.always,
             ),
             _Choice<ResourceActivation>(
               value: ResourceActivation.taskMatch,
               keyName: 'resource-activation-task-match',
-              label: context.localized('Agent decides', 'Agent 判断'),
+              label: context.l10n.agentDecides,
             ),
             _Choice<ResourceActivation>(
               value: ResourceActivation.manual,
               keyName: 'resource-activation-manual',
-              label: context.localized('Manual', '手动'),
+              label: context.l10n.manual,
             ),
           ],
           onSelected: onActivationChanged,
         ),
         const SizedBox(height: 16),
-        _FieldLabel(text: context.localized('Instructions', '提示词内容')),
+        _FieldLabel(text: context.l10n.instructions),
         const SizedBox(height: 7),
         _MultilineField(
           key: const Key('resource-content'),
           controller: controller,
-          hintText: context.localized(
-            'Describe the behavior the Agent should follow.',
-            '直接写清楚 Agent 应遵循的行为。',
-          ),
+          hintText: context.l10n.describeTheBehaviorTheAgentShouldFollow,
           height: 220,
         ),
       ],
@@ -1500,7 +1454,7 @@ class _SkillEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _FieldLabel(text: context.localized('Skill source', 'Skill 来源')),
+        _FieldLabel(text: context.l10n.skillSource),
         const SizedBox(height: 7),
         if (installedOnline)
           Container(
@@ -1520,10 +1474,7 @@ class _SkillEditor extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  context.localized(
-                    'Installed from an online source',
-                    '已从在线来源安装',
-                  ),
+                  context.l10n.installedFromAnOnlineSource,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.primary,
                     fontWeight: FontWeight.w600,
@@ -1539,12 +1490,12 @@ class _SkillEditor extends StatelessWidget {
               _Choice<SkillSourceMode>(
                 value: SkillSourceMode.local,
                 keyName: 'resource-skill-source-local',
-                label: context.localized('Local authoring', '本地编写'),
+                label: context.l10n.localAuthoring,
               ),
               _Choice<SkillSourceMode>(
                 value: SkillSourceMode.online,
                 keyName: 'resource-skill-source-online',
-                label: context.localized('Online sync', '在线同步'),
+                label: context.l10n.onlineSync,
               ),
             ],
             onSelected: onSourceModeChanged,
@@ -1552,7 +1503,7 @@ class _SkillEditor extends StatelessWidget {
         const SizedBox(height: 16),
         if (sourceMode == SkillSourceMode.online) ...<Widget>[
           if (installedOnline) ...<Widget>[
-            _FieldLabel(text: context.localized('Skill name', 'Skill 名称')),
+            _FieldLabel(text: context.l10n.skillName),
             const SizedBox(height: 7),
             DesktopTextField(
               key: const Key('resource-skill-name'),
@@ -1560,7 +1511,7 @@ class _SkillEditor extends StatelessWidget {
               readOnly: true,
             ),
             const SizedBox(height: 14),
-            _FieldLabel(text: context.localized('When to use', '什么时候使用')),
+            _FieldLabel(text: context.l10n.whenToUse),
             const SizedBox(height: 7),
             DesktopTextField(
               key: const Key('resource-skill-description'),
@@ -1570,7 +1521,7 @@ class _SkillEditor extends StatelessWidget {
               maxLines: 4,
             ),
             const SizedBox(height: 14),
-            _FieldLabel(text: context.localized('My note', '我的备注')),
+            _FieldLabel(text: context.l10n.myNote),
             const SizedBox(height: 7),
             DesktopTextField(
               key: const Key('resource-skill-note'),
@@ -1578,10 +1529,7 @@ class _SkillEditor extends StatelessWidget {
               minLines: 2,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: context.localized(
-                  'Add a local note about how you use this Skill.',
-                  '记录你会在什么场景使用这个 Skill。',
-                ),
+                hintText: context.l10n.addALocalNoteAboutHowYouUseThisSkill,
               ),
             ),
             const SizedBox(height: 16),
@@ -1603,14 +1551,13 @@ class _SkillEditor extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.localized(
-                      installedOnline
-                          ? 'The installed package is read-only. Review the source before updating.'
-                          : 'Review the Skill before installing. DingDong saves the full folder, including scripts and references; updates stay manual.',
-                      installedOnline
-                          ? '已安装的 Skill 包为只读。更新前请先查看来源。'
-                          : '安装前先确认内容。DingDong 会保存包括脚本和参考资料在内的完整目录，更新由你手动触发。',
-                    ),
+                    installedOnline
+                        ? context
+                              .l10n
+                              .theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e
+                        : context
+                              .l10n
+                              .reviewTheSkillBeforeInstallingDingDongSavesTheFullFolder_1375b575,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
                       height: 1.4,
@@ -1621,7 +1568,7 @@ class _SkillEditor extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _FieldLabel(text: context.localized('Source URL', '来源链接')),
+          _FieldLabel(text: context.l10n.sourceURL),
           const SizedBox(height: 7),
           Row(
             children: <Widget>[
@@ -1640,7 +1587,7 @@ class _SkillEditor extends StatelessWidget {
               const SizedBox(width: 7),
               DesktopIconButton(
                 key: const Key('resource-skill-open-source'),
-                tooltip: context.localized('Open source', '打开来源'),
+                tooltip: context.l10n.openSource,
                 onPressed: onOpenSource,
                 icon: const Icon(Icons.open_in_new_rounded, size: 17),
               ),
@@ -1660,10 +1607,10 @@ class _SkillEditor extends StatelessWidget {
                         ),
                   label: Text(
                     updating
-                        ? context.localized('Updating…', '更新中…')
+                        ? context.l10n.updating
                         : updated
-                        ? context.localized('Updated', '已更新')
-                        : context.localized('Check update', '检查更新'),
+                        ? context.l10n.updated
+                        : context.l10n.checkUpdate,
                   ),
                 ),
               ],
@@ -1675,14 +1622,11 @@ class _SkillEditor extends StatelessWidget {
               children: <Widget>[
                 Expanded(
                   child: _FieldLabel(
-                    text: context.localized(
-                      'Installed Skill package · SKILL.md',
-                      '已安装的 Skill 包 · SKILL.md',
-                    ),
+                    text: context.l10n.installedSkillPackageSKILLMd,
                   ),
                 ),
                 Text(
-                  context.localized('Read-only', '只读'),
+                  context.l10n.readOnly,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
@@ -1711,10 +1655,7 @@ class _SkillEditor extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    context.localized(
-                      'Saved as SKILL.md · name: $name',
-                      '保存为 SKILL.md · name: $name',
-                    ),
+                    context.l10n.savedAsSKILLMdNameName(name),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -1726,16 +1667,9 @@ class _SkillEditor extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: <Widget>[
-              Expanded(
-                child: _FieldLabel(
-                  text: context.localized('SKILL.md content', 'SKILL.md 内容'),
-                ),
-              ),
+              Expanded(child: _FieldLabel(text: context.l10n.skillMdContent)),
               Text(
-                context.localized(
-                  'Cursor-compatible format',
-                  '兼容 Cursor 的单文件格式',
-                ),
+                context.l10n.cursorCompatibleFormat,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -1746,10 +1680,7 @@ class _SkillEditor extends StatelessWidget {
           _MultilineField(
             key: const Key('resource-content'),
             controller: documentController,
-            hintText: context.localized(
-              '---\nname: my-skill\ndescription: Use when…\n---\n\n# Instructions',
-              '---\nname: my-skill\ndescription: 什么时候使用…\n---\n\n# 执行说明',
-            ),
+            hintText: context.l10n.nameMySkillDescriptionUseWhenInstructions,
             height: 340,
             monospace: true,
           ),
@@ -1787,7 +1718,7 @@ class _McpEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _FieldLabel(text: context.localized('Connection type', '连接方式')),
+        _FieldLabel(text: context.l10n.connectionType),
         const SizedBox(height: 7),
         _FlatChoiceRow<McpTransport>(
           selected: transport,
@@ -1805,7 +1736,7 @@ class _McpEditor extends StatelessWidget {
             _Choice<McpTransport>(
               value: McpTransport.raw,
               keyName: 'resource-mcp-transport-raw',
-              label: context.localized('Paste config', '粘贴配置'),
+              label: context.l10n.pasteConfig,
             ),
           ],
           onSelected: onTransportChanged,
@@ -1825,12 +1756,7 @@ class _McpEditor extends StatelessWidget {
           McpTransport.raw => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _FieldLabel(
-                text: context.localized(
-                  'JSON, TOML, or YAML configuration',
-                  'JSON、TOML 或 YAML 配置',
-                ),
-              ),
+              _FieldLabel(text: context.l10n.jsonTOMLOrYAMLConfiguration),
               const SizedBox(height: 7),
               _MultilineField(
                 key: const Key('resource-mcp-raw'),
@@ -1863,17 +1789,14 @@ class _McpStdioFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _FieldLabel(text: context.localized('Command', '启动命令')),
+        _FieldLabel(text: context.l10n.command),
         const SizedBox(height: 7),
         DesktopTextField(
           key: const Key('resource-mcp-command'),
           controller: commandController,
           style: const TextStyle(fontFamily: 'monospace'),
           decoration: InputDecoration(
-            hintText: context.localized(
-              'Executable path, npx, uvx…',
-              '可执行文件路径、npx、uvx…',
-            ),
+            hintText: context.l10n.executablePathNpxUvx,
           ),
         ),
         const SizedBox(height: 14),
@@ -1881,12 +1804,7 @@ class _McpStdioFields extends StatelessWidget {
           left: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _FieldLabel(
-                text: context.localized(
-                  'Arguments · one per line',
-                  '参数 · 每行一个',
-                ),
-              ),
+              _FieldLabel(text: context.l10n.argumentsOnePerLine),
               const SizedBox(height: 7),
               _MultilineField(
                 key: const Key('resource-mcp-args'),
@@ -1900,7 +1818,7 @@ class _McpStdioFields extends StatelessWidget {
           right: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _FieldLabel(text: context.localized('Environment', '环境变量')),
+              _FieldLabel(text: context.l10n.environment),
               const SizedBox(height: 7),
               _MultilineField(
                 key: const Key('resource-mcp-env'),
@@ -1933,7 +1851,7 @@ class _McpHttpFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _FieldLabel(text: context.localized('Server URL', '服务地址')),
+        _FieldLabel(text: context.l10n.serverURL),
         const SizedBox(height: 7),
         DesktopTextField(
           key: const Key('resource-mcp-url'),
@@ -1946,7 +1864,7 @@ class _McpHttpFields extends StatelessWidget {
           left: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _FieldLabel(text: context.localized('Headers', '请求头')),
+              _FieldLabel(text: context.l10n.headers),
               const SizedBox(height: 7),
               _MultilineField(
                 key: const Key('resource-mcp-headers'),
@@ -1960,9 +1878,7 @@ class _McpHttpFields extends StatelessWidget {
           right: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _FieldLabel(
-                text: context.localized('Bearer token env', '令牌环境变量'),
-              ),
+              _FieldLabel(text: context.l10n.bearerTokenEnv),
               const SizedBox(height: 7),
               DesktopTextField(
                 key: const Key('resource-mcp-token-env'),
@@ -1989,10 +1905,9 @@ class _KnowledgeContentEditor extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Text(
-          context.localized(
-            'Knowledge is collected from imports and Agent context; it cannot be newly authored here yet.',
-            '知识库内容来自导入和 Agent 上下文，暂时不能在这里直接新建。',
-          ),
+          context
+              .l10n
+              .knowledgeIsCollectedFromImportsAndAgentContextItCannotBe_08bd7ed0,
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 10),
@@ -2032,16 +1947,15 @@ class _TriggerScopeField extends StatelessWidget {
       children: <Widget>[
         _FieldLabel(
           text: nativeProject
-              ? context.localized('Project installation scope', '项目安装范围')
-              : context.localized('Trigger scope', '触发范围'),
+              ? context.l10n.projectInstallationScope
+              : context.l10n.triggerScope,
         ),
         if (nativeProject) ...<Widget>[
           const SizedBox(height: 4),
           Text(
-            context.localized(
-              'DingDong copies the complete Skill package into each selected project\'s native directory. The Skill is discovered only when that Agent works in the project.',
-              'DingDong 会把完整 Skill 包复制到每个所选项目的 Agent 原生目录；只有该 Agent 在这些项目中工作时才会发现它。',
-            ),
+            context
+                .l10n
+                .dingdongCopiesTheCompleteSkillPackageIntoEachSelected_de26f089,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -2075,14 +1989,8 @@ class _TriggerScopeField extends StatelessWidget {
                       child: Text(
                         names.isEmpty
                             ? nativeProject
-                                  ? context.localized(
-                                      'No project selected',
-                                      '尚未选择项目',
-                                    )
-                                  : context.localized(
-                                      'All projects · no restriction',
-                                      '所有项目 · 不限制',
-                                    )
+                                  ? context.l10n.noProjectSelected
+                                  : context.l10n.allProjectsNoRestriction
                             : names.join('、'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -2097,15 +2005,9 @@ class _TriggerScopeField extends StatelessWidget {
                     Text(
                       names.isEmpty
                           ? nativeProject
-                                ? context.localized(
-                                    'Configure projects',
-                                    '配置项目',
-                                  )
-                                : context.localized('Choose rules', '选择规则')
-                          : context.localized(
-                              '${names.length} selected',
-                              '已选 ${names.length} 个',
-                            ),
+                                ? context.l10n.configureProjects
+                                : context.l10n.chooseRules
+                          : context.l10n.lengthSelected(names.length),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
@@ -2167,7 +2069,7 @@ class _SkillDeliveryEditor extends StatelessWidget {
       initiallyExpanded: true,
       leading: const Icon(Icons.inventory_2_outlined, size: 16),
       title: Text(
-        context.localized('Delivery by Agent', '按 Agent 交付'),
+        context.l10n.deliveryByAgent,
         style: Theme.of(
           context,
         ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -2176,10 +2078,9 @@ class _SkillDeliveryEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Text(
-            context.localized(
-              'Dynamic loads on demand through DingDong. Native · Global installs in the Agent user directory. Native · Project installs only in selected projects.',
-              '动态通过 DingDong 按需加载；原生 · 全局安装到 Agent 用户目录；原生 · 项目只安装到所选项目。',
-            ),
+            context
+                .l10n
+                .dynamicLoadsOnDemandThroughDingDongNativeGlobalInstalls_ff4bd6e5,
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -2200,10 +2101,7 @@ class _SkillDeliveryEditor extends StatelessWidget {
             DesktopDisclosure(
               key: const Key('skill-delivery-uninstalled-agents'),
               title: Text(
-                context.localized(
-                  'Not installed Agents (${uninstalledAgents.length})',
-                  '未安装的 Agent（${uninstalledAgents.length}）',
-                ),
+                context.l10n.notInstalledAgentsLength(uninstalledAgents.length),
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: colors.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -2297,7 +2195,7 @@ class _SkillDeliveryAgentRow extends StatelessWidget {
             ),
             if (!agent.available)
               Text(
-                context.localized('Not installed', '未安装'),
+                context.l10n.notInstalled,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -2311,18 +2209,18 @@ class _SkillDeliveryAgentRow extends StatelessWidget {
             _Choice<SkillDeliveryMode>(
               value: SkillDeliveryMode.dynamic,
               keyName: 'skill-delivery-${agent.id}-dynamic',
-              label: context.localized('Dynamic', '动态'),
+              label: context.l10n.dynamicMessage,
             ),
             _Choice<SkillDeliveryMode>(
               value: SkillDeliveryMode.nativeUser,
               keyName: 'skill-delivery-${agent.id}-native-user',
-              label: context.localized('Native · User', '原生 · 全局'),
+              label: context.l10n.nativeUser,
               enabled: agent.available,
             ),
             _Choice<SkillDeliveryMode>(
               value: SkillDeliveryMode.nativeProject,
               keyName: 'skill-delivery-${agent.id}-native-project',
-              label: context.localized('Native · Project', '原生 · 项目'),
+              label: context.l10n.nativeProject,
               enabled: agent.available,
             ),
           ],
@@ -2337,10 +2235,7 @@ class _SkillDeliveryAgentRow extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  context.localized(
-                    'Impeccable project Hook (approval required in /hooks)',
-                    'Impeccable 项目 Hook（需在 /hooks 中批准）',
-                  ),
+                  context.l10n.impeccableProjectHookApprovalRequiredInHooks,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -2385,7 +2280,7 @@ class _ResourceOptions extends StatelessWidget {
       key: const Key('resource-advanced-settings'),
       leading: const Icon(Icons.tune_rounded, size: 16),
       title: Text(
-        context.localized('Other settings', '其它设置'),
+        context.l10n.otherSettings,
         style: Theme.of(
           context,
         ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -2394,7 +2289,7 @@ class _ResourceOptions extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           if (showUpdateLink) ...<Widget>[
-            _FieldLabel(text: context.localized('Update link', '更新链接')),
+            _FieldLabel(text: context.l10n.updateLink),
             const SizedBox(height: 7),
             Row(
               children: <Widget>[
@@ -2402,8 +2297,8 @@ class _ResourceOptions extends StatelessWidget {
                   child: DesktopTextField(
                     key: const Key('resource-update-url'),
                     controller: updateUrlController,
-                    decoration: const InputDecoration(
-                      hintText: 'HTTPS or GitHub file URL',
+                    decoration: InputDecoration(
+                      hintText: context.l10n.httpsOrGitHubFileURL,
                     ),
                   ),
                 ),
@@ -2411,10 +2306,7 @@ class _ResourceOptions extends StatelessWidget {
                   const SizedBox(width: 8),
                   DesktopIconButton(
                     key: const Key('resource-sync-update'),
-                    tooltip: context.localized(
-                      'Fetch latest content',
-                      '获取最新内容',
-                    ),
+                    tooltip: context.l10n.fetchLatestContent,
                     onPressed: onSync,
                     icon: const Icon(Icons.sync_rounded),
                   ),
@@ -2428,7 +2320,7 @@ class _ResourceOptions extends StatelessWidget {
               Expanded(
                 child: _InlineToggle(
                   key: const Key('resource-pinned'),
-                  label: context.localized('Pin in library', '在资源库置顶'),
+                  label: context.l10n.pinInLibrary,
                   value: pinned,
                   onChanged: onPinnedChanged,
                 ),
@@ -2437,10 +2329,7 @@ class _ResourceOptions extends StatelessWidget {
               Expanded(
                 child: _InlineToggle(
                   key: const Key('resource-enabled'),
-                  label: context.localized(
-                    'Available to installed Agents',
-                    '对已安装的 Agent 可用',
-                  ),
+                  label: context.l10n.availableToInstalledAgents,
                   value: enabled,
                   onChanged: onEnabledChanged,
                 ),
@@ -2481,13 +2370,13 @@ class _EditorActions extends StatelessWidget {
             children: <Widget>[
               if (existing)
                 DesktopIconButton(
-                  tooltip: context.localized('Delete', '删除'),
+                  tooltip: context.l10n.delete,
                   onPressed: onDelete,
                   icon: const Icon(Icons.delete_outline_rounded),
                 ),
               const Spacer(),
               DesktopIconButton(
-                tooltip: context.localized('Reset changes', '重置更改'),
+                tooltip: context.l10n.resetChanges,
                 onPressed: onReset,
                 icon: const Icon(Icons.undo_rounded),
               ),
@@ -2510,12 +2399,12 @@ class _EditorActions extends StatelessWidget {
               DesktopActionButton(
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                label: Text(context.localized('Delete', '删除')),
+                label: Text(context.l10n.delete),
               ),
             const Spacer(),
             DesktopActionButton(
               onPressed: onReset,
-              child: Text(context.localized('Reset', '重置')),
+              child: Text(context.l10n.reset2),
             ),
             const SizedBox(width: 8),
             DesktopActionButton(
@@ -2548,12 +2437,12 @@ class _SaveButtonLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String label = saving
-        ? context.localized('Saving…', '保存中…')
+        ? context.l10n.saving
         : saved
-        ? context.localized('Saved', '已保存')
+        ? context.l10n.saved
         : syncing
-        ? context.localized('Install Skill', '安装 Skill')
-        : context.localized('Save', '保存');
+        ? context.l10n.installSkill
+        : context.l10n.save;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 150),
       child: Row(
@@ -2753,11 +2642,11 @@ class _InlineToggle extends StatelessWidget {
 
 String _typeLabel(BuildContext context, ResourceType type) {
   return switch (type) {
-    ResourceType.prompt => context.localized('Prompt', '提示词'),
-    ResourceType.skill => context.localized('Skill', 'Skill'),
+    ResourceType.prompt => context.l10n.prompt,
+    ResourceType.skill => context.l10n.skill,
     ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
-    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
+    ResourceType.knowledge => context.l10n.knowledge,
+    ResourceType.clipboard => context.l10n.clipboard,
   };
 }
 
@@ -2773,47 +2662,39 @@ IconData _typeIcon(ResourceType type) {
 
 String _typeDescription(BuildContext context, ResourceType type) {
   return switch (type) {
-    ResourceType.prompt => context.localized(
-      'Required instructions that are applied automatically whenever active.',
-      '命中后必须自动应用的完整指令。',
-    ),
-    ResourceType.skill => context.localized(
-      'Matched by description, then loaded as a complete Skill package only when needed.',
-      '先按 description 匹配，需要时才加载完整 Skill 包。',
-    ),
-    ResourceType.mcp => context.localized(
-      'A tool connection whose MCP tools are called only when the task requires them.',
-      '提供 MCP 工具连接，仅在任务需要时调用。',
-    ),
-    ResourceType.knowledge => context.localized(
-      'Imported knowledge available to Agent context.',
-      '已导入、可供 Agent 使用的知识库内容。',
-    ),
-    ResourceType.clipboard => context.localized('Clipboard item.', '剪贴板条目。'),
+    ResourceType.prompt =>
+      context
+          .l10n
+          .requiredInstructionsThatAreAppliedAutomaticallyWhenever_7564e51c,
+    ResourceType.skill =>
+      context
+          .l10n
+          .matchedByDescriptionThenLoadedAsACompleteSkillPackage_fa102bfe,
+    ResourceType.mcp =>
+      context
+          .l10n
+          .aToolConnectionWhoseMCPToolsAreCalledOnlyWhenTheTask_08282426,
+    ResourceType.knowledge =>
+      context.l10n.importedKnowledgeAvailableToAgentContext,
+    ResourceType.clipboard => context.l10n.clipboardItem,
   };
 }
 
 String _titleLabel(BuildContext context, ResourceType type) {
   return switch (type) {
-    ResourceType.prompt => context.localized('Prompt name', '提示词名称'),
-    ResourceType.skill => context.localized('Skill name', 'Skill 名称'),
-    ResourceType.mcp => context.localized('Server name', '服务名称'),
-    ResourceType.knowledge => context.localized('Name', '名称'),
-    ResourceType.clipboard => context.localized('Name', '名称'),
+    ResourceType.prompt => context.l10n.promptName,
+    ResourceType.skill => context.l10n.skillName,
+    ResourceType.mcp => context.l10n.serverName,
+    ResourceType.knowledge => context.l10n.name,
+    ResourceType.clipboard => context.l10n.name,
   };
 }
 
 String _titleHint(BuildContext context, ResourceType type) {
   return switch (type) {
-    ResourceType.prompt => context.localized(
-      'e.g. Concise release notes',
-      '例如：简洁发布说明',
-    ),
-    ResourceType.skill => context.localized(
-      'lowercase-hyphen-name',
-      '使用小写英文与连字符',
-    ),
-    ResourceType.mcp => context.localized('e.g. Figma', '例如：Figma'),
+    ResourceType.prompt => context.l10n.eGConciseReleaseNotes,
+    ResourceType.skill => context.l10n.lowercaseHyphenName,
+    ResourceType.mcp => context.l10n.eGFigma,
     ResourceType.knowledge => '',
     ResourceType.clipboard => '',
   };

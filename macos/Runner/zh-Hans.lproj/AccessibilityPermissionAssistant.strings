@@ -1,0 +1,7 @@
+"title" = "辅助功能授权";
+"subtitle" = "拖入当前 DingDong，再打开系统开关";
+"stale_entry_guide" = "“−”可用：先删除旧条目，再拖入当前版本。";
+"disabled_remove_guide" = "“−”置灰：先拖一次让它可用，删除后再拖一次并打开开关。";
+"close" = "关闭";
+"drag_hint" = "按住此卡片拖入系统列表";
+"drag_accessibility_label" = "将当前 DingDong 拖入辅助功能列表";

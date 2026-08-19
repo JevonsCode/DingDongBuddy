@@ -1,0 +1,7 @@
+"title" = "Permiso de accesibilidad";
+"subtitle" = "Arrastra este DingDong y activa el interruptor del sistema";
+"stale_entry_guide" = "Si «−» funciona, elimina la entrada anterior y arrastra esta versión.";
+"disabled_remove_guide" = "Si «−» está desactivado, arrastra una vez, elimina la entrada, vuelve a arrastrar y activa el interruptor.";
+"close" = "Cerrar";
+"drag_hint" = "Mantén pulsada esta tarjeta y arrástrala a la lista del sistema";
+"drag_accessibility_label" = "Arrastra el DingDong actual a la lista de Accesibilidad";

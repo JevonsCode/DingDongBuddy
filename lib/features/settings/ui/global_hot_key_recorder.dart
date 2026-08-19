@@ -69,10 +69,8 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
     final String? key = shortcutKeyForLogicalKey(event.logicalKey);
     if (key == null) {
       setState(() {
-        _validationMessage = context.localized(
-          'Use a letter, number, F1–F12, arrow, Space, or Return.',
-          '请使用字母、数字、F1–F12、方向键、空格或回车。',
-        );
+        _validationMessage =
+            context.l10n.useALetterNumberF1F12ArrowSpaceOrReturn;
       });
       return KeyEventResult.handled;
     }
@@ -88,10 +86,7 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
     );
     if (!candidate.hasModifier) {
       setState(() {
-        _validationMessage = context.localized(
-          'Include at least one modifier key.',
-          '请至少包含一个修饰键。',
-        );
+        _validationMessage = context.l10n.includeAtLeastOneModifierKey;
       });
       return KeyEventResult.handled;
     }
@@ -122,7 +117,7 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
                 onPressed: _recording ? _cancelRecording : _startRecording,
                 label: Text(
                   _recording
-                      ? context.localized('Press a shortcut…', '请按下快捷键…')
+                      ? context.l10n.pressAShortcut
                       : widget.value.label(platform),
                 ),
                 minWidth: 172,
@@ -135,7 +130,7 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
               onPressed: widget.value == GlobalHotKey.defaultValue
                   ? null
                   : () => widget.onChanged(GlobalHotKey.defaultValue),
-              label: context.localized('Reset', '恢复默认'),
+              label: context.l10n.reset,
               compact: true,
             ),
           ],
@@ -224,10 +219,8 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
     final String? key = shortcutKeyForLogicalKey(event.logicalKey);
     if (key == null) {
       setState(() {
-        _validationMessage = context.localized(
-          'Use a letter, number, F1–F12, arrow, Space, or Return.',
-          '请使用字母、数字、F1–F12、方向键、空格或回车。',
-        );
+        _validationMessage =
+            context.l10n.useALetterNumberF1F12ArrowSpaceOrReturn;
       });
       return KeyEventResult.handled;
     }
@@ -242,10 +235,7 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
     );
     if (!candidate.hasModifier) {
       setState(() {
-        _validationMessage = context.localized(
-          'Include at least one modifier key.',
-          '请至少包含一个修饰键。',
-        );
+        _validationMessage = context.l10n.includeAtLeastOneModifierKey;
       });
       return KeyEventResult.handled;
     }
@@ -262,10 +252,8 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
     final bool accepted = await widget.onChanged(candidate);
     if (!accepted && mounted) {
       setState(() {
-        _validationMessage = context.localized(
-          'This conflicts with another DingDong or system shortcut.',
-          '这个组合与其他 DingDong 或系统快捷键冲突。',
-        );
+        _validationMessage =
+            context.l10n.thisConflictsWithAnotherDingDongOrSystemShortcut;
       });
     }
   }
@@ -282,15 +270,11 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
             Semantics(
               button: true,
               label: _recording
-                  ? context.localized(
-                      '${widget.semanticLabel}, waiting for a shortcut',
-                      '${widget.semanticLabel}，正在等待快捷键',
+                  ? context.l10n.semanticlabelWaitingForAShortcut(
+                      widget.semanticLabel,
                     )
                   : '${widget.semanticLabel}, ${widget.value.label(platform)}',
-              hint: context.localized(
-                'Press to record a different shortcut',
-                '按下后录制新的快捷键',
-              ),
+              hint: context.l10n.pressToRecordADifferentShortcut,
               child: ExcludeSemantics(
                 child: Focus(
                   focusNode: _focusNode,
@@ -300,7 +284,7 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
                     onPressed: _recording ? _cancelRecording : _startRecording,
                     label: Text(
                       _recording
-                          ? context.localized('Press a shortcut…', '请按下快捷键…')
+                          ? context.l10n.pressAShortcut
                           : widget.value.label(platform),
                     ),
                     minWidth: 172,
@@ -313,10 +297,7 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
             Semantics(
               button: true,
               enabled: widget.value != widget.defaultValue,
-              label: context.localized(
-                'Reset ${widget.semanticLabel}',
-                '恢复${widget.semanticLabel}默认值',
-              ),
+              label: context.l10n.resetSemanticLabel(widget.semanticLabel),
               child: ExcludeSemantics(
                 child: DesktopActionButton(
                   key: Key(
@@ -325,7 +306,7 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
                   onPressed: widget.value == widget.defaultValue
                       ? null
                       : () => unawaited(_save(widget.defaultValue)),
-                  label: context.localized('Reset', '恢复默认'),
+                  label: context.l10n.reset,
                   compact: true,
                 ),
               ),

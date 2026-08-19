@@ -78,6 +78,48 @@ void main() {
   );
 
   test(
+    'Codex falls back to the newest exact-workspace session without an id',
+    () async {
+      final Directory day = await Directory(
+        path.join(codex.path, '2026', '08', '19'),
+      ).create(recursive: true);
+      final File matching = File(
+        path.join(day.path, 'rollout-current-workspace.jsonl'),
+      );
+      await matching.writeAsString(
+        <String>[
+          _codexSessionMetaLine(
+            id: 'current-workspace',
+            cwd: '/workspace/current',
+          ),
+          _codexTokenLine(total: 3210, input: 3000, output: 210),
+        ].join('\n'),
+      );
+      final File unrelated = File(
+        path.join(day.path, 'rollout-newer-unrelated.jsonl'),
+      );
+      await unrelated.writeAsString(
+        <String>[
+          _codexSessionMetaLine(id: 'newer-unrelated', cwd: '/workspace/other'),
+          _codexTokenLine(total: 9999, input: 9000, output: 999),
+        ].join('\n'),
+      );
+      await matching.setLastModified(DateTime.utc(2026, 8, 19, 10));
+      await unrelated.setLastModified(DateTime.utc(2026, 8, 19, 11));
+
+      final ConversationTokenUsage? usage = await resolver.resolve(
+        const ConversationTokenUsageRequest(
+          source: 'Codex',
+          workspacePath: '/workspace/current',
+        ),
+      );
+
+      expect(usage?.source, ConversationTokenUsageSource.codex);
+      expect(usage?.totalTokens, 3210);
+    },
+  );
+
+  test(
     'Claude Code deduplicates responses and includes subagent usage',
     () async {
       final Directory project = await Directory(
@@ -136,6 +178,91 @@ void main() {
       expect(usage?.cacheWriteInputTokens, 45);
       expect(usage?.totalTokens, 945);
     },
+  );
+
+  test(
+    'Claude Code falls back to the exact-workspace transcript without an id',
+    () async {
+      final Directory project = await Directory(
+        path.join(claude.path, 'project-workspace'),
+      ).create();
+      final File transcript = File(
+        path.join(project.path, 'claude-workspace-session.jsonl'),
+      );
+      await transcript.writeAsString(
+        <String>[
+          _claudeWorkspaceLine(
+            sessionId: 'claude-workspace-session',
+            cwd: '/workspace/claude',
+          ),
+          _claudeAssistantLine(
+            requestId: 'request-workspace',
+            messageId: 'message-workspace',
+            input: 400,
+            output: 50,
+            cacheRead: 100,
+            cacheWrite: 25,
+          ),
+        ].join('\n'),
+      );
+
+      final ConversationTokenUsage? usage = await resolver.resolve(
+        const ConversationTokenUsageRequest(
+          source: 'Claude Code',
+          workspacePath: '/workspace/claude',
+        ),
+      );
+
+      expect(usage?.source, ConversationTokenUsageSource.claudeCode);
+      expect(usage?.totalTokens, 575);
+    },
+  );
+
+  test(
+    'Claude Code resolves workspace symlinks before transcript matching',
+    () async {
+      final Directory actualWorkspace = await Directory(
+        path.join(temporary.path, 'actual-workspace'),
+      ).create();
+      final Link linkedWorkspace = Link(
+        path.join(temporary.path, 'linked-workspace'),
+      );
+      await linkedWorkspace.create(actualWorkspace.path);
+      final Directory project = await Directory(
+        path.join(claude.path, 'project-symlink'),
+      ).create();
+      final File transcript = File(
+        path.join(project.path, 'claude-symlink-session.jsonl'),
+      );
+      await transcript.writeAsString(
+        <String>[
+          _claudeWorkspaceLine(
+            sessionId: 'claude-symlink-session',
+            cwd: actualWorkspace.path,
+          ),
+          _claudeAssistantLine(
+            requestId: 'request-symlink',
+            messageId: 'message-symlink',
+            input: 40,
+            output: 5,
+            cacheRead: 10,
+            cacheWrite: 2,
+          ),
+        ].join('\n'),
+      );
+
+      final ConversationTokenUsage? usage = await resolver.resolve(
+        ConversationTokenUsageRequest(
+          source: 'Claude Code',
+          workspacePath: linkedWorkspace.path,
+        ),
+      );
+
+      expect(usage?.totalTokens, 57);
+    },
+    skip: Platform.isWindows
+        ? 'Creating a test symlink requires additional Windows privileges.'
+        : false,
   );
 
   test('Pi mirrors its billed all-entry session total', () async {
@@ -243,6 +370,20 @@ String _codexTokenLine({
     },
   },
 });
+
+String _codexSessionMetaLine({required String id, required String cwd}) =>
+    jsonEncode(<String, Object?>{
+      'type': 'session_meta',
+      'payload': <String, Object?>{'id': id, 'cwd': cwd},
+    });
+
+String _claudeWorkspaceLine({required String sessionId, required String cwd}) =>
+    jsonEncode(<String, Object?>{
+      'type': 'user',
+      'sessionId': sessionId,
+      'cwd': cwd,
+      'message': <String, Object?>{'role': 'user'},
+    });
 
 String _claudeAssistantLine({
   String? requestId,

@@ -97,13 +97,19 @@ final class LocalConversationTokenUsageResolver {
     ConversationTokenUsageRequest request,
   ) async {
     final String? conversationId = _safeConversationId(request.conversationId);
-    if (conversationId == null) {
-      return null;
-    }
-    final File? transcript = await _newestMatchingFile(<Directory>[
+    final List<Directory> roots = <Directory>[
       _codexSessionsDirectory,
       _codexArchivedSessionsDirectory,
-    ], conversationId);
+    ];
+    final File? transcript =
+        (conversationId == null
+            ? null
+            : await _newestMatchingFile(roots, conversationId)) ??
+        await _newestMatchingWorkspaceFile(
+          roots,
+          request.workspacePath,
+          _codexTranscriptMatchesWorkspace,
+        );
     if (transcript == null) {
       return null;
     }
@@ -142,11 +148,17 @@ final class LocalConversationTokenUsageResolver {
   Future<ConversationTokenUsage?> _readClaudeCode(
     ConversationTokenUsageRequest request,
   ) async {
-    final File? transcript = await _resolveTranscript(
-      root: _claudeProjectsDirectory,
-      transcriptPath: request.transcriptPath,
-      conversationId: request.conversationId,
-    );
+    final File? transcript =
+        await _resolveTranscript(
+          root: _claudeProjectsDirectory,
+          transcriptPath: request.transcriptPath,
+          conversationId: request.conversationId,
+        ) ??
+        await _newestMatchingWorkspaceFile(
+          <Directory>[_claudeProjectsDirectory],
+          request.workspacePath,
+          _claudeTranscriptMatchesWorkspace,
+        );
     if (transcript == null) {
       return null;
     }
@@ -299,8 +311,42 @@ final class LocalConversationTokenUsageResolver {
     Iterable<Directory> roots,
     String conversationId,
   ) async {
-    File? newest;
-    DateTime? newestModified;
+    final List<_TranscriptCandidate> candidates = await _transcriptCandidates(
+      roots,
+      fileNameContains: conversationId,
+    );
+    return candidates.isEmpty ? null : candidates.first.file;
+  }
+
+  Future<File?> _newestMatchingWorkspaceFile(
+    Iterable<Directory> roots,
+    String? workspacePath,
+    Future<bool> Function(File file, String workspacePath) matches,
+  ) async {
+    final String? normalizedWorkspace = await _normalizedWorkspace(
+      workspacePath,
+    );
+    if (normalizedWorkspace == null) {
+      return null;
+    }
+    final List<_TranscriptCandidate> candidates = await _transcriptCandidates(
+      roots,
+    );
+    for (final _TranscriptCandidate candidate in candidates.take(
+      _maximumWorkspaceTranscriptCandidates,
+    )) {
+      if (await matches(candidate.file, normalizedWorkspace)) {
+        return candidate.file;
+      }
+    }
+    return null;
+  }
+
+  Future<List<_TranscriptCandidate>> _transcriptCandidates(
+    Iterable<Directory> roots, {
+    String? fileNameContains,
+  }) async {
+    final List<_TranscriptCandidate> candidates = <_TranscriptCandidate>[];
     for (final Directory root in roots) {
       if (!await root.exists()) {
         continue;
@@ -311,18 +357,90 @@ final class LocalConversationTokenUsageResolver {
       )) {
         if (entity is! File ||
             path.extension(entity.path) != '.jsonl' ||
-            !path.basename(entity.path).contains(conversationId)) {
+            (fileNameContains != null &&
+                !path.basename(entity.path).contains(fileNameContains))) {
           continue;
         }
-        final DateTime modified = (await entity.stat()).modified;
-        if (newestModified == null || modified.isAfter(newestModified)) {
-          newest = entity;
-          newestModified = modified;
-        }
+        candidates.add(
+          _TranscriptCandidate(entity, (await entity.stat()).modified),
+        );
       }
     }
-    return newest;
+    candidates.sort(
+      (_TranscriptCandidate left, _TranscriptCandidate right) =>
+          right.modified.compareTo(left.modified),
+    );
+    return candidates;
   }
+}
+
+const int _maximumWorkspaceTranscriptCandidates = 256;
+const int _maximumWorkspaceProbeLines = 64;
+
+final class _TranscriptCandidate {
+  const _TranscriptCandidate(this.file, this.modified);
+
+  final File file;
+  final DateTime modified;
+}
+
+Future<bool> _codexTranscriptMatchesWorkspace(
+  File file,
+  String workspacePath,
+) async {
+  var inspected = 0;
+  await for (final String line in _lines(file)) {
+    if (inspected++ >= _maximumWorkspaceProbeLines) {
+      break;
+    }
+    final Map<String, Object?>? json = _decodeObject(line);
+    if (json?['type'] != 'session_meta') {
+      continue;
+    }
+    final Map<String, Object?>? payload = _object(json?['payload']);
+    return await _workspaceEquals(payload?['cwd'], workspacePath);
+  }
+  return false;
+}
+
+Future<bool> _claudeTranscriptMatchesWorkspace(
+  File file,
+  String workspacePath,
+) async {
+  var inspected = 0;
+  await for (final String line in _lines(file)) {
+    if (inspected++ >= _maximumWorkspaceProbeLines) {
+      break;
+    }
+    final Map<String, Object?>? json = _decodeObject(line);
+    final String? cwd = _nonEmptyText(json?['cwd']);
+    if (cwd != null) {
+      return await _workspaceEquals(cwd, workspacePath);
+    }
+  }
+  return false;
+}
+
+Future<bool> _workspaceEquals(Object? value, String workspacePath) async {
+  final String? candidate = await _normalizedWorkspace(value);
+  return candidate != null && path.equals(candidate, workspacePath);
+}
+
+Future<String?> _normalizedWorkspace(Object? value) async {
+  final String? workspace = _nonEmptyText(value);
+  if (workspace == null || !path.isAbsolute(workspace)) {
+    return null;
+  }
+  final String normalized = path.normalize(workspace);
+  try {
+    final Directory directory = Directory(normalized);
+    if (await directory.exists()) {
+      return path.normalize(await directory.resolveSymbolicLinks());
+    }
+  } on Object {
+    // A disappearing workspace still has a safe lexical identity.
+  }
+  return normalized;
 }
 
 Stream<String> _lines(File file) =>

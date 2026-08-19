@@ -587,11 +587,11 @@ void main() {
       isEmpty,
     );
     expect(
-      menuGateway.lastItems.any((item) => item.englishLabel == 'Enable'),
+      menuGateway.lastItems.any((item) => item.label == 'Enable'),
       isFalse,
     );
     expect(
-      menuGateway.lastItems.any((item) => item.englishLabel == 'Disable'),
+      menuGateway.lastItems.any((item) => item.label == 'Disable'),
       isFalse,
     );
     expect(find.byKey(const Key('desktop-context-menu')), findsNothing);
@@ -798,12 +798,11 @@ final class _FakeManagerContextMenuGateway
   Future<String?> show({
     required double x,
     required double y,
-    required bool useChinese,
     required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) async {
     lastIsDark = isDark;
-    if (items.length == 1 && items.single.englishLabel == 'Delete group') {
+    if (items.length == 1 && items.single.label == 'Delete group') {
       groupShowCount += 1;
       return groupAction;
     }

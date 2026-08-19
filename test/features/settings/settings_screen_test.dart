@@ -12,7 +12,6 @@ import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void testWidgetsOnPlatform(
@@ -108,13 +107,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),
-        supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-        localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          DingDongLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
         home: SettingsScreen(viewModel: model),
       ),
     );
@@ -554,7 +548,10 @@ void main() {
     expect(tester.widget<TextField>(prompt).controller!.text, '♥');
     expect(tester.widget<TextField>(skill).controller!.text, '♦');
     expect(tester.widget<TextField>(mcp).controller!.text, '♠');
-    expect(find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP'), findsOneWidget);
+    expect(
+      find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 12.4K Token'),
+      findsOneWidget,
+    );
 
     await tester.ensureVisible(prompt);
     await tester.enterText(prompt, '◇');
@@ -576,7 +573,10 @@ void main() {
       ),
       custom,
     );
-    expect(find.text('DingDong · ◇ Prompt | ◆ Skill* | ● MCP'), findsOneWidget);
+    expect(
+      find.text('DingDong · ◇ Prompt | ◆ Skill* | ● MCP · 12.4K Token'),
+      findsOneWidget,
+    );
 
     final SettingsViewModel reopened = SettingsViewModel(
       SettingsRepository(backend),
@@ -598,7 +598,10 @@ void main() {
     expect(tester.widget<TextField>(prompt).controller!.text, '♥');
     expect(tester.widget<TextField>(skill).controller!.text, '♦');
     expect(tester.widget<TextField>(mcp).controller!.text, '♠');
-    expect(find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP'), findsOneWidget);
+    expect(
+      find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 12.4K Token'),
+      findsOneWidget,
+    );
     expect(
       ConversationFooterSymbols.parse(
         backend.values['dingdong.agentApi.conversationFooterSymbols'],
@@ -633,21 +636,24 @@ void main() {
     );
     await tester.ensureVisible(compactSwitch);
     await tester.pumpAndSettle();
-    expect(model.settings.showConversationTokenUsage, isFalse);
-    expect(find.textContaining('12.4K Token'), findsNothing);
+    expect(model.settings.showConversationTokenUsage, isTrue);
+    expect(find.textContaining('12.4K Token'), findsOneWidget);
+    expect(
+      find.byKey(const Key('settings-conversation-footer-marker-help')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Skill * means'), findsOneWidget);
+    expect(find.textContaining('MCP * means'), findsOneWidget);
 
     await tester.tap(compactSwitch);
     await tester.pumpAndSettle();
 
-    expect(model.settings.showConversationTokenUsage, isTrue);
+    expect(model.settings.showConversationTokenUsage, isFalse);
     expect(
       backend.values['dingdong.agentApi.showConversationTokenUsage'],
-      isTrue,
+      isFalse,
     );
-    expect(
-      find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 12.4K Token'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('12.4K Token'), findsNothing);
   });
 
   testWidgets('sound picker keeps the DingDong family and supports preview', (

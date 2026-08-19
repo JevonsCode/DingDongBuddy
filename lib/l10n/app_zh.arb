@@ -1,0 +1,4019 @@
+{
+  "@@locale": "zh",
+  "languageEnglish": "英语",
+  "@languageEnglish": {
+    "description": "英语语言选项的显示名称。"
+  },
+  "languageChinese": "中文",
+  "@languageChinese": {
+    "description": "中文语言选项的显示名称。"
+  },
+  "languageSpanish": "西班牙语",
+  "@languageSpanish": {
+    "description": "西班牙语语言选项的显示名称。"
+  },
+  "aNewVersionIsAvailable": "有新版本可用",
+  "@aNewVersionIsAvailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aSelectedLocalPathResourceCouldNotBeSharedError": "所选资源包含无法安全分享的本地路径：{error}",
+  "@aSelectedLocalPathResourceCouldNotBeSharedError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "aSkillMeansItsFullInstructionsWereLoadedForThisTaskAnMCP_240facd9": "Skill 后的 * 表示本轮已加载完整说明；MCP 后的 * 表示本轮实际调用过工具，不表示调用成功；Prompt 不加 *。",
+  "@aSkillMeansItsFullInstructionsWereLoadedForThisTaskAnMCP_240facd9": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aToolConnectionWhoseMCPToolsAreCalledOnlyWhenTheTask_08282426": "提供 MCP 工具连接，仅在任务需要时调用。",
+  "@aToolConnectionWhoseMCPToolsAreCalledOnlyWhenTheTask_08282426": {
+    "description": "DingDong built-in interface copy."
+  },
+  "actionCountTimes": "{action} {count} 次",
+  "@actionCountTimes": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "action": {
+        "type": "Object",
+        "description": "Value from `action`."
+      },
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      },
+      "times": {
+        "type": "Object",
+        "description": "Value from `metric.count == 1 ? 'time' : 'times'`."
+      }
+    }
+  },
+  "activated": "激活",
+  "@activated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "activated2": "激活",
+  "@activated2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "adapterVersionHistory": "Adapter 版本历史",
+  "@adapterVersionHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addALocalNoteAboutHowYouUseThisSkill": "记录你会在什么场景使用这个 Skill。",
+  "@addALocalNoteAboutHowYouUseThisSkill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addAgentConfiguration": "添加 Agent 配置",
+  "@addAgentConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addAtLeastOneCompleteRule": "请至少填写一条完整规则。",
+  "@addAtLeastOneCompleteRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addOneOrMoreExistingAbsoluteProjectDirectories": "添加一个或多个已存在的绝对项目目录。",
+  "@addOneOrMoreExistingAbsoluteProjectDirectories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addProject": "添加项目",
+  "@addProject": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addRule": "添加规则",
+  "@addRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addTitle": "添加标题",
+  "@addTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "addToGroups": "加入分组",
+  "@addToGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedAPIAndMCPDetails": "高级 API 与 MCP 信息",
+  "@advancedAPIAndMCPDetails": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedCommandsAndTheInstallationPromptTheirPresence_b84b4903": "高级命令与安装提示词；显示这些内容不代表 Agent 已验证。",
+  "@advancedCommandsAndTheInstallationPromptTheirPresence_b84b4903": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedMatching": "高级匹配",
+  "@advancedMatching": {
+    "description": "DingDong built-in interface copy."
+  },
+  "afterTheGlobalShortcutDingDongCanReturnFocusAndPasteThe_5ad1a82a": "使用全局快捷键后，DingDong 可返回原应用并粘贴所选内容。",
+  "@afterTheGlobalShortcutDingDongCanReturnFocusAndPasteThe_5ad1a82a": {
+    "description": "DingDong built-in interface copy."
+  },
+  "afterUpdatingYouWillNeedToGrantDingDongSMacOSPermissions_20660ff5": "更新完成后，需要在 macOS“系统设置”中重新授予 DingDong 相关权限。",
+  "@afterUpdatingYouWillNeedToGrantDingDongSMacOSPermissions_20660ff5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentActivity": "Agent 活动",
+  "@agentActivity": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAlerts": "Agent 提醒",
+  "@agentAlerts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAndClipboardItemsCreatedHereAreExplicitDEVTestData_f8625f9f": "这里创建的 Agent 与剪贴板条目都是明确的 DEV 测试数据；“手机来源”样例为模拟数据，绝不会读取真实手机剪贴板。",
+  "@agentAndClipboardItemsCreatedHereAreExplicitDEVTestData_f8625f9f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompletion": "Agent 完成提醒",
+  "@agentCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompletionNotifications": "Agent 完成提醒",
+  "@agentCompletionNotifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompletionNotificationsForName": "{name} 的 Agent 完成提醒",
+  "@agentCompletionNotificationsForName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `device.name`."
+      }
+    }
+  },
+  "agentCompletionSignal": "Agent 完成回执",
+  "@agentCompletionSignal": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConfigurationFileIsInvalid": "Agent 配置文件无效",
+  "@agentConfigurationFileIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConnectionCenter": "Agent 连接中心",
+  "@agentConnectionCenter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConnections": "Agent 连接",
+  "@agentConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDecides": "Agent 判断",
+  "@agentDecides": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentPluginProvidesTheSameSkill": "Agent 插件提供了同名 Skill",
+  "@agentPluginProvidesTheSameSkill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentReplyFooter": "Agent 回复尾部",
+  "@agentReplyFooter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentResourceSyncFailed": "Agent 资源同步失败",
+  "@agentResourceSyncFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSessionLoadingName": "Agent 会话加载名称",
+  "@agentSessionLoadingName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSetupNeedsUpdate": "Agent 接入需要更新",
+  "@agentSetupNeedsUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSetupPrompt": "给 Agent 的接入提示词",
+  "@agentSetupPrompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSetupPromptNeedsUpdating": "Agent 接入提示词需要更新",
+  "@agentSetupPromptNeedsUpdating": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentSource": "Agent 来源",
+  "@agentSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "all": "全部",
+  "@all": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allProjectsNoRestriction": "所有项目 · 不限制",
+  "@allProjectsNoRestriction": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allSources": "全部来源",
+  "@allSources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allowAgentsToReadClipboardContent": "允许 Agent 读取剪贴板正文",
+  "@allowAgentsToReadClipboardContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "allowedByTheExplicitSettingsSwitch": "已通过设置中的明确开关允许",
+  "@allowedByTheExplicitSettingsSwitch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "always": "始终",
+  "@always": {
+    "description": "DingDong built-in interface copy."
+  },
+  "anEnabledAgentPluginProvidesASkillWithTheSameNameBoth_c5e2f5ee": "已启用的 Agent 插件提供了同名 Skill。两者仍可使用，请确认应该保留或调用哪一个。",
+  "@anEnabledAgentPluginProvidesASkillWithTheSameNameBoth_c5e2f5ee": {
+    "description": "DingDong built-in interface copy."
+  },
+  "anExistingUserManagedSkillWasPreservedDingDongDidNot_0f7d7c2a": "已保留用户原有 Skill，DingDong 没有覆盖任何文件。",
+  "@anExistingUserManagedSkillWasPreservedDingDongDidNot_0f7d7c2a": {
+    "description": "DingDong built-in interface copy."
+  },
+  "anonymousInstallAndUpdateStatistics": "匿名安装与更新统计",
+  "@anonymousInstallAndUpdateStatistics": {
+    "description": "DingDong built-in interface copy."
+  },
+  "apiAgentConnections": "API | Agent 连接",
+  "@apiAgentConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "apiListeningOnHostPort": "API 正在监听 {host}:{port}",
+  "@apiListeningOnHostPort": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "host": {
+        "type": "Object",
+        "description": "Value from `endpoint.host`."
+      },
+      "port": {
+        "type": "Object",
+        "description": "Value from `endpoint.port`."
+      }
+    }
+  },
+  "apiStatusUnverified": "API 状态待确认",
+  "@apiStatusUnverified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "appearance": "外观",
+  "@appearance": {
+    "description": "DingDong built-in interface copy."
+  },
+  "applicationConfiguration": "应用配置",
+  "@applicationConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "apply": "应用",
+  "@apply": {
+    "description": "DingDong built-in interface copy."
+  },
+  "archiveTo": "归档到…",
+  "@archiveTo": {
+    "description": "DingDong built-in interface copy."
+  },
+  "archiveToGroups": "归档到分组",
+  "@archiveToGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "archivedCopiesRemainUnchanged": "已有归档副本不会受到影响。",
+  "@archivedCopiesRemainUnchanged": {
+    "description": "DingDong built-in interface copy."
+  },
+  "argumentsOnePerLine": "参数 · 每行一个",
+  "@argumentsOnePerLine": {
+    "description": "DingDong built-in interface copy."
+  },
+  "autoSendClipboard": "自动发送剪贴板",
+  "@autoSendClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "autoSendClipboardFromThisComputerToName": "自动将剪贴板从这台电脑发送到 {name}",
+  "@autoSendClipboardFromThisComputerToName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `device.name`."
+      }
+    }
+  },
+  "availableToInstalledAgents": "对已安装的 Agent 可用",
+  "@availableToInstalledAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToCategories": "返回分类列表",
+  "@backToCategories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToDynamic": "返回动态",
+  "@backToDynamic": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToResources": "返回资源列表",
+  "@backToResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "backToTop": "回到顶部",
+  "@backToTop": {
+    "description": "DingDong built-in interface copy."
+  },
+  "basicCompletion": "基础完成提醒",
+  "@basicCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "bearerTokenEnv": "令牌环境变量",
+  "@bearerTokenEnv": {
+    "description": "DingDong built-in interface copy."
+  },
+  "blue": "蓝色",
+  "@blue": {
+    "description": "DingDong built-in interface copy."
+  },
+  "called": "调用",
+  "@called": {
+    "description": "DingDong built-in interface copy."
+  },
+  "called2": "调用",
+  "@called2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cancel": "取消",
+  "@cancel": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cancelDevicePairing": "取消设备连接",
+  "@cancelDevicePairing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cancelPairing": "取消连接",
+  "@cancelPairing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "candidate": "候选",
+  "@candidate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "captureCurrentClipboard": "捕获当前剪贴板",
+  "@captureCurrentClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "captureNow": "立即捕获",
+  "@captureNow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "captureTextFilesAndImagesWhileDingDongIsRunning": "DingDong 运行期间捕获文本、文件和图片。",
+  "@captureTextFilesAndImagesWhileDingDongIsRunning": {
+    "description": "DingDong built-in interface copy."
+  },
+  "caseSensitive": "区分大小写",
+  "@caseSensitive": {
+    "description": "DingDong built-in interface copy."
+  },
+  "category": "分类",
+  "@category": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryName": "分类名称",
+  "@categoryName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryNameIsRequired": "请输入分类名称。",
+  "@categoryNameIsRequired": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryRule": "分类规则",
+  "@categoryRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "check": "待确认",
+  "@check": {
+    "description": "DingDong built-in interface copy."
+  },
+  "check2": "检查更新",
+  "@check2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "check3": "检测",
+  "@check3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkUnreadCountingOrderingAndRepeatedPhoneDelivery": "检查未读数字、列表顺序和手机连续接收。",
+  "@checkUnreadCountingOrderingAndRepeatedPhoneDelivery": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkUpdate": "检查更新",
+  "@checkUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checking": "检查中",
+  "@checking": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkingForUpdates": "正在检查更新…",
+  "@checkingForUpdates": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkingLocalService": "正在检查本机服务",
+  "@checkingLocalService": {
+    "description": "DingDong built-in interface copy."
+  },
+  "choose": "选择",
+  "@choose": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseHowDingDongBehavesWhenYouSignIn": "选择登录系统后 DingDong 的运行方式。",
+  "@chooseHowDingDongBehavesWhenYouSignIn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseRules": "选择规则",
+  "@chooseRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "选择哪些 Agent 事件需要提醒，再自定义提示声音和颜色。",
+  "@chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clean": "清理",
+  "@clean": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clear": "清除",
+  "@clear": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearAll": "取消全选",
+  "@clearAll": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearCategory": "清除{category}？",
+  "@clearCategory": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_categoryLabel(dialogContext, category)`."
+      }
+    }
+  },
+  "clearCustomSound": "清除自定义声音",
+  "@clearCustomSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearSearch": "清除搜索",
+  "@clearSearch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearSelection": "取消全选",
+  "@clearSelection": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clearSelection2": "清除选择",
+  "@clearSelection2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clickAnywhereToCloseEsc": "点击任意处关闭大图 · Esc",
+  "@clickAnywhereToCloseEsc": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clickToEnlargeQRCode": "点击放大二维码",
+  "@clickToEnlargeQRCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboard": "剪贴板",
+  "@clipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardAndDevices": "剪贴板与设备",
+  "@clipboardAndDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardBodyAccess": "剪贴板正文访问",
+  "@clipboardBodyAccess": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardCategories": "剪贴板分类",
+  "@clipboardCategories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardContent": "剪贴板内容",
+  "@clipboardContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardContentStaysMetadataOnlyUnlessExplicitlyEnabled_df1d930e": "除非在设置中明确允许，否则剪贴板正文只返回元数据。",
+  "@clipboardContentStaysMetadataOnlyUnlessExplicitlyEnabled_df1d930e": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardDatabase": "剪贴板数据库",
+  "@clipboardDatabase": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardDetailsAndCompleteContent": "剪贴板详情与完整内容",
+  "@clipboardDetailsAndCompleteContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardHistory": "剪贴板",
+  "@clipboardHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardHistory2": "剪贴板历史",
+  "@clipboardHistory2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardHistoryRemainsUnchanged": "剪贴板历史不会受到影响。",
+  "@clipboardHistoryRemainsUnchanged": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardItem": "剪贴板条目。",
+  "@clipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardSortLabel": "剪贴板排序：{label}",
+  "@clipboardSortLabel": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "label": {
+        "type": "Object",
+        "description": "Value from `label`."
+      }
+    }
+  },
+  "clipboardWorkspace": "剪贴板工作区",
+  "@clipboardWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardWorkspaceShortcut": "剪贴板工作区快捷键",
+  "@clipboardWorkspaceShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "close": "关闭",
+  "@close": {
+    "description": "DingDong built-in interface copy."
+  },
+  "closeEnlargedView": "关闭大图",
+  "@closeEnlargedView": {
+    "description": "DingDong built-in interface copy."
+  },
+  "code": "代码",
+  "@code": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexSubagent": "Codex 子代理",
+  "@codexSubagent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexVoiceTaskNotifications": "Codex 语音任务提醒",
+  "@codexVoiceTaskNotifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "command": "启动命令",
+  "@command": {
+    "description": "DingDong built-in interface copy."
+  },
+  "command2": "命令",
+  "@command2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "completionDetailsStayOnThisDeviceCountingMetadata_9920ce29": "完成详情仅保存在本机；用于统计的元数据只包含完成时间。",
+  "@completionDetailsStayOnThisDeviceCountingMetadata_9920ce29": {
+    "description": "DingDong built-in interface copy."
+  },
+  "completionHistoryAndRecentCounts": "任务完成记录与近期计数",
+  "@completionHistoryAndRecentCounts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "completionNotificationsAreOffForThisDevice": "此设备的完成提醒已关闭",
+  "@completionNotificationsAreOffForThisDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configurationDetails": "配置详情",
+  "@configurationDetails": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configurationSaved": "配置已保存",
+  "@configurationSaved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configureProjects": "配置项目",
+  "@configureProjects": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configureTheFinalDingDongResourceLineAndOptionallyAppend_e6f7cb62": "配置 DingDong 最终资源行，并可选择追加精确的本轮会话用量。",
+  "@configureTheFinalDingDongResourceLineAndOptionallyAppend_e6f7cb62": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectANewDevice": "连接新设备",
+  "@connectANewDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectedDevices": "连接设备",
+  "@connectedDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connecting": "连接中…",
+  "@connecting": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connection": "连接操作",
+  "@connection": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionError": "连接异常",
+  "@connectionError": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionManager": "连接管理窗口",
+  "@connectionManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionTestFailedError": "连接测试失败：{error}",
+  "@connectionTestFailedError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "connectionType": "连接方式",
+  "@connectionType": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contains": "包含",
+  "@contains": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contains2": "包含",
+  "@contains2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "content": "内容",
+  "@content": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentQRCode": "内容二维码",
+  "@contentQRCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentRegex": "内容正则",
+  "@contentRegex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentRegularExpression": "内容正则",
+  "@contentRegularExpression": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentType": "内容类型",
+  "@contentType": {
+    "description": "DingDong built-in interface copy."
+  },
+  "contentTypes": "内容类型",
+  "@contentTypes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copied": "已复制",
+  "@copied": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copiedCountTimes": "已复制 {count} 次",
+  "@copiedCountTimes": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "copiedFileReferencesOriginalFilesAreNeverDeleted": "复制过的文件引用；不会删除原文件",
+  "@copiedFileReferencesOriginalFilesAreNeverDeleted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copy": "复制",
+  "@copy": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copyContent": "复制内容",
+  "@copyContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copyCount": "复制次数",
+  "@copyCount": {
+    "description": "DingDong built-in interface copy."
+  },
+  "copyCount2": "按次数排序",
+  "@copyCount2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "coreEndpoints": "核心端点",
+  "@coreEndpoints": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotApplyThisSkillDeliveryPolicyDetail": "无法应用此 Skill 交付策略。{detail}",
+  "@couldNotApplyThisSkillDeliveryPolicyDetail": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "detail": {
+        "type": "Object",
+        "description": "Value from `detail`."
+      }
+    }
+  },
+  "couldNotFetchThisUpdateError": "无法获取此更新：{error}",
+  "@couldNotFetchThisUpdateError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "couldNotImportThisResourceBundleError": "无法导入这个资源包：{error}",
+  "@couldNotImportThisResourceBundleError": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "error": {
+        "type": "Object",
+        "description": "Value from `error`."
+      }
+    }
+  },
+  "couldNotOpenThisAgentConversation": "无法打开这个 Agent 对话。",
+  "@couldNotOpenThisAgentConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotOpenThisSkillSource": "无法打开这个 Skill 来源。",
+  "@couldNotOpenThisSkillSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotReachTheSourceCheckYourNetworkAndLinkThenTry_1c1ff9ae": "无法连接来源链接，请检查网络和链接后重试。",
+  "@couldNotReachTheSourceCheckYourNetworkAndLinkThenTry_1c1ff9ae": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotSaveThisConfigurationCheckTheContentAndTryAgain": "保存失败，请检查内容后重试。",
+  "@couldNotSaveThisConfigurationCheckTheContentAndTryAgain": {
+    "description": "DingDong built-in interface copy."
+  },
+  "couldNotSyncThisResourceToAnInstalledAgentDetail": "无法把这个资源同步到已安装的 Agent。{detail}",
+  "@couldNotSyncThisResourceToAnInstalledAgentDetail": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "detail": {
+        "type": "Object",
+        "description": "Value from `detail`."
+      }
+    }
+  },
+  "countIssuesNeedAttention": "{count} 个问题需要处理",
+  "@countIssuesNeedAttention": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countItems": "{count} 条",
+  "@countItems": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countItemsDescription": "{count} 项 · {description}",
+  "@countItemsDescription": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      },
+      "description": {
+        "type": "Object",
+        "description": "Value from `description`."
+      }
+    }
+  },
+  "countPairedDevices": "已连接 {count} 台设备",
+  "@countPairedDevices": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countSelected": "已选择 {count} 项",
+  "@countSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "countWindowHours": "计数时间范围（小时）",
+  "@countWindowHours": {
+    "description": "DingDong built-in interface copy."
+  },
+  "create": "创建样例",
+  "@create": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createAComputerRecordAndSendItOnlyToConnectedDevicesWith_41a63724": "创建电脑记录，只发送给已连接且开启自动同步的设备。",
+  "@createAComputerRecordAndSendItOnlyToConnectedDevicesWith_41a63724": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createAQRCodeThenScanItWithTheDeviceYouTrust": "生成二维码，再用你信任的设备扫码。",
+  "@createAQRCodeThenScanItWithTheDeviceYouTrust": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createASampleAndOpenTheRealTargetDeviceChooser": "创建样例并打开真实的目标设备选择弹框。",
+  "@createASampleAndOpenTheRealTargetDeviceChooser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createAndSend": "创建并发送",
+  "@createAndSend": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createOneClearlyLabeledDEVCompletion": "生成一条明确标注为 DEV 的完成提醒。",
+  "@createOneClearlyLabeledDEVCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createOneToStartOrganizingClipboardItems": "新建分类后即可开始自动整理剪贴板。",
+  "@createOneToStartOrganizingClipboardItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createResource": "创建资源",
+  "@createResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdBasicAgentCompletion": "已创建：基础 Agent 完成提醒",
+  "@createdBasicAgentCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdComputerAutoSendSample": "已创建：电脑自动同步样例",
+  "@createdComputerAutoSendSample": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdRichMobileAgentDetail": "已创建：手机端长描述 Agent 提醒",
+  "@createdRichMobileAgentDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdSimulatedPhoneFileRow": "已创建：模拟手机文件记录",
+  "@createdSimulatedPhoneFileRow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdSimulatedPhoneTextRow": "已创建：模拟手机文字记录",
+  "@createdSimulatedPhoneTextRow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createdThreeAgentCompletions": "已创建：连续三条 Agent 提醒",
+  "@createdThreeAgentCompletions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "createsRemovableDEVSamplesOrOpensTheRealDeviceWorkflow": "创建可删除的 DEV 样例，或打开真实设备流程。",
+  "@createsRemovableDEVSamplesOrOpensTheRealDeviceWorkflow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "curatedContentReusableByAgents": "整理后可被 Agent 复用的内容",
+  "@curatedContentReusableByAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "current": "当前版本",
+  "@current": {
+    "description": "DingDong built-in interface copy."
+  },
+  "currentAgentAccessClipboardRulesAndRuntimeState": "当前 Agent 接入、剪贴板规则与运行状态",
+  "@currentAgentAccessClipboardRulesAndRuntimeState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "currentMemory": "当前内存",
+  "@currentMemory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "cursorCompatibleFormat": "兼容 Cursor 的单文件格式",
+  "@cursorCompatibleFormat": {
+    "description": "DingDong built-in interface copy."
+  },
+  "customFile": "自定义文件",
+  "@customFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "customSound": "自定义声音",
+  "@customSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dark": "深色",
+  "@dark": {
+    "description": "DingDong built-in interface copy."
+  },
+  "defaultOrder": "默认排序",
+  "@defaultOrder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "defaultWorkspace": "默认页面",
+  "@defaultWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "defineWhatContentBelongsInThisCategory": "设置进入这个分类的内容条件。",
+  "@defineWhatContentBelongsInThisCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "delete": "删除",
+  "@delete": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteCategory": "删除分类",
+  "@deleteCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteGroup": "删除分组",
+  "@deleteGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteGroup2": "删除“{group}”？",
+  "@deleteGroup2": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "group": {
+        "type": "Object",
+        "description": "Value from `group`."
+      }
+    }
+  },
+  "deleteName": "删除「{name}」？",
+  "@deleteName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `group.name`."
+      }
+    }
+  },
+  "deleteSelectedItems": "删除所选条目？",
+  "@deleteSelectedItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteSelectedResources": "删除所选资源？",
+  "@deleteSelectedResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisArchivedCopy": "删除这个归档副本？",
+  "@deleteThisArchivedCopy": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisCategory": "删除这个分类？",
+  "@deleteThisCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisClipboardItem": "删除此剪贴板条目？",
+  "@deleteThisClipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisDevice": "删除这个设备？",
+  "@deleteThisDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisResource": "删除此资源？",
+  "@deleteThisResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisResource2": "删除这个资源？",
+  "@deleteThisResource2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deletedHistoryCannotBeRestored": "被删除的历史记录无法恢复。",
+  "@deletedHistoryCannotBeRestored": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deliveryByAgent": "按 Agent 交付",
+  "@deliveryByAgent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "describeTheBehaviorTheAgentShouldFollow": "直接写清楚 Agent 应遵循的行为。",
+  "@describeTheBehaviorTheAgentShouldFollow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "desktopBehaviorHistoryPrivacyAndLocalAgentConnectivity": "管理桌面行为、历史隐私与本地 Agent 连接。",
+  "@desktopBehaviorHistoryPrivacyAndLocalAgentConnectivity": {
+    "description": "DingDong built-in interface copy."
+  },
+  "desktopNotification": "桌面通知",
+  "@desktopNotification": {
+    "description": "DingDong built-in interface copy."
+  },
+  "details": "查看详情",
+  "@details": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongBright": "清亮叮咚",
+  "@dingdongBright": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongChecksAutomaticallyWhenResourcesChangeUseCheckIn_ab07f57c": "资源发生变化时 DingDong 会自动检查，也可以使用右上角的“检测”重新检查。",
+  "@dingdongChecksAutomaticallyWhenResourcesChangeUseCheckIn_ab07f57c": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongClassic": "经典叮咚",
+  "@dingdongClassic": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongCopiesTheCompleteSkillPackageIntoEachSelected_de26f089": "DingDong 会把完整 Skill 包复制到每个所选项目的 Agent 原生目录；只有该 Agent 在这些项目中工作时才会发现它。",
+  "@dingdongCopiesTheCompleteSkillPackageIntoEachSelected_de26f089": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongCrisp": "清脆叮咚",
+  "@dingdongCrisp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongCurrentAppVersionDesktop": "DingDong {currentAppVersion} · 桌面版",
+  "@dingdongCurrentAppVersionDesktop": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "currentAppVersion": {
+        "type": "Object",
+        "description": "Value from `currentAppVersion`."
+      }
+    }
+  },
+  "dingdongDeep": "低沉叮咚",
+  "@dingdongDeep": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongDeviceConnectionManager": "DingDong 设备连接管理窗口",
+  "@dingdongDeviceConnectionManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongHasRecordedTheseLocalStatisticsSinceDateEarlier_90d48aa0": "DingDong 从 {date} 开始在本机记录这些统计；更早的使用不会补记，因此 0 不一定代表从未使用。",
+  "@dingdongHasRecordedTheseLocalStatisticsSinceDateEarlier_90d48aa0": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "date": {
+        "type": "Object",
+        "description": "Value from `date`."
+      }
+    }
+  },
+  "dingdongListensOnlyOnTheLocalLoopbackInterface": "DingDong 仅监听本机回环地址。",
+  "@dingdongListensOnlyOnTheLocalLoopbackInterface": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongOwnedImageCopiesAndRecords": "DingDong 自有的图片副本与记录",
+  "@dingdongOwnedImageCopiesAndRecords": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongPreservedTheExistingAgentFileBecauseItCouldNotBe_6c5484e5": "DingDong 无法安全解析该文件，因此保留了原有 Agent 配置。",
+  "@dingdongPreservedTheExistingAgentFileBecauseItCouldNotBe_6c5484e5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongResourceManagerWindow": "DingDong 资源管理窗口",
+  "@dingdongResourceManagerWindow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongSettingsWindow": "DingDong 设置窗口",
+  "@dingdongSettingsWindow": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongSkillsUseTheSameName": "DingDong Skill 名称重复",
+  "@dingdongSkillsUseTheSameName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingdongSoft": "轻柔叮咚",
+  "@dingdongSoft": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disable": "停用",
+  "@disable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disableCategory": "停用分类",
+  "@disableCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disableResource": "停用资源",
+  "@disableResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "discardChanges": "放弃更改",
+  "@discardChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "discardUnsavedChanges": "放弃未保存的更改？",
+  "@discardUnsavedChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "disconnect": "断开连接",
+  "@disconnect": {
+    "description": "DingDong built-in interface copy."
+  },
+  "downloadingUpdate": "正在下载更新…",
+  "@downloadingUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "downloadingUpdatePercent": "正在下载更新… {percent}%",
+  "@downloadingUpdatePercent": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "percent": {
+        "type": "Object",
+        "description": "Value from `percent`."
+      }
+    }
+  },
+  "dynamicLoadsOnDemandThroughDingDongNativeGlobalInstalls_ff4bd6e5": "动态通过 DingDong 按需加载；原生 · 全局安装到 Agent 用户目录；原生 · 项目只安装到所选项目。",
+  "@dynamicLoadsOnDemandThroughDingDongNativeGlobalInstalls_ff4bd6e5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dynamicMessage": "动态",
+  "@dynamicMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dynamicWorkspace": "动态工作区",
+  "@dynamicWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dynamicWorkspaceShortcut": "动态工作区快捷键",
+  "@dynamicWorkspaceShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGConciseReleaseNotes": "例如：简洁发布说明",
+  "@eGConciseReleaseNotes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGDingDongProjects": "例如：DingDong 项目",
+  "@eGDingDongProjects": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGFigma": "例如：Figma",
+  "@eGFigma": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eGProjectDrafts": "例如：项目草稿",
+  "@eGProjectDrafts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "eachProjectMustBeAnExistingAbsoluteDirectory": "每个项目都必须是已存在的绝对目录。",
+  "@eachProjectMustBeAnExistingAbsoluteDirectory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "edit": "编辑",
+  "@edit": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editAndOrganize": "编辑与整理",
+  "@editAndOrganize": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editProjectGroup": "编辑项目组",
+  "@editProjectGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editRules": "编辑规则",
+  "@editRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editText": "编辑文本",
+  "@editText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editTitle": "修改标题",
+  "@editTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "editTriggerGroup": "编辑触发组",
+  "@editTriggerGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "email": "邮箱",
+  "@email": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enable": "启用",
+  "@enable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enableCategory": "启用分类",
+  "@enableCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enableResource": "启用资源",
+  "@enableResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enableResourcesFromTheLibraryToSeeThemHere": "在资源库启用资源后会显示在这里。",
+  "@enableResourcesFromTheLibraryToSeeThemHere": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabled": "启用",
+  "@enabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabled2": "已启用",
+  "@enabled2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabledPhoneVibrationIsOff": "已开启 · 手机端震动已关",
+  "@enabledPhoneVibrationIsOff": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enabledPhoneVibrationIsOn": "已开启 · 手机端震动已开",
+  "@enabledPhoneVibrationIsOn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "endpointsCommandsAndSetupPrompt": "端点、命令与接入提示词",
+  "@endpointsCommandsAndSetupPrompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enlargeQRCode": "放大二维码",
+  "@enlargeQRCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enterATriggerGroupName": "请输入触发组名称。",
+  "@enterATriggerGroupName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enterAValidWebSourceBeforeOpeningIt": "请先填写有效的网页来源链接。",
+  "@enterAValidWebSourceBeforeOpeningIt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved": "输入一个可见符号。星号和竖线为保留字符。",
+  "@enterOneVisibleSymbolAsteriskAndVerticalBarAreReserved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "environment": "环境变量",
+  "@environment": {
+    "description": "DingDong built-in interface copy."
+  },
+  "equals": "等于",
+  "@equals": {
+    "description": "DingDong built-in interface copy."
+  },
+  "equals2": "等于",
+  "@equals2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "executablePathNpxUvx": "可执行文件路径、npx、uvx…",
+  "@executablePathNpxUvx": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exerciseRealDingDongIntegrationPathsFromOnePlace": "从一个窗口直接验收 DingDong 的真实集成链路。",
+  "@exerciseRealDingDongIntegrationPathsFromOnePlace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exportJSON": "导出 JSON",
+  "@exportJSON": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exportedResourceLibraryToPath": "资源库已导出到 {path}",
+  "@exportedResourceLibraryToPath": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "path": {
+        "type": "Object",
+        "description": "Value from `path`."
+      }
+    }
+  },
+  "fetchAndReview": "请求并检查",
+  "@fetchAndReview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fetchLatestContent": "获取最新内容",
+  "@fetchLatestContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "file": "文件",
+  "@file": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fileFromPhone": "来自手机的文件",
+  "@fileFromPhone": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fileHistory": "文件记录",
+  "@fileHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "files": "文件",
+  "@files": {
+    "description": "DingDong built-in interface copy."
+  },
+  "findIcon": "找回图标",
+  "@findIcon": {
+    "description": "DingDong built-in interface copy."
+  },
+  "forExampleProjectLinks": "例如：项目链接",
+  "@forExampleProjectLinks": {
+    "description": "DingDong built-in interface copy."
+  },
+  "general": "通用",
+  "@general": {
+    "description": "DingDong built-in interface copy."
+  },
+  "gotIt": "知道了",
+  "@gotIt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "green": "绿色",
+  "@green": {
+    "description": "DingDong built-in interface copy."
+  },
+  "group": "分组",
+  "@group": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groupName": "触发组名称",
+  "@groupName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groupRepeatedSessions": "合并同会话提醒",
+  "@groupRepeatedSessions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groups": "分组",
+  "@groups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "groups2": "选择分组",
+  "@groups2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "headers": "请求头",
+  "@headers": {
+    "description": "DingDong built-in interface copy."
+  },
+  "healthCheckFailed": "健康检查失败",
+  "@healthCheckFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "healthCheckPassed": "健康检查已通过",
+  "@healthCheckPassed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideCategoriesAndGroups": "收起分类与分组",
+  "@hideCategoriesAndGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideDockIcon": "隐藏 Dock 图标",
+  "@hideDockIcon": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideInConversation": "会话中隐藏",
+  "@hideInConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hideMessage": "收起",
+  "@hideMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236": "历史仅保存在本机；是否允许 Agent 读取正文由下方开关控制。",
+  "@historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236": {
+    "description": "DingDong built-in interface copy."
+  },
+  "horizontalNudge": "左右摇动",
+  "@horizontalNudge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hoursHCount": "{hours} 小时 · {count}",
+  "@hoursHCount": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "hours": {
+        "type": "Object",
+        "description": "Value from `hours`."
+      },
+      "count": {
+        "type": "Object",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "httpsExampleComDingdongResourcesJson": "https://example.com/dingdong-resources.json",
+  "@httpsExampleComDingdongResourcesJson": {
+    "description": "DingDong built-in interface copy."
+  },
+  "image": "图片",
+  "@image": {
+    "description": "DingDong built-in interface copy."
+  },
+  "imageCache": "图片缓存",
+  "@imageCache": {
+    "description": "DingDong built-in interface copy."
+  },
+  "images": "图片",
+  "@images": {
+    "description": "DingDong built-in interface copy."
+  },
+  "imagesTextAndFilesAreIndependentCleaningThemNeverRemoves_cb27e3f9": "图片、文字与文件彼此独立；这里的清理永远不会删除永久归档。",
+  "@imagesTextAndFilesAreIndependentCleaningThemNeverRemoves_cb27e3f9": {
+    "description": "DingDong built-in interface copy."
+  },
+  "impeccableProjectHookApprovalRequiredInHooks": "Impeccable 项目 Hook（需在 /hooks 中批准）",
+  "@impeccableProjectHookApprovalRequiredInHooks": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importFromLink": "从链接导入",
+  "@importFromLink": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importHistory": "导入历史",
+  "@importHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importJSONFile": "导入 JSON 文件",
+  "@importJSONFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importLengthResources": "导入 {length} 项资源",
+  "@importLengthResources": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.imported.length`."
+      }
+    }
+  },
+  "importedImportedCountSkippedSkippedCount": "导入 {importedCount} 项；跳过 {skippedCount} 项。",
+  "@importedImportedCountSkippedSkippedCount": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "importedCount": {
+        "type": "Object",
+        "description": "Value from `entry.importedCount`."
+      },
+      "skippedCount": {
+        "type": "Object",
+        "description": "Value from `entry.skippedCount`."
+      }
+    }
+  },
+  "importedKnowledgeAvailableToAgentContext": "已导入、可供 Agent 使用的知识库内容。",
+  "@importedKnowledgeAvailableToAgentContext": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importedLengthSkippedSkippedCountSuffix": "已导入 {length} 项；跳过 {skippedCount} 项。{suffix}",
+  "@importedLengthSkippedSkippedCountSuffix": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.imported.length`."
+      },
+      "skippedCount": {
+        "type": "Object",
+        "description": "Value from `result.skippedCount`."
+      },
+      "suffix": {
+        "type": "Object",
+        "description": "Value from `suffix`."
+      }
+    }
+  },
+  "includeAtLeastOneModifierKey": "请至少包含一个修饰键。",
+  "@includeAtLeastOneModifierKey": {
+    "description": "DingDong built-in interface copy."
+  },
+  "independentCopiesProtectedFromHistoryCleanup": "独立副本，不受历史清理影响",
+  "@independentCopiesProtectedFromHistoryCleanup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installInAnyOfTheseProjects": "安装到以下任一项目",
+  "@installInAnyOfTheseProjects": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installSkill": "安装 Skill",
+  "@installSkill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installedFromAnOnlineSource": "已从在线来源安装",
+  "@installedFromAnOnlineSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installedSkillPackageSKILLMd": "已安装的 Skill 包 · SKILL.md",
+  "@installedSkillPackageSKILLMd": {
+    "description": "DingDong built-in interface copy."
+  },
+  "installingAndRestarting": "正在安装并重启…",
+  "@installingAndRestarting": {
+    "description": "DingDong built-in interface copy."
+  },
+  "instructions": "提示词内容",
+  "@instructions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "issuecountIssueSNeedAttention": "{issueCount} 个问题需要处理",
+  "@issuecountIssueSNeedAttention": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "issueCount": {
+        "type": "Object",
+        "description": "Value from `issueCount`."
+      }
+    }
+  },
+  "issues": "问题",
+  "@issues": {
+    "description": "DingDong built-in interface copy."
+  },
+  "jsonTOMLOrYAMLConfiguration": "JSON、TOML 或 YAML 配置",
+  "@jsonTOMLOrYAMLConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepDingDongInTheMenuBarWithoutShowingItInTheDock": "仅保留菜单栏入口，不在 Dock 中显示 DingDong。",
+  "@keepDingDongInTheMenuBarWithoutShowingItInTheDock": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepEditing": "继续编辑",
+  "@keepEditing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": "相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近 Agent 数量。",
+  "@keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46": "根据当前桌面环境调整工作台显示。",
+  "@keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keepThisItemEasyToFindAcrossMultipleGroups": "一个条目可以同时归档到多个分组，方便之后查找。",
+  "@keepThisItemEasyToFindAcrossMultipleGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "keyboardShortcuts": "键盘快捷键",
+  "@keyboardShortcuts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "knowledge": "知识库",
+  "@knowledge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "knowledgeIsCollectedFromImportsAndAgentContextItCannotBe_08bd7ed0": "知识库内容来自导入和 Agent 上下文，暂时不能在这里直接新建。",
+  "@knowledgeIsCollectedFromImportsAndAgentContextItCannotBe_08bd7ed0": {
+    "description": "DingDong built-in interface copy."
+  },
+  "knownConfigurationIssues": "已知配置问题",
+  "@knownConfigurationIssues": {
+    "description": "DingDong built-in interface copy."
+  },
+  "language": "语言",
+  "@language": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lastDateTime": "最近 {date} {time}",
+  "@lastDateTime": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "date": {
+        "type": "Object",
+        "description": "Value from `date`."
+      },
+      "time": {
+        "type": "Object",
+        "description": "Value from `time`."
+      }
+    }
+  },
+  "lastReceivedFromSourceAtCompletedAt": "最近收到 {source} 回执 · {completedAt}",
+  "@lastReceivedFromSourceAtCompletedAt": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "source": {
+        "type": "Object",
+        "description": "Value from `activity.source`."
+      },
+      "completedAt": {
+        "type": "Object",
+        "description": "Value from `TimeOfDay.fromDateTime(activity.completedAt.toLocal()).format(context)`."
+      }
+    }
+  },
+  "latest": "最新版本",
+  "@latest": {
+    "description": "DingDong built-in interface copy."
+  },
+  "launchAtStartup": "开机启动",
+  "@launchAtStartup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "leaveEmptyToUseTheResourceTitle": "留空时使用资源标题。",
+  "@leaveEmptyToUseTheResourceTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lengthDuplicates": "{length} 项重复",
+  "@lengthDuplicates": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.duplicateIds.length`."
+      }
+    }
+  },
+  "lengthIDConflicts": "{length} 项 ID 冲突",
+  "@lengthIDConflicts": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.conflictIds.length`."
+      }
+    }
+  },
+  "lengthOnlineSourcesChecked": "已检查 {length} 个在线来源",
+  "@lengthOnlineSourcesChecked": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `result.onlineResources.length`."
+      }
+    }
+  },
+  "lengthRange": "长度范围",
+  "@lengthRange": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lengthResults": "{length} 个结果",
+  "@lengthResults": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `viewModel.visibleResources.length`."
+      }
+    }
+  },
+  "lengthSelected": "已选 {length} 个",
+  "@lengthSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `_selected.length`."
+      }
+    }
+  },
+  "lengthSources": "已选 {length} 个来源",
+  "@lengthSources": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `selected.length`."
+      }
+    }
+  },
+  "libraryMessage": "资源库",
+  "@libraryMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "libraryWorkspace": "资源库工作区",
+  "@libraryWorkspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "libraryWorkspaceShortcut": "资源库工作区快捷键",
+  "@libraryWorkspaceShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "light": "浅色",
+  "@light": {
+    "description": "DingDong built-in interface copy."
+  },
+  "link": "链接",
+  "@link": {
+    "description": "DingDong built-in interface copy."
+  },
+  "links": "链接",
+  "@links": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loadThisResourceWithoutShowingItsNameInTheAgent_ec7e075b": "加载这个资源，但不在 Agent 对话中展示它的名称。",
+  "@loadThisResourceWithoutShowingItsNameInTheAgent_ec7e075b": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loaded": "加载",
+  "@loaded": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loaded2": "加载",
+  "@loaded2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "local": "本地",
+  "@local": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localAPI": "本机 API",
+  "@localAPI": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localAuthoring": "本地编写",
+  "@localAuthoring": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localData": "本地数据",
+  "@localData": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localPort": "本地端口",
+  "@localPort": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localServiceUnavailable": "本机服务不可用",
+  "@localServiceUnavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "localServiceVerified": "本机服务已验证",
+  "@localServiceVerified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "lowercaseHyphenName": "使用小写英文与连字符",
+  "@lowercaseHyphenName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maintenance": "维护数据",
+  "@maintenance": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manage": "资源管理",
+  "@manage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manageAgents": "管理 Agent",
+  "@manageAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manageCategories": "管理分类",
+  "@manageCategories": {
+    "description": "DingDong built-in interface copy."
+  },
+  "manual": "手动",
+  "@manual": {
+    "description": "DingDong built-in interface copy."
+  },
+  "markAsUpdated": "标记为已更新",
+  "@markAsUpdated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchAProjectPathRepositoryOrAgentSource": "按项目目录、仓库地址或 Agent 来源设置触发条件。",
+  "@matchAProjectPathRepositoryOrAgentSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchAnyOfTheseRules": "满足任一规则时触发",
+  "@matchAnyOfTheseRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchedByDescriptionThenLoadedAsACompleteSkillPackage_fa102bfe": "先按 description 匹配，需要时才加载完整 Skill 包。",
+  "@matchedByDescriptionThenLoadedAsACompleteSkillPackage_fa102bfe": {
+    "description": "DingDong built-in interface copy."
+  },
+  "matchesEverything": "匹配全部内容",
+  "@matchesEverything": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumCharacters": "最多字符数",
+  "@maximumCharacters": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumDetailedItems": "详细记录上限",
+  "@maximumDetailedItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumItems": "最大条目数",
+  "@maximumItems": {
+    "description": "DingDong built-in interface copy."
+  },
+  "maximumLengthCannotBeNegative": "最多字符数不能为负数。",
+  "@maximumLengthCannotBeNegative": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpAccess": "MCP 接入",
+  "@mcpAccess": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpConfigurationIsInvalid": "MCP 配置无效",
+  "@mcpConfigurationIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpFooterSymbol": "MCP 尾部符号",
+  "@mcpFooterSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpSymbol": "MCP 符号",
+  "@mcpSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "menuBarAlertColor": "菜单栏提示颜色",
+  "@menuBarAlertColor": {
+    "description": "DingDong built-in interface copy."
+  },
+  "menuBarIconHiddenByTheCameraHousing": "菜单栏图标被刘海遮挡",
+  "@menuBarIconHiddenByTheCameraHousing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "menuBarMascot": "状态小人",
+  "@menuBarMascot": {
+    "description": "DingDong built-in interface copy."
+  },
+  "metadataOnly": "仅允许元数据",
+  "@metadataOnly": {
+    "description": "DingDong built-in interface copy."
+  },
+  "minimumCharacters": "最少字符数",
+  "@minimumCharacters": {
+    "description": "DingDong built-in interface copy."
+  },
+  "minimumLengthCannotBeNegative": "最少字符数不能为负数。",
+  "@minimumLengthCannotBeNegative": {
+    "description": "DingDong built-in interface copy."
+  },
+  "minimumLengthCannotExceedMaximumLength": "最少字符数不能大于最多字符数。",
+  "@minimumLengthCannotExceedMaximumLength": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mockAddAPhoneOriginTextRowWithoutReadingAnyPhone_381a76fb": "MOCK：添加一条手机来源文字；不会读取手机剪贴板。",
+  "@mockAddAPhoneOriginTextRowWithoutReadingAnyPhone_381a76fb": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mockCreateASmallLocalFileAndShowItsDeviceSource": "MOCK：创建一个小型本地文件并展示设备来源。",
+  "@mockCreateASmallLocalFileAndShowItsDeviceSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "monitorClipboardChanges": "监控剪贴板变化",
+  "@monitorClipboardChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "more": "更多",
+  "@more": {
+    "description": "DingDong built-in interface copy."
+  },
+  "moreActions": "更多操作",
+  "@moreActions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "muted": "静音",
+  "@muted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "myNote": "我的备注",
+  "@myNote": {
+    "description": "DingDong built-in interface copy."
+  },
+  "name": "名称",
+  "@name": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nameMySkillDescriptionUseWhenInstructions": "---\nname: my-skill\ndescription: 什么时候使用…\n---\n\n# 执行说明",
+  "@nameMySkillDescriptionUseWhenInstructions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nativeProject": "原生 · 项目",
+  "@nativeProject": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nativeUser": "原生 · 全局",
+  "@nativeUser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "needsYourInput": "等待你的确认",
+  "@needsYourInput": {
+    "description": "DingDong built-in interface copy."
+  },
+  "needsYourInput2": "需要你处理",
+  "@needsYourInput2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "never": "尚无记录",
+  "@never": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newCategory": "新建分类",
+  "@newCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newConfiguration": "新建配置",
+  "@newConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newGroup": "新建分组",
+  "@newGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newProjectGroup": "新建项目组",
+  "@newProjectGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newResource": "新建资源",
+  "@newResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newTriggerGroup": "新建触发组",
+  "@newTriggerGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newestFirstClickAResumableItemToReturnToItsConversation": "按时间倒序排列；点击可恢复的记录可返回对应对话。",
+  "@newestFirstClickAResumableItemToReturnToItsConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noAgentCompletionsYet": "暂无 Agent 完成记录",
+  "@noAgentCompletionsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noCategoriesYet": "还没有分类",
+  "@noCategoriesYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noConnectedDevicesYet": "还没有已连接设备",
+  "@noConnectedDevicesYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noDeviceIsOnlineConnectOneFirst": "当前没有在线设备，请先连接设备。",
+  "@noDeviceIsOnlineConnectOneFirst": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noIssuesFound": "没有发现问题",
+  "@noIssuesFound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noKnownIssueThisIsNotAConnectionGuarantee": "未发现已知问题；不代表连接已验证",
+  "@noKnownIssueThisIsNotAConnectionGuarantee": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingGroups": "没有匹配的分组",
+  "@noMatchingGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingResources": "没有匹配的资源",
+  "@noMatchingResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingSources": "没有匹配的来源",
+  "@noMatchingSources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noMatchingTriggerGroups": "没有匹配的触发组",
+  "@noMatchingTriggerGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noProjectGroupsYet": "还没有项目组",
+  "@noProjectGroupsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noProjectSelected": "尚未选择项目",
+  "@noProjectSelected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noRealAgentCompletionHasBeenReceivedYet": "尚未收到真实 Agent 完成回执",
+  "@noRealAgentCompletionHasBeenReceivedYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noRecentAgentEvents": "暂无 Agent 事件",
+  "@noRecentAgentEvents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noResourceImportsYet": "还没有资源导入记录。",
+  "@noResourceImportsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noSoundSelected": "尚未选择声音",
+  "@noSoundSelected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noTriggerGroupsYet": "还没有触发组",
+  "@noTriggerGroupsYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "noUpdateMetadataYet": "尚未获取更新信息",
+  "@noUpdateMetadataYet": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notInstalled": "未安装",
+  "@notInstalled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notInstalledAgentsLength": "未安装的 Agent（{length}）",
+  "@notInstalledAgentsLength": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `uninstalledAgents.length`."
+      }
+    }
+  },
+  "notVerified": "尚未验证",
+  "@notVerified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notifications": "通知",
+  "@notifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notify": "发送提醒",
+  "@notify": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notifyWhenAnAgentFinishesItsCurrentTaskTurn": "Agent 完成本轮任务时提醒。",
+  "@notifyWhenAnAgentFinishesItsCurrentTaskTurn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notifyWhenAnAgentIsWaitingForConfirmationAChoiceOrYour_825d0876": "Agent 等待确认、选择或需要你接管时提醒。",
+  "@notifyWhenAnAgentIsWaitingForConfirmationAChoiceOrYour_825d0876": {
+    "description": "DingDong built-in interface copy."
+  },
+  "nudgeTheTrayMascotLikeAnOverdueReminder": "让菜单栏小人左右摇动，模拟超时提醒。",
+  "@nudgeTheTrayMascotLikeAnOverdueReminder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f": "默认关闭。关闭时只返回元数据；开启后，敏感记录仍需调用方明确请求。",
+  "@offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "offline": "离线",
+  "@offline": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onByDefaultSendsOneEventAfterInstallationOrAVersion_153fb4ab": "默认开启。仅在安装或版本更新后发送一次统计，内容包括随机安装 ID、应用版本、操作系统和处理器架构；不发送活跃状态、功能使用、剪贴板内容、文件或 Agent 消息。实现代码开源，并可随时关闭。",
+  "@onByDefaultSendsOneEventAfterInstallationOrAVersion_153fb4ab": {
+    "description": "DingDong built-in interface copy."
+  },
+  "oneWayAutoSend": "单向自动同步",
+  "@oneWayAutoSend": {
+    "description": "DingDong built-in interface copy."
+  },
+  "online": "在线",
+  "@online": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlineOnlineTitles": "在线来源：{onlineTitles}",
+  "@onlineOnlineTitles": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "onlineTitles": {
+        "type": "Object",
+        "description": "Value from `entry.onlineTitles.join('、')`."
+      }
+    }
+  },
+  "onlineSkillUpdated": "在线 Skill 已更新",
+  "@onlineSkillUpdated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlineSync": "在线同步",
+  "@onlineSync": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlineSyncIsNotReadyInThisWindowReopenResourceManagerAnd_2ceb1f90": "当前窗口尚未启用在线同步，请重新打开资源管理后重试。",
+  "@onlineSyncIsNotReadyInThisWindowReopenResourceManagerAnd_2ceb1f90": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyActiveInItsConfiguredTriggerScope": "仅在已配置的触发范围内生效",
+  "@onlyActiveInItsConfiguredTriggerScope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyDingDongSLocalFileReferencesAreRemovedOriginalFiles_aea4cfa6": "只删除 DingDong 本机保存的文件引用；原始文件和文件夹不会被删除。",
+  "@onlyDingDongSLocalFileReferencesAreRemovedOriginalFiles_aea4cfa6": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyExactExistingProjectDirectoriesCanReceiveANative_7c3d0f93": "只有精确且已存在的项目目录才能接收原生 Skill。",
+  "@onlyExactExistingProjectDirectoriesCanReceiveANative_7c3d0f93": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyImageCopiesInsideDingDongSCacheAreRemovedSource_28dfcaa2": "只删除 DingDong 缓存内的图片副本；其他位置的原始图片不会被删除。",
+  "@onlyImageCopiesInsideDingDongSCacheAreRemovedSource_28dfcaa2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyTextRecordsStoredByDingDongAreRemoved": "只删除 DingDong 自己保存的文字记录。",
+  "@onlyTextRecordsStoredByDingDongAreRemoved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyTheConfiguredPreferredPortIsKnown": "目前只知道设置中的首选端口。",
+  "@onlyTheConfiguredPreferredPortIsKnown": {
+    "description": "DingDong built-in interface copy."
+  },
+  "open": "打开",
+  "@open": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openAgentConversation": "打开 Agent 对话",
+  "@openAgentConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openCategoryLocation": "打开{category}所在位置",
+  "@openCategoryLocation": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_categoryLabel(context, category)`."
+      }
+    }
+  },
+  "openDingDongDataFolder": "打开 DingDong 数据文件夹",
+  "@openDingDongDataFolder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openDingDongImageCache": "打开 DingDong 图片缓存",
+  "@openDingDongImageCache": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openFileWithSystemApp": "使用系统应用打开文件",
+  "@openFileWithSystemApp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openForDetailsOrRetry": "可查看详情或重新检查。",
+  "@openForDetailsOrRetry": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openLinkWithSystemBrowser": "使用系统浏览器打开链接",
+  "@openLinkWithSystemBrowser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openOrHideClipboard": "打开或隐藏剪贴板",
+  "@openOrHideClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openPathWithSystemApp": "使用系统应用打开路径",
+  "@openPathWithSystemApp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openPermissionHelper": "打开授权助手",
+  "@openPermissionHelper": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openSettings": "前往开启",
+  "@openSettings": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openSource": "打开来源",
+  "@openSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openTheStandaloneQRDeviceSwitchDisconnectAndDelete_441119af": "打开独立二维码、设备、开关、断连和删除窗口。",
+  "@openTheStandaloneQRDeviceSwitchDisconnectAndDelete_441119af": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openTitle": "打开 {title}",
+  "@openTitle": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "title": {
+        "type": "Object",
+        "description": "Value from `widget.display.title`."
+      }
+    }
+  },
+  "openedConnectionManager": "已打开：连接管理窗口",
+  "@openedConnectionManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openedSendToDeviceChooser": "已打开：发送到设备选择弹框",
+  "@openedSendToDeviceChooser": {
+    "description": "DingDong built-in interface copy."
+  },
+  "optional": "可多选",
+  "@optional": {
+    "description": "DingDong built-in interface copy."
+  },
+  "optional2": "可选",
+  "@optional2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "orange": "橙黄",
+  "@orange": {
+    "description": "DingDong built-in interface copy."
+  },
+  "organizeClipboardItem": "整理剪贴板条目",
+  "@organizeClipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "otherLocalFiles": "其他本地文件",
+  "@otherLocalFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "otherSettings": "其它设置",
+  "@otherSettings": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pairATrustedDeviceAndChooseWhatThisComputerSends": "连接可信设备，并选择这台电脑可以发送的内容。",
+  "@pairATrustedDeviceAndChooseWhatThisComputerSends": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pairingDoesNotCopyContentByItself": "完成连接后也不会自动复制内容。",
+  "@pairingDoesNotCopyContentByItself": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pairingQRCodeForName": "{name} 的连接二维码",
+  "@pairingQRCodeForName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `controller.localDevice.name`."
+      }
+    }
+  },
+  "paste": "粘贴",
+  "@paste": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAGitHubSkillRepositoryFolderOrDirectSKILLMdLink_1ee790e1": "请粘贴 GitHub Skill 仓库、文件夹或 SKILL.md 直链。\n正确示例：\nhttps://github.com/JevonsCode/codex-skills/tree/main/skills/user-taste\nhttps://github.com/mattpocock/skills/tree/main/skills/productivity/grilling",
+  "@pasteAGitHubSkillRepositoryFolderOrDirectSKILLMdLink_1ee790e1": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAJSONBundleLinkDingDongWillFetchItResolveItsOnline_cb404168": "粘贴 JSON 资源包链接。DingDong 会先请求文件、解析其中的在线资源，并在导入前展示来源供你检查。",
+  "@pasteAJSONBundleLinkDingDongWillFetchItResolveItsOnline_cb404168": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAsPlainText": "粘贴为纯文本",
+  "@pasteAsPlainText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteConfig": "粘贴配置",
+  "@pasteConfig": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pasteAgentSetupInstructionDescription": "把这段简短指令发给本机 Agent。它已经包含当前安装的准确 MCP 路径，会保留已有配置，并仅在支持时接入任务完成提醒。",
+  "@pasteAgentSetupInstructionDescription": {
+    "description": "Explains what the short Agent setup instruction changes."
+  },
+  "path": "路径",
+  "@path": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permanentArchives": "永久归档",
+  "@permanentArchives": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permanentArchivesAndTheirImageFilesAreProtectedAndWill_889010d8": "永久归档及归档引用的图片文件受保护，会完整保留。",
+  "@permanentArchivesAndTheirImageFilesAreProtectedAndWill_889010d8": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permissionGranted": "权限已授予",
+  "@permissionGranted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permissionRequired": "需要授予权限",
+  "@permissionRequired": {
+    "description": "DingDong built-in interface copy."
+  },
+  "permissionStatusUnavailable": "无法获取权限状态",
+  "@permissionStatusUnavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pin": "置顶",
+  "@pin": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pinInLibrary": "在资源库置顶",
+  "@pinInLibrary": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pink": "粉色",
+  "@pink": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pinned": "已置顶",
+  "@pinned": {
+    "description": "DingDong built-in interface copy."
+  },
+  "plainText": "纯文本",
+  "@plainText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "portChangesApplyTheNextTimeDingDongStarts": "端口修改将在下次启动 DingDong 时生效。",
+  "@portChangesApplyTheNextTimeDingDongStarts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "preferredPortPreferredPortWasUnavailableUsingActualPort": "首选端口 {preferredPort} 不可用，当前使用 {actualPort}。",
+  "@preferredPortPreferredPortWasUnavailableUsingActualPort": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "preferredPort": {
+        "type": "Object",
+        "description": "Value from `preferredPort`."
+      },
+      "actualPort": {
+        "type": "Object",
+        "description": "Value from `actualPort`."
+      }
+    }
+  },
+  "preparingUpdate": "正在准备更新…",
+  "@preparingUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pressAShortcut": "请按下快捷键…",
+  "@pressAShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "pressToRecordADifferentShortcut": "按下后录制新的快捷键",
+  "@pressToRecordADifferentShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "preview": "预览",
+  "@preview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previewImageWithSystemApp": "使用系统应用预览图片",
+  "@previewImageWithSystemApp": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previewRealTrayStatesWithoutCreatingHistoryRecords": "预览真实菜单栏状态，不创建历史记录。",
+  "@previewRealTrayStatesWithoutCreatingHistoryRecords": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previewSound": "试听声音",
+  "@previewSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "priorityFirstMatchWins": "匹配顺序 · 上方优先",
+  "@priorityFirstMatchWins": {
+    "description": "DingDong built-in interface copy."
+  },
+  "priorityIndexDragToReorder": "优先级 {index} · 拖动排序",
+  "@priorityIndexDragToReorder": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "index": {
+        "type": "Object",
+        "description": "Value from `index + 1`."
+      }
+    }
+  },
+  "privateHistoryMetadata": "私有历史元数据",
+  "@privateHistoryMetadata": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectDirectory": "项目目录",
+  "@projectDirectory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectDirectoryEquals": "项目目录 · 等于",
+  "@projectDirectoryEquals": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectInstallationScope": "项目安装范围",
+  "@projectInstallationScope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "projectSkillPathIsInvalid": "项目 Skill 路径无效",
+  "@projectSkillPathIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "prompt": "提示词",
+  "@prompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptFooterSymbol": "Prompt 尾部符号",
+  "@promptFooterSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptName": "提示词名称",
+  "@promptName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptSymbol": "Prompt 符号",
+  "@promptSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "prompts": "提示词",
+  "@prompts": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptsSkillsMCPResourcesAndTriggerScopes": "Prompt、Skill、MCP 资源与触发范围",
+  "@promptsSkillsMCPResourcesAndTriggerScopes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "protectedData": "受保护数据",
+  "@protectedData": {
+    "description": "DingDong built-in interface copy."
+  },
+  "protectedDataIsNotClearedHere": "受保护数据不会在这里清除",
+  "@protectedDataIsNotClearedHere": {
+    "description": "DingDong built-in interface copy."
+  },
+  "purple": "紫色",
+  "@purple": {
+    "description": "DingDong built-in interface copy."
+  },
+  "qrCode": "二维码",
+  "@qrCode": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quickPasteNeedsAccessibilityPermission": "快捷粘贴需要辅助功能权限。",
+  "@quickPasteNeedsAccessibilityPermission": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quickPastePermission": "快捷粘贴权限",
+  "@quickPastePermission": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quickPastePermissionGranted": "快捷粘贴权限已开启",
+  "@quickPastePermissionGranted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "readOnly": "只读",
+  "@readOnly": {
+    "description": "DingDong built-in interface copy."
+  },
+  "recentAgents": "最近 Agent",
+  "@recentAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "recheckLocalService": "重新检查本机服务",
+  "@recheckLocalService": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reconnect": "重新连接",
+  "@reconnect": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reconnectThisAgent": "重新接入这个 Agent",
+  "@reconnectThisAgent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "refreshStatus": "刷新状态",
+  "@refreshStatus": {
+    "description": "DingDong built-in interface copy."
+  },
+  "regularExpressionIsInvalid": "正则表达式格式不正确。",
+  "@regularExpressionIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "release": "发布页",
+  "@release": {
+    "description": "DingDong built-in interface copy."
+  },
+  "rememberAfterRestart": "重启后保留记录",
+  "@rememberAfterRestart": {
+    "description": "DingDong built-in interface copy."
+  },
+  "removeFromSelection": "取消选择",
+  "@removeFromSelection": {
+    "description": "DingDong built-in interface copy."
+  },
+  "removeRule": "删除规则",
+  "@removeRule": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reorder": "调整顺序",
+  "@reorder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "repeatcountNotificationsForThisConversation": "此会话已提醒 {repeatCount} 次",
+  "@repeatcountNotificationsForThisConversation": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "repeatCount": {
+        "type": "Object",
+        "description": "Value from `widget.activity.repeatCount`."
+      }
+    }
+  },
+  "reportAProblem": "上报问题",
+  "@reportAProblem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "repositoryAddress": "仓库地址",
+  "@repositoryAddress": {
+    "description": "DingDong built-in interface copy."
+  },
+  "requestAFeature": "提出需求",
+  "@requestAFeature": {
+    "description": "DingDong built-in interface copy."
+  },
+  "requiredInstructionsThatAreAppliedAutomaticallyWhenever_7564e51c": "命中后必须自动应用的完整指令。",
+  "@requiredInstructionsThatAreAppliedAutomaticallyWhenever_7564e51c": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reset": "恢复默认",
+  "@reset": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reset2": "重置",
+  "@reset2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resetChanges": "重置更改",
+  "@resetChanges": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resetSemanticLabel": "恢复{semanticLabel}默认值",
+  "@resetSemanticLabel": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "semanticLabel": {
+        "type": "Object",
+        "description": "Value from `widget.semanticLabel`."
+      }
+    }
+  },
+  "resource": "资源",
+  "@resource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceActions": "资源操作",
+  "@resourceActions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceLibrary": "资源",
+  "@resourceLibrary": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceLibrary2": "资源库",
+  "@resourceLibrary2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceManager": "资源管理",
+  "@resourceManager": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resources": "资源",
+  "@resources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourcesBecomeAvailableWhenASelectedGroupMatchesThis_ae977468": "所选触发组命中当前项目或 Agent 来源时，资源才会生效。",
+  "@resourcesBecomeAvailableWhenASelectedGroupMatchesThis_ae977468": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourcesUsingThisGroupWillBecomeUnrestricted": "使用此触发组的资源将变为不限制项目。",
+  "@resourcesUsingThisGroupWillBecomeUnrestricted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restart": "重启",
+  "@restart": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restore": "恢复内置",
+  "@restore": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restoreDefaults": "恢复默认",
+  "@restoreDefaults": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restoreOneHistoryItem": "恢复单个历史条目",
+  "@restoreOneHistoryItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "retentionDays": "保留天数",
+  "@retentionDays": {
+    "description": "DingDong built-in interface copy."
+  },
+  "returnedAsACandidate": "成为候选",
+  "@returnedAsACandidate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reviewOnlineResources": "检查在线资源",
+  "@reviewOnlineResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reviewResourceSyncAgentConfigurationAndAnythingElseThat_a562ea61": "集中查看资源同步、Agent 配置及其他需要处理的问题。",
+  "@reviewResourceSyncAgentConfigurationAndAnythingElseThat_a562ea61": {
+    "description": "DingDong built-in interface copy."
+  },
+  "reviewTheSkillBeforeInstallingDingDongSavesTheFullFolder_1375b575": "安装前先确认内容。DingDong 会保存包括脚本和参考资料在内的完整目录，更新由你手动触发。",
+  "@reviewTheSkillBeforeInstallingDingDongSavesTheFullFolder_1375b575": {
+    "description": "DingDong built-in interface copy."
+  },
+  "richMobileDetail": "手机长描述",
+  "@richMobileDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "ruleAndItsMatchingConditionsWillBeRemovedClipboardItems_48d9a089": "“{rule}”及其匹配条件将被移除，剪贴板条目不会被删除。",
+  "@ruleAndItsMatchingConditionsWillBeRemovedClipboardItems_48d9a089": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "rule": {
+        "type": "Object",
+        "description": "Value from `_ruleName(context, rule)`."
+      }
+    }
+  },
+  "rulesRunFromTopToBottomTheFirstMatchWins": "规则从上到下匹配，首个命中分类生效。",
+  "@rulesRunFromTopToBottomTheFirstMatchWins": {
+    "description": "DingDong built-in interface copy."
+  },
+  "run": "测试",
+  "@run": {
+    "description": "DingDong built-in interface copy."
+  },
+  "running": "执行中…",
+  "@running": {
+    "description": "DingDong built-in interface copy."
+  },
+  "runningTest": "正在执行测试…",
+  "@runningTest": {
+    "description": "DingDong built-in interface copy."
+  },
+  "runtimeCheck": "运行时检查",
+  "@runtimeCheck": {
+    "description": "DingDong built-in interface copy."
+  },
+  "runtimeStatusUnverified": "运行状态尚未验证",
+  "@runtimeStatusUnverified": {
+    "description": "DingDong built-in interface copy."
+  },
+  "save": "保存",
+  "@save": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saveAsPrompt": "保存为提示词",
+  "@saveAsPrompt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saveCategory": "保存分类",
+  "@saveCategory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saveGroup": "保存触发组",
+  "@saveGroup": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saved": "已保存",
+  "@saved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "savedAsSKILLMdNameName": "保存为 SKILL.md · name: {name}",
+  "@savedAsSKILLMdNameName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `name`."
+      }
+    }
+  },
+  "savedYAMLRevisionsCurrentAdaptersStayIntact": "已保存的 YAML 修订；当前 Adapter 不受影响",
+  "@savedYAMLRevisionsCurrentAdaptersStayIntact": {
+    "description": "DingDong built-in interface copy."
+  },
+  "saving": "保存中…",
+  "@saving": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scanToConnect": "扫码连接",
+  "@scanToConnect": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scanToShareClickToEnlarge": "扫码分享 · 点击放大",
+  "@scanToShareClickToEnlarge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scanWithTheDeviceYouWantToTrust": "请使用要信任的设备扫码。",
+  "@scanWithTheDeviceYouWantToTrust": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scope": "作用域",
+  "@scope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "scoped": "有触发范围",
+  "@scoped": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchClipboard": "搜索剪贴板",
+  "@searchClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchClipboardHistory": "搜索剪贴板历史",
+  "@searchClipboardHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchGroups": "搜索分组",
+  "@searchGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchNameOrContent": "搜索名称或内容",
+  "@searchNameOrContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchNamesOrRules": "搜索名称或规则",
+  "@searchNamesOrRules": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchPromptsSkillsAndMCP": "搜索提示词、Skills 和 MCP",
+  "@searchPromptsSkillsAndMCP": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchResources": "搜索资源",
+  "@searchResources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "searchSources": "搜索来源",
+  "@searchSources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "seeWhatDingDongStoresLocallyAndCleanOnlyTheHistoryYou_a955b365": "查看 DingDong 的本地占用，只清理你明确选择的历史数据。",
+  "@seeWhatDingDongStoresLocallyAndCleanOnlyTheHistoryYou_a955b365": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAConfigurationToInspectOrEdit": "选择一项配置以查看或编辑",
+  "@selectAConfigurationToInspectOrEdit": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAll": "全选",
+  "@selectAll": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAnItemToPreview": "选择一个条目以预览",
+  "@selectAnItemToPreview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectItem": "选择条目",
+  "@selectItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectItem2": "选择此项",
+  "@selectItem2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectioncountResourcesSelected": "已选择 {selectionCount} 项资源",
+  "@selectioncountResourcesSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "selectionCount": {
+        "type": "Object",
+        "description": "Value from `selectionCount`."
+      }
+    }
+  },
+  "selectioncountSelected": "已选 {selectionCount} 项",
+  "@selectioncountSelected": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "selectionCount": {
+        "type": "Object",
+        "description": "Value from `selectionCount`."
+      }
+    }
+  },
+  "semanticlabelWaitingForAShortcut": "{semanticLabel}，正在等待快捷键",
+  "@semanticlabelWaitingForAShortcut": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "semanticLabel": {
+        "type": "Object",
+        "description": "Value from `widget.semanticLabel`."
+      }
+    }
+  },
+  "send3": "发送 3 条",
+  "@send3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendTestNotification": "发送测试通知",
+  "@sendTestNotification": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendTheOneLineSetupRequestToEachAffectedAgentMarkIt_3a68e15f": "把这一句接入请求发给受影响的 Agent；确认 MCP 和任务完成提醒都验证通过后，再标记完成。",
+  "@sendTheOneLineSetupRequestToEachAffectedAgentMarkIt_3a68e15f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendToDevice": "发送到设备",
+  "@sendToDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sendToDeviceDialog": "发送到设备弹框",
+  "@sendToDeviceDialog": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sensitiveContentHidden": "敏感内容已隐藏",
+  "@sensitiveContentHidden": {
+    "description": "DingDong built-in interface copy."
+  },
+  "serverName": "服务名称",
+  "@serverName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "serverURL": "服务地址",
+  "@serverURL": {
+    "description": "DingDong built-in interface copy."
+  },
+  "serviceHealth": "服务健康状态",
+  "@serviceHealth": {
+    "description": "DingDong built-in interface copy."
+  },
+  "setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb": "设置面板全局快捷键，以及面板获得焦点时使用的工作区快捷键。",
+  "@setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb": {
+    "description": "DingDong built-in interface copy."
+  },
+  "settings": "设备设置",
+  "@settings": {
+    "description": "DingDong built-in interface copy."
+  },
+  "settings2": "设置",
+  "@settings2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sharedDatabaseFiles": "共享数据库文件",
+  "@sharedDatabaseFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "shortcutReady": "{shortcut} 就绪",
+  "@shortcutReady": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "shortcut": {
+        "type": "Object",
+        "description": "Value from `shortcut`."
+      }
+    }
+  },
+  "showCategoriesAndGroups": "展开分类与分组",
+  "@showCategoriesAndGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showCategoriesAndGroupsFiltersActive": "展开分类与分组（筛选已启用）",
+  "@showCategoriesAndGroupsFiltersActive": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showConversationTokenUsage": "显示会话 Token 用量",
+  "@showConversationTokenUsage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showMessage": "展开",
+  "@showMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showPairingQR": "显示连接二维码",
+  "@showPairingQR": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showQRCodeToPairATrustedDevice": "显示二维码以连接可信设备",
+  "@showQRCodeToPairATrustedDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "showTheSleepingMascotBrieflyThenRestoreTheCurrentState": "短暂显示睡眠小人，然后恢复当前状态。",
+  "@showTheSleepingMascotBrieflyThenRestoreTheCurrentState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": "仅在 Codex、Claude Code 或 Pi 可提供本机精确用量时显示；不支持的 Agent 不做估算。",
+  "@shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skill": "Skill",
+  "@skill": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skill2": "技能",
+  "@skill2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillConfigurationIsInvalid": "Skill 配置无效",
+  "@skillConfigurationIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillFooterSymbol": "Skill 尾部符号",
+  "@skillFooterSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillMdContent": "SKILL.md 内容",
+  "@skillMdContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillMdNeedsValidNameAndDescriptionFieldsInItsYAML_c05294f5": "SKILL.md 的 YAML frontmatter 需要有效的 name 和 description。",
+  "@skillMdNeedsValidNameAndDescriptionFieldsInItsYAML_c05294f5": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillName": "Skill 名称",
+  "@skillName": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillNameConflict": "Skill 名称冲突",
+  "@skillNameConflict": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillPackageIsMissing": "Skill 包缺失",
+  "@skillPackageIsMissing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillSource": "Skill 来源",
+  "@skillSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillSymbol": "Skill 符号",
+  "@skillSymbol": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skills": "技能",
+  "@skills": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skippedcountResourcesAlreadyExistAndWillBeSkippedOr_6aa841ce": "发现 {skippedCount} 项已有资源，导入时会跳过或标记为冲突。",
+  "@skippedcountResourcesAlreadyExistAndWillBeSkippedOr_6aa841ce": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "skippedCount": {
+        "type": "Object",
+        "description": "Value from `result.skippedCount`."
+      }
+    }
+  },
+  "sleepingState": "睡眠状态",
+  "@sleepingState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sound": "声音",
+  "@sound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "source": "来源",
+  "@source": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceApplicationRegularExpression": "来源应用正则",
+  "@sourceApplicationRegularExpression": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceFilterSummary": "来源筛选：{summary}",
+  "@sourceFilterSummary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "summary": {
+        "type": "Object",
+        "description": "Value from `summary`."
+      }
+    }
+  },
+  "sourceRegex": "来源正则",
+  "@sourceRegex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceURL": "来源链接",
+  "@sourceURL": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sources": "来源",
+  "@sources": {
+    "description": "DingDong built-in interface copy."
+  },
+  "startDingDongAfterYouSignInToThisComputer": "登录此电脑后自动启动 DingDong。",
+  "@startDingDongAfterYouSignInToThisComputer": {
+    "description": "DingDong built-in interface copy."
+  },
+  "status": "状态",
+  "@status": {
+    "description": "DingDong built-in interface copy."
+  },
+  "stopConnecting": "停止连接",
+  "@stopConnecting": {
+    "description": "DingDong built-in interface copy."
+  },
+  "subagentNotifications": "子智能体提醒",
+  "@subagentNotifications": {
+    "description": "DingDong built-in interface copy."
+  },
+  "system": "跟随系统",
+  "@system": {
+    "description": "DingDong built-in interface copy."
+  },
+  "systemSound": "系统声音",
+  "@systemSound": {
+    "description": "DingDong built-in interface copy."
+  },
+  "tagsAndAliases": "标签与别名",
+  "@tagsAndAliases": {
+    "description": "DingDong built-in interface copy."
+  },
+  "taskMatch": "任务匹配",
+  "@taskMatch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "testAConciseSummaryPlusALongerMobileDetailBody": "测试简短摘要与手机端较长详情正文。",
+  "@testAConciseSummaryPlusALongerMobileDetailBody": {
+    "description": "DingDong built-in interface copy."
+  },
+  "testNotificationSent": "测试通知已发送",
+  "@testNotificationSent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "testPanel": "测试面板",
+  "@testPanel": {
+    "description": "DingDong built-in interface copy."
+  },
+  "text": "文本",
+  "@text": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textFromPhone": "来自手机的文字",
+  "@textFromPhone": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textHistory": "文字记录",
+  "@textHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textIsLargerThan128KiBAndWasNotSent": "文本超过 128 KiB，未发送。",
+  "@textIsLargerThan128KiBAndWasNotSent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "textLinksCodeCommandsAndRichText": "文本、链接、代码、命令与富文本",
+  "@textLinksCodeCommandsAndRichText": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67": "内置桥接通过 JSON-RPC 提供提示词、技能、MCP 引用与通知能力。",
+  "@theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCommandBelowUsesTheActualEndpointWhenTheRuntime_0a3909c7": "运行时提供了实际地址时，下方命令会使用实际地址。",
+  "@theCommandBelowUsesTheActualEndpointWhenTheRuntime_0a3909c7": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCompleteSkillPackageCouldNotBeFoundReinstallOrUpdate_2a4648b6": "找不到完整 Skill 包，请重新安装或更新来源。",
+  "@theCompleteSkillPackageCouldNotBeFoundReinstallOrUpdate_2a4648b6": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theDEVPWAEndpointIsNotConfiguredInThisBuild": "这个构建尚未配置 DEV PWA 地址。",
+  "@theDEVPWAEndpointIsNotConfiguredInThisBuild": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theDeviceDisconnectedBeforeSending": "发送前设备已断开。",
+  "@theDeviceDisconnectedBeforeSending": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c": "内容加密后超过 256 KiB 中继上限，未发送。",
+  "@theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theHealthEndpointRespondedSuccessfully": "/health 已成功响应。",
+  "@theHealthEndpointRespondedSuccessfully": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "助手会打开“辅助功能”，并在旁边显示可拖拽的 DingDong。“−”可用时先删除旧条目再拖入；若“−”置灰，先拖一次让它可用，删除旧条目后再拖一次并打开开关。",
+  "@theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e": "已安装的 Skill 包为只读。更新前请先查看来源。",
+  "@theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theKeyStaysInTheQRWebRTCIsPreferredTheEncryptedRelay_ca235c45": "密钥只存在于二维码中；优先使用 WebRTC 直连，加密中继不保存内容。",
+  "@theKeyStaysInTheQRWebRTCIsPreferredTheEncryptedRelay_ca235c45": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theRuntimeEndpointDidNotPassItsHealthCheck": "实际运行地址未通过健康检查。",
+  "@theRuntimeEndpointDidNotPassItsHealthCheck": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theSKILLMdMetadataCouldNotBeParsedReviewTheResource_d8ef0c36": "无法解析 SKILL.md 元数据，请检查资源内容后再启用。",
+  "@theSKILLMdMetadataCouldNotBeParsedReviewTheResource_d8ef0c36": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theScopedProjectDirectoryNoLongerExistsOrIsNotAnAbsolute_78de1cff": "限定的项目目录不存在，或不是有效的绝对路径。",
+  "@theScopedProjectDirectoryNoLongerExistsOrIsNotAnAbsolute_78de1cff": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theSourceDidNotReturnAUsableSKILLMdCheckTheRepository_8db02039": "来源链接没有返回可用的 SKILL.md，请确认仓库路径和访问权限。",
+  "@theSourceDidNotReturnAUsableSKILLMdCheckTheRepository_8db02039": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theTestFailedCheckTheConnectionAndSystemPermissions": "测试执行失败，请检查连接状态和系统权限。",
+  "@theTestFailedCheckTheConnectionAndSystemPermissions": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theme": "主题",
+  "@theme": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52": "以下资源会从互联网加载。请先检查来源链接，确认无误后再导入。",
+  "@theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisComputerHost": "这台电脑 · 主机",
+  "@thisComputerHost": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisComputerName": "这台电脑 → {name}",
+  "@thisComputerName": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Value from `device.name`."
+      }
+    }
+  },
+  "thisConflictsWithAnotherDingDongOrSystemShortcut": "这个组合与其他 DingDong 或系统快捷键冲突。",
+  "@thisConflictsWithAnotherDingDongOrSystemShortcut": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisContentIsNoLongerAvailableOrCouldNotBeOpened": "该内容已不存在或无法打开。",
+  "@thisContentIsNoLongerAvailableOrCouldNotBeOpened": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisContentNoLongerExistsOrCannotBeOpened": "该内容已不存在或无法打开。",
+  "@thisContentNoLongerExistsOrCannotBeOpened": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3": "本轮会话已经提醒 {repeatCount} 次，共消耗 {totalTokens} Token",
+  "@thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "repeatCount": {
+        "type": "Object",
+        "description": "Value from `widget.activity.repeatCount`."
+      },
+      "totalTokens": {
+        "type": "Object",
+        "description": "Value from `formatExactConversationTokenCount(widget.activity.tokenUsage!.totalTokens)`."
+      }
+    }
+  },
+  "thisGroupContainsCountArchivedCopiesCopiesWithNoOther_d4ba7c7d": "这个分组中有 {count} 个归档副本。没有其他分组的副本会被删除，剪贴板历史不受影响。",
+  "@thisGroupContainsCountArchivedCopiesCopiesWithNoOther_d4ba7c7d": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Value from `count`."
+      }
+    }
+  },
+  "thisMCPResourceCannotBeWrittenToAgentConfigurationUntil_ad7aa3e0": "修正格式前，该 MCP 资源无法写入 Agent 配置。",
+  "@thisMCPResourceCannotBeWrittenToAgentConfigurationUntil_ad7aa3e0": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisOnlineSkillDoesNotHaveAnAvailableSource": "这个在线 Skill 没有可用的来源链接。",
+  "@thisOnlineSkillDoesNotHaveAnAvailableSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisRemovesCategoryHistoryCategory2CurrentResourcesAnd_a27899ae": "将删除{category}历史（{category2}），当前资源与配置会保留。",
+  "@thisRemovesCategoryHistoryCategory2CurrentResourcesAnd_a27899ae": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_categoryLabel(dialogContext, category)`."
+      },
+      "category2": {
+        "type": "Object",
+        "description": "Value from `_formatBytes(dialogContext, usage?.bytesFor(category))`."
+      }
+    }
+  },
+  "thisRemovesLengthResourcesFromTheLocalLibrary": "这会从本地资源库中移除 {length} 项资源。",
+  "@thisRemovesLengthResourcesFromTheLocalLibrary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "length": {
+        "type": "Object",
+        "description": "Value from `ids.length`."
+      }
+    }
+  },
+  "thisRemovesOnlyThisPartOfClipboardHistoryCategory": "只会删除这部分剪贴板历史（{category}）。",
+  "@thisRemovesOnlyThisPartOfClipboardHistoryCategory": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "category": {
+        "type": "Object",
+        "description": "Value from `_formatBytes(dialogContext, usage?.bytesFor(category))`."
+      }
+    }
+  },
+  "thisRemovesTheResourceFromTheSharedAgentLibrary": "此操作会将资源从共享 Agent 资源库中移除。",
+  "@thisRemovesTheResourceFromTheSharedAgentLibrary": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisRemovesTitleFromTheLocalResourceLibrary": "这会从本地资源库中移除“{title}”。",
+  "@thisRemovesTitleFromTheLocalResourceLibrary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "title": {
+        "type": "Object",
+        "description": "Value from `resource.title`."
+      }
+    }
+  },
+  "threeAlertBurst": "连续三条提醒",
+  "@threeAlertBurst": {
+    "description": "DingDong built-in interface copy."
+  },
+  "title": "标题",
+  "@title": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trayMascotPreviewsAreUnavailableOnThisPlatformTheOther_ab13b937": "当前平台不支持状态小人预览；其余集成测试仍可使用。",
+  "@trayMascotPreviewsAreUnavailableOnThisPlatformTheOther_ab13b937": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggerGroups": "选择触发组",
+  "@triggerGroups": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggerScope": "触发范围",
+  "@triggerScope": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggeredHorizontalNudge": "已触发：左右摇动",
+  "@triggeredHorizontalNudge": {
+    "description": "DingDong built-in interface copy."
+  },
+  "triggeredSleepingState": "已触发：睡眠状态",
+  "@triggeredSleepingState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustAndDirectionalSettingsWillBeRevokedPairAgainTo_f59587ea": "将撤销信任和方向设置；下次连接需要重新扫码。",
+  "@trustAndDirectionalSettingsWillBeRevokedPairAgainTo_f59587ea": {
+    "description": "DingDong built-in interface copy."
+  },
+  "twoDingDongResourcesResolveToTheSameSkillDestination_aac6ae3f": "两个 DingDong 资源指向同一 Skill 位置，请改名或停用其中一个。",
+  "@twoDingDongResourcesResolveToTheSameSkillDestination_aac6ae3f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "type": "类型",
+  "@type": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unavailable": "不可用",
+  "@unavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "uncategorized": "未分类",
+  "@uncategorized": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unknown": "未知",
+  "@unknown": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unknownAgentConversation": "未知 Agent 会话",
+  "@unknownAgentConversation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unpin": "取消置顶",
+  "@unpin": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unrecognizedLocalFilesAreKept": "保留未识别的本地文件",
+  "@unrecognizedLocalFilesAreKept": {
+    "description": "DingDong built-in interface copy."
+  },
+  "untitledClipboardItem": "未命名剪贴板条目",
+  "@untitledClipboardItem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "upTo7CharactersThisNameIsShownFirstInTheAgent_b892681f": "最多 7 个字。Agent 会话中优先展示这个名称；留空时回退到资源标题。",
+  "@upTo7CharactersThisNameIsShownFirstInTheAgent_b892681f": {
+    "description": "DingDong built-in interface copy."
+  },
+  "update": "需要更新",
+  "@update": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateCheckFailed": "更新检查失败",
+  "@updateCheckFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateFailed": "更新失败",
+  "@updateFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateLink": "更新链接",
+  "@updateLink": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updateToVersion": "更新到 {version}",
+  "@updateToVersion": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "version": {
+        "type": "Object",
+        "description": "Value from `version`."
+      }
+    }
+  },
+  "updated": "已更新",
+  "@updated": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updated2": "更新",
+  "@updated2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updated3": "更新时间",
+  "@updated3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updatedTitleFromItsSource": "已从来源更新 {title}。",
+  "@updatedTitleFromItsSource": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "title": {
+        "type": "Object",
+        "description": "Value from `updated.title`."
+      }
+    }
+  },
+  "updating": "更新中…",
+  "@updating": {
+    "description": "DingDong built-in interface copy."
+  },
+  "updating2": "正在更新…",
+  "@updating2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usage": "使用",
+  "@usage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usage2": "使用统计",
+  "@usage2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usage3": "占用",
+  "@usage3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "useALetterNumberF1F12ArrowSpaceOrReturn": "请使用字母、数字、F1–F12、方向键、空格或回车。",
+  "@useALetterNumberF1F12ArrowSpaceOrReturn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "useAValidSTDIOOrStreamableHTTPMCPConfiguration": "请填写有效的 STDIO 或 Streamable HTTP MCP 配置。",
+  "@useAValidSTDIOOrStreamableHTTPMCPConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "useRegularExpressionsOnlyWhenTypeAndLengthAreNotEnough": "仅在类型和长度条件不足时使用正则表达式。",
+  "@useRegularExpressionsOnlyWhenTypeAndLengthAreNotEnough": {
+    "description": "DingDong built-in interface copy."
+  },
+  "used": "使用",
+  "@used": {
+    "description": "DingDong built-in interface copy."
+  },
+  "used2": "使用",
+  "@used2": {
+    "description": "DingDong built-in interface copy."
+  },
+  "usesTheRealLocalDingRouteUnreadBadgeNativeAlertAnd_63a64edd": "走真实本地 /ding、未读角标、系统提醒和已连接手机分发链路。",
+  "@usesTheRealLocalDingRouteUnreadBadgeNativeAlertAnd_63a64edd": {
+    "description": "DingDong built-in interface copy."
+  },
+  "verifyTheLocalServiceAndInspectRealAgentSignals": "验证本机服务，并查看真实的 Agent 信号。",
+  "@verifyTheLocalServiceAndInspectRealAgentSignals": {
+    "description": "DingDong built-in interface copy."
+  },
+  "verifyingUpdate": "正在校验更新…",
+  "@verifyingUpdate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "version": "版本",
+  "@version": {
+    "description": "DingDong built-in interface copy."
+  },
+  "viewAllRecentAgents": "查看全部最近 Agent",
+  "@viewAllRecentAgents": {
+    "description": "DingDong built-in interface copy."
+  },
+  "viewResource": "查看资源",
+  "@viewResource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "visibleForReferenceOnlyTheseItemsCannotBeClearedHere": "仅供查看占用；这些数据不允许在这里清除。",
+  "@visibleForReferenceOnlyTheseItemsCannotBeClearedHere": {
+    "description": "DingDong built-in interface copy."
+  },
+  "waitingForTheLoopbackHealthResponse": "正在等待本机回环健康检查。",
+  "@waitingForTheLoopbackHealthResponse": {
+    "description": "DingDong built-in interface copy."
+  },
+  "webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": "优先使用 WebRTC 直连；端到端加密中继不保存剪贴板、文件或 Agent 内容。",
+  "@webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": {
+    "description": "DingDong built-in interface copy."
+  },
+  "website": "官网",
+  "@website": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory": "关闭后，下次启动将从空的 Agent 历史开始。",
+  "@whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenItApplies": "生效方式",
+  "@whenItApplies": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98": "关闭后，子智能体动态不显示提醒，也不播放叮咚声音。",
+  "@whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958": "关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放叮咚声音。",
+  "@whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958": {
+    "description": "DingDong built-in interface copy."
+  },
+  "whenToUse": "什么时候使用",
+  "@whenToUse": {
+    "description": "DingDong built-in interface copy."
+  },
+  "windowOpacity": "窗口透明度",
+  "@windowOpacity": {
+    "description": "DingDong built-in interface copy."
+  },
+  "workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968": "工作区快捷键只在面板获得焦点时生效。默认：macOS 为 Control+Q/W/E，Windows 为 Alt+Q/W/E。",
+  "@workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968": {
+    "description": "DingDong built-in interface copy."
+  },
+  "youReUpToDate": "已是最新版本",
+  "@youReUpToDate": {
+    "description": "DingDong built-in interface copy."
+  },
+  "yourDevices": "已连接设备",
+  "@yourDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "yourEditsHaveNotBeenSavedLeavingThisPageWillDiscardThem": "当前编辑尚未保存，离开此页面将放弃这些更改。",
+  "@yourEditsHaveNotBeenSavedLeavingThisPageWillDiscardThem": {
+    "description": "DingDong built-in interface copy."
+  },
+  "custom": "自定义",
+  "@custom": {
+    "description": "DingDong built-in interface copy."
+  },
+  "builtIn": "内置",
+  "@builtIn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "invalidConfiguration": "配置无效",
+  "@invalidConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "loadExternal": "载入外部版本",
+  "@loadExternal": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryNotChecked": "目录尚未检查",
+  "@directoryNotChecked": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryNotDetected": "未检测到目录",
+  "@directoryNotDetected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryDetected": "已检测到目录",
+  "@directoryDetected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unsaved": "尚未保存",
+  "@unsaved": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newAgent": "新 Agent",
+  "@newAgent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newLabel": "新建",
+  "@newLabel": {
+    "description": "DingDong built-in interface copy."
+  },
+  "refresh": "刷新",
+  "@refresh": {
+    "description": "DingDong built-in interface copy."
+  },
+  "versionComparison": "版本对比",
+  "@versionComparison": {
+    "description": "DingDong built-in interface copy."
+  },
+  "advancedConfig": "高级配置",
+  "@advancedConfig": {
+    "description": "DingDong built-in interface copy."
+  },
+  "deleteThisAdapter": "删除这个 Adapter？",
+  "@deleteThisAdapter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "restoreBuiltInVersion": "恢复内置版本？",
+  "@restoreBuiltInVersion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notChecked": "尚未检查",
+  "@notChecked": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notDetected": "未检测到",
+  "@notDetected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "detected": "已检测到",
+  "@detected": {
+    "description": "DingDong built-in interface copy."
+  },
+  "managedButDisabled": "已托管但未启用",
+  "@managedButDisabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "managedAndEnabled": "已托管并启用",
+  "@managedAndEnabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustedButDisabled": "已信任但未启用",
+  "@trustedButDisabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustedAndEnabled": "已信任并启用",
+  "@trustedAndEnabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkingCodex": "正在检查 Codex…",
+  "@checkingCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustEnable": "信任并启用",
+  "@trustEnable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "checkAgain": "重新检查",
+  "@checkAgain": {
+    "description": "DingDong built-in interface copy."
+  },
+  "notDeclared": "未声明",
+  "@notDeclared": {
+    "description": "DingDong built-in interface copy."
+  },
+  "declared": "已声明",
+  "@declared": {
+    "description": "DingDong built-in interface copy."
+  },
+  "skillPaths": "Skill 路径",
+  "@skillPaths": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mcpConfigurationPath": "MCP 配置路径",
+  "@mcpConfigurationPath": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDirectory": "Agent 目录",
+  "@agentDirectory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "invalid": "无效",
+  "@invalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "valid": "有效",
+  "@valid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "adapterDocument": "Adapter 文档",
+  "@adapterDocument": {
+    "description": "DingDong built-in interface copy."
+  },
+  "configurationEvidence": "配置证据",
+  "@configurationEvidence": {
+    "description": "DingDong built-in interface copy."
+  },
+  "storedOnThisDevice": "数据保存在本机",
+  "@storedOnThisDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAccess": "Agent 接入",
+  "@agentAccess": {
+    "description": "DingDong built-in interface copy."
+  },
+  "workspace": "管理",
+  "@workspace": {
+    "description": "DingDong built-in interface copy."
+  },
+  "userOverride": "用户覆盖",
+  "@userOverride": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectAnAgentAdapterOrCreateOne": "选择一个 Agent Adapter，或新建一个。",
+  "@selectAnAgentAdapterOrCreateOne": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theFileChangedOutsideDingDongWhileYouHaveUnsavedEdits": "外部 Agent 修改了文件，但编辑器里还有未保存内容。",
+  "@theFileChangedOutsideDingDongWhileYouHaveUnsavedEdits": {
+    "description": "DingDong built-in interface copy."
+  },
+  "directoryDetectionAndDeclaredPathsVerifyRuntimeConnectionsSeparately": "目录检测与配置路径；实际运行连接需单独验证",
+  "@directoryDetectionAndDeclaredPathsVerifyRuntimeConnectionsSeparately": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentConnectionConfiguration": "Agent 连接配置",
+  "@agentConnectionConfiguration": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aComparisonAppearsAfterTheNextSavedOrExternalEdit": "保存或外部修改下一版后，这里会显示差异。",
+  "@aComparisonAppearsAfterTheNextSavedOrExternalEdit": {
+    "description": "DingDong built-in interface copy."
+  },
+  "twoVersionsAgo": "上两个版本",
+  "@twoVersionsAgo": {
+    "description": "DingDong built-in interface copy."
+  },
+  "previousVersion": "上一个版本",
+  "@previousVersion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "newAgentAdapter": "新建 Agent Adapter",
+  "@newAgentAdapter": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCustomYAMLFileWillBeDeletedAgentResourcesWillStopSyncing": "自定义 YAML 文件会被删除，Agent 资源也将停止同步到这个客户端。",
+  "@theCustomYAMLFileWillBeDeletedAgentResourcesWillStopSyncing": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theUserOverrideWillBeRemovedItsSnapshotsRemainInLocalHistory": "用户覆盖文件会被移除，已有快照仍保留在本地历史中。",
+  "@theUserOverrideWillBeRemovedItsSnapshotsRemainInLocalHistory": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectionHasNotBeenInferred": "未推断连接成功",
+  "@connectionHasNotBeenInferred": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDirectoryDetectedDoesNotVerifyConnections": "当前已知：DingDong 检测到声明的 Agent 目录。检测到目录或声明了路径，都不能证明 MCP、Hook、Bridge、鉴权或完成回调已连通；请在“Agent 连接”中验证本机 API 和真实完成回执。",
+  "@agentDirectoryDetectedDoesNotVerifyConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentDirectoryNotDetectedDoesNotVerifyConnections": "当前已知：DingDong 未检测到声明的 Agent 目录。检测到目录或声明了路径，都不能证明 MCP、Hook、Bridge、鉴权或完成回调已连通；请在“Agent 连接”中验证本机 API 和真实完成回执。",
+  "@agentDirectoryNotDetectedDoesNotVerifyConnections": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexDidNotReturnAVerifiableHookState": "Codex 没有返回可验证的 Hook 状态。",
+  "@codexDidNotReturnAVerifiableHookState": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisHookIsManagedAndDisabledDingDongCannotChangeIt": "这个 Hook 由外部策略托管且已停用，DingDong 无法修改。",
+  "@thisHookIsManagedAndDisabledDingDongCannotChangeIt": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisManagedHookIsEnabledAndCanRunAfterTaskCompletion": "这个托管 Hook 已启用，可在任务完成后运行。",
+  "@thisManagedHookIsEnabledAndCanRunAfterTaskCompletion": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theCurrentHashIsTrustedButThisHookIsDisabled": "当前哈希已受信任，但这个 Hook 仍处于停用状态。",
+  "@theCurrentHashIsTrustedButThisHookIsDisabled": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexCanRunDingDongAfterATaskCompletes": "Codex 可在任务完成后调用 DingDong。",
+  "@codexCanRunDingDongAfterATaskCompletes": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theHookChangedAfterItsLastReviewCheckTheCurrentCommandAnd": "Hook 在上次审核后发生了变化，请检查当前命令和哈希后再重新信任。",
+  "@theHookChangedAfterItsLastReviewCheckTheCurrentCommandAnd": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexIsBlockingThisHookUntilItsExactCurrentHashIsTrusted": "Codex 正在阻止这个 Hook，需确认并信任当前精确哈希后才会执行。",
+  "@codexIsBlockingThisHookUntilItsExactCurrentHashIsTrusted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "aDingDongHookExistsButItsCommandDoesNotExactlyMatchThis": "已存在 DingDong Hook，但命令与当前安装的应用不完全一致，因此没有授予信任。",
+  "@aDingDongHookExistsButItsCommandDoesNotExactlyMatchThis": {
+    "description": "DingDong built-in interface copy."
+  },
+  "theExpectedDingDongStopHookIsNotConfiguredInCodex": "Codex 中尚未配置预期的 DingDong Stop Hook。",
+  "@theExpectedDingDongStopHookIsNotConfiguredInCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisCodexBuildCouldNotBeReachedThroughAppServerUseHooks": "当前无法通过 App Server 连接这个 Codex 版本，请改用 /hooks 审核 Hook。",
+  "@thisCodexBuildCouldNotBeReachedThroughAppServerUseHooks": {
+    "description": "DingDong built-in interface copy."
+  },
+  "selectRefreshToReadTheCurrentStateFromCodex": "点击刷新，从 Codex 读取当前状态。",
+  "@selectRefreshToReadTheCurrentStateFromCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "readingTheCurrentHookDefinitionAndTrustStateFromCodex": "正在从 Codex 读取当前 Hook 定义与信任状态。",
+  "@readingTheCurrentHookDefinitionAndTrustStateFromCodex": {
+    "description": "DingDong built-in interface copy."
+  },
+  "verificationFailed": "验证失败",
+  "@verificationFailed": {
+    "description": "DingDong built-in interface copy."
+  },
+  "changedSinceReview": "审核后已发生变化",
+  "@changedSinceReview": {
+    "description": "DingDong built-in interface copy."
+  },
+  "trustRequired": "需要信任",
+  "@trustRequired": {
+    "description": "DingDong built-in interface copy."
+  },
+  "commandMismatch": "命令不匹配",
+  "@commandMismatch": {
+    "description": "DingDong built-in interface copy."
+  },
+  "hookNotConfigured": "尚未配置 Hook",
+  "@hookNotConfigured": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexUnavailable": "Codex 不可用",
+  "@codexUnavailable": {
+    "description": "DingDong built-in interface copy."
+  },
+  "onlyTheExactHookShownAboveAndItsCurrentHashWillBe": "只会信任上面显示的精确 Hook 与当前哈希；以后 Hook 定义再次变化时仍需重新确认。",
+  "@onlyTheExactHookShownAboveAndItsCurrentHashWillBe": {
+    "description": "DingDong built-in interface copy."
+  },
+  "codexCompletionHook": "Codex 完成 Hook",
+  "@codexCompletionHook": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisAdapterDoesNotDeclareBothGlobalAndProjectSkillPaths": "这个 Adapter 没有同时声明全局与项目 Skill 路径。",
+  "@thisAdapterDoesNotDeclareBothGlobalAndProjectSkillPaths": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisAdapterDoesNotDeclareAPromptFile": "这个 Adapter 没有声明 Prompt 文件。",
+  "@thisAdapterDoesNotDeclareAPromptFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "promptConfigurationPath": "Prompt 配置路径",
+  "@promptConfigurationPath": {
+    "description": "DingDong built-in interface copy."
+  },
+  "thisAdapterDoesNotDeclareAnMCPFile": "这个 Adapter 没有声明 MCP 文件。",
+  "@thisAdapterDoesNotDeclareAnMCPFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "unavailableBecauseTheAdapterIsInvalid": "Adapter 无效，无法读取检测路径。",
+  "@unavailableBecauseTheAdapterIsInvalid": {
+    "description": "DingDong built-in interface copy."
+  },
+  "yamlStructureAndDeclaredPathsPassedValidation": "YAML 结构和声明路径已通过校验。",
+  "@yamlStructureAndDeclaredPathsPassedValidation": {
+    "description": "DingDong built-in interface copy."
+  },
+  "detectionIsNotConnectionVerification": "检测不等于连接验证",
+  "@detectionIsNotConnectionVerification": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAdapterCatalogSummary": "{configurationCount} 个配置 · 检测到 {detectedCount} 个目录",
+  "@agentAdapterCatalogSummary": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "configurationCount": {
+        "type": "Object",
+        "description": "Value from `entries.length`."
+      },
+      "detectedCount": {
+        "type": "Object",
+        "description": "Value from `detected`."
+      }
+    }
+  },
+  "agentAdapterCatalogSummaryWithInvalid": "{configurationCount} 个配置 · 检测到 {detectedCount} 个目录 · {invalidCount} 个无效",
+  "@agentAdapterCatalogSummaryWithInvalid": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "configurationCount": {
+        "type": "Object",
+        "description": "Value from `entries.length`."
+      },
+      "detectedCount": {
+        "type": "Object",
+        "description": "Value from `detected`."
+      },
+      "invalidCount": {
+        "type": "Object",
+        "description": "Value from `invalid`."
+      }
+    }
+  },
+  "openClipboard": "打开剪贴板",
+  "@openClipboard": {
+    "description": "DingDong built-in interface copy."
+  },
+  "openConnectedDevices": "打开连接设备",
+  "@openConnectedDevices": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardMonitoringOn": "正在监听剪贴板",
+  "@clipboardMonitoringOn": {
+    "description": "DingDong built-in interface copy."
+  },
+  "clipboardMonitoringPaused": "剪贴板监听已暂停",
+  "@clipboardMonitoringPaused": {
+    "description": "DingDong built-in interface copy."
+  },
+  "stopMonitoring": "停止监听",
+  "@stopMonitoring": {
+    "description": "DingDong built-in interface copy."
+  },
+  "startMonitoring": "开始监听",
+  "@startMonitoring": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quitDingDong": "退出 DingDong",
+  "@quitDingDong": {
+    "description": "DingDong built-in interface copy."
+  },
+  "quitDingDongDev": "退出 DingDong DEV",
+  "@quitDingDongDev": {
+    "description": "DingDong built-in interface copy."
+  },
+  "dingDongUnreadCount": "DingDong · {count} 条未读内容",
+  "@dingDongUnreadCount": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "count": {
+        "type": "Object",
+        "description": "Unread item count."
+      }
+    }
+  },
+  "connectedDevicesWindowTitle": "DingDong · 连接设备",
+  "@connectedDevicesWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "settingsWindowTitle": "DingDong · 设置",
+  "@settingsWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "developmentTestPanelWindowTitle": "DingDong DEV · 测试面板",
+  "@developmentTestPanelWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "resourceManagerWindowTitle": "DingDong · 资源管理",
+  "@resourceManagerWindowTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "connectDingDongToCurrentAgent": "请将「{commandPath}」接入当前 Agent，配置为名为 dingdong 的用户级 STDIO MCP（不加 args），保留现有配置，并验证 dingdong_bridge。若支持用户级任务完成 Hook，再为任务完成事件配置 Hook 命令：同一程序加上「--notify-stop --source \"<当前 Agent 名称>\"」，并验证提醒。",
+  "@connectDingDongToCurrentAgent": {
+    "description": "Short actionable setup instruction copied by the user.",
+    "placeholders": {
+      "commandPath": {
+        "type": "String",
+        "description": "Absolute path to the bundled DingDong MCP executable."
+      }
+    }
+  },
+  "about": "关于",
+  "@about": {
+    "description": "DingDong built-in interface copy."
+  },
+  "timeSingular": "次",
+  "@timeSingular": {
+    "description": "Singular unit for a resource usage count."
+  },
+  "timePlural": "次",
+  "@timePlural": {
+    "description": "Plural unit for a resource usage count."
+  },
+  "agentNeedsYourAttention": "Agent 需要你处理",
+  "@agentNeedsYourAttention": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentCompleted": "Agent 完成啦",
+  "@agentCompleted": {
+    "description": "DingDong built-in interface copy."
+  },
+  "mobileDevice": "移动设备",
+  "@mobileDevice": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sharedFile": "共享文件",
+  "@sharedFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "fromDevice": "来自 {name}",
+  "@fromDevice": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "name": {
+        "type": "Object",
+        "description": "Runtime value for name."
+      }
+    }
+  },
+  "dingDongComputer": "DingDong 电脑",
+  "@dingDongComputer": {
+    "description": "DingDong built-in interface copy."
+  },
+  "currentTask": "当前任务",
+  "@currentTask": {
+    "description": "DingDong built-in interface copy."
+  },
+  "sourceCompletedCurrentTask": "{source} 已完成本轮任务",
+  "@sourceCompletedCurrentTask": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "source": {
+        "type": "Object",
+        "description": "Runtime value for source."
+      }
+    }
+  },
+  "devAgentCompletedMessage": "DEV 测试：Agent 已完成本轮任务",
+  "@devAgentCompletedMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devAgentCompletedDetail": "这是测试面板生成的基础完成提醒，不代表真实 Agent 任务结果。",
+  "@devAgentCompletedDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devCrossDeviceTaskCompletedMessage": "DEV 测试：跨设备任务已完成",
+  "@devCrossDeviceTaskCompletedMessage": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devCrossDeviceTaskCompletedDetail": "这是测试面板生成的模拟完成说明，用来检查手机卡片的长描述、来源、完成时间与震动开关。它不代表真实 Agent 任务结果。",
+  "@devCrossDeviceTaskCompletedDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devRepeatedAlertMessage": "DEV 测试：连续提醒 {index}/3",
+  "@devRepeatedAlertMessage": {
+    "description": "DingDong built-in interface copy.",
+    "placeholders": {
+      "index": {
+        "type": "Object",
+        "description": "Runtime value for index."
+      }
+    }
+  },
+  "devRepeatedAlertDetail": "用于检查未读数字、时间顺序和手机端连续接收；这是模拟测试数据。",
+  "@devRepeatedAlertDetail": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneTextSampleTitle": "DEV 手机文字样例",
+  "@devPhoneTextSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneTextSampleContent": "DingDong DEV 测试：这段文字模拟用户在手机输入框粘贴内容并主动点击“发送”。",
+  "@devPhoneTextSampleContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devTestPhoneSource": "来自 DEV 测试手机",
+  "@devTestPhoneSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devAutoSyncSampleTitle": "DEV 电脑自动同步样例",
+  "@devAutoSyncSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devAutoSyncSampleContent": "DingDong DEV 测试：由电脑创建，仅发送给开启“自动同步”的已连接设备。",
+  "@devAutoSyncSampleContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devTestPanelSource": "DingDong DEV 测试面板",
+  "@devTestPanelSource": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devManualSendSampleTitle": "DEV 主动发送样例",
+  "@devManualSendSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devManualSendSampleContent": "DingDong DEV 测试：请选择一个已连接设备主动发送这条内容。",
+  "@devManualSendSampleContent": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneFileBody": "DingDong DEV 测试文件\n\n这是一份由测试面板创建的本地样例，用于模拟手机主动选择文件并点击发送。\n它不是来自真实手机，也不包含真实用户内容。\n",
+  "@devPhoneFileBody": {
+    "description": "DingDong built-in interface copy."
+  },
+  "devPhoneFileSampleTitle": "DingDong DEV 手机文件样例.txt",
+  "@devPhoneFileSampleTitle": {
+    "description": "DingDong built-in interface copy."
+  },
+  "agentAPI": "Agent API",
+  "@agentAPI": {
+    "description": "DingDong built-in interface copy."
+  },
+  "audioFiles": "音频文件",
+  "@audioFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "chooseSoundFile": "选择声音",
+  "@chooseSoundFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importThisFolder": "导入此文件夹",
+  "@importThisFolder": {
+    "description": "DingDong built-in interface copy."
+  },
+  "importAction": "导入",
+  "@importAction": {
+    "description": "DingDong built-in interface copy."
+  },
+  "exportAction": "导出",
+  "@exportAction": {
+    "description": "DingDong built-in interface copy."
+  },
+  "jsonFiles": "JSON 文件",
+  "@jsonFiles": {
+    "description": "DingDong built-in interface copy."
+  },
+  "jsonFile": "JSON 文件",
+  "@jsonFile": {
+    "description": "DingDong built-in interface copy."
+  },
+  "categoryRuleKeywordsExample": "command, alias:build",
+  "@categoryRuleKeywordsExample": {
+    "description": "Technical example shown in the Clipboard tags and aliases field."
+  },
+  "httpsOrGitHubFileURL": "HTTPS 或 GitHub 文件 URL",
+  "@httpsOrGitHubFileURL": {
+    "description": "DingDong built-in interface copy."
+  }
+}

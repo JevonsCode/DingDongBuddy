@@ -69,7 +69,7 @@ class _GroupFilters extends StatelessWidget {
                     )
                     .length;
           return _GroupButton(
-            label: group ?? context.localized('All', '全部'),
+            label: group ?? context.l10n.all,
             count: count,
             selected:
                 viewModel.selectedGroup == group &&

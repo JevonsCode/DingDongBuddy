@@ -39,7 +39,7 @@ class ResourceFilterBar extends StatelessWidget {
                   children: <Widget>[
                     Expanded(
                       child: Text(
-                        context.localized('Resource manager', '资源管理'),
+                        context.l10n.resourceManager,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.25,
@@ -48,7 +48,7 @@ class ResourceFilterBar extends StatelessWidget {
                     ),
                     DesktopMenuButton<_LibraryAction>(
                       key: const Key('library-actions'),
-                      tooltip: context.localized('Resource actions', '资源操作'),
+                      tooltip: context.l10n.resourceActions,
                       onSelected: (_LibraryAction action) {
                         switch (action) {
                           case _LibraryAction.create:
@@ -66,37 +66,31 @@ class ResourceFilterBar extends StatelessWidget {
                       entries: <DesktopMenuEntry<_LibraryAction>>[
                         DesktopMenuItem<_LibraryAction>(
                           value: _LibraryAction.create,
-                          label: context.localized('New resource', '新建资源'),
+                          label: context.l10n.newResource,
                           symbol: 'add_title',
                         ),
                         if (onImportJson != null)
                           DesktopMenuItem<_LibraryAction>(
                             value: _LibraryAction.importJson,
-                            label: context.localized(
-                              'Import JSON file',
-                              '导入 JSON 文件',
-                            ),
+                            label: context.l10n.importJSONFile,
                             symbol: 'archive',
                           ),
                         if (onImportLink != null)
                           DesktopMenuItem<_LibraryAction>(
                             value: _LibraryAction.importLink,
-                            label: context.localized(
-                              'Import from link',
-                              '从链接导入',
-                            ),
+                            label: context.l10n.importFromLink,
                             symbol: 'link',
                           ),
                         if (onImportHistory != null)
                           DesktopMenuItem<_LibraryAction>(
                             value: _LibraryAction.importHistory,
-                            label: context.localized('Import history', '导入历史'),
+                            label: context.l10n.importHistory,
                             symbol: 'details',
                           ),
                         if (onExport != null)
                           DesktopMenuItem<_LibraryAction>(
                             value: _LibraryAction.export,
-                            label: context.localized('Export JSON', '导出 JSON'),
+                            label: context.l10n.exportJSON,
                             symbol: 'share',
                           ),
                       ],
@@ -107,7 +101,7 @@ class ResourceFilterBar extends StatelessWidget {
               return Row(
                 children: <Widget>[
                   Text(
-                    context.localized('Resource manager', '资源管理'),
+                    context.l10n.resourceManager,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.25,
@@ -125,28 +119,25 @@ class ResourceFilterBar extends StatelessWidget {
                     children: <Widget>[
                       _TransferActionButton(
                         actionKey: const Key('library-import-json'),
-                        tooltip: context.localized(
-                          'Import JSON file',
-                          '导入 JSON 文件',
-                        ),
+                        tooltip: context.l10n.importJSONFile,
                         onPressed: onImportJson,
                         icon: Icons.download_outlined,
                       ),
                       _TransferActionButton(
                         actionKey: const Key('library-import-link'),
-                        tooltip: context.localized('Import from link', '从链接导入'),
+                        tooltip: context.l10n.importFromLink,
                         onPressed: onImportLink,
                         icon: Icons.link_rounded,
                       ),
                       _TransferActionButton(
                         actionKey: const Key('library-import-history'),
-                        tooltip: context.localized('Import history', '导入历史'),
+                        tooltip: context.l10n.importHistory,
                         onPressed: onImportHistory,
                         icon: Icons.history_rounded,
                       ),
                       _TransferActionButton(
                         actionKey: const Key('library-export'),
-                        tooltip: context.localized('Export JSON', '导出 JSON'),
+                        tooltip: context.l10n.exportJSON,
                         onPressed: onExport,
                         icon: Icons.upload_outlined,
                       ),
@@ -156,7 +147,7 @@ class ResourceFilterBar extends StatelessWidget {
                   DesktopActionButton(
                     onPressed: viewModel.startCreating,
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: context.localized('New resource', '新建资源'),
+                    label: context.l10n.newResource,
                     tone: DesktopActionTone.primary,
                   ),
                 ],
@@ -170,11 +161,8 @@ class ResourceFilterBar extends StatelessWidget {
                 key: const Key('resource-search'),
                 onChanged: viewModel.setQuery,
                 height: 36,
-                hintText: context.localized(
-                  'Search name or content',
-                  '搜索名称或内容',
-                ),
-                clearTooltip: context.localized('Clear search', '清除搜索'),
+                hintText: context.l10n.searchNameOrContent,
+                clearTooltip: context.l10n.clearSearch,
                 searchIcon: const Icon(Icons.search_rounded, size: 17),
                 borderRadius: 7,
               );
@@ -206,13 +194,11 @@ class ResourceFilterBar extends StatelessWidget {
             children: <Widget>[
               Text(
                 viewModel.selectionCount > 0
-                    ? context.localized(
-                        '${viewModel.selectionCount} selected',
-                        '已选 ${viewModel.selectionCount} 项',
+                    ? context.l10n.selectioncountSelected(
+                        viewModel.selectionCount,
                       )
-                    : context.localized(
-                        '${viewModel.visibleResources.length} results',
-                        '${viewModel.visibleResources.length} 个结果',
+                    : context.l10n.lengthResults(
+                        viewModel.visibleResources.length,
                       ),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -223,8 +209,8 @@ class ResourceFilterBar extends StatelessWidget {
                 key: const Key('resource-select-all'),
                 onPressed: viewModel.toggleAllVisible,
                 label: viewModel.allVisibleSelected
-                    ? context.localized('Clear all', '取消全选')
-                    : context.localized('Select all', '全选'),
+                    ? context.l10n.clearAll
+                    : context.l10n.selectAll,
                 compact: true,
                 tone: DesktopActionTone.soft,
               ),
@@ -246,7 +232,7 @@ class _TypeFilters extends StatelessWidget {
     children: <Widget>[
       _TypeTab(
         key: const Key('resource-filter-all'),
-        label: context.localized('All', '全部'),
+        label: context.l10n.all,
         selected: viewModel.selectedType == null && !viewModel.pinnedOnly,
         onTap: () => viewModel.setTypeFilter(null),
       ),
@@ -264,7 +250,7 @@ class _TypeFilters extends StatelessWidget {
       const SizedBox(width: 5),
       _TypeTab(
         key: const Key('resource-filter-pinned'),
-        label: context.localized('Pinned', '已置顶'),
+        label: context.l10n.pinned,
         selected: viewModel.pinnedOnly,
         onTap: () => viewModel.setPinnedOnly(!viewModel.pinnedOnly),
       ),
@@ -344,11 +330,11 @@ class _TransferActionButton extends StatelessWidget {
 
 String _typeLabel(BuildContext context, ResourceType type) {
   return switch (type) {
-    ResourceType.prompt => context.localized('Prompts', '提示词'),
-    ResourceType.skill => context.localized('Skills', '技能'),
+    ResourceType.prompt => context.l10n.prompts,
+    ResourceType.skill => context.l10n.skills,
     ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
-    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
+    ResourceType.knowledge => context.l10n.knowledge,
+    ResourceType.clipboard => context.l10n.clipboard,
   };
 }
 

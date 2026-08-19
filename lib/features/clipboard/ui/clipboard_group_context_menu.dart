@@ -23,13 +23,11 @@ Future<void> showClipboardGroupContextMenu(
         await gateway.show(
           x: globalPosition.dx,
           y: globalPosition.dy,
-          useChinese: Localizations.localeOf(context).languageCode == 'zh',
           isDark: Theme.of(context).brightness == Brightness.dark,
-          items: const <DesktopContextMenuItem>[
+          items: <DesktopContextMenuItem>[
             DesktopContextMenuItem(
               id: 'delete',
-              englishLabel: 'Delete group',
-              chineseLabel: '删除分组',
+              label: context.l10n.deleteGroup,
             ),
           ],
         ) ==
@@ -44,7 +42,7 @@ Future<void> showClipboardGroupContextMenu(
               key: const Key('clipboard-group-action-delete'),
               value: _ClipboardGroupAction.delete,
               symbol: 'delete',
-              label: context.localized('Delete group', '删除分组'),
+              label: context.l10n.deleteGroup,
               destructive: true,
             ),
           ],
@@ -61,26 +59,26 @@ Future<void> showClipboardGroupContextMenu(
   final bool? confirmed = await showDialog<bool>(
     context: context,
     builder: (BuildContext dialogContext) => DesktopAlertDialog(
-      title: Text(context.localized('Delete “$group”?', '删除“$group”？')),
+      title: Text(context.l10n.deleteGroup2(group)),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360),
         child: Text(
-          context.localized(
-            'This group contains $count archived ${count == 1 ? 'copy' : 'copies'}. Copies with no other group are deleted. Clipboard history is never changed.',
-            '这个分组中有 $count 个归档副本。没有其他分组的副本会被删除，剪贴板历史不受影响。',
-          ),
+          context.l10n
+              .thisGroupContainsCountArchivedCopiesCopiesWithNoOther_d4ba7c7d(
+                count,
+              ),
         ),
       ),
       actions: <Widget>[
         DesktopActionButton(
           onPressed: () => Navigator.pop(dialogContext, false),
-          label: context.localized('Cancel', '取消'),
+          label: context.l10n.cancel,
           compact: true,
         ),
         DesktopActionButton(
           key: const Key('clipboard-delete-group-confirm'),
           onPressed: () => Navigator.pop(dialogContext, true),
-          label: context.localized('Delete group', '删除分组'),
+          label: context.l10n.deleteGroup,
           tone: DesktopActionTone.danger,
         ),
       ],

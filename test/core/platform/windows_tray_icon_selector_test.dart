@@ -1,4 +1,6 @@
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -48,21 +50,31 @@ void main() {
   });
 
   test('formats the Windows unread count for the hover tooltip', () {
-    expect(
-      windowsTrayTooltip(unreadCount: 0, useChineseLabels: true),
-      'DingDong',
+    final DingDongLocalizations chinese = lookupDingDongLocalizations(
+      const Locale('zh'),
     );
+    final DingDongLocalizations english = lookupDingDongLocalizations(
+      const Locale('en'),
+    );
+    final DingDongLocalizations spanish = lookupDingDongLocalizations(
+      const Locale('es'),
+    );
+    expect(windowsTrayTooltip(unreadCount: 0, strings: chinese), 'DingDong');
     expect(
-      windowsTrayTooltip(unreadCount: 3, useChineseLabels: true),
+      windowsTrayTooltip(unreadCount: 3, strings: chinese),
       'DingDong · 3 条未读内容',
     );
     expect(
-      windowsTrayTooltip(unreadCount: 3, useChineseLabels: false),
+      windowsTrayTooltip(unreadCount: 3, strings: english),
       'DingDong · 3 unread',
     );
     expect(
-      windowsTrayTooltip(unreadCount: 1001, useChineseLabels: true),
+      windowsTrayTooltip(unreadCount: 1001, strings: chinese),
       'DingDong · 999 条未读内容',
+    );
+    expect(
+      windowsTrayTooltip(unreadCount: 3, strings: spanish),
+      'DingDong · 3 sin leer',
     );
   });
 }

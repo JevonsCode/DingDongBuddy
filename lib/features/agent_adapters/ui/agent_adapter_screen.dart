@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
@@ -131,25 +132,21 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(
-          _localized(context, 'Restore built-in version?', '恢复内置版本？'),
-        ),
+        title: Text(context.l10n.restoreBuiltInVersion),
         content: Text(
-          _localized(
-            context,
-            'The user override will be removed. Its snapshots remain in local history.',
-            '用户覆盖文件会被移除，已有快照仍保留在本地历史中。',
-          ),
+          context
+              .l10n
+              .theUserOverrideWillBeRemovedItsSnapshotsRemainInLocalHistory,
         ),
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            label: _localized(context, 'Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            label: _localized(context, 'Restore', '恢复'),
+            label: context.l10n.restore,
             tone: DesktopActionTone.primary,
           ),
         ],
@@ -164,25 +161,21 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(
-          _localized(context, 'Delete this Adapter?', '删除这个 Adapter？'),
-        ),
+        title: Text(context.l10n.deleteThisAdapter),
         content: Text(
-          _localized(
-            context,
-            'The custom YAML file will be deleted. Agent resources will stop syncing to this client.',
-            '自定义 YAML 文件会被删除，Agent 资源也将停止同步到这个客户端。',
-          ),
+          context
+              .l10n
+              .theCustomYAMLFileWillBeDeletedAgentResourcesWillStopSyncing,
         ),
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            label: _localized(context, 'Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            label: _localized(context, 'Delete', '删除'),
+            label: context.l10n.delete,
             tone: DesktopActionTone.danger,
           ),
         ],
@@ -289,11 +282,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                   children: <Widget>[
                     Text(
                       controller.isCreating
-                          ? _localized(
-                              context,
-                              'New Agent Adapter',
-                              '新建 Agent Adapter',
-                            )
+                          ? context.l10n.newAgentAdapter
                           : entry!.displayName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
@@ -319,14 +308,14 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                 DesktopActionButton(
                   key: const Key('agent-adapter-reset'),
                   onPressed: controller.isSaving ? null : _confirmReset,
-                  label: _localized(context, 'Restore', '恢复内置'),
+                  label: context.l10n.restore,
                   compact: true,
                 ),
               if (entry != null && !entry.hasBuiltIn)
                 DesktopActionButton(
                   key: const Key('agent-adapter-delete'),
                   onPressed: controller.isSaving ? null : _confirmDelete,
-                  label: _localized(context, 'Delete', '删除'),
+                  label: context.l10n.delete,
                   tone: DesktopActionTone.danger,
                   compact: true,
                 ),
@@ -343,8 +332,8 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                   size: 16,
                 ),
                 label: _showAdvanced
-                    ? _localized(context, 'Status', '状态')
-                    : _localized(context, 'Advanced config', '高级配置'),
+                    ? context.l10n.status
+                    : context.l10n.advancedConfig,
                 tone: DesktopActionTone.neutral,
               ),
               const SizedBox(width: 8),
@@ -359,7 +348,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save_outlined, size: 16),
-                label: _localized(context, 'Save', '保存'),
+                label: context.l10n.save,
                 tone: DesktopActionTone.primary,
               ),
             ],
@@ -414,7 +403,7 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                   child: Row(
                     children: <Widget>[
                       Text(
-                        _localized(context, 'Version comparison', '版本对比'),
+                        context.l10n.versionComparison,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -429,20 +418,12 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                             items: <DesktopSelectItem<int>>[
                               DesktopSelectItem<int>(
                                 value: 1,
-                                label: _localized(
-                                  context,
-                                  'Previous version',
-                                  '上一个版本',
-                                ),
+                                label: context.l10n.previousVersion,
                               ),
                               if (maxComparison >= 2)
                                 DesktopSelectItem<int>(
                                   value: 2,
-                                  label: _localized(
-                                    context,
-                                    'Two versions ago',
-                                    '上两个版本',
-                                  ),
+                                  label: context.l10n.twoVersionsAgo,
                                 ),
                             ],
                             onChanged: (int value) =>
@@ -456,11 +437,9 @@ class _AgentAdapterScreenState extends State<AgentAdapterScreen> {
                   child: previousDocument == null
                       ? Center(
                           child: Text(
-                            _localized(
-                              context,
-                              'A comparison appears after the next saved or external edit.',
-                              '保存或外部修改下一版后，这里会显示差异。',
-                            ),
+                            context
+                                .l10n
+                                .aComparisonAppearsAfterTheNextSavedOrExternalEdit,
                             style: TextStyle(
                               color: Theme.of(
                                 context,
@@ -506,22 +485,16 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    _localized(
-                      context,
-                      'Agent connection configuration',
-                      'Agent 连接配置',
-                    ),
+                    context.l10n.agentConnectionConfiguration,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    _localized(
-                      context,
-                      'Directory detection and declared paths; verify runtime connections separately',
-                      '目录检测与配置路径；实际运行连接需单独验证',
-                    ),
+                    context
+                        .l10n
+                        .directoryDetectionAndDeclaredPathsVerifyRuntimeConnectionsSeparately,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -533,8 +506,7 @@ class _Header extends StatelessWidget {
             ),
             DesktopIconButton(
               key: const Key('agent-adapter-refresh'),
-              tooltip:
-                  '$directoryPath\n${_localized(context, 'Refresh', '刷新')}',
+              tooltip: '$directoryPath\n${context.l10n.refresh}',
               onPressed: isLoading ? null : () => unawaited(onRefresh()),
               icon: isLoading
                   ? const SizedBox.square(
@@ -548,7 +520,7 @@ class _Header extends StatelessWidget {
               key: const Key('agent-adapter-new'),
               onPressed: onCreate,
               icon: const Icon(Icons.add, size: 17),
-              label: _localized(context, 'New', '新建'),
+              label: context.l10n.newLabel,
               tone: DesktopActionTone.neutral,
             ),
           ],
@@ -579,8 +551,8 @@ class _AdapterList extends StatelessWidget {
       children: <Widget>[
         if (isCreating)
           _AdapterRow(
-            title: _localized(context, 'New Agent', '新 Agent'),
-            subtitle: _localized(context, 'Unsaved', '尚未保存'),
+            title: context.l10n.newAgent,
+            subtitle: context.l10n.unsaved,
             selected: true,
             installed: null,
             invalid: false,
@@ -623,9 +595,9 @@ class _AdapterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final String detectionLabel = switch (installed) {
-      true => _localized(context, 'Directory detected', '已检测到目录'),
-      false => _localized(context, 'Directory not detected', '未检测到目录'),
-      null => _localized(context, 'Directory not checked', '目录尚未检查'),
+      true => context.l10n.directoryDetected,
+      false => context.l10n.directoryNotDetected,
+      null => context.l10n.directoryNotChecked,
     };
     return Semantics(
       button: true,
@@ -750,17 +722,15 @@ class _ExternalChangeNotice extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              _localized(
-                context,
-                'The file changed outside DingDong while you have unsaved edits.',
-                '外部 Agent 修改了文件，但编辑器里还有未保存内容。',
-              ),
+              context
+                  .l10n
+                  .theFileChangedOutsideDingDongWhileYouHaveUnsavedEdits,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
           DesktopActionButton(
             onPressed: onLoadExternal,
-            label: _localized(context, 'Load external', '载入外部版本'),
+            label: context.l10n.loadExternal,
             compact: true,
           ),
         ],
@@ -882,11 +852,7 @@ class _EmptyEditor extends StatelessWidget {
       child: isLoading
           ? const CircularProgressIndicator()
           : Text(
-              _localized(
-                context,
-                'Select an Agent Adapter or create one.',
-                '选择一个 Agent Adapter，或新建一个。',
-              ),
+              context.l10n.selectAnAgentAdapterOrCreateOne,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -897,18 +863,11 @@ class _EmptyEditor extends StatelessWidget {
 
 String _originLabel(BuildContext context, AgentAdapterEntry entry) {
   if (!entry.isValid) {
-    return _localized(context, 'Invalid configuration', '配置无效');
+    return context.l10n.invalidConfiguration;
   }
   return switch (entry.origin) {
-    AgentAdapterOrigin.builtIn => _localized(context, 'Built in', '内置'),
-    AgentAdapterOrigin.customized => _localized(
-      context,
-      'User override',
-      '用户覆盖',
-    ),
-    AgentAdapterOrigin.custom => _localized(context, 'Custom', '自定义'),
+    AgentAdapterOrigin.builtIn => context.l10n.builtIn,
+    AgentAdapterOrigin.customized => context.l10n.userOverride,
+    AgentAdapterOrigin.custom => context.l10n.custom,
   };
 }
-
-String _localized(BuildContext context, String english, String chinese) =>
-    Localizations.localeOf(context).languageCode == 'zh' ? chinese : english;

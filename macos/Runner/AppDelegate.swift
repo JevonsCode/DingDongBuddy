@@ -4,6 +4,16 @@ import ApplicationServices
 import FlutterMacOS
 import ServiceManagement
 
+private func ddAppDelegateString(_ key: String) -> String {
+  NSLocalizedString(
+    key,
+    tableName: "AppDelegate",
+    bundle: .main,
+    value: key,
+    comment: ""
+  )
+}
+
 private struct GlobalHotKeyConfiguration: Equatable {
   let keyCode: UInt32
   let modifiers: UInt32
@@ -381,7 +391,8 @@ class AppDelegate: FlutterAppDelegate {
       }
       self.launchAtStartupChannel = launchAtStartupChannel
     }
-    super.applicationDidFinishLaunching(notification)
+    // FlutterAppDelegate conforms to NSApplicationDelegate but does not
+    // implement this optional selector, so a super call crashes at runtime.
     if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
        let icon = NSImage(contentsOf: iconURL)
     {
@@ -404,11 +415,8 @@ class AppDelegate: FlutterAppDelegate {
 
   override func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
     let menu = NSMenu()
-    let usesChinese = Locale.preferredLanguages.first?
-      .lowercased()
-      .hasPrefix("zh") == true
     let recoveryItem = NSMenuItem(
-      title: usesChinese ? "找回菜单栏图标…" : "Find Menu Bar Icon…",
+      title: ddAppDelegateString("find_menu_bar_icon"),
       action: #selector(showMenuBarRecoveryFromDockMenu(_:)),
       keyEquivalent: ""
     )
@@ -416,7 +424,7 @@ class AppDelegate: FlutterAppDelegate {
     menu.addItem(recoveryItem)
     menu.addItem(.separator())
     let item = NSMenuItem(
-      title: usesChinese ? "隐藏 Dock 图标" : "Hide Dock Icon",
+      title: ddAppDelegateString("hide_dock_icon"),
       action: #selector(hideDockIconFromDockMenu(_:)),
       keyEquivalent: ""
     )
@@ -470,21 +478,14 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   func showMenuBarRecoveryAssistant() {
-    let usesChinese = Locale.preferredLanguages.first?
-      .lowercased()
-      .hasPrefix("zh") == true
     NSApp.activate(ignoringOtherApps: true)
     let alert = NSAlert()
     alert.alertStyle = .informational
-    alert.messageText = usesChinese
-      ? "找回 DingDong 菜单栏图标"
-      : "Find the DingDong menu bar icon"
-    alert.informativeText = usesChinese
-      ? "如果图标被刘海遮挡，请在 Finder 中选中 DingDong，按 ⌘I，勾选“缩放以适合内建摄像头下方”，然后重新打开 DingDong。图标出现后，按住 ⌘ 拖到右侧；macOS 会记住位置。"
-      : "If the icon is hidden behind the camera housing, reveal DingDong in Finder, press ⌘I, enable “Scale to fit below built-in camera,” then reopen DingDong. Once visible, hold ⌘ and drag it to the right; macOS remembers the position."
-    alert.addButton(withTitle: usesChinese ? "在 Finder 中显示" : "Show in Finder")
-    alert.addButton(withTitle: usesChinese ? "打开系统设置" : "Open System Settings")
-    alert.addButton(withTitle: usesChinese ? "取消" : "Cancel")
+    alert.messageText = ddAppDelegateString("recovery_title")
+    alert.informativeText = ddAppDelegateString("recovery_detail")
+    alert.addButton(withTitle: ddAppDelegateString("show_in_finder"))
+    alert.addButton(withTitle: ddAppDelegateString("open_system_settings"))
+    alert.addButton(withTitle: ddAppDelegateString("cancel"))
     switch alert.runModal() {
     case .alertFirstButtonReturn:
       NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])

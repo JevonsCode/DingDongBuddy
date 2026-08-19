@@ -1,0 +1,7 @@
+"find_menu_bar_icon" = "Buscar el icono de la barra de menús…";
+"hide_dock_icon" = "Ocultar el icono del Dock";
+"recovery_title" = "Buscar el icono de DingDong en la barra de menús";
+"recovery_detail" = "Si la cámara oculta el icono, muestra DingDong en Finder, pulsa ⌘I, activa «Ajustar debajo de la cámara integrada» y vuelve a abrir DingDong. Cuando aparezca, mantén pulsado ⌘ y arrástralo hacia la derecha; macOS recordará la posición.";
+"show_in_finder" = "Mostrar en Finder";
+"open_system_settings" = "Abrir Ajustes del Sistema";
+"cancel" = "Cancelar";

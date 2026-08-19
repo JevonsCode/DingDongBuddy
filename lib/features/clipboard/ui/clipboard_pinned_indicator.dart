@@ -21,7 +21,7 @@ class ClipboardPinnedIndicator extends StatelessWidget {
     return Transform.rotate(
       angle: -0.34,
       child: Tooltip(
-        message: context.localized('Pinned', '已置顶'),
+        message: context.l10n.pinned,
         child: Icon(
           key: Key('$keyPrefix-$recordId'),
           Icons.push_pin_rounded,

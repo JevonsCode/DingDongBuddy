@@ -2171,6 +2171,11 @@ h3 {
   color: #8bb29e;
 }
 
+.terminal-demo-dingdong .is-token {
+  color: #d8c489;
+  font-variant-numeric: tabular-nums;
+}
+
 .terminal-demo-status {
   display: flex;
   justify-content: space-between;

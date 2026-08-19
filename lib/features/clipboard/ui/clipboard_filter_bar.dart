@@ -64,8 +64,8 @@ class _CompactClipboardToolbar extends StatelessWidget {
                     controller: searchController,
                     onChanged: viewModel.setQuery,
                     height: 38,
-                    hintText: context.localized('Search clipboard', '搜索剪贴板'),
-                    clearTooltip: context.localized('Clear search', '清除搜索'),
+                    hintText: context.l10n.searchClipboard,
+                    clearTooltip: context.l10n.clearSearch,
                     style: const TextStyle(fontSize: 12),
                     hintStyle: TextStyle(
                       color: PopupStyle.of(context).textSecondary,
@@ -183,13 +183,10 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
         ? PopupStyle.of(context).accentSoft
         : PopupStyle.of(context).surface;
     final String label = widget.filtersExpanded
-        ? context.localized('Hide categories and groups', '收起分类与分组')
+        ? context.l10n.hideCategoriesAndGroups
         : widget.filtersActive
-        ? context.localized(
-            'Show categories and groups (filters active)',
-            '展开分类与分组（筛选已启用）',
-          )
-        : context.localized('Show categories and groups', '展开分类与分组');
+        ? context.l10n.showCategoriesAndGroupsFiltersActive
+        : context.l10n.showCategoriesAndGroups;
     return Semantics(
       button: true,
       expanded: widget.filtersExpanded,
@@ -297,7 +294,7 @@ class _ClipboardKindFilters extends StatelessWidget {
           const SizedBox(width: 4),
           DesktopIconButton(
             key: const Key('clipboard-manage-categories'),
-            tooltip: context.localized('Manage categories', '管理分类'),
+            tooltip: context.l10n.manageCategories,
             onPressed: resourceManagerLauncher == null
                 ? null
                 : () => unawaited(
@@ -312,11 +309,11 @@ class _ClipboardKindFilters extends StatelessWidget {
 
   Widget _categoryChip(BuildContext context, ClipboardCategoryRule? category) {
     final String label = switch (category?.id) {
-      null => context.localized('All', '全部'),
-      'text' => context.localized('Text', '文本'),
-      'links' => context.localized('Links', '链接'),
-      'images' => context.localized('Images', '图片'),
-      'files' => context.localized('Files', '文件'),
+      null => context.l10n.all,
+      'text' => context.l10n.text,
+      'links' => context.l10n.links,
+      'images' => context.l10n.images,
+      'files' => context.l10n.files,
       _ => category!.name,
     };
     final bool showShortcut = category == null && showResetShortcutHint;

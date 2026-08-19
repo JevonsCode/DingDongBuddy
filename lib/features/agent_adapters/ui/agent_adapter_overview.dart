@@ -13,13 +13,13 @@ class _AdapterCatalogSummary extends StatelessWidget {
     final int invalid = entries
         .where((AgentAdapterEntry entry) => !entry.isValid)
         .length;
-    final String summary = _localized(
-      context,
-      '${entries.length} configurations · $detected directories detected'
-          '${invalid == 0 ? '' : ' · $invalid invalid'}',
-      '${entries.length} 个配置 · 检测到 $detected 个目录'
-          '${invalid == 0 ? '' : ' · $invalid 个无效'}',
-    );
+    final String summary = invalid == 0
+        ? context.l10n.agentAdapterCatalogSummary(entries.length, detected)
+        : context.l10n.agentAdapterCatalogSummaryWithInvalid(
+            entries.length,
+            detected,
+            invalid,
+          );
     return Semantics(
       container: true,
       label: summary,
@@ -49,11 +49,7 @@ class _AdapterCatalogSummary extends StatelessWidget {
               ),
             ),
             Text(
-              _localized(
-                context,
-                'Detection is not connection verification',
-                '检测不等于连接验证',
-              ),
+              context.l10n.detectionIsNotConnectionVerification,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
@@ -91,7 +87,7 @@ class _AdapterOverview extends StatelessWidget {
         ],
         const SizedBox(height: 14),
         Text(
-          _localized(context, 'Configuration evidence', '配置证据'),
+          context.l10n.configurationEvidence,
           style: Theme.of(
             context,
           ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
@@ -103,86 +99,60 @@ class _AdapterOverview extends StatelessWidget {
               icon: entry.isValid
                   ? Icons.check_circle_outline_rounded
                   : Icons.error_outline_rounded,
-              title: _localized(context, 'Adapter document', 'Adapter 文档'),
-              value: entry.isValid
-                  ? _localized(context, 'Valid', '有效')
-                  : _localized(context, 'Invalid', '无效'),
+              title: context.l10n.adapterDocument,
+              value: entry.isValid ? context.l10n.valid : context.l10n.invalid,
               detail:
                   entry.error ??
-                  _localized(
-                    context,
-                    'YAML structure and declared paths passed validation.',
-                    'YAML 结构和声明路径已通过校验。',
-                  ),
+                  context.l10n.yamlStructureAndDeclaredPathsPassedValidation,
               positive: entry.isValid,
               warning: !entry.isValid,
             ),
             const Divider(height: 1),
             _EvidenceRow(
               icon: Icons.folder_outlined,
-              title: _localized(context, 'Agent directory', 'Agent 目录'),
+              title: context.l10n.agentDirectory,
               value: entry.installed
-                  ? _localized(context, 'Detected', '已检测到')
-                  : _localized(context, 'Not detected', '未检测到'),
+                  ? context.l10n.detected
+                  : context.l10n.notDetected,
               detail:
                   adapter?.detectDirectory ??
-                  _localized(
-                    context,
-                    'Unavailable because the Adapter is invalid.',
-                    'Adapter 无效，无法读取检测路径。',
-                  ),
+                  context.l10n.unavailableBecauseTheAdapterIsInvalid,
               positive: entry.installed,
             ),
             const Divider(height: 1),
             _EvidenceRow(
               icon: Icons.hub_outlined,
-              title: _localized(context, 'MCP configuration path', 'MCP 配置路径'),
-              value: hasMcp
-                  ? _localized(context, 'Declared', '已声明')
-                  : _localized(context, 'Not declared', '未声明'),
+              title: context.l10n.mcpConfigurationPath,
+              value: hasMcp ? context.l10n.declared : context.l10n.notDeclared,
               detail:
                   adapter?.mcpFilePath ??
-                  _localized(
-                    context,
-                    'This Adapter does not declare an MCP file.',
-                    '这个 Adapter 没有声明 MCP 文件。',
-                  ),
+                  context.l10n.thisAdapterDoesNotDeclareAnMCPFile,
               positive: hasMcp,
             ),
             const Divider(height: 1),
             _EvidenceRow(
               icon: Icons.description_outlined,
-              title: _localized(
-                context,
-                'Prompt configuration path',
-                'Prompt 配置路径',
-              ),
+              title: context.l10n.promptConfigurationPath,
               value: hasPrompt
-                  ? _localized(context, 'Declared', '已声明')
-                  : _localized(context, 'Not declared', '未声明'),
+                  ? context.l10n.declared
+                  : context.l10n.notDeclared,
               detail:
                   adapter?.promptFilePath ??
-                  _localized(
-                    context,
-                    'This Adapter does not declare a prompt file.',
-                    '这个 Adapter 没有声明 Prompt 文件。',
-                  ),
+                  context.l10n.thisAdapterDoesNotDeclareAPromptFile,
               positive: hasPrompt,
             ),
             const Divider(height: 1),
             _EvidenceRow(
               icon: Icons.layers_outlined,
-              title: _localized(context, 'Skill paths', 'Skill 路径'),
+              title: context.l10n.skillPaths,
               value: hasSkills
-                  ? _localized(context, 'Declared', '已声明')
-                  : _localized(context, 'Not declared', '未声明'),
+                  ? context.l10n.declared
+                  : context.l10n.notDeclared,
               detail: hasSkills
                   ? '${adapter!.globalSkillPath}\n${adapter.projectSkillPath}'
-                  : _localized(
-                      context,
-                      'This Adapter does not declare both global and project Skill paths.',
-                      '这个 Adapter 没有同时声明全局与项目 Skill 路径。',
-                    ),
+                  : context
+                        .l10n
+                        .thisAdapterDoesNotDeclareBothGlobalAndProjectSkillPaths,
               positive: hasSkills,
             ),
           ],
@@ -248,11 +218,7 @@ class _CodexCompletionHookCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      _localized(
-                        context,
-                        'Codex completion Hook',
-                        'Codex 完成 Hook',
-                      ),
+                      context.l10n.codexCompletionHook,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -270,7 +236,7 @@ class _CodexCompletionHookCard extends StatelessWidget {
               ),
               DesktopIconButton(
                 key: const Key('codex-completion-hook-refresh'),
-                tooltip: _localized(context, 'Check again', '重新检查'),
+                tooltip: context.l10n.checkAgain,
                 onPressed: checking
                     ? null
                     : controller.refreshCodexCompletionHook,
@@ -307,11 +273,7 @@ class _CodexCompletionHookCard extends StatelessWidget {
           ],
           const SizedBox(height: 10),
           Text(
-            _localized(
-              context,
-              'Only the exact Hook shown above and its current hash will be trusted. A future change requires another review.',
-              '只会信任上面显示的精确 Hook 与当前哈希；以后 Hook 定义再次变化时仍需重新确认。',
-            ),
+            context.l10n.onlyTheExactHookShownAboveAndItsCurrentHashWillBe,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: colors.onSurfaceVariant,
               height: 1.35,
@@ -328,8 +290,8 @@ class _CodexCompletionHookCard extends StatelessWidget {
                     : controller.repairCodexCompletionHook,
                 icon: const Icon(Icons.security_update_good_outlined, size: 17),
                 label: status.review == CodexCompletionHookReview.trusted
-                    ? _localized(context, 'Enable', '启用')
-                    : _localized(context, 'Trust & enable', '信任并启用'),
+                    ? context.l10n.enable
+                    : context.l10n.trustEnable,
                 tone: DesktopActionTone.primary,
               ),
             ),
@@ -345,52 +307,24 @@ class _CodexCompletionHookCard extends StatelessWidget {
     bool checking,
   ) {
     if (checking) {
-      return _localized(context, 'Checking Codex…', '正在检查 Codex…');
+      return context.l10n.checkingCodex;
     }
     return switch (status.review) {
-      CodexCompletionHookReview.notChecked => _localized(
-        context,
-        'Not checked',
-        '尚未检查',
-      ),
-      CodexCompletionHookReview.unavailable => _localized(
-        context,
-        'Codex unavailable',
-        'Codex 不可用',
-      ),
-      CodexCompletionHookReview.missing => _localized(
-        context,
-        'Hook not configured',
-        '尚未配置 Hook',
-      ),
-      CodexCompletionHookReview.mismatched => _localized(
-        context,
-        'Command mismatch',
-        '命令不匹配',
-      ),
-      CodexCompletionHookReview.untrusted => _localized(
-        context,
-        'Trust required',
-        '需要信任',
-      ),
-      CodexCompletionHookReview.modified => _localized(
-        context,
-        'Changed since review',
-        '审核后已发生变化',
-      ),
+      CodexCompletionHookReview.notChecked => context.l10n.notChecked,
+      CodexCompletionHookReview.unavailable => context.l10n.codexUnavailable,
+      CodexCompletionHookReview.missing => context.l10n.hookNotConfigured,
+      CodexCompletionHookReview.mismatched => context.l10n.commandMismatch,
+      CodexCompletionHookReview.untrusted => context.l10n.trustRequired,
+      CodexCompletionHookReview.modified => context.l10n.changedSinceReview,
       CodexCompletionHookReview.trusted =>
         status.enabled
-            ? _localized(context, 'Trusted and enabled', '已信任并启用')
-            : _localized(context, 'Trusted but disabled', '已信任但未启用'),
+            ? context.l10n.trustedAndEnabled
+            : context.l10n.trustedButDisabled,
       CodexCompletionHookReview.managed =>
         status.enabled
-            ? _localized(context, 'Managed and enabled', '已托管并启用')
-            : _localized(context, 'Managed but disabled', '已托管但未启用'),
-      CodexCompletionHookReview.failed => _localized(
-        context,
-        'Verification failed',
-        '验证失败',
-      ),
+            ? context.l10n.managedAndEnabled
+            : context.l10n.managedButDisabled,
+      CodexCompletionHookReview.failed => context.l10n.verificationFailed,
     };
   }
 
@@ -400,74 +334,31 @@ class _CodexCompletionHookCard extends StatelessWidget {
     bool checking,
   ) {
     if (checking) {
-      return _localized(
-        context,
-        'Reading the current Hook definition and trust state from Codex.',
-        '正在从 Codex 读取当前 Hook 定义与信任状态。',
-      );
+      return context.l10n.readingTheCurrentHookDefinitionAndTrustStateFromCodex;
     }
     return switch (status.review) {
-      CodexCompletionHookReview.notChecked => _localized(
-        context,
-        'Select refresh to read the current state from Codex.',
-        '点击刷新，从 Codex 读取当前状态。',
-      ),
-      CodexCompletionHookReview.unavailable => _localized(
-        context,
-        'This Codex build could not be reached through App Server. Use /hooks to review the Hook.',
-        '当前无法通过 App Server 连接这个 Codex 版本，请改用 /hooks 审核 Hook。',
-      ),
-      CodexCompletionHookReview.missing => _localized(
-        context,
-        'The expected DingDong Stop Hook is not configured in Codex.',
-        'Codex 中尚未配置预期的 DingDong Stop Hook。',
-      ),
-      CodexCompletionHookReview.mismatched => _localized(
-        context,
-        'A DingDong Hook exists, but its command does not exactly match this installed app. It was not trusted.',
-        '已存在 DingDong Hook，但命令与当前安装的应用不完全一致，因此没有授予信任。',
-      ),
-      CodexCompletionHookReview.untrusted => _localized(
-        context,
-        'Codex is blocking this Hook until its exact current hash is trusted.',
-        'Codex 正在阻止这个 Hook，需确认并信任当前精确哈希后才会执行。',
-      ),
-      CodexCompletionHookReview.modified => _localized(
-        context,
-        'The Hook changed after its last review. Check the current command and hash before trusting it again.',
-        'Hook 在上次审核后发生了变化，请检查当前命令和哈希后再重新信任。',
-      ),
+      CodexCompletionHookReview.notChecked =>
+        context.l10n.selectRefreshToReadTheCurrentStateFromCodex,
+      CodexCompletionHookReview.unavailable =>
+        context.l10n.thisCodexBuildCouldNotBeReachedThroughAppServerUseHooks,
+      CodexCompletionHookReview.missing =>
+        context.l10n.theExpectedDingDongStopHookIsNotConfiguredInCodex,
+      CodexCompletionHookReview.mismatched =>
+        context.l10n.aDingDongHookExistsButItsCommandDoesNotExactlyMatchThis,
+      CodexCompletionHookReview.untrusted =>
+        context.l10n.codexIsBlockingThisHookUntilItsExactCurrentHashIsTrusted,
+      CodexCompletionHookReview.modified =>
+        context.l10n.theHookChangedAfterItsLastReviewCheckTheCurrentCommandAnd,
       CodexCompletionHookReview.trusted =>
         status.enabled
-            ? _localized(
-                context,
-                'Codex can run DingDong after a task completes.',
-                'Codex 可在任务完成后调用 DingDong。',
-              )
-            : _localized(
-                context,
-                'The current hash is trusted, but this Hook is disabled.',
-                '当前哈希已受信任，但这个 Hook 仍处于停用状态。',
-              ),
+            ? context.l10n.codexCanRunDingDongAfterATaskCompletes
+            : context.l10n.theCurrentHashIsTrustedButThisHookIsDisabled,
       CodexCompletionHookReview.managed =>
         status.enabled
-            ? _localized(
-                context,
-                'This managed Hook is enabled and can run after task completion.',
-                '这个托管 Hook 已启用，可在任务完成后运行。',
-              )
-            : _localized(
-                context,
-                'This Hook is managed and disabled; DingDong cannot change it.',
-                '这个 Hook 由外部策略托管且已停用，DingDong 无法修改。',
-              ),
+            ? context.l10n.thisManagedHookIsEnabledAndCanRunAfterTaskCompletion
+            : context.l10n.thisHookIsManagedAndDisabledDingDongCannotChangeIt,
       CodexCompletionHookReview.failed =>
-        status.detail ??
-            _localized(
-              context,
-              'Codex did not return a verifiable Hook state.',
-              'Codex 没有返回可验证的 Hook 状态。',
-            ),
+        status.detail ?? context.l10n.codexDidNotReturnAVerifiableHookState,
     };
   }
 }
@@ -479,11 +370,9 @@ class _VerificationBoundaryNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String message = _localized(
-      context,
-      'What is known: DingDong ${entry.installed ? 'found' : 'did not find'} the declared Agent directory. A detected directory or declared path does not verify MCP, Hook, Bridge, authentication, or completion callbacks. Use Agent connections to verify the running local API and real completion signals.',
-      '当前已知：DingDong ${entry.installed ? '检测到' : '未检测到'}声明的 Agent 目录。检测到目录或声明了路径，都不能证明 MCP、Hook、Bridge、鉴权或完成回调已连通；请在“Agent 连接”中验证本机 API 和真实完成回执。',
-    );
+    final String message = entry.installed
+        ? context.l10n.agentDirectoryDetectedDoesNotVerifyConnections
+        : context.l10n.agentDirectoryNotDetectedDoesNotVerifyConnections;
     return Semantics(
       container: true,
       label: message,
@@ -515,11 +404,7 @@ class _VerificationBoundaryNotice extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    _localized(
-                      context,
-                      'Connection has not been inferred',
-                      '未推断连接成功',
-                    ),
+                    context.l10n.connectionHasNotBeenInferred,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -646,9 +531,9 @@ class _DetectionBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final String label = switch (installed) {
-      true => _localized(context, 'Detected', '已检测'),
-      false => _localized(context, 'Not detected', '未检测'),
-      null => _localized(context, 'Not checked', '未检查'),
+      true => context.l10n.detected,
+      false => context.l10n.notDetected,
+      null => context.l10n.notChecked,
     };
     final Color foreground = installed == true
         ? colors.primary

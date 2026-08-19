@@ -283,7 +283,7 @@ void main() {
             .list(limit: 50)
             .single;
         expect(received.content, '用户在输入框里手动粘贴后点击了发送');
-        expect(received.source, '来自 iPhone');
+        expect(received.source, 'From iPhone');
         expect(received.tags, contains('device-origin:phone-one'));
       },
     );

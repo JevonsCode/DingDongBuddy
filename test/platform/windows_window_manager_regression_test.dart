@@ -10,14 +10,11 @@ void main() {
 
     expect(
       source,
-      contains(
-        '::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED)',
-      ),
+      contains('::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED)'),
     );
     expect(source, contains('bool WindowManager::EnsureTaskbarInitialized()'));
     expect(
-      RegExp(r'if \(!EnsureTaskbarInitialized\(\)\) \{')
-          .allMatches(source),
+      RegExp(r'if \(!EnsureTaskbarInitialized\(\)\) \{').allMatches(source),
       hasLength(3),
     );
     expect(

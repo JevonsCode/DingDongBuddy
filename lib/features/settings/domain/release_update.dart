@@ -8,6 +8,7 @@ final class ReleaseMetadata {
     this.latestBuild,
     this.publishedAt,
     this.notes = const <String>[],
+    this.notesByLanguage = const <String, List<String>>{},
   });
 
   final String app;
@@ -16,7 +17,31 @@ final class ReleaseMetadata {
   final DateTime? publishedAt;
   final Uri website;
   final Uri releasePage;
+
+  /// Legacy English-only notes kept for older release metadata feeds.
   final List<String> notes;
+  final Map<String, List<String>> notesByLanguage;
+
+  List<String> notesFor(String languageCode) {
+    final String normalized = languageCode.trim().toLowerCase();
+    final String base = normalized.split(RegExp('[-_]')).first;
+    final List<String>? localized =
+        notesByLanguage[normalized] ?? notesByLanguage[base];
+    if (localized != null && localized.isNotEmpty) {
+      return localized;
+    }
+    if (notes.isNotEmpty) {
+      return notes;
+    }
+    final List<String>? english = notesByLanguage['en'];
+    if (english != null && english.isNotEmpty) {
+      return english;
+    }
+    for (final List<String> fallback in notesByLanguage.values) {
+      if (fallback.isNotEmpty) return fallback;
+    }
+    return const <String>[];
+  }
 }
 
 /// Source used to resolve the latest available DingDong release.
@@ -49,6 +74,8 @@ final class ReleaseStatus {
 
   String? get latestVersion => metadata?.latestVersion;
   List<String> get notes => metadata?.notes ?? const <String>[];
+  List<String> notesFor(String languageCode) =>
+      metadata?.notesFor(languageCode) ?? const <String>[];
   Uri get website => metadata?.website ?? defaultWebsiteUri;
   Uri get releasePage => metadata?.releasePage ?? defaultReleasePageUri;
 
@@ -111,8 +138,8 @@ List<int> _versionParts(String value) {
       .toList(growable: false);
 }
 
-const String currentAppVersion = '1.4.6';
-const String currentAppBuild = '54';
+const String currentAppVersion = '1.5.0';
+const String currentAppBuild = '55';
 const Duration backgroundReleaseUpdateCheckInterval = Duration(hours: 7);
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',

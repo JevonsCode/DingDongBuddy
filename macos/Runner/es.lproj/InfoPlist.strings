@@ -1,0 +1,4 @@
+"NSLocalNetworkUsageDescription" = "DingDong se conecta directamente a tus dispositivos de confianza en la red local para transferir elementos del portapapeles y archivos.";
+"NSDocumentsFolderUsageDescription" = "DingDong necesita acceso a Documentos para instalar paquetes locales completos de Agent Skill.";
+"NSDesktopFolderUsageDescription" = "DingDong necesita acceso al Escritorio para instalar paquetes locales completos de Agent Skill.";
+"NSDownloadsFolderUsageDescription" = "DingDong necesita acceso a Descargas para instalar paquetes locales completos de Agent Skill.";

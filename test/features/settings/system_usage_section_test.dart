@@ -12,10 +12,12 @@ void main() {
     (WidgetTester tester) async {
       final _UsageSource source = _UsageSource();
       final _Cleaner cleaner = _Cleaner(source);
+      final _LocationGateway locationGateway = _LocationGateway();
       final SettingsViewModel model = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
         systemUsageSource: source,
         systemDataCleaner: cleaner,
+        systemDataLocationGateway: locationGateway,
       );
       addTearDown(model.dispose);
       await model.load();
@@ -47,6 +49,25 @@ void main() {
         find.byKey(const Key('settings-clear-resource-library')),
         findsNothing,
       );
+      expect(
+        find.byKey(const Key('settings-open-clipboard-images-folder')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-open-clipboard-text-folder')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-open-clipboard-files-folder')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const Key('settings-open-clipboard-images-folder')),
+      );
+      await tester.pump();
+      expect(locationGateway.categories, <SystemDataCategory>[
+        SystemDataCategory.clipboardImages,
+      ]);
 
       final Finder clearButton = find.byKey(
         const Key('settings-clear-clipboard-images'),
@@ -62,6 +83,12 @@ void main() {
       expect(
         find.text(
           'Permanent archives and their image files are protected and will stay intact.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Only image copies inside DingDong\'s cache are removed. Source images elsewhere stay untouched.',
         ),
         findsOneWidget,
       );
@@ -131,5 +158,14 @@ final class _Cleaner implements SystemDataCleaner {
     source.imagesCleared = categories.contains(
       SystemDataCategory.clipboardImages,
     );
+  }
+}
+
+final class _LocationGateway implements SystemDataLocationGateway {
+  final List<SystemDataCategory> categories = <SystemDataCategory>[];
+
+  @override
+  Future<void> open(SystemDataCategory category) async {
+    categories.add(category);
   }
 }

@@ -4,7 +4,6 @@ import 'package:dingdong/features/clipboard/domain/clipboard_qr_payload.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -333,12 +332,7 @@ void main() {
 
 Widget _previewTestApp({required Widget home}) => MaterialApp(
   locale: const Locale('zh'),
-  supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-  localizationsDelegates: const <LocalizationsDelegate<Object>>[
-    DingDongLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
+  supportedLocales: DingDongLocalizations.supportedLocales,
+  localizationsDelegates: DingDongLocalizations.localizationsDelegates,
   home: home,
 );

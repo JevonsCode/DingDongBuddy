@@ -1,3 +1,5 @@
+import 'package:dingdong/app/app_localizations.dart';
+
 enum WindowsTrayIconState { normal, reminder, resting, sleeping }
 
 /// Returns the Windows tray icon that contrasts with the sampled taskbar.
@@ -27,13 +29,11 @@ String windowsTrayIconPath({
 /// Returns the localized Windows notification-area hover text.
 String windowsTrayTooltip({
   required int unreadCount,
-  required bool useChineseLabels,
+  required DingDongLocalizations strings,
 }) {
   final int count = unreadCount.clamp(0, 999);
   if (count == 0) {
     return 'DingDong';
   }
-  return useChineseLabels
-      ? 'DingDong · $count 条未读内容'
-      : 'DingDong · $count unread';
+  return strings.dingDongUnreadCount(count);
 }

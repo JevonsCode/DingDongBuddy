@@ -24,15 +24,9 @@ class PopupFooter extends StatelessWidget {
     final String shortcut = globalHotKey.label(shortcutPlatform);
     final Uri? endpoint = agentBaseUri;
     final String apiStatus = endpoint == null
-        ? context.localized('API status unverified', 'API 状态待确认')
-        : context.localized(
-            'API listening on ${endpoint.host}:${endpoint.port}',
-            'API 正在监听 ${endpoint.host}:${endpoint.port}',
-          );
-    final String shortcutStatus = context.localized(
-      '$shortcut ready',
-      '$shortcut 就绪',
-    );
+        ? context.l10n.apiStatusUnverified
+        : context.l10n.apiListeningOnHostPort(endpoint.host, endpoint.port);
+    final String shortcutStatus = context.l10n.shortcutReady(shortcut);
     return Container(
       height: 39,
       padding: const EdgeInsets.symmetric(horizontal: 16),

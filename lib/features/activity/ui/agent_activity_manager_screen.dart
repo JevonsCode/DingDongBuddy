@@ -49,7 +49,7 @@ class AgentActivityManagerScreen extends StatelessWidget {
                           Row(
                             children: <Widget>[
                               Text(
-                                context.localized('Recent agents', '最近 Agent'),
+                                context.l10n.recentAgents,
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
@@ -59,10 +59,9 @@ class AgentActivityManagerScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            context.localized(
-                              'Newest first. Click a resumable item to return to its conversation.',
-                              '按时间倒序排列；点击可恢复的记录可返回对应对话。',
-                            ),
+                            context
+                                .l10n
+                                .newestFirstClickAResumableItemToReturnToItsConversation,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: colors.onSurfaceVariant),
                           ),
@@ -77,10 +76,7 @@ class AgentActivityManagerScreen extends StatelessWidget {
                 child: activities.isEmpty
                     ? Center(
                         child: Text(
-                          context.localized(
-                            'No Agent completions yet',
-                            '暂无 Agent 完成记录',
-                          ),
+                          context.l10n.noAgentCompletionsYet,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: colors.onSurfaceVariant),
                         ),
@@ -119,14 +115,7 @@ class AgentActivityManagerScreen extends StatelessWidget {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.localized(
-              'Could not open this Agent conversation.',
-              '无法打开这个 Agent 对话。',
-            ),
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.couldNotOpenThisAgentConversation)),
       );
     }
   }
@@ -149,7 +138,7 @@ class _ActivityCountBadge extends StatelessWidget {
         border: Border.all(color: colors.outlineVariant),
       ),
       child: Text(
-        context.localized('$count items', '$count 条'),
+        context.l10n.countItems(count),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: colors.onSurfaceVariant,
           fontWeight: FontWeight.w600,
@@ -239,14 +228,17 @@ class _ActivityHistoryRow extends StatelessWidget {
                             message:
                                 showConversationTokenUsage &&
                                     activity.tokenUsage != null
-                                ? context.localized(
-                                    'This conversation has notified you ${activity.repeatCount} times and used ${formatExactConversationTokenCount(activity.tokenUsage!.totalTokens)} tokens.',
-                                    '本轮会话已经提醒 ${activity.repeatCount} 次，共消耗 ${formatExactConversationTokenCount(activity.tokenUsage!.totalTokens)} Token',
-                                  )
-                                : context.localized(
-                                    '${activity.repeatCount} notifications for this conversation',
-                                    '此会话已提醒 ${activity.repeatCount} 次',
-                                  ),
+                                ? context.l10n
+                                      .thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3(
+                                        activity.repeatCount,
+                                        formatExactConversationTokenCount(
+                                          activity.tokenUsage!.totalTokens,
+                                        ),
+                                      )
+                                : context.l10n
+                                      .repeatcountNotificationsForThisConversation(
+                                        activity.repeatCount,
+                                      ),
                             child: ActivityRepeatCount(
                               key: Key(
                                 'agent-activity-manager-repeat-count-${activity.id}',
@@ -293,10 +285,7 @@ class _ActivityHistoryRow extends StatelessWidget {
                         ] else if (canOpen) ...<Widget>[
                           const SizedBox(width: 9),
                           Tooltip(
-                            message: context.localized(
-                              'Open Agent conversation',
-                              '打开 Agent 对话',
-                            ),
+                            message: context.l10n.openAgentConversation,
                             child: Icon(
                               Icons.open_in_new_rounded,
                               key: const Key(

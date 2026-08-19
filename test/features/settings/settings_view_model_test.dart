@@ -134,7 +134,7 @@ void main() {
   });
 
   test(
-    'conversation token usage display defaults off and persists opt-in',
+    'conversation token usage display defaults on and persists opt-out',
     () async {
       final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
       final SettingsViewModel model = SettingsViewModel(
@@ -142,13 +142,13 @@ void main() {
       );
       await model.load();
 
-      expect(model.settings.showConversationTokenUsage, isFalse);
-      await model.setShowConversationTokenUsage(true);
-
       expect(model.settings.showConversationTokenUsage, isTrue);
+      await model.setShowConversationTokenUsage(false);
+
+      expect(model.settings.showConversationTokenUsage, isFalse);
       expect(
         backend.values['dingdong.agentApi.showConversationTokenUsage'],
-        isTrue,
+        isFalse,
       );
     },
   );
@@ -488,10 +488,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.4.7',
-        latestBuild: '55',
+        latestVersion: '1.5.1',
+        latestBuild: '56',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.4.7'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/1.5.1'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -507,11 +507,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.4.7');
+    expect(model.releaseStatus.latestVersion, '1.5.1');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.4.7'),
+      Uri.parse('https://example.com/dingdong/releases/1.5.1'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -524,7 +524,7 @@ void main() {
         final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
           ReleaseMetadata(
             app: 'DingDong',
-            latestVersion: '1.4.7',
+            latestVersion: '1.5.1',
             website: Uri.parse('https://example.com/dingdong'),
             releasePage: Uri.parse('https://example.com/dingdong/releases'),
           ),
@@ -616,141 +616,62 @@ void main() {
     expect(permission.inspectCount, 2);
   });
 
-  test(
-    'MCP setup prompt always uses the built-in platform-specific instructions',
-    () async {
-      final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
-      final SettingsViewModel model = SettingsViewModel(
-        SettingsRepository(backend),
-        mcpCommandPath: r'C:\Program Files\DingDong\dingdong-mcp.exe',
-      );
-      await model.load();
+  test('MCP setup prompt is a concise actionable English request', () async {
+    final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
+    const String commandPath = r'C:\Program Files\DingDong\dingdong-mcp.exe';
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(backend),
+      mcpCommandPath: commandPath,
+    );
+    await model.load();
 
-      expect(
-        model.mcpSetupPrompt,
-        contains(r'C:\Program Files\DingDong\dingdong-mcp.exe'),
-      );
-      expect(model.mcpSetupPrompt, contains('STDIO MCP server named dingdong'));
-      expect(
-        model.mcpSetupPrompt,
-        startsWith('Connect DingDong on this computer'),
-      );
-      expect(model.mcpSetupPrompt, isNot(contains('Do not explain DingDong')));
-      expect(model.mcpSetupPrompt, contains('Preserve every existing entry'));
-      expect(model.mcpSetupPrompt, contains('reload the client'));
-      expect(model.mcpSetupPrompt, contains('dingdong_notify'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('exactly one per-Agent delivery mode'),
-      );
-      expect(
-        model.mcpSetupPrompt,
-        contains('dynamic, nativeUser, or nativeProject'),
-      );
-      expect(model.mcpSetupPrompt, contains('master enabled switch'));
-      expect(model.mcpSetupPrompt, contains('dingdong_set_skill_delivery'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('automatically discover local Skill changes'),
-      );
-      expect(model.mcpSetupPrompt, contains('start a new Agent task'));
-      expect(model.mcpSetupPrompt, contains('restart the Agent only if'));
-      expect(model.mcpSetupPrompt, contains('duplicate-name conflict'));
-      expect(model.mcpSetupPrompt, contains('Hook switch is separate'));
-      expect(model.mcpSetupPrompt, contains('exact current definition'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('matching Hooks from every loaded source all run'),
-      );
-      expect(model.mcpSetupPrompt, contains('required instruction'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('a Skill candidate is not an instruction'),
-      );
-      expect(
-        model.mcpSetupPrompt,
-        contains('MCP summary is not an instruction'),
-      );
-      expect(model.mcpSetupPrompt, contains('dingdong_confirm_mcp_use'));
-      expect(model.mcpSetupPrompt, contains('MCP * means a tool was called'));
-      expect(model.mcpSetupPrompt, contains('Prompt items remain unmarked'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('--notify-stop --source "Current client name"'),
-      );
-      expect(model.mcpSetupPrompt, contains('~/.codex/config.toml'));
-      expect(model.mcpSetupPrompt, contains('~/.claude/settings.json'));
-      expect(model.mcpSetupPrompt, contains('~/.cursor/hooks.json'));
-      expect(model.mcpSetupPrompt, contains('~/.gemini/settings.json'));
-      expect(model.mcpSetupPrompt, contains('~/.kiro/settings/mcp.json'));
-      expect(model.mcpSetupPrompt, contains('Kiro CLI v3'));
-      expect(model.mcpSetupPrompt, contains('afterAgentResponse command hook'));
-      expect(model.mcpSetupPrompt, contains('AfterAgent command hook'));
-      expect(model.mcpSetupPrompt, contains('Resource Manager'));
-      expect(model.mcpSetupPrompt, contains('Trust & enable'));
-      expect(model.mcpSetupPrompt, contains('review and trust'));
-      expect(model.mcpSetupPrompt, contains('Test both paths'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('DingDong task-completion hook is connected'),
-      );
-      expect(model.mcpSetupPrompt, contains('remote or cloud agent'));
-      expect(model.mcpSetupPrompt, isNot(contains('clipboard content')));
-    },
-  );
+    final String prompt = model.mcpSetupPrompt;
+    expect(prompt.split(commandPath), hasLength(2));
+    expect(prompt, contains('user-level STDIO MCP server named dingdong'));
+    expect(prompt, contains('dingdong_bridge'));
+    expect(prompt, contains('--notify-stop --source'));
+    expect(prompt, contains('same executable'));
+    expect(prompt, contains('with no args'));
+    expect(prompt, contains('Hook command'));
+    expect(prompt, contains('preserve existing settings'));
+    expect(prompt, isNot(contains('\n')));
+    expect(prompt.length, lessThan(600));
+    for (final String client in <String>[
+      'Codex',
+      'Claude Code',
+      'Cursor',
+      'Gemini',
+      'Kiro',
+    ]) {
+      expect(prompt, isNot(contains(client)));
+    }
+  });
 
   test(
-    'Chinese MCP setup prompt asks for an immediate DingDong test',
+    'Chinese MCP setup prompt is concise and includes the real path',
     () async {
+      const String commandPath =
+          '/Applications/DingDong.app/Contents/MCP/dingdong_mcp';
       final SettingsViewModel model = SettingsViewModel(
         SettingsRepository(
           MemoryPreferencesBackend(<String, Object>{'dingdong.language': 'zh'}),
         ),
-        mcpCommandPath: '/Applications/DingDong.app/Contents/MCP/dingdong_mcp',
+        mcpCommandPath: commandPath,
       );
 
       await model.load();
 
-      expect(
-        model.mcpSetupPrompt,
-        startsWith('请把这台电脑上的 DingDong 接入当前 Agent 或 IDE'),
-      );
-      expect(model.mcpSetupPrompt, isNot(contains('不要介绍 DingDong')));
-      expect(model.mcpSetupPrompt, contains('立即调用一次'));
-      expect(model.mcpSetupPrompt, contains('DingDong MCP 已接入'));
-      expect(model.mcpSetupPrompt, contains('每个 Agent 恰好一种交付模式'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('dynamic、nativeUser 或 nativeProject'),
-      );
-      expect(model.mcpSetupPrompt, contains('总启用开关'));
-      expect(model.mcpSetupPrompt, contains('dingdong_set_skill_delivery'));
-      expect(model.mcpSetupPrompt, contains('自动发现本地 Skill 变化'));
-      expect(model.mcpSetupPrompt, contains('新建 Agent 任务'));
-      expect(model.mcpSetupPrompt, contains('仍看不到时才重启 Agent'));
-      expect(model.mcpSetupPrompt, contains('同名冲突'));
-      expect(model.mcpSetupPrompt, contains('Hook 开关独立'));
-      expect(model.mcpSetupPrompt, contains('当前精确定义'));
-      expect(model.mcpSetupPrompt, contains('所有已加载来源中命中的 Hook 都会运行'));
-      expect(model.mcpSetupPrompt, contains('必须自动应用的指令'));
-      expect(model.mcpSetupPrompt, contains('Skill 候选不是指令'));
-      expect(model.mcpSetupPrompt, contains('MCP 摘要不是指令'));
-      expect(model.mcpSetupPrompt, contains('dingdong_confirm_mcp_use'));
-      expect(model.mcpSetupPrompt, contains('MCP 后的 * 只表示本轮调用过'));
-      expect(model.mcpSetupPrompt, contains('Prompt 不加 *'));
-      expect(
-        model.mcpSetupPrompt,
-        contains('--notify-stop --source "当前客户端名称"'),
-      );
-      expect(model.mcpSetupPrompt, contains('Stop command Hook'));
-      expect(model.mcpSetupPrompt, contains('afterAgentResponse command Hook'));
-      expect(model.mcpSetupPrompt, contains('AfterAgent command Hook'));
-      expect(model.mcpSetupPrompt, contains('Kiro'));
-      expect(model.mcpSetupPrompt, contains('资源管理'));
-      expect(model.mcpSetupPrompt, contains('信任并启用'));
-      expect(model.mcpSetupPrompt, contains('审核并信任'));
-      expect(model.mcpSetupPrompt, contains('分别验证两条链路'));
-      expect(model.mcpSetupPrompt, contains('远程或云端 Agent'));
+      final String prompt = model.mcpSetupPrompt;
+      expect(prompt.split(commandPath), hasLength(2));
+      expect(prompt, contains('名为 dingdong 的用户级 STDIO MCP'));
+      expect(prompt, contains('dingdong_bridge'));
+      expect(prompt, contains('--notify-stop --source'));
+      expect(prompt, contains('同一程序'));
+      expect(prompt, contains('不加 args'));
+      expect(prompt, contains('配置 Hook 命令'));
+      expect(prompt, contains('保留现有配置'));
+      expect(prompt, isNot(contains('\n')));
+      expect(prompt.length, lessThan(400));
     },
   );
 

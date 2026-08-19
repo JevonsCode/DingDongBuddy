@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -8,6 +9,7 @@ import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show Locale;
 
 const int defaultAgentActivityMaxItems = 500;
 const int defaultAgentActivityCountHours = 24;
@@ -34,10 +36,14 @@ final class ActivityController extends ChangeNotifier {
     int maxItems = defaultAgentActivityMaxItems,
     int countWindowHours = defaultAgentActivityCountHours,
     bool groupRepeatedAgentSessions = true,
+    DingDongLocalizations Function()? localizations,
     this._rememberAcrossRestarts = true,
   }) : _store = store ?? InMemoryAgentActivityStore(),
        _idGenerator = idGenerator ?? _generateId,
        _now = now ?? DateTime.now,
+       _localizations =
+           localizations ??
+           (() => lookupDingDongLocalizations(const Locale('en'))),
        _maxItems = _sanitizeMaxItems(maxItems),
        _countWindowHours = _sanitizeCountHours(countWindowHours),
        _groupRepeatedAgentSessions = true {
@@ -47,6 +53,7 @@ final class ActivityController extends ChangeNotifier {
   final AgentActivityStore _store;
   final String Function() _idGenerator;
   final DateTime Function() _now;
+  final DingDongLocalizations Function() _localizations;
   List<AgentActivity> _activities = const <AgentActivity>[];
   List<AgentTaskRun> _activeRuns = const <AgentTaskRun>[];
   List<DateTime> _completionTimes = const <DateTime>[];
@@ -149,7 +156,9 @@ final class ActivityController extends ChangeNotifier {
     String? conversationId,
   }) {
     final String normalizedSource = _normalizedSource(source);
-    final String normalizedTask = task.trim().isEmpty ? '当前任务' : task.trim();
+    final String normalizedTask = task.trim().isEmpty
+        ? _localizations().currentTask
+        : task.trim();
     final String? normalizedWorkspace = _trimmed(workspacePath);
     final String? normalizedConversationId = _trimmed(conversationId);
     final AgentConversationTarget? target =

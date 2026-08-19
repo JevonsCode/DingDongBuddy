@@ -1,0 +1,7 @@
+"find_menu_bar_icon" = "Find Menu Bar Icon…";
+"hide_dock_icon" = "Hide Dock Icon";
+"recovery_title" = "Find the DingDong menu bar icon";
+"recovery_detail" = "If the icon is hidden behind the camera housing, reveal DingDong in Finder, press ⌘I, enable “Scale to fit below built-in camera,” then reopen DingDong. Once visible, hold ⌘ and drag it to the right; macOS remembers the position.";
+"show_in_finder" = "Show in Finder";
+"open_system_settings" = "Open System Settings";
+"cancel" = "Cancel";

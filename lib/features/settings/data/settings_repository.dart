@@ -52,6 +52,7 @@ final class SettingsRepository {
       _backend.read(_notifyAgentAttentionKey),
       _backend.read(_notifyCodexVoiceActivityKey),
       _backend.read(_showConversationTokenUsageKey),
+      _backend.read(_conversationTokenUsageDefaultOnMigrationKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -64,6 +65,17 @@ final class SettingsRepository {
         _agentSetupAcknowledgedRevisionKey,
         agentSetupAcknowledgedRevision,
       );
+    }
+    final bool conversationTokenUsageDefaultOnMigrated = values[29] == true;
+    final bool showConversationTokenUsage =
+        conversationTokenUsageDefaultOnMigrated
+        ? (values[28] is bool ? values[28]! as bool : true)
+        : true;
+    if (!conversationTokenUsageDefaultOnMigrated) {
+      await Future.wait(<Future<void>>[
+        _backend.write(_showConversationTokenUsageKey, true),
+        _backend.write(_conversationTokenUsageDefaultOnMigrationKey, true),
+      ]);
     }
     return AppSettings(
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
@@ -87,9 +99,7 @@ final class SettingsRepository {
       notifyCodexVoiceActivity: values[27] is bool
           ? values[27]! as bool
           : false,
-      showConversationTokenUsage: values[28] is bool
-          ? values[28]! as bool
-          : false,
+      showConversationTokenUsage: showConversationTokenUsage,
       notifySubagentActivity: values[22] is bool ? values[22]! as bool : false,
       conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
       agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
@@ -160,6 +170,7 @@ final class SettingsRepository {
         _showConversationTokenUsageKey,
         settings.showConversationTokenUsage,
       ),
+      _backend.write(_conversationTokenUsageDefaultOnMigrationKey, true),
       _backend.write(_agentActivityMaxItemsKey, settings.agentActivityMaxItems),
       _backend.write(
         _agentActivityCountHoursKey,
@@ -216,6 +227,8 @@ const String _conversationFooterSymbolsKey =
     'dingdong.agentApi.conversationFooterSymbols';
 const String _showConversationTokenUsageKey =
     'dingdong.agentApi.showConversationTokenUsage';
+const String _conversationTokenUsageDefaultOnMigrationKey =
+    'dingdong.migrations.conversationTokenUsageDefaultOn.v1';
 const String _agentActivityMaxItemsKey = 'dingdong.agentActivity.maxItems';
 const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
 const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';

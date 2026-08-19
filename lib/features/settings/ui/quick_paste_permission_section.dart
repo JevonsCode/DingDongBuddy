@@ -26,15 +26,14 @@ class QuickPastePermissionSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                context.localized('Quick paste permission', '快捷粘贴权限'),
+                context.l10n.quickPastePermission,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                context.localized(
-                  'After the global shortcut, DingDong can return focus and paste the selected item.',
-                  '使用全局快捷键后，DingDong 可返回原应用并粘贴所选内容。',
-                ),
+                context
+                    .l10n
+                    .afterTheGlobalShortcutDingDongCanReturnFocusAndPasteThe_5ad1a82a,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
@@ -59,18 +58,9 @@ class QuickPastePermissionSection extends StatelessWidget {
                     Expanded(
                       child: Text(
                         switch (granted) {
-                          true => context.localized(
-                            'Permission granted',
-                            '权限已授予',
-                          ),
-                          false => context.localized(
-                            'Permission required',
-                            '需要授予权限',
-                          ),
-                          null => context.localized(
-                            'Permission status unavailable',
-                            '无法获取权限状态',
-                          ),
+                          true => context.l10n.permissionGranted,
+                          false => context.l10n.permissionRequired,
+                          null => context.l10n.permissionStatusUnavailable,
                         },
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
@@ -78,7 +68,7 @@ class QuickPastePermissionSection extends StatelessWidget {
                       ),
                     ),
                     DesktopIconButton(
-                      tooltip: context.localized('Refresh status', '刷新状态'),
+                      tooltip: context.l10n.refreshStatus,
                       onPressed: viewModel.refreshQuickPastePermission,
                       icon: const Icon(Icons.refresh_rounded),
                     ),
@@ -88,10 +78,7 @@ class QuickPastePermissionSection extends StatelessWidget {
                         key: const Key('settings-open-accessibility'),
                         onPressed: viewModel.openQuickPastePermissionSettings,
                         icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                        label: context.localized(
-                          'Open permission helper',
-                          '打开授权助手',
-                        ),
+                        label: context.l10n.openPermissionHelper,
                         tone: DesktopActionTone.neutral,
                       ),
                     ],
@@ -119,10 +106,9 @@ class QuickPastePermissionSection extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          context.localized(
-                            'The helper opens Accessibility and places a draggable DingDong beside it. If “−” works, remove the old entry before dragging. If “−” is disabled, drag once to make it available, remove the entry, then drag again and turn DingDong on.',
-                            '助手会打开“辅助功能”，并在旁边显示可拖拽的 DingDong。“−”可用时先删除旧条目再拖入；若“−”置灰，先拖一次让它可用，删除旧条目后再拖一次并打开开关。',
-                          ),
+                          context
+                              .l10n
+                              .theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),

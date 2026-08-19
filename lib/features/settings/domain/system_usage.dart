@@ -75,3 +75,8 @@ abstract interface class SystemUsageSource {
 abstract interface class SystemDataCleaner {
   Future<void> clear(Set<SystemDataCategory> categories);
 }
+
+/// Opens a DingDong-owned storage location for inspection.
+abstract interface class SystemDataLocationGateway {
+  Future<void> open(SystemDataCategory category);
+}

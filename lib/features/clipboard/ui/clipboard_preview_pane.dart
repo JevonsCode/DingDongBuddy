@@ -19,11 +19,7 @@ class _ClipboardPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final ClipboardRecord? value = record;
     if (value == null) {
-      return Center(
-        child: Text(
-          context.localized('Select an item to preview', '选择一个条目以预览'),
-        ),
-      );
+      return Center(child: Text(context.l10n.selectAnItemToPreview));
     }
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -37,7 +33,7 @@ class _ClipboardPreview extends StatelessWidget {
               DesktopActionButton(
                 onPressed: () => unawaited(onRestore()),
                 icon: Icons.keyboard_return_rounded,
-                label: context.localized('Restore', '恢复'),
+                label: context.l10n.restore,
                 tone: DesktopActionTone.primary,
               ),
               if (onOpen != null && canOpenClipboardContent(value)) ...<Widget>[
@@ -46,7 +42,7 @@ class _ClipboardPreview extends StatelessWidget {
                   key: const Key('clipboard-preview-open'),
                   onPressed: () => unawaited(onOpen!(value)),
                   icon: Icons.open_in_new_rounded,
-                  label: context.localized('Open', '打开'),
+                  label: context.l10n.open,
                   tone: DesktopActionTone.soft,
                 ),
               ],
@@ -57,37 +53,35 @@ class _ClipboardPreview extends StatelessWidget {
                   icon: value.pinned
                       ? Icons.push_pin_rounded
                       : Icons.push_pin_outlined,
-                  label: value.pinned
-                      ? context.localized('Unpin', '取消置顶')
-                      : context.localized('Pin', '置顶'),
+                  label: value.pinned ? context.l10n.unpin : context.l10n.pin,
                 ),
               ],
               const SizedBox(width: 8),
               DesktopMenuButton<_ClipboardAction>(
                 key: const Key('clipboard-more-actions'),
-                tooltip: context.localized('More actions', '更多操作'),
+                tooltip: context.l10n.moreActions,
                 onSelected: onAction,
                 entries: <DesktopMenuEntry<_ClipboardAction>>[
                   DesktopMenuItem<_ClipboardAction>(
                     value: _ClipboardAction.edit,
-                    label: context.localized('Edit and organize', '编辑与整理'),
+                    label: context.l10n.editAndOrganize,
                     symbol: 'edit',
                   ),
                   DesktopMenuItem<_ClipboardAction>(
                     value: _ClipboardAction.archiveTo,
-                    label: context.localized('Archive to…', '归档到…'),
+                    label: context.l10n.archiveTo,
                     symbol: 'archive_to',
                   ),
                   const DesktopMenuDivider<_ClipboardAction>(),
                   DesktopMenuItem<_ClipboardAction>(
                     value: _ClipboardAction.promotePrompt,
-                    label: context.localized('Save as prompt', '保存为提示词'),
+                    label: context.l10n.saveAsPrompt,
                     symbol: 'prompt',
                   ),
                   const DesktopMenuDivider<_ClipboardAction>(),
                   DesktopMenuItem<_ClipboardAction>(
                     value: _ClipboardAction.delete,
-                    label: context.localized('Delete', '删除'),
+                    label: context.l10n.delete,
                     symbol: 'delete',
                     destructive: true,
                   ),
@@ -99,7 +93,7 @@ class _ClipboardPreview extends StatelessWidget {
           Expanded(
             child: SelectableText(
               value.sensitive
-                  ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
+                  ? context.l10n.sensitiveContentHidden
                   : value.content,
             ),
           ),

@@ -63,6 +63,83 @@ void main() {
     },
   );
 
+  test('Prompt creation is disabled until scope is configured', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_create_resource', <String, Object?>{
+      'type': 'prompt',
+      'title': 'Project rules',
+      'content': 'Follow the project rules.',
+    });
+
+    expect(transport.method, 'POST');
+    expect(transport.path, '/library');
+    expect(transport.body?['type'], 'prompt');
+    expect(transport.body?['enabled'], isFalse);
+    expect(transport.body?['source'], 'DingDong MCP');
+  });
+
+  test('Skill creation is rejected in favor of the package installer', () {
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+      _RecordingMcpHttpTransport(),
+    );
+
+    expect(
+      () => executor.execute('dingdong_create_resource', <String, Object?>{
+        'type': 'skill',
+        'title': 'Reviewer',
+        'content': '---\nname: reviewer\n---',
+      }),
+      throwsArgumentError,
+    );
+  });
+
+  test('Prompt updates verify the resource type before patching', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport()
+      ..queuedResponses.addAll(<Map<String, Object?>>[
+        <String, Object?>{
+          'status': 'ok',
+          'item': <String, Object?>{'id': 'prompt-1', 'type': 'prompt'},
+        },
+        <String, Object?>{'status': 'updated'},
+      ]);
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await executor.execute('dingdong_update_resource', <String, Object?>{
+      'resourceId': 'prompt-1',
+      'enabled': true,
+    });
+
+    expect(transport.requests, hasLength(2));
+    expect(transport.requests.first.method, 'GET');
+    expect(transport.requests.first.path, '/library/prompt-1');
+    expect(transport.requests.first.query, <String, String>{'mode': 'summary'});
+    expect(transport.method, 'PATCH');
+    expect(transport.path, '/library/prompt-1');
+    expect(transport.body, <String, Object?>{'enabled': true});
+  });
+
+  test('Skill updates are rejected before mutation', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport()
+      ..response = <String, Object?>{
+        'status': 'ok',
+        'item': <String, Object?>{'id': 'skill-1', 'type': 'skill'},
+      };
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    await expectLater(
+      executor.execute('dingdong_update_resource', <String, Object?>{
+        'resourceId': 'skill-1',
+        'title': 'Unsafe edit',
+      }),
+      throwsStateError,
+    );
+
+    expect(transport.requests, hasLength(1));
+    expect(transport.requests.single.method, 'GET');
+  });
+
   test('bridge adds working directory and repository context', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
@@ -424,6 +501,8 @@ final class _RecordingMcpHttpTransport implements McpHttpTransport {
   _RecordingMcpHttpTransport();
 
   Map<String, Object?> response = <String, Object?>{'status': 'ok'};
+  final List<Map<String, Object?>> queuedResponses = <Map<String, Object?>>[];
+  final List<_RecordedMcpRequest> requests = <_RecordedMcpRequest>[];
   String? method;
   String? path;
   Map<String, String>? query;
@@ -440,6 +519,23 @@ final class _RecordingMcpHttpTransport implements McpHttpTransport {
     this.path = path;
     this.query = query;
     this.body = body;
-    return response;
+    requests.add(
+      _RecordedMcpRequest(method: method, path: path, query: query, body: body),
+    );
+    return queuedResponses.isEmpty ? response : queuedResponses.removeAt(0);
   }
+}
+
+final class _RecordedMcpRequest {
+  const _RecordedMcpRequest({
+    required this.method,
+    required this.path,
+    required this.query,
+    required this.body,
+  });
+
+  final String method;
+  final String path;
+  final Map<String, String> query;
+  final Map<String, Object?>? body;
 }

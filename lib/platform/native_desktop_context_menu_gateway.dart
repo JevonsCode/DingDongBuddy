@@ -12,14 +12,12 @@ final class NativeDesktopContextMenuGateway
   Future<String?> show({
     required double x,
     required double y,
-    required bool useChinese,
     required bool isDark,
     required List<DesktopContextMenuItem> items,
   }) {
     return _channel.invokeMethod<String>('showContextMenu', <String, Object>{
       'x': x,
       'y': y,
-      'useChinese': useChinese,
       'isDark': isDark,
       'items': items
           .map((DesktopContextMenuItem item) => item.toJson())

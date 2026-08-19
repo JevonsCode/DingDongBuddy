@@ -93,7 +93,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     symbol: 'library',
                     value:
                         '${widget.libraryViewModel.configurableResources.length}',
-                    label: context.localized('Resource library', '资源'),
+                    label: context.l10n.resourceLibrary,
                     onTap: () => widget.onOpenWorkspace(1),
                   ),
                 ),
@@ -103,7 +103,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     key: const Key('today-open-clipboard'),
                     symbol: 'clipboard',
                     value: '${widget.clipboardViewModel.allRecords.length}',
-                    label: context.localized('Clipboard history', '剪贴板'),
+                    label: context.l10n.clipboardHistory,
                     onTap: () => widget.onOpenWorkspace(2),
                   ),
                 ),
@@ -113,12 +113,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     key: const Key('today-agent-api'),
                     symbol: 'mcp',
                     value: widget.agentBaseUri == null
-                        ? context.localized('Check', '待确认')
+                        ? context.l10n.check
                         : '${widget.agentBaseUri!.port}',
-                    label: context.localized(
-                      'API | Agent connections',
-                      'API | Agent 连接',
-                    ),
+                    label: context.l10n.apiAgentConnections,
                     badge:
                         widget
                             .settingsViewModel
@@ -126,11 +123,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             .requiresAgentSetupUpdate
                         ? _MetricCardBadge(
                             key: const Key('today-agent-setup-update-badge'),
-                            label: context.localized('UPDATE', '需要更新'),
-                            semanticLabel: context.localized(
-                              'Agent setup needs update',
-                              'Agent 接入需要更新',
-                            ),
+                            label: context.l10n.update,
+                            semanticLabel: context.l10n.agentSetupNeedsUpdate,
                             tone: _MetricCardBadgeTone.attention,
                           )
                         : !widget.settingsViewModel.settings.mcpAccessSeen
@@ -148,7 +142,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             Row(
               children: <Widget>[
                 Text(
-                  context.localized('Recent agents', '最近 Agent'),
+                  context.l10n.recentAgents,
                   style: TextStyle(
                     color: PopupStyle.of(context).textSecondary,
                     fontSize: 10,
@@ -176,7 +170,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             const SizedBox(height: 8),
             if (widget.activityController.activities.isEmpty)
               Text(
-                context.localized('No recent agent events', '暂无 Agent 事件'),
+                context.l10n.noRecentAgentEvents,
                 style: TextStyle(
                   color: PopupStyle.of(context).textSecondary,
                   fontSize: 10,
@@ -210,7 +204,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               }),
             const SizedBox(height: 28),
             Text(
-              context.localized('Enabled', '已启用'),
+              context.l10n.enabled2,
               style: TextStyle(
                 color: PopupStyle.of(context).textSecondary,
                 fontSize: 10,
@@ -220,10 +214,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             const SizedBox(height: 8),
             if (enabled.isEmpty)
               Text(
-                context.localized(
-                  'Enable resources from the library to see them here.',
-                  '在资源库启用资源后会显示在这里。',
-                ),
+                context.l10n.enableResourcesFromTheLibraryToSeeThemHere,
                 style: TextStyle(
                   color: PopupStyle.of(context).textSecondary,
                   fontSize: 10,
@@ -317,14 +308,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.localized(
-              'Could not open this Agent conversation.',
-              '无法打开这个 Agent 对话。',
-            ),
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.couldNotOpenThisAgentConversation)),
       );
     }
   }

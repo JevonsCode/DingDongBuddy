@@ -19,7 +19,6 @@ void main() {
     expect(transport.method, 'POST');
     expect(transport.path, '/ding');
     expect(transport.body, <String, Object?>{
-      'message': 'Codex 已完成本轮任务',
       'source': 'Codex',
       'flashCount': 4,
       'fallback': true,
@@ -34,7 +33,7 @@ void main() {
       transport,
     ).notify('{"agent_name":"Claude Code"}');
 
-    expect(transport.body?['message'], 'Claude Code 已完成本轮任务');
+    expect(transport.body, isNot(contains('message')));
     expect(transport.body?['source'], 'Claude Code');
   });
 

@@ -18,6 +18,11 @@ connects them to supported clients, and gathers their alerts with a desktop
 sound you choose. Important results and selected clipboard items can also reach
 a trusted phone through the mobile PWA.
 
+> **Current release: DingDong 1.5.0 Beta.** It is published as a GitHub
+> prerelease so the existing stable `latest` channel remains on 1.4.6 while
+> this localization, observability, and performance update is validated more
+> broadly.
+
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
 stay visible. A `*` marks a Skill loaded or an MCP called during that task.
@@ -67,24 +72,29 @@ line to the final reply, showing the Prompts active for this task, matching
 Skills, and available MCP connections:
 
 ```text
-DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub*
+DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub* · 12.4K Token
 ```
 
 An `*` after a Skill means the full Skill was loaded during this task; without
 it, the Skill is only a candidate. An `*` after an MCP means one of its tools
 was actually called; it does not claim the call succeeded. Prompt items stay
 unmarked because delivery is observable but semantic compliance is not.
-Customize all three symbols under **Settings → Agent reply footer**.
+Customize all three symbols under **Settings → Agent reply footer**. Exact
+conversation Token usage is shown by default for supported Codex, Claude Code,
+and Pi sessions, and can be turned off there.
 
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.4.6.”
+- “Use this project's release workflow, run every check, and prepare version 1.5.0.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
-Agents can also configure project-scoped Skills after explicit user approval with
-`dingdong_install_skill`, `dingdong_upsert_trigger_group`, and
-`dingdong_bind_resource_scope`.
+Agents can search before creating or updating Prompt and MCP resources with
+`dingdong_create_resource` and `dingdong_update_resource`, then bind the scope
+you requested. Project-scoped Skills use `dingdong_install_skill`,
+`dingdong_upsert_trigger_group`, `dingdong_bind_resource_scope`, and the
+dedicated delivery tools so package contents cannot be confused with ordinary
+resource text.
 
 ## Connected devices and mobile PWA
 
@@ -144,9 +154,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
-- [macOS · Intel beta](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
-- [Windows x64 beta](https://github.com/JevonsCode/DingDongBuddy/releases/latest)
+- [macOS · Apple silicon · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg)
+- [macOS · Intel · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64-beta.dmg)
+- [Windows x64 · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-beta-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.
@@ -208,7 +218,9 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | Clipboard monitoring | Off | On / off |
 | Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |
 | Completion sound | DingDong Classic | Built-in, custom, system, or muted |
+| Language | Follow system | English / Simplified Chinese / Spanish |
 | Agent reply footer symbols | ♥ / ♦ / ♠ | Customize Prompt, Skill, and MCP separately |
+| Conversation Token usage | On | Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted, never estimated |
 | Local Agent API port | `2333` | `1024`–`65535`; restart required |
 
 ## Privacy and local data
@@ -246,13 +258,16 @@ Important paths:
 
 Architecture details live in
 [AI companion architecture](docs/architecture/ai-companion-architecture.md).
+See [localization](docs/product/localization.md) before adding or changing
+user-facing copy.
 
 ## Release
 
 `pubspec.yaml` is the version source. A release commit on `main`
 must synchronize the app version, build number, MCP server info, website,
 `docs/dingdong-release.json`, release notes, regression checklist, and
-version-contract tests. After the Flutter desktop workflow passes for the latest
+version-contract tests. The metadata `prerelease` flag controls whether GitHub
+publishes the tested tag as a Beta. After the Flutter desktop workflow passes for the latest
 `main` SHA, the release gate also requires the PWA/relay deployed from that exact
 commit. Deploy it either through **Device link Cloudflare** after configuring
 its protected `device-link-production` environment, or from that clean tested

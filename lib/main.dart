@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_dependencies.dart';
+import 'package:dingdong/app/app_locale.dart';
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
@@ -46,6 +48,7 @@ import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
+import 'package:dingdong/features/settings/data/io_system_data_location_gateway.dart';
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
@@ -152,12 +155,14 @@ Future<void> main(List<String> arguments) async {
       );
   final SharedPreferencesBackend preferencesBackend =
       SharedPreferencesBackend();
+  late final SettingsViewModel settingsViewModel;
   final ActivityController activityController = ActivityController(
     store: FileAgentActivityStore(appDataPaths.agentActivityFile),
+    localizations: () =>
+        appLocalizationsFor(settingsViewModel.settings.language),
   );
   late final NativeAgentConversationLauncher agentConversationLauncher;
   late final AppDependencies dependencies;
-  late final SettingsViewModel settingsViewModel;
   late final TrayBuddyController trayBuddyController;
   late final DeviceLinkController deviceLinkController;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
@@ -168,8 +173,8 @@ Future<void> main(List<String> arguments) async {
     unreadStore: PreferencesTrayUnreadStore(preferencesBackend),
     clipboardMonitoringState: () =>
         dependencies.clipboardMonitorService.isRunning,
-    useChineseLabels: () =>
-        _usesChineseLabels(settingsViewModel.settings.language),
+    localizations: () =>
+        appLocalizationsFor(settingsViewModel.settings.language),
     developmentBuild: appDataPaths.development,
   );
   dependencies = await AppDependencies.production(
@@ -306,6 +311,8 @@ Future<void> main(List<String> arguments) async {
         defaultValue: 'https://dingdong.xn--m8txu.com',
       ),
     ),
+    localizations: () =>
+        appLocalizationsFor(settingsViewModel.settings.language),
     agentStateProvider: () => (
       activities: activityController.activities,
       activeRuns: activityController.activeRuns,
@@ -389,6 +396,9 @@ Future<void> main(List<String> arguments) async {
     systemUsageSource: IoSystemUsageSource(
       dependencies.paths.applicationSupportDirectory,
     ),
+    systemDataLocationGateway: IoSystemDataLocationGateway(
+      dependencies.paths.applicationSupportDirectory,
+    ),
   );
   await settingsViewModel.load();
   settingsViewModel.startBackgroundReleaseUpdateChecks();
@@ -436,7 +446,7 @@ Future<void> main(List<String> arguments) async {
   );
   await desktopShellService.start();
   trayBuddyController.start(
-    lastClipboardActivity: _latestClipboardCapture(dependencies.clipboardStore),
+    lastClipboardActivity: dependencies.clipboardStore.latestUpdatedAt(),
   );
   Future<Object?> handleChildWindowCall(MethodCall call) async {
     if (isDeviceLinkManagerHostMethod(call.method)) {
@@ -538,6 +548,7 @@ Future<void> main(List<String> arguments) async {
         }
         await _runDevelopmentTestAction(
           action: action,
+          strings: appLocalizationsFor(settingsViewModel.settings.language),
           dependencies: dependencies,
           shellGateway: shellGateway,
           shellController: shellController,
@@ -659,15 +670,6 @@ Future<void> main(List<String> arguments) async {
   );
 }
 
-bool _usesChineseLabels(AppLanguagePreference language) {
-  return switch (language) {
-    AppLanguagePreference.chinese => true,
-    AppLanguagePreference.english => false,
-    AppLanguagePreference.system =>
-      Platform.localeName.toLowerCase().startsWith('zh'),
-  };
-}
-
 Uri? _configuredUri(String value) {
   final String trimmed = value.trim();
   if (trimmed.isEmpty) return null;
@@ -681,19 +683,6 @@ String _lifecycleTelemetryArchitecture() {
   if (abi.contains('x64')) return 'x64';
   if (abi.contains('ia32')) return 'x86';
   return 'other';
-}
-
-DateTime? _latestClipboardCapture(ClipboardStore store) {
-  DateTime? latest;
-  for (final ClipboardRecord record in store.list(
-    limit: 5000,
-    includeProtectedBeyondLimit: true,
-  )) {
-    if (latest == null || record.updatedAt.isAfter(latest)) {
-      latest = record.updatedAt;
-    }
-  }
-  return latest;
 }
 
 Future<void> _clearClipboardHistory(AppDependencies dependencies) async {
@@ -766,7 +755,7 @@ Future<void> _runDeviceLinkManagerWindow(
   final AppSettings settings = await SettingsRepository(
     SharedPreferencesBackend(),
   ).load();
-  final bool chinese = _usesChineseLabels(settings.language);
+  final DingDongLocalizations strings = appLocalizationsFor(settings.language);
 
   await windowManager.ensureInitialized();
   await preventWindowsAuxiliaryWindowClose();
@@ -779,7 +768,7 @@ Future<void> _runDeviceLinkManagerWindow(
       hideDockIcon: settings.hideDockIcon,
       fallback: false,
     ),
-    title: chinese ? 'DingDong · 连接设备' : 'DingDong · Connected Devices',
+    title: strings.connectedDevicesWindowTitle,
     titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.waitUntilReadyToShow(options);
@@ -810,6 +799,9 @@ Future<void> _runSettingsWindow(
         : TrayNotificationColor.orange,
   );
   final AppSettings windowSettings = await settingsRepository.load();
+  final DingDongLocalizations strings = appLocalizationsFor(
+    windowSettings.language,
+  );
   final SettingsViewModel viewModel = SettingsViewModel(
     settingsRepository,
     clipboardMonitoring: hostBridge,
@@ -826,6 +818,9 @@ Future<void> _runSettingsWindow(
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(paths.applicationSupportDirectory),
     systemDataCleaner: hostBridge,
+    systemDataLocationGateway: IoSystemDataLocationGateway(
+      paths.applicationSupportDirectory,
+    ),
   );
 
   await windowManager.ensureInitialized();
@@ -839,7 +834,7 @@ Future<void> _runSettingsWindow(
       hideDockIcon: windowSettings.hideDockIcon,
       fallback: false,
     ),
-    title: 'DingDong · 设置',
+    title: strings.settingsWindowTitle,
     titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.waitUntilReadyToShow(options, () async {
@@ -854,7 +849,9 @@ Future<void> _runSettingsWindow(
         arguments['destination'],
       ),
       onSettingsChanged: hostBridge.notifyChanged,
-      soundFileGateway: FileSelectorSoundGateway(),
+      soundFileGateway: FileSelectorSoundGateway(
+        () => appLocalizationsFor(viewModel.settings.language),
+      ),
       soundPreviewGateway: hostBridge,
       onRestartApplication: hostBridge.restartApplication,
     ),
@@ -879,7 +876,7 @@ Future<void> _runDevelopmentTestPanelWindow(
     SharedPreferencesBackend(),
     defaultTrayNotificationColor: TrayNotificationColor.pink,
   ).load();
-  final bool chinese = _usesChineseLabels(settings.language);
+  final DingDongLocalizations strings = appLocalizationsFor(settings.language);
   const Size size = Size(780, 720);
   final WindowOptions options = WindowOptions(
     size: size,
@@ -890,7 +887,7 @@ Future<void> _runDevelopmentTestPanelWindow(
       hideDockIcon: settings.hideDockIcon,
       fallback: false,
     ),
-    title: chinese ? 'DingDong DEV · 测试面板' : 'DingDong DEV · Test Panel',
+    title: strings.developmentTestPanelWindowTitle,
     titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.waitUntilReadyToShow(options);
@@ -912,6 +909,7 @@ Future<void> _runDevelopmentTestPanelWindow(
 
 Future<void> _runDevelopmentTestAction({
   required DevelopmentTestAction action,
+  required DingDongLocalizations strings,
   required AppDependencies dependencies,
   required PluginDesktopShellGateway shellGateway,
   required ShellController shellController,
@@ -930,23 +928,23 @@ Future<void> _runDevelopmentTestAction({
     case DevelopmentTestAction.agentCompletion:
       await _postDevelopmentDing(
         dependencies,
-        message: 'DEV 测试：Agent 已完成本轮任务',
-        detail: '这是测试面板生成的基础完成提醒，不代表真实 Agent 任务结果。',
+        message: strings.devAgentCompletedMessage,
+        detail: strings.devAgentCompletedDetail,
       );
       return;
     case DevelopmentTestAction.agentRichCompletion:
       await _postDevelopmentDing(
         dependencies,
-        message: 'DEV 测试：跨设备任务已完成',
-        detail: '这是测试面板生成的模拟完成说明，用来检查手机卡片的长描述、来源、完成时间与震动开关。它不代表真实 Agent 任务结果。',
+        message: strings.devCrossDeviceTaskCompletedMessage,
+        detail: strings.devCrossDeviceTaskCompletedDetail,
       );
       return;
     case DevelopmentTestAction.agentBurst:
       for (var index = 1; index <= 3; index += 1) {
         await _postDevelopmentDing(
           dependencies,
-          message: 'DEV 测试：连续提醒 $index/3',
-          detail: '用于检查未读数字、时间顺序和手机端连续接收；这是模拟测试数据。',
+          message: strings.devRepeatedAlertMessage(index),
+          detail: strings.devRepeatedAlertDetail,
           source: 'DingDong DEV $index',
           sound: index == 1 ? 'default' : 'muted',
         );
@@ -958,9 +956,9 @@ Future<void> _runDevelopmentTestAction({
     case DevelopmentTestAction.phoneClipboardText:
       final ClipboardRecord phoneTextRecord = _developmentTextRecord(
         action: action,
-        title: 'DEV 手机文字样例',
-        content: 'DingDong DEV 测试：这段文字模拟用户在手机输入框粘贴内容并主动点击“发送”。',
-        source: '来自 DEV 测试手机',
+        title: strings.devPhoneTextSampleTitle,
+        content: strings.devPhoneTextSampleContent,
+        source: strings.devTestPhoneSource,
         additionalTags: const <String>['device-origin:dev-test-mobile'],
       );
       await _saveDevelopmentClipboardRecord(
@@ -975,6 +973,7 @@ Future<void> _runDevelopmentTestAction({
       final ClipboardRecord phoneFileRecord = await _developmentPhoneFileRecord(
         action: action,
         dependencies: dependencies,
+        strings: strings,
       );
       await _saveDevelopmentClipboardRecord(
         record: phoneFileRecord,
@@ -987,9 +986,9 @@ Future<void> _runDevelopmentTestAction({
     case DevelopmentTestAction.autoSendClipboard:
       final ClipboardRecord autoSendRecord = _developmentTextRecord(
         action: action,
-        title: 'DEV 电脑自动同步样例',
-        content: 'DingDong DEV 测试：由电脑创建，仅发送给开启“自动同步”的已连接设备。',
-        source: 'DingDong DEV 测试面板',
+        title: strings.devAutoSyncSampleTitle,
+        content: strings.devAutoSyncSampleContent,
+        source: strings.devTestPanelSource,
       );
       await _saveDevelopmentClipboardRecord(
         record: autoSendRecord,
@@ -1003,9 +1002,9 @@ Future<void> _runDevelopmentTestAction({
     case DevelopmentTestAction.manualDeviceShare:
       final ClipboardRecord manualShareRecord = _developmentTextRecord(
         action: action,
-        title: 'DEV 主动发送样例',
-        content: 'DingDong DEV 测试：请选择一个已连接设备主动发送这条内容。',
-        source: 'DingDong DEV 测试面板',
+        title: strings.devManualSendSampleTitle,
+        content: strings.devManualSendSampleContent,
+        source: strings.devTestPanelSource,
       );
       await _saveDevelopmentClipboardRecord(
         record: manualShareRecord,
@@ -1089,6 +1088,7 @@ ClipboardRecord _developmentTextRecord({
 Future<ClipboardRecord> _developmentPhoneFileRecord({
   required DevelopmentTestAction action,
   required AppDependencies dependencies,
+  required DingDongLocalizations strings,
 }) async {
   final DateTime now = DateTime.now().toUtc();
   await dependencies.paths.deviceTransferDirectory.create(recursive: true);
@@ -1098,16 +1098,11 @@ Future<ClipboardRecord> _developmentPhoneFileRecord({
       'dingdong-dev-phone-${now.microsecondsSinceEpoch}.txt',
     ),
   );
-  await file.writeAsString(
-    'DingDong DEV 测试文件\n\n'
-    '这是一份由测试面板创建的本地样例，用于模拟手机主动选择文件并点击发送。\n'
-    '它不是来自真实手机，也不包含真实用户内容。\n',
-    flush: true,
-  );
+  await file.writeAsString(strings.devPhoneFileBody, flush: true);
   return ClipboardRecord(
     id: 'DEV-TEST-${action.id}-${now.microsecondsSinceEpoch}',
     group: '',
-    title: 'DingDong DEV 手机文件样例.txt',
+    title: strings.devPhoneFileSampleTitle,
     content: file.path,
     tags: const <String>[
       'clipboard',
@@ -1116,7 +1111,7 @@ Future<ClipboardRecord> _developmentPhoneFileRecord({
       'dev-test',
       'device-origin:dev-test-mobile',
     ],
-    source: '来自 DEV 测试手机',
+    source: strings.devTestPhoneSource,
     pinned: false,
     enabled: true,
     activation: 'taskMatch',
@@ -1444,7 +1439,10 @@ Future<void> _runResourceManagerWindow(
   }
   final settings = await SettingsRepository(SharedPreferencesBackend()).load();
   final ActivityController activityController =
-      ActivityController(store: FileAgentActivityStore(paths.agentActivityFile))
+      ActivityController(
+          store: FileAgentActivityStore(paths.agentActivityFile),
+          localizations: () => appLocalizationsFor(settings.language),
+        )
         ..configure(
           rememberAcrossRestarts: settings.rememberAgentActivity,
           maxItems: settings.agentActivityMaxItems,
@@ -1469,6 +1467,7 @@ Future<void> _runResourceManagerWindow(
 
   await windowManager.ensureInitialized();
   await preventWindowsAuxiliaryWindowClose();
+  final DingDongLocalizations strings = appLocalizationsFor(settings.language);
   final WindowOptions options = WindowOptions(
     size: const Size(1080, 752),
     minimumSize: const Size(980, 680),
@@ -1478,7 +1477,7 @@ Future<void> _runResourceManagerWindow(
       hideDockIcon: settings.hideDockIcon,
       fallback: false,
     ),
-    title: '资源管理',
+    title: strings.resourceManagerWindowTitle,
     titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.waitUntilReadyToShow(options);

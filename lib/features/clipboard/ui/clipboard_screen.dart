@@ -221,10 +221,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.localized(
-              'This content is no longer available or could not be opened.',
-              '该内容已不存在或无法打开。',
-            ),
+            context.l10n.thisContentIsNoLongerAvailableOrCouldNotBeOpened,
           ),
         ),
       );
@@ -371,21 +368,15 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                                   controller: _searchController,
                                   onChanged: viewModel.setQuery,
                                   height: 40,
-                                  hintText: context.localized(
-                                    'Search clipboard history',
-                                    '搜索剪贴板历史',
-                                  ),
-                                  clearTooltip: context.localized(
-                                    'Clear search',
-                                    '清除搜索',
-                                  ),
+                                  hintText: context.l10n.searchClipboardHistory,
+                                  clearTooltip: context.l10n.clearSearch,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               DesktopActionButton(
                                 onPressed: viewModel.captureNow,
                                 icon: const Icon(Icons.add_rounded, size: 18),
-                                label: context.localized('Capture now', '立即捕获'),
+                                label: context.l10n.captureNow,
                                 tone: DesktopActionTone.primary,
                               ),
                             ],

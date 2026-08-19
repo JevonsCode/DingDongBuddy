@@ -13,11 +13,11 @@ class _ConnectionHeader extends StatelessWidget {
         if (onBack != null) ...<Widget>[
           Semantics(
             button: true,
-            label: context.localized('Back to Dynamic', '返回动态'),
+            label: context.l10n.backToDynamic,
             child: ExcludeSemantics(
               child: DesktopIconButton(
                 key: const Key('agent-api-back'),
-                tooltip: context.localized('Back to Dynamic', '返回动态'),
+                tooltip: context.l10n.backToDynamic,
                 onPressed: onBack,
                 icon: Icon(Icons.arrow_back_rounded, size: 18),
               ),
@@ -30,7 +30,7 @@ class _ConnectionHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                context.localized('Agent connections', 'Agent 连接'),
+                context.l10n.agentConnections,
                 style: TextStyle(
                   color: PopupStyle.of(context).textPrimary,
                   fontSize: 18,
@@ -40,10 +40,7 @@ class _ConnectionHeader extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                context.localized(
-                  'Verify the local service and inspect real Agent signals.',
-                  '验证本机服务，并查看真实的 Agent 信号。',
-                ),
+                context.l10n.verifyTheLocalServiceAndInspectRealAgentSignals,
                 style: TextStyle(
                   color: PopupStyle.of(context).textSecondary,
                   fontSize: 11,
@@ -89,46 +86,38 @@ class _ConnectionHealthCard extends StatelessWidget {
         Icons.check_circle_outline_rounded,
         PopupStyle.of(context).success,
         PopupStyle.of(context).success.withValues(alpha: 0.14),
-        context.localized('Local service verified', '本机服务已验证'),
+        context.l10n.localServiceVerified,
       ),
       _AgentHealthStatus.checking => (
         Icons.sync_rounded,
         PopupStyle.of(context).accent,
         PopupStyle.of(context).accentSoft,
-        context.localized('Checking local service', '正在检查本机服务'),
+        context.l10n.checkingLocalService,
       ),
       _AgentHealthStatus.unavailable => (
         Icons.error_outline_rounded,
         Theme.of(context).colorScheme.error,
         Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
-        context.localized('Local service unavailable', '本机服务不可用'),
+        context.l10n.localServiceUnavailable,
       ),
       _AgentHealthStatus.unknown => (
         Icons.help_outline_rounded,
         PopupStyle.of(context).textSecondary,
         PopupStyle.of(context).field,
-        context.localized('Runtime status unverified', '运行状态尚未验证'),
+        context.l10n.runtimeStatusUnverified,
       ),
     };
     final bool usingFallback =
         endpointIsVerified && actualPort != null && actualPort != preferredPort;
     final String statusDescription = switch (status) {
-      _AgentHealthStatus.healthy => context.localized(
-        'The /health endpoint responded successfully.',
-        '/health 已成功响应。',
-      ),
-      _AgentHealthStatus.checking => context.localized(
-        'Waiting for the loopback health response.',
-        '正在等待本机回环健康检查。',
-      ),
-      _AgentHealthStatus.unavailable => context.localized(
-        'The runtime endpoint did not pass its health check.',
-        '实际运行地址未通过健康检查。',
-      ),
-      _AgentHealthStatus.unknown => context.localized(
-        'Only the configured preferred port is known.',
-        '目前只知道设置中的首选端口。',
-      ),
+      _AgentHealthStatus.healthy =>
+        context.l10n.theHealthEndpointRespondedSuccessfully,
+      _AgentHealthStatus.checking =>
+        context.l10n.waitingForTheLoopbackHealthResponse,
+      _AgentHealthStatus.unavailable =>
+        context.l10n.theRuntimeEndpointDidNotPassItsHealthCheck,
+      _AgentHealthStatus.unknown =>
+        context.l10n.onlyTheConfiguredPreferredPortIsKnown,
     };
     return Semantics(
       container: true,
@@ -187,10 +176,11 @@ class _ConnectionHealthCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     usingFallback
-                        ? context.localized(
-                            'Preferred port $preferredPort was unavailable; using $actualPort.',
-                            '首选端口 $preferredPort 不可用，当前使用 $actualPort。',
-                          )
+                        ? context.l10n
+                              .preferredPortPreferredPortWasUnavailableUsingActualPort(
+                                preferredPort,
+                                actualPort!,
+                              )
                         : statusDescription,
                     key: usingFallback
                         ? const Key('agent-api-fallback-port')
@@ -209,10 +199,7 @@ class _ConnectionHealthCard extends StatelessWidget {
                     Tooltip(
                       message: error!,
                       child: Text(
-                        context.localized(
-                          'Open for details or retry.',
-                          '可查看详情或重新检查。',
-                        ),
+                        context.l10n.openForDetailsOrRetry,
                         style: TextStyle(color: color, fontSize: 10),
                       ),
                     ),
@@ -222,14 +209,11 @@ class _ConnectionHealthCard extends StatelessWidget {
             if (onRetry != null)
               Semantics(
                 button: true,
-                label: context.localized('Recheck local service', '重新检查本机服务'),
+                label: context.l10n.recheckLocalService,
                 child: ExcludeSemantics(
                   child: DesktopIconButton(
                     key: const Key('agent-api-recheck'),
-                    tooltip: context.localized(
-                      'Recheck local service',
-                      '重新检查本机服务',
-                    ),
+                    tooltip: context.l10n.recheckLocalService,
                     onPressed: status == _AgentHealthStatus.checking
                         ? null
                         : () => unawaited(onRetry!()),
@@ -265,13 +249,12 @@ class _ConnectionChecklist extends StatelessWidget {
   Widget build(BuildContext context) {
     final AgentActivity? activity = latestActivity;
     final String activityDetail = activity == null
-        ? context.localized(
-            'No real Agent completion has been received yet',
-            '尚未收到真实 Agent 完成回执',
-          )
-        : context.localized(
-            'Last received from ${activity.source} at ${TimeOfDay.fromDateTime(activity.completedAt.toLocal()).format(context)}',
-            '最近收到 ${activity.source} 回执 · ${TimeOfDay.fromDateTime(activity.completedAt.toLocal()).format(context)}',
+        ? context.l10n.noRealAgentCompletionHasBeenReceivedYet
+        : context.l10n.lastReceivedFromSourceAtCompletedAt(
+            activity.source,
+            TimeOfDay.fromDateTime(
+              activity.completedAt.toLocal(),
+            ).format(context),
           );
     return Container(
       key: const Key('agent-connection-checklist'),
@@ -280,31 +263,19 @@ class _ConnectionChecklist extends StatelessWidget {
         children: <Widget>[
           _ConnectionRow(
             icon: Icons.dns_outlined,
-            title: context.localized('Local API', '本机 API'),
+            title: context.l10n.localAPI,
             detail: switch (healthStatus) {
-              _AgentHealthStatus.healthy => context.localized(
-                'Health check passed',
-                '健康检查已通过',
-              ),
-              _AgentHealthStatus.checking => context.localized(
-                'Checking',
-                '检查中',
-              ),
-              _AgentHealthStatus.unavailable => context.localized(
-                'Health check failed',
-                '健康检查失败',
-              ),
-              _AgentHealthStatus.unknown => context.localized(
-                'Not verified',
-                '尚未验证',
-              ),
+              _AgentHealthStatus.healthy => context.l10n.healthCheckPassed,
+              _AgentHealthStatus.checking => context.l10n.checking,
+              _AgentHealthStatus.unavailable => context.l10n.healthCheckFailed,
+              _AgentHealthStatus.unknown => context.l10n.notVerified,
             },
             good: healthStatus == _AgentHealthStatus.healthy,
           ),
           const Divider(height: 1),
           _ConnectionRow(
             icon: Icons.notifications_active_outlined,
-            title: context.localized('Agent completion signal', 'Agent 完成回执'),
+            title: context.l10n.agentCompletionSignal,
             detail: activityDetail,
             good: activity != null,
             onTap: onManageAgents,
@@ -314,16 +285,10 @@ class _ConnectionChecklist extends StatelessWidget {
             icon: issueCount == 0
                 ? Icons.fact_check_outlined
                 : Icons.warning_amber_rounded,
-            title: context.localized('Known configuration issues', '已知配置问题'),
+            title: context.l10n.knownConfigurationIssues,
             detail: issueCount == 0
-                ? context.localized(
-                    'No known issue; this is not a connection guarantee',
-                    '未发现已知问题；不代表连接已验证',
-                  )
-                : context.localized(
-                    '$issueCount issue(s) need attention',
-                    '$issueCount 个问题需要处理',
-                  ),
+                ? context.l10n.noKnownIssueThisIsNotAConnectionGuarantee
+                : context.l10n.issuecountIssueSNeedAttention(issueCount),
             good: issueCount == 0,
             warning: issueCount > 0,
             onTap: onOpenIssues,
@@ -331,13 +296,10 @@ class _ConnectionChecklist extends StatelessWidget {
           const Divider(height: 1),
           _ConnectionRow(
             icon: Icons.content_paste_outlined,
-            title: context.localized('Clipboard body access', '剪贴板正文访问'),
+            title: context.l10n.clipboardBodyAccess,
             detail: clipboardContentAllowed
-                ? context.localized(
-                    'Allowed by the explicit Settings switch',
-                    '已通过设置中的明确开关允许',
-                  )
-                : context.localized('Metadata only', '仅允许元数据'),
+                ? context.l10n.allowedByTheExplicitSettingsSwitch
+                : context.l10n.metadataOnly,
             good: clipboardContentAllowed,
           ),
         ],
@@ -429,10 +391,7 @@ class _AdvancedDisclosure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String label = context.localized(
-      'Advanced API and MCP details',
-      '高级 API 与 MCP 信息',
-    );
+    final String label = context.l10n.advancedAPIAndMCPDetails;
     return Semantics(
       button: true,
       expanded: expanded,
@@ -469,10 +428,7 @@ class _AdvancedDisclosure extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          context.localized(
-                            'Endpoints, commands, and setup prompt',
-                            '端点、命令与接入提示词',
-                          ),
+                          context.l10n.endpointsCommandsAndSetupPrompt,
                           style: TextStyle(
                             color: PopupStyle.of(context).textSecondary,
                             fontSize: 10,
@@ -577,9 +533,7 @@ class _CommandRow extends StatelessWidget {
               copied ? Icons.check_rounded : Icons.copy_rounded,
               size: 15,
             ),
-            label: copied
-                ? context.localized('Copied', '已复制')
-                : context.localized('Copy', '复制'),
+            label: copied ? context.l10n.copied : context.l10n.copy,
             tone: copied ? DesktopActionTone.soft : DesktopActionTone.neutral,
             compact: true,
           ),
@@ -599,43 +553,43 @@ class _EndpointList extends StatelessWidget {
         id: 'health',
         method: 'GET',
         path: '/health',
-        description: context.localized('Service health', '服务健康状态'),
+        description: context.l10n.serviceHealth,
       ),
       _EndpointData(
         id: 'ding',
         method: 'POST',
         path: '/ding',
-        description: context.localized('Desktop notification', '桌面通知'),
+        description: context.l10n.desktopNotification,
       ),
       _EndpointData(
         id: 'library-search',
         method: 'GET',
         path: '/library',
-        description: context.localized('Search resources', '搜索资源'),
+        description: context.l10n.searchResources,
       ),
       _EndpointData(
         id: 'library-create',
         method: 'POST',
         path: '/library',
-        description: context.localized('Create resource', '创建资源'),
+        description: context.l10n.createResource,
       ),
       _EndpointData(
         id: 'clipboard-history',
         method: 'GET',
         path: '/clipboard/history',
-        description: context.localized('Private history metadata', '私有历史元数据'),
+        description: context.l10n.privateHistoryMetadata,
       ),
       _EndpointData(
         id: 'clipboard-capture',
         method: 'POST',
         path: '/clipboard/capture',
-        description: context.localized('Capture current clipboard', '捕获当前剪贴板'),
+        description: context.l10n.captureCurrentClipboard,
       ),
       _EndpointData(
         id: 'clipboard-restore',
         method: 'POST',
         path: '/clipboard/restore/{id}',
-        description: context.localized('Restore one history item', '恢复单个历史条目'),
+        description: context.l10n.restoreOneHistoryItem,
       ),
     ];
     return Column(

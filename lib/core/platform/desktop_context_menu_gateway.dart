@@ -2,28 +2,24 @@
 final class DesktopContextMenuItem {
   const DesktopContextMenuItem({
     required this.id,
-    required this.englishLabel,
-    required this.chineseLabel,
+    required this.label,
     this.enabled = true,
   }) : separator = false;
 
   const DesktopContextMenuItem.separator()
     : id = '',
-      englishLabel = '',
-      chineseLabel = '',
+      label = '',
       enabled = false,
       separator = true;
 
   final String id;
-  final String englishLabel;
-  final String chineseLabel;
+  final String label;
   final bool enabled;
   final bool separator;
 
   Map<String, Object> toJson() => <String, Object>{
     'id': id,
-    'englishLabel': englishLabel,
-    'chineseLabel': chineseLabel,
+    'label': label,
     'enabled': enabled,
     'separator': separator,
   };
@@ -34,7 +30,6 @@ abstract interface class DesktopContextMenuGateway {
   Future<String?> show({
     required double x,
     required double y,
-    required bool useChinese,
     required bool isDark,
     required List<DesktopContextMenuItem> items,
   });

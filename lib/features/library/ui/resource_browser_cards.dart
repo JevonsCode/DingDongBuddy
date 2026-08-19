@@ -17,7 +17,7 @@ class _ResourceCards extends StatelessWidget {
     if (resources.isEmpty) {
       return Center(
         child: Text(
-          context.localized('No matching resources', '没有匹配的资源'),
+          context.l10n.noMatchingResources,
           style: TextStyle(color: PopupStyle.of(context).textSecondary),
         ),
       );
@@ -60,17 +60,17 @@ class _ResourceCards extends StatelessWidget {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => DesktopAlertDialog(
-        title: Text(context.localized('Delete this resource?', '删除这个资源？')),
+        title: Text(context.l10n.deleteThisResource2),
         content: Text(resource.title),
         actions: <Widget>[
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, false),
-            label: context.localized('Cancel', '取消'),
+            label: context.l10n.cancel,
             compact: true,
           ),
           DesktopActionButton(
             onPressed: () => Navigator.pop(context, true),
-            label: context.localized('Delete', '删除'),
+            label: context.l10n.delete,
             tone: DesktopActionTone.danger,
           ),
         ],
@@ -187,11 +187,7 @@ class _ResourceCard extends StatelessWidget {
                                 _ResourceTag(
                                   key:
                                       resource.isScopedSkill &&
-                                          tag ==
-                                              context.localized(
-                                                'Scoped',
-                                                '有触发范围',
-                                              )
+                                          tag == context.l10n.scoped
                                       ? Key(
                                           'resource-card-scope-${resource.id}',
                                         )
@@ -224,8 +220,8 @@ class _ResourceCard extends StatelessWidget {
                     key: Key('resource-card-status-${resource.id}'),
                     symbol: resource.enabled ? 'enabled' : 'paused',
                     tooltip: resource.enabled
-                        ? context.localized('Disable', '停用')
-                        : context.localized('Enable', '启用'),
+                        ? context.l10n.disable
+                        : context.l10n.enable,
                     color: resource.enabled
                         ? PopupStyle.of(context).success
                         : PopupStyle.of(context).textTertiary,
@@ -236,17 +232,17 @@ class _ResourceCard extends StatelessWidget {
                   ),
                   _CardAction(
                     symbol: 'copy',
-                    tooltip: context.localized('Copy', '复制'),
+                    tooltip: context.l10n.copy,
                     onPressed: onCopy == null ? null : () => onCopy!(),
                   ),
                   _CardAction(
                     symbol: 'edit',
-                    tooltip: context.localized('Edit', '编辑'),
+                    tooltip: context.l10n.edit,
                     onPressed: onEdit == null ? null : () => onEdit!(),
                   ),
                   _CardAction(
                     symbol: 'delete',
-                    tooltip: context.localized('Delete', '删除'),
+                    tooltip: context.l10n.delete,
                     color: const Color(0xFF9B625C),
                     onPressed: onDelete,
                   ),
@@ -370,12 +366,11 @@ List<String> _resourceCardTags(
       ...resource.tags,
     ],
     ResourceType.skill => <String>[
-      context.localized('Skill', '技能'),
-      context.localized(
-        display.variant == ResourceCardVariant.skillOnline ? 'Online' : 'Local',
-        display.variant == ResourceCardVariant.skillOnline ? '在线' : '本地',
-      ),
-      if (resource.isScopedSkill) context.localized('Scoped', '有触发范围'),
+      context.l10n.skill2,
+      display.variant == ResourceCardVariant.skillOnline
+          ? context.l10n.online
+          : context.l10n.local,
+      if (resource.isScopedSkill) context.l10n.scoped,
       ...resource.tags,
     ],
     ResourceType.mcp => <String>['MCP', display.variantLabel, ...resource.tags],
@@ -398,12 +393,12 @@ List<String> _resourceCardTags(
 
 String _typeLabel(BuildContext context, ResourceType? type) {
   return switch (type) {
-    null => context.localized('All', '全部'),
-    ResourceType.prompt => context.localized('Prompts', '提示词'),
-    ResourceType.skill => context.localized('Skills', '技能'),
+    null => context.l10n.all,
+    ResourceType.prompt => context.l10n.prompts,
+    ResourceType.skill => context.l10n.skills,
     ResourceType.mcp => 'MCP',
-    ResourceType.knowledge => context.localized('Knowledge', '知识库'),
-    ResourceType.clipboard => context.localized('Clipboard', '剪贴板'),
+    ResourceType.knowledge => context.l10n.knowledge,
+    ResourceType.clipboard => context.l10n.clipboard,
   };
 }
 

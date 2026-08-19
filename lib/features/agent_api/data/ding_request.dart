@@ -66,13 +66,16 @@ final class DingRequest {
     this.receivedAt,
   });
 
-  factory DingRequest.parse(String body) {
+  factory DingRequest.parse(
+    String body, {
+    String fallbackMessage = 'Task complete',
+  }) {
     if (body.isEmpty) {
-      return const DingRequest();
+      return DingRequest(message: fallbackMessage);
     }
     final Map<String, Object?> json = jsonDecode(body) as Map<String, Object?>;
     final String message =
-        _trimmedOrNull(json['message'] as String?) ?? 'Task complete';
+        _trimmedOrNull(json['message'] as String?) ?? fallbackMessage;
     final String? detail = _trimmedOrNull(json['detail'] as String?);
     final int requestedFlashCount = json['flashCount'] as int? ?? 8;
     final String? source = _trimmedOrNull(json['source'] as String?);
@@ -107,13 +110,14 @@ final class DingRequest {
   final DateTime? receivedAt;
 
   DingRequest copyWith({
+    String? message,
     DingSound? sound,
     AgentNotificationKind? notificationKind,
     ConversationTokenUsage? tokenUsage,
     DateTime? receivedAt,
   }) {
     return DingRequest(
-      message: message,
+      message: message ?? this.message,
       detail: detail,
       source: source,
       sound: sound ?? this.sound,

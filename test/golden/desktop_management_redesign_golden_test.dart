@@ -18,7 +18,6 @@ import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -288,13 +287,8 @@ Widget _testApp({required ThemeMode mode, required Widget home}) => MaterialApp(
   darkTheme: AppTheme.desktopPanelDark(),
   themeMode: mode,
   locale: const Locale('en'),
-  supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-  localizationsDelegates: const <LocalizationsDelegate<Object>>[
-    DingDongLocalizations.delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
+  supportedLocales: DingDongLocalizations.supportedLocales,
+  localizationsDelegates: DingDongLocalizations.localizationsDelegates,
   home: Scaffold(body: home),
 );
 

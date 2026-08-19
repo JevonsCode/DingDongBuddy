@@ -16,7 +16,7 @@ void main() {
     expect(settings.notifyCodexVoiceActivity, isFalse);
     expect(settings.notifySubagentActivity, isFalse);
     expect(settings.groupRepeatedAgentSessions, isTrue);
-    expect(settings.showConversationTokenUsage, isFalse);
+    expect(settings.showConversationTokenUsage, isTrue);
     expect(settings.lifecycleTelemetryEnabled, isTrue);
     expect(settings.agentActivityMaxItems, 500);
     expect(settings.agentActivityCountHours, 24);
@@ -34,7 +34,52 @@ void main() {
       backend.values['dingdong.agentApi.acknowledgedSetupRevision'],
       currentAgentSetupRevision,
     );
+    expect(
+      backend.values['dingdong.migrations.conversationTokenUsageDefaultOn.v1'],
+      isTrue,
+    );
   });
+
+  test('preserves an explicit conversation Token display opt-out', () async {
+    final AppSettings settings = await SettingsRepository(
+      MemoryPreferencesBackend(<String, Object>{
+        'dingdong.agentApi.showConversationTokenUsage': false,
+        'dingdong.migrations.conversationTokenUsageDefaultOn.v1': true,
+      }),
+    ).load();
+
+    expect(settings.showConversationTokenUsage, isFalse);
+  });
+
+  test(
+    'migrates the 1.4.6 default-off Token preference exactly once',
+    () async {
+      final MemoryPreferencesBackend backend = MemoryPreferencesBackend(
+        <String, Object>{'dingdong.agentApi.showConversationTokenUsage': false},
+      );
+      final SettingsRepository repository = SettingsRepository(backend);
+
+      final AppSettings migrated = await repository.load();
+
+      expect(migrated.showConversationTokenUsage, isTrue);
+      expect(
+        backend.values['dingdong.agentApi.showConversationTokenUsage'],
+        isTrue,
+      );
+      expect(
+        backend
+            .values['dingdong.migrations.conversationTokenUsageDefaultOn.v1'],
+        isTrue,
+      );
+
+      await repository.save(
+        migrated.copyWith(showConversationTokenUsage: false),
+      );
+      final AppSettings optedOut = await repository.load();
+
+      expect(optedOut.showConversationTokenUsage, isFalse);
+    },
+  );
 
   test('setup revision migration preserves legacy connected installs', () {
     expect(
@@ -238,7 +283,7 @@ void main() {
     final SettingsRepository repository = SettingsRepository(backend);
     const AppSettings settings = AppSettings(
       clipboardMonitoring: true,
-      language: AppLanguagePreference.english,
+      language: AppLanguagePreference.spanish,
       themeMode: AppThemePreference.system,
       backgroundOpacity: 0.88,
       defaultWorkspace: DefaultWorkspace.library,
@@ -278,7 +323,7 @@ void main() {
     await repository.save(settings);
 
     expect(backend.values['dingdong.clipboard.monitoring'], isTrue);
-    expect(backend.values['dingdong.language'], 'en');
+    expect(backend.values['dingdong.language'], 'es');
     expect(backend.values['dingdong.panel.themeMode'], 'system');
     expect(backend.values['dingdong.panel.backgroundOpacity'], 0.88);
     expect(backend.values['dingdong.panel.defaultTab'], 'library');

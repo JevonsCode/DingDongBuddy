@@ -6,7 +6,6 @@ import 'package:dingdong/features/settings/domain/quick_paste_permission.dart';
 import 'package:dingdong/features/settings/ui/quick_paste_permission_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -70,13 +69,8 @@ void main() {
       MaterialApp(
         theme: AppTheme.desktopPanelLight(),
         locale: const Locale('zh'),
-        supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-        localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          DingDongLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
         home: Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(52),

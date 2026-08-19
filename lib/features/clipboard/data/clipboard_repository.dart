@@ -11,6 +11,10 @@ abstract interface class ClipboardStore {
     bool includeProtectedBeyondLimit = false,
   });
 
+  DateTime? latestUpdatedAt();
+
+  int historyCount();
+
   void save(ClipboardRecord record);
 
   void delete(String id);
@@ -99,6 +103,20 @@ final class InMemoryClipboardStore
       includeProtectedBeyondLimit: includeProtectedBeyondLimit,
     );
   }
+
+  @override
+  DateTime? latestUpdatedAt() {
+    DateTime? latest;
+    for (final ClipboardRecord record in _records) {
+      if (latest == null || record.updatedAt.isAfter(latest)) {
+        latest = record.updatedAt;
+      }
+    }
+    return latest;
+  }
+
+  @override
+  int historyCount() => _records.length;
 
   @override
   void save(ClipboardRecord record) {
@@ -227,6 +245,22 @@ final class ClipboardRepository
             includeProtectedBeyondLimit: true,
           )
         : List<ClipboardRecord>.unmodifiable(records);
+  }
+
+  @override
+  DateTime? latestUpdatedAt() {
+    final Object? value = _database
+        .select('SELECT MAX(ZUPDATEDAT) AS LATEST FROM ZCLIPBOARDRECORD')
+        .single['LATEST'];
+    return value == null ? null : _decodeDate(value);
+  }
+
+  @override
+  int historyCount() {
+    return _database
+            .select('SELECT COUNT(*) AS ITEM_COUNT FROM ZCLIPBOARDRECORD')
+            .single['ITEM_COUNT']
+        as int;
   }
 
   List<ClipboardRecord> trim({

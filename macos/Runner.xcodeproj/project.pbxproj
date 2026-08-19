@@ -29,6 +29,9 @@
 		DD0900040000000000000004 /* DingDongUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0900030000000000000003 /* DingDongUpdater.swift */; };
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
+		DD0B00010000000000000001 /* AccessibilityPermissionAssistant.strings in Resources */ = {isa = PBXBuildFile; fileRef = DD0B00020000000000000002 /* AccessibilityPermissionAssistant.strings */; };
+		DD0B00060000000000000006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DD0B00070000000000000007 /* InfoPlist.strings */; };
+		DD0B000B000000000000000B /* AppDelegate.strings in Resources */ = {isa = PBXBuildFile; fileRef = DD0B000C000000000000000C /* AppDelegate.strings */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 /* End PBXBuildFile section */
@@ -75,6 +78,15 @@
 		33CC10F22044A3C60003C045 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Runner/Assets.xcassets; sourceTree = "<group>"; };
 		33CC10F52044A3C60003C045 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		33CC10F72044A3C60003C045 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Runner/Info.plist; sourceTree = "<group>"; };
+		DD0B00030000000000000003 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AccessibilityPermissionAssistant.strings; sourceTree = "<group>"; };
+		DD0B00040000000000000004 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/AccessibilityPermissionAssistant.strings"; sourceTree = "<group>"; };
+		DD0B00050000000000000005 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/AccessibilityPermissionAssistant.strings; sourceTree = "<group>"; };
+		DD0B00080000000000000008 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		DD0B00090000000000000009 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		DD0B000A000000000000000A /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		DD0B000D000000000000000D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/AppDelegate.strings; sourceTree = "<group>"; };
+		DD0B000E000000000000000E /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/AppDelegate.strings"; sourceTree = "<group>"; };
+		DD0B000F000000000000000F /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/AppDelegate.strings; sourceTree = "<group>"; };
 		33CC11122044BFA00003C045 /* MainFlutterWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainFlutterWindow.swift; sourceTree = "<group>"; };
 		33CEB47222A05771004F2AC0 /* Flutter-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Debug.xcconfig"; sourceTree = "<group>"; };
 		33CEB47422A05771004F2AC0 /* Flutter-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Release.xcconfig"; sourceTree = "<group>"; };
@@ -151,6 +163,9 @@
 			children = (
 				33CC10F22044A3C60003C045 /* Assets.xcassets */,
 				33CC10F42044A3C60003C045 /* MainMenu.xib */,
+				DD0B00020000000000000002 /* AccessibilityPermissionAssistant.strings */,
+				DD0B00070000000000000007 /* InfoPlist.strings */,
+				DD0B000C000000000000000C /* AppDelegate.strings */,
 				33CC10F72044A3C60003C045 /* Info.plist */,
 			);
 			name = Resources;
@@ -274,6 +289,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				es,
+				"zh-Hans",
 				Base,
 			);
 			mainGroup = 33CC10E42044A3C60003C045;
@@ -306,6 +323,9 @@
 			files = (
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
+				DD0B00010000000000000001 /* AccessibilityPermissionAssistant.strings in Resources */,
+				DD0B00060000000000000006 /* InfoPlist.strings in Resources */,
+				DD0B000B000000000000000B /* AppDelegate.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -414,6 +434,39 @@
 				33CC10F52044A3C60003C045 /* Base */,
 			);
 			name = MainMenu.xib;
+			path = Runner;
+			sourceTree = "<group>";
+		};
+		DD0B00020000000000000002 /* AccessibilityPermissionAssistant.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DD0B00030000000000000003 /* en */,
+				DD0B00040000000000000004 /* zh-Hans */,
+				DD0B00050000000000000005 /* es */,
+			);
+			name = AccessibilityPermissionAssistant.strings;
+			path = Runner;
+			sourceTree = "<group>";
+		};
+		DD0B00070000000000000007 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DD0B00080000000000000008 /* en */,
+				DD0B00090000000000000009 /* zh-Hans */,
+				DD0B000A000000000000000A /* es */,
+			);
+			name = InfoPlist.strings;
+			path = Runner;
+			sourceTree = "<group>";
+		};
+		DD0B000C000000000000000C /* AppDelegate.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DD0B000D000000000000000D /* en */,
+				DD0B000E000000000000000E /* zh-Hans */,
+				DD0B000F000000000000000F /* es */,
+			);
+			name = AppDelegate.strings;
 			path = Runner;
 			sourceTree = "<group>";
 		};

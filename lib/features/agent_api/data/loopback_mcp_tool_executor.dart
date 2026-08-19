@@ -52,6 +52,8 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
         path: '/library',
         query: _stringQuery(arguments, <String>['query', 'type', 'limit']),
       ),
+      'dingdong_create_resource' => _createResource(arguments),
+      'dingdong_update_resource' => _updateResource(arguments),
       'dingdong_get_asset' => _contextualGet(
         path: '/library/${arguments['id'] ?? ''}',
         arguments: arguments,
@@ -100,6 +102,65 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       'dingdong_notify' => _notify(arguments),
       _ => throw ArgumentError.value(name, 'name', 'Unknown DingDong tool'),
     };
+  }
+
+  Future<Map<String, Object?>> _createResource(Map<String, Object?> arguments) {
+    final String type = (arguments['type'] as String? ?? '').trim();
+    if (type != 'prompt' && type != 'mcp') {
+      throw ArgumentError.value(
+        type,
+        'type',
+        'Create Prompt and MCP resources here; use dingdong_install_skill for Skills.',
+      );
+    }
+    final String title = (arguments['title'] as String? ?? '').trim();
+    final String content = (arguments['content'] as String? ?? '').trim();
+    if (title.isEmpty || content.isEmpty) {
+      throw ArgumentError(
+        'Creating a DingDong resource requires a non-empty title and content.',
+      );
+    }
+    final Map<String, Object?> body = Map<String, Object?>.of(arguments)
+      ..putIfAbsent('enabled', () => false)
+      ..putIfAbsent('source', () => 'DingDong MCP');
+    return _transport.request(method: 'POST', path: '/library', body: body);
+  }
+
+  Future<Map<String, Object?>> _updateResource(
+    Map<String, Object?> arguments,
+  ) async {
+    final String resourceId = (arguments['resourceId'] as String? ?? '').trim();
+    if (resourceId.isEmpty) {
+      throw ArgumentError.value(
+        resourceId,
+        'resourceId',
+        'A resource ID is required.',
+      );
+    }
+    final Map<String, Object?> body = Map<String, Object?>.of(arguments)
+      ..remove('resourceId');
+    if (body.isEmpty) {
+      throw ArgumentError('At least one resource field must be updated.');
+    }
+    final Map<String, Object?> existing = await _transport.request(
+      method: 'GET',
+      path: '/library/$resourceId',
+      query: const <String, String>{'mode': 'summary'},
+    );
+    final Object? rawItem = existing['item'];
+    final String type = rawItem is Map
+        ? (rawItem['type'] as String? ?? '').trim()
+        : '';
+    if (type != 'prompt' && type != 'mcp') {
+      throw StateError(
+        'Only Prompt and MCP resources can be updated with dingdong_update_resource.',
+      );
+    }
+    return _transport.request(
+      method: 'PATCH',
+      path: '/library/$resourceId',
+      body: body,
+    );
   }
 
   Future<Map<String, Object?>> _bindResourceScope(

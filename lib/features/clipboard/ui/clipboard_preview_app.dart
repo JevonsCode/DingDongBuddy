@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
@@ -17,7 +18,6 @@ import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -100,12 +100,7 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.localized(
-              'This content no longer exists or cannot be opened.',
-              '该内容已不存在或无法打开。',
-            ),
-          ),
+          content: Text(context.l10n.thisContentNoLongerExistsOrCannotBeOpened),
         ),
       );
     }
@@ -122,18 +117,9 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
         AppThemePreference.light => ThemeMode.light,
         AppThemePreference.dark => ThemeMode.dark,
       },
-      locale: switch (widget.settings.language) {
-        AppLanguagePreference.system => null,
-        AppLanguagePreference.english => const Locale('en'),
-        AppLanguagePreference.chinese => const Locale('zh'),
-      },
-      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-      localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        DingDongLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      locale: configuredAppLocale(widget.settings.language),
+      supportedLocales: DingDongLocalizations.supportedLocales,
+      localizationsDelegates: DingDongLocalizations.localizationsDelegates,
       home: CallbackShortcuts(
         bindings: <ShortcutActivator, VoidCallback>{
           const SingleActivator(LogicalKeyboardKey.escape): () =>
@@ -235,18 +221,9 @@ class _ClipboardQrPreviewAppState extends State<ClipboardQrPreviewApp> {
       AppThemePreference.light => ThemeMode.light,
       AppThemePreference.dark => ThemeMode.dark,
     },
-    locale: switch (widget.settings.language) {
-      AppLanguagePreference.system => null,
-      AppLanguagePreference.english => const Locale('en'),
-      AppLanguagePreference.chinese => const Locale('zh'),
-    },
-    supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-    localizationsDelegates: const <LocalizationsDelegate<Object>>[
-      DingDongLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
+    locale: configuredAppLocale(widget.settings.language),
+    supportedLocales: DingDongLocalizations.supportedLocales,
+    localizationsDelegates: DingDongLocalizations.localizationsDelegates,
     home: CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.escape): _close,
@@ -328,7 +305,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
         key: const Key('clipboard-preview-copy'),
         onPressed: widget.onCopy,
         icon: Icons.copy_rounded,
-        label: context.localized('Copy', '复制'),
+        label: context.l10n.copy,
         tone: DesktopActionTone.primary,
       ),
       if (widget.onOpen != null)
@@ -336,7 +313,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
           key: const Key('clipboard-preview-open'),
           onPressed: widget.onOpen!,
           icon: Icons.open_in_new_rounded,
-          label: context.localized('Open', '打开'),
+          label: context.l10n.open,
           tone: DesktopActionTone.soft,
         ),
       if (widget.onShare != null)
@@ -344,7 +321,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
           key: const Key('clipboard-preview-share'),
           onPressed: widget.onShare!,
           icon: Icons.send_to_mobile_rounded,
-          label: context.localized('Send to device', '发送到设备'),
+          label: context.l10n.sendToDevice,
         ),
       if (qrData != null)
         _PreviewAction(
@@ -353,7 +330,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
             _showQr = !showQr;
           }),
           icon: Icons.qr_code_2_rounded,
-          label: context.localized('QR code', '二维码'),
+          label: context.l10n.qrCode,
           tone: showQr ? DesktopActionTone.soft : DesktopActionTone.neutral,
         ),
     ];
@@ -380,10 +357,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                     children: <Widget>[
                       Text(
                         record.title.trim().isEmpty
-                            ? context.localized(
-                                'Untitled clipboard item',
-                                '未命名剪贴板条目',
-                              )
+                            ? context.l10n.untitledClipboardItem
                             : record.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -409,7 +383,7 @@ class _ClipboardPreviewCardState extends State<ClipboardPreviewCard> {
                 ),
                 DesktopIconButton(
                   key: const Key('clipboard-preview-close'),
-                  tooltip: context.localized('Close', '关闭'),
+                  tooltip: context.l10n.close,
                   onPressed: widget.onClose,
                   icon: const Icon(Icons.close_rounded, size: 16),
                   size: 30,
@@ -582,13 +556,10 @@ class _PreviewQrCode extends StatelessWidget {
               children: <Widget>[
                 Semantics(
                   button: true,
-                  label: context.localized('Enlarge QR code', '放大二维码'),
+                  label: context.l10n.enlargeQRCode,
                   onTap: onExpand,
                   child: Tooltip(
-                    message: context.localized(
-                      'Click to enlarge QR code',
-                      '点击放大二维码',
-                    ),
+                    message: context.l10n.clickToEnlargeQRCode,
                     child: MouseRegion(
                       cursor: SystemMouseCursors.zoomIn,
                       child: GestureDetector(
@@ -616,10 +587,7 @@ class _PreviewQrCode extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        context.localized(
-                          'Scan to share · Click to enlarge',
-                          '扫码分享 · 点击放大',
-                        ),
+                        context.l10n.scanToShareClickToEnlarge,
                         style: TextStyle(
                           color: palette.textSecondary,
                           fontSize: 10.5,
@@ -716,7 +684,7 @@ class ClipboardQrPreviewCard extends StatelessWidget {
                 top: 12,
                 child: DesktopIconButton(
                   key: const Key('clipboard-preview-qr-expanded-close'),
-                  tooltip: context.localized('Close enlarged view', '关闭大图'),
+                  tooltip: context.l10n.closeEnlargedView,
                   onPressed: onClose,
                   icon: const Icon(Icons.close_rounded, size: 16),
                   size: 30,
@@ -730,10 +698,7 @@ class ClipboardQrPreviewCard extends StatelessWidget {
                 right: 0,
                 bottom: 18,
                 child: Text(
-                  context.localized(
-                    'Click anywhere to close · Esc',
-                    '点击任意处关闭大图 · Esc',
-                  ),
+                  context.l10n.clickAnywhereToCloseEsc,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: palette.textSecondary,
@@ -779,7 +744,7 @@ class _QrArtwork extends StatelessWidget {
           dataModuleShape: QrDataModuleShape.square,
           color: PopupStyle.textPrimary,
         ),
-        semanticsLabel: context.localized('Content QR code', '内容二维码'),
+        semanticsLabel: context.l10n.contentQRCode,
       ),
     );
   }
@@ -856,8 +821,8 @@ class _PreviewContent extends StatelessWidget {
     return Semantics(
       container: true,
       label: record.sensitive
-          ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
-          : context.localized('Clipboard content', '剪贴板内容'),
+          ? context.l10n.sensitiveContentHidden
+          : context.l10n.clipboardContent,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(10),
@@ -868,7 +833,7 @@ class _PreviewContent extends StatelessWidget {
         child: SingleChildScrollView(
           child: SelectableText(
             record.sensitive
-                ? context.localized('Sensitive content hidden', '敏感内容已隐藏')
+                ? context.l10n.sensitiveContentHidden
                 : record.content,
             style: TextStyle(
               fontFamily: codeLike ? 'monospace' : null,
@@ -924,13 +889,13 @@ IconData _kindIcon(ClipboardKind kind) => switch (kind) {
 };
 
 String _kindLabel(BuildContext context, ClipboardKind kind) => switch (kind) {
-  ClipboardKind.text => context.localized('Text', '文本'),
-  ClipboardKind.url => context.localized('Link', '链接'),
-  ClipboardKind.command => context.localized('Command', '命令'),
-  ClipboardKind.code => context.localized('Code', '代码'),
+  ClipboardKind.text => context.l10n.text,
+  ClipboardKind.url => context.l10n.link,
+  ClipboardKind.command => context.l10n.command2,
+  ClipboardKind.code => context.l10n.code,
   ClipboardKind.json => 'JSON',
-  ClipboardKind.path => context.localized('Path', '路径'),
-  ClipboardKind.email => context.localized('Email', '邮箱'),
-  ClipboardKind.file => context.localized('File', '文件'),
-  ClipboardKind.image => context.localized('Image', '图片'),
+  ClipboardKind.path => context.l10n.path,
+  ClipboardKind.email => context.l10n.email,
+  ClipboardKind.file => context.l10n.file,
+  ClipboardKind.image => context.l10n.image,
 };

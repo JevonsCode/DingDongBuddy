@@ -5,7 +5,6 @@ import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -27,13 +26,8 @@ void main() {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.desktopPanelLight(),
         locale: const Locale('zh'),
-        supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-        localizationsDelegates: const <LocalizationsDelegate<Object>>[
-          DingDongLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
         home: Builder(
           builder: (BuildContext context) => Center(
             child: FilledButton(

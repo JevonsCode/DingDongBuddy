@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
@@ -27,7 +28,6 @@ import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Root application hosted by the dedicated resource manager Flutter engine.
@@ -223,7 +223,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DingDong · 资源管理',
+      onGenerateTitle: (BuildContext context) =>
+          context.l10n.resourceManagerWindowTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.desktopPanelLight(),
       darkTheme: AppTheme.desktopPanelDark(),
@@ -232,26 +233,14 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
         AppThemePreference.light => ThemeMode.light,
         AppThemePreference.dark => ThemeMode.dark,
       },
-      locale: switch (widget.settings.language) {
-        AppLanguagePreference.system => null,
-        AppLanguagePreference.english => const Locale('en'),
-        AppLanguagePreference.chinese => const Locale('zh'),
-      },
-      supportedLocales: const <Locale>[Locale('en'), Locale('zh')],
-      localizationsDelegates: const <LocalizationsDelegate<Object>>[
-        DingDongLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      locale: configuredAppLocale(widget.settings.language),
+      supportedLocales: DingDongLocalizations.supportedLocales,
+      localizationsDelegates: DingDongLocalizations.localizationsDelegates,
       home: Builder(
         builder: (BuildContext context) => Semantics(
           container: true,
           explicitChildNodes: true,
-          label: context.localized(
-            'DingDong resource manager window',
-            'DingDong 资源管理窗口',
-          ),
+          label: context.l10n.dingdongResourceManagerWindow,
           child: Scaffold(
             key: const Key('resource-manager-shell'),
             body: AnimatedBuilder(
@@ -279,7 +268,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                         key: _libraryScreenKey,
                         viewModel: widget.viewModel,
                         skillAgents: _skillDeliveryAgents(),
-                        transferGateway: FileSelectorLibraryTransferGateway(),
+                        transferGateway: FileSelectorLibraryTransferGateway(
+                          () => appLocalizationsFor(widget.settings.language),
+                        ),
                         contextMenuGateway: widget.desktopContextMenuGateway,
                         onOpenExternalLink: widget.onOpenExternalLink,
                       ),
@@ -343,9 +334,6 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   }
 }
 
-String _localized(BuildContext context, String english, String chinese) =>
-    Localizations.localeOf(context).languageCode == 'zh' ? chinese : english;
-
 class _WorkspaceSidebar extends StatelessWidget {
   const _WorkspaceSidebar({
     required this.selectedIndex,
@@ -387,7 +375,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
-                  _localized(context, 'WORKSPACE', '管理'),
+                  context.l10n.workspace,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: colors.onSurfaceVariant,
                     fontSize: 10,
@@ -400,7 +388,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               _SidebarItem(
                 key: const Key('resource-manager-nav-resources'),
                 symbol: 'library',
-                label: _localized(context, 'Resources', '资源'),
+                label: context.l10n.resources,
                 selected:
                     selectedIndex == ResourceManagerDestination.resources.index,
                 onTap: () =>
@@ -410,7 +398,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               _SidebarItem(
                 key: const Key('resource-manager-nav-clipboard'),
                 symbol: 'clipboard',
-                label: _localized(context, 'Clipboard', '剪贴板'),
+                label: context.l10n.clipboard,
                 selected:
                     selectedIndex == ResourceManagerDestination.clipboard.index,
                 onTap: () =>
@@ -420,7 +408,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               _SidebarItem(
                 key: const Key('resource-manager-nav-agent-activity'),
                 icon: Icons.smart_toy_outlined,
-                label: _localized(context, 'Recent agents', '最近 Agent'),
+                label: context.l10n.recentAgents,
                 selected:
                     selectedIndex ==
                     ResourceManagerDestination.recentAgents.index,
@@ -431,7 +419,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               _SidebarItem(
                 key: const Key('resource-manager-nav-agent-adapters'),
                 icon: Icons.hub_outlined,
-                label: _localized(context, 'Agent access', 'Agent 接入'),
+                label: context.l10n.agentAccess,
                 selected:
                     selectedIndex ==
                     ResourceManagerDestination.agentAdapters.index,
@@ -442,7 +430,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               _SidebarItem(
                 key: const Key('resource-manager-nav-issues'),
                 icon: Icons.error_outline_rounded,
-                label: _localized(context, 'Issues', '问题'),
+                label: context.l10n.issues,
                 selected:
                     selectedIndex == ResourceManagerDestination.issues.index,
                 badgeCount: issueCount,
@@ -453,7 +441,7 @@ class _WorkspaceSidebar extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
-                  _localized(context, 'Stored on this device', '数据保存在本机'),
+                  context.l10n.storedOnThisDevice,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),

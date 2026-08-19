@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.4.6 from pubspec', () {
+  test('desktop hosts consume application version 1.5.0 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,26 +77,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.4.6+54'));
+    expect(pubspec, contains('version: 1.5.0+55'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.4.6';"),
+      contains("const String currentAppVersion = '1.5.0';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '54';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '55';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.4.6'"),
+      contains("'version': '1.5.0'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.4.6'"),
+      contains("'version': '1.5.0'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,4,6,54'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.4.6"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,0,55'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.0"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -142,6 +142,10 @@ void main() {
     expect(appDelegate, contains('pendingApplicationOpen'));
     expect(appDelegate, contains('flushPendingApplicationOpen'));
     expect(appDelegate, contains('"openApplication"'));
+    expect(
+      appDelegate,
+      isNot(contains('super.applicationDidFinishLaunching(notification)')),
+    );
     expect(gateway, contains("call.method == 'openApplication'"));
     expect(gateway, contains('DesktopShellCommand.openApplication'));
     expect(
@@ -199,7 +203,7 @@ void main() {
     expect(checksum, isNot('2c6031875648498a461842f54b999f632e6d4f0e'));
   });
 
-  test('English and Chinese READMEs match the in-app Agent setup flow', () {
+  test('READMEs document setup while the in-app prompt stays concise', () {
     final String english = File('README.md').readAsStringSync();
     final String chinese = File('README.zh.md').readAsStringSync();
     const String commandPath =
@@ -229,45 +233,33 @@ void main() {
       expect(readme, contains('dingdong_install_skill'));
       expect(readme, contains('dingdong_bind_resource_scope'));
     }
-    for (final String prompt in <String>[englishPrompt, chinesePrompt]) {
-      expect(prompt, contains(commandPath));
-      expect(prompt, contains('--notify-stop --source'));
-      expect(prompt, contains('~/.codex/config.toml'));
-      expect(prompt, contains('~/.claude/settings.json'));
-      expect(prompt, contains('~/.cursor/hooks.json'));
-      expect(prompt, contains('~/.gemini/settings.json'));
-      expect(prompt, contains('afterAgentResponse'));
-      expect(prompt, contains('AfterAgent'));
-      expect(prompt, contains('dingdong_notify'));
-      expect(prompt, contains('AGENTS.md'));
-      expect(prompt, contains('Skill'));
-      expect(prompt, contains('MCP'));
-      expect(prompt, contains('dingdong_install_skill'));
-      expect(prompt, contains('dingdong_confirm_mcp_use'));
-      expect(prompt, contains('conversation.line'));
-      expect(prompt, isNot(contains('dingdong_render_conversation_footer')));
-      expect(prompt, contains('ANSI'));
-      expect(prompt, isNot(contains('iframe')));
-      expect(prompt, contains('strict'));
-    }
     expect(english, contains('Trust & enable'));
     expect(chinese, contains('信任并启用'));
-    expect(englishPrompt, contains('Trust & enable'));
-    expect(chinesePrompt, contains('信任并启用'));
     expect(english, contains('Prompt, Skill, and MCP invocation semantics'));
     expect(chinese, contains('Prompt、Skill 和 MCP 的调用逻辑'));
-    expect(englishPrompt, contains('a Skill candidate is not an instruction'));
-    expect(chinesePrompt, contains('Skill 候选不是指令'));
-    expect(englishPrompt, contains('single Markdown text line'));
-    expect(chinesePrompt, contains('严格单行 Markdown footer'));
+    for (final String prompt in <String>[englishPrompt, chinesePrompt]) {
+      expect(prompt.split(commandPath), hasLength(2));
+      expect(prompt, contains('STDIO MCP'));
+      expect(prompt, contains('dingdong_bridge'));
+      expect(prompt, contains('--notify-stop --source'));
+      expect(prompt, isNot(contains('\n')));
+      expect(prompt.length, lessThan(600));
+      for (final String client in <String>[
+        'Codex',
+        'Claude Code',
+        'Cursor',
+        'Gemini',
+        'Kiro',
+      ]) {
+        expect(prompt, isNot(contains(client)));
+      }
+    }
   });
 
-  test('website Agent setup prompts stay in sync with the app', () {
+  test('website Agent setup prompts stay concise without inventing a path', () {
     final String website = _normalizeLineEndings(
       File('docs/index.html').readAsStringSync(),
     );
-    const String commandPath =
-        '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
     final String websiteEnglishPrompt = RegExp(
       r'const agentSetupPrompts = \{\s*en: `(.*?)`,\s*zh:',
       dotAll: true,
@@ -277,20 +269,20 @@ void main() {
       dotAll: true,
     ).firstMatch(website)!.group(1)!;
 
-    expect(
+    for (final String prompt in <String>[
       websiteEnglishPrompt,
-      defaultMcpSetupPrompt(
-        language: AppLanguagePreference.english,
-        commandPath: commandPath,
-      ),
-    );
-    expect(
       websiteChinesePrompt,
-      defaultMcpSetupPrompt(
-        language: AppLanguagePreference.chinese,
-        commandPath: commandPath,
-      ),
-    );
+    ]) {
+      expect(prompt, contains('STDIO MCP'));
+      expect(prompt, contains('dingdong'));
+      expect(prompt, contains('dingdong_bridge'));
+      expect(prompt, isNot(contains('\n')));
+      expect(prompt.length, lessThan(500));
+      expect(prompt, isNot(contains('/Applications/')));
+      expect(prompt, isNot(contains(r'C:\Program Files')));
+    }
+    expect(websiteEnglishPrompt, contains('path shown in the app'));
+    expect(websiteChinesePrompt, contains('软件内显示的 DingDong MCP 路径'));
     expect(website, contains('id="agent-prompt-copy"'));
     expect(website, contains('copyAgentSetupPrompt'));
   });
@@ -435,7 +427,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.4.6</span>'));
+    expect(website, contains('<span class="demo-version">v1.5.0 Beta</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -598,22 +590,23 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.4.6"'));
-    expect(releaseMetadata, contains('"latestBuild": "54"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.5.0"'));
+    expect(releaseMetadata, contains('"latestBuild": "55"'));
+    expect(releaseMetadata, contains('"prerelease": true'));
     expect(
       releaseMetadata,
-      contains('Shows candidate, loaded, and called counts'),
+      contains('Shows separate candidate, loaded, and real-call counts'),
     );
     expect(
       releaseMetadata,
-      contains('Shows exact conversation Token usage for supported Codex'),
+      contains('Shows exact conversation Token totals by default'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": true'));
     expect(
       releaseMetadata,
-      contains('DingDong-1.4.6-windows-x64-beta-Setup.exe'),
+      contains('DingDong-1.5.0-windows-x64-beta-Setup.exe'),
     );
   });
 
@@ -690,10 +683,21 @@ void main() {
     final String macHost = File(
       'macos/Runner/AppDelegate.swift',
     ).readAsStringSync();
+    final String english = File(
+      'macos/Runner/en.lproj/AppDelegate.strings',
+    ).readAsStringSync();
+    final String chinese = File(
+      'macos/Runner/zh-Hans.lproj/AppDelegate.strings',
+    ).readAsStringSync();
+    final String spanish = File(
+      'macos/Runner/es.lproj/AppDelegate.strings',
+    ).readAsStringSync();
 
     expect(macHost, contains('applicationDockMenu'));
-    expect(macHost, contains('Hide Dock Icon'));
-    expect(macHost, contains('隐藏 Dock 图标'));
+    expect(macHost, contains('ddAppDelegateString("hide_dock_icon")'));
+    expect(english, contains('Hide Dock Icon'));
+    expect(chinese, contains('隐藏 Dock 图标'));
+    expect(spanish, contains('Ocultar el icono del Dock'));
     expect(macHost, contains('invokeMethod("hideDockIcon"'));
   });
 
@@ -783,6 +787,9 @@ void main() {
     expect(workflow, contains('flutter build windows --release'));
     expect(workflow, isNot(contains('APTABASE_APP_KEY')));
     expect(workflow, contains('--notes-file docs/release-notes.md'));
+    expect(workflow, contains('type: boolean'));
+    expect(workflow, contains('release_flags+=(--prerelease)'));
+    expect(workflow, contains(r'gh release edit "$RELEASE_TAG"'));
     expect(workflow, contains('node-version: 22'));
     expect(workflow, contains('Recheck the PWA and relay release bundle'));
     expect(workflow, contains('npx wrangler deploy --dry-run'));
@@ -807,6 +814,8 @@ void main() {
       greaterThan(workflow.indexOf('name: Publish GitHub release')),
     );
     expect(releaseGate, contains(r'--ref "$tag"'));
+    expect(releaseGate, contains("jq -r '.prerelease // false'"));
+    expect(releaseGate, contains(r'-f prerelease="$prerelease"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
     expect(pagesWorkflow, contains('source_ref:'));
     expect(pagesWorkflow, contains('repository_dispatch:'));
@@ -941,6 +950,8 @@ void main() {
       final String releaseSettings = File(
         'lib/features/settings/ui/release_settings_section.dart',
       ).readAsStringSync();
+      final String englishArb = File('lib/l10n/app_en.arb').readAsStringSync();
+      final String chineseArb = File('lib/l10n/app_zh.arb').readAsStringSync();
       final String telemetryDomain = File(
         'lib/features/telemetry/domain/lifecycle_telemetry.dart',
       ).readAsStringSync();
@@ -975,8 +986,14 @@ void main() {
       expect(main, isNot(contains('showLifecycleTelemetryConsentPrompt')));
       expect(main, isNot(contains('telemetry.track')));
       expect(settingsRepository, contains("value != 'disabled'"));
-      expect(releaseSettings, contains("'On by default."));
-      expect(releaseSettings, contains("'默认开启。"));
+      expect(
+        releaseSettings,
+        contains(
+          '.onByDefaultSendsOneEventAfterInstallationOrAVersion_153fb4ab',
+        ),
+      );
+      expect(englishArb, contains('"On by default.'));
+      expect(chineseArb, contains('"默认开启。'));
       expect(
         File(
           'lib/features/settings/ui/lifecycle_telemetry_consent_dialog.dart',
