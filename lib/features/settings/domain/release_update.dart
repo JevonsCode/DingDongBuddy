@@ -18,7 +18,7 @@ final class ReleaseMetadata {
   final Uri website;
   final Uri releasePage;
 
-  /// Legacy English-only notes kept for older release metadata feeds.
+  /// Legacy English-only notes kept for clients that require the array schema.
   final List<String> notes;
   final Map<String, List<String>> notesByLanguage;
 
@@ -138,8 +138,8 @@ List<int> _versionParts(String value) {
       .toList(growable: false);
 }
 
-const String currentAppVersion = '1.5.0';
-const String currentAppBuild = '55';
+const String currentAppVersion = '1.5.1';
+const String currentAppBuild = '56';
 const Duration backgroundReleaseUpdateCheckInterval = Duration(hours: 7);
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',

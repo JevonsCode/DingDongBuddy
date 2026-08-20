@@ -1,3 +1,61 @@
+# DingDong 1.5.1
+
+DingDong 1.5.1 restores update discovery for installed 1.4.6 clients. The
+public release feed is backward-compatible again while newer clients keep
+localized release notes.
+
+## Keep installed clients on the update path
+
+- The public `notes` field remains an English array that DingDong 1.4.6 and
+  1.5.0 can decode safely.
+- Localized notes move to the additive `notesByLanguage` field. DingDong 1.5.1
+  accepts the legacy array, the 1.5.0 localized object, and the new split
+  schema.
+- Regression tests now enforce the 1.4.6 metadata contract so future feed
+  changes cannot silently strand installed clients.
+
+All supported desktop packages are published through GitHub's stable `latest`
+channel.
+
+---
+
+# DingDong 1.5.1
+
+DingDong 1.5.1 恢复已安装 1.4.6 客户端的更新检查。公开发布元数据重新保持向后
+兼容，同时让新客户端继续显示多语言更新日志。
+
+## 让旧客户端继续留在更新通道上
+
+- 公开 `notes` 字段保留为英文数组，让 DingDong 1.4.6 和 1.5.0 都能安全解析。
+- 多语言日志移到新增的 `notesByLanguage` 字段。DingDong 1.5.1 同时兼容旧数组、
+  1.5.0 的多语言对象和新的拆分结构。
+- 新增 1.4.6 元数据契约回归测试，防止未来调整再次让已安装客户端无法更新。
+
+全部受支持的桌面安装包都通过 GitHub 正式版 `latest` 通道发布。
+
+---
+
+# DingDong 1.5.1
+
+DingDong 1.5.1 restaura la búsqueda de actualizaciones para los clientes 1.4.6
+instalados. Los metadatos públicos vuelven a ser compatibles y los clientes
+nuevos conservan las notas localizadas.
+
+## Mantener los clientes instalados en el canal de actualización
+
+- El campo público `notes` sigue siendo una lista en inglés que DingDong 1.4.6
+  y 1.5.0 pueden decodificar de forma segura.
+- Las notas localizadas pasan al campo adicional `notesByLanguage`. DingDong
+  1.5.1 acepta la lista antigua, el objeto localizado de 1.5.0 y el nuevo
+  esquema dividido.
+- Las pruebas de regresión protegen el contrato de metadatos de 1.4.6 para que
+  futuros cambios no aíslen a clientes instalados.
+
+Todos los paquetes de escritorio compatibles se publican mediante el canal
+estable `latest` de GitHub.
+
+---
+
 # DingDong 1.5.0
 
 DingDong 1.5.0 makes Agent resource use visible, adds exact conversation

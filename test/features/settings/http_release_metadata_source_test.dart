@@ -6,6 +6,36 @@ import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'prefers separate localized notes while preserving the legacy array',
+    () async {
+      final HttpClient client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      final Uri metadataUri = await _serveMetadata(<String, Object?>{
+        'app': 'DingDong',
+        'latestVersion': '1.5.1',
+        'website': 'https://example.com',
+        'releasePage': 'https://example.com/releases/1.5.1',
+        'notes': <String>['Legacy English change'],
+        'notesByLanguage': <String, Object?>{
+          'en': <String>['Localized English change'],
+          'zh': <String>['中文变更'],
+          'es': <String>['Cambio en español'],
+        },
+      });
+
+      final ReleaseMetadata metadata = await HttpReleaseMetadataSource(
+        client: client,
+        metadataUris: <Uri>[metadataUri],
+      ).fetch();
+
+      expect(metadata.notes, <String>['Legacy English change']);
+      expect(metadata.notesFor('zh-CN'), <String>['中文变更']);
+      expect(metadata.notesFor('en-US'), <String>['Localized English change']);
+      expect(metadata.notesFor('es'), <String>['Cambio en español']);
+    },
+  );
+
   test('decodes localized release notes with deterministic fallback', () async {
     final HttpClient client = HttpClient();
     addTearDown(() => client.close(force: true));

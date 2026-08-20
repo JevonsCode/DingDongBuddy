@@ -1,4 +1,4 @@
-const cacheName = "dingdong-app-shell-v28";
+const cacheName = "dingdong-app-shell-v29";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const notificationVibrationPattern = [250, 100, 250, 100, 450];

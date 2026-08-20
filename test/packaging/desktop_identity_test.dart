@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
@@ -6,6 +7,19 @@ import 'package:dingdong/features/settings/domain/mcp_setup_prompt.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('published release metadata remains readable by 1.4.6 clients', () {
+    final Map<String, Object?> metadata =
+        jsonDecode(File('docs/dingdong-release.json').readAsStringSync())
+            as Map<String, Object?>;
+    final List<String> legacyNotes =
+        (metadata['notes'] as List<Object?>? ?? const <Object?>[])
+            .whereType<String>()
+            .toList(growable: false);
+
+    expect(legacyNotes, isNotEmpty);
+    expect(metadata['notesByLanguage'], isA<Map<String, Object?>>());
+  });
+
   test('desktop hosts preserve DingDong product identity for upgrades', () {
     final String macConfig = File(
       'macos/Runner/Configs/AppInfo.xcconfig',
@@ -67,7 +81,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.5.0 from pubspec', () {
+  test('desktop hosts consume application version 1.5.1 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -77,26 +91,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.5.0+55'));
+    expect(pubspec, contains('version: 1.5.1+56'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.5.0';"),
+      contains("const String currentAppVersion = '1.5.1';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '55';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '56';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.5.0'"),
+      contains("'version': '1.5.1'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.5.0'"),
+      contains("'version': '1.5.1'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,0,55'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.0"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,1,56'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.1"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -428,7 +442,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.5.0</span>'));
+    expect(website, contains('<span class="demo-version">v1.5.1</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -591,21 +605,21 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.5.0"'));
-    expect(releaseMetadata, contains('"latestBuild": "55"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.5.1"'));
+    expect(releaseMetadata, contains('"latestBuild": "56"'));
     expect(releaseMetadata, contains('"prerelease": false'));
     expect(
       releaseMetadata,
-      contains('Shows separate candidate, loaded, and real-call counts'),
+      contains('Restores update discovery for DingDong 1.4.6'),
     );
     expect(
       releaseMetadata,
-      contains('Shows exact conversation Token totals by default'),
+      contains('Keeps localized release notes for current clients'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));
-    expect(releaseMetadata, contains('DingDong-1.5.0-windows-x64-Setup.exe'));
+    expect(releaseMetadata, contains('DingDong-1.5.1-windows-x64-Setup.exe'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
