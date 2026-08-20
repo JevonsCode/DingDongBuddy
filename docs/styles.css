@@ -2814,11 +2814,6 @@ pre {
   display: none !important;
 }
 
-.beta-badge {
-  color: var(--muted);
-  background: var(--surface-muted);
-}
-
 .recommendation-badge {
   color: var(--accent);
   border-color: var(--accent-border);

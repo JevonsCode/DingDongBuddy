@@ -1,4 +1,4 @@
-# DingDong 1.5.0 Beta Manual Regression Checklist
+# DingDong 1.5.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,

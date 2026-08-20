@@ -16,8 +16,8 @@ DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记�
 Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent 提醒统一收在一起，
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
-> **当前版本：DingDong 1.5.0 Beta。** GitHub 会把它标记为预发布；在这次多语言、
-> 可观测性与性能更新完成更广泛验证前，现有正式版 `latest` 通道仍保留在 1.4.6。
+> **当前版本：DingDong 1.5.0。** 这次多语言、可观测性和性能更新现已进入
+> 正式版 `latest` 通道。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -131,9 +131,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片 · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg)
-- [macOS · Intel · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64-beta.dmg)
-- [Windows x64 · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-beta-Setup.exe)
+- [macOS · Apple 芯片 · 1.5.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg)
+- [macOS · Intel · 1.5.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64.dmg)
+- [Windows x64 · 1.5.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。
@@ -238,12 +238,12 @@ flutter build macos --release
 `pubspec.yaml` 是版本来源。`main` 上的发布提交必须同步应用版本、
 构建号、MCP Server 信息、官网、`docs/dingdong-release.json`、版本说明、
 回归清单和版本契约测试。版本元数据中的 `prerelease` 控制 GitHub 是否把已测试标签
-发布为 Beta。最新 `main` 提交通过 Flutter desktop 工作流后，
+发布为预发布。最新 `main` 提交通过 Flutter desktop 工作流后，
 发布门禁还会要求 PWA / 中继来自同一个提交：可以在配置好受保护的
 `device-link-production` 环境后通过 **Device link Cloudflare** 工作流部署，
 也可以从这个已测试的干净提交用已授权 Wrangler 携带准确 SHA 部署。随后自动化创建
-`v<version>` 标签并发布签名的 macOS、
-Windows beta、MCP 与更新源文件。官网只会在下载制品已经存在后，从同一个版本
+`v<version>` 标签并发布签名的 macOS、Windows、MCP 与更新源文件。官网只会在
+下载制品已经存在后，从同一个版本
 标签部署。
 
 参阅[版本说明](docs/release-notes.md)和

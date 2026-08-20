@@ -18,10 +18,8 @@ connects them to supported clients, and gathers their alerts with a desktop
 sound you choose. Important results and selected clipboard items can also reach
 a trusted phone through the mobile PWA.
 
-> **Current release: DingDong 1.5.0 Beta.** It is published as a GitHub
-> prerelease so the existing stable `latest` channel remains on 1.4.6 while
-> this localization, observability, and performance update is validated more
-> broadly.
+> **Current release: DingDong 1.5.0.** This localization, observability, and
+> performance update is available through the stable `latest` channel.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -154,9 +152,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg)
-- [macOS · Intel · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64-beta.dmg)
-- [Windows x64 · 1.5.0 Beta](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-beta-Setup.exe)
+- [macOS · Apple silicon · 1.5.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg)
+- [macOS · Intel · 1.5.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64.dmg)
+- [Windows x64 · 1.5.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.
@@ -267,13 +265,13 @@ user-facing copy.
 must synchronize the app version, build number, MCP server info, website,
 `docs/dingdong-release.json`, release notes, regression checklist, and
 version-contract tests. The metadata `prerelease` flag controls whether GitHub
-publishes the tested tag as a Beta. After the Flutter desktop workflow passes for the latest
+publishes the tested tag as a prerelease. After the Flutter desktop workflow passes for the latest
 `main` SHA, the release gate also requires the PWA/relay deployed from that exact
 commit. Deploy it either through **Device link Cloudflare** after configuring
 its protected `device-link-production` environment, or from that clean tested
 checkout with authenticated Wrangler and the exact release SHA. Automation then
-creates `v<version>` and publishes the signed macOS, Windows
-beta, MCP, and update-feed assets. The website is deployed from that release tag
+creates `v<version>` and publishes the signed macOS, Windows, MCP, and
+update-feed assets. The website is deployed from that release tag
 only after its downloadable packages exist.
 
 See [release notes](docs/release-notes.md) and the

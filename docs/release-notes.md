@@ -1,6 +1,6 @@
-# DingDong 1.5.0 Beta
+# DingDong 1.5.0
 
-DingDong 1.5.0 Beta makes Agent resource use visible, adds exact conversation
+DingDong 1.5.0 makes Agent resource use visible, adds exact conversation
 Token totals where client evidence supports them, and moves the desktop app to
 a centralized English, Simplified Chinese, and Spanish localization system.
 
@@ -33,16 +33,16 @@ a centralized English, Simplified Chinese, and Spanish localization system.
 - SQL-side aggregation, count queries, and bounded conversation-log scans lower
   transient memory use on large histories while preserving exact results.
 - The website and mobile PWA now demonstrate Token usage, Agent-managed
-  resources, and the 1.5.0 Beta download channel. The PWA shell advances to 28.
+  resources, and the 1.5.0 stable download channel. The PWA shell advances to 28.
 
-This GitHub release is a prerelease. All three desktop packages are Beta; the
-existing stable `latest` channel remains on DingDong 1.4.6.
+All supported desktop packages are published through GitHub's stable `latest`
+channel.
 
 ---
 
-# DingDong 1.5.0 Beta
+# DingDong 1.5.0
 
-DingDong 1.5.0 Beta 让 Agent 资源的真实使用过程可见，在客户端证据可靠时展示
+DingDong 1.5.0 让 Agent 资源的真实使用过程可见，在客户端证据可靠时展示
 精确会话 Token 总量，并把桌面端迁移到统一管理的英语、简体中文与西班牙语架构。
 
 ## 看清 Prompt、Skill 与 MCP 真的做了什么
@@ -70,17 +70,16 @@ DingDong 1.5.0 Beta 让 Agent 资源的真实使用过程可见，在客户端�
   不会删除外部来源文件。
 - SQL 聚合、COUNT 查询与有界会话日志扫描降低大历史记录下的瞬时内存占用，同时保持
   结果准确。
-- 官网与手机 PWA 同步展示 Token 用量、Agent 管理资源和 1.5.0 Beta 下载入口；PWA
+- 官网与手机 PWA 同步展示 Token 用量、Agent 管理资源和 1.5.0 正式版下载入口；PWA
   Shell 升级到 28。
 
-本次 GitHub Release 是预发布，三个桌面安装包都属于 Beta；现有正式版 `latest`
-通道仍保留在 DingDong 1.4.6。
+全部受支持的桌面安装包都已通过 GitHub 正式版 `latest` 通道发布。
 
 ---
 
-# DingDong 1.5.0 Beta
+# DingDong 1.5.0
 
-DingDong 1.5.0 Beta hace visible el uso real de los recursos de Agent, muestra
+DingDong 1.5.0 hace visible el uso real de los recursos de Agent, muestra
 el total exacto de Tokens cuando el cliente aporta evidencia compatible y
 centraliza la interfaz en inglés, chino simplificado y español.
 
@@ -101,10 +100,10 @@ centraliza la interfaz en inglés, chino simplificado y español.
   propia caché, sin borrar archivos externos.
 - Las agregaciones SQL y el análisis acotado de registros reducen la memoria
   temporal en historiales grandes.
-- El sitio y la PWA muestran el canal 1.5.0 Beta; la PWA avanza a Shell 28.
+- El sitio y la PWA muestran el canal estable 1.5.0; la PWA avanza a Shell 28.
 
-Esta versión de GitHub es una versión preliminar. Los tres paquetes de
-escritorio son Beta y el canal estable `latest` continúa en DingDong 1.4.6.
+Todos los paquetes de escritorio compatibles se publican mediante el canal
+estable `latest` de GitHub.
 
 ---
 

@@ -348,8 +348,8 @@ void main() {
       ),
     );
     expect(guide, contains('DingDong-<version>-macos-arm64.dmg'));
-    expect(guide, contains('DingDong-<version>-macos-x64-beta.dmg'));
-    expect(guide, contains('DingDong-<version>-windows-x64-beta-Setup.exe'));
+    expect(guide, contains('DingDong-<version>-macos-x64.dmg'));
+    expect(guide, contains('DingDong-<version>-windows-x64-Setup.exe'));
     expect(guide, contains('com.dingdongbuddy.app'));
     expect(guide, contains('api-port'));
     expect(guide, contains('/health'));
@@ -421,13 +421,14 @@ void main() {
     expect(website, contains('getHighEntropyValues'));
     expect(website, contains('"architecture"'));
     expect(website, contains('download.recommended'));
-    expect(website, contains('download.beta'));
+    expect(website, isNot(contains('download.beta')));
+    expect(websiteStyles, isNot(contains('.beta-badge')));
     expect(website, isNot(contains('Intel Mac OS X')));
     expect(website, isNot(contains('knowledge')));
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.5.0 Beta</span>'));
+    expect(website, contains('<span class="demo-version">v1.5.0</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -592,7 +593,7 @@ void main() {
     }
     expect(releaseMetadata, contains('"latestVersion": "1.5.0"'));
     expect(releaseMetadata, contains('"latestBuild": "55"'));
-    expect(releaseMetadata, contains('"prerelease": true'));
+    expect(releaseMetadata, contains('"prerelease": false'));
     expect(
       releaseMetadata,
       contains('Shows separate candidate, loaded, and real-call counts'),
@@ -603,11 +604,8 @@ void main() {
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
-    expect(releaseMetadata, contains('"beta": true'));
-    expect(
-      releaseMetadata,
-      contains('DingDong-1.5.0-windows-x64-beta-Setup.exe'),
-    );
+    expect(releaseMetadata, contains('"beta": false'));
+    expect(releaseMetadata, contains('DingDong-1.5.0-windows-x64-Setup.exe'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -728,16 +726,11 @@ void main() {
     expect(workflow, contains('Verify macOS application architecture'));
     expect(
       workflow,
-      contains(
-        r'DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.dmg',
-      ),
+      contains(r'DingDong-${VERSION}-macos-${{ matrix.asset_arch }}.dmg'),
     );
     expect(workflow, contains('dotnet tool install --tool-path .tools vpk'));
     expect(workflow, contains('--noPortable'));
-    expect(
-      workflow,
-      contains(r'DingDong-${version}-windows-x64-beta-Setup.exe'),
-    );
+    expect(workflow, contains(r'DingDong-${version}-windows-x64-Setup.exe'));
     expect(workflow, contains('mcp-macos-arm64'));
     expect(workflow, contains('mcp-macos-x86_64'));
     expect(workflow, contains("if: matrix.arch == 'x86_64'"));
@@ -787,8 +780,16 @@ void main() {
     expect(workflow, contains('flutter build windows --release'));
     expect(workflow, isNot(contains('APTABASE_APP_KEY')));
     expect(workflow, contains('--notes-file docs/release-notes.md'));
+    expect(
+      RegExp('--notes-file docs/release-notes.md').allMatches(workflow),
+      hasLength(2),
+    );
     expect(workflow, contains('type: boolean'));
-    expect(workflow, contains('release_flags+=(--prerelease)'));
+    expect(
+      workflow,
+      contains(r'release_flags=("--prerelease=${{ inputs.prerelease }}")'),
+    );
+    expect(workflow, isNot(contains('beta_suffix')));
     expect(workflow, contains(r'gh release edit "$RELEASE_TAG"'));
     expect(workflow, contains('node-version: 22'));
     expect(workflow, contains('Recheck the PWA and relay release bundle'));

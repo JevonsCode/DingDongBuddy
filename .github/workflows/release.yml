@@ -127,7 +127,7 @@ jobs:
 
   macos:
     needs: [validate, macos-mcp]
-    name: macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}
+    name: macos-${{ matrix.asset_arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     strategy:
@@ -137,11 +137,9 @@ jobs:
           - arch: arm64
             asset_arch: arm64
             runner: macos-15
-            beta_suffix: ""
           - arch: x86_64
             asset_arch: x64
             runner: macos-15-intel
-            beta_suffix: -beta
     env:
       MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
       MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -250,10 +248,10 @@ jobs:
           DMGBUILD_BIN="$RUNNER_TEMP/dmgbuild/bin/dmgbuild" \
             scripts/create_macos_dmg.sh \
             build/macos/Build/Products/Release/DingDong.app \
-            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.dmg"
+            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}.dmg"
           ditto -c -k --sequesterRsrc --keepParent \
             build/macos/Build/Products/Release/DingDong.app \
-            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.zip"
+            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}.zip"
       - name: Generate signed Sparkle appcast
         run: |
           VERSION="${RELEASE_TAG#v}"
@@ -262,7 +260,7 @@ jobs:
           chmod 600 "$private_key"
           chmod +x scripts/generate_sparkle_appcast.sh
           scripts/generate_sparkle_appcast.sh \
-            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}.zip" \
+            "dist/DingDong-${VERSION}-macos-${{ matrix.asset_arch }}.zip" \
             "dist/appcast-macos-${{ matrix.asset_arch }}.xml" \
             "https://github.com/JevonsCode/DingDongBuddy/releases/download/${RELEASE_TAG}/" \
             "$private_key"
@@ -275,7 +273,7 @@ jobs:
         run: scripts/notarize_macos_artifact.sh dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
-          name: DingDong-macos-${{ matrix.asset_arch }}${{ matrix.beta_suffix }}
+          name: DingDong-macos-${{ matrix.asset_arch }}
           path: |
             dist/*.dmg
             dist/*.zip
@@ -328,7 +326,7 @@ jobs:
             throw "Velopack did not create a Setup executable."
           }
           Copy-Item $setup.FullName `
-            "dist/DingDong-${version}-windows-x64-beta-Setup.exe"
+            "dist/DingDong-${version}-windows-x64-Setup.exe"
       - uses: actions/upload-artifact@v4
         with:
           name: DingDong-windows
@@ -352,10 +350,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           release_title="DingDong ${RELEASE_TAG#v}"
-          release_flags=()
+          release_flags=("--prerelease=${{ inputs.prerelease }}")
           if [ "${{ inputs.prerelease }}" = "true" ]; then
             release_title="$release_title Beta"
-            release_flags+=(--prerelease)
           fi
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" dist/* \
@@ -364,6 +361,7 @@ jobs:
             gh release edit "$RELEASE_TAG" \
               --repo "$GITHUB_REPOSITORY" \
               --title "$release_title" \
+              --notes-file docs/release-notes.md \
               "${release_flags[@]}"
           else
             gh release create "$RELEASE_TAG" dist/* \

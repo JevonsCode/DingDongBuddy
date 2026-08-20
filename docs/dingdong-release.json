@@ -2,25 +2,25 @@
   "app": "DingDong",
   "latestVersion": "1.5.0",
   "latestBuild": "55",
-  "publishedAt": "2026-08-19T17:44:45Z",
-  "prerelease": true,
+  "publishedAt": "2026-08-20T00:34:26Z",
+  "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
   "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.0",
   "downloads": {
     "macOS": {
       "arm64": {
         "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-arm64.dmg",
-        "beta": true
+        "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64-beta.dmg",
-        "beta": true
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-macos-x64.dmg",
+        "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-beta-Setup.exe",
-        "beta": true
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.0/DingDong-1.5.0-windows-x64-Setup.exe",
+        "beta": false
       }
     }
   },
@@ -33,7 +33,7 @@
       "Lets Agents safely search, create, update, and scope Prompt and MCP resources while complete Skills keep their dedicated package flow.",
       "Opens DingDong-managed data and image-cache locations and clears only DingDong-owned cache files.",
       "Reduces transient memory use with SQL aggregation, count queries, and bounded conversation-log scans.",
-      "Publishes 1.5.0 as a GitHub prerelease; all desktop packages are Beta while the stable latest channel remains on 1.4.6."
+      "Publishes 1.5.0 through the stable GitHub latest channel for every supported desktop architecture."
     ],
     "zh": [
       "在资源卡片和配置详情中分别显示 Prompt、Skill 与 MCP 的候选、加载和真实调用次数。",
@@ -43,7 +43,7 @@
       "Agent 可以安全搜索、创建、修改 Prompt 和 MCP 并绑定作用域；完整 Skill 保持专用 Package 流程。",
       "设置可以打开 DingDong 自有数据与图片缓存位置，清理时只删除 DingDong 自有缓存。",
       "通过 SQL 聚合、COUNT 查询和有界会话日志扫描降低瞬时内存占用。",
-      "1.5.0 作为 GitHub 预发布提供，三个桌面安装包均为 Beta，正式版 latest 仍保持 1.4.6。"
+      "1.5.0 已通过 GitHub 正式版 latest 通道提供，覆盖全部受支持的桌面架构。"
     ],
     "es": [
       "Muestra por separado candidatos, cargas y llamadas reales de Prompt, Skill y MCP en las tarjetas y los detalles.",
@@ -53,7 +53,7 @@
       "Permite que los Agents busquen, creen, actualicen y limiten Prompt y MCP de forma segura; los Skills conservan su flujo de paquetes.",
       "Abre las ubicaciones administradas por DingDong y limpia únicamente su propia caché de imágenes.",
       "Reduce la memoria temporal mediante agregaciones SQL, consultas COUNT y análisis acotado de registros de conversación.",
-      "Publica 1.5.0 como versión preliminar de GitHub; todos los paquetes son Beta y el canal estable latest continúa en 1.4.6."
+      "Publica 1.5.0 mediante el canal estable latest de GitHub para todas las arquitecturas de escritorio compatibles."
     ]
   }
 }

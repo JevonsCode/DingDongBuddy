@@ -55,8 +55,8 @@ Select exactly one `downloads` entry from the detected platform and architecture
 | Local platform | Manifest entry | Expected asset |
 | --- | --- | --- |
 | macOS `arm64` | `downloads.macOS.arm64.url` | `DingDong-<version>-macos-arm64.dmg` |
-| macOS `x86_64` | `downloads.macOS.x86_64.url` | `DingDong-<version>-macos-x64-beta.dmg` |
-| Windows `AMD64` / x64 | `downloads.windows.x86_64.url` | `DingDong-<version>-windows-x64-beta-Setup.exe` |
+| macOS `x86_64` | `downloads.macOS.x86_64.url` | `DingDong-<version>-macos-x64.dmg` |
+| Windows `AMD64` / x64 | `downloads.windows.x86_64.url` | `DingDong-<version>-windows-x64-Setup.exe` |
 
 Download the asset over HTTPS to a new temporary directory. Confirm that the
 resolved release version and filename match the manifest before opening it.
