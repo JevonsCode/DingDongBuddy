@@ -168,6 +168,15 @@ final class CodexThreadInspector {
         isSubagent: _isBackgroundThread(thread),
         isRealtimeVoice: _isRealtimeVoiceThread(thread),
       );
+    } on CodexAppServerProtocolException catch (error) {
+      if (_isNonPersistedThreadError(error)) {
+        // Ephemeral Codex jobs disappear from a fresh App Server as soon as
+        // they stop. Treat that exact outcome as background activity so
+        // ambient suggestions and other internal jobs do not become ordinary
+        // completion reminders. Other lookup failures remain fail-open below.
+        return CodexThreadInspection.nonPersisted(threadId);
+      }
+      return const CodexThreadInspection.unavailable();
     } on Object {
       // Fail open for notification delivery. Unknown metadata must not hide a
       // user-thread reminder, and failures remain retryable because they are
@@ -192,6 +201,11 @@ final class CodexThreadInspection {
     : threadId = '',
       exists = false,
       isSubagent = false,
+      isRealtimeVoice = false;
+
+  const CodexThreadInspection.nonPersisted(this.threadId)
+    : exists = false,
+      isSubagent = true,
       isRealtimeVoice = false;
 
   final String threadId;
@@ -233,3 +247,6 @@ bool _hasText(Object? value) => value is String && value.trim().isNotEmpty;
 
 bool _isSubagentThreadSource(Object? value) =>
     value is String && value.trim().toLowerCase().startsWith('subagent');
+
+bool _isNonPersistedThreadError(CodexAppServerProtocolException error) =>
+    error.message.trimLeft().toLowerCase().startsWith('thread not loaded:');

@@ -1,49 +1,49 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.1",
-  "latestBuild": "56",
-  "publishedAt": "2026-08-20T06:57:14Z",
+  "latestVersion": "1.5.2",
+  "latestBuild": "57",
+  "publishedAt": "2026-08-21T07:49:18Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.1",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.2",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.1/DingDong-1.5.1-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.1/DingDong-1.5.1-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.1/DingDong-1.5.1-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Restores update discovery for DingDong 1.4.6 by keeping public release metadata backward-compatible.",
-    "Keeps localized release notes for current clients through an additive notesByLanguage field.",
-    "Adds regression coverage so future metadata changes cannot strand installed clients."
+    "Stops ephemeral Codex background jobs from creating reminders after those jobs disappear.",
+    "Makes Command-number quick paste dismiss the preview first, matching double-click and Return.",
+    "Adds regression coverage for both notification filtering and clipboard shortcut ordering."
   ],
   "notesByLanguage": {
     "en": [
-      "Restores update discovery for DingDong 1.4.6 by keeping public release metadata backward-compatible.",
-      "Keeps localized release notes for current clients through an additive notesByLanguage field.",
-      "Adds regression coverage so future metadata changes cannot strand installed clients."
+      "Stops ephemeral Codex background jobs from creating reminders after those jobs disappear.",
+      "Makes Command-number quick paste dismiss the preview first, matching double-click and Return.",
+      "Adds regression coverage for both notification filtering and clipboard shortcut ordering."
     ],
     "zh": [
-      "保持公开发布元数据向后兼容，恢复 DingDong 1.4.6 的更新检查。",
-      "通过新增 notesByLanguage 字段，继续为当前客户端提供多语言更新日志。",
-      "新增回归测试，防止未来的元数据结构调整再次让已安装客户端无法更新。"
+      "Codex 临时后台任务停止并消失后，不再产生普通 Agent 完成提醒。",
+      "Command + 数字快速粘贴会先关闭预览，行为与双击和回车保持一致。",
+      "为提醒过滤和剪贴板快捷键执行顺序新增回归测试。"
     ],
     "es": [
-      "Restaura la búsqueda de actualizaciones de DingDong 1.4.6 al mantener compatibles los metadatos públicos.",
-      "Conserva las notas de versión localizadas para los clientes actuales mediante el campo adicional notesByLanguage.",
-      "Añade pruebas de regresión para evitar que futuros cambios de metadatos aíslen a clientes instalados."
+      "Evita que las tareas efímeras de Codex creen avisos cuando desaparecen después de terminar.",
+      "Hace que el pegado rápido con Command y un número cierre primero la vista previa, igual que el doble clic y Retorno.",
+      "Añade pruebas de regresión para el filtrado de avisos y el orden de los atajos del portapapeles."
     ]
   }
 }

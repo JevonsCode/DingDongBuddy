@@ -1,6 +1,6 @@
 import webPush from "web-push";
 
-const serviceVersion = "1.5.1";
+const serviceVersion = "1.5.2";
 const maximumFrameBytes = 256 * 1024;
 const maximumLifecycleTelemetryBytes = 4 * 1024;
 // Web Push providers only guarantee a 4 KiB encrypted message. Keeping the

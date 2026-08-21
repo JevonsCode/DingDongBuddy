@@ -260,6 +260,35 @@ void main() {
     expect(result.isRealtimeVoice, isFalse);
   });
 
+  test(
+    'exact read suppresses a non-persisted ephemeral thread after it stops',
+    () async {
+      final _ScriptedConnectionFactory factory = _ScriptedConnectionFactory(
+        <_ExpectedRequest>[
+          _ExpectedRequest(
+            method: 'thread/read',
+            params: const <String, Object?>{
+              'threadId': 'ephemeral-thread-1',
+              'includeTurns': false,
+            },
+            error: const CodexAppServerProtocolException(
+              'thread not loaded: ephemeral-thread-1',
+            ),
+          ),
+        ],
+      );
+
+      final CodexThreadInspection result = await CodexThreadInspector(
+        connectionFactory: factory,
+      ).inspectThreadId('ephemeral-thread-1');
+
+      expect(result.exists, isFalse);
+      expect(result.isSubagent, isTrue);
+      expect(result.isOpenable, isFalse);
+      expect(factory.pendingRequestCount, 0);
+    },
+  );
+
   test('exact read failure stays fail-open and retryable', () async {
     final _ScriptedConnectionFactory factory = _ScriptedConnectionFactory(
       <_ExpectedRequest>[

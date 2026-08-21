@@ -1286,6 +1286,58 @@ void main() {
     expect(dismissCount, 1);
   });
 
+  testWidgetsOnPlatform(
+    'Command-number dismisses the preview before quick paste',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final _RecordingGateway gateway = _RecordingGateway();
+      final List<String> events = <String>[];
+      final _RecordingQuickPasteGateway quickPaste =
+          _RecordingQuickPasteGateway(onPaste: () => events.add('paste'));
+      final ClipboardViewModel model = ClipboardViewModel(
+        InMemoryClipboardStore(<ClipboardRecord>[
+          _record(),
+          ClipboardRecord(
+            id: 'second',
+            group: 'Clipboard',
+            title: 'Second item',
+            content: 'second value',
+            tags: const <String>['clipboard', 'text'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now.subtract(const Duration(seconds: 1)),
+            updatedAt: now.subtract(const Duration(seconds: 1)),
+          ),
+        ]),
+        gateway: gateway,
+        quickPasteGateway: quickPaste,
+      )..load();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ClipboardScreen(
+            viewModel: model,
+            onDismissPreview: () async => events.add('dismiss'),
+          ),
+        ),
+      );
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+      await tester.pumpAndSettle();
+
+      expect(gateway.writtenText, 'second value');
+      expect(quickPaste.pasteCount, 1);
+      expect(events, <String>['dismiss', 'paste']);
+    },
+  );
+
   testWidgets('callout single click previews the clipboard row', (
     WidgetTester tester,
   ) async {
@@ -1839,10 +1891,14 @@ final class _RecordingGateway implements ClipboardGateway {
 }
 
 final class _RecordingQuickPasteGateway implements QuickPasteGateway {
+  _RecordingQuickPasteGateway({this.onPaste});
+
+  final VoidCallback? onPaste;
   int pasteCount = 0;
 
   @override
   Future<bool> pasteIntoPreviousApplication() async {
+    onPaste?.call();
     pasteCount += 1;
     return true;
   }

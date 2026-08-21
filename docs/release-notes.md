@@ -1,3 +1,67 @@
+# DingDong 1.5.2
+
+DingDong 1.5.2 removes two intermittent interruptions from everyday Agent and
+clipboard work: internal Codex jobs no longer surface as user reminders after
+they disappear, and Command-number quick paste now follows the same reliable
+preview-dismissal path as double-click and Return.
+
+## Quieter Agent activity and reliable quick paste
+
+- Ephemeral Codex background jobs that return the exact `thread not loaded`
+  protocol result are classified as non-persisted background activity instead
+  of ordinary completions. Unrelated App Server failures still fail open so
+  genuine user-thread reminders are not silently hidden.
+- Command-number clipboard shortcuts now dismiss an open preview before
+  restoring and pasting the selected item, matching double-click and Return.
+- Regression tests protect both notification classification and clipboard
+  shortcut ordering.
+
+All supported desktop packages are published through GitHub's stable `latest`
+channel.
+
+---
+
+# DingDong 1.5.2
+
+DingDong 1.5.2 修复两个会打断日常 Agent 与剪贴板工作的偶发现象：Codex 内部临时
+任务停止并消失后不再冒充用户提醒；Command + 数字快速粘贴也会走与双击、回车一致
+的可靠预览关闭流程。
+
+## 更安静的 Agent 动态与更可靠的快速粘贴
+
+- 对明确返回 `thread not loaded` 的 Codex 临时后台任务，按未持久化后台活动处理，
+  不再生成普通完成提醒。其他 App Server 异常仍保持开放式容错，避免静默漏掉真正的
+  用户任务提醒。
+- Command + 数字剪贴板快捷键会先关闭已打开的预览，再恢复并粘贴目标记录，行为与
+  双击、回车保持一致。
+- 新增回归测试，覆盖提醒分类和剪贴板快捷键的执行顺序。
+
+全部受支持的桌面安装包都通过 GitHub 正式版 `latest` 通道发布。
+
+---
+
+# DingDong 1.5.2
+
+DingDong 1.5.2 elimina dos interrupciones intermitentes: las tareas internas
+efímeras de Codex ya no aparecen como avisos del usuario al desaparecer, y el
+pegado rápido con Command y un número sigue ahora la misma ruta fiable que el
+doble clic y Retorno.
+
+## Actividad más silenciosa y pegado rápido fiable
+
+- Las tareas efímeras de Codex que devuelven exactamente `thread not loaded`
+  se clasifican como actividad de fondo no persistida. Otros fallos de App
+  Server siguen abiertos para no ocultar avisos reales del usuario.
+- Los atajos de Command y número cierran primero la vista previa y después
+  restauran y pegan el elemento, igual que el doble clic y Retorno.
+- Las pruebas de regresión protegen la clasificación de avisos y el orden de
+  ejecución de los atajos del portapapeles.
+
+Todos los paquetes de escritorio compatibles se publican mediante el canal
+estable `latest` de GitHub.
+
+---
+
 # DingDong 1.5.1
 
 DingDong 1.5.1 restores update discovery for installed 1.4.6 clients. The

@@ -321,7 +321,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
               if (shortcutIndex != null &&
                   (keyboard.isMetaPressed || keyboard.isControlPressed)) {
                 unawaited(
-                  viewModel.restoreVisibleAt(
+                  _restoreVisibleAt(
                     _shortcutStartIndex + shortcutIndex,
                     mode:
                         defaultTargetPlatform == TargetPlatform.macOS &&
@@ -476,6 +476,14 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     viewModel.select(selected);
     await onDismissPreview?.call();
     await viewModel.restoreSelected();
+  }
+
+  Future<void> _restoreVisibleAt(
+    int index, {
+    required ClipboardPasteMode mode,
+  }) async {
+    await onDismissPreview?.call();
+    await viewModel.restoreVisibleAt(index, mode: mode);
   }
 }
 
