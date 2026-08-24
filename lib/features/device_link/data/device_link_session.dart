@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -116,8 +117,10 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   final StreamController<DeviceLinkSessionEvent> _events =
       StreamController<DeviceLinkSessionEvent>.broadcast();
   final List<RTCIceCandidate> _pendingRemoteCandidates = <RTCIceCandidate>[];
+  final Queue<String> _incomingEnvelopes = Queue<String>();
 
   WebSocket? _socket;
+  StreamSubscription<Object?>? _socketSubscription;
   RTCPeerConnection? _peerConnection;
   RTCDataChannel? _dataChannel;
   Timer? _reconnectTimer;
@@ -125,9 +128,11 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   bool _connecting = false;
   bool _makingOffer = false;
   bool _relayPeerPresent = false;
+  bool _drainingIncomingEnvelopes = false;
   int _reconnectAttempt = 0;
-  Future<void> _relayMessages = Future<void>.value();
-  Future<void> _incomingMessages = Future<void>.value();
+  Future<void> _incomingDrain = Future<void>.value();
+
+  static const int _maximumQueuedIncomingEnvelopes = 16;
 
   @override
   Stream<DeviceLinkSessionEvent> get events => _events.stream;
@@ -156,18 +161,25 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
       }
       _socket = socket;
       socket.pingInterval = const Duration(seconds: 20);
-      socket.listen(
-        (Object? data) {
-          if (data is String) {
-            _relayMessages = _relayMessages.then(
-              (_) => _handleRelayMessage(data),
-            );
-          }
-        },
-        onError: _handleSocketError,
-        onDone: () => _handleSocketDone(socket),
-        cancelOnError: false,
-      );
+      late final StreamSubscription<Object?> subscription;
+      subscription = socket
+          .asyncMap<void>((Object? data) async {
+            if (data is String) {
+              await _handleRelayMessage(data);
+            }
+          })
+          .listen(
+            null,
+            onError: _handleSocketError,
+            onDone: () {
+              if (identical(_socketSubscription, subscription)) {
+                _socketSubscription = null;
+              }
+              _handleSocketDone(socket);
+            },
+            cancelOnError: false,
+          );
+      _socketSubscription = subscription;
     } on Object catch (error) {
       _events.add(
         DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
@@ -341,15 +353,41 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
       );
       return;
     }
-    _incomingMessages = _incomingMessages.then((_) async {
-      try {
-        _events.add(DeviceLinkMessageEvent(await _codec.open(envelope)));
-      } on Object catch (error) {
-        _events.add(
-          DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
-        );
+    if (_closed) return;
+    if (_incomingEnvelopes.length >= _maximumQueuedIncomingEnvelopes) {
+      _events.add(
+        DeviceLinkStatusEvent(
+          DeviceConnectionStatus.error,
+          error: StateError('Incoming device message queue is full.'),
+        ),
+      );
+      return;
+    }
+    _incomingEnvelopes.addLast(envelope);
+    if (_drainingIncomingEnvelopes) return;
+    _drainingIncomingEnvelopes = true;
+    _incomingDrain = _drainIncomingEnvelopes();
+  }
+
+  Future<void> _drainIncomingEnvelopes() async {
+    try {
+      while (!_closed && _incomingEnvelopes.isNotEmpty) {
+        final String envelope = _incomingEnvelopes.removeFirst();
+        try {
+          _events.add(DeviceLinkMessageEvent(await _codec.open(envelope)));
+        } on Object catch (error) {
+          _events.add(
+            DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
+          );
+        }
       }
-    });
+    } finally {
+      _drainingIncomingEnvelopes = false;
+      if (!_closed && _incomingEnvelopes.isNotEmpty) {
+        _drainingIncomingEnvelopes = true;
+        _incomingDrain = _drainIncomingEnvelopes();
+      }
+    }
   }
 
   Future<void> _sendSignal(Map<String, Object?> signal) async {
@@ -438,10 +476,15 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _relayPeerPresent = false;
+    _incomingEnvelopes.clear();
     await _resetPeer();
+    final StreamSubscription<Object?>? subscription = _socketSubscription;
+    _socketSubscription = null;
+    await subscription?.cancel();
     final WebSocket? socket = _socket;
     _socket = null;
     await socket?.close();
+    await _incomingDrain;
     await _events.close();
   }
 }

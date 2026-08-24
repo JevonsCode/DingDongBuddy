@@ -452,10 +452,11 @@ final class GitHubSkillPackageInstaller
         if (downloadUrl == null || downloadUrl.isEmpty) {
           throw const FormatException('GitHub file has no download URL.');
         }
-        final Uint8List bytes = await _get(Uri.parse(downloadUrl), budget);
-        await File(
-          path.join(destination.path, name),
-        ).writeAsBytes(bytes, flush: true);
+        await _downloadFile(
+          Uri.parse(downloadUrl),
+          File(path.join(destination.path, name)),
+          budget,
+        );
       } else {
         throw FormatException(
           'Skill package contains unsupported GitHub entry "$name" ($type).',
@@ -506,6 +507,63 @@ final class GitHubSkillPackageInstaller
     }
     budget.addFile();
     return bytes.takeBytes();
+  }
+
+  Future<void> _downloadFile(
+    Uri uri,
+    File destination,
+    _DownloadBudget budget,
+  ) async {
+    final Future<Uint8List> Function(Uri uri)? byteLoader = loader;
+    if (byteLoader != null) {
+      final Uint8List bytes = await _get(uri, budget);
+      await destination.writeAsBytes(bytes, flush: true);
+      return;
+    }
+    if (uri.scheme != 'https') {
+      throw const FormatException('Skill downloads must use HTTPS.');
+    }
+    final HttpClientRequest request = await _client
+        .getUrl(uri)
+        .timeout(const Duration(seconds: 15));
+    request.headers.set(
+      HttpHeaders.userAgentHeader,
+      'DingDong Skill Installer',
+    );
+    request.headers.set(
+      HttpHeaders.acceptHeader,
+      'application/vnd.github+json',
+    );
+    final HttpClientResponse response = await request.close().timeout(
+      const Duration(seconds: 15),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      await response.drain<void>();
+      throw HttpException(
+        'GitHub returned HTTP ${response.statusCode}',
+        uri: uri,
+      );
+    }
+    final IOSink output = destination.openWrite();
+    var completed = false;
+    try {
+      await for (final List<int> chunk in response.timeout(
+        const Duration(seconds: 15),
+      )) {
+        budget.add(chunk.length);
+        output.add(chunk);
+      }
+      await output.close();
+      budget.addFile();
+      completed = true;
+    } finally {
+      if (!completed) {
+        await output.close();
+        if (await destination.exists()) {
+          await destination.delete();
+        }
+      }
+    }
   }
 }
 

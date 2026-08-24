@@ -263,6 +263,28 @@ void main() {
     expect(controller.activities.single.unseen, isFalse);
   });
 
+  test('a linked device marks only the displayed activities as seen', () {
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'activity-${++id}',
+      now: () => DateTime.utc(2026, 8, 24, 9),
+    );
+    controller.record(source: 'Codex', message: 'First');
+    controller.record(source: 'Claude Code', message: 'Second');
+
+    expect(
+      controller.markSeen(<String>['activity-1', 'missing', 'activity-1']),
+      isTrue,
+    );
+    expect(controller.activities, hasLength(2));
+    expect(controller.activities.first.id, 'activity-2');
+    expect(controller.activities.first.unseen, isTrue);
+    expect(controller.activities.last.id, 'activity-1');
+    expect(controller.activities.last.unseen, isFalse);
+    expect(controller.unseenCount, 1);
+    expect(controller.markSeen(<String>['activity-1', 'missing']), isFalse);
+  });
+
   test('suppressed completion hook enriches the latest matching item', () {
     final ActivityController controller = ActivityController(
       idGenerator: () => 'activity-1',

@@ -1,4 +1,4 @@
-# DingDong 1.5.2 Manual Regression Checklist
+# DingDong 1.5.3 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -6,6 +6,10 @@ and macOS golden images; the items below exercise real operating-system state.
 
 ## Window, tray, and startup
 
+- Start a release build with a completely empty DingDong application-support
+  directory. The first window renders before Settings finishes loading, device
+  linking can start, and no uninitialized Settings/localization exception is
+  emitted.
 - A freshly installed macOS build opens without a `WindowManagerPlugin` crash.
 - A saved non-default opacity can be restored before the desktop shell starts without a native window crash.
 - DingDong opens the saved default workspace and restores theme and opacity.
@@ -190,6 +194,11 @@ and macOS golden images; the items below exercise real operating-system state.
 - Transfer a file immediately below 25 MB. A file above 25 MB is rejected.
   Disconnect before downloading a computer-hosted file and confirm it is no
   longer available; reconnecting does not expose unsent history.
+- Start three phone-to-computer file uploads concurrently, then attempt a
+  fourth. At most three partial uploads exist; out-of-order, duplicate,
+  malformed, idle, disconnected, and incomplete transfers remove their
+  `.part` files, while a valid transfer is assembled in chunk order without a
+  25 MB in-memory copy.
 - Verify a same-network connection can establish WebRTC. Then block or fail the
   direct channel and confirm encrypted relay fallback remains connected without
   duplicating Clipboard items. Confirm both desktop and phone explain that local
@@ -202,6 +211,12 @@ and macOS golden images; the items below exercise real operating-system state.
 - Trigger a rich Agent completion while the PWA is visible, in the background,
   and with the phone locked. Each event appears once with description, source,
   and completion time; background delivery does not require reopening the PWA.
+- Trigger one ordinary completion and one response waiting for user input.
+  Realtime delivery, encrypted Web Push, and a reconnect snapshot must all keep
+  the second item marked **需要你处理** instead of turning it into a normal
+  completion. Its system notification uses the attention title, contextual
+  body, **立即处理** action, and the longer attention vibration request; the
+  ordinary completion uses **查看详情** and the shorter completion pattern.
 - In one Codex chat whose Bridge cannot provide a stable conversation ID,
   trigger eight consecutive task starts from the same workspace. The phone
   shows one running item and a running count of one, using the latest task and
@@ -223,6 +238,11 @@ and macOS golden images; the items below exercise real operating-system state.
   reloaded, an older page cannot create a competing connection, and a
   notification from an earlier pairing never injects content into the current
   pairing.
+- Open the Agent tab while it contains multiple unread items. Only the activity
+  ids actually rendered on the phone become seen on the desktop; unrelated
+  items stay unread. The phone count and, where supported, the installed-app
+  badge clear after the acknowledgement is sent, and the following desktop
+  snapshot confirms that reconnecting does not resurrect those seen items.
 - Inspect the system notification: both its main icon and badge use DingDong
   artwork rather than a stale or browser-default icon.
 - Turn vibration off and on per device. Run the direct vibration diagnostic and
@@ -234,7 +254,9 @@ and macOS golden images; the items below exercise real operating-system state.
   subscription is rebuilt and the diagnostics reach browser-created status.
 - Disconnect and reconnect one saved device, then delete it. Manual disconnect
   remains stable until reconnect; delete removes the desktop record, PWA
-  pairing, relay subscription, and future delivery.
+  pairing, relay subscription, and future delivery. The delete action uses the
+  DingDong confirmation dialog; cancelling returns to settings without changing
+  the device or opening a browser-native confirmation prompt.
 - On iPhone/iPad Safari, add DingDong to the Home Screen, open that Home Screen
   web app, pair again if Safari did not transfer the pairing, and verify
   permission plus background Web Push. Record this separately from Android;
@@ -348,6 +370,10 @@ and macOS golden images; the items below exercise real operating-system state.
   changed after it was read, writes atomically, and verifies the saved result by
   reading it back. Incrementing only usage count or last-used time does not
   rewrite the native configuration; explicitly saving the resource still does.
+- An enabled MCP scoped by project path or repository remains installed in the
+  selected Agent's native user configuration, so the server is available when
+  Bridge later evaluates that runtime scope. A source-only Trigger Group still
+  limits which Agent configurations receive the MCP.
 - Managed Prompt, JSON/TOML MCP, Adapter, Resource, Trigger Group, and internal
   state writes serialize concurrent DingDong writers, reject stale snapshots,
   validate unique sibling files before replacement, preserve POSIX permissions,
@@ -390,6 +416,10 @@ and macOS golden images; the items below exercise real operating-system state.
   describes how the Agent should install and verify DingDong MCP.
 - The displayed MCP executable exists inside the installed distribution.
 - Sending JSON-RPC `tools/list` to the bundled executable returns DingDong tools.
+- Compare the MCP `initialize.instructions` value with the DingDong-managed
+  bridge block written into Agent prompt files. Both come from the same
+  canonical guidance and agree on task-start Bridge calls, authoritative Prompt
+  snapshots, dynamic Skill loading, MCP confirmation, and the one-footer rule.
 - `dingdong_set_skill_delivery` uses a closed input schema, requires an explicit
   master enabled value, requires at least one path for `nativeProject`, rejects
   project paths or enabled Hooks for other modes, and permits the Hook switch
@@ -405,6 +435,9 @@ and macOS golden images; the items below exercise real operating-system state.
   unknown IDs and unavailable deployment state have no synchronization side
   effect.
 - `dingdong_bridge` remains summary-first and does not include clipboard content by default.
+- One Bridge call that applies Prompts and returns Skill/MCP candidates updates
+  both usage and candidate metadata in one serialized resource-library
+  transaction; concurrent Studio windows cannot lose either counter.
 - When Bridge receives a workspace path but no repository URL, it resolves the
   workspace's Git `remote.origin.url`. SSH/SCP and HTTPS forms of the same
   host/repository match one repository trigger; a different repository does
@@ -449,6 +482,11 @@ and macOS golden images; the items below exercise real operating-system state.
   require a separate explicit request.
 - `dingdong_notify` uses the sound selected in Settings when no sound is supplied.
 - Agent sessions, memories, bundles, and handoffs remain available after restarting DingDong.
+  The in-process session and handoff caches retain only the newest 100 records,
+  list newest first, and can still patch an older persisted ID through targeted
+  lookup without hydrating every historical record.
+- Reuse one loopback HTTP client across MCP requests, reject a response above
+  16 MiB, and close the client when the stdio MCP process exits.
 - Enabling or disabling an MCP updates supported Agent user configurations and preserves unrelated entries.
 - An online Skill installs its complete directory, including scripts, references, and assets.
 
@@ -589,8 +627,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.5.2` build `57` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.5.2.57` and product name `DingDong`.
+- The macOS release app metadata is version `1.5.3` build `58` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.5.3.58` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -598,7 +636,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.5.2` and that exact commit SHA; every
+  `/v1/health` must report version `1.5.3` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

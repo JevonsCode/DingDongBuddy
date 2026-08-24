@@ -18,9 +18,9 @@ connects them to supported clients, and gathers their alerts with a desktop
 sound you choose. Important results and selected clipboard items can also reach
 a trusted phone through the mobile PWA.
 
-> **Current release: DingDong 1.5.2.** This reliability update filters
-> ephemeral Codex background reminders and makes Command-number quick paste
-> follow the same preview-dismissal path as double-click and Return.
+> **Current release: DingDong 1.5.3.** This stability update fixes fresh-install
+> startup and project-scoped MCP delivery, bounds phone file-transfer and
+> Agent/MCP memory, and makes mobile reminders and PWA upgrades more reliable.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -85,7 +85,7 @@ and Pi sessions, and can be turned off there.
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.5.2.”
+- “Use this project's release workflow, run every check, and prepare version 1.5.3.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can search before creating or updating Prompt and MCP resources with
@@ -116,13 +116,15 @@ pairings, so ordinary upgrades do not require scanning the QR code again.
   you tap **Send**.
 - **Files:** transfers are limited to 25 MB. Computer-hosted items remain
   available only while the source computer and receiving device are connected.
-- **Agent reminders:** completion cards include a longer description, source,
-  and completion time. Background Web Push and vibration can be enabled per
-  device; the operating system still controls whether a notification actually
-  vibrates.
+- **Agent reminders:** mobile cards distinguish ordinary completion from work
+  that needs attention and include context plus real lifecycle times. System
+  notifications carry task context and an open action, with different requested
+  vibration patterns; the operating system still controls actual haptics.
 - **Mobile navigation:** tap the tabs or swipe horizontally between Computer
   Clipboard and Agent reminders. Tapping a system notification opens Agent
-  reminders directly without reloading an already running PWA.
+  reminders directly without reloading an already running PWA. Once visible,
+  exact unread items are acknowledged back to the computer and the app badge is
+  updated where supported.
 - **Computer isolation:** Clipboard items, Agent events, incoming files, drafts,
   transfer state, and notification diagnostics stay inside their source
   computer. Switching the active computer never mixes or moves those records.
@@ -153,9 +155,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon · 1.5.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-arm64.dmg)
-- [macOS · Intel · 1.5.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-x64.dmg)
-- [Windows x64 · 1.5.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-arm64.dmg)
+- [macOS · Intel · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-x64.dmg)
+- [Windows x64 · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

@@ -16,8 +16,8 @@ DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记�
 Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent 提醒统一收在一起，
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
-> **当前版本：DingDong 1.5.2。** 这次可靠性更新会过滤 Codex 临时后台任务的
-> 误提醒，并让 Command + 数字快速粘贴走与双击、回车一致的预览关闭流程。
+> **当前版本：DingDong 1.5.3。** 这次稳定性更新修复全新安装启动与项目作用域
+> MCP 交付，限制手机文件传输和 Agent/MCP 内存上限，并提升手机提醒与 PWA 升级可靠性。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -77,7 +77,7 @@ Skill 名称后的 `*` 表示本轮已加载完整 Skill；没有 `*` 则只是�
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.5.2。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.5.3。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
 Agent 会先搜索去重，再通过 `dingdong_create_resource` 和
@@ -101,10 +101,12 @@ PWA 会在联网及重新回到前台时检查最新应用壳。设备设置中�
   粘贴文字、选择文件，并点击“**发送**”后，内容才会进入电脑剪贴板列表。
 - **文件：** 单个文件上限为 25 MB。由电脑托管的内容只有在来源电脑与接收设备
   保持连接时才可获取。
-- **Agent 提醒：** 手机卡片会展示更完整的说明、来源和完成时间。每台设备可单独
-  开关后台 Web Push 与震动；通知是否真正震动仍由手机系统决定。
+- **Agent 提醒：** 手机卡片会区分普通完成和“需要你处理”，展示说明、来源与真实
+  起止时间。后台通知带任务上下文和查看操作，并按提醒类型使用不同震动节奏；实际
+  触感仍由手机系统决定。
 - **手机切换：** 点击标签或左右滑动，都可以在“电脑剪贴板”和“Agent 提醒”之间
-  切换；点击系统通知会直接进入“Agent 提醒”，已经运行的 PWA 不会因此重载。
+  切换；点击系统通知会直接进入“Agent 提醒”，已经运行的 PWA 不会因此重载。手机
+  实际展示未读提醒后会把对应条目精确回写为已读，并在支持时同步应用角标。
 - **电脑隔离：** 每台电脑的剪贴板、Agent 提醒、收到的文件、输入草稿、传输状态和
   通知诊断都独立保存；切换当前电脑不会把内容混到一起。
 - **界面图标：** 手机设置中可选择浅蓝或白色背景。主屏幕图标由手机系统安装时生成，
@@ -131,9 +133,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片 · 1.5.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-arm64.dmg)
-- [macOS · Intel · 1.5.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-x64.dmg)
-- [Windows x64 · 1.5.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-arm64.dmg)
+- [macOS · Intel · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-x64.dmg)
+- [Windows x64 · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

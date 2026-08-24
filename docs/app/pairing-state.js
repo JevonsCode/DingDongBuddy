@@ -12,6 +12,34 @@ export function isStoredPairing(value) {
   );
 }
 
+export function isScannedPairing(value) {
+  if (!isStoredPairing(value)) return false;
+  if (!/^[A-Za-z0-9_-]{20,64}$/.test(value.room)) return false;
+  if (!/^[A-Za-z0-9_-]{43}$/.test(value.secret)) return false;
+  if (
+    typeof value.hostId !== "string" ||
+    value.hostId.length < 1 ||
+    value.hostId.length > 160 ||
+    typeof value.hostName !== "string" ||
+    value.hostName.length < 1 ||
+    value.hostName.length > 80 ||
+    value.relay.length > 2048
+  ) {
+    return false;
+  }
+  try {
+    const relay = new URL(value.relay);
+    return (
+      ["https:", "http:"].includes(relay.protocol) &&
+      !relay.username &&
+      !relay.password &&
+      !relay.hash
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function pairingsMatch(stored, scanned) {
   return (
     isStoredPairing(stored) &&

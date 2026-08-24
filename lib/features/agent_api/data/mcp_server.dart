@@ -2,6 +2,8 @@
 
 import 'dart:convert';
 
+import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
+
 /// Executes one advertised MCP tool against DingDong's local services.
 abstract interface class McpToolExecutor {
   Future<Map<String, Object?>> execute(
@@ -36,24 +38,9 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.5.2',
+              'version': '1.5.3',
             },
-            'instructions':
-                'Call dingdong_bridge with expand="prompts" at the start of each user task. '
-                'Every active Prompt returned there is a required instruction: it is included in full and must be applied automatically. '
-                'Each successful response is the authoritative Prompt snapshot for the current task and replaces every Prompt set returned for earlier tasks; a Prompt absent from the current snapshot is inactive and must not be applied. '
-                'The same response contains the authoritative dynamic-delivery Skill catalog for the current task and workspace: every resolved, valid, enabled, scope-matched dynamic Skill as an id, name, and description candidate. A managed Skill can be absent because it is disabled, invalid, out of scope, delivered natively, transitioning, or blocked by a duplicate-name conflict; inspect active.skillSuppressions and active.skillConflicts when present. '
-                'If the Bridge call fails, report that DingDong resources could not be loaded and do not reuse an earlier Prompt or Skill set. '
-                'A Skill candidate is not an instruction: only when its description matches the task, call dingdong_load_skill with its id or name and current workspace before applying the returned full SKILL.md. '
-                'Load only a Skill returned by the current catalog. Read only referenced package files with dingdong_read_skill_file. '
-                'MCP entries are tool references, not instructions; call a configured MCP tool only when the task requires it. Each active MCP entry includes its managed serverName and, for Codex, its toolNamePrefix. '
-                'When conversation.visible is true, keep the successful dingdong_bridge capsule until the final user-visible response so later usage evidence can be merged. After a successful dingdong_load_skill, replace only the capsule item with the same mergeKey using its returned conversation.item with confirmedUse: true. After an actual configured MCP tool call reaches a terminal result, including an error result, call dingdong_confirm_mcp_use once for that MCP resource with the active entry id and serverName plus the exact called toolName, then replace only the item with the same mergeKey using its returned conversation.item with confirmedUse: true. Never confirm MCP use from availability, tool discovery, or an uncalled tool. The mergeKey is opaque merge-only metadata and must never be displayed. A Skill marker proves only a full Skill load; it does not claim that every instruction was followed. An MCP marker means called, not necessarily succeeded. Prompt items remain unmarked because delivery cannot prove semantic compliance. On Codex desktop, include the current merged footer exactly once as a single Markdown text line and keep DingDong as text. Use the exact Prompt, Skill, and MCP symbols and lineToken values returned by DingDong; these symbols are user-configurable, so never infer them. The initial conversation.line is already canonical only when no item was replaced. The conversation capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Use conversation.presentations.ansi.line only on an explicitly ANSI-capable terminal; every other host uses the current merged plain-text tokens exactly once. Show only resource titles and truthful markers; do not show resource content, descriptions, IDs, server names, tool names, or merge keys. '
-                'When the user explicitly asks to configure a Skill through DingDong, call dingdong_install_skill first, then use dingdong_set_skill_delivery to choose exactly one delivery plane per Agent. Native project delivery uses strict project scope and requires exact existing project paths; its Hook switch is separate and defaults off. '
-                'When the user asks to configure a Prompt or MCP resource, search first, then use dingdong_create_resource or dingdong_update_resource and bind the requested scope without creating duplicates. '
-                'Use dingdong_notify when the task is blocked or waiting for '
-                'the user. A configured completion hook normally handles the '
-                'final task-complete alert; if the client has no completion '
-                'hook, call dingdong_notify once before the final response.',
+            'instructions': dingDongAgentBridgeGuidance,
           },
         });
       }

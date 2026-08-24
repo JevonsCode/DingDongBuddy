@@ -9,8 +9,9 @@
     <meta name="apple-mobile-web-app-title" content="DingDong" />
     <title>DingDong Buddy</title>
     <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?shell=35" />
   </head>
   <body>
     <div class="app-shell">
@@ -102,8 +103,8 @@
           <div id="notification-onboarding" class="notification-onboarding" hidden>
             <img src="../assets/dingdong-mobile-alert-icon.png" alt="" />
             <div>
-              <strong id="notification-onboarding-title">让完成后提醒</strong>
-              <span id="notification-onboarding-copy">Agent 完成后，即使收起 DingDong 也能收到通知。</span>
+              <strong id="notification-onboarding-title">让任务状态及时提醒</strong>
+              <span id="notification-onboarding-copy">Agent 完成或需要你处理时，收起 DingDong 也能收到通知。</span>
             </div>
             <button id="enable-notifications" class="small-button accent" type="button">开启</button>
           </div>
@@ -209,9 +210,9 @@
           <button id="clear-file" type="button">移除</button>
         </div>
         <div class="composer-row">
-          <label class="attach-button" for="file-input" aria-label="选择文件">
+          <button id="attach-button" class="attach-button" type="button" aria-label="选择文件">
             <img src="../assets/symbols/path.png" alt="" />
-          </label>
+          </button>
           <input id="file-input" type="file" hidden />
           <textarea
             id="message-input"
@@ -264,13 +265,17 @@
         </div>
         <div class="setting-row">
           <div>
-            <strong>Agent 完成提醒</strong>
+            <strong>Agent 状态提醒</strong>
             <span id="agent-notification-status" role="status" aria-live="polite">
               默认开启，等待系统授权
             </span>
           </div>
           <label class="switch-control">
-            <input id="agent-notification-toggle" type="checkbox" />
+            <input
+              id="agent-notification-toggle"
+              type="checkbox"
+              aria-label="Agent 状态提醒"
+            />
             <span></span>
           </label>
         </div>
@@ -280,7 +285,11 @@
             <span id="vibration-support-label">实际触感仍受手机系统设置控制</span>
           </div>
           <label class="switch-control">
-            <input id="vibration-toggle" type="checkbox" />
+            <input
+              id="vibration-toggle"
+              type="checkbox"
+              aria-label="提醒时震动"
+            />
             <span></span>
           </label>
         </div>
@@ -297,7 +306,7 @@
           <div>
             <strong>PWA 更新</strong>
             <span id="pwa-update-status" role="status" aria-live="polite">
-              当前版本 1.5.2 · 联网时自动保持最新
+              当前版本 1.5.3 · 联网时自动保持最新
             </span>
           </div>
           <button id="pwa-update-button" class="small-button" type="button">
@@ -339,6 +348,30 @@
       </form>
     </dialog>
 
+    <dialog id="delete-device-dialog" class="settings-dialog delete-device-dialog">
+      <form method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">连接设备</p>
+            <h2>删除这台电脑？</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
+        </div>
+        <div class="delete-dialog-copy">
+          <img src="../assets/symbols/delete.png" alt="" />
+          <p>
+            删除“<strong id="delete-device-name">这台电脑</strong>”后，手机会清除它的连接与通知设置。以后仍可重新扫描电脑上的二维码连接。
+          </p>
+        </div>
+        <div class="dialog-actions">
+          <button class="quiet-button" value="cancel" type="submit">取消</button>
+          <button id="confirm-delete-device" class="danger-button" type="button">
+            删除设备
+          </button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="install-dialog" class="settings-dialog install-dialog">
       <form method="dialog">
         <div class="dialog-header">
@@ -363,7 +396,7 @@
         <div class="dialog-header">
           <div>
             <p id="notification-help-eyebrow" class="eyebrow">通知设置</p>
-            <h2 id="notification-help-title">检查完成提醒</h2>
+            <h2 id="notification-help-title">检查 Agent 提醒</h2>
           </div>
           <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
         </div>
@@ -398,6 +431,6 @@
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-    <script type="module" src="./app.js"></script>
+    <script type="module" src="./app.js?shell=35"></script>
   </body>
 </html>

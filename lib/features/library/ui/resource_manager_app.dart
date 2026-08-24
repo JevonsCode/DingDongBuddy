@@ -75,6 +75,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
         WindowsAuxiliaryWindowCloseBehavior<ResourceManagerApp> {
   int _selectedIndex = 0;
   int _clipboardCategoryRequestRevision = 0;
+  int _handledClipboardCategoryRequestRevision = 0;
   final GlobalKey<LibraryScreenState> _libraryScreenKey =
       GlobalKey<LibraryScreenState>();
   late final AgentConversationLauncher _agentConversationLauncher;
@@ -281,7 +282,17 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                           resourceManagerLauncher:
                               widget.resourceManagerLauncher,
                           categoryManagementRequestRevision:
-                              _clipboardCategoryRequestRevision,
+                              _clipboardCategoryRequestRevision >
+                                  _handledClipboardCategoryRequestRevision
+                              ? _clipboardCategoryRequestRevision
+                              : 0,
+                          onCategoryManagementRequestHandled: (int revision) {
+                            if (revision >
+                                _handledClipboardCategoryRequestRevision) {
+                              _handledClipboardCategoryRequestRevision =
+                                  revision;
+                            }
+                          },
                         ),
                       ResourceManagerDestination.recentAgents =>
                         AgentActivityManagerScreen(

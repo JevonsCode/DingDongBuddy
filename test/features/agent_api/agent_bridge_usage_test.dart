@@ -7,6 +7,59 @@ import 'package:dingdong/features/library/domain/managed_mcp_identity.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'Bridge records one task snapshot with one atomic metadata write',
+    () async {
+      final DateTime now = DateTime.utc(2026, 8, 24);
+      final _DeliveryReceiptOnlyStore
+      store = _DeliveryReceiptOnlyStore(<Resource>[
+        Resource(
+          id: 'required-prompt',
+          type: ResourceType.prompt,
+          title: 'Required prompt',
+          content: 'Always apply this instruction.',
+          activation: ResourceActivation.always,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'reviewer-skill',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content:
+              '---\nname: reviewer\ndescription: Review changes\n---\n\n# Reviewer',
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Resource(
+          id: 'figma-mcp',
+          type: ResourceType.mcp,
+          title: 'Figma',
+          content: '{"command":"figma-mcp"}',
+          activation: ResourceActivation.always,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+
+      final response = await AgentBridge(
+        store,
+        now: () => now,
+      ).respond('{"task":"review the Figma change","source":"Codex"}');
+
+      expect(response.statusCode, 200);
+      expect(store.recordDeliveryCalls, 1);
+      expect(store.saveCalls, 0);
+      final List<Resource> tracked = await store.load();
+      expect(tracked[0].usageCount, 1);
+      expect(tracked[0].candidateCount, 0);
+      expect(tracked[1].usageCount, 0);
+      expect(tracked[1].candidateCount, 1);
+      expect(tracked[2].usageCount, 0);
+      expect(tracked[2].candidateCount, 1);
+    },
+  );
+
   test('full Skill load merges usage without replacing the library', () async {
     final DateTime now = DateTime.utc(2026, 8, 12);
     final _UsageMergeOnlyStore store = _UsageMergeOnlyStore(<Resource>[
@@ -170,6 +223,53 @@ void main() {
       );
     },
   );
+}
+
+final class _DeliveryReceiptOnlyStore
+    implements ResourceStore, ResourceDeliveryStore {
+  _DeliveryReceiptOnlyStore(List<Resource> resources)
+    : _resources = List<Resource>.of(resources);
+
+  List<Resource> _resources;
+  int recordDeliveryCalls = 0;
+  int saveCalls = 0;
+
+  @override
+  Future<List<Resource>> load() async => List<Resource>.of(_resources);
+
+  @override
+  Future<List<Resource>> recordDelivery({
+    required Set<String> usedResourceIds,
+    required Set<String> candidateResourceIds,
+    required DateTime deliveredAt,
+  }) async {
+    recordDeliveryCalls += 1;
+    _resources = _resources
+        .map(
+          (Resource resource) => resource.copyWith(
+            usageCount: usedResourceIds.contains(resource.id)
+                ? resource.usageCount + 1
+                : resource.usageCount,
+            lastUsedAt: usedResourceIds.contains(resource.id)
+                ? deliveredAt
+                : resource.lastUsedAt,
+            candidateCount: candidateResourceIds.contains(resource.id)
+                ? resource.candidateCount + 1
+                : resource.candidateCount,
+            lastCandidateAt: candidateResourceIds.contains(resource.id)
+                ? deliveredAt
+                : resource.lastCandidateAt,
+          ),
+        )
+        .toList(growable: false);
+    return List<Resource>.of(_resources);
+  }
+
+  @override
+  Future<void> save(List<Resource> resources) async {
+    saveCalls += 1;
+    throw StateError('Bridge must use the atomic delivery receipt.');
+  }
 }
 
 final class _UsageMergeOnlyStore

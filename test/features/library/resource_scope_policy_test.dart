@@ -7,6 +7,76 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'native MCP sync preserves runtime scopes and honors source-only routing',
+    () {
+      final DateTime now = DateTime.utc(2026, 8, 24);
+      Resource mcp(String groupId) => Resource(
+        id: 'mcp-$groupId',
+        type: ResourceType.mcp,
+        title: 'Scoped MCP',
+        content: '{"command":"scoped-mcp"}',
+        triggerGroupIds: <String>[groupId],
+        createdAt: now,
+        updatedAt: now,
+      );
+      TriggerGroup group(String id, TriggerRule rule) => TriggerGroup(
+        id: id,
+        name: id,
+        rules: <TriggerRule>[rule],
+        createdAt: now,
+        updatedAt: now,
+      );
+      final Map<String, TriggerGroup> groups = <String, TriggerGroup>{
+        'project': group(
+          'project',
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.contains,
+            value: 'dingdong',
+          ),
+        ),
+        'repository': group(
+          'repository',
+          TriggerRule(
+            field: TriggerRuleField.repositoryUrl,
+            operator: TriggerRuleOperator.contains,
+            value: 'DingDongBuddy',
+          ),
+        ),
+        'codex': group(
+          'codex',
+          TriggerRule(
+            field: TriggerRuleField.source,
+            operator: TriggerRuleOperator.equals,
+            value: 'Codex',
+          ),
+        ),
+      };
+
+      expect(
+        resourceCanSyncToAgentSource(mcp('project'), 'Codex', groups),
+        isTrue,
+      );
+      expect(
+        resourceCanSyncToAgentSource(mcp('project'), 'Claude Code', groups),
+        isTrue,
+      );
+      expect(
+        resourceCanSyncToAgentSource(mcp('repository'), 'Cursor', groups),
+        isTrue,
+      );
+      expect(
+        resourceCanSyncToAgentSource(mcp('codex'), 'Codex', groups),
+        isTrue,
+      );
+      expect(
+        resourceCanSyncToAgentSource(mcp('codex'), 'Cursor', groups),
+        isFalse,
+      );
+    },
+  );
+
+  test(
     'strict Skill scope fails closed when its trigger definition drifts',
     () {
       final Directory first = Directory.systemTemp.createTempSync(

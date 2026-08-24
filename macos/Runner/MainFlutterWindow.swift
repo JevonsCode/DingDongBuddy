@@ -12,7 +12,6 @@ private final class DesktopContextMenuTarget: NSObject {
 
 class MainFlutterWindow: NSWindow {
   private var systemActionChannels: [FlutterMethodChannel] = []
-  private var sharingPicker: NSSharingServicePicker?
 
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { true }
@@ -63,21 +62,6 @@ class MainFlutterWindow: NSWindow {
         return
       }
       switch call.method {
-      case "shareText":
-        guard let arguments = call.arguments as? [String: Any],
-              let content = arguments["content"] as? String
-        else {
-          result(FlutterError(
-            code: "invalid_arguments",
-            message: "content must be a string.",
-            details: nil
-          ))
-          return
-        }
-        let picker = NSSharingServicePicker(items: [content])
-        self.sharingPicker = picker
-        picker.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
-        result(nil)
       case "showContextMenu":
         guard let arguments = call.arguments as? [String: Any],
               let entries = arguments["items"] as? [[String: Any]]

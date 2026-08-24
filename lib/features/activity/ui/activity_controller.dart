@@ -579,6 +579,35 @@ final class ActivityController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Marks only the activities that a trusted linked device has displayed.
+  ///
+  /// Unknown and already-seen ids are ignored so delayed mobile receipts
+  /// cannot affect newer activity.
+  bool markSeen(Iterable<String> activityIds) {
+    final Set<String> ids = activityIds
+        .map((String id) => id.trim())
+        .where((String id) => id.isNotEmpty)
+        .toSet();
+    if (ids.isEmpty) return false;
+
+    var changed = false;
+    _activities = _activities
+        .map((AgentActivity item) {
+          if (!item.unseen || !ids.contains(item.id)) return item;
+          changed = true;
+          return item.seen();
+        })
+        .toList(growable: false);
+    if (!changed) return false;
+
+    if (unseenCount == 0) {
+      _revealActive = false;
+    }
+    _persist();
+    notifyListeners();
+    return true;
+  }
+
   void clear() {
     _recentCountTimer?.cancel();
     _activities = const <AgentActivity>[];

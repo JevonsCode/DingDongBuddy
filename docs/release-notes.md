@@ -1,3 +1,113 @@
+# DingDong 1.5.3
+
+DingDong 1.5.3 hardens fresh-install startup, scoped Agent resources, mobile
+alerts, file transfer, and long-running memory use. It also splits the largest
+desktop and PWA maintenance hotspots without changing their public contracts.
+
+## Keep startup and Agent resource delivery dependable
+
+- Fresh installations now start device linking from the already-loaded Settings
+  snapshot, avoiding an early localization read before Settings is ready.
+- Project- and repository-scoped MCPs remain installed for matching Agent
+  sources, while the Bridge evaluates their task context at runtime.
+- MCP initialization and native Agent prompts now share one canonical Bridge
+  guide, and delivery metrics are recorded in one atomic receipt.
+
+## Bound file transfer, queues, and memory
+
+- Phone uploads stream in order to temporary files, allow at most three
+  concurrent transfers, and clean up malformed, interrupted, or timed-out data.
+- Encrypted device input has an explicit bounded queue; Agent history caches,
+  MCP responses, Skill downloads, and package hashing now have bounded or
+  streaming paths instead of retaining complete histories or files.
+
+## Make mobile alerts and PWA upgrades more trustworthy
+
+- Completion and attention semantics survive live delivery, reconnection, and
+  Web Push. The phone acknowledges only the exact visible activity IDs and keeps
+  supported app badges in sync.
+- Notification copy, actions, and requested vibration distinguish completed
+  work from work needing attention, with capability-safe fallbacks.
+- PWA shell 35 modularizes browser responsibilities, validates pairing input
+  more strictly, improves touch and keyboard accessibility, and replaces the
+  native device-delete confirmation with a DingDong dialog.
+
+All supported desktop packages are published through GitHub's stable `latest`
+channel.
+
+---
+
+# DingDong 1.5.3
+
+DingDong 1.5.3 加固全新安装启动、Agent 作用域资源、手机提醒、文件传输与长期运行
+内存边界，并在不改变公开契约的前提下拆分桌面端和 PWA 的主要维护热点。
+
+## 让启动与 Agent 资源交付更可靠
+
+- 全新安装从依赖层已加载的 Settings 快照启动设备连接，避免 Settings 尚未就绪时
+  过早读取本地化导致启动失败。
+- 项目与仓库作用域 MCP 会继续安装到匹配的 Agent 来源，再由 Bridge 在运行时结合
+  当前任务上下文完成精确判断。
+- MCP 初始化和 Agent 原生 Prompt 共用一份 Bridge 权威指南；交付指标通过一次原子
+  回执写入，减少漂移和并发冲突。
+
+## 为文件传输、队列和内存建立硬边界
+
+- 手机上传按顺序流式写入临时文件，最多同时处理三个传输；字段异常、断线或超时都会
+  清理未完成文件。
+- 加密设备输入使用明确的有界队列；Agent 历史缓存、MCP 响应、Skill 下载与包摘要
+  改为有上限或流式路径，不再长期保留完整历史或文件。
+
+## 让手机提醒与 PWA 升级更可信
+
+- 普通完成与需要处理语义贯穿实时消息、重连和 Web Push；手机只回写实际可见活动的
+  精确 ID，并在系统支持时同步应用角标。
+- 通知文案、操作与震动请求会区分“已完成”和“需要处理”，不支持的系统安全降级。
+- PWA shell 35 拆分浏览器职责，加强配对输入校验、触控和键盘可访问性，并用 DingDong
+  自有弹窗替代设备删除的浏览器原生确认框。
+
+全部受支持的桌面安装包都通过 GitHub 正式版 `latest` 通道发布。
+
+---
+
+# DingDong 1.5.3
+
+DingDong 1.5.3 refuerza el inicio de instalaciones nuevas, los recursos de
+Agent con alcance, los avisos móviles, la transferencia de archivos y los
+límites de memoria. También divide los mayores puntos de mantenimiento del
+escritorio y la PWA sin cambiar sus contratos públicos.
+
+## Inicio y entrega de recursos más fiables
+
+- Las instalaciones nuevas inician el enlace de dispositivos desde la
+  configuración ya cargada y evitan leer la localización antes de tiempo.
+- Los MCP con alcance de proyecto o repositorio siguen instalados para los
+  orígenes de Agent compatibles; el Bridge evalúa después el contexto real.
+- La inicialización MCP y los prompts nativos comparten una guía canónica, y las
+  métricas de entrega se guardan con un único recibo atómico.
+
+## Límites para archivos, colas y memoria
+
+- Las cargas del teléfono se escriben en orden en archivos temporales, con un
+  máximo de tres transferencias simultáneas y limpieza ante errores o cortes.
+- La entrada cifrada usa una cola acotada; el historial de Agent, las respuestas
+  MCP, las descargas de Skill y los resúmenes de paquetes usan límites o flujos.
+
+## Avisos móviles y actualizaciones PWA más fiables
+
+- La semántica de finalización o atención se conserva en mensajes en vivo,
+  reconexiones y Web Push. El teléfono confirma solo los identificadores
+  visibles exactos y sincroniza la insignia cuando el sistema lo permite.
+- El texto, las acciones y la vibración solicitada distinguen el trabajo
+  terminado del que necesita atención, con degradación segura por capacidad.
+- PWA shell 35 modulariza el navegador, valida mejor el emparejamiento, mejora
+  la accesibilidad táctil y de teclado, y usa un diálogo propio para eliminar.
+
+Todos los paquetes de escritorio compatibles se publican mediante el canal
+estable `latest` de GitHub.
+
+---
+
 # DingDong 1.5.2
 
 DingDong 1.5.2 removes two intermittent interruptions from everyday Agent and

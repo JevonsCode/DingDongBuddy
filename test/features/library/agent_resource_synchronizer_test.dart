@@ -780,7 +780,7 @@ mcp:
       expect(contents, startsWith('- Keep the existing user instruction.'));
       expect(contents, contains('dingdong_bridge'));
       expect(contents, contains('every returned active Prompt'));
-      expect(contents, contains('authoritative snapshot'));
+      expect(contents, contains('authoritative Prompt snapshot'));
       expect(contents, contains('replaces every Prompt set'));
       expect(contents, contains('authoritative Skill catalog'));
       expect(contents, contains('every valid, enabled, scope-matched Skill'));
@@ -791,18 +791,21 @@ mcp:
       expect(contents, contains('conversation.visible'));
       expect(contents, contains('conversation.line'));
       expect(contents, contains('exactly once'));
-      expect(contents, contains('keep `DingDong` as text'));
+      expect(contents, contains('keep DingDong as text'));
       expect(contents, contains('Do not use an image'));
       expect(contents, contains('current merged ANSI tokens'));
       expect(contents, contains('current merged plain-text tokens'));
-      expect(contents, contains('symbols and item `lineToken` values'));
+      expect(contents, contains('symbols and lineToken values'));
       expect(contents, contains('user-configurable'));
       expect(contents, contains('confirmedUse'));
-      expect(contents, contains('MCP `*` means a tool was called'));
+      expect(contents, contains('MCP marker means called'));
       expect(contents, contains('Prompt items remain unmarked'));
       expect(contents, contains('toolNamePrefix'));
       expect(contents, contains('mergeKey'));
-      expect(contents, contains('not that every instruction was followed'));
+      expect(
+        contents,
+        contains('does not claim that every instruction was followed'),
+      );
       expect(contents, isNot(contains('dingdong_render_conversation_footer')));
       expect(contents, isNot(contains('iframe')));
       expect(
@@ -1349,6 +1352,64 @@ command = "second"
       contains('[mcp_servers.dingdong-reviewer-abcdef]'),
     );
   });
+
+  test(
+    'project-scoped MCP stays installed until Bridge evaluates the project',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-project-mcp-sync-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final File codex = File('${temp.path}/codex.json');
+      final File cursor = File('${temp.path}/cursor.json');
+      final DateTime timestamp = DateTime.utc(2026, 8, 24);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore([
+        TriggerGroup(
+          id: 'dingdong-project',
+          name: 'DingDong project',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.projectPath,
+              operator: TriggerRuleOperator.contains,
+              value: 'DingDongBuddy',
+            ),
+          ],
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        ),
+      ]);
+      final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(
+            codex,
+            AgentMcpConfigKind.mcpServersJson,
+            clientName: 'Codex',
+          ),
+          AgentMcpTarget(
+            cursor,
+            AgentMcpConfigKind.mcpServersJson,
+            clientName: 'Cursor',
+          ),
+        ],
+        triggerGroupStore: groups,
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+
+      await synchronizer.sync(<Resource>[
+        _resource(
+          id: 'project-mcp',
+          type: ResourceType.mcp,
+          content: '{"type":"streamable-http","url":"https://example.com/mcp"}',
+          triggerGroupIds: const <String>['dingdong-project'],
+        ),
+      ]);
+
+      expect(_onlyServerCount(codex), 1);
+      expect(_onlyServerCount(cursor), 1);
+    },
+  );
 
   test('source-scoped MCPs sync only to matching Agent targets', () async {
     final Directory temp = Directory.systemTemp.createTempSync(

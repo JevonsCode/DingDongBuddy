@@ -22,6 +22,8 @@ final class AgentStateRoutes {
   final Map<String, Map<String, Object?>> _handoffs =
       <String, Map<String, Object?>>{};
 
+  static const int _maximumCachedRecords = 100;
+
   Future<HttpResponseData?> route({
     required String method,
     required String path,
@@ -140,8 +142,11 @@ final class AgentStateRoutes {
   }
 
   Future<HttpResponseData> _patchSession(String id, String body) async {
-    await _hydrateRecords(_sessions, 'agent-session');
-    final Map<String, Object?>? existing = _sessions[id];
+    final Map<String, Object?>? existing = await _recordById(
+      _sessions,
+      'agent-session',
+      id,
+    );
     if (existing == null) {
       return _notFound('Agent session not found');
     }
@@ -152,7 +157,10 @@ final class AgentStateRoutes {
         'id': id,
         'updatedAt': now().toUtc().toIso8601String(),
       };
-      _sessions[id] = updated;
+      _sessions
+        ..remove(id)
+        ..[id] = updated;
+      _trimMap(_sessions, _maximumCachedRecords);
       await _updateAgentResource(id, updated);
       return _ok(<String, Object?>{'session': updated});
     } on Object {
@@ -172,6 +180,8 @@ final class AgentStateRoutes {
           (record) =>
               query['source'] == null || record['source'] == query['source'],
         )
+        .toList(growable: false)
+        .reversed
         .take(limit)
         .toList(growable: false);
     return _ok(<String, Object?>{
@@ -327,8 +337,11 @@ final class AgentStateRoutes {
   }
 
   Future<HttpResponseData> _patchHandoff(String id, String body) async {
-    await _hydrateRecords(_handoffs, 'agent-handoff');
-    final Map<String, Object?>? existing = _handoffs[id];
+    final Map<String, Object?>? existing = await _recordById(
+      _handoffs,
+      'agent-handoff',
+      id,
+    );
     if (existing == null) {
       return _notFound('Agent handoff not found');
     }
@@ -339,7 +352,10 @@ final class AgentStateRoutes {
         'id': id,
         'updatedAt': now().toUtc().toIso8601String(),
       };
-      _handoffs[id] = updated;
+      _handoffs
+        ..remove(id)
+        ..[id] = updated;
+      _trimMap(_handoffs, _maximumCachedRecords);
       await _updateAgentResource(id, updated);
       return _ok(<String, Object?>{'handoff': updated});
     } on Object {
@@ -355,6 +371,8 @@ final class AgentStateRoutes {
           (record) =>
               query['status'] == null || record['status'] == query['status'],
         )
+        .toList(growable: false)
+        .reversed
         .take(limit)
         .toList(growable: false);
     return _ok(<String, Object?>{
@@ -401,11 +419,25 @@ final class AgentStateRoutes {
     Map<String, Map<String, Object?>> destination,
     String marker,
   ) async {
-    for (final Resource resource in await resourceStore.load()) {
-      if (!resource.tags.contains(marker) ||
-          destination.containsKey(resource.id)) {
-        continue;
-      }
+    final List<Resource> loaded = await resourceStore.load();
+    final Map<String, int> sourceOrder = <String, int>{
+      for (var index = 0; index < loaded.length; index++)
+        loaded[index].id: index,
+    };
+    final List<Resource> records =
+        loaded
+            .where((Resource resource) => resource.tags.contains(marker))
+            .toList(growable: false)
+          ..sort((Resource left, Resource right) {
+            final int timestamp = right.updatedAt.compareTo(left.updatedAt);
+            if (timestamp != 0) return timestamp;
+            return (sourceOrder[right.id] ?? 0).compareTo(
+              sourceOrder[left.id] ?? 0,
+            );
+          });
+    destination.clear();
+    for (final Resource resource
+        in records.take(_maximumCachedRecords).toList().reversed) {
       try {
         final Object? decoded = jsonDecode(resource.content);
         if (decoded is Map<String, Object?>) {
@@ -418,6 +450,38 @@ final class AgentStateRoutes {
         // Older records without structured content remain library resources.
       }
     }
+  }
+
+  Future<Map<String, Object?>?> _recordById(
+    Map<String, Map<String, Object?>> cache,
+    String marker,
+    String id,
+  ) async {
+    final Map<String, Object?>? cached = cache[id];
+    if (cached != null) {
+      return cached;
+    }
+    for (final Resource resource in await resourceStore.load()) {
+      if (resource.id != id || !resource.tags.contains(marker)) {
+        continue;
+      }
+      try {
+        final Object? decoded = jsonDecode(resource.content);
+        if (decoded is! Map<String, Object?>) {
+          return null;
+        }
+        final Map<String, Object?> record = <String, Object?>{
+          ...decoded,
+          'id': resource.id,
+        };
+        cache[id] = record;
+        _trimMap(cache, _maximumCachedRecords);
+        return record;
+      } on FormatException {
+        return null;
+      }
+    }
+    return null;
   }
 
   Future<void> _updateAgentResource(

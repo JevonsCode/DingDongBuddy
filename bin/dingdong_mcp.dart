@@ -11,22 +11,26 @@ Future<void> main(List<String> arguments) async {
   final DartIoMcpHttpTransport transport = DartIoMcpHttpTransport(
     AppDataPaths.current().activePortFile,
   );
-  if (arguments.contains('--notify-stop')) {
-    await _notifyStop(
-      transport,
-      sourceOverride: _argumentValue(arguments, '--source'),
-    );
-    return;
-  }
-  final McpServer server = McpServer(
-    executor: LoopbackMcpToolExecutor(transport),
-  );
-  await for (final String line
-      in stdin.transform(utf8.decoder).transform(const LineSplitter())) {
-    final String? response = await server.handleLine(line);
-    if (response != null) {
-      stdout.writeln(response);
+  try {
+    if (arguments.contains('--notify-stop')) {
+      await _notifyStop(
+        transport,
+        sourceOverride: _argumentValue(arguments, '--source'),
+      );
+      return;
     }
+    final McpServer server = McpServer(
+      executor: LoopbackMcpToolExecutor(transport),
+    );
+    await for (final String line
+        in stdin.transform(utf8.decoder).transform(const LineSplitter())) {
+      final String? response = await server.handleLine(line);
+      if (response != null) {
+        stdout.writeln(response);
+      }
+    }
+  } finally {
+    transport.close(force: true);
   }
 }
 

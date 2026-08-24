@@ -11,6 +11,7 @@ import {
 } from "../../docs/app/device-name.js";
 import {
   isStoredPairing,
+  isScannedPairing,
   normalizePairingRegistry,
   pairingForRoom,
   pairingsMatch,
@@ -29,12 +30,30 @@ import {
   shouldReconnectRelay,
 } from "../../docs/app/connection-policy.js";
 import {
+  agentEventNeedsAttention,
+  agentNotificationBody,
+  agentNotificationTitle,
   agentNotificationsAreActive,
   applyAgentNotificationDefault,
   wantsAgentNotifications,
 } from "../../docs/app/notification-policy.js";
 
-const appSource = readFileSync(new URL("../../docs/app/app.js", import.meta.url), "utf8");
+const readProjectSource = (path) =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
+const appSource = [
+  "../../docs/app/app.js",
+  "../../docs/app/app-codecs.js",
+  "../../docs/app/app-connection.js",
+  "../../docs/app/app-content-transfer.js",
+  "../../docs/app/app-formatters.js",
+  "../../docs/app/app-installation.js",
+  "../../docs/app/app-notifications.js",
+  "../../docs/app/app-pairing.js",
+  "../../docs/app/app-platform.js",
+  "../../docs/app/app-rendering.js",
+  "../../docs/app/app-settings.js",
+  "../../docs/app/app-storage.js",
+].map(readProjectSource).join("\n");
 const pageSource = readFileSync(new URL("../../docs/app/index.html", import.meta.url), "utf8");
 const stylesSource = readFileSync(
   new URL("../../docs/app/styles.css", import.meta.url),
@@ -60,17 +79,22 @@ const desktopSessionSource = readFileSync(
   ),
   "utf8",
 );
-const desktopControllerSource = readFileSync(
-  new URL(
-    "../../lib/features/device_link/ui/device_link_controller.dart",
-    import.meta.url,
-  ),
-  "utf8",
-);
-const desktopMainSource = readFileSync(
-  new URL("../../lib/main.dart", import.meta.url),
-  "utf8",
-);
+const desktopControllerSource = [
+  "../../lib/features/device_link/ui/device_link_controller.dart",
+  "../../lib/features/device_link/ui/device_link_agent_sync.dart",
+  "../../lib/features/device_link/ui/device_link_file_transfer.dart",
+  "../../lib/features/device_link/ui/device_link_persistence.dart",
+  "../../lib/features/device_link/ui/device_link_session_protocol.dart",
+  "../../lib/features/device_link/ui/device_link_support.dart",
+].map(readProjectSource).join("\n");
+const desktopMainSource = [
+  "../../lib/main.dart",
+  "../../lib/main_clipboard_windows.dart",
+  "../../lib/main_development_window.dart",
+  "../../lib/main_resource_window.dart",
+  "../../lib/main_settings_windows.dart",
+  "../../lib/main_system_maintenance.dart",
+].map(readProjectSource).join("\n");
 const wranglerSource = readFileSync(
   new URL("../wrangler.jsonc", import.meta.url),
   "utf8",
@@ -196,14 +220,18 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v30/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v35/);
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1\.5\.2"/);
-  assert.match(appSource, /const currentPwaShellVersion = 30/);
+  assert.match(appSource, /const currentPwaVersion = "1\.5\.3"/);
+  assert.match(appSource, /const currentPwaShellVersion = 35/);
+  assert.match(pageSource, /styles\.css\?shell=35/);
+  assert.match(pageSource, /app\.js\?shell=35/);
+  assert.match(appSource, /notification-policy\.js\?shell=35/);
+  assert.match(appSource, /pairing-state\.js\?shell=35/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -211,9 +239,12 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v30/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v35/);
+  assert.match(serviceWorkerSource, /styles\.css\?shell=35/);
+  assert.match(serviceWorkerSource, /app\.js\?shell=35/);
+  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=35/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.5.2", shell: 30 });
+  assert.deepEqual(pwaVersion, { version: "1.5.3", shell: 35 });
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
@@ -310,6 +341,27 @@ test("Agent state shows realtime runs, unread history, and honest lifecycle time
   assert.match(appSource, /running \? "运行中"/);
   assert.match(stylesSource, /\.agent-card-running/);
   assert.match(stylesSource, /\.agent-timeline/);
+});
+
+test("mobile workbench keeps notification and unread states flat and semantic", () => {
+  assert.match(
+    stylesSource,
+    /\.notification-onboarding\s*{[^}]*background: var\(--accent-soft\)/,
+  );
+  assert.doesNotMatch(stylesSource, /#fff3f7|#e7c4d2/);
+  assert.match(
+    stylesSource,
+    /\.text-input:focus-visible,[\s\S]*?outline: 2px solid var\(--accent\)/,
+  );
+  assert.doesNotMatch(
+    stylesSource,
+    /\.clipboard-card,\s*\.agent-card\s*{[^}]*box-shadow/,
+  );
+  assert.doesNotMatch(
+    stylesSource,
+    /\.agent-card\.is-unseen\s*{[^}]*box-shadow/,
+  );
+  assert.doesNotMatch(stylesSource, /\.tab\.is-active\s*{[^}]*box-shadow/);
 });
 
 test("agent notifications open the Agent tab without reloading a live PWA", () => {
@@ -440,6 +492,74 @@ test("agent completion reminders default on without claiming delivery before pus
   assert.match(serviceWorkerSource, /notification-policy\.js/);
 });
 
+test("Agent reminder presentation distinguishes completion from attention", () => {
+  const attention = {
+    notificationKind: "attention",
+    source: "Codex",
+    task: "确认发布范围",
+    detail: "需要选择正式发布或预发布。",
+  };
+  assert.equal(agentEventNeedsAttention(attention), true);
+  assert.equal(agentNotificationTitle(attention), "Agent 需要你处理");
+  assert.equal(
+    agentNotificationBody(attention),
+    "确认发布范围：需要选择正式发布或预发布。",
+  );
+  assert.equal(agentEventNeedsAttention({ needsUserAttention: true }), true);
+  assert.equal(agentEventNeedsAttention({ notificationKind: "completion" }), false);
+  assert.equal(
+    agentNotificationTitle({ title: "  自定义完成标题  " }),
+    "自定义完成标题",
+  );
+  assert.match(serviceWorkerSource, /title: needsUserAttention \? "立即处理" : "查看详情"/);
+  assert.match(serviceWorkerSource, /timestamp: notificationTimestamp\(message\.completedAt\)/);
+  assert.match(serviceWorkerSource, /systemAgentNotificationBody\(message\)/);
+  assert.match(stylesSource, /\.agent-card\.needs-attention/);
+  assert.doesNotMatch(
+    stylesSource,
+    /\.agent-card-running\s*\{[^}]*linear-gradient/,
+  );
+});
+
+test("viewing the Agent feed acknowledges exact ids and updates the app badge", () => {
+  assert.match(appSource, /type: "agent\.seen", activityIds/);
+  assert.match(appSource, /maximumAgentSeenBatchSize = 40/);
+  assert.match(appSource, /document\.visibilityState !== "visible"/);
+  assert.match(appSource, /navigator\.setAppBadge/);
+  assert.match(appSource, /navigator\.clearAppBadge/);
+  assert.match(desktopControllerSource, /case 'agent\.seen':/);
+  assert.match(desktopControllerSource, /_onAgentSeen\?\.call\(activityIds\)/);
+  assert.match(desktopControllerSource, /'notificationKind': activity\.notificationKind\.apiValue/);
+  assert.match(desktopControllerSource, /'needsUserAttention': activity\.needsUserAttention/);
+});
+
+test("mobile destructive confirmation uses the DingDong dialog system", () => {
+  assert.match(pageSource, /rel="icon"[^>]*dingdong-pwa-192\.png/);
+  assert.match(pageSource, /id="delete-device-dialog"/);
+  assert.match(pageSource, /id="confirm-delete-device"/);
+  assert.match(appSource, /function requestDeleteDevice\(\)/);
+  assert.match(appSource, /function confirmDeleteDevice\(\)/);
+  assert.doesNotMatch(appSource, /\bconfirm\s*\(/);
+  assert.match(pageSource, /id="attach-button"[\s\S]*aria-label="选择文件"/);
+  assert.match(
+    pageSource,
+    /id="agent-notification-toggle"[\s\S]*aria-label="Agent 状态提醒"/,
+  );
+  assert.match(
+    pageSource,
+    /id="vibration-toggle"[\s\S]*aria-label="提醒时震动"/,
+  );
+});
+
+test("mobile controls keep visible focus and practical touch targets", () => {
+  assert.match(stylesSource, /:where\(button, input, textarea\):focus-visible/);
+  assert.match(stylesSource, /\.device-status-button\s*\{[\s\S]*min-height: 44px/);
+  assert.match(stylesSource, /\.tab\s*\{[\s\S]*min-height: 44px/);
+  assert.match(stylesSource, /\.switch-control\s*\{[\s\S]*min-height: 44px/);
+  assert.match(stylesSource, /\.icon-style-choice\s*\{[\s\S]*font-size: 10px/);
+  assert.match(stylesSource, /@media \(pointer: coarse\)/);
+});
+
 test("the PWA shell refreshes from the network before falling back to cache", () => {
   assert.match(serviceWorkerSource, /isApplicationShell \? networkFirst\(request\)/);
   assert.match(serviceWorkerSource, /request\.mode === "navigate"/);
@@ -484,10 +604,22 @@ test("encrypted relay data is the fallback when local WebRTC cannot connect", ()
     desktopSessionSource,
     /encodeDeviceLinkRelayFrame\(\s*type: 'data',\s*envelope: envelope/,
   );
-  assert.match(desktopSessionSource, /_relayMessages = _relayMessages\.then/);
+  assert.match(desktopSessionSource, /\.asyncMap<void>\(/);
+  assert.match(
+    desktopSessionSource,
+    /_maximumQueuedIncomingEnvelopes = 16/,
+  );
+  assert.match(
+    desktopSessionSource,
+    /_incomingEnvelopes\.length >= _maximumQueuedIncomingEnvelopes/,
+  );
   assert.match(
     desktopSessionSource,
     /bool get connected => _dataChannelConnected \|\| _relayConnected/,
+  );
+  assert.match(
+    appSource,
+    /if \(!\(error instanceof Event && error\.type === "error"\)\) \{\s*console\.error\(error\)/,
   );
 });
 
@@ -516,6 +648,27 @@ test("a saved pairing survives refresh and a stale matching QR fragment", () => 
   assert.match(serviceWorkerSource, /pairing-state\.js/);
   assert.match(serviceWorkerSource, /content-navigation\.js/);
   assert.doesNotMatch(serviceWorkerSource, /client\.navigate\(client\.url\)/);
+});
+
+test("scanned pairing payloads reject malformed rooms, keys, and relay URLs", () => {
+  const valid = {
+    v: 1,
+    room: "Abcd_1234-efgh5678-IJKL",
+    secret: "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
+    hostId: "desktop-one",
+    hostName: "Studio",
+    relay: "https://relay.example/device-link",
+  };
+  assert.equal(isScannedPairing(valid), true);
+  assert.equal(isScannedPairing({ ...valid, room: "short" }), false);
+  assert.equal(isScannedPairing({ ...valid, secret: "too-short" }), false);
+  assert.equal(isScannedPairing({ ...valid, relay: "javascript:alert(1)" }), false);
+  assert.equal(
+    isScannedPairing({ ...valid, relay: "https://user:secret@relay.example" }),
+    false,
+  );
+  assert.match(appSource, /if \(!isScannedPairing\(decoded\)\)/);
+  assert.match(appSource, /isScannedPairing\(pending\?\.pair\)/);
 });
 
 test("one phone keeps multiple computers isolated and switchable", () => {
@@ -751,9 +904,14 @@ test("notification diagnostics are platform-aware and never require closing all 
   assert.match(serviceWorkerSource, /workerPairSnapshotMatches\(failedPair, currentPair\)/);
   assert.match(
     serviceWorkerSource,
-    /const notificationVibrationPattern = \[250, 100, 250, 100, 450\]/,
+    /const completionVibrationPattern = \[180, 80, 280\]/,
   );
-  assert.match(serviceWorkerSource, /vibrate: notificationVibrationPattern/);
+  assert.match(
+    serviceWorkerSource,
+    /const attentionVibrationPattern = \[300, 100, 300, 100, 650\]/,
+  );
+  assert.match(serviceWorkerSource, /\? attentionVibrationPattern/);
+  assert.match(serviceWorkerSource, /: completionVibrationPattern/);
 });
 
 test("a realtime duplicate never masquerades as a Push-created notification", () => {
@@ -805,7 +963,7 @@ test("mobile mascots use dark assets and the sleeping mascot alternates frames",
   assert.match(pageSource, /dingdong-sleeping-icon-2\.png/);
   assert.match(stylesSource, /@keyframes sleeping-frame-one/);
   assert.match(stylesSource, /@keyframes sleeping-frame-two/);
-  assert.match(pageSource, /让完成后提醒/);
+  assert.match(pageSource, /让任务状态及时提醒/);
   assert.doesNotMatch(pageSource, /敲门/);
   assert.doesNotMatch(pageSource, /dingdong-alert-icon(?:-2)?\.png/);
   assert.doesNotMatch(appSource, /dingdong-alert-icon(?:-2)?\.png/);

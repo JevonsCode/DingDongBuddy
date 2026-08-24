@@ -462,6 +462,44 @@ void main() {
     expect(transport.path, '/library/skills/skill-1/reconcile');
     expect(transport.body, isNull);
   });
+
+  test('real MCP transport rejects oversized loopback responses', () async {
+    final Directory temp = await Directory.systemTemp.createTemp(
+      'dingdong-mcp-transport-',
+    );
+    final File activePort = File(p.join(temp.path, 'active-port'));
+    final HttpServer server = await HttpServer.bind(
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    await activePort.writeAsString('${server.port}');
+    server.listen((HttpRequest request) async {
+      request.response
+        ..headers.contentType = ContentType.json
+        ..write('{"payload":"${List<String>.filled(128, 'x').join()}"}');
+      await request.response.close();
+    });
+    final DartIoMcpHttpTransport transport = DartIoMcpHttpTransport(
+      activePort,
+      maximumResponseBytes: 64,
+    );
+    addTearDown(() async {
+      transport.close(force: true);
+      await server.close(force: true);
+      await temp.delete(recursive: true);
+    });
+
+    await expectLater(
+      transport.request(method: 'GET', path: '/agent/bridge'),
+      throwsA(
+        isA<StateError>().having(
+          (StateError error) => error.message,
+          'message',
+          contains('exceeds 64 bytes'),
+        ),
+      ),
+    );
+  });
 }
 
 final class _InspectingInstallTransport implements McpHttpTransport {

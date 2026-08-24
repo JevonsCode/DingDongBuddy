@@ -183,8 +183,19 @@ final class AgentBridge {
       };
       final DateTime usedAt = startedAt;
       List<Resource> updatedResources = resources;
-      if (selectedIds.isNotEmpty) {
-        final ResourceStore store = _store;
+      final ResourceStore store = _store;
+      final ResourceDeliveryStore? deliveryStore =
+          store is ResourceDeliveryStore
+          ? store as ResourceDeliveryStore
+          : null;
+      if (deliveryStore != null &&
+          (selectedIds.isNotEmpty || candidateIds.isNotEmpty)) {
+        updatedResources = await deliveryStore.recordDelivery(
+          usedResourceIds: selectedIds,
+          candidateResourceIds: candidateIds,
+          deliveredAt: usedAt,
+        );
+      } else if (selectedIds.isNotEmpty) {
         final ResourceUsageStore? usageStore = store is ResourceUsageStore
             ? store as ResourceUsageStore
             : null;
@@ -204,8 +215,7 @@ final class AgentBridge {
           await store.save(updatedResources);
         }
       }
-      if (candidateIds.isNotEmpty) {
-        final ResourceStore store = _store;
+      if (deliveryStore == null && candidateIds.isNotEmpty) {
         final ResourceCandidateStore? candidateStore =
             store is ResourceCandidateStore
             ? store as ResourceCandidateStore

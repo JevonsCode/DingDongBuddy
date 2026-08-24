@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
@@ -348,6 +349,16 @@ void main() {
       );
       await _flushEvents();
       expect(harness.clipboardStore.list(limit: 50), isEmpty);
+      await _waitUntil(
+        () => harness.directory.listSync().whereType<File>().any(
+          (File file) => file.path.endsWith('.part') && file.lengthSync() == 8,
+        ),
+      );
+      final File partial = harness.directory
+          .listSync()
+          .whereType<File>()
+          .singleWhere((File file) => file.path.endsWith('.part'));
+      expect(await partial.length(), 8);
 
       harness.session.emit(
         const DeviceLinkMessageEvent(<String, Object?>{
@@ -364,6 +375,52 @@ void main() {
       expect(received.kind, ClipboardKind.file);
       expect(await File(received.content).readAsString(), 'LAN file');
     });
+
+    test(
+      'incomplete phone uploads are bounded and removed on shutdown',
+      () async {
+        final _Harness harness = await _connectedHarness(autoSend: false);
+        addTearDown(harness.dispose);
+
+        for (
+          var index = 0;
+          index < deviceLinkMaximumConcurrentFileUploads + 2;
+          index += 1
+        ) {
+          harness.session.emit(
+            DeviceLinkMessageEvent(<String, Object?>{
+              'type': 'file.start',
+              'transferId': 'pending-$index',
+              'name': 'pending-$index.bin',
+              'size': deviceLinkMaximumFileBytes,
+            }),
+          );
+        }
+        await _waitUntil(
+          () =>
+              harness.directory
+                  .listSync()
+                  .whereType<File>()
+                  .where((File file) => file.path.endsWith('.part'))
+                  .length ==
+              deviceLinkMaximumConcurrentFileUploads,
+        );
+
+        expect(
+          harness.directory.listSync().whereType<File>().where(
+            (File file) => file.path.endsWith('.part'),
+          ),
+          hasLength(deviceLinkMaximumConcurrentFileUploads),
+        );
+        await harness.controller.shutdown();
+        expect(
+          harness.directory.listSync().whereType<File>().where(
+            (File file) => file.path.endsWith('.part'),
+          ),
+          isEmpty,
+        );
+      },
+    );
 
     test('one malformed message does not block later device events', () async {
       final _Harness harness = await _connectedHarness(autoSend: false);
@@ -391,10 +448,91 @@ void main() {
           'vibrationEnabled': false,
         }),
       );
-      await _flushEvents();
+      await _waitUntil(
+        () => !harness.controller.devices.single.vibrationEnabled,
+      );
 
       expect(harness.controller.devices.single.vibrationEnabled, isFalse);
     });
+
+    test(
+      'malformed file field types never leave partial uploads behind',
+      () async {
+        final _Harness harness = await _connectedHarness(autoSend: false);
+        addTearDown(harness.dispose);
+
+        harness.session.emit(
+          const DeviceLinkMessageEvent(<String, Object?>{
+            'type': 'file.start',
+            'transferId': 'invalid-name',
+            'name': 42,
+            'size': 1,
+          }),
+        );
+        await _flushEvents();
+        expect(harness.directory.listSync(), isEmpty);
+
+        harness.session.emit(
+          const DeviceLinkMessageEvent(<String, Object?>{
+            'type': 'file.start',
+            'transferId': 'invalid-chunk',
+            'name': 'broken.txt',
+            'size': 1,
+          }),
+        );
+        await _waitUntil(
+          () => harness.directory.listSync().whereType<File>().any(
+            (File file) => file.path.endsWith('.part'),
+          ),
+        );
+        harness.session.emit(
+          const DeviceLinkMessageEvent(<String, Object?>{
+            'type': 'file.chunk',
+            'transferId': 'invalid-chunk',
+            'index': 0,
+            'data': 42,
+          }),
+        );
+        await _waitUntil(
+          () => harness.directory
+              .listSync()
+              .whereType<File>()
+              .where((File file) => file.path.endsWith('.part'))
+              .isEmpty,
+        );
+
+        harness.session.emit(
+          const DeviceLinkMessageEvent(<String, Object?>{
+            'type': 'file.start',
+            'transferId': 'invalid-index',
+            'name': 'broken-index.txt',
+            'size': 1,
+          }),
+        );
+        await _waitUntil(
+          () => harness.directory.listSync().whereType<File>().any(
+            (File file) => file.path.endsWith('.part'),
+          ),
+        );
+        harness.session.emit(
+          const DeviceLinkMessageEvent(<String, Object?>{
+            'type': 'file.chunk',
+            'transferId': 'invalid-index',
+            'index': double.infinity,
+            'data': 'WA==',
+          }),
+        );
+        await _waitUntil(
+          () => harness.directory
+              .listSync()
+              .whereType<File>()
+              .where((File file) => file.path.endsWith('.part'))
+              .isEmpty,
+        );
+
+        expect(harness.clipboardStore.list(limit: 50), isEmpty);
+      },
+    );
 
     test('disconnect keeps trust while delete revokes the device', () async {
       final _Harness harness = await _connectedHarness(autoSend: false);
@@ -691,6 +829,7 @@ void main() {
         startedAt: DateTime.utc(2026, 8, 11, 8),
         completedAt: DateTime.utc(2026, 8, 11, 8, 10),
         unseen: true,
+        notificationKind: AgentNotificationKind.attention,
       );
       final AgentTaskRun running = AgentTaskRun(
         id: 'run-2',
@@ -720,6 +859,8 @@ void main() {
         allOf(
           containsPair('id', 'activity-1'),
           containsPair('unseen', true),
+          containsPair('notificationKind', 'attention'),
+          containsPair('needsUserAttention', true),
           containsPair('startedAt', '2026-08-11T08:00:00.000Z'),
           containsPair('completedAt', '2026-08-11T08:10:00.000Z'),
         ),
@@ -734,6 +875,31 @@ void main() {
       );
     },
   );
+
+  test('a linked phone can acknowledge exact Agent activity ids', () async {
+    List<String>? acknowledgedIds;
+    final _Harness harness = await _connectedHarness(
+      autoSend: false,
+      onAgentSeen: (List<String> ids) => acknowledgedIds = ids,
+    );
+    addTearDown(harness.dispose);
+
+    harness.session.emit(
+      const DeviceLinkMessageEvent(<String, Object?>{
+        'type': 'agent.seen',
+        'activityIds': <Object?>[
+          ' activity-1 ',
+          'activity-1',
+          '',
+          42,
+          'activity-2',
+        ],
+      }),
+    );
+    await _flushEvents();
+
+    expect(acknowledgedIds, <String>['activity-1', 'activity-2']);
+  });
 
   test('agent state snapshots send one running item for one chat', () async {
     var id = 0;
@@ -879,6 +1045,7 @@ void main() {
           message: List<String>.filled(500, '"\\\n🚀摘要').join(),
           detail: fullDetail,
           source: List<String>.filled(40, 'Codex"\\').join(),
+          notificationKind: AgentNotificationKind.attention,
         ),
         activity: AgentActivity(
           id: 'activity-1',
@@ -887,6 +1054,7 @@ void main() {
           startedAt: DateTime.utc(2026, 8, 8, 7, 59),
           completedAt: DateTime.utc(2026, 8, 8, 8),
           unseen: true,
+          notificationKind: AgentNotificationKind.attention,
         ),
         notificationId: 'completion-1',
       );
@@ -904,6 +1072,8 @@ void main() {
       expect(pushMessage['id'], messageId);
       expect(pushMessage['activityId'], 'activity-1');
       expect(pushMessage['type'], 'agent.completed');
+      expect(pushMessage['notificationKind'], 'attention');
+      expect(pushMessage['needsUserAttention'], isTrue);
       expect(pushMessage['startedAt'], '2026-08-08T07:59:00.000Z');
       expect((pushMessage['detail']! as String).endsWith('…'), isTrue);
       expect(
@@ -924,6 +1094,7 @@ Future<_Harness> _connectedHarness({
   List<String> sharedClipboardItemIds = const <String>[],
   Uri? relayBaseUrl,
   AgentStateProvider? agentStateProvider,
+  AgentSeenCallback? onAgentSeen,
 }) async {
   final Directory directory = await Directory.systemTemp.createTemp(
     'dingdong-device-link-test-',
@@ -965,6 +1136,7 @@ Future<_Harness> _connectedHarness({
     sessionFactory: ({required relayUrl, required room, required secret}) =>
         session,
     agentStateProvider: agentStateProvider,
+    onAgentSeen: onAgentSeen,
   );
   await controller.start();
   session.connectedValue = true;

@@ -8,6 +8,7 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,13 @@ void main() {
         settingsRepository: settingsRepository,
       ),
     );
+    // The production macOS app starts as a menu-bar accessory and hides its
+    // main window. Integration tests render DingDongApp directly, without the
+    // desktop shell that normally reopens the window, so make the test host
+    // visible before waiting for animations and scheduled frames to settle.
+    await windowManager.ensureInitialized();
+    await windowManager.show();
+    await windowManager.focus();
     await tester.pumpAndSettle();
 
     expect(

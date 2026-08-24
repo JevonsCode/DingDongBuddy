@@ -81,7 +81,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.5.2 from pubspec', () {
+  test('desktop hosts consume application version 1.5.3 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -91,26 +91,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.5.2+57'));
+    expect(pubspec, contains('version: 1.5.3+58'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.5.2';"),
+      contains("const String currentAppVersion = '1.5.3';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '57';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '58';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.5.2'"),
+      contains("'version': '1.5.3'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.5.2'"),
+      contains("'version': '1.5.3'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,2,57'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.2"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,3,58'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.3"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -442,7 +442,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.5.2</span>'));
+    expect(website, contains('<span class="demo-version">v1.5.3</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -605,21 +605,21 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.5.2"'));
-    expect(releaseMetadata, contains('"latestBuild": "57"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.5.3"'));
+    expect(releaseMetadata, contains('"latestBuild": "58"'));
     expect(releaseMetadata, contains('"prerelease": false'));
     expect(
       releaseMetadata,
-      contains('Stops ephemeral Codex background jobs from creating reminders'),
+      contains('Fixes fresh-install startup and project-scoped MCP delivery'),
     );
     expect(
       releaseMetadata,
-      contains('Makes Command-number quick paste dismiss the preview first'),
+      contains('Streams phone uploads to bounded temporary files'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));
-    expect(releaseMetadata, contains('DingDong-1.5.2-windows-x64-Setup.exe'));
+    expect(releaseMetadata, contains('DingDong-1.5.3-windows-x64-Setup.exe'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -1131,7 +1131,11 @@ void main() {
   test(
     'resource manager paints its first frame before the window is shown',
     () {
-      final String mainSource = File('lib/main.dart').readAsStringSync();
+      // Auxiliary window bootstraps live in a private part of main.dart; read
+      // that focused source so the ordering contract survives file splitting.
+      final String mainSource = File(
+        'lib/main_resource_window.dart',
+      ).readAsStringSync();
       final int functionStart = mainSource.indexOf(
         'Future<void> _runResourceManagerWindow',
       );

@@ -35,6 +35,20 @@ abstract interface class ResourceInvocationStore {
   );
 }
 
+/// Atomically records one Bridge delivery receipt.
+///
+/// Prompt/knowledge application and Skill/MCP candidacy belong to the same
+/// task-start snapshot. Stores that implement this seam can update both kinds
+/// of metadata with one read-modify-write transaction instead of reparsing and
+/// rewriting the complete resource library twice.
+abstract interface class ResourceDeliveryStore {
+  Future<List<Resource>> recordDelivery({
+    required Set<String> usedResourceIds,
+    required Set<String> candidateResourceIds,
+    required DateTime deliveredAt,
+  });
+}
+
 /// Serializes read-modify-write workflows against every window/process that
 /// uses the same file-backed resource library.
 abstract interface class ExclusiveResourceStore {
@@ -75,6 +89,7 @@ final class InMemoryResourceStore
     implements
         ResourceStore,
         ResourceCandidateStore,
+        ResourceDeliveryStore,
         ResourceUsageStore,
         ResourceInvocationStore,
         ExclusiveResourceStore,
@@ -141,6 +156,32 @@ final class InMemoryResourceStore
                 )
               : resource,
         )
+        .toList(growable: false);
+    return List<Resource>.of(_resources);
+  }
+
+  @override
+  Future<List<Resource>> recordDelivery({
+    required Set<String> usedResourceIds,
+    required Set<String> candidateResourceIds,
+    required DateTime deliveredAt,
+  }) async {
+    _resources = _resources
+        .map((Resource resource) {
+          final bool used = usedResourceIds.contains(resource.id);
+          final bool candidate = candidateResourceIds.contains(resource.id);
+          if (!used && !candidate) {
+            return resource;
+          }
+          return resource.copyWith(
+            usageCount: used ? resource.usageCount + 1 : resource.usageCount,
+            lastUsedAt: used ? deliveredAt : resource.lastUsedAt,
+            candidateCount: candidate
+                ? resource.candidateCount + 1
+                : resource.candidateCount,
+            lastCandidateAt: candidate ? deliveredAt : resource.lastCandidateAt,
+          );
+        })
         .toList(growable: false);
     return List<Resource>.of(_resources);
   }

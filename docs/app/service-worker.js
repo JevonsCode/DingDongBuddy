@@ -1,7 +1,8 @@
-const cacheName = "dingdong-app-shell-v30";
+const cacheName = "dingdong-app-shell-v35";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
-const notificationVibrationPattern = [250, 100, 250, 100, 450];
+const completionVibrationPattern = [180, 80, 280];
+const attentionVibrationPattern = [300, 100, 300, 100, 650];
 const agentLaunchIntentKey = "agent-launch-intent";
 
 self.addEventListener("install", (event) => {
@@ -15,12 +16,23 @@ self.addEventListener("install", (event) => {
         cache.addAll([
           base,
           `${base}index.html`,
-          `${base}styles.css`,
-          `${base}app.js`,
+          `${base}styles.css?shell=35`,
+          `${base}app.js?shell=35`,
+          `${base}app-codecs.js?shell=35`,
+          `${base}app-connection.js?shell=35`,
+          `${base}app-content-transfer.js?shell=35`,
+          `${base}app-formatters.js?shell=35`,
+          `${base}app-installation.js?shell=35`,
+          `${base}app-notifications.js?shell=35`,
+          `${base}app-pairing.js?shell=35`,
+          `${base}app-platform.js?shell=35`,
+          `${base}app-rendering.js?shell=35`,
+          `${base}app-settings.js?shell=35`,
+          `${base}app-storage.js?shell=35`,
           `${base}connection-policy.js`,
-          `${base}notification-policy.js`,
+          `${base}notification-policy.js?shell=35`,
           `${base}device-name.js`,
-          `${base}pairing-state.js`,
+          `${base}pairing-state.js?shell=35`,
           `${base}content-navigation.js`,
           `${base}manifest.webmanifest`,
           `${base}version.json`,
@@ -432,11 +444,8 @@ async function showAgentCompletionNotification(message, pair) {
     if (shownAt > 0 && Date.now() - shownAt < notificationDedupeMs) {
       return "duplicate";
     }
-    const detail = String(
-      message.detail || message.summary || "本轮任务已经完成。",
-    )
-      .replace(/\s+/g, " ")
-      .trim();
+    const needsUserAttention = agentMessageNeedsAttention(message);
+    const title = systemAgentNotificationTitle(message);
     const vibrate =
       pair.vibrationEnabled !== false && message.vibrate !== false;
     const notificationBrandIcon = new URL(
@@ -444,12 +453,25 @@ async function showAgentCompletionNotification(message, pair) {
       self.registration.scope,
     ).href;
     const options = {
-      body: detail.length > 260 ? `${detail.slice(0, 259)}…` : detail,
+      body: systemAgentNotificationBody(message),
       icon: notificationBrandIcon,
       badge: notificationBrandIcon,
       tag: notificationKey,
       renotify: true,
-      ...(vibrate ? { vibrate: notificationVibrationPattern } : {}),
+      timestamp: notificationTimestamp(message.completedAt),
+      actions: [
+        {
+          action: "open-agent",
+          title: needsUserAttention ? "立即处理" : "查看详情",
+        },
+      ],
+      ...(vibrate
+        ? {
+            vibrate: needsUserAttention
+              ? attentionVibrationPattern
+              : completionVibrationPattern,
+          }
+        : {}),
       data: {
         type: "agent.completed",
         message,
@@ -459,18 +481,18 @@ async function showAgentCompletionNotification(message, pair) {
     };
     if (!(await workerPairStillMatches(pair))) return "stale";
     try {
-      await self.registration.showNotification(
-        message.title || "Agent 完成啦",
-        options,
-      );
-    } catch (error) {
-      if (!vibrate) throw error;
-      delete options.vibrate;
-      await self.registration.showNotification(
-        message.title || "Agent 完成啦",
-        options,
-      );
+      await self.registration.showNotification(title, options);
+    } catch {
+      delete options.actions;
+      try {
+        await self.registration.showNotification(title, options);
+      } catch (error) {
+        if (!vibrate) throw error;
+        delete options.vibrate;
+        await self.registration.showNotification(title, options);
+      }
     }
+    await setWorkerAppBadge();
     ledger[notificationKey] = Date.now();
     await idbSet("notification-ledger", trimNotificationLedger(ledger)).catch(
       () => {},
@@ -484,6 +506,60 @@ async function showAgentCompletionNotification(message, pair) {
     if (notificationJobs.get(notificationKey) === job) {
       notificationJobs.delete(notificationKey);
     }
+  }
+}
+
+function agentMessageNeedsAttention(message) {
+  return (
+    message?.needsUserAttention === true ||
+    message?.notificationKind === "attention"
+  );
+}
+
+function systemAgentNotificationTitle(message) {
+  const baseTitle = normalizedNotificationText(message?.title) ||
+    (agentMessageNeedsAttention(message)
+      ? "Agent 需要你处理"
+      : "Agent 完成啦");
+  const source = normalizedNotificationText(message?.source);
+  if (!source || baseTitle.toLowerCase().includes(source.toLowerCase())) {
+    return baseTitle;
+  }
+  return `${source} · ${baseTitle}`;
+}
+
+function systemAgentNotificationBody(message) {
+  const task = normalizedNotificationText(message?.task);
+  const detail = normalizedNotificationText(
+    message?.detail || message?.summary,
+  );
+  const fallback = agentMessageNeedsAttention(message)
+    ? "请打开 Agent 提醒查看并继续处理。"
+    : "本轮任务已经完成。";
+  const body =
+    task && detail && task !== detail ? `${task}：${detail}` : detail || task || fallback;
+  const characters = Array.from(body);
+  return characters.length > 260
+    ? `${characters.slice(0, 259).join("")}…`
+    : body;
+}
+
+function normalizedNotificationText(value) {
+  return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+}
+
+function notificationTimestamp(value) {
+  const timestamp = new Date(value || 0).getTime();
+  return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : Date.now();
+}
+
+async function setWorkerAppBadge() {
+  const method = self.navigator?.setAppBadge;
+  if (typeof method !== "function") return;
+  try {
+    await method.call(self.navigator);
+  } catch {
+    // System notifications remain authoritative when badging is unsupported.
   }
 }
 

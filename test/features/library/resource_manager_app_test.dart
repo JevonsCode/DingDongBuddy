@@ -382,9 +382,19 @@ void main() {
       await tester.tap(find.byKey(const Key('resource-discard-changes')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('clipboard-manager-search')), findsOneWidget);
+      expect(
+        find.byKey(const Key('resource-unsaved-changes-dialog')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('clipboard-category-rules-dialog')),
+        findsNothing,
+      );
 
       await tester.tap(find.byKey(const Key('resource-manager-nav-resources')));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('clipboard-manager-search')), findsNothing);
+      expect(find.byKey(const Key('resource-editor')), findsOneWidget);
 
       final ResourceManagerCreateRequest request =
           const ResourceManagerCreateRequest(

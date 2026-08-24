@@ -1,49 +1,49 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.2",
-  "latestBuild": "57",
-  "publishedAt": "2026-08-21T07:49:18Z",
+  "latestVersion": "1.5.3",
+  "latestBuild": "58",
+  "publishedAt": "2026-08-24T14:15:56Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.2",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.3",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.2/DingDong-1.5.2-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Stops ephemeral Codex background jobs from creating reminders after those jobs disappear.",
-    "Makes Command-number quick paste dismiss the preview first, matching double-click and Return.",
-    "Adds regression coverage for both notification filtering and clipboard shortcut ordering."
+    "Fixes fresh-install startup and project-scoped MCP delivery so scoped tools remain available when the task context matches.",
+    "Streams phone uploads to bounded temporary files, limits concurrent transfers and encrypted queues, and caps Agent, MCP, and Skill memory paths.",
+    "Keeps mobile Agent reminder urgency and exact seen state in sync while hardening PWA upgrades, pairing validation, accessibility, and maintainability."
   ],
   "notesByLanguage": {
     "en": [
-      "Stops ephemeral Codex background jobs from creating reminders after those jobs disappear.",
-      "Makes Command-number quick paste dismiss the preview first, matching double-click and Return.",
-      "Adds regression coverage for both notification filtering and clipboard shortcut ordering."
+      "Fixes fresh-install startup and project-scoped MCP delivery so scoped tools remain available when the task context matches.",
+      "Streams phone uploads to bounded temporary files, limits concurrent transfers and encrypted queues, and caps Agent, MCP, and Skill memory paths.",
+      "Keeps mobile Agent reminder urgency and exact seen state in sync while hardening PWA upgrades, pairing validation, accessibility, and maintainability."
     ],
     "zh": [
-      "Codex 临时后台任务停止并消失后，不再产生普通 Agent 完成提醒。",
-      "Command + 数字快速粘贴会先关闭预览，行为与双击和回车保持一致。",
-      "为提醒过滤和剪贴板快捷键执行顺序新增回归测试。"
+      "修复全新安装启动与项目/仓库作用域 MCP 交付，任务上下文匹配时作用域工具可正常使用。",
+      "手机上传流式写入有上限的临时文件，限制并发传输与加密消息队列，并为 Agent、MCP、Skill 内存路径建立硬上限。",
+      "手机端同步提醒紧急程度和精确已读状态，同时加强 PWA 升级、配对校验、可访问性和可维护性。"
     ],
     "es": [
-      "Evita que las tareas efímeras de Codex creen avisos cuando desaparecen después de terminar.",
-      "Hace que el pegado rápido con Command y un número cierre primero la vista previa, igual que el doble clic y Retorno.",
-      "Añade pruebas de regresión para el filtrado de avisos y el orden de los atajos del portapapeles."
+      "Corrige el inicio de instalaciones nuevas y la entrega de MCP con alcance de proyecto o repositorio cuando coincide el contexto de la tarea.",
+      "Transmite las cargas del teléfono a archivos temporales acotados, limita transferencias y colas cifradas, y fija límites de memoria para Agent, MCP y Skill.",
+      "Sincroniza la urgencia y el estado visto exacto de los avisos móviles, y refuerza las actualizaciones, la validación de emparejamiento, la accesibilidad y el mantenimiento de la PWA."
     ]
   }
 }

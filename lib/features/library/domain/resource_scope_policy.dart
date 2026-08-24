@@ -103,6 +103,39 @@ bool resourceMatchesScope(
   );
 }
 
+/// Decides whether a resource must exist in one Agent's native configuration.
+///
+/// Project-path and repository rules are evaluated later at the Bridge with a
+/// concrete task context. They therefore cannot be used to exclude an MCP
+/// from the user-level client configuration: doing so would make the server
+/// unavailable exactly when that later runtime rule matches. Source-only
+/// groups remain useful for routing an MCP to selected Agent clients.
+bool resourceCanSyncToAgentSource(
+  Resource resource,
+  String source,
+  Map<String, TriggerGroup> triggerGroupsById,
+) {
+  if (resource.triggerGroupIds.isEmpty) {
+    return true;
+  }
+  final TriggerContext context = TriggerContext(source: source);
+  for (final String id in resource.triggerGroupIds) {
+    final TriggerGroup? group = triggerGroupsById[id];
+    if (group == null || group.rules.isEmpty) {
+      continue;
+    }
+    if (group.rules.any(
+      (TriggerRule rule) => rule.field != TriggerRuleField.source,
+    )) {
+      return true;
+    }
+    if (group.matches(context)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 String _canonicalExistingProjectPath(String value) {
   final String normalized = path.normalize(value.trim());
   final Directory directory = Directory(normalized);

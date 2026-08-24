@@ -10,6 +10,9 @@
   --accent: #2b5877;
   --accent-soft: #e7f0f5;
   --success: #238558;
+  --success-soft: #eff8f3;
+  --attention: #9b5d26;
+  --attention-soft: #fff4e8;
   --danger: #b54845;
   --shadow: 0 16px 44px rgb(31 38 43 / 10%);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
@@ -40,6 +43,12 @@ textarea {
 
 button {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+:where(button, input, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .app-shell {
@@ -120,10 +129,12 @@ h2 {
   max-width: min(72vw, 420px);
   align-items: center;
   gap: 7px;
-  margin: 3px 0 0;
-  padding: 0;
+  min-height: 44px;
+  margin: -8px -8px -9px;
+  padding: 10px 8px 9px;
   overflow: hidden;
   border: 0;
+  border-radius: 8px;
   outline-offset: 3px;
   background: transparent;
   color: var(--text-secondary);
@@ -154,19 +165,17 @@ h2 {
   flex: 0 0 7px;
   border-radius: 50%;
   background: #afb4b6;
-  box-shadow: 0 0 0 2px rgb(175 180 182 / 14%);
 }
 
 .online-summary i[data-online="true"],
 .device-switcher-status i[data-online="true"] {
   background: var(--success);
-  box-shadow: 0 0 0 2px rgb(35 133 88 / 14%);
 }
 
 .icon-button {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   place-items: center;
   border: 0;
@@ -403,7 +412,12 @@ main {
 .text-input:focus,
 .composer textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgb(43 88 119 / 10%);
+}
+
+.text-input:focus-visible,
+.composer textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .primary-button,
@@ -411,7 +425,7 @@ main {
 .danger-button,
 .small-button,
 .send-button {
-  min-height: 42px;
+  min-height: 44px;
   border: 0;
   border-radius: 10px;
   font-weight: 750;
@@ -438,7 +452,7 @@ main {
 }
 
 .small-button {
-  min-height: 34px;
+  min-height: 40px;
   padding: 0 11px;
   background: var(--field);
   color: var(--text-secondary);
@@ -484,8 +498,8 @@ main {
 }
 
 .notification-onboarding {
-  border-color: #e7c4d2;
-  background: #fff3f7;
+  border-color: rgb(43 88 119 / 24%);
+  background: var(--accent-soft);
 }
 
 .notification-onboarding > img {
@@ -508,7 +522,7 @@ main {
 
 .tab {
   display: flex;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 7px;
@@ -521,16 +535,12 @@ main {
   font-weight: 750;
   transition:
     color 220ms ease,
-    background-color 220ms ease,
-    box-shadow 220ms ease,
-    transform 220ms ease;
+    background-color 220ms ease;
 }
 
 .tab.is-active {
   background: var(--surface);
   color: var(--accent);
-  box-shadow: 0 2px 8px rgb(31 38 43 / 8%);
-  transform: translateY(-1px);
 }
 
 .tab img {
@@ -607,7 +617,6 @@ main {
   border: 1px solid var(--border);
   border-radius: 13px;
   background: var(--surface);
-  box-shadow: 0 5px 16px rgb(31 38 43 / 5%);
 }
 
 .clipboard-card-main {
@@ -636,7 +645,7 @@ main {
 
 .card-copy {
   display: flex;
-  min-height: 34px;
+  min-height: 40px;
   align-items: center;
   gap: 6px;
   padding: 0 10px;
@@ -710,7 +719,7 @@ main {
 }
 
 .agent-section-count b {
-  color: var(--text-primary);
+  color: var(--text);
   font-size: 11px;
 }
 
@@ -731,12 +740,21 @@ main {
 
 .agent-card-running {
   border-color: rgb(43 126 93 / 24%);
-  background: linear-gradient(145deg, rgb(241 251 247 / 92%), var(--surface));
+  background: var(--success-soft);
 }
 
 .agent-card.is-unseen {
   border-color: rgb(247 151 62 / 34%);
-  box-shadow: 0 8px 24px rgb(128 78 31 / 8%);
+}
+
+.agent-card.needs-attention {
+  border-color: rgb(155 93 38 / 38%);
+  background: var(--attention-soft);
+}
+
+.agent-card.needs-attention .agent-summary {
+  background: rgb(255 254 252 / 72%);
+  color: #6f421b;
 }
 
 .agent-status {
@@ -750,7 +768,6 @@ main {
   height: 7px;
   border-radius: 50%;
   background: #2b9a6d;
-  box-shadow: 0 0 0 4px rgb(43 154 109 / 12%);
   content: "";
 }
 
@@ -823,13 +840,13 @@ main {
 
 .agent-time-item span {
   color: var(--text-secondary);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .agent-time-item strong {
   overflow: hidden;
   margin-top: 3px;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -897,17 +914,19 @@ main {
 
 .composer-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: end;
   gap: 7px;
 }
 
 .attach-button {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   place-items: center;
   border-radius: 10px;
+  border: 0;
   background: var(--field);
   cursor: pointer;
 }
@@ -922,7 +941,7 @@ main {
 
 .composer textarea {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   max-height: 112px;
   resize: none;
   padding: 10px 11px;
@@ -937,7 +956,7 @@ main {
 
 .send-button {
   display: flex;
-  height: 42px;
+  height: 44px;
   align-items: center;
   gap: 6px;
   padding: 0 12px;
@@ -957,7 +976,7 @@ main {
 .composer-note {
   margin-top: 7px;
   color: var(--text-secondary);
-  font-size: 9px;
+  font-size: 10px;
   text-align: center;
 }
 
@@ -965,7 +984,7 @@ main {
   display: block;
   margin-bottom: 2px;
   color: var(--accent);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .selected-file {
@@ -989,6 +1008,8 @@ main {
 }
 
 .selected-file button {
+  min-width: 44px;
+  min-height: 36px;
   border: 0;
   background: transparent;
   color: var(--accent);
@@ -1110,12 +1131,12 @@ main {
   align-items: center;
   gap: 5px;
   color: var(--text-secondary);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .device-current-mark {
   color: var(--accent);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 750;
 }
 
@@ -1181,7 +1202,7 @@ main {
   border-radius: 9px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1220,6 +1241,16 @@ main {
   opacity: 0;
 }
 
+.switch-control {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+  margin: -11px 0;
+  place-items: center;
+  cursor: pointer;
+}
+
 .switch-control > span {
   position: relative;
   display: block;
@@ -1253,6 +1284,11 @@ main {
   transform: translateX(16px);
 }
 
+.switch-control input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .dialog-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1275,6 +1311,34 @@ main {
   align-items: center;
   gap: 13px;
   padding: 18px 2px 2px;
+}
+
+.delete-dialog-copy {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 18px 2px 2px;
+}
+
+.delete-dialog-copy img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  padding: 10px;
+  border-radius: 11px;
+  background: rgb(181 72 69 / 10%);
+  object-fit: contain;
+  opacity: 0.78;
+}
+
+.delete-dialog-copy p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.delete-dialog-copy strong {
+  color: var(--text);
 }
 
 .install-dialog-copy img {
@@ -1381,9 +1445,11 @@ main {
   }
 }
 
-@media (min-width: 621px) {
-  .app-shell {
-    box-shadow: var(--shadow);
+@media (pointer: coarse) {
+  .small-button,
+  .card-copy,
+  .selected-file button {
+    min-height: 44px;
   }
 }
 

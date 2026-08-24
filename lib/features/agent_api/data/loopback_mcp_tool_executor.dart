@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
@@ -404,9 +405,22 @@ Map<String, String> _stringQuery(
 
 /// Real loopback transport that discovers the running app's active port file.
 final class DartIoMcpHttpTransport implements McpHttpTransport {
-  const DartIoMcpHttpTransport(this._activePortFile);
+  DartIoMcpHttpTransport(
+    this._activePortFile, {
+    HttpClient? client,
+    this.maximumResponseBytes = 16 * 1024 * 1024,
+  }) : assert(maximumResponseBytes > 0),
+       _client =
+           client ??
+           (HttpClient()
+             ..connectionTimeout = const Duration(seconds: 5)
+             ..idleTimeout = const Duration(seconds: 15));
 
   final File _activePortFile;
+  final HttpClient _client;
+  final int maximumResponseBytes;
+
+  void close({bool force = false}) => _client.close(force: force);
 
   @override
   Future<Map<String, Object?>> request({
@@ -428,26 +442,40 @@ final class DartIoMcpHttpTransport implements McpHttpTransport {
       path: path,
       queryParameters: query.isEmpty ? null : query,
     );
-    final HttpClient client = HttpClient();
-    try {
-      final HttpClientRequest request = await client.openUrl(method, uri);
-      if (body != null) {
-        request.headers.contentType = ContentType.json;
-        request.write(jsonEncode(body));
-      }
-      final HttpClientResponse response = await request.close();
-      final String responseBody = await utf8.decoder.bind(response).join();
-      final Map<String, Object?> payload = responseBody.isEmpty
-          ? <String, Object?>{}
-          : jsonDecode(responseBody) as Map<String, Object?>;
-      if (response.statusCode >= 400) {
-        throw StateError(
-          payload['message']?.toString() ?? 'DingDong request failed.',
-        );
-      }
-      return payload;
-    } finally {
-      client.close(force: true);
+    final HttpClientRequest request = await _client.openUrl(method, uri);
+    if (body != null) {
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode(body));
     }
+    final HttpClientResponse response = await request.close();
+    final String responseBody = await _readBoundedUtf8(
+      response,
+      maximumBytes: maximumResponseBytes,
+    );
+    final Map<String, Object?> payload = responseBody.isEmpty
+        ? <String, Object?>{}
+        : jsonDecode(responseBody) as Map<String, Object?>;
+    if (response.statusCode >= 400) {
+      throw StateError(
+        payload['message']?.toString() ?? 'DingDong request failed.',
+      );
+    }
+    return payload;
   }
+}
+
+Future<String> _readBoundedUtf8(
+  Stream<List<int>> stream, {
+  required int maximumBytes,
+}) async {
+  final BytesBuilder bytes = BytesBuilder(copy: false);
+  var length = 0;
+  await for (final List<int> chunk in stream) {
+    length += chunk.length;
+    if (length > maximumBytes) {
+      throw StateError('DingDong response exceeds $maximumBytes bytes.');
+    }
+    bytes.add(chunk);
+  }
+  return utf8.decode(bytes.takeBytes());
 }

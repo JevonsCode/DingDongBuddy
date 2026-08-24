@@ -33,7 +33,12 @@ Future<String> computeSkillPackageDigest(Directory root) async {
         manifest.writeln('D\u0000$relative');
       case FileSystemEntityType.file:
         final File file = File(entity.path);
-        final Hash hash = await Sha256().hash(await file.readAsBytes());
+        final HashSink sink = Sha256().newHashSink();
+        await for (final List<int> chunk in file.openRead()) {
+          sink.add(chunk);
+        }
+        sink.close();
+        final Hash hash = await sink.hash();
         final FileStat stat = await file.stat();
         final bool executable = !Platform.isWindows && stat.mode & 0x49 != 0;
         manifest.writeln(
