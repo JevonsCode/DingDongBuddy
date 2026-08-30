@@ -14,10 +14,11 @@ final class AgentActivity {
     this.detail,
     this.startedAt,
     this.repeatCount = 1,
+    int? unseenReminderCount,
     this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
     this.tokenUsage,
-  });
+  }) : unseenReminderCount = unseenReminderCount ?? (unseen ? 1 : 0);
 
   factory AgentActivity.fromJson(Map<String, Object?> json) {
     return AgentActivity(
@@ -30,6 +31,10 @@ final class AgentActivity {
       detail: _trimmed(json['detail']),
       startedAt: _dateTime(json['startedAt']),
       repeatCount: _repeatCount(json['repeatCount']),
+      unseenReminderCount: _unseenReminderCount(
+        json['unseenReminderCount'],
+        unseen: json['unseen'] == true,
+      ),
       notificationKind: AgentNotificationKind.parse(json['notificationKind']),
       conversationTarget: json['conversationTarget'] is Map
           ? AgentConversationTarget.fromJson(
@@ -49,6 +54,7 @@ final class AgentActivity {
   final String? detail;
   final DateTime? startedAt;
   final int repeatCount;
+  final int unseenReminderCount;
   final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
   final ConversationTokenUsage? tokenUsage;
@@ -66,6 +72,7 @@ final class AgentActivity {
     detail: detail,
     startedAt: startedAt,
     repeatCount: repeatCount,
+    unseenReminderCount: 0,
     notificationKind: notificationKind,
     conversationTarget: conversationTarget,
     tokenUsage: tokenUsage,
@@ -82,6 +89,7 @@ final class AgentActivity {
     AgentNotificationKind? notificationKind,
     ConversationTokenUsage? tokenUsage,
     bool preserveLifecycle = false,
+    bool countAsReminder = true,
   }) {
     final AgentConversationTarget? mergedTarget =
         this.conversationTarget == null
@@ -94,11 +102,14 @@ final class AgentActivity {
       source: source,
       message: message,
       completedAt: completedAt,
-      unseen: true,
+      unseen: countAsReminder || unseen,
       task: preserveLifecycle ? this.task : task,
       detail: detail ?? (preserveLifecycle ? this.detail : null),
       startedAt: preserveLifecycle ? this.startedAt : startedAt,
       repeatCount: repeatCount + 1,
+      unseenReminderCount: countAsReminder
+          ? unseenReminderCount + 1
+          : unseenReminderCount,
       notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: mergedTarget,
       tokenUsage: tokenUsage ?? this.tokenUsage,
@@ -116,6 +127,7 @@ final class AgentActivity {
         detail: detail,
         startedAt: startedAt,
         repeatCount: repeatCount,
+        unseenReminderCount: unseenReminderCount,
         notificationKind: notificationKind,
         conversationTarget: conversationTarget?.merge(target) ?? target,
         tokenUsage: tokenUsage,
@@ -131,6 +143,7 @@ final class AgentActivity {
     if (detail != null) 'detail': detail,
     if (startedAt != null) 'startedAt': startedAt!.toUtc().toIso8601String(),
     'repeatCount': repeatCount,
+    if (unseenReminderCount > 0) 'unseenReminderCount': unseenReminderCount,
     if (notificationKind != AgentNotificationKind.completion)
       'notificationKind': notificationKind.apiValue,
     if (conversationTarget != null)
@@ -152,6 +165,16 @@ DateTime? _dateTime(Object? value) {
 }
 
 int _repeatCount(Object? value) {
+  if (value is int && value >= 1) {
+    return value;
+  }
+  return 1;
+}
+
+int _unseenReminderCount(Object? value, {required bool unseen}) {
+  if (!unseen) {
+    return 0;
+  }
   if (value is int && value >= 1) {
     return value;
   }

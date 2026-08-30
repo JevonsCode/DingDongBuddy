@@ -12,6 +12,44 @@ enum LinkedDeviceKind {
 
 enum DeviceConnectionStatus { connecting, connected, disconnected, error }
 
+/// Which side of the encrypted room this computer owns for a trusted link.
+/// Existing phone pairings are hosts; a computer that imports another
+/// computer's pairing link joins as the peer.
+enum DeviceLinkConnectionSide {
+  host,
+  peer;
+
+  static DeviceLinkConnectionSide parse(Object? value) => switch (value) {
+    'peer' => DeviceLinkConnectionSide.peer,
+    _ => DeviceLinkConnectionSide.host,
+  };
+}
+
+/// User-controlled content route. Signalling remains end-to-end encrypted for
+/// every mode; [localNetwork] forbids relay data frames after signalling.
+enum DeviceLinkTransportPreference {
+  automatic,
+  localNetwork,
+  serviceRelay;
+
+  static DeviceLinkTransportPreference parse(Object? value) => switch (value) {
+    'localNetwork' => DeviceLinkTransportPreference.localNetwork,
+    'serviceRelay' => DeviceLinkTransportPreference.serviceRelay,
+    _ => DeviceLinkTransportPreference.automatic,
+  };
+}
+
+enum DeviceLinkActiveTransport {
+  none,
+  localNetwork,
+  serviceRelay;
+
+  static DeviceLinkActiveTransport parse(Object? value) => values.firstWhere(
+    (DeviceLinkActiveTransport transport) => transport.name == value,
+    orElse: () => DeviceLinkActiveTransport.none,
+  );
+}
+
 const int deviceLinkClipboardHistoryLimit = 50;
 
 final class LocalDeviceIdentity {
@@ -49,6 +87,9 @@ final class LinkedDevice {
     required this.platform,
     required this.room,
     required this.secret,
+    this.relayUrl,
+    this.connectionSide = DeviceLinkConnectionSide.host,
+    this.transportPreference = DeviceLinkTransportPreference.automatic,
     required this.autoSendClipboard,
     required this.receiveAgentNotifications,
     required this.vibrationEnabled,
@@ -59,15 +100,25 @@ final class LinkedDevice {
   });
 
   factory LinkedDevice.fromJson(Map<String, Object?> json) {
+    final LinkedDeviceKind kind = LinkedDeviceKind.parse(json['kind']);
     return LinkedDevice(
       id: json['id']! as String,
       name: json['name']! as String,
-      kind: LinkedDeviceKind.parse(json['kind']),
+      kind: kind,
       platform: json['platform'] as String? ?? '',
       room: json['room']! as String,
       secret: json['secret']! as String,
+      relayUrl: json['relayUrl'] is String
+          ? Uri.tryParse(json['relayUrl']! as String)
+          : null,
+      connectionSide: DeviceLinkConnectionSide.parse(json['connectionSide']),
+      transportPreference: DeviceLinkTransportPreference.parse(
+        json['transportPreference'],
+      ),
       autoSendClipboard: json['autoSendClipboard'] == true,
-      receiveAgentNotifications: json['receiveAgentNotifications'] != false,
+      receiveAgentNotifications: json['receiveAgentNotifications'] is bool
+          ? json['receiveAgentNotifications']! as bool
+          : kind == LinkedDeviceKind.phone,
       vibrationEnabled: json['vibrationEnabled'] != false,
       manuallyDisconnected: json['manuallyDisconnected'] == true,
       pairedAt: DateTime.parse(json['pairedAt']! as String).toUtc(),
@@ -91,6 +142,9 @@ final class LinkedDevice {
 
   /// Base64url-encoded 256-bit pairing key scanned through the QR fragment.
   final String secret;
+  final Uri? relayUrl;
+  final DeviceLinkConnectionSide connectionSide;
+  final DeviceLinkTransportPreference transportPreference;
   final bool autoSendClipboard;
   final bool receiveAgentNotifications;
   final bool vibrationEnabled;
@@ -108,6 +162,9 @@ final class LinkedDevice {
     String? platform,
     String? room,
     String? secret,
+    Uri? relayUrl,
+    DeviceLinkConnectionSide? connectionSide,
+    DeviceLinkTransportPreference? transportPreference,
     bool? autoSendClipboard,
     bool? receiveAgentNotifications,
     bool? vibrationEnabled,
@@ -123,6 +180,9 @@ final class LinkedDevice {
       platform: platform ?? this.platform,
       room: room ?? this.room,
       secret: secret ?? this.secret,
+      relayUrl: relayUrl ?? this.relayUrl,
+      connectionSide: connectionSide ?? this.connectionSide,
+      transportPreference: transportPreference ?? this.transportPreference,
       autoSendClipboard: autoSendClipboard ?? this.autoSendClipboard,
       receiveAgentNotifications:
           receiveAgentNotifications ?? this.receiveAgentNotifications,
@@ -142,6 +202,9 @@ final class LinkedDevice {
     'platform': platform,
     'room': room,
     'secret': secret,
+    if (relayUrl != null) 'relayUrl': relayUrl.toString(),
+    'connectionSide': connectionSide.name,
+    'transportPreference': transportPreference.name,
     'autoSendClipboard': autoSendClipboard,
     'receiveAgentNotifications': receiveAgentNotifications,
     'vibrationEnabled': vibrationEnabled,
@@ -223,6 +286,45 @@ final class DevicePairingPayload {
       hostName: json['hostName']! as String,
       relayUrl: Uri.parse(json['relay']! as String),
     );
+  }
+
+  /// Accepts the full QR URL, its `#pair=` fragment, or the raw encoded body.
+  factory DevicePairingPayload.parseInput(String value) {
+    String encoded = value.trim();
+    if (encoded.isEmpty) {
+      throw const FormatException('The pairing link is empty.');
+    }
+    final Uri? uri = Uri.tryParse(encoded);
+    final String fragment = uri?.fragment ?? '';
+    if (fragment.startsWith('pair=')) {
+      encoded = fragment.substring('pair='.length);
+    } else {
+      encoded = encoded
+          .replaceFirst(RegExp(r'^#?pair='), '')
+          .replaceFirst(RegExp(r'^.*#pair='), '');
+    }
+    final DevicePairingPayload payload = DevicePairingPayload.decode(encoded);
+    final String relay = payload.relayUrl.toString();
+    if (!RegExp(r'^[A-Za-z0-9_-]{20,64}$').hasMatch(payload.room) ||
+        !RegExp(r'^[A-Za-z0-9_-]{43}$').hasMatch(payload.secret) ||
+        payload.hostId.trim().isEmpty ||
+        payload.hostId.length > 160 ||
+        payload.hostName.trim().isEmpty ||
+        payload.hostName.length > 80 ||
+        relay.length > 2048 ||
+        !const <String>{
+          'http',
+          'https',
+          'ws',
+          'wss',
+        }.contains(payload.relayUrl.scheme) ||
+        !payload.relayUrl.hasAuthority ||
+        payload.relayUrl.host.isEmpty ||
+        payload.relayUrl.userInfo.isNotEmpty ||
+        payload.relayUrl.fragment.isNotEmpty) {
+      throw const FormatException('The pairing link is invalid.');
+    }
+    return payload;
   }
 
   factory DevicePairingPayload.fromJson(Map<String, Object?> json) {

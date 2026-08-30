@@ -73,6 +73,9 @@ Future<void> _runSettingsWindow(
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: hostBridge,
     quickPastePermissionGateway: hostBridge,
+    selectionPluginGateway: Platform.isMacOS ? hostBridge : null,
+    restoreSelectionPluginOnLoad: false,
+    onSettingsSaved: hostBridge.notifyChanged,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(paths.applicationSupportDirectory),
     systemDataCleaner: hostBridge,
@@ -106,7 +109,6 @@ Future<void> _runSettingsWindow(
       initialDestination: SettingsWindowDestination.fromValue(
         arguments['destination'],
       ),
-      onSettingsChanged: hostBridge.notifyChanged,
       soundFileGateway: FileSelectorSoundGateway(
         () => appLocalizationsFor(viewModel.settings.language),
       ),

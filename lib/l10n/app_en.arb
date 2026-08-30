@@ -2688,6 +2688,16 @@
   "@searchClipboard": {
     "description": "DingDong built-in interface copy."
   },
+  "searchClipboardWithShortcut": "Search clipboard  {shortcut}",
+  "@searchClipboardWithShortcut": {
+    "description": "Clipboard search placeholder with its platform shortcut.",
+    "placeholders": {
+      "shortcut": {
+        "type": "String",
+        "description": "Platform shortcut such as ⌘F or Ctrl+F."
+      }
+    }
+  },
   "searchClipboardHistory": "Search clipboard history",
   "@searchClipboardHistory": {
     "description": "DingDong built-in interface copy."
@@ -3840,7 +3850,7 @@
   "@resourceManagerWindowTitle": {
     "description": "DingDong built-in interface copy."
   },
-  "connectDingDongToCurrentAgent": "Connect ‘{commandPath}’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If user-level task-completion Hooks are supported, add a Hook command for that event using the same executable with ‘--notify-stop --source \"<current Agent name>\"’, then verify the alert.",
+  "connectDingDongToCurrentAgent": "Connect ‘{commandPath}’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If task-completion Hooks are supported, set the Hook command to the same executable plus ‘--notify-stop --source \"<current Agent name>\"’ and verify the alert. If SessionStart supports startup and resume, add ‘--acknowledge-session-start --source \"<current Agent name>\"’ so opening a conversation acknowledges only its reminders.",
   "@connectDingDongToCurrentAgent": {
     "description": "Short actionable setup instruction copied by the user.",
     "placeholders": {
@@ -4015,5 +4025,126 @@
   "httpsOrGitHubFileURL": "HTTPS or GitHub file URL",
   "@httpsOrGitHubFileURL": {
     "description": "DingDong built-in interface copy."
+  },
+  "connectAnotherComputer": "Connect another computer",
+  "@connectAnotherComputer": {"description": "Action that imports a trusted pairing link on a second computer."},
+  "computerPairingLink": "Computer pairing link",
+  "@computerPairingLink": {"description": "Title for the desktop-to-desktop pairing dialog."},
+  "pastePairingLinkFromOtherComputer": "Paste the pairing link copied from the other computer. It contains an encryption key, so only share it through a channel you trust.",
+  "@pastePairingLinkFromOtherComputer": {"description": "Security guidance for desktop-to-desktop pairing."},
+  "pastePairingLink": "Paste pairing link",
+  "@pastePairingLink": {"description": "Placeholder for the desktop pairing link field."},
+  "connectComputer": "Connect computer",
+  "@connectComputer": {"description": "Confirms a desktop-to-desktop pairing link."},
+  "invalidPairingLink": "This pairing link is invalid or incomplete.",
+  "@invalidPairingLink": {"description": "Shown when a desktop pairing link cannot be decoded."},
+  "copyLinkForAnotherComputer": "Copy link for another computer",
+  "@copyLinkForAnotherComputer": {"description": "Copies the current encrypted pairing link for desktop import."},
+  "pairingLinkCopied": "Pairing link copied. Treat it like a one-time password.",
+  "@pairingLinkCopied": {"description": "Confirmation after copying a pairing link."},
+  "communicationMethod": "Communication method",
+  "@communicationMethod": {"description": "Label for the per-device transport preference."},
+  "automaticRecommended": "Automatic (recommended)",
+  "@automaticRecommended": {"description": "Transport option that prefers direct WebRTC and falls back to relay."},
+  "localNetworkDirect": "Local network direct",
+  "@localNetworkDirect": {"description": "Transport option that sends content only over direct WebRTC."},
+  "encryptedService": "Encrypted service",
+  "@encryptedService": {"description": "Transport option that sends encrypted content through the relay service."},
+  "localNetworkHandshakeNote": "Local-network mode uses the service only for encrypted signalling; clipboard and file bodies stay on the direct connection.",
+  "@localNetworkHandshakeNote": {"description": "Clarifies that local-network mode still uses relay signalling."},
+  "computerSyncDefaultsNote": "Computers start with notifications and automatic clipboard sync off. Explicit shares are copied to the other computer's system clipboard.",
+  "@computerSyncDefaultsNote": {"description": "Explains safe defaults for desktop-to-desktop links."},
+  "sharedFileIsNoLongerAvailable": "The local file is no longer available and was not sent.",
+  "@sharedFileIsNoLongerAvailable": {"description": "Explains why an explicit device file share failed."},
+  "sharedFileIsLargerThan25MiB": "The file is larger than 25 MiB and was not sent.",
+  "@sharedFileIsLargerThan25MiB": {"description": "Explains the device file transfer limit."},
+  "systemSelectionTools": "System selection tools",
+  "@systemSelectionTools": {
+    "description": "Settings title for the optional system-wide text selection plugin."
+  },
+  "systemSelectionToolsDescription": "Show a toolbar in apps that expose selected text. Copy stays local; translation and explanations need your configured model service.",
+  "@systemSelectionToolsDescription": {
+    "description": "Privacy and behavior summary for the system selection plugin."
+  },
+  "enableSystemSelectionTools": "Enable system selection tools",
+  "@enableSystemSelectionTools": {
+    "description": "Switch label for the system selection plugin."
+  },
+  "enableSystemSelectionToolsDescription": "Off by default. When off, DingDong installs no selection listener and makes no model requests.",
+  "@enableSystemSelectionToolsDescription": {
+    "description": "Lifecycle explanation for the system selection plugin."
+  },
+  "selectionPluginRunning": "Running",
+  "@selectionPluginRunning": {
+    "description": "Runtime state for an active system selection plugin."
+  },
+  "selectionPluginPermissionNeeded": "Enabled · Accessibility permission required",
+  "@selectionPluginPermissionNeeded": {
+    "description": "Runtime state when selection is enabled but host permission is missing."
+  },
+  "selectionPluginStopped": "Stopped",
+  "@selectionPluginStopped": {
+    "description": "Runtime state when the system selection plugin is disabled or not running."
+  },
+  "selectionModelProvider": "Model provider",
+  "@selectionModelProvider": {
+    "description": "Settings label for model backend."
+  },
+  "selectionModelEndpoint": "Service address",
+  "@selectionModelEndpoint": {
+    "description": "Settings label for model service endpoint."
+  },
+  "selectionModelName": "Model",
+  "@selectionModelName": {
+    "description": "Settings label for model name."
+  },
+  "selectionTargetLanguage": "Translate to",
+  "@selectionTargetLanguage": {
+    "description": "Settings label for translation target language."
+  },
+  "selectionUnloadLocalModel": "Unload the local model after each answer",
+  "@selectionUnloadLocalModel": {
+    "description": "Low-memory option for a local model backend."
+  },
+  "selectionUnloadLocalModelDescription": "Uses less memory between selections, with a slower next answer.",
+  "@selectionUnloadLocalModelDescription": {
+    "description": "Tradeoff description for unloading a local model."
+  },
+  "selectionApiToken": "API token",
+  "@selectionApiToken": {
+    "description": "Settings label for a user-provided model API token."
+  },
+  "selectionTokenPlaceholder": "Paste your own token",
+  "@selectionTokenPlaceholder": {
+    "description": "Placeholder for the secret token field."
+  },
+  "selectionTokenSaved": "Saved securely in Keychain",
+  "@selectionTokenSaved": {
+    "description": "Token is present in native secure storage."
+  },
+  "selectionTokenNotSaved": "Not configured",
+  "@selectionTokenNotSaved": {
+    "description": "No token is present in native secure storage."
+  },
+  "saveToken": "Save token",
+  "@saveToken": {
+    "description": "Action that saves a user-provided API token."
+  },
+  "removeToken": "Remove token",
+  "@removeToken": {
+    "description": "Action that removes a user-provided API token."
+  },
+  "selectionConfigurationApply": "Apply model settings",
+  "@selectionConfigurationApply": {
+    "description": "Action that validates and persists selection model settings."
+  },
+  "selectionPluginError": "{reason, select, invalidEndpoint{Enter a service address without credentials, query parameters or fragments.} emptyModel{Enter a model name.} emptyTargetLanguage{Enter a target language.} localEndpointRequired{Use a loopback HTTP address for Ollama or LM Studio.} remoteHttpsRequired{Use HTTPS for a remote model service.} updateFailed{Could not update the plugin. Refresh its status and try again.} persistenceFailed{The plugin changed, but its settings could not be saved. Check local storage and apply again.} unavailable{The native plugin is unavailable. Install a build that includes system selection tools.} statusUnavailable{Could not read the plugin status. Try refreshing again.} permissionSettingsUnavailable{Open Accessibility settings in System Settings and grant DingDong permission.} tokenRequired{Enter your own API token.} tokenSaveFailed{Could not save the token. Unlock Keychain and try again.} tokenRemoveFailed{Could not remove the token. Unlock Keychain and try again.} other{Could not update the plugin. Refresh its status and try again.}}",
+  "@selectionPluginError": {
+    "description": "Actionable native selection plugin validation and runtime errors.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   }
 }

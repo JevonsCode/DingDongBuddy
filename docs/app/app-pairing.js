@@ -1,9 +1,9 @@
 import { parseContentTabLaunch } from "./content-navigation.js";
-import { base64UrlDecode } from "./app-codecs.js?shell=35";
+import { base64UrlDecode } from "./app-codecs.js?shell=38";
 import {
   isScannedPairing,
   pairingsMatch,
-} from "./pairing-state.js?shell=35";
+} from "./pairing-state.js?shell=38";
 
 // QR launch capture, multi-device replacement, and explicit pairing confirmation.
 export function createPairingController({
@@ -29,6 +29,8 @@ export function createPairingController({
   enableAgentNotifications,
   connect,
 }) {
+  let pairingInProgress = false;
+
   function pairingFromFragment() {
     const raw = location.hash.startsWith("#pair=")
       ? location.hash.slice("#pair=".length)
@@ -132,53 +134,64 @@ export function createPairingController({
 
   async function confirmPairing() {
     const pair = state.pendingPair;
-    if (!pair) return;
+    if (!pair || pairingInProgress) return;
     const name = elements["device-name"].value.trim();
     if (!name) {
       elements["device-name"].focus();
       return;
     }
-    const previousSession = sessionForRoom(pair.room);
-    if (previousSession && !pairingsMatch(previousSession.pair, pair)) {
-      invalidateNotificationOperations(previousSession);
-      closeConnection(previousSession);
-      const previousPairSnapshot = { ...previousSession.pair };
-      state.sessions.delete(previousPairSnapshot.room);
-      await persistPairingsForWorker().catch(() => {});
-      await cleanupPushSubscription(previousPairSnapshot, previousSession);
-      await resetNotificationRuntime(previousSession);
+    pairingInProgress = true;
+    elements["confirm-pair"].disabled = true;
+    elements["cancel-pair"].disabled = true;
+    try {
+      const previousSession = sessionForRoom(pair.room);
+      if (previousSession && !pairingsMatch(previousSession.pair, pair)) {
+        invalidateNotificationOperations(previousSession);
+        closeConnection(previousSession);
+        const previousPairSnapshot = { ...previousSession.pair };
+        state.sessions.delete(previousPairSnapshot.room);
+        await persistPairingsForWorker().catch(() => {});
+        await cleanupPushSubscription(previousPairSnapshot, previousSession);
+        await resetNotificationRuntime(previousSession);
+      }
+      if (name !== state.identity.name) {
+        state.identity.nameSource = "user";
+      }
+      state.identity.name = name;
+      localStorage.setItem(storageKeys.identity, JSON.stringify(state.identity));
+      const nextPair = {
+        version: 1,
+        room: pair.room,
+        secret: pair.secret,
+        relay: pair.relay,
+        hostId: pair.hostId,
+        hostName: pair.hostName || "DingDong 电脑",
+        vibrationEnabled: true,
+        agentNotificationsEnabled: true,
+        agentNotificationPreferenceSet: false,
+        manualDisconnect: false,
+      };
+      const session = createDeviceSession(nextPair);
+      state.sessions.set(nextPair.room, session);
+      state.activeRoom = nextPair.room;
+      state.pendingPair = null;
+      clearPairingFragment();
+      clearPendingPairingLaunch();
+      savePairings();
+      render();
+      const notificationSetup =
+        notificationsCanRunInCurrentSurface() && (!isIos() || isStandalone())
+          ? enableAgentNotifications({ session, markPreference: false })
+          : Promise.resolve(false);
+      connect(session);
+      notificationSetup.then(() => render());
+    } catch {
+      showToast("连接准备失败，请重试");
+    } finally {
+      pairingInProgress = false;
+      elements["confirm-pair"].disabled = false;
+      elements["cancel-pair"].disabled = false;
     }
-    if (name !== state.identity.name) {
-      state.identity.nameSource = "user";
-    }
-    state.identity.name = name;
-    localStorage.setItem(storageKeys.identity, JSON.stringify(state.identity));
-    const nextPair = {
-      version: 1,
-      room: pair.room,
-      secret: pair.secret,
-      relay: pair.relay,
-      hostId: pair.hostId,
-      hostName: pair.hostName || "DingDong 电脑",
-      vibrationEnabled: true,
-      agentNotificationsEnabled: true,
-      agentNotificationPreferenceSet: false,
-      manualDisconnect: false,
-    };
-    const session = createDeviceSession(nextPair);
-    state.sessions.set(nextPair.room, session);
-    state.activeRoom = nextPair.room;
-    state.pendingPair = null;
-    clearPairingFragment();
-    clearPendingPairingLaunch();
-    savePairings();
-    render();
-    const notificationSetup =
-      notificationsCanRunInCurrentSurface() && (!isIos() || isStandalone())
-        ? enableAgentNotifications({ session, markPreference: false })
-        : Promise.resolve(false);
-    connect(session);
-    notificationSetup.then(() => render());
   }
 
 

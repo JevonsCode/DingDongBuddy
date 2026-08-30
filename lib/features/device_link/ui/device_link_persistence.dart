@@ -2,22 +2,82 @@ part of 'device_link_controller.dart';
 
 // Serialize device mutations and clean up sessions and partial uploads.
 extension _DeviceLinkPersistence on DeviceLinkController {
+  Future<void> _serializeDeviceMutation(Future<void> Function() mutation) {
+    final Future<void> operation = _deviceMutationTail.then((_) => mutation());
+    _deviceMutationTail = operation.then<void>(
+      (_) {},
+      onError: (Object error, StackTrace stackTrace) {
+        // Keep the serialization tail usable; the caller still receives the
+        // original operation error and can report it.
+      },
+    );
+    return operation;
+  }
+
   Future<void> _updateDevice(
     String deviceId,
     LinkedDevice Function(LinkedDevice device) update,
-  ) async {
-    await _replaceDevice(update(_device(deviceId)));
+  ) => _serializeDeviceMutation(() async {
+    final LinkedDevice next = update(_device(deviceId));
+    _replaceDeviceInMemory(next);
+    await _persist();
+    _notifyIfActive();
+  });
+
+  Future<LinkedDevice> _upsertDevice(
+    String deviceId,
+    LinkedDevice Function(LinkedDevice? current) update,
+  ) {
+    late LinkedDevice result;
+    return _serializeDeviceMutation(() async {
+      final LinkedDevice? current = _devices.cast<LinkedDevice?>().firstWhere(
+        (LinkedDevice? device) => device?.id == deviceId,
+        orElse: () => null,
+      );
+      result = update(current);
+      if (current == null) {
+        _devices = List<LinkedDevice>.unmodifiable(<LinkedDevice>[
+          ..._devices,
+          result,
+        ]);
+      } else {
+        _replaceDeviceInMemory(result);
+      }
+      await _persist();
+      _notifyIfActive();
+    }).then((_) => result);
   }
 
-  Future<void> _replaceDevice(LinkedDevice next) async {
+  void _replaceDeviceInMemory(LinkedDevice next) {
     _devices = List<LinkedDevice>.unmodifiable(
       _devices.map(
         (LinkedDevice device) => device.id == next.id ? next : device,
       ),
     );
-    await _persist();
-    _notifyIfActive();
   }
+
+  Future<void> _addDevice(LinkedDevice next) =>
+      _serializeDeviceMutation(() async {
+        if (_devices.any((LinkedDevice device) => device.id == next.id)) {
+          _replaceDeviceInMemory(next);
+        } else {
+          _devices = List<LinkedDevice>.unmodifiable(<LinkedDevice>[
+            ..._devices,
+            next,
+          ]);
+        }
+        await _persist();
+        _notifyIfActive();
+      });
+
+  Future<void> _deletePersistedDevice(String deviceId) =>
+      _serializeDeviceMutation(() async {
+        _devices = List<LinkedDevice>.unmodifiable(
+          _devices.where((LinkedDevice device) => device.id != deviceId),
+        );
+        await _persist();
+        _notifyIfActive();
+      });
 
   LinkedDevice _device(String id) =>
       _devices.firstWhere((LinkedDevice device) => device.id == id);
@@ -34,9 +94,11 @@ extension _DeviceLinkPersistence on DeviceLinkController {
   Future<void> _removeSession(String room) async {
     final _ManagedDeviceSession? session = _sessionsByRoom.remove(room);
     if (session == null) return;
+    session.active = false;
     await session.subscription?.cancel();
     final String? deviceId = session.deviceId;
     if (deviceId != null) {
+      _transports[deviceId] = DeviceLinkActiveTransport.none;
       await _discardIncomingFileUploadsForDevice(deviceId);
     }
     await session.handle.close();

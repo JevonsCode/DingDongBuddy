@@ -81,7 +81,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.5.3 from pubspec', () {
+  test('desktop hosts consume application version 1.5.4 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -91,26 +91,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.5.3+58'));
+    expect(pubspec, contains('version: 1.5.4+59'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.5.3';"),
+      contains("const String currentAppVersion = '1.5.4';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '58';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '59';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.5.3'"),
+      contains("'version': '1.5.4'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.5.3'"),
+      contains("'version': '1.5.4'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,3,58'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.3"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,4,59'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.4"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -237,6 +237,7 @@ void main() {
       expect(readme, contains('```mermaid'));
       expect(readme, contains('dingdong_bridge'));
       expect(readme, contains('--notify-stop --source'));
+      expect(readme, contains('--acknowledge-session-start --source'));
       expect(readme, contains('~/.codex/config.toml'));
       expect(readme, contains('~/.claude/settings.json'));
       expect(readme, contains('~/.cursor/hooks.json'));
@@ -256,6 +257,7 @@ void main() {
       expect(prompt, contains('STDIO MCP'));
       expect(prompt, contains('dingdong_bridge'));
       expect(prompt, contains('--notify-stop --source'));
+      expect(prompt, contains('--acknowledge-session-start --source'));
       expect(prompt, isNot(contains('\n')));
       expect(prompt.length, lessThan(600));
       for (final String client in <String>[
@@ -372,6 +374,7 @@ void main() {
     expect(guide, contains('~/.cursor/hooks.json'));
     expect(guide, contains('~/.gemini/settings.json'));
     expect(guide, contains('--notify-stop --source'));
+    expect(guide, contains('--acknowledge-session-start --source'));
     expect(guide, contains('afterAgentResponse'));
     expect(guide, contains('AfterAgent'));
     expect(guide, contains('dingdong_notify'));
@@ -442,7 +445,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.5.3</span>'));
+    expect(website, contains('<span class="demo-version">v1.5.4</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -605,21 +608,18 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.5.3"'));
-    expect(releaseMetadata, contains('"latestBuild": "58"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.5.4"'));
+    expect(releaseMetadata, contains('"latestBuild": "59"'));
     expect(releaseMetadata, contains('"prerelease": false'));
     expect(
       releaseMetadata,
-      contains('Fixes fresh-install startup and project-scoped MCP delivery'),
+      contains('Adds optional macOS system selection tools'),
     );
-    expect(
-      releaseMetadata,
-      contains('Streams phone uploads to bounded temporary files'),
-    );
+    expect(releaseMetadata, contains('Adds computer-to-computer sharing'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));
-    expect(releaseMetadata, contains('DingDong-1.5.3-windows-x64-Setup.exe'));
+    expect(releaseMetadata, contains('DingDong-1.5.4-windows-x64-Setup.exe'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -647,6 +647,7 @@ void main() {
     expect(macBuilder, contains('build cli'));
     expect(macBuilder, contains('--target=bin/dingdong_mcp.dart'));
     expect(macBuilder, contains('--notify-stop'));
+    expect(macBuilder, contains('--acknowledge-session-start'));
     expect(macBuilder, contains('"method":"tools/list"'));
     expect(macBuilder, contains(r'smoke_home="$(mktemp -d'));
     expect(macBuilder, contains(r'HOME="$smoke_home"'));
@@ -876,7 +877,10 @@ void main() {
       contains('GITHUB_TOKEN tag pushes do not start new workflows'),
     );
     expect(releaseGate, contains('gh workflow run release.yml'));
-    expect(workflow, isNot(contains('swift test')));
+    expect(
+      workflow,
+      contains('xcrun swift test --package-path macos/Runner/SelectionPlugin'),
+    );
     expect(
       Directory('Sources').existsSync()
           ? Directory(

@@ -74,7 +74,6 @@ final class ClipboardViewModel extends ChangeNotifier {
   List<ClipboardCategoryRule> _categoryRules = const <ClipboardCategoryRule>[];
   final List<String> _groupOrder = <String>[];
   String _query = '';
-  ClipboardKind? _selectedKind;
   String? _selectedCategoryId;
   String? _selectedGroup;
   final Set<String> _selectedSourceIds = <String>{};
@@ -88,8 +87,6 @@ final class ClipboardViewModel extends ChangeNotifier {
       _archiveEntryForId(_selectedRecord!.id) != null;
 
   String get query => _query;
-
-  ClipboardKind? get selectedKind => _selectedKind;
 
   String? get selectedCategoryId => _selectedCategoryId;
 
@@ -107,7 +104,6 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   bool get hasActiveFilters =>
-      _selectedKind != null ||
       _selectedCategoryId != null ||
       _selectedGroup != null ||
       _selectedSourceIds.isNotEmpty;
@@ -226,7 +222,6 @@ final class ClipboardViewModel extends ChangeNotifier {
   bool get canReorderVisibleRecords =>
       showingArchivedRecords &&
       _query.trim().isEmpty &&
-      _selectedKind == null &&
       _selectedCategoryId == null &&
       _selectedSourceIds.isEmpty &&
       _sortMode == ClipboardSortMode.defaultOrder;
@@ -235,9 +230,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     final String needle = _query.trim().toLowerCase();
     final List<ClipboardRecord> records = _activeRecords
         .where((ClipboardRecord record) {
-          if (_selectedKind != null && record.kind != _selectedKind) {
-            return false;
-          }
           if (_selectedCategoryId != null &&
               categoryFor(record)?.id != _selectedCategoryId) {
             return false;
@@ -307,16 +299,8 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setKind(ClipboardKind? value) {
-    _selectedKind = value;
-    _selectedCategoryId = null;
-    _ensureSelectionVisible();
-    notifyListeners();
-  }
-
   void setCategory(String? value) {
     _selectedCategoryId = value;
-    _selectedKind = null;
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -494,7 +478,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (!hasActiveFilters) {
       return;
     }
-    _selectedKind = null;
     _selectedCategoryId = null;
     _selectedGroup = null;
     _selectedSourceIds.clear();
@@ -725,14 +708,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setEnabledMany(Set<String> ids, bool enabled) {
-    _updateMany(
-      ids,
-      (ClipboardRecord record) =>
-          record.copyWith(enabled: enabled, updatedAt: _now().toUtc()),
-    );
-  }
-
   void deleteMany(Set<String> ids) {
     final List<ClipboardRecord> deleted = <ClipboardRecord>[];
     for (final String id in ids) {
@@ -752,38 +727,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     }
     _pruneSelectedSources();
     if (ids.contains(_selectedRecord?.id)) _selectedRecord = null;
-    _ensureSelectionVisible();
-    _revisions?.changed(DataCollection.clipboard);
-    notifyListeners();
-  }
-
-  void _updateMany(
-    Set<String> ids,
-    ClipboardRecord Function(ClipboardRecord record) update,
-  ) {
-    final String? selectedId = _selectedRecord?.id;
-    for (final String id in ids) {
-      final ClipboardArchiveEntry? archive = _archiveEntryForId(id);
-      if (archive != null) {
-        _archiveStore.saveArchive(
-          ClipboardArchiveEntry(
-            record: update(archive.record),
-            sourceClipboardId: archive.sourceClipboardId,
-            archivedAt: archive.archivedAt,
-          ),
-        );
-      } else {
-        final ClipboardRecord? source = _recordForId(id);
-        if (source != null) _store.save(update(source));
-      }
-    }
-    _reloadRecords();
-    if (selectedId != null) {
-      final int selectedIndex = allRecords.indexWhere(
-        (ClipboardRecord record) => record.id == selectedId,
-      );
-      _selectedRecord = selectedIndex < 0 ? null : allRecords[selectedIndex];
-    }
     _ensureSelectionVisible();
     _revisions?.changed(DataCollection.clipboard);
     notifyListeners();

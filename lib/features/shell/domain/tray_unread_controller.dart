@@ -58,6 +58,22 @@ final class TrayUnreadController {
     });
   }
 
+  /// Acknowledges a known number of reminders without clearing newer events.
+  Future<void> acknowledgeCount(int count) {
+    if (count <= 0) {
+      return Future<void>.value();
+    }
+    return _enqueue(() async {
+      final int next = math.min(_latestEventId, _acknowledgedEventId + count);
+      if (next == _acknowledgedEventId) {
+        return;
+      }
+      _acknowledgedEventId = next;
+      await _persist();
+      await _apply();
+    });
+  }
+
   Future<void> clear() => acknowledge(snapshot());
 
   /// Reapplies the current visual state after the taskbar appearance changes.

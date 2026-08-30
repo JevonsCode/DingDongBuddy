@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
@@ -39,6 +40,27 @@ void main() {
     });
 
     test(
+      'legacy computer links keep reminders off unless explicitly enabled',
+      () {
+        final LinkedDevice device = LinkedDevice.fromJson(<String, Object?>{
+          'id': 'legacy-computer',
+          'name': '旧电脑',
+          'kind': 'computer',
+          'platform': 'macos',
+          'room': 'abcdefghijklmnopqrstuvwx',
+          'secret': _secret,
+          'autoSendClipboard': false,
+          'vibrationEnabled': false,
+          'manuallyDisconnected': false,
+          'pairedAt': '2026-08-08T00:00:00.000Z',
+        });
+
+        expect(device.receiveAgentNotifications, isFalse);
+        expect(device.autoSendClipboard, isFalse);
+      },
+    );
+
+    test(
       'pairing payload round-trips without putting the key in the URL query',
       () {
         final DevicePairingPayload payload = DevicePairingPayload(
@@ -66,6 +88,39 @@ void main() {
           ).secret,
           payload.secret,
           reason: 'The QR fragment is never sent in the HTTP request.',
+        );
+      },
+    );
+
+    test(
+      'computer pairing input rejects weak tokens and relay credentials',
+      () {
+        String encode({required String secret, required Uri relay}) =>
+            DevicePairingPayload(
+              room: 'abcdefghijklmnopqrstuvwx',
+              secret: secret,
+              hostId: 'desktop-one',
+              hostName: 'Studio',
+              relayUrl: relay,
+            ).encode();
+
+        expect(
+          () => DevicePairingPayload.parseInput(
+            encode(
+              secret: 'too-short',
+              relay: Uri.parse('https://relay.example'),
+            ),
+          ),
+          throwsFormatException,
+        );
+        expect(
+          () => DevicePairingPayload.parseInput(
+            encode(
+              secret: _secret,
+              relay: Uri.parse('https://user:pass@relay.example'),
+            ),
+          ),
+          throwsFormatException,
         );
       },
     );
@@ -548,6 +603,436 @@ void main() {
     });
   });
 
+  test('a computer imports a pairing link as a safe peer connection', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-computer-peer-test-',
+    );
+    final MemoryDeviceLinkStore store = MemoryDeviceLinkStore();
+    final _FakeDeviceLinkSession peerSession = _FakeDeviceLinkSession()
+      ..allowControlPlaneSend = true;
+    Uri? connectedRelay;
+    final DeviceLinkController controller = DeviceLinkController(
+      store: store,
+      clipboardStore: InMemoryClipboardStore(),
+      transferDirectory: directory,
+      pwaBaseUrl: Uri.parse('https://relay.example/app/'),
+      relayBaseUrl: null,
+      peerSessionFactory:
+          ({required relayUrl, required room, required secret}) {
+            connectedRelay = relayUrl;
+            return peerSession;
+          },
+    );
+    addTearDown(() async {
+      await controller.shutdown();
+      controller.dispose();
+      await directory.delete(recursive: true);
+    });
+
+    await controller.start();
+    final DevicePairingPayload payload = DevicePairingPayload(
+      room: 'computer-room-abcdefghijkl',
+      secret: _secret,
+      hostId: 'desktop-host',
+      hostName: 'Studio Mac',
+      relayUrl: Uri.parse('https://paired-relay.example'),
+    );
+    await controller.joinComputer(
+      'https://paired-relay.example/app/#pair=${payload.encode()}',
+    );
+
+    final LinkedDevice computer = controller.devices.single;
+    expect(computer.kind, LinkedDeviceKind.computer);
+    expect(computer.connectionSide, DeviceLinkConnectionSide.peer);
+    expect(computer.autoSendClipboard, isFalse);
+    expect(computer.receiveAgentNotifications, isFalse);
+    expect(connectedRelay, Uri.parse('https://paired-relay.example'));
+    expect(
+      store.document!.devices.single.relayUrl,
+      Uri.parse('https://paired-relay.example'),
+    );
+
+    peerSession.emit(const DeviceLinkPeerPresenceEvent(true));
+    await _flushEvents();
+
+    expect(peerSession.sent, hasLength(1));
+    expect(peerSession.sent.single['type'], 'hello');
+    expect(peerSession.sent.single['agentNotificationsEnabled'], isFalse);
+    expect(
+      (peerSession.sent.single['device']! as Map<Object?, Object?>)['kind'],
+      'computer',
+    );
+
+    await controller.setTransportPreference(
+      computer.id,
+      DeviceLinkTransportPreference.localNetwork,
+    );
+    expect(peerSession.sent, hasLength(2));
+    expect(peerSession.sent.last, <String, Object?>{
+      'type': 'settings.update',
+      'transportPreference': 'localNetwork',
+    });
+    expect(
+      store.document!.devices.single.transportPreference,
+      DeviceLinkTransportPreference.localNetwork,
+    );
+  });
+
+  test(
+    'startup uses each persisted device relay without a global relay',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-persisted-relay-test-',
+      );
+      final Uri persistedRelay = Uri.parse('https://saved-relay.example');
+      final LinkedDevice device = LinkedDevice(
+        id: 'saved-computer',
+        name: 'Saved computer',
+        kind: LinkedDeviceKind.computer,
+        platform: 'macos',
+        room: 'saved-room-abcdefghijkl',
+        secret: _secret,
+        relayUrl: persistedRelay,
+        autoSendClipboard: false,
+        receiveAgentNotifications: false,
+        vibrationEnabled: false,
+        manuallyDisconnected: false,
+        pairedAt: DateTime.utc(2026, 8, 8),
+      );
+      final MemoryDeviceLinkStore store = MemoryDeviceLinkStore(
+        DeviceLinkDocument(
+          localDevice: const LocalDeviceIdentity(
+            id: 'desktop-one',
+            name: 'Studio',
+            platform: 'macos',
+          ),
+          devices: <LinkedDevice>[device],
+        ),
+      );
+      Uri? attachedRelay;
+      final _FakeDeviceLinkSession session = _FakeDeviceLinkSession();
+      final DeviceLinkController controller = DeviceLinkController(
+        store: store,
+        clipboardStore: InMemoryClipboardStore(),
+        transferDirectory: directory,
+        pwaBaseUrl: null,
+        relayBaseUrl: null,
+        sessionFactory: ({required relayUrl, required room, required secret}) {
+          attachedRelay = relayUrl;
+          return session;
+        },
+      );
+      addTearDown(() async {
+        await controller.shutdown();
+        controller.dispose();
+        await directory.delete(recursive: true);
+      });
+
+      await controller.start();
+
+      expect(attachedRelay, persistedRelay);
+      expect(session.connectCalls, 1);
+    },
+  );
+
+  test(
+    'events from a replaced computer session cannot mutate the new pair',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-stale-session-test-',
+      );
+      final LinkedDevice existing = LinkedDevice(
+        id: 'desktop-host',
+        name: 'Old computer',
+        kind: LinkedDeviceKind.computer,
+        platform: 'macos',
+        room: 'old-computer-room-abcde',
+        secret: _secret,
+        relayUrl: Uri.parse('https://old-relay.example'),
+        connectionSide: DeviceLinkConnectionSide.peer,
+        autoSendClipboard: false,
+        receiveAgentNotifications: false,
+        vibrationEnabled: false,
+        manuallyDisconnected: false,
+        pairedAt: DateTime.utc(2026, 8, 8),
+      );
+      final MemoryDeviceLinkStore store = MemoryDeviceLinkStore(
+        DeviceLinkDocument(
+          localDevice: const LocalDeviceIdentity(
+            id: 'desktop-local',
+            name: 'Local computer',
+            platform: 'macos',
+          ),
+          devices: <LinkedDevice>[existing],
+        ),
+      );
+      final List<_FakeDeviceLinkSession> sessions = <_FakeDeviceLinkSession>[];
+      final _MemoryClipboardGateway systemClipboard = _MemoryClipboardGateway();
+      final InMemoryClipboardStore clipboardStore = InMemoryClipboardStore();
+      final DeviceLinkController controller = DeviceLinkController(
+        store: store,
+        clipboardStore: clipboardStore,
+        transferDirectory: directory,
+        pwaBaseUrl: null,
+        relayBaseUrl: null,
+        peerSessionFactory:
+            ({required relayUrl, required room, required secret}) {
+              final _FakeDeviceLinkSession session = _FakeDeviceLinkSession(
+                keepEventsOpenAfterClose: true,
+              );
+              sessions.add(session);
+              return session;
+            },
+        systemClipboard: systemClipboard,
+      );
+      addTearDown(() async {
+        await controller.shutdown();
+        controller.dispose();
+        for (final _FakeDeviceLinkSession session in sessions) {
+          await session.disposeEvents();
+        }
+        await directory.delete(recursive: true);
+      });
+
+      await controller.start();
+      final _FakeDeviceLinkSession oldSession = sessions.single;
+      final DevicePairingPayload replacement = DevicePairingPayload(
+        room: 'new-computer-room-abcde',
+        secret: _secret,
+        hostId: existing.id,
+        hostName: 'New computer',
+        relayUrl: Uri.parse('https://new-relay.example'),
+      );
+      await controller.joinComputer(replacement.encode());
+      final _FakeDeviceLinkSession newSession = sessions.last;
+
+      oldSession.emit(
+        const DeviceLinkStatusEvent(DeviceConnectionStatus.connected),
+      );
+      oldSession.emit(
+        const DeviceLinkMessageEvent(<String, Object?>{
+          'type': 'clipboard.create',
+          'content': 'stale payload',
+        }),
+      );
+      await _flushEvents();
+
+      expect(oldSession.closed, isTrue);
+      expect(newSession.closed, isFalse);
+      expect(controller.devices.single.room, replacement.room);
+      expect(
+        controller.statusOf(existing.id),
+        DeviceConnectionStatus.connecting,
+      );
+      expect(clipboardStore.list(limit: 10), isEmpty);
+      expect(systemClipboard.text, isNull);
+    },
+  );
+
+  test(
+    'concurrent device setting writes merge through one persistence tail',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-device-mutation-test-',
+      );
+      final LinkedDevice device = LinkedDevice(
+        id: 'phone-one',
+        name: 'Phone',
+        kind: LinkedDeviceKind.phone,
+        platform: 'ios-pwa',
+        room: 'mutation-room-abcdefghij',
+        secret: _secret,
+        autoSendClipboard: false,
+        receiveAgentNotifications: false,
+        vibrationEnabled: true,
+        manuallyDisconnected: false,
+        pairedAt: DateTime.utc(2026, 8, 8),
+      );
+      final _BlockingDeviceLinkStore store = _BlockingDeviceLinkStore(
+        DeviceLinkDocument(
+          localDevice: const LocalDeviceIdentity(
+            id: 'desktop-one',
+            name: 'Studio',
+            platform: 'macos',
+          ),
+          devices: <LinkedDevice>[device],
+        ),
+      );
+      final DeviceLinkController controller = DeviceLinkController(
+        store: store,
+        clipboardStore: InMemoryClipboardStore(),
+        transferDirectory: directory,
+        pwaBaseUrl: null,
+        relayBaseUrl: Uri.parse('https://relay.example'),
+        sessionFactory: ({required relayUrl, required room, required secret}) =>
+            _FakeDeviceLinkSession(),
+      );
+      addTearDown(() async {
+        await controller.shutdown();
+        controller.dispose();
+        await directory.delete(recursive: true);
+      });
+
+      await controller.start();
+      final Future<void> autoSend = controller.setAutoSendClipboard(
+        device.id,
+        true,
+      );
+      await store.firstSaveStarted.future;
+      final Future<void> notifications = controller.setAgentNotifications(
+        device.id,
+        true,
+      );
+      store.releaseFirstSave.complete();
+      await Future.wait(<Future<void>>[autoSend, notifications]);
+
+      expect(store.document!.devices.single.autoSendClipboard, isTrue);
+      expect(store.document!.devices.single.receiveAgentNotifications, isTrue);
+    },
+  );
+
+  test(
+    'manual computer share writes the exact text message protocol',
+    () async {
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        deviceKind: LinkedDeviceKind.computer,
+      );
+      addTearDown(harness.dispose);
+      final ClipboardRecord record = _record('computer-share', '  保留空格  ');
+
+      await harness.controller.shareRecord(record, 'phone-one');
+
+      expect(harness.session.sent, hasLength(1));
+      expect(harness.session.sent.single['type'], 'clipboard.create');
+      expect(harness.session.sent.single['manual'], isTrue);
+      expect(harness.session.sent.single['content'], '  保留空格  ');
+    },
+  );
+
+  test(
+    'computer file share fails visibly before recording authorization',
+    () async {
+      final ClipboardRecord missingFile = ClipboardRecord(
+        id: 'missing-file',
+        group: 'Files',
+        title: 'Missing file',
+        content: '/path/that/no-longer-exists.txt',
+        tags: const <String>['clipboard', 'file', 'file-url'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 8, 8),
+        updatedAt: DateTime.utc(2026, 8, 8),
+      );
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        deviceKind: LinkedDeviceKind.computer,
+        clipboardRecords: <ClipboardRecord>[missingFile],
+      );
+      addTearDown(harness.dispose);
+
+      await expectLater(
+        harness.controller.shareRecord(missingFile, 'phone-one'),
+        throwsA(isA<DeviceLinkFileUnavailableException>()),
+      );
+
+      expect(harness.session.sent, isEmpty);
+      expect(
+        harness.store.document!.devices.single.sharedClipboardItemIds,
+        isEmpty,
+      );
+    },
+  );
+
+  test(
+    'computer file authorization is saved only after every frame sends',
+    () async {
+      final Directory sourceDirectory = await Directory.systemTemp.createTemp(
+        'dingdong-file-share-source-',
+      );
+      final File source = File('${sourceDirectory.path}/sample.txt');
+      await source.writeAsString('computer file payload');
+      final ClipboardRecord fileRecord = ClipboardRecord(
+        id: 'computer-file',
+        group: 'Files',
+        title: 'sample.txt',
+        content: source.path,
+        tags: const <String>['clipboard', 'file', 'file-url'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 8, 8),
+        updatedAt: DateTime.utc(2026, 8, 8),
+      );
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        deviceKind: LinkedDeviceKind.computer,
+        clipboardRecords: <ClipboardRecord>[fileRecord],
+      );
+      addTearDown(() async {
+        await harness.dispose();
+        await sourceDirectory.delete(recursive: true);
+      });
+      harness.session.failOnMessageType = 'file.chunk';
+
+      await expectLater(
+        harness.controller.shareRecord(fileRecord, 'phone-one'),
+        throwsStateError,
+      );
+      expect(
+        harness.store.document!.devices.single.sharedClipboardItemIds,
+        isEmpty,
+      );
+
+      harness.session
+        ..failOnMessageType = null
+        ..sent.clear();
+      await harness.controller.shareRecord(fileRecord, 'phone-one');
+
+      expect(
+        harness.session.sent.map((Map<String, Object?> frame) => frame['type']),
+        <Object?>['file.start', 'file.chunk', 'file.end'],
+      );
+      expect(
+        harness.store.document!.devices.single.sharedClipboardItemIds,
+        <String>[fileRecord.id],
+      );
+    },
+  );
+
+  test(
+    'computer content reaches the system clipboard without a sync loop',
+    () async {
+      final _MemoryClipboardGateway systemClipboard = _MemoryClipboardGateway();
+      final _Harness harness = await _connectedHarness(
+        autoSend: true,
+        deviceKind: LinkedDeviceKind.computer,
+        systemClipboard: systemClipboard,
+      );
+      addTearDown(harness.dispose);
+      harness.session.sent.clear();
+
+      harness.session.emit(
+        const DeviceLinkMessageEvent(<String, Object?>{
+          'type': 'clipboard.create',
+          'content': '  从另一台电脑发送  ',
+          'manual': true,
+        }),
+      );
+      await _flushEvents();
+
+      expect(systemClipboard.text, '  从另一台电脑发送  ');
+      final ClipboardRecord received = harness.clipboardStore
+          .list(limit: 10)
+          .single;
+      expect(received.tags, contains('device-origin:phone-one'));
+
+      await harness.controller.handleLocalClipboard(received);
+      expect(harness.session.sent, isEmpty);
+    },
+  );
+
   test('new QR pairing starts with an empty device clipboard list', () async {
     final Directory directory = await Directory.systemTemp.createTemp(
       'dingdong-pairing-test-',
@@ -600,6 +1085,7 @@ void main() {
     expect(controller.devices.single.name, '测试手机');
     expect(controller.devices.single.autoSendClipboard, isFalse);
     expect(controller.devices.single.receiveAgentNotifications, isFalse);
+    expect(store.document!.devices.single.relayUrl, pairing.payload.relayUrl);
     expect(
       session.sent.map((Map<String, Object?> value) => value['type']),
       <Object?>['welcome', 'clipboard.snapshot'],
@@ -724,6 +1210,38 @@ void main() {
       expect(harness.session.sent.last['snapshot'], isTrue);
     },
   );
+
+  test('computer reconnect does not replay clipboard history', () async {
+    final ClipboardRecord previouslyShared = _record(
+      'computer-shared',
+      '只在当时主动发送',
+    );
+    final _Harness harness = await _connectedHarness(
+      autoSend: false,
+      deviceKind: LinkedDeviceKind.computer,
+      clipboardRecords: <ClipboardRecord>[previouslyShared],
+      sharedClipboardItemIds: const <String>['computer-shared'],
+    );
+    addTearDown(harness.dispose);
+
+    harness.session.emit(
+      const DeviceLinkMessageEvent(<String, Object?>{
+        'type': 'hello',
+        'device': <String, Object?>{
+          'id': 'phone-one',
+          'name': 'Studio B',
+          'kind': 'computer',
+          'platform': 'macos',
+        },
+      }),
+    );
+    await _flushEvents();
+
+    expect(
+      harness.session.sent.map((Map<String, Object?> value) => value['type']),
+      <Object?>['welcome'],
+    );
+  });
 
   test('reconnect snapshot skips an oversized legacy text item', () async {
     final ClipboardRecord oversized = _record(
@@ -1084,17 +1602,122 @@ void main() {
       );
     },
   );
+
+  test(
+    'agent Web Push uses the device relay before the global relay',
+    () async {
+      final HttpServer globalServer = await HttpServer.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final HttpServer deviceServer = await HttpServer.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final Completer<Map<String, Object?>> received =
+          Completer<Map<String, Object?>>();
+      var globalRequestCount = 0;
+      globalServer.listen((HttpRequest request) async {
+        globalRequestCount += 1;
+        await utf8.decoder.bind(request).drain<void>();
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType.json
+          ..write('{"accepted":true}');
+        await request.response.close();
+      });
+      deviceServer.listen((HttpRequest request) async {
+        final String body = await utf8.decoder.bind(request).join();
+        received.complete(Map<String, Object?>.from(jsonDecode(body) as Map));
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType.json
+          ..write('{"accepted":true}');
+        await request.response.close();
+      });
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        relayBaseUrl: Uri.parse('http://127.0.0.1:${globalServer.port}'),
+        deviceRelayUrl: Uri.parse('http://127.0.0.1:${deviceServer.port}'),
+      );
+      addTearDown(() async {
+        await harness.dispose();
+        await globalServer.close(force: true);
+        await deviceServer.close(force: true);
+      });
+
+      await _sendTestAgentCompletion(harness);
+
+      final Map<String, Object?> body = await received.future.timeout(
+        const Duration(seconds: 3),
+      );
+      final Map<String, Object?> pushMessage =
+          await SecureMessageCodec.fromBase64Url(
+            _secret,
+          ).open(body['envelope']! as String);
+      expect(globalRequestCount, 0);
+      expect(pushMessage['type'], 'agent.completed');
+      expect(pushMessage['id'], body['messageId']);
+    },
+  );
+
+  test(
+    'agent Web Push works with a device relay when the global relay is empty',
+    () async {
+      final HttpServer deviceServer = await HttpServer.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final Completer<Map<String, Object?>> received =
+          Completer<Map<String, Object?>>();
+      deviceServer.listen((HttpRequest request) async {
+        final String body = await utf8.decoder.bind(request).join();
+        received.complete(Map<String, Object?>.from(jsonDecode(body) as Map));
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType.json
+          ..write('{"accepted":true}');
+        await request.response.close();
+      });
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        relayBaseUrl: null,
+        useDefaultRelayBaseUrl: false,
+        deviceRelayUrl: Uri.parse('http://127.0.0.1:${deviceServer.port}'),
+      );
+      addTearDown(() async {
+        await harness.dispose();
+        await deviceServer.close(force: true);
+      });
+
+      await _sendTestAgentCompletion(harness);
+
+      final Map<String, Object?> body = await received.future.timeout(
+        const Duration(seconds: 3),
+      );
+      final String envelope = body['envelope']! as String;
+      final Map<String, Object?> pushMessage =
+          await SecureMessageCodec.fromBase64Url(_secret).open(envelope);
+      expect(pushMessage['type'], 'agent.completed');
+      expect(pushMessage['id'], body['messageId']);
+      expect(utf8.encode(envelope), isNotEmpty);
+    },
+  );
 }
 
 const String _secret = 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc';
 
 Future<_Harness> _connectedHarness({
   required bool autoSend,
+  LinkedDeviceKind deviceKind = LinkedDeviceKind.phone,
   List<ClipboardRecord> clipboardRecords = const <ClipboardRecord>[],
   List<String> sharedClipboardItemIds = const <String>[],
   Uri? relayBaseUrl,
+  Uri? deviceRelayUrl,
+  bool useDefaultRelayBaseUrl = true,
   AgentStateProvider? agentStateProvider,
   AgentSeenCallback? onAgentSeen,
+  ClipboardGateway? systemClipboard,
 }) async {
   final Directory directory = await Directory.systemTemp.createTemp(
     'dingdong-device-link-test-',
@@ -1102,12 +1725,13 @@ Future<_Harness> _connectedHarness({
   final LinkedDevice device = LinkedDevice(
     id: 'phone-one',
     name: 'iPhone',
-    kind: LinkedDeviceKind.phone,
+    kind: deviceKind,
     platform: 'ios-pwa',
     room: 'abcdefghijklmnopqrstuvwx',
     secret: _secret,
+    relayUrl: deviceRelayUrl,
     autoSendClipboard: autoSend,
-    receiveAgentNotifications: true,
+    receiveAgentNotifications: deviceKind == LinkedDeviceKind.phone,
     vibrationEnabled: true,
     manuallyDisconnected: false,
     pairedAt: DateTime.utc(2026, 8, 8),
@@ -1132,11 +1756,14 @@ Future<_Harness> _connectedHarness({
     clipboardStore: clipboardStore,
     transferDirectory: directory,
     pwaBaseUrl: Uri.parse('https://relay.example/app/'),
-    relayBaseUrl: relayBaseUrl ?? Uri.parse('https://relay.example'),
+    relayBaseUrl: useDefaultRelayBaseUrl
+        ? relayBaseUrl ?? Uri.parse('https://relay.example')
+        : relayBaseUrl,
     sessionFactory: ({required relayUrl, required room, required secret}) =>
         session,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
+    systemClipboard: systemClipboard,
   );
   await controller.start();
   session.connectedValue = true;
@@ -1148,6 +1775,27 @@ Future<_Harness> _connectedHarness({
     store: store,
     clipboardStore: clipboardStore,
     directory: directory,
+  );
+}
+
+Future<void> _sendTestAgentCompletion(_Harness harness) async {
+  await harness.controller.sendAgentCompleted(
+    DingRequest(
+      message: '完成摘要',
+      detail: '详细结果',
+      source: 'Codex',
+      notificationKind: AgentNotificationKind.attention,
+    ),
+    activity: AgentActivity(
+      id: 'activity-1',
+      source: 'Codex',
+      message: '完成摘要',
+      startedAt: DateTime.utc(2026, 8, 8, 7, 59),
+      completedAt: DateTime.utc(2026, 8, 8, 8),
+      unseen: true,
+      notificationKind: AgentNotificationKind.attention,
+    ),
+    notificationId: 'completion-1',
   );
 }
 
@@ -1203,12 +1851,18 @@ final class _Harness {
 }
 
 final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
+  _FakeDeviceLinkSession({this.keepEventsOpenAfterClose = false});
+
   final StreamController<DeviceLinkSessionEvent> _events =
       StreamController<DeviceLinkSessionEvent>.broadcast(sync: true);
 
+  final bool keepEventsOpenAfterClose;
   final List<Map<String, Object?>> sent = <Map<String, Object?>>[];
   bool connectedValue = false;
+  bool allowControlPlaneSend = false;
   bool closed = false;
+  bool _eventsClosed = false;
+  String? failOnMessageType;
   int connectCalls = 0;
 
   @override
@@ -1226,7 +1880,18 @@ final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
 
   @override
   Future<void> send(Map<String, Object?> message) async {
-    if (!connectedValue) throw StateError('offline');
+    final bool controlMessage = const <String>{
+      'hello',
+      'welcome',
+      'settings.update',
+      'request.rejected',
+    }.contains(message['type']);
+    if (!connectedValue && !(allowControlPlaneSend && controlMessage)) {
+      throw StateError('offline');
+    }
+    if (message['type'] == failOnMessageType) {
+      throw StateError('simulated send failure');
+    }
     sent.add(message);
   }
 
@@ -1235,6 +1900,52 @@ final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
     if (closed) return;
     closed = true;
     connectedValue = false;
+    if (!keepEventsOpenAfterClose) await disposeEvents();
+  }
+
+  Future<void> disposeEvents() async {
+    if (_eventsClosed) return;
+    _eventsClosed = true;
     await _events.close();
+  }
+}
+
+final class _BlockingDeviceLinkStore implements DeviceLinkStore {
+  _BlockingDeviceLinkStore(this.document);
+
+  DeviceLinkDocument? document;
+  final Completer<void> firstSaveStarted = Completer<void>();
+  final Completer<void> releaseFirstSave = Completer<void>();
+  int _saveCount = 0;
+
+  @override
+  Future<DeviceLinkDocument?> load() async => document;
+
+  @override
+  Future<void> save(DeviceLinkDocument value) async {
+    _saveCount += 1;
+    if (_saveCount == 1) {
+      firstSaveStarted.complete();
+      await releaseFirstSave.future;
+    }
+    document = value;
+  }
+}
+
+final class _MemoryClipboardGateway implements ClipboardGateway {
+  String? text;
+  List<String> files = const <String>[];
+
+  @override
+  Future<ClipboardSnapshot> read() async => ClipboardSnapshot(text: text);
+
+  @override
+  Future<void> writeFiles(List<String> paths) async {
+    files = List<String>.of(paths);
+  }
+
+  @override
+  Future<void> writeText(String value) async {
+    text = value;
   }
 }

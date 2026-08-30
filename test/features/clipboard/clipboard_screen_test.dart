@@ -609,6 +609,79 @@ void main() {
     expect(editable.focusNode.hasFocus, isTrue);
   });
 
+  for (final (
+        TargetPlatform platform,
+        LogicalKeyboardKey modifier,
+        String shortcut,
+      )
+      in <(TargetPlatform, LogicalKeyboardKey, String)>[
+        (TargetPlatform.macOS, LogicalKeyboardKey.metaLeft, 'Command-F'),
+        (TargetPlatform.windows, LogicalKeyboardKey.controlLeft, 'Control-F'),
+      ]) {
+    testWidgetsOnPlatform(
+      '$shortcut clears a non-empty search only after a two-second hold',
+      platform,
+      (WidgetTester tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(390, 760);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+        final ClipboardViewModel model = ClipboardViewModel(
+          InMemoryClipboardStore(<ClipboardRecord>[_record()]),
+        )..load();
+        await tester.pumpWidget(
+          MaterialApp(home: ClipboardScreen(viewModel: model)),
+        );
+        await tester.pump();
+
+        final Finder search = find.byKey(const Key('clipboard-search'));
+        await tester.enterText(search, 'keep this query');
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.keyF);
+        await tester.pump(const Duration(milliseconds: 1999));
+        expect(model.query, 'keep this query');
+
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.keyF);
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pump(const Duration(seconds: 2));
+        expect(model.query, 'keep this query');
+
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.keyF);
+        await tester.pump(const Duration(seconds: 1));
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pump(const Duration(seconds: 2));
+        expect(model.query, 'keep this query');
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.keyF);
+
+        await tester.sendKeyDownEvent(modifier);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.keyF);
+        await tester.pump(const Duration(seconds: 1));
+        await tester.sendKeyRepeatEvent(LogicalKeyboardKey.keyF);
+        await tester.pump(const Duration(milliseconds: 999));
+        expect(model.query, 'keep this query');
+
+        await tester.pump(const Duration(milliseconds: 1));
+        expect(model.query, isEmpty);
+        expect(
+          tester
+              .widget<EditableText>(
+                find.descendant(
+                  of: search,
+                  matching: find.byType(EditableText),
+                ),
+              )
+              .controller
+              .text,
+          isEmpty,
+        );
+
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.keyF);
+        await tester.sendKeyUpEvent(modifier);
+      },
+    );
+  }
+
   testWidgets(
     'search stays visible after remount and clearing restores all history',
     (WidgetTester tester) async {

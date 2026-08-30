@@ -1,8 +1,32 @@
-# DingDong 1.5.3 Manual Regression Checklist
+# DingDong 1.5.4 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
 and macOS golden images; the items below exercise real operating-system state.
+
+Run `flutter test -d macos integration_test/desktop_release_acceptance_test.dart`
+for the real desktop acceptance journeys. They exercise resource editing and
+enablement through the loopback Bridge, Skill loading, Agent lifecycle and the
+native notification channel, settings persistence, workspace/search clicks,
+port fallback, the native selection switch, and two native WebRTC peers using
+encrypted local relay and direct data-channel routes. Content, clipboard and settings
+stores use explicit test fixtures; this does not claim that user API credentials,
+third-party Agent accounts or remote model availability have been verified.
+
+## System selection tools (macOS)
+
+- The new setting is off by default. Enable it only after authorizing the exact
+  DingDong app identity in macOS Accessibility, then refresh its status.
+- In an application that exposes a safe text selection, select test text and
+  exercise Copy, Translate, Explain, and Option-Command-C. Translation and
+  explanation require a configured, available model service.
+- Disable the setting while a request is pending: the toolbar closes and no
+  further selection monitoring or model requests remain active.
+- Switch providers and server addresses: unsaved Token text clears and stored
+  credentials are not silently reused for a different provider or origin.
+- Do not run the standalone DingDong Selection helper alongside the built-in
+  host. Missing permissions or an unavailable model must show an actionable
+  status; they must not be reported as successful translation.
 
 ## Window, tray, and startup
 
@@ -161,11 +185,32 @@ and macOS golden images; the items below exercise real operating-system state.
   exposes **手动升级**. With the current deployment it reports the latest
   version without re-pairing. With a newer deployment it refreshes to the new
   shell, restores every saved computer, and reconnects without scanning again.
+- Cold-open the PWA with and without saved pairings. Before IndexedDB hydration
+  completes it shows a neutral restoring state, never a false disconnected
+  banner or connect prompt; after hydration it transitions directly to the
+  correct paired, disconnected, or empty state.
 - Pair a second computer from the same phone without deleting or replacing the
   first. Both computers remain independently connected when available. The
   header shows a green online dot plus the online-computer count; opening it
   lists every paired computer and switches the active computer without
   disconnecting the others.
+- On computer A, copy its pairing link. On computer B, choose **Connect another
+  computer**, paste the link, and connect. Both Connected Devices windows show
+  the computer relationship, while the compact header connection icon shows a
+  count badge. Restart either computer and verify the host/peer role and relay
+  address survive without generating a replacement pairing.
+- Confirm a newly linked computer starts with Agent reminders and automatic
+  Clipboard sync off. **Send to Device** places the selected text in the other
+  computer's system clipboard; a received file places its saved local path in
+  the clipboard. Turn automatic sync on for only computer B, copy one new item
+  on A, and confirm it arrives once on B without bouncing back to A or a third
+  computer.
+- For the computer link, exercise **Automatic**, **Local network**, and
+  **Encrypted service**. Automatic prefers the direct channel and falls back;
+  Local network uses the service only for encrypted signalling and becomes
+  unavailable when the direct data channel is blocked; Encrypted service does
+  not re-establish a direct content channel. Change modes while connected and
+  confirm the visible active route updates without re-pairing.
 - Put different Clipboard items, Agent events, selected files, and unsent text
   drafts into the two computer sessions. Switch repeatedly and verify every
   value returns only with its source computer. Refresh and confirm the same
@@ -598,7 +643,7 @@ and macOS golden images; the items below exercise real operating-system state.
 
 - `flutter analyze` passes.
 - `flutter test` passes on macOS.
-- `flutter test integration_test/desktop_agent_connection_smoke_test.dart -d
+- `flutter test integration_test/desktop_release_acceptance_test.dart -d
   macos` passes with a real occupied loopback port, fallback bind, and `/health`
   request. Its product data stores are explicitly in-memory test substitutes.
 - When that macOS test runner sends `SIGTERM`, the Debug host exits through
@@ -627,8 +672,8 @@ and macOS golden images; the items below exercise real operating-system state.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.5.3` build `58` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.5.3.58` and product name `DingDong`.
+- The macOS release app metadata is version `1.5.4` build `59` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.5.4.59` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -636,7 +681,7 @@ and macOS golden images; the items below exercise real operating-system state.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.5.3` and that exact commit SHA; every
+  `/v1/health` must report version `1.5.4` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

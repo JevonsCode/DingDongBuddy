@@ -1,5 +1,6 @@
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
@@ -7,6 +8,7 @@ import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
 
 export 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+export 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 export 'package:dingdong/features/settings/domain/app_settings.dart';
 export 'package:dingdong/features/settings/domain/global_hot_key.dart';
 export 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
@@ -53,6 +55,12 @@ final class SettingsRepository {
       _backend.read(_notifyCodexVoiceActivityKey),
       _backend.read(_showConversationTokenUsageKey),
       _backend.read(_conversationTokenUsageDefaultOnMigrationKey),
+      _backend.read(_selectionEnabledKey),
+      _backend.read(_selectionProviderKey),
+      _backend.read(_selectionEndpointKey),
+      _backend.read(_selectionModelKey),
+      _backend.read(_selectionTargetLanguageKey),
+      _backend.read(_selectionUnloadLocalModelKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -121,6 +129,18 @@ final class SettingsRepository {
           ? values[20]! as bool
           : true,
       lifecycleTelemetryEnabled: _parseLifecycleTelemetryEnabled(values[21]),
+      selectionPlugin: SelectionPluginConfiguration(
+        enabled: values[30] is bool ? values[30]! as bool : false,
+        provider: SelectionModelProvider.parse(values[31]),
+        endpoint: values[32] is String
+            ? values[32]! as String
+            : 'http://127.0.0.1:11434',
+        model: values[33] is String ? values[33]! as String : 'qwen3:0.6b',
+        targetLanguage: values[34] is String ? values[34]! as String : '简体中文',
+        unloadLocalModelAfterResponse: values[35] is bool
+            ? values[35]! as bool
+            : true,
+      ),
     ).sanitized();
   }
 
@@ -194,6 +214,21 @@ final class SettingsRepository {
         _lifecycleTelemetryPreferenceKey,
         settings.lifecycleTelemetryEnabled ? 'enabled' : 'disabled',
       ),
+      _backend.write(_selectionEnabledKey, settings.selectionPlugin.enabled),
+      _backend.write(
+        _selectionProviderKey,
+        settings.selectionPlugin.provider.name,
+      ),
+      _backend.write(_selectionEndpointKey, settings.selectionPlugin.endpoint),
+      _backend.write(_selectionModelKey, settings.selectionPlugin.model),
+      _backend.write(
+        _selectionTargetLanguageKey,
+        settings.selectionPlugin.targetLanguage,
+      ),
+      _backend.write(
+        _selectionUnloadLocalModelKey,
+        settings.selectionPlugin.unloadLocalModelAfterResponse,
+      ),
     ]);
   }
 }
@@ -240,5 +275,12 @@ const String _groupRepeatedAgentSessionsKey =
 // Keep the original key so existing opt-outs survive this default-on migration.
 const String _lifecycleTelemetryPreferenceKey =
     'dingdong.telemetry.lifecycleConsent';
+const String _selectionEnabledKey = 'dingdong.selection.enabled';
+const String _selectionProviderKey = 'dingdong.selection.provider';
+const String _selectionEndpointKey = 'dingdong.selection.endpoint';
+const String _selectionModelKey = 'dingdong.selection.model';
+const String _selectionTargetLanguageKey = 'dingdong.selection.targetLanguage';
+const String _selectionUnloadLocalModelKey =
+    'dingdong.selection.unloadLocalModelAfterResponse';
 
 bool _parseLifecycleTelemetryEnabled(Object? value) => value != 'disabled';

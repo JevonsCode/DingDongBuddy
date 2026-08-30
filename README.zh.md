@@ -9,6 +9,12 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
+  <a href="https://github.com/JevonsCode/DingDongCodexPet">叮咚 Logo 的 Codex 宠物 · 项目地址</a><br>
+  <sub>宠物仓库目前为私有，需要仓库访问权限。</sub>
+</p>
+
+
+<p align="center">
   <strong>清晰管理剪贴板列表<br>统一管理提示词、Skill、MCP<br>接入的 Agent 提醒一处收好，叮咚哪一声由你定</strong>
 </p>
 
@@ -16,8 +22,8 @@ DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记�
 Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent 提醒统一收在一起，
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
-> **当前版本：DingDong 1.5.3。** 这次稳定性更新修复全新安装启动与项目作用域
-> MCP 交付，限制手机文件传输和 Agent/MCP 内存上限，并提升手机提醒与 PWA 升级可靠性。
+> **当前版本：DingDong 1.5.4。** 新增可选的 macOS 划词工具和电脑间分享，
+> 改进 Agent 会话已读确认与设置同步，并扩展桌面交互验收。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -32,9 +38,28 @@ Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或�
 | MCP | 只维护一份 Server 配置，同步到匹配的 Agent 客户端，并保留无关配置 |
 | Agent 动态 | 在本机记录完成、阻塞和决策提醒，保留未读状态、重复次数和历史，并播放可配置提示声 |
 | Agent 回复尾部 | 用一行资源小票展示本轮生效的 Prompt、匹配 Skill 和可用 MCP；`*` 表示 Skill 已加载或 MCP 已调用 |
-| 连接设备 | 一部手机可同时保存并连接多台电脑；每台电脑的剪贴板、文件、草稿和 Agent 提醒彼此隔离 |
+| 连接设备 | 手机和电脑都可互相配对；内容默认手动分享，电脑可按设备开启自动同步，并选择局域网直连或加密服务 |
 
 剪贴板和资源数据默认只保存在这台电脑上；轻量连接中继不会保存剪贴板或文件正文。
+
+## 可选的 macOS 系统级划词
+
+当前源码已接入在 Fuli 项目中开发的原生划词插件。打开“**设置 → 系统级划词**”，
+主动开启，并按提示授予 **DingDong** 辅助功能权限。在支持 macOS 选区读取的应用里
+选中文字，即可点击“**复制 / 翻译 / 解释**”；也可按 `⌥⌘C` 直接复制。
+
+复制只在本机完成；翻译和解释需要在同一区域配置模型服务。本地 Provider 需要已启动
+的回环服务和已安装的模型，云端 Provider 需要你自己的 API Token，Token 只存入
+macOS 钥匙串。预设模型名是可编辑的配置默认值，不表示已安装模型或承诺免费额度。
+只有主动点击翻译或解释才会发送文本；关闭插件会移除监听并取消模型请求。
+
+划词功能直接由 DingDong 宿主管理，不启动第二个常驻程序，也不是任意 JavaScript
+插件的加载器。Fuli 示例里的 Skill 包用于帮助 Agent 开发插件，加载 Skill 本身不会
+开启系统划词。不要同时运行独立的 DingDong Selection 助手，否则两者会重复监听选区
+和同一快捷键。
+
+配置与排查见[系统划词插件使用说明](docs/product/system-selection-plugin.md)。
+这是当前源码工作区的接入结果；已安装的正式版本需要换成包含此功能的新构建才会出现入口。
 
 ## 统一管理 Prompt、Skill 和 MCP
 
@@ -77,7 +102,7 @@ Skill 名称后的 `*` 表示本轮已加载完整 Skill；没有 `*` 则只是�
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.5.3。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.5.4。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
 Agent 会先搜索去重，再通过 `dingdong_create_resource` 和
@@ -97,6 +122,9 @@ PWA 会在联网及重新回到前台时检查最新应用壳。设备设置中�
 
 - **电脑 → 手机：** 可以按设备开启自动发送，但只发送配对后新复制的内容；
   连接前的历史只有在你主动选择“**发送到设备**”时才会发送。
+- **电脑 → 电脑：** 把另一台电脑生成的配对链接粘贴进“连接另一台电脑”即可加入可信
+  设备。默认不发送提醒、不自动同步；主动选择“**发送到设备**”后，文字或收到文件的
+  路径才会写入对方系统剪贴板，也可以按电脑单独开启自动同步。
 - **手机 → 电脑：** PWA 不会读取或监听手机系统剪贴板。只有你在输入框中输入或
   粘贴文字、选择文件，并点击“**发送**”后，内容才会进入电脑剪贴板列表。
 - **文件：** 单个文件上限为 25 MB。由电脑托管的内容只有在来源电脑与接收设备
@@ -112,9 +140,11 @@ PWA 会在联网及重新回到前台时检查最新应用壳。设备设置中�
 - **界面图标：** 手机设置中可选择浅蓝或白色背景。主屏幕图标由手机系统安装时生成，
   如果系统没有更新，可能需要移除并重新添加 PWA。
 
-DingDong 会先尝试 WebRTC 直连，必要时使用端到端加密的中继转发；中继只转发
-加密帧和 Web Push 载荷，不保存剪贴板或文件正文。Android 可直接使用网页，安装
-PWA 不是通知前提；iPhone 与 iPad 需要先添加到主屏幕，才能开启 Web Push。
+每条电脑连接可选择“**自动**”“**局域网直连**”或“**加密服务**”。自动模式优先
+使用 WebRTC 直连，失败时回退到端到端加密中继；局域网模式仍通过服务完成加密配对
+与信令，但内容只走直连。中继只转发加密帧和 Web Push 载荷，不保存剪贴板或文件
+正文。Android 可直接使用网页，安装 PWA 不是通知前提；iPhone 与 iPad 需要先添加
+到主屏幕，才能开启 Web Push。
 
 Android Chrome 链路已经完成包括后台通知在内的端到端实测。iPhone / iPad
 实现遵循 WebKit 的主屏幕 Web App 要求，但正式发布前仍需要补一轮真实设备记录。
@@ -124,7 +154,7 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 在本机 Codex、Claude Code、Cursor、Gemini CLI 或 Kiro 会话中粘贴：
 
 ```text
-请从 https://github.com/JevonsCode/DingDongBuddy 在这台电脑上安装 DingDong。先读取并执行 https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/INSTALL_WITH_AGENT.md，完成应用安装、MCP 接入、完成 Hook 接入和两项连接测试；保留所有现有用户数据与无关的 Agent 配置，不要只复述说明。
+请从 https://github.com/JevonsCode/DingDongBuddy 在这台电脑上安装 DingDong。先读取并执行 https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/INSTALL_WITH_AGENT.md，完成应用安装、MCP 接入、完成 Hook 接入、适用于 Codex 时的会话核销接入，以及全部适用的连接测试；保留所有现有用户数据与无关的 Agent 配置，不要只复述说明。
 ```
 
 不绑定具体版本的权威操作位于
@@ -133,9 +163,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片 · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-arm64.dmg)
-- [macOS · Intel · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-x64.dmg)
-- [Windows x64 · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.5.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-arm64.dmg)
+- [macOS · Intel · 1.5.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-x64.dmg)
+- [Windows x64 · 1.5.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。
@@ -147,7 +177,7 @@ macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通�
 
 | Agent | MCP 配置 | 完成事件 | 托管引导 | 当前验证状态 |
 | --- | --- | --- | --- | --- |
-| Codex | `~/.codex/config.toml` | `Stop` | Prompt Bridge | **已在 macOS 端到端验证** |
+| Codex | `~/.codex/config.toml` | `Stop`；`SessionStart` 核销 | Prompt Bridge | 完成提醒**已在 macOS 端到端验证**；核销链路已实现 |
 | Claude Code | `~/.claude.json` | `Stop` | Prompt Bridge | **已在 macOS 端到端验证** |
 | Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` | 无 | 已实现；待真实客户端端到端验证 |
 | Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` | 无 | 已实现；待真实客户端端到端验证 |
@@ -155,12 +185,15 @@ macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通�
 
 ### 接入原理
 
-DingDong 使用两条互相独立的原生链路：
+DingDong 在 Codex 中使用三条互相独立的原生链路：
 
 1. MCP Bridge 提供 `dingdong_bridge`、资源工具、配置工具和
    `dingdong_notify`。
 2. 客户端输出最终回复后，完成 Hook 执行
    `dingdong_mcp --notify-stop --source <agent>`；不会再调用第二次模型。
+3. Codex 的 `SessionStart` Hook 只匹配 `startup|resume`，并执行
+   `dingdong_mcp --acknowledge-session-start --source Codex`。从 Codex 打开或
+   恢复某个对话时，DingDong 只把该线程的提醒标记为已读，并从托盘数字中扣除对应数量。
 
 自动接入会保留原生文件里的无关内容，包括 `~/.codex/config.toml`、
 `~/.claude/settings.json`、`~/.cursor/hooks.json` 和
@@ -217,7 +250,7 @@ DingDong 使用两条互相独立的原生链路：
 flutter pub get
 flutter analyze
 flutter test
-flutter test integration_test/desktop_agent_connection_smoke_test.dart -d macos
+flutter test integration_test/desktop_release_acceptance_test.dart -d macos
 flutter build macos --release
 ```
 

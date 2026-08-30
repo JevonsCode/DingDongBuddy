@@ -8,6 +8,7 @@ import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_segmented_control.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/core/widgets/desktop_slider.dart';
+import 'package:dingdong/features/selection/ui/selection_plugin_section.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
@@ -314,6 +315,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           QuickPastePermissionSection(
                             viewModel: widget.viewModel,
                           ),
+                          if (defaultTargetPlatform == TargetPlatform.macOS)
+                            SelectionPluginSection(viewModel: widget.viewModel),
                           SystemUsageSection(viewModel: widget.viewModel),
                           _SettingsSection(
                             title: context.l10n.appearance,

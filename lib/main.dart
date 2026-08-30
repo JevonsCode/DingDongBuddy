@@ -78,6 +78,7 @@ import 'package:dingdong/platform/native_launch_at_startup.dart';
 import 'package:dingdong/platform/native_menu_bar_recovery_gateway.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/native_quick_paste_gateway.dart';
+import 'package:dingdong/platform/native_selection_plugin_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:dingdong/platform/preferences_tray_unread_store.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
@@ -210,6 +211,11 @@ Future<void> main(List<String> arguments) async {
         conversationId: start.conversationId,
       );
     },
+    onAgentConversationOpened: (AgentConversationTarget target) async {
+      final int acknowledged = activityController.markConversationSeen(target);
+      await shellGateway.acknowledgeUnreadCount(acknowledged);
+      return acknowledged;
+    },
     isSubagentConversation: (AgentConversationTarget target) async {
       if (target.client != AgentClient.codex) {
         return false;
@@ -245,13 +251,9 @@ Future<void> main(List<String> arguments) async {
       return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
     },
     onFilteredNotification: (DingRequest request) async {
-      final AgentConversationTarget? target = request.conversationTarget;
-      if (target == null) {
-        return;
-      }
       activityController.discardActiveRun(
         source: request.source ?? 'Agent',
-        target: target,
+        target: request.conversationTarget,
       );
     },
     onNotification: (request) async {
@@ -326,13 +328,15 @@ Future<void> main(List<String> arguments) async {
         defaultValue: 'https://dingdong.xn--m8txu.com',
       ),
     ),
+    systemClipboard: dependencies.clipboardGateway,
     localizations: currentLocalizations,
     agentStateProvider: () => (
       activities: activityController.activities,
       activeRuns: activityController.activeRuns,
     ),
     onAgentSeen: (List<String> activityIds) {
-      activityController.markSeen(activityIds);
+      final int acknowledged = activityController.markSeen(activityIds);
+      unawaited(shellGateway.acknowledgeUnreadCount(acknowledged));
     },
     onClipboardReceived: () {
       shellController.requestClipboardRefresh();
@@ -388,6 +392,8 @@ Future<void> main(List<String> arguments) async {
   await dependencies.start();
   shellController.open(dependencies.initialSettings.defaultWorkspace.index);
   final NativeQuickPasteGateway quickPasteGateway = NativeQuickPasteGateway();
+  const NativeSelectionPluginGateway selectionPluginGateway =
+      NativeSelectionPluginGateway();
   final NativeLaunchAtStartup launchAtStartup = NativeLaunchAtStartup();
   final NativeNotificationGateway notificationGateway =
       NativeNotificationGateway();
@@ -407,6 +413,7 @@ Future<void> main(List<String> arguments) async {
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: applicationUpdater,
     quickPastePermissionGateway: quickPasteGateway,
+    selectionPluginGateway: Platform.isMacOS ? selectionPluginGateway : null,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(
       dependencies.paths.applicationSupportDirectory,
@@ -479,6 +486,31 @@ Future<void> main(List<String> arguments) async {
         return await quickPasteGateway.isGranted();
       case 'settings_quick_open':
         await quickPasteGateway.openSettings();
+        return null;
+      case 'settings_selection_apply':
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        return (await selectionPluginGateway.apply(
+          SelectionPluginConfiguration(
+            enabled: values['enabled'] == true,
+            provider: SelectionModelProvider.parse(values['provider']),
+            endpoint: values['endpoint']! as String,
+            model: values['model']! as String,
+            targetLanguage: values['targetLanguage']! as String,
+            unloadLocalModelAfterResponse:
+                values['unloadLocalModelAfterResponse'] == true,
+          ),
+        )).toPlatformResult();
+      case 'settings_selection_status':
+        return (await selectionPluginGateway.status()).toPlatformResult();
+      case 'settings_selection_open_accessibility':
+        await selectionPluginGateway.openAccessibilitySettings();
+        return null;
+      case 'settings_selection_token_save':
+        final Map<Object?, Object?> values = call.arguments! as Map;
+        await selectionPluginGateway.saveToken(values['token']! as String);
+        return null;
+      case 'settings_selection_token_clear':
+        await selectionPluginGateway.clearToken();
         return null;
       case 'settings_clipboard_start':
         await dependencies.clipboardMonitorService.start();

@@ -6,12 +6,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=35";
+} from "./notification-policy.js?shell=38";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=35";
+} from "./pairing-state.js?shell=38";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -20,20 +20,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=35";
-import { createInstallationController } from "./app-installation.js?shell=35";
-import { createAgentNotificationController } from "./app-notifications.js?shell=35";
-import { createAppRenderer } from "./app-rendering.js?shell=35";
-import { createConnectionController } from "./app-connection.js?shell=35";
-import { createDeviceSettingsController } from "./app-settings.js?shell=35";
-import { createPairingController } from "./app-pairing.js?shell=35";
-import { createContentTransferController } from "./app-content-transfer.js?shell=35";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=38";
+import { createInstallationController } from "./app-installation.js?shell=38";
+import { createAgentNotificationController } from "./app-notifications.js?shell=38";
+import { createAppRenderer } from "./app-rendering.js?shell=38";
+import { createConnectionController } from "./app-connection.js?shell=38";
+import { createDeviceSettingsController } from "./app-settings.js?shell=38";
+import { createPairingController } from "./app-pairing.js?shell=38";
+import { createContentTransferController } from "./app-content-transfer.js?shell=38";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=35";
+} from "./app-platform.js?shell=38";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -54,8 +54,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.5.3";
-const currentPwaShellVersion = 35;
+const currentPwaVersion = "1.5.4";
+const currentPwaShellVersion = 38;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;
@@ -70,6 +70,7 @@ const initialPairingRegistry = normalizePairingRegistry(
 );
 
 const state = {
+  booting: true,
   identity: loadIdentity(),
   sessions: new Map(
     initialPairingRegistry.pairings.map((pair) => [
@@ -99,6 +100,8 @@ const state = {
   lastBadgeCount: null,
   pendingDeleteRoom: null,
   deleteInProgress: false,
+  clipboardRenderSignature: null,
+  agentRenderSignature: null,
 };
 
 function createDeviceSession(pair) {
@@ -120,8 +123,10 @@ function createDeviceSession(pair) {
     connectionGeneration: 0,
     relayGeneration: 0,
     items: [],
+    clipboardRenderRevision: 0,
     agentRuns: [],
     agentEvents: [],
+    agentRenderRevision: 0,
     downloads: new Map(),
     outgoingRequests: new Set(),
     selectedFile: null,
@@ -177,6 +182,7 @@ const elements = Object.fromEntries(
     "install-app-title",
     "install-app-copy",
     "install-app-button",
+    "boot-view",
     "pwa-launcher-view",
     "open-pwa-app-button",
     "install-dialog",
@@ -512,6 +518,7 @@ async function boot(scannedPair) {
   wireInteractions();
   initializeLaunchQueue();
   initializeInstallState();
+  render();
   const installStateReady = refreshInstallState();
   registerServiceWorker().then((registration) => {
     state.serviceWorkerRegistration = registration;
@@ -556,23 +563,28 @@ async function boot(scannedPair) {
       if (sessionIsActive(session)) renderAgentNotificationStatus();
     }
   });
+  if (isBrowserPwaLauncher()) {
+    state.booting = false;
+    render();
+    await installStateReady;
+    renderInstallPromotion();
+    return;
+  }
   await installStateReady;
   if (isBrowserPwaLauncher()) {
+    state.booting = false;
     render();
     return;
   }
   refreshNotificationPermission();
-  await upgradeDefaultIdentityName();
-  await restorePairingsFromWorker();
-  await restoreAgentLaunchIntent();
-  await restorePushHealthFromWorker();
+  await Promise.all([upgradeDefaultIdentityName(), restorePairingsFromWorker()]);
+  await Promise.all([restoreAgentLaunchIntent(), restorePushHealthFromWorker()]);
   let defaultsChanged = false;
   for (const session of state.sessions.values()) {
     defaultsChanged = applyAgentNotificationDefault(session.pair) || defaultsChanged;
   }
   if (defaultsChanged) savePairings();
   renderInstallPromotion();
-  refreshInstallState().catch(() => {});
 
   const scannedSession = scannedPair
     ? sessionForRoom(scannedPair.room)
@@ -585,11 +597,22 @@ async function boot(scannedPair) {
     clearPairingFragment();
     clearPendingPairingLaunch();
   }
+  try {
+    await persistPairingsForWorker();
+  } catch {
+    // Local storage remains authoritative for this foreground launch. A later
+    // mutation will retry the service-worker mirror.
+  }
+  if (isBrowserPwaLauncher()) {
+    state.booting = false;
+    render();
+    return;
+  }
+  state.booting = false;
   if (state.sessions.size > 0) {
     for (const session of state.sessions.values()) {
       session.pushSubscriptionReady = false;
     }
-    await persistPairingsForWorker();
     render();
     for (const session of state.sessions.values()) {
       if (!session.pair.manualDisconnect) connect(session);
@@ -614,6 +637,7 @@ async function boot(scannedPair) {
   if (scannedPair && !scannedPairMatches) {
     showPairConfirmation(scannedPair);
   }
+  renderInstallPromotion();
 }
 
 function wireInteractions() {
@@ -632,6 +656,7 @@ function wireInteractions() {
     render();
   });
   elements["device-status-button"].addEventListener("click", () => {
+    if (state.booting) return;
     if (state.sessions.size === 0) {
       showToast("请先扫描电脑上的连接二维码");
       return;
@@ -646,7 +671,9 @@ function wireInteractions() {
     savePairings();
     connect(session);
   });
-  elements["settings-button"].addEventListener("click", openSettingsDialog);
+  elements["settings-button"].addEventListener("click", () => {
+    if (!state.booting) openSettingsDialog();
+  });
   elements["enable-notifications"].addEventListener("click", async () => {
     await enableAgentNotifications();
     render();
@@ -951,12 +978,30 @@ function handleContentTabOpen(message) {
 function render() {
   renderInstallPromotion();
   const browserPwaLauncher = isBrowserPwaLauncher();
+  elements["device-status-button"].disabled = state.booting;
+  elements["settings-button"].disabled = state.booting;
   elements["app-header"].hidden = browserPwaLauncher;
   elements["pwa-launcher-view"].hidden = !browserPwaLauncher;
+  elements["boot-view"].hidden = !state.booting || browserPwaLauncher;
+  if (state.booting && !browserPwaLauncher) {
+    elements["pair-view"].hidden = true;
+    elements["empty-view"].hidden = true;
+    elements["content-view"].hidden = true;
+    elements.composer.hidden = true;
+    elements["connection-label"].textContent = "正在恢复设备";
+    elements["online-dot"].dataset.online = "loading";
+    elements["online-count"].textContent = "读取中";
+    elements["device-status-button"].setAttribute(
+      "aria-label",
+      "正在恢复已保存的设备连接",
+    );
+    return;
+  }
   const session = activeSession();
   const hasPair = Boolean(session);
   const confirmingPair = Boolean(state.pendingPair);
   if (browserPwaLauncher) {
+    elements["boot-view"].hidden = true;
     elements["pair-view"].hidden = true;
     elements["empty-view"].hidden = true;
     elements["content-view"].hidden = true;

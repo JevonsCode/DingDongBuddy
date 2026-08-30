@@ -220,18 +220,18 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v35/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v38/);
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1\.5\.3"/);
-  assert.match(appSource, /const currentPwaShellVersion = 35/);
-  assert.match(pageSource, /styles\.css\?shell=35/);
-  assert.match(pageSource, /app\.js\?shell=35/);
-  assert.match(appSource, /notification-policy\.js\?shell=35/);
-  assert.match(appSource, /pairing-state\.js\?shell=35/);
+  assert.match(appSource, /const currentPwaVersion = "1\.5\.4"/);
+  assert.match(appSource, /const currentPwaShellVersion = 38/);
+  assert.match(pageSource, /styles\.css\?shell=38/);
+  assert.match(pageSource, /app\.js\?shell=38/);
+  assert.match(appSource, /notification-policy\.js\?shell=38/);
+  assert.match(appSource, /pairing-state\.js\?shell=38/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -239,12 +239,54 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v35/);
-  assert.match(serviceWorkerSource, /styles\.css\?shell=35/);
-  assert.match(serviceWorkerSource, /app\.js\?shell=35/);
-  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=35/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v38/);
+  assert.match(serviceWorkerSource, /styles\.css\?shell=38/);
+  assert.match(serviceWorkerSource, /app\.js\?shell=38/);
+  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=38/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.5.3", shell: 35 });
+  assert.deepEqual(pwaVersion, { version: "1.5.4", shell: 38 });
+});
+
+test("PWA hydration stays neutral until saved device state is restored", () => {
+  assert.match(pageSource, /id="boot-view" class="boot-view"/);
+  assert.match(pageSource, /id="empty-view" class="empty-view" hidden/);
+  assert.match(appSource, /const state = \{\s*booting: true/);
+  assert.match(
+    appSource,
+    /initializeInstallState\(\);\s*render\(\);\s*const installStateReady = refreshInstallState\(\)/,
+  );
+  assert.match(
+    appSource,
+    /elements\["boot-view"\]\.hidden = !state\.booting \|\| browserPwaLauncher/,
+  );
+  assert.match(
+    appSource,
+    /elements\["offline-banner"\]\.hidden =\s*session\.connected \|\| session\.connecting \|\| state\.booting/,
+  );
+  assert.match(
+    appSource,
+    /state\.booting = false;\s*if \(state\.sessions\.size > 0\)/,
+  );
+  assert.match(
+    appSource,
+    /await installStateReady;\s*if \(isBrowserPwaLauncher\(\)\)[\s\S]*refreshNotificationPermission\(\);\s*await Promise\.all\(\[upgradeDefaultIdentityName\(\), restorePairingsFromWorker\(\)\]\)/,
+  );
+  assert.match(
+    appSource,
+    /await persistPairingsForWorker\(\);[\s\S]*state\.booting = false;\s*if \(state\.sessions\.size > 0\)/,
+  );
+  assert.match(
+    appSource,
+    /elements\["device-status-button"\]\.disabled = state\.booting/,
+  );
+  assert.match(appSource, /elements\["online-dot"\]\.dataset\.online = "loading"/);
+  assert.match(stylesSource, /\.clipboard-card,[\s\S]*contain: layout paint style/);
+  assert.match(appSource, /state\.clipboardRenderSignature === signature/);
+  assert.match(appSource, /state\.agentRenderSignature === signature/);
+  assert.match(appSource, /clipboardRenderRevision: 0/);
+  assert.match(appSource, /session\.clipboardRenderRevision \+= 1/);
+  assert.match(appSource, /agentRenderRevision: 0/);
+  assert.match(appSource, /session\.agentRenderRevision \+= 1/);
 });
 
 test("a superseded PWA page stops reconnecting instead of stealing the room back", () => {
@@ -432,7 +474,10 @@ test("agent notifications open the Agent tab without reloading a live PWA", () =
   );
   assert.match(serviceWorkerSource, /await storeAgentLaunchIntent\(data\)/);
   assert.match(serviceWorkerSource, /idbSet\(agentLaunchIntentKey/);
-  assert.match(appSource, /await restorePairingsFromWorker\(\);\s*await restoreAgentLaunchIntent\(\)/);
+  assert.match(
+    appSource,
+    /await Promise\.all\(\[upgradeDefaultIdentityName\(\), restorePairingsFromWorker\(\)\]\);\s*await Promise\.all\(\[restoreAgentLaunchIntent\(\), restorePushHealthFromWorker\(\)\]\)/,
+  );
   assert.match(appSource, /await idbDelete\(agentLaunchIntentKey\)/);
   assert.match(appSource, /intent\?\.tab !== "agent"/);
   assert.match(appSource, /intent\.room === session\?\.pair\.room/);
@@ -615,7 +660,15 @@ test("encrypted relay data is the fallback when local WebRTC cannot connect", ()
   );
   assert.match(
     desktopSessionSource,
-    /bool get connected => _dataChannelConnected \|\| _relayConnected/,
+    /bool get connected => activeTransport != DeviceLinkActiveTransport\.none/,
+  );
+  assert.match(
+    desktopSessionSource,
+    /transportPreference != DeviceLinkTransportPreference\.serviceRelay[\s\S]*_dataChannelConnected/,
+  );
+  assert.match(
+    desktopSessionSource,
+    /transportPreference != DeviceLinkTransportPreference\.localNetwork[\s\S]*_relayConnected/,
   );
   assert.match(
     appSource,
@@ -635,7 +688,10 @@ test("a saved pairing survives refresh and a stale matching QR fragment", () => 
   assert.equal(isStoredPairing(scanned), true);
   assert.equal(pairingsMatch(stored, scanned), true);
   assert.equal(pairingsMatch(stored, { ...scanned, room: "another-room" }), false);
-  assert.match(appSource, /await restorePairingsFromWorker\(\)/);
+  assert.match(
+    appSource,
+    /Promise\.all\(\[upgradeDefaultIdentityName\(\), restorePairingsFromWorker\(\)\]\)/,
+  );
   assert.match(appSource, /async function idbGet\(key\)/);
   assert.match(appSource, /const launchPair = capturePairingLaunch\(\)/);
   assert.match(appSource, /storageKeys\.pendingPair/);
@@ -983,7 +1039,10 @@ test("the phone defaults to the most specific browser-provided device name", asy
 
   assert.equal(await detectDeviceName(navigatorLike), "Xiaomi 17 Ultra");
   assert.equal(defaultDeviceName(navigatorLike), "Android 手机");
-  assert.match(appSource, /await upgradeDefaultIdentityName\(\)/);
+  assert.match(
+    appSource,
+    /Promise\.all\(\[upgradeDefaultIdentityName\(\), restorePairingsFromWorker\(\)\]\)/,
+  );
   assert.match(serviceWorkerSource, /device-name\.js/);
   assert.doesNotMatch(appSource, /name:\s*isIos\(\)\s*\?\s*"iPhone"\s*:\s*"我的手机"/);
 });

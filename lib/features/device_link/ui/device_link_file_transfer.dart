@@ -7,8 +7,40 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     String deviceId, {
     required bool manual,
   }) async {
-    final Map<String, Object?> payload = _recordPayload(record);
+    final LinkedDevice device = _device(deviceId);
     final _ManagedDeviceSession managed = _sessionForDevice(deviceId);
+    if (device.kind == LinkedDeviceKind.computer) {
+      if (record.sensitive) {
+        throw StateError('Sensitive clipboard content is not transferred.');
+      }
+      if (record.filePaths.isNotEmpty) {
+        final File? file = _firstExistingFile(record);
+        if (file == null) {
+          throw const DeviceLinkFileUnavailableException();
+        }
+        final int size = file.lengthSync();
+        if (size > deviceLinkMaximumFileBytes) {
+          throw DeviceLinkFileTooLargeException(actualBytes: size);
+        }
+        await _sendFileRecord(managed, record, file, size: size);
+        await _rememberSharedClipboardItem(deviceId, record.id);
+        return;
+      }
+      final int contentBytes = utf8.encode(record.content).length;
+      if (contentBytes > deviceLinkMaximumTextBytes) {
+        throw DeviceLinkTextTooLargeException(actualBytes: contentBytes);
+      }
+      await managed.handle.send(<String, Object?>{
+        'type': 'clipboard.create',
+        'requestId': 'desktop-${_randomToken(12)}',
+        'content': record.content,
+        'title': record.title,
+        'manual': manual,
+      });
+      await _rememberSharedClipboardItem(deviceId, record.id);
+      return;
+    }
+    final Map<String, Object?> payload = _recordPayload(record);
     await managed.handle.send(<String, Object?>{
       'type': 'clipboard.upsert',
       'manual': manual,
@@ -20,6 +52,10 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
   Future<void> _sendSnapshot(_ManagedDeviceSession managed) async {
     final String? deviceId = managed.deviceId;
     final LinkedDevice? device = deviceId == null ? null : _device(deviceId);
+    // Computer links are live clipboard delivery, not history replication.
+    // Reconnects must never replay previously shared content into the other
+    // computer's system clipboard or spend work building phone-only snapshots.
+    if (device?.kind == LinkedDeviceKind.computer) return;
     final List<String> allowedIds =
         device?.sharedClipboardItemIds ?? const <String>[];
     final Map<String, ClipboardRecord> recordsById = <String, ClipboardRecord>{
@@ -64,12 +100,13 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     String deviceId,
     String recordId,
   ) async {
-    final LinkedDevice device = _device(deviceId);
-    final List<String> ids = <String>[
-      recordId,
-      ...device.sharedClipboardItemIds.where((String id) => id != recordId),
-    ].take(deviceLinkClipboardHistoryLimit).toList(growable: false);
-    await _replaceDevice(device.copyWith(sharedClipboardItemIds: ids));
+    await _updateDevice(deviceId, (LinkedDevice device) {
+      final List<String> ids = <String>[
+        recordId,
+        ...device.sharedClipboardItemIds.where((String id) => id != recordId),
+      ].take(deviceLinkClipboardHistoryLimit).toList(growable: false);
+      return device.copyWith(sharedClipboardItemIds: ids);
+    });
   }
 
   Map<String, Object?> _recordPayload(ClipboardRecord record) {
@@ -103,8 +140,9 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     LinkedDevice device,
     Map<String, Object?> message,
   ) async {
-    final String content = (message['content'] as String? ?? '').trim();
-    if (content.isEmpty) return;
+    final String content = message['content'] as String? ?? '';
+    final String classificationText = content.trim();
+    if (classificationText.isEmpty) return;
     final int contentBytes = utf8.encode(content).length;
     if (contentBytes > deviceLinkMaximumTextBytes) {
       await managed.handle.send(<String, Object?>{
@@ -118,7 +156,7 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       return;
     }
     final ClipboardClassification classification = ClipboardClassifier.classify(
-      content,
+      classificationText,
     );
     final DateTime now = DateTime.now().toUtc();
     final ClipboardRecord record = ClipboardRecord(
@@ -137,6 +175,9 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       updatedAt: now,
     );
     _clipboardStore.save(record);
+    if (device.kind == LinkedDeviceKind.computer) {
+      await _systemClipboard?.writeText(content);
+    }
     onClipboardReceived?.call();
   }
 
@@ -262,37 +303,39 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       rethrow;
     }
     final DateTime now = DateTime.now().toUtc();
-    _clipboardStore.save(
-      ClipboardRecord(
-        id: 'DEVICE-FILE-${now.microsecondsSinceEpoch}-${_randomToken(6)}',
-        group: '',
-        title: upload.name,
-        content: output.path,
-        tags: <String>[
-          'clipboard',
-          'file',
-          'file-url',
-          'device-origin:${device.id}',
-        ],
-        source: _localizations().fromDevice(device.name),
-        pinned: false,
-        enabled: true,
-        activation: 'taskMatch',
-        createdAt: now,
-        updatedAt: now,
-      ),
+    final ClipboardRecord record = ClipboardRecord(
+      id: 'DEVICE-FILE-${now.microsecondsSinceEpoch}-${_randomToken(6)}',
+      group: '',
+      title: upload.name,
+      content: output.path,
+      tags: <String>[
+        'clipboard',
+        'file',
+        'file-url',
+        'device-origin:${device.id}',
+      ],
+      source: _localizations().fromDevice(device.name),
+      pinned: false,
+      enabled: true,
+      activation: 'taskMatch',
+      createdAt: now,
+      updatedAt: now,
     );
+    _clipboardStore.save(record);
+    if (device.kind == LinkedDeviceKind.computer) {
+      await _systemClipboard?.writeFiles(<String>[output.path]);
+    }
     onClipboardReceived?.call();
   }
 
-  Future<void> _sendRequestedFile(
+  Future<bool> _sendRequestedFile(
     _ManagedDeviceSession managed,
     String itemId,
   ) async {
     final String? deviceId = managed.deviceId;
     if (deviceId == null ||
         !_device(deviceId).sharedClipboardItemIds.contains(itemId)) {
-      return;
+      return false;
     }
     ClipboardRecord? record;
     for (final ClipboardRecord candidate in _clipboardStore.list(
@@ -305,14 +348,26 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       }
     }
     final File? file = record == null ? null : _firstExistingFile(record);
-    if (file == null || file.lengthSync() > deviceLinkMaximumFileBytes) return;
+    if (file == null) return false;
+    final int size = file.lengthSync();
+    if (size > deviceLinkMaximumFileBytes) return false;
+    await _sendFileRecord(managed, record!, file, size: size);
+    return true;
+  }
+
+  Future<void> _sendFileRecord(
+    _ManagedDeviceSession managed,
+    ClipboardRecord record,
+    File file, {
+    required int size,
+  }) async {
     final String transferId = 'download-${_randomToken(12)}';
     await managed.handle.send(<String, Object?>{
       'type': 'file.start',
       'transferId': transferId,
-      'itemId': record!.id,
+      'itemId': record.id,
       'name': path.basename(file.path),
-      'size': file.lengthSync(),
+      'size': size,
     });
     final RandomAccessFile input = await file.open();
     var index = 0;

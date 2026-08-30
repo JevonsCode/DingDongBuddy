@@ -800,7 +800,7 @@
       }
     }
   },
-  "countPairedDevices": "已连接 {count} 台设备",
+  "countPairedDevices": "已配对 {count} 台设备",
   "@countPairedDevices": {
     "description": "DingDong built-in interface copy.",
     "placeholders": {
@@ -2688,6 +2688,16 @@
   "@searchClipboard": {
     "description": "DingDong built-in interface copy."
   },
+  "searchClipboardWithShortcut": "搜索剪贴板  {shortcut}",
+  "@searchClipboardWithShortcut": {
+    "description": "Clipboard search placeholder with its platform shortcut.",
+    "placeholders": {
+      "shortcut": {
+        "type": "String",
+        "description": "Platform shortcut such as ⌘F or Ctrl+F."
+      }
+    }
+  },
   "searchClipboardHistory": "搜索剪贴板历史",
   "@searchClipboardHistory": {
     "description": "DingDong built-in interface copy."
@@ -3840,7 +3850,7 @@
   "@resourceManagerWindowTitle": {
     "description": "DingDong built-in interface copy."
   },
-  "connectDingDongToCurrentAgent": "请将「{commandPath}」接入当前 Agent，配置为名为 dingdong 的用户级 STDIO MCP（不加 args），保留现有配置，并验证 dingdong_bridge。若支持用户级任务完成 Hook，再为任务完成事件配置 Hook 命令：同一程序加上「--notify-stop --source \"<当前 Agent 名称>\"」，并验证提醒。",
+  "connectDingDongToCurrentAgent": "请将「{commandPath}」接入当前 Agent，配置为名为 dingdong 的用户级 STDIO MCP（不加 args），保留现有配置，并验证 dingdong_bridge。若支持任务完成 Hook，配置 Hook 命令为同一程序加「--notify-stop --source \"<当前 Agent 名称>\"」并验证提醒。若 SessionStart 支持 startup 和 resume，再配置同一程序加「--acknowledge-session-start --source \"<当前 Agent 名称>\"」，使打开对话时只核销对应提醒。",
   "@connectDingDongToCurrentAgent": {
     "description": "Short actionable setup instruction copied by the user.",
     "placeholders": {
@@ -4015,5 +4025,126 @@
   "httpsOrGitHubFileURL": "HTTPS 或 GitHub 文件 URL",
   "@httpsOrGitHubFileURL": {
     "description": "DingDong built-in interface copy."
+  },
+  "connectAnotherComputer": "连接另一台电脑",
+  "@connectAnotherComputer": {"description": "Action that imports a trusted pairing link on a second computer."},
+  "computerPairingLink": "电脑连接链接",
+  "@computerPairingLink": {"description": "Title for the desktop-to-desktop pairing dialog."},
+  "pastePairingLinkFromOtherComputer": "粘贴从另一台电脑复制的连接链接。链接包含加密密钥，请只通过你信任的方式传递。",
+  "@pastePairingLinkFromOtherComputer": {"description": "Security guidance for desktop-to-desktop pairing."},
+  "pastePairingLink": "粘贴连接链接",
+  "@pastePairingLink": {"description": "Placeholder for the desktop pairing link field."},
+  "connectComputer": "连接电脑",
+  "@connectComputer": {"description": "Confirms a desktop-to-desktop pairing link."},
+  "invalidPairingLink": "这个连接链接无效或不完整。",
+  "@invalidPairingLink": {"description": "Shown when a desktop pairing link cannot be decoded."},
+  "copyLinkForAnotherComputer": "复制给另一台电脑",
+  "@copyLinkForAnotherComputer": {"description": "Copies the current encrypted pairing link for desktop import."},
+  "pairingLinkCopied": "连接链接已复制，请像一次性密码一样妥善传递。",
+  "@pairingLinkCopied": {"description": "Confirmation after copying a pairing link."},
+  "communicationMethod": "通信方式",
+  "@communicationMethod": {"description": "Label for the per-device transport preference."},
+  "automaticRecommended": "自动（推荐）",
+  "@automaticRecommended": {"description": "Transport option that prefers direct WebRTC and falls back to relay."},
+  "localNetworkDirect": "局域网直连",
+  "@localNetworkDirect": {"description": "Transport option that sends content only over direct WebRTC."},
+  "encryptedService": "加密服务",
+  "@encryptedService": {"description": "Transport option that sends encrypted content through the relay service."},
+  "localNetworkHandshakeNote": "局域网模式仍会使用服务完成加密握手，但剪贴板与文件正文只走电脑间直连。",
+  "@localNetworkHandshakeNote": {"description": "Clarifies that local-network mode still uses relay signalling."},
+  "computerSyncDefaultsNote": "电脑设备默认关闭提醒和自动同步；只有主动分享后，内容才会写入对方的系统剪贴板。",
+  "@computerSyncDefaultsNote": {"description": "Explains safe defaults for desktop-to-desktop links."},
+  "sharedFileIsNoLongerAvailable": "本地文件已不存在，因此没有发送。",
+  "@sharedFileIsNoLongerAvailable": {"description": "Explains why an explicit device file share failed."},
+  "sharedFileIsLargerThan25MiB": "文件超过 25 MiB，因此没有发送。",
+  "@sharedFileIsLargerThan25MiB": {"description": "Explains the device file transfer limit."},
+  "systemSelectionTools": "系统级划词工具",
+  "@systemSelectionTools": {
+    "description": "Settings title for the optional system-wide text selection plugin."
+  },
+  "systemSelectionToolsDescription": "在支持读取选区的 App 中显示轻量工具条。复制始终本地完成；翻译和解释需要你配置可用的模型服务。",
+  "@systemSelectionToolsDescription": {
+    "description": "Privacy and behavior summary for the system selection plugin."
+  },
+  "enableSystemSelectionTools": "打开系统级划词工具",
+  "@enableSystemSelectionTools": {
+    "description": "Switch label for the system selection plugin."
+  },
+  "enableSystemSelectionToolsDescription": "默认关闭。关闭后 DingDong 不安装划词监听，也不会请求模型。",
+  "@enableSystemSelectionToolsDescription": {
+    "description": "Lifecycle explanation for the system selection plugin."
+  },
+  "selectionPluginRunning": "运行中",
+  "@selectionPluginRunning": {
+    "description": "Runtime state for an active system selection plugin."
+  },
+  "selectionPluginPermissionNeeded": "已打开 · 需要辅助功能权限",
+  "@selectionPluginPermissionNeeded": {
+    "description": "Runtime state when selection is enabled but host permission is missing."
+  },
+  "selectionPluginStopped": "已停止",
+  "@selectionPluginStopped": {
+    "description": "Runtime state when the system selection plugin is disabled or not running."
+  },
+  "selectionModelProvider": "模型服务",
+  "@selectionModelProvider": {
+    "description": "Settings label for model backend."
+  },
+  "selectionModelEndpoint": "服务地址",
+  "@selectionModelEndpoint": {
+    "description": "Settings label for model service endpoint."
+  },
+  "selectionModelName": "模型",
+  "@selectionModelName": {
+    "description": "Settings label for model name."
+  },
+  "selectionTargetLanguage": "翻译为",
+  "@selectionTargetLanguage": {
+    "description": "Settings label for translation target language."
+  },
+  "selectionUnloadLocalModel": "每次回答后卸载本地模型",
+  "@selectionUnloadLocalModel": {
+    "description": "Low-memory option for a local model backend."
+  },
+  "selectionUnloadLocalModelDescription": "降低空闲内存占用，但下一次回答会稍慢。",
+  "@selectionUnloadLocalModelDescription": {
+    "description": "Tradeoff description for unloading a local model."
+  },
+  "selectionApiToken": "API Token",
+  "@selectionApiToken": {
+    "description": "Settings label for a user-provided model API token."
+  },
+  "selectionTokenPlaceholder": "粘贴你自己的 Token",
+  "@selectionTokenPlaceholder": {
+    "description": "Placeholder for the secret token field."
+  },
+  "selectionTokenSaved": "已安全保存到钥匙串",
+  "@selectionTokenSaved": {
+    "description": "Token is present in native secure storage."
+  },
+  "selectionTokenNotSaved": "未配置",
+  "@selectionTokenNotSaved": {
+    "description": "No token is present in native secure storage."
+  },
+  "saveToken": "保存 Token",
+  "@saveToken": {
+    "description": "Action that saves a user-provided API token."
+  },
+  "removeToken": "移除 Token",
+  "@removeToken": {
+    "description": "Action that removes a user-provided API token."
+  },
+  "selectionConfigurationApply": "应用模型设置",
+  "@selectionConfigurationApply": {
+    "description": "Action that validates and persists selection model settings."
+  },
+  "selectionPluginError": "{reason, select, invalidEndpoint{请输入不含账号、查询参数或片段的服务地址。} emptyModel{请输入模型名称。} emptyTargetLanguage{请输入目标语言。} localEndpointRequired{Ollama 和 LM Studio 必须使用本机回环 HTTP 地址。} remoteHttpsRequired{远程模型服务必须使用 HTTPS。} updateFailed{插件更新失败，请刷新状态后重试。} persistenceFailed{插件状态已改变，但设置保存失败。请检查本机存储后重新应用。} unavailable{原生插件不可用，请安装包含系统划词功能的构建。} statusUnavailable{无法读取插件状态，请再次刷新。} permissionSettingsUnavailable{请打开系统设置中的辅助功能设置，允许 DingDong。} tokenRequired{请输入你自己的 API Token。} tokenSaveFailed{Token 保存失败，请解锁钥匙串后重试。} tokenRemoveFailed{Token 移除失败，请解锁钥匙串后重试。} other{插件更新失败，请刷新状态后重试。}}",
+  "@selectionPluginError": {
+    "description": "Actionable native selection plugin validation and runtime errors.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   }
 }

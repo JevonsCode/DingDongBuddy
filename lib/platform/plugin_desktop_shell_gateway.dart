@@ -64,6 +64,8 @@ final class PluginDesktopShellGateway
   Timer? _trayBuddyPreviewTimer;
   Timer? _trayBuddyFrameTimer;
   bool _started = false;
+  bool _unreadControllerRestored = false;
+  int _pendingUnreadAcknowledgements = 0;
   bool _methodHandlersInstalled = false;
   bool _taskbarIsLight = false;
   bool _hideDockIcon = false;
@@ -115,6 +117,12 @@ final class PluginDesktopShellGateway
     windowManager.addListener(this);
     trayManager.addListener(this);
     await _unreadController.restore();
+    _unreadControllerRestored = true;
+    if (_pendingUnreadAcknowledgements > 0) {
+      final int pending = _pendingUnreadAcknowledgements;
+      _pendingUnreadAcknowledgements = 0;
+      await _unreadController.acknowledgeCount(pending);
+    }
     if (Platform.isWindows) {
       _taskbarIsLight = await trayManager.getTaskbarSurfaceIsLight();
       await _unreadController.refresh();
@@ -223,6 +231,17 @@ final class PluginDesktopShellGateway
   }
 
   Future<void> markUnread() => _unreadController.markUnread();
+
+  Future<void> acknowledgeUnreadCount(int count) {
+    if (count <= 0) {
+      return Future<void>.value();
+    }
+    if (!_unreadControllerRestored) {
+      _pendingUnreadAcknowledgements += count;
+      return Future<void>.value();
+    }
+    return _unreadController.acknowledgeCount(count);
+  }
 
   Future<void> shakeTrayIcon() async {
     if (!Platform.isMacOS) {
@@ -476,6 +495,7 @@ final class PluginDesktopShellGateway
     await trayManager.destroy();
     _windowVisible.value = false;
     _started = false;
+    _unreadControllerRestored = false;
   }
 
   @override

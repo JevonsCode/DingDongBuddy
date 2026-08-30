@@ -141,6 +141,9 @@ class _DesktopSearchFieldState extends State<DesktopSearchField> {
           fontSize: 13,
           height: 1.05,
         );
+    final double clearWidth = _hasText && widget.enabled
+        ? (widget.height <= 34 ? 32 : 34)
+        : 0;
     return Container(
       key: widget.surfaceKey,
       height: widget.height,
@@ -191,23 +194,24 @@ class _DesktopSearchFieldState extends State<DesktopSearchField> {
             width: widget.height,
             height: widget.height,
           ),
-          suffixIcon: _hasText && widget.enabled
-              ? Center(
-                  child: DesktopIconButton(
-                    key: widget.clearButtonKey,
-                    tooltip: widget.clearTooltip,
-                    onPressed: _clear,
-                    size: widget.height <= 34 ? 26 : 28,
-                    iconSize: 14,
-                    foregroundColor: foreground,
-                    icon: const Icon(Icons.close_rounded),
+          suffixIcon: clearWidth == 0
+              ? null
+              : SizedBox(
+                  width: clearWidth,
+                  child: Center(
+                    child: DesktopIconButton(
+                      key: widget.clearButtonKey,
+                      tooltip: widget.clearTooltip,
+                      onPressed: _clear,
+                      size: widget.height <= 34 ? 26 : 28,
+                      iconSize: 14,
+                      foregroundColor: foreground,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
                   ),
-                )
-              : null,
+                ),
           suffixIconConstraints: BoxConstraints.tightFor(
-            width: _hasText && widget.enabled
-                ? (widget.height <= 34 ? 32 : 34)
-                : 0,
+            width: clearWidth,
             height: widget.height,
           ),
           border: InputBorder.none,

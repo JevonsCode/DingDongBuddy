@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
@@ -58,6 +59,29 @@ final class DeviceLinkTextTooLargeException implements Exception {
       'is $maximumBytes bytes.';
 }
 
+final class DeviceLinkFileUnavailableException implements Exception {
+  const DeviceLinkFileUnavailableException();
+
+  @override
+  String toString() =>
+      'DeviceLinkFileUnavailableException: the local file is unavailable.';
+}
+
+final class DeviceLinkFileTooLargeException implements Exception {
+  const DeviceLinkFileTooLargeException({
+    required this.actualBytes,
+    this.maximumBytes = deviceLinkMaximumFileBytes,
+  });
+
+  final int actualBytes;
+  final int maximumBytes;
+
+  @override
+  String toString() =>
+      'DeviceLinkFileTooLargeException: file is $actualBytes bytes; maximum '
+      'is $maximumBytes bytes.';
+}
+
 final class DeviceLinkController extends ChangeNotifier
     implements DeviceLinkManagement {
   factory DeviceLinkController({
@@ -67,6 +91,8 @@ final class DeviceLinkController extends ChangeNotifier
     required Uri? pwaBaseUrl,
     required Uri? relayBaseUrl,
     DeviceLinkSessionFactory sessionFactory = createDeviceLinkSession,
+    DeviceLinkSessionFactory peerSessionFactory = createPeerDeviceLinkSession,
+    ClipboardGateway? systemClipboard,
     VoidCallback? onClipboardReceived,
     AgentStateProvider? agentStateProvider,
     AgentSeenCallback? onAgentSeen,
@@ -78,6 +104,8 @@ final class DeviceLinkController extends ChangeNotifier
     pwaBaseUrl: pwaBaseUrl,
     relayBaseUrl: relayBaseUrl,
     sessionFactory: sessionFactory,
+    peerSessionFactory: peerSessionFactory,
+    systemClipboard: systemClipboard,
     onClipboardReceived: onClipboardReceived,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
@@ -91,6 +119,8 @@ final class DeviceLinkController extends ChangeNotifier
     required this._pwaBaseUrl,
     required this._relayBaseUrl,
     required this._sessionFactory,
+    required this._peerSessionFactory,
+    this._systemClipboard,
     this.onClipboardReceived,
     this._agentStateProvider,
     this._onAgentSeen,
@@ -105,6 +135,8 @@ final class DeviceLinkController extends ChangeNotifier
   final Uri? _pwaBaseUrl;
   final Uri? _relayBaseUrl;
   final DeviceLinkSessionFactory _sessionFactory;
+  final DeviceLinkSessionFactory _peerSessionFactory;
+  final ClipboardGateway? _systemClipboard;
   final VoidCallback? onClipboardReceived;
   final AgentStateProvider? _agentStateProvider;
   final AgentSeenCallback? _onAgentSeen;
@@ -113,6 +145,8 @@ final class DeviceLinkController extends ChangeNotifier
       <String, _ManagedDeviceSession>{};
   final Map<String, DeviceConnectionStatus> _statuses =
       <String, DeviceConnectionStatus>{};
+  final Map<String, DeviceLinkActiveTransport> _transports =
+      <String, DeviceLinkActiveTransport>{};
   final Map<String, _IncomingFileUpload> _incomingFiles =
       <String, _IncomingFileUpload>{};
 
@@ -125,6 +159,7 @@ final class DeviceLinkController extends ChangeNotifier
   bool _started = false;
   bool _disposed = false;
   Future<void> _agentSyncTail = Future<void>.value();
+  Future<void> _deviceMutationTail = Future<void>.value();
 
   @override
   LocalDeviceIdentity get localDevice => _localDevice;
@@ -144,6 +179,10 @@ final class DeviceLinkController extends ChangeNotifier
       _statuses[deviceId] ?? DeviceConnectionStatus.disconnected;
 
   @override
+  DeviceLinkActiveTransport transportOf(String deviceId) =>
+      _transports[deviceId] ?? DeviceLinkActiveTransport.none;
+
+  @override
   bool isConnected(String deviceId) =>
       statusOf(deviceId) == DeviceConnectionStatus.connected;
 
@@ -158,8 +197,10 @@ final class DeviceLinkController extends ChangeNotifier
     if (document == null) await _persist();
     for (final LinkedDevice device in _devices) {
       _statuses[device.id] = DeviceConnectionStatus.disconnected;
-      if (!device.manuallyDisconnected && _relayBaseUrl != null) {
-        _attachSession(device.room, deviceId: device.id);
+      _transports[device.id] = DeviceLinkActiveTransport.none;
+      if (!device.manuallyDisconnected &&
+          (device.relayUrl ?? _relayBaseUrl) != null) {
+        _attachDeviceSession(device);
       }
     }
     notifyListeners();
@@ -198,6 +239,51 @@ final class DeviceLinkController extends ChangeNotifier
     if (!_disposed) notifyListeners();
   }
 
+  @override
+  Future<void> joinComputer(String pairingLink) async {
+    final DevicePairingPayload payload = DevicePairingPayload.parseInput(
+      pairingLink,
+    );
+    if (payload.hostId == _localDevice.id) {
+      throw const FormatException('A computer cannot connect to itself.');
+    }
+    final LinkedDevice? previous = _devices.cast<LinkedDevice?>().firstWhere(
+      (LinkedDevice? device) => device?.id == payload.hostId,
+      orElse: () => null,
+    );
+    if (previous != null && previous.room != payload.room) {
+      await _removeSession(previous.room);
+    }
+    final LinkedDevice device = await _upsertDevice(
+      payload.hostId,
+      (LinkedDevice? current) => LinkedDevice(
+        id: payload.hostId,
+        name: payload.hostName,
+        kind: LinkedDeviceKind.computer,
+        platform: current?.platform ?? '',
+        room: payload.room,
+        secret: payload.secret,
+        relayUrl: payload.relayUrl,
+        connectionSide: DeviceLinkConnectionSide.peer,
+        transportPreference:
+            current?.transportPreference ??
+            DeviceLinkTransportPreference.automatic,
+        autoSendClipboard: current?.autoSendClipboard ?? false,
+        receiveAgentNotifications: current?.receiveAgentNotifications ?? false,
+        vibrationEnabled: false,
+        manuallyDisconnected: false,
+        pairedAt: DateTime.now().toUtc(),
+        sharedClipboardItemIds:
+            current?.sharedClipboardItemIds ?? const <String>[],
+        lastSeenAt: current?.lastSeenAt,
+      ),
+    );
+    _statuses[device.id] = DeviceConnectionStatus.connecting;
+    _transports[device.id] = DeviceLinkActiveTransport.none;
+    _attachDeviceSession(device);
+    _notifyIfActive();
+  }
+
   void requestShare(ClipboardRecord record) {
     _pendingShare = record;
     _shareRequestRevision += 1;
@@ -215,18 +301,22 @@ final class DeviceLinkController extends ChangeNotifier
   }
 
   Future<void> handleLocalClipboard(ClipboardRecord record) async {
-    if (record.sensitive) return;
+    if (record.sensitive ||
+        record.tags.any((String tag) => tag.startsWith('device-origin:'))) {
+      return;
+    }
+    final List<Future<void>> sends = <Future<void>>[];
     for (final LinkedDevice device in _devices) {
       if (!device.autoSendClipboard || !isConnected(device.id)) continue;
       if (record.updatedAt.isBefore(device.pairedAt)) continue;
-      if (record.tags.contains('device-origin:${device.id}')) continue;
-      try {
-        await _sendClipboardRecord(record, device.id, manual: false);
-      } on Object {
-        // A disconnect between capture and send will update through the
-        // session state; the local clipboard capture remains successful.
-      }
+      sends.add(
+        _sendClipboardRecord(record, device.id, manual: false).catchError((_) {
+          // A disconnect between capture and send will update through the
+          // session state; the local clipboard capture remains successful.
+        }),
+      );
     }
+    await Future.wait(sends);
   }
 
   Future<void> sendAgentCompleted(
@@ -237,6 +327,7 @@ final class DeviceLinkController extends ChangeNotifier
     final bool needsUserAttention =
         request.notificationKind == AgentNotificationKind.attention;
     for (final LinkedDevice device in _devices) {
+      if (device.kind == LinkedDeviceKind.computer) continue;
       final Map<String, Object?> message = <String, Object?>{
         'type': 'agent.completed',
         'id': notificationId,
@@ -310,10 +401,44 @@ final class DeviceLinkController extends ChangeNotifier
   }
 
   @override
+  Future<void> setTransportPreference(
+    String deviceId,
+    DeviceLinkTransportPreference value,
+  ) async {
+    final LinkedDevice device = _device(deviceId);
+    if (device.transportPreference == value) return;
+    await _updateDevice(
+      deviceId,
+      (LinkedDevice current) => current.copyWith(transportPreference: value),
+    );
+    final LinkedDevice current = _device(deviceId);
+    final _ManagedDeviceSession? managed = _sessionsByRoom[current.room];
+    if (current.kind == LinkedDeviceKind.computer && managed != null) {
+      try {
+        await managed.handle.send(<String, Object?>{
+          'type': 'settings.update',
+          'transportPreference': value.name,
+        });
+      } on Object {
+        // The local preference remains durable and will apply on reconnect.
+      }
+    }
+    final DeviceLinkSessionHandle? handle = managed?.handle;
+    if (handle is ConfigurableDeviceLinkSessionHandle) {
+      final ConfigurableDeviceLinkSessionHandle configurable =
+          handle as ConfigurableDeviceLinkSessionHandle;
+      configurable.updateTransportPreference(value);
+      _transports[deviceId] = configurable.activeTransport;
+    }
+    _notifyIfActive();
+  }
+
+  @override
   Future<void> disconnect(String deviceId) async {
     final LinkedDevice device = _device(deviceId);
     await _removeSession(device.room);
     _statuses[deviceId] = DeviceConnectionStatus.disconnected;
+    _transports[deviceId] = DeviceLinkActiveTransport.none;
     await _updateDevice(
       deviceId,
       (LinkedDevice value) => value.copyWith(manuallyDisconnected: true),
@@ -322,18 +447,18 @@ final class DeviceLinkController extends ChangeNotifier
 
   @override
   Future<void> reconnect(String deviceId) async {
-    if (_relayBaseUrl == null) return;
-    final LinkedDevice device = _device(deviceId);
     await _updateDevice(
       deviceId,
       (LinkedDevice value) => value.copyWith(manuallyDisconnected: false),
     );
-    final _ManagedDeviceSession? session = _sessionsByRoom[device.room];
+    final LinkedDevice current = _device(deviceId);
+    if ((current.relayUrl ?? _relayBaseUrl) == null) return;
+    final _ManagedDeviceSession? session = _sessionsByRoom[current.room];
     if (session != null) {
       unawaited(session.handle.connect());
       return;
     }
-    _attachSession(device.room, deviceId: device.id);
+    _attachDeviceSession(current);
   }
 
   @override
@@ -341,11 +466,8 @@ final class DeviceLinkController extends ChangeNotifier
     final LinkedDevice device = _device(deviceId);
     await _removeSession(device.room);
     _statuses.remove(deviceId);
-    _devices = List<LinkedDevice>.unmodifiable(
-      _devices.where((LinkedDevice value) => value.id != deviceId),
-    );
-    await _persist();
-    notifyListeners();
+    _transports.remove(deviceId);
+    await _deletePersistedDevice(deviceId);
   }
 
   /// Gives private controller parts a safe notification boundary without

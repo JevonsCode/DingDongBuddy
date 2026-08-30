@@ -3168,3 +3168,38 @@ footer span {
     transition-duration: 0.01ms !important;
   }
 }
+
+.pet-project {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding-block: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.pet-project img {
+  flex: 0 0 auto;
+}
+
+.pet-project h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.pet-project p {
+  max-width: 65ch;
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.pet-project a {
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .pet-project {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

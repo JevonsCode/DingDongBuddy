@@ -20,7 +20,6 @@ class SettingsWindowApp extends StatefulWidget {
     required this.viewModel,
     required this.windowController,
     this.initialDestination = SettingsWindowDestination.top,
-    this.onSettingsChanged,
     this.soundFileGateway,
     this.soundPreviewGateway,
     this.onRestartApplication,
@@ -30,7 +29,6 @@ class SettingsWindowApp extends StatefulWidget {
   final SettingsViewModel viewModel;
   final WindowController windowController;
   final SettingsWindowDestination initialDestination;
-  final Future<void> Function()? onSettingsChanged;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
   final Future<void> Function()? onRestartApplication;
@@ -53,7 +51,6 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
       initialDestination: widget.initialDestination,
     );
     unawaited(widget.viewModel.load());
-    widget.viewModel.addListener(_handleSettingsChanged);
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         if (call.method == 'window_focus') {
@@ -69,17 +66,10 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
 
   @override
   void dispose() {
-    widget.viewModel.removeListener(_handleSettingsChanged);
     unawaited(widget.windowController.setWindowMethodHandler(null));
     _navigationController.dispose();
     widget.viewModel.dispose();
     super.dispose();
-  }
-
-  void _handleSettingsChanged() {
-    if (widget.viewModel.isLoaded) {
-      unawaited(widget.onSettingsChanged?.call());
-    }
   }
 
   @override

@@ -63,6 +63,26 @@ void main() {
     },
   );
 
+  test(
+    'asset search preserves the all selector for the library route',
+    () async {
+      final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+      final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(
+        transport,
+      );
+
+      await executor.execute('dingdong_search_assets', <String, Object?>{
+        'query': 'release',
+        'type': 'all',
+      });
+
+      expect(transport.query, <String, String>{
+        'query': 'release',
+        'type': 'all',
+      });
+    },
+  );
+
   test('Prompt creation is disabled until scope is configured', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
@@ -236,6 +256,9 @@ void main() {
       'id': 'reviewer-id',
       'mode': 'full',
       'source': 'Codex',
+      // Legacy callers cannot opt into clipboard reads through this tool.
+      'includeClipboard': true,
+      'includeSensitiveClipboard': true,
     });
 
     expect(transport.method, 'GET');

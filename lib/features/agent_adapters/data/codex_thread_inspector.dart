@@ -69,13 +69,6 @@ final class CodexThreadInspector {
     return result.openableConversationIds.contains(normalizedId);
   }
 
-  Future<Set<String>> openableThreadIds(Iterable<String> threadIds) async {
-    final AgentConversationPreflightResult result = await inspectThreadIds(
-      threadIds,
-    );
-    return result.openableConversationIds;
-  }
-
   Future<AgentConversationPreflightResult> inspectThreadIds(
     Iterable<String> threadIds,
   ) async {

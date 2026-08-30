@@ -10,8 +10,11 @@ The required outcome is one local installation with all of the following:
 - the latest DingDong release for the computer's supported OS and architecture;
 - DingDong running and its loopback health endpoint responding;
 - the current Agent connected to DingDong through its native global MCP config;
-- one native, persistent task-completion Hook for the current Agent; and
-- separate successful tests of the Hook and the `dingdong_notify` MCP tool.
+- one native, persistent task-completion Hook for the current Agent;
+- for Codex, one native `SessionStart` Hook that acknowledges the opened
+  conversation's DingDong reminders; and
+- separate successful tests of the applicable Hooks and the `dingdong_notify`
+  MCP tool.
 
 ## Safety and support boundaries
 
@@ -141,12 +144,29 @@ perform this setup in the current local Agent or IDE:
    has none, configure MCP only and report that automatic completion alerts are
    unsupported. Do not invent a setting. For Kiro versions that expose only a
    project-level Hook, do not modify the project without explicit permission.
-3. Validate every changed TOML or JSON file, then reload the client. For Codex,
+3. For Codex only, add exactly one user-level `SessionStart` command Hook to
+   `~/.codex/config.toml`. It must match only `startup` and `resume`, so clearing
+   or compacting a conversation cannot acknowledge a reminder:
+
+   ```toml
+   [[hooks.SessionStart]]
+   matcher = "^(startup|resume)$"
+
+   [[hooks.SessionStart.hooks]]
+   type = "command"
+   command = '"<DINGDONG_MCP_PATH>" --acknowledge-session-start --source "Codex"'
+   timeout = 10
+   ```
+
+   This Hook sends Codex's stable `session_id` to DingDong. DingDong marks only
+   unseen activity for that Codex conversation as seen and reduces the tray
+   count by the number of matching reminders; it does not clear other threads.
+4. Validate every changed TOML or JSON file, then reload the client. For Codex,
    restart `dingdong` under **Settings → MCP servers**, then use **DingDong →
-   Resource Manager → Agent access → Codex → Trust & enable**. If that action is
-   unavailable, review and trust the Hook in `/hooks`. A changed executable path
-   creates a new Hook trust identity.
-4. Keep DingDong's resource semantics distinct after connection:
+   Resource Manager → Agent access → Codex → Trust & enable** for the completion
+   Hook. Review and trust the separate `SessionStart` Hook in `/hooks`. A changed
+   executable path creates a new Hook trust identity.
+5. Keep DingDong's resource semantics distinct after connection:
    - Prompt: every active Prompt is delivered in full and applied automatically
      as a required instruction.
    - Skill: every successful Bridge response returns the authoritative complete
@@ -158,7 +178,7 @@ perform this setup in the current local Agent or IDE:
      disabled, invalid, or out of scope.
    - MCP: configuration only makes tools available; call an MCP tool when the
      task needs it, not automatically on every turn.
-5. Confirm the configuration tools `dingdong_install_skill`,
+6. Confirm the configuration tools `dingdong_install_skill`,
    `dingdong_upsert_trigger_group`, and `dingdong_bind_resource_scope` are
    present. When the user explicitly asks to install a Skill through DingDong
    for one project, use them in that order with an exact existing absolute
@@ -166,7 +186,7 @@ perform this setup in the current local Agent or IDE:
    load in a matching and an unrelated workspace; the latter must reject the
    Skill.
 
-## 5. Test both connections and report
+## 5. Test every applicable connection and report
 
 1. Pipe this JSON object as standard input to the exact Hook command and confirm
    DingDong receives the notification:
@@ -175,13 +195,21 @@ perform this setup in the current local Agent or IDE:
    {"summary":"DingDong task-completion hook is connected"}
    ```
 
-2. Confirm `dingdong_notify` appears in the current client's MCP tools and call
+2. For Codex, pipe this JSON object to the exact `SessionStart` Hook command and
+   require it to exit successfully with `{}`:
+
+   ```json
+   {"hook_event_name":"SessionStart","source":"resume","session_id":"dingdong-session-hook-test"}
+   ```
+
+3. Confirm `dingdong_notify` appears in the current client's MCP tools and call
    it once with message `DingDong MCP is connected` and the current client name
    as `source`.
-3. Report the installed version and path, the user-level Agent configuration
+4. Report the installed version and path, the user-level Agent configuration
    files changed, whether the MCP server is available, whether the completion
-   Hook is configured (and trusted for Codex), and whether both tests succeeded.
+   Hook is configured (and trusted for Codex), whether the Codex `SessionStart`
+   Hook is trusted, and whether all applicable tests succeeded.
    On failure, preserve the previous configuration and return the original error
    instead of guessing.
-4. Remove only the temporary download and mount created during this install.
+5. Remove only the temporary download and mount created during this install.
    Never remove DingDong user data or unrelated Agent configuration.

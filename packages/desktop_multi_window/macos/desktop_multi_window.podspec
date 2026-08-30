@@ -13,7 +13,8 @@ A new flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files     = 'Classes/**/*'
+  # CocoaPods and Swift Package Manager compile the same maintained sources.
+  s.source_files     = 'desktop_multi_window/Sources/desktop_multi_window/**/*'
   s.dependency 'FlutterMacOS'
 
   s.platform = :osx, '10.11'

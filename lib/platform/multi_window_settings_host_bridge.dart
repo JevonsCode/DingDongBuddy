@@ -1,5 +1,7 @@
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
+import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
+import 'package:dingdong/features/selection/domain/selection_plugin_gateway.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
@@ -14,6 +16,7 @@ final class MultiWindowSettingsHostBridge
         ClipboardMonitoring,
         LaunchAtStartup,
         QuickPastePermissionGateway,
+        SelectionPluginGateway,
         SoundPreviewGateway,
         ApplicationUpdater,
         SystemDataCleaner {
@@ -48,6 +51,43 @@ final class MultiWindowSettingsHostBridge
   @override
   Future<void> openSettings() {
     return _parent.invokeMethod<void>('settings_quick_open');
+  }
+
+  @override
+  Future<SelectionPluginRuntimeStatus> apply(
+    SelectionPluginConfiguration configuration,
+  ) async {
+    return SelectionPluginRuntimeStatus.fromPlatform(
+      await _parent.invokeMethod<Object?>(
+        'settings_selection_apply',
+        configuration.toPlatformArguments(),
+      ),
+    );
+  }
+
+  @override
+  Future<SelectionPluginRuntimeStatus> status() async {
+    return SelectionPluginRuntimeStatus.fromPlatform(
+      await _parent.invokeMethod<Object?>('settings_selection_status'),
+    );
+  }
+
+  @override
+  Future<void> openAccessibilitySettings() {
+    return _parent.invokeMethod<void>('settings_selection_open_accessibility');
+  }
+
+  @override
+  Future<void> saveToken(String token) {
+    return _parent.invokeMethod<void>(
+      'settings_selection_token_save',
+      <String, String>{'token': token},
+    );
+  }
+
+  @override
+  Future<void> clearToken() {
+    return _parent.invokeMethod<void>('settings_selection_token_clear');
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
+import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
@@ -106,6 +107,7 @@ final class AppSettings {
     this.mcpAccessSeen = false,
     this.agentSetupAcknowledgedRevision = currentAgentSetupRevision,
     this.apiPort = 2333,
+    this.selectionPlugin = const SelectionPluginConfiguration(),
   });
 
   final bool clipboardMonitoring;
@@ -137,6 +139,7 @@ final class AppSettings {
   final bool mcpAccessSeen;
   final int agentSetupAcknowledgedRevision;
   final int apiPort;
+  final SelectionPluginConfiguration selectionPlugin;
 
   bool get requiresAgentSetupUpdate =>
       agentSetupAcknowledgedRevision < currentAgentSetupRevision;
@@ -176,6 +179,7 @@ final class AppSettings {
           ? 0
           : agentSetupAcknowledgedRevision,
       apiPort: apiPort >= 1024 && apiPort <= 65535 ? apiPort : 2333,
+      selectionPlugin: selectionPlugin.sanitized(),
     );
   }
 
@@ -209,6 +213,7 @@ final class AppSettings {
     bool? mcpAccessSeen,
     int? agentSetupAcknowledgedRevision,
     int? apiPort,
+    SelectionPluginConfiguration? selectionPlugin,
   }) {
     return AppSettings(
       clipboardMonitoring: clipboardMonitoring ?? this.clipboardMonitoring,
@@ -255,6 +260,7 @@ final class AppSettings {
       agentSetupAcknowledgedRevision:
           agentSetupAcknowledgedRevision ?? this.agentSetupAcknowledgedRevision,
       apiPort: apiPort ?? this.apiPort,
+      selectionPlugin: selectionPlugin ?? this.selectionPlugin,
     ).sanitized();
   }
 }

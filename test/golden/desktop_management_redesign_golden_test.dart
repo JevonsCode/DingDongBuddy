@@ -170,6 +170,40 @@ void main() {
     }
   }, tags: <String>['golden']);
 
+  testWidgets(
+    'connected computer transport settings light and dark',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(720, 900);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final _GoldenDeviceManagement controller = _GoldenDeviceManagement(
+        includeComputer: true,
+      );
+
+      for (final (ThemeMode mode, String name) in <(ThemeMode, String)>[
+        (ThemeMode.light, 'connected_computer_transport_light'),
+        (ThemeMode.dark, 'connected_computer_transport_dark'),
+      ]) {
+        await tester.pumpWidget(
+          _testApp(
+            mode: mode,
+            home: RepaintBoundary(
+              key: const Key('management-golden'),
+              child: DeviceLinkManagerScreen(controller: controller),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await expectLater(
+          find.byKey(const Key('management-golden')),
+          matchesGoldenFile('goldens/$name.png'),
+        );
+      }
+    },
+    tags: <String>['golden'],
+  );
+
   testWidgets('clipboard detail preview light and dark', (
     WidgetTester tester,
   ) async {
@@ -401,11 +435,34 @@ List<Resource> _resources() {
 
 final class _GoldenDeviceManagement extends ChangeNotifier
     implements DeviceLinkManagement {
+  _GoldenDeviceManagement({this.includeComputer = false});
+
+  final bool includeComputer;
+
   @override
   bool get canPair => true;
 
   @override
-  List<LinkedDevice> get devices => const <LinkedDevice>[];
+  List<LinkedDevice> get devices => includeComputer
+      ? <LinkedDevice>[
+          LinkedDevice(
+            id: 'studio-macbook',
+            name: 'Studio MacBook',
+            kind: LinkedDeviceKind.computer,
+            platform: 'macos',
+            room: 'computer-room-abcdefghijkl',
+            secret: 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc',
+            connectionSide: DeviceLinkConnectionSide.host,
+            transportPreference: DeviceLinkTransportPreference.localNetwork,
+            autoSendClipboard: false,
+            receiveAgentNotifications: false,
+            vibrationEnabled: false,
+            manuallyDisconnected: false,
+            pairedAt: DateTime.utc(2026, 8, 27),
+            lastSeenAt: DateTime.utc(2026, 8, 27, 10, 30),
+          ),
+        ]
+      : const <LinkedDevice>[];
 
   @override
   LocalDeviceIdentity get localDevice => const LocalDeviceIdentity(
@@ -428,13 +485,16 @@ final class _GoldenDeviceManagement extends ChangeNotifier
   Future<void> cancelPairing() async {}
 
   @override
+  Future<void> joinComputer(String pairingLink) async {}
+
+  @override
   Future<void> deleteDevice(String deviceId) async {}
 
   @override
   Future<void> disconnect(String deviceId) async {}
 
   @override
-  bool isConnected(String deviceId) => false;
+  bool isConnected(String deviceId) => includeComputer;
 
   @override
   Future<void> reconnect(String deviceId) async {}
@@ -446,6 +506,18 @@ final class _GoldenDeviceManagement extends ChangeNotifier
   Future<void> setAutoSendClipboard(String deviceId, bool value) async {}
 
   @override
-  DeviceConnectionStatus statusOf(String deviceId) =>
-      DeviceConnectionStatus.disconnected;
+  Future<void> setTransportPreference(
+    String deviceId,
+    DeviceLinkTransportPreference value,
+  ) async {}
+
+  @override
+  DeviceConnectionStatus statusOf(String deviceId) => includeComputer
+      ? DeviceConnectionStatus.connected
+      : DeviceConnectionStatus.disconnected;
+
+  @override
+  DeviceLinkActiveTransport transportOf(String deviceId) => includeComputer
+      ? DeviceLinkActiveTransport.localNetwork
+      : DeviceLinkActiveTransport.none;
 }

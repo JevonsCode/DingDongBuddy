@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
@@ -5,6 +7,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.da
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -40,6 +43,16 @@ void main() {
         ),
         isTrue,
       );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      expect(
+        calls.hasHandlerCall(
+          channel: 'mixin.one/window_controller/$qrWindowId',
+          method: 'unregisterMethodHandler',
+        ),
+        isTrue,
+      );
     },
   );
 
@@ -66,6 +79,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(calls.hasWindowCall('window_hide', detailWindowId), isTrue);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(
+      calls.hasHandlerCall(
+        channel: 'mixin.one/window_controller/$detailWindowId',
+        method: 'unregisterMethodHandler',
+      ),
+      isTrue,
+    );
+
+    calls.windowCalls.clear();
+    await _sendWindowMethod(
+      tester.binding.defaultBinaryMessenger,
+      channel: 'mixin.one/window_controller/$detailWindowId',
+      method: clipboardPreviewFocusWindowMethod,
+    );
+    await tester.pump();
+    expect(
+      calls.windowCalls.map((MethodCall call) => call.method),
+      isNot(contains('focus')),
+    );
   });
 }
 
@@ -125,6 +160,35 @@ final class _WindowCalls {
             arguments['channel'] == channel &&
             arguments['method'] == method;
       });
+
+  bool hasHandlerCall({required String channel, required String method}) =>
+      channelCalls.any((MethodCall call) {
+        final Object? arguments = call.arguments;
+        return call.method == method &&
+            arguments is Map<Object?, Object?> &&
+            arguments['channel'] == channel;
+      });
+}
+
+Future<void> _sendWindowMethod(
+  TestDefaultBinaryMessenger messenger, {
+  required String channel,
+  required String method,
+  Object? arguments,
+}) async {
+  final Completer<void> handled = Completer<void>();
+  await messenger.handlePlatformMessage(
+    'mixin.one/desktop_multi_window/channels',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall('methodCall', <String, Object?>{
+        'channel': channel,
+        'method': method,
+        'arguments': arguments,
+      }),
+    ),
+    (_) => handled.complete(),
+  );
+  await handled.future;
 }
 
 final class _NoopClipboardGateway implements ClipboardGateway {

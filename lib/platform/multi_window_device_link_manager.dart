@@ -12,9 +12,11 @@ const String deviceLinkManagerSnapshotMethod = 'device_link_snapshot';
 const String deviceLinkManagerBeginPairingMethod = 'device_link_begin_pairing';
 const String deviceLinkManagerCancelPairingMethod =
     'device_link_cancel_pairing';
+const String deviceLinkManagerJoinComputerMethod = 'device_link_join_computer';
 const String deviceLinkManagerAutoSendSetMethod = 'device_link_auto_send_set';
 const String deviceLinkManagerAgentNotificationsSetMethod =
     'device_link_agent_notifications_set';
+const String deviceLinkManagerTransportSetMethod = 'device_link_transport_set';
 const String deviceLinkManagerDisconnectMethod = 'device_link_disconnect';
 const String deviceLinkManagerReconnectMethod = 'device_link_reconnect';
 const String deviceLinkManagerDeleteMethod = 'device_link_delete';
@@ -78,6 +80,10 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
       for (final LinkedDevice device in controller.devices)
         device.id: controller.statusOf(device.id).name,
     },
+    'transports': <String, String>{
+      for (final LinkedDevice device in controller.devices)
+        device.id: controller.transportOf(device.id).name,
+    },
     'pairing': controller.pendingPairing?.toJson(),
     'pairingStatus': controller.pairingStatus.name,
     'canPair': controller.canPair,
@@ -98,6 +104,9 @@ Future<Object?> handleDeviceLinkManagerHostCall(
     case deviceLinkManagerCancelPairingMethod:
       await controller.cancelPairing();
       return null;
+    case deviceLinkManagerJoinComputerMethod:
+      await controller.joinComputer(call.arguments! as String);
+      return null;
     case deviceLinkManagerAutoSendSetMethod:
       final Map<Object?, Object?> values = call.arguments! as Map;
       await controller.setAutoSendClipboard(
@@ -110,6 +119,13 @@ Future<Object?> handleDeviceLinkManagerHostCall(
       await controller.setAgentNotifications(
         values['deviceId']! as String,
         values['enabled']! as bool,
+      );
+      return null;
+    case deviceLinkManagerTransportSetMethod:
+      final Map<Object?, Object?> values = call.arguments! as Map;
+      await controller.setTransportPreference(
+        values['deviceId']! as String,
+        DeviceLinkTransportPreference.parse(values['transport']),
       );
       return null;
     case deviceLinkManagerDisconnectMethod:
@@ -130,8 +146,10 @@ bool isDeviceLinkManagerHostMethod(String method) => const <String>{
   deviceLinkManagerSnapshotMethod,
   deviceLinkManagerBeginPairingMethod,
   deviceLinkManagerCancelPairingMethod,
+  deviceLinkManagerJoinComputerMethod,
   deviceLinkManagerAutoSendSetMethod,
   deviceLinkManagerAgentNotificationsSetMethod,
+  deviceLinkManagerTransportSetMethod,
   deviceLinkManagerDisconnectMethod,
   deviceLinkManagerReconnectMethod,
   deviceLinkManagerDeleteMethod,
@@ -155,6 +173,8 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   List<LinkedDevice> _devices = const <LinkedDevice>[];
   Map<String, DeviceConnectionStatus> _statuses =
       const <String, DeviceConnectionStatus>{};
+  Map<String, DeviceLinkActiveTransport> _transports =
+      const <String, DeviceLinkActiveTransport>{};
   PendingDevicePairing? _pendingPairing;
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
   bool _canPair = false;
@@ -178,6 +198,10 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   @override
   DeviceConnectionStatus statusOf(String deviceId) =>
       _statuses[deviceId] ?? DeviceConnectionStatus.disconnected;
+
+  @override
+  DeviceLinkActiveTransport transportOf(String deviceId) =>
+      _transports[deviceId] ?? DeviceLinkActiveTransport.none;
 
   @override
   bool isConnected(String deviceId) =>
@@ -210,6 +234,17 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
                 entry.key! as String: _parseStatus(entry.value),
           }
         : const <String, DeviceConnectionStatus>{};
+    final Object? rawTransports = json['transports'];
+    _transports = rawTransports is Map
+        ? <String, DeviceLinkActiveTransport>{
+            for (final MapEntry<Object?, Object?> entry
+                in rawTransports.entries)
+              if (entry.key is String)
+                entry.key! as String: DeviceLinkActiveTransport.parse(
+                  entry.value,
+                ),
+          }
+        : const <String, DeviceLinkActiveTransport>{};
     final Object? rawPairing = json['pairing'];
     _pendingPairing = rawPairing is Map
         ? PendingDevicePairing.fromJson(Map<String, Object?>.from(rawPairing))
@@ -230,6 +265,10 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
       _invokeAndReload(deviceLinkManagerCancelPairingMethod);
 
   @override
+  Future<void> joinComputer(String pairingLink) =>
+      _invokeAndReload(deviceLinkManagerJoinComputerMethod, pairingLink);
+
+  @override
   Future<void> setAutoSendClipboard(String deviceId, bool value) =>
       _invokeAndReload(deviceLinkManagerAutoSendSetMethod, <String, Object?>{
         'deviceId': deviceId,
@@ -242,6 +281,15 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
         deviceLinkManagerAgentNotificationsSetMethod,
         <String, Object?>{'deviceId': deviceId, 'enabled': value},
       );
+
+  @override
+  Future<void> setTransportPreference(
+    String deviceId,
+    DeviceLinkTransportPreference value,
+  ) => _invokeAndReload(deviceLinkManagerTransportSetMethod, <String, Object?>{
+    'deviceId': deviceId,
+    'transport': value.name,
+  });
 
   @override
   Future<void> disconnect(String deviceId) =>

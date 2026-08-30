@@ -128,6 +128,10 @@ second gate: the caller must also explicitly set
 a perfect secret detector; the user-controlled content switch is the primary
 permission boundary.
 
+These gates apply to the dedicated clipboard API. Resource-library search,
+asset reads and exports always exclude clipboard records; the MCP library
+tools do not offer clipboard permission overrides.
+
 ## Main API groups
 
 Representative routes are:

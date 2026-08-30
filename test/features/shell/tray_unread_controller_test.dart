@@ -128,6 +128,38 @@ void main() {
       expect(restored.count, 1);
     },
   );
+
+  test('acknowledges only the requested number of unread events', () async {
+    final _MemoryTrayUnreadStore store = _MemoryTrayUnreadStore(
+      const TrayUnreadState.empty(),
+    );
+    final List<int> appearances = <int>[];
+    final TrayUnreadController controller = TrayUnreadController(
+      store: store,
+      apply:
+          ({
+            required bool hot,
+            required String title,
+            required int iconSize,
+            required int unreadCount,
+          }) async {
+            appearances.add(unreadCount);
+          },
+    );
+
+    await controller.markUnread();
+    await controller.markUnread();
+    await controller.markUnread();
+    await controller.acknowledgeCount(2);
+
+    expect(controller.count, 1);
+    expect(appearances.last, 1);
+    expect(store.state.acknowledgedEventId, 2);
+
+    await controller.acknowledgeCount(20);
+    expect(controller.count, 0);
+    expect(store.state.acknowledgedEventId, 3);
+  });
 }
 
 final class _MemoryTrayUnreadStore implements TrayUnreadStore {

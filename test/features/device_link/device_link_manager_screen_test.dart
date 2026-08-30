@@ -65,6 +65,47 @@ void main() {
     expect(controller.beganPairing, isTrue);
   });
 
+  testWidgets('another computer can be joined from its pairing link', (
+    WidgetTester tester,
+  ) async {
+    final _FakeManagement controller = _FakeManagement(includeDevice: false);
+    await _pumpManager(
+      tester,
+      controller: controller,
+      locale: const Locale('zh'),
+    );
+
+    expect(find.textContaining('电脑设备默认关闭提醒'), findsNothing);
+    await tester.tap(find.byKey(const Key('device-join-computer')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('device-computer-pairing-dialog')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('电脑设备默认关闭提醒'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('device-computer-pairing-dialog')),
+        matching: find.byType(Wrap),
+      ),
+      findsWidgets,
+    );
+
+    const String pairingLink = 'https://relay.example/app/#pair=payload';
+    await tester.enterText(
+      find.byKey(const Key('device-computer-pairing-input')),
+      pairingLink,
+    );
+    await tester.tap(find.byKey(const Key('device-computer-pairing-submit')));
+    await tester.pumpAndSettle();
+
+    expect(controller.joinedComputerLink, pairingLink);
+    expect(
+      find.byKey(const Key('device-computer-pairing-dialog')),
+      findsNothing,
+    );
+  });
+
   testWidgets('active pairing QR is visible and has one security explanation', (
     WidgetTester tester,
   ) async {
@@ -114,6 +155,35 @@ void main() {
 
     expect(controller.autoSendDeviceId, 'phone-one');
     expect(controller.autoSendValue, isTrue);
+  });
+
+  testWidgets('computer transport selector exposes its label and value', (
+    WidgetTester tester,
+  ) async {
+    final SemanticsHandle semantics = tester.ensureSemantics();
+    final _FakeManagement controller = _FakeManagement(
+      deviceKind: LinkedDeviceKind.computer,
+    );
+    await _pumpManager(tester, controller: controller);
+
+    final Finder selector = find.byKey(
+      const Key('device-transport-computer-one'),
+    );
+    final Finder selectorSemantics = find.descendant(
+      of: selector,
+      matching: find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Semantics &&
+            widget.properties.label == 'Communication method',
+      ),
+    );
+    expect(selectorSemantics, findsOneWidget);
+    final data = tester.getSemantics(selectorSemantics);
+    expect(data.label, 'Communication method');
+    expect(data.value, 'Automatic (recommended)');
+    expect(data.flagsCollection.isButton, isTrue);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
   });
 
   testWidgets('error status uses the active dark theme color scheme', (
@@ -186,21 +256,26 @@ final class _FakeManagement extends ChangeNotifier
     this.includeDevice = true,
     this.pendingPairing,
     this.connectionStatus = DeviceConnectionStatus.connecting,
-  });
+    LinkedDeviceKind deviceKind = LinkedDeviceKind.phone,
+  }) : device = LinkedDevice(
+         id: deviceKind == LinkedDeviceKind.computer
+             ? 'computer-one'
+             : 'phone-one',
+         name: deviceKind == LinkedDeviceKind.computer ? '工作电脑' : '我的手机',
+         kind: deviceKind,
+         platform: deviceKind == LinkedDeviceKind.computer
+             ? 'macos'
+             : 'ios-pwa',
+         room: 'abcdefghijklmnopqrstuvwx',
+         secret: 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc',
+         autoSendClipboard: false,
+         receiveAgentNotifications: false,
+         vibrationEnabled: deviceKind == LinkedDeviceKind.phone,
+         manuallyDisconnected: false,
+         pairedAt: DateTime.utc(2026, 8, 8),
+       );
 
-  final LinkedDevice device = LinkedDevice(
-    id: 'phone-one',
-    name: '我的手机',
-    kind: LinkedDeviceKind.phone,
-    platform: 'ios-pwa',
-    room: 'abcdefghijklmnopqrstuvwx',
-    secret: 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc',
-    autoSendClipboard: false,
-    receiveAgentNotifications: false,
-    vibrationEnabled: true,
-    manuallyDisconnected: false,
-    pairedAt: DateTime.utc(2026, 8, 8),
-  );
+  final LinkedDevice device;
 
   final bool includeDevice;
   final DeviceConnectionStatus connectionStatus;
@@ -212,6 +287,7 @@ final class _FakeManagement extends ChangeNotifier
   String? autoSendDeviceId;
   bool? autoSendValue;
   bool beganPairing = false;
+  String? joinedComputerLink;
 
   @override
   bool get canPair => true;
@@ -241,6 +317,11 @@ final class _FakeManagement extends ChangeNotifier
   Future<void> cancelPairing() async {}
 
   @override
+  Future<void> joinComputer(String pairingLink) async {
+    joinedComputerLink = pairingLink;
+  }
+
+  @override
   Future<void> deleteDevice(String deviceId) async {}
 
   @override
@@ -258,6 +339,12 @@ final class _FakeManagement extends ChangeNotifier
   Future<void> setAgentNotifications(String deviceId, bool value) async {}
 
   @override
+  Future<void> setTransportPreference(
+    String deviceId,
+    DeviceLinkTransportPreference value,
+  ) async {}
+
+  @override
   Future<void> setAutoSendClipboard(String deviceId, bool value) async {
     autoSendDeviceId = deviceId;
     autoSendValue = value;
@@ -265,4 +352,8 @@ final class _FakeManagement extends ChangeNotifier
 
   @override
   DeviceConnectionStatus statusOf(String deviceId) => connectionStatus;
+
+  @override
+  DeviceLinkActiveTransport transportOf(String deviceId) =>
+      DeviceLinkActiveTransport.none;
 }

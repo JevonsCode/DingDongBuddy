@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
@@ -180,41 +179,6 @@ final class AgentAdapter {
 
   String resolvedProjectSkillPath() =>
       path.joinAll(projectSkillPath!.split('/'));
-
-  String toYaml() {
-    final StringBuffer output = StringBuffer()
-      ..writeln('schemaVersion: $schemaVersion')
-      ..writeln('id: ${jsonEncode(id)}')
-      ..writeln('displayName: ${jsonEncode(displayName)}')
-      ..writeln()
-      ..writeln('detect:')
-      ..writeln('  directory: ${jsonEncode(detectDirectory)}');
-    if (globalSkillPath != null) {
-      output
-        ..writeln()
-        ..writeln('skills:')
-        ..writeln('  global: ${jsonEncode(globalSkillPath)}')
-        ..writeln('  project: ${jsonEncode(projectSkillPath)}');
-    }
-    if (mcpFilePath != null) {
-      output
-        ..writeln()
-        ..writeln('mcp:')
-        ..writeln('  file: ${jsonEncode(mcpFilePath)}')
-        ..writeln('  format: ${jsonEncode(mcpKind!.configValue)}');
-    }
-    if (promptFilePath != null) {
-      output
-        ..writeln()
-        ..writeln('prompt:')
-        ..writeln('  file: ${jsonEncode(promptFilePath)}')
-        ..writeln(
-          '  includeBridgeRoutingInstructions: '
-          '$includeBridgeRoutingInstructions',
-        );
-    }
-    return output.toString();
-  }
 
   static String resolveUserPath(String configured, String homeDirectory) {
     final String resolved = configured == '~'

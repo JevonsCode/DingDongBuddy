@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
+import 'package:dingdong/features/selection/domain/selection_plugin_gateway.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/application_updater.dart';
 import 'package:dingdong/features/settings/domain/launch_at_startup.dart';
@@ -33,6 +34,9 @@ final class SettingsViewModel extends ChangeNotifier
     ApplicationUpdater? applicationUpdater,
     DateTime Function()? now,
     QuickPastePermissionGateway? quickPastePermissionGateway,
+    SelectionPluginGateway? selectionPluginGateway,
+    bool restoreSelectionPluginOnLoad = true,
+    Future<void> Function()? onSettingsSaved,
     this.mcpCommandPath = 'dingdong-mcp',
     this.systemUsageSource,
     this.systemDataCleaner,
@@ -49,6 +53,9 @@ final class SettingsViewModel extends ChangeNotifier
        _externalLinkGateway = externalLinkGateway,
        _applicationUpdater = applicationUpdater,
        _quickPastePermissionGateway = quickPastePermissionGateway,
+       _selectionPluginGateway = selectionPluginGateway,
+       _restoreSelectionPluginOnLoad = restoreSelectionPluginOnLoad,
+       _onSettingsSaved = onSettingsSaved,
        _now = now ?? DateTime.now;
 
   final SettingsRepository _repository;
@@ -66,6 +73,9 @@ final class SettingsViewModel extends ChangeNotifier
   final ApplicationUpdater? _applicationUpdater;
   final DateTime Function() _now;
   final QuickPastePermissionGateway? _quickPastePermissionGateway;
+  final SelectionPluginGateway? _selectionPluginGateway;
+  final bool _restoreSelectionPluginOnLoad;
+  final Future<void> Function()? _onSettingsSaved;
   final String mcpCommandPath;
   final SystemUsageSource? systemUsageSource;
   final SystemDataCleaner? systemDataCleaner;
@@ -82,6 +92,10 @@ final class SettingsViewModel extends ChangeNotifier
   Timer? _backgroundReleaseUpdateCheckTimer;
   bool? _isQuickPastePermissionGranted;
   bool _isPresentingQuickPastePermissionGrant = false;
+  SelectionPluginRuntimeStatus _selectionPluginStatus =
+      const SelectionPluginRuntimeStatus.disabled();
+  SelectionPluginError? _selectionPluginConfigurationError;
+  Future<void> _selectionOperation = Future<void>.value();
   SystemUsageSnapshot? _systemUsage;
   bool _isClearingSystemData = false;
   int _loadedApiPort = 2333;
@@ -99,6 +113,13 @@ final class SettingsViewModel extends ChangeNotifier
       _applicationUpdateStatus;
   bool get applicationUpdaterSupported => _applicationUpdaterSupported;
   bool? get isQuickPastePermissionGranted => _isQuickPastePermissionGranted;
+  bool get isSelectionPluginRunning => _selectionPluginStatus.running;
+  bool get isSelectionPluginPermissionGranted =>
+      _selectionPluginStatus.permissionGranted;
+  bool get isSelectionPluginTokenConfigured =>
+      _selectionPluginStatus.tokenConfigured;
+  SelectionPluginError? get selectionPluginConfigurationError =>
+      _selectionPluginConfigurationError;
   @override
   bool? get quickPastePermissionGranted => _isQuickPastePermissionGranted;
   String get mcpSetupPrompt => defaultMcpSetupPrompt(
@@ -121,49 +142,75 @@ final class SettingsViewModel extends ChangeNotifier
   }
 
   Future<void> _load({required bool force}) async {
-    if (_loaded && !force) {
+    if (_disposed || (_loaded && !force)) {
       return;
     }
     try {
       final AppSettings loadedSettings = await _repository.load();
+      if (_disposed) return;
       if (!_loaded) {
         _loadedApiPort = loadedSettings.apiPort;
       }
       _settings = loadedSettings;
       final LaunchAtStartup? launchAtStartup = _launchAtStartup;
       if (launchAtStartup != null) {
-        _settings = _settings.copyWith(
-          launchAtStartup: await launchAtStartup.isEnabled(),
-        );
+        final bool launchAtStartupEnabled = await launchAtStartup.isEnabled();
+        if (_disposed) return;
+        _settings = _settings.copyWith(launchAtStartup: launchAtStartupEnabled);
       }
       await _onWindowOpacityChanged?.call(_settings.backgroundOpacity);
+      if (_disposed) return;
       await _onDockIconHiddenChanged?.call(_settings.hideDockIcon);
+      if (_disposed) return;
       await _onTrayNotificationColorChanged?.call(
         _settings.trayNotificationColor,
       );
+      if (_disposed) return;
       String? loadWarning;
       final Future<bool> Function(GlobalHotKey value)? updateGlobalHotKey =
           _onGlobalHotKeyChanged;
-      if (updateGlobalHotKey != null &&
-          !await updateGlobalHotKey(_settings.globalHotKey)) {
-        _settings = _settings.copyWith(globalHotKey: GlobalHotKey.defaultValue);
-        await _repository.save(_settings);
-        loadWarning = _globalHotKeyRegistrationError;
+      if (updateGlobalHotKey != null) {
+        final bool registered = await updateGlobalHotKey(
+          _settings.globalHotKey,
+        );
+        if (_disposed) return;
+        if (!registered) {
+          _settings = _settings.copyWith(
+            globalHotKey: GlobalHotKey.defaultValue,
+          );
+          await _repository.save(_settings);
+          if (_disposed) return;
+          loadWarning = _globalHotKeyRegistrationError;
+        }
       }
       if (_settings.clipboardMonitoring) {
         await _clipboardMonitoring?.start();
+        if (_disposed) return;
       }
-      _isQuickPastePermissionGranted = await _quickPastePermissionGateway
-          ?.isGranted();
+      final bool? quickPastePermissionGranted =
+          await _quickPastePermissionGateway?.isGranted();
+      if (_disposed) return;
+      _isQuickPastePermissionGranted = quickPastePermissionGranted;
+      if (!_loaded && _restoreSelectionPluginOnLoad) {
+        await _applySelectionPluginConfiguration(_settings.selectionPlugin);
+      } else {
+        await refreshSelectionPluginStatus();
+      }
+      if (_disposed) return;
       await _loadSystemUsage();
+      if (_disposed) return;
       await _loadApplicationUpdater();
+      if (_disposed) return;
       _loaded = true;
       _errorMessage = loadWarning;
     } on Object {
+      if (_disposed) return;
       _loaded = true;
       _errorMessage = 'Settings could not be loaded.';
     }
-    notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 
   @override
@@ -187,6 +234,206 @@ final class SettingsViewModel extends ChangeNotifier
     _settings = _settings.copyWith(language: value);
     notifyListeners();
     await _save();
+  }
+
+  /// Applies the user-controlled lifecycle before persisting it. This order is
+  /// important when disabling: native observers and model work stop first.
+  Future<void> setSelectionPluginEnabled(bool enabled) {
+    return _queueSelectionOperation(
+      () => _setSelectionPluginConfiguration(
+        _settings.selectionPlugin.copyWith(enabled: enabled),
+      ),
+    );
+  }
+
+  Future<void> setSelectionPluginConfiguration(
+    SelectionPluginConfiguration value,
+  ) => _queueSelectionOperation(() => _setSelectionPluginConfiguration(value));
+
+  Future<void> _queueSelectionOperation(Future<void> Function() operation) {
+    if (_disposed) return Future<void>.value();
+    final Future<void> next = _selectionOperation.then<void>((_) async {
+      if (_disposed) return;
+      await operation();
+    });
+    _selectionOperation = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> _setSelectionPluginConfiguration(
+    SelectionPluginConfiguration value,
+  ) async {
+    if (_disposed) return;
+    final SelectionPluginError? validationError = value.validationError;
+    if (validationError != null) {
+      _selectionPluginConfigurationError = validationError;
+      notifyListeners();
+      return;
+    }
+    final SelectionPluginConfiguration candidate = value.sanitized();
+    var applied = false;
+    try {
+      applied = await _applySelectionPluginConfiguration(
+        candidate,
+        rethrowErrors: true,
+      );
+      if (!applied) return;
+      _settings = _settings.copyWith(selectionPlugin: candidate);
+      _selectionPluginConfigurationError = null;
+      if (!_disposed) {
+        notifyListeners();
+      }
+      await _save();
+      if (_disposed) return;
+      if (_errorMessage != null) {
+        _selectionPluginConfigurationError =
+            SelectionPluginError.persistenceFailed;
+        notifyListeners();
+      }
+    } on Object {
+      if (_disposed) return;
+      // Keep the actual native state visible if only persistence failed.
+      // In particular, a failed disk write must never re-enable the plugin.
+      _selectionPluginConfigurationError = applied
+          ? SelectionPluginError.persistenceFailed
+          : SelectionPluginError.updateFailed;
+      notifyListeners();
+    }
+  }
+
+  Future<void> refreshSelectionPluginStatus() =>
+      _queueSelectionOperation(_refreshSelectionPluginStatus);
+
+  Future<void> _refreshSelectionPluginStatus() async {
+    final SelectionPluginGateway? gateway = _selectionPluginGateway;
+    if (_disposed || gateway == null) return;
+    try {
+      final SelectionPluginRuntimeStatus status = await gateway.status();
+      if (_disposed) return;
+      _selectionPluginStatus = status;
+      // A refresh observes the host; replaying persisted settings could undo
+      // an in-flight change made by the dedicated settings window.
+      _settings = _settings.copyWith(
+        selectionPlugin: _settings.selectionPlugin.copyWith(
+          enabled: _selectionPluginStatus.enabled,
+        ),
+      );
+      _selectionPluginConfigurationError = null;
+    } on Object {
+      if (_disposed) return;
+      _selectionPluginConfigurationError =
+          SelectionPluginError.statusUnavailable;
+    }
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
+  Future<void> openSelectionPluginAccessibilitySettings() async {
+    if (_disposed) return;
+    try {
+      await _requireSelectionGateway().openAccessibilitySettings();
+    } on Object {
+      if (_disposed) return;
+      _selectionPluginConfigurationError =
+          SelectionPluginError.permissionSettingsUnavailable;
+      notifyListeners();
+    }
+  }
+
+  Future<void> saveSelectionPluginToken(
+    String value, {
+    SelectionPluginConfiguration? configuration,
+  }) => _queueSelectionOperation(() async {
+    if (_disposed) return;
+    if (configuration != null) {
+      await _setSelectionPluginConfiguration(configuration);
+      if (_disposed) return;
+      if (_selectionPluginConfigurationError != null) return;
+    }
+    final String token = value.trim();
+    if (token.isEmpty) {
+      _selectionPluginConfigurationError = SelectionPluginError.tokenRequired;
+      notifyListeners();
+      return;
+    }
+    try {
+      await _requireSelectionGateway().saveToken(token);
+      if (_disposed) return;
+      _selectionPluginStatus = SelectionPluginRuntimeStatus(
+        enabled: _selectionPluginStatus.enabled,
+        running: _selectionPluginStatus.running,
+        permissionGranted: _selectionPluginStatus.permissionGranted,
+        tokenConfigured: true,
+      );
+      _selectionPluginConfigurationError = null;
+    } on Object {
+      if (_disposed) return;
+      _selectionPluginConfigurationError = SelectionPluginError.tokenSaveFailed;
+    }
+    if (!_disposed) {
+      notifyListeners();
+    }
+  });
+
+  Future<void> clearSelectionPluginToken() =>
+      _queueSelectionOperation(() async {
+        if (_disposed) return;
+        try {
+          await _requireSelectionGateway().clearToken();
+          if (_disposed) return;
+          _selectionPluginStatus = SelectionPluginRuntimeStatus(
+            enabled: _selectionPluginStatus.enabled,
+            running: _selectionPluginStatus.running,
+            permissionGranted: _selectionPluginStatus.permissionGranted,
+            tokenConfigured: false,
+          );
+          _selectionPluginConfigurationError = null;
+        } on Object {
+          if (_disposed) return;
+          _selectionPluginConfigurationError =
+              SelectionPluginError.tokenRemoveFailed;
+        }
+        if (!_disposed) {
+          notifyListeners();
+        }
+      });
+
+  SelectionPluginGateway _requireSelectionGateway() {
+    final SelectionPluginGateway? gateway = _selectionPluginGateway;
+    if (gateway == null) throw StateError('Selection host is unavailable.');
+    return gateway;
+  }
+
+  Future<bool> _applySelectionPluginConfiguration(
+    SelectionPluginConfiguration configuration, {
+    bool rethrowErrors = false,
+  }) async {
+    final SelectionPluginGateway? gateway = _selectionPluginGateway;
+    if (_disposed) return false;
+    if (gateway == null) {
+      if (rethrowErrors) {
+        throw StateError('Selection host is unavailable.');
+      }
+      if (configuration.enabled) {
+        _selectionPluginConfigurationError = SelectionPluginError.unavailable;
+      }
+      return false;
+    }
+    try {
+      final SelectionPluginRuntimeStatus status = await gateway.apply(
+        configuration,
+      );
+      if (!_disposed) {
+        _selectionPluginStatus = status;
+      }
+      return true;
+    } on Object {
+      if (_disposed) return false;
+      _selectionPluginConfigurationError = SelectionPluginError.unavailable;
+      if (rethrowErrors) rethrow;
+      return false;
+    }
   }
 
   Future<void> setThemeMode(AppThemePreference value) async {
@@ -472,8 +719,11 @@ final class SettingsViewModel extends ChangeNotifier
     _releaseStatus = _releaseStatus.checking();
     notifyListeners();
     try {
-      _releaseStatus = _releaseStatus.resolved(await source.fetch(), _now());
+      final ReleaseMetadata metadata = await source.fetch();
+      if (_disposed) return;
+      _releaseStatus = _releaseStatus.resolved(metadata, _now());
     } on Object catch (error) {
+      if (_disposed) return;
       _releaseStatus = _releaseStatus.failed(error.toString(), _now());
     }
     if (!_disposed) {
@@ -502,18 +752,22 @@ final class SettingsViewModel extends ChangeNotifier
   /// replaces the old application, removes obsolete files, and relaunches.
   Future<void> installLatestUpdate() async {
     final ApplicationUpdater? updater = _applicationUpdater;
-    if (updater == null ||
+    if (_disposed ||
+        updater == null ||
         !_applicationUpdaterSupported ||
         _applicationUpdateStatus.isBusy) {
       return;
     }
     try {
       await updater.installLatest();
+      if (_disposed) return;
       await _refreshApplicationUpdater();
+      if (_disposed) return;
       if (_applicationUpdateStatus.isBusy) {
         _startApplicationUpdatePolling();
       }
     } on Object catch (error) {
+      if (_disposed) return;
       _applicationUpdateStatus = ApplicationUpdateStatus(
         phase: ApplicationUpdatePhase.failed,
         message: error.toString(),
@@ -540,11 +794,12 @@ final class SettingsViewModel extends ChangeNotifier
 
   @override
   Future<void> refreshQuickPastePermission() async {
-    if (_isPresentingQuickPastePermissionGrant) {
+    if (_disposed || _isPresentingQuickPastePermissionGrant) {
       return;
     }
-    _isQuickPastePermissionGranted = await _quickPastePermissionGateway
-        ?.isGranted();
+    final bool? granted = await _quickPastePermissionGateway?.isGranted();
+    if (_disposed) return;
+    _isQuickPastePermissionGranted = granted;
     notifyListeners();
   }
 
@@ -564,7 +819,9 @@ final class SettingsViewModel extends ChangeNotifier
   }
 
   Future<void> refreshSystemUsage() async {
+    if (_disposed) return;
     await _loadSystemUsage();
+    if (_disposed) return;
     notifyListeners();
   }
 
@@ -573,7 +830,10 @@ final class SettingsViewModel extends ChangeNotifier
     final Set<SystemDataCategory> clearable = categories
         .where((SystemDataCategory category) => category.canClear)
         .toSet();
-    if (cleaner == null || clearable.isEmpty || _isClearingSystemData) {
+    if (_disposed ||
+        cleaner == null ||
+        clearable.isEmpty ||
+        _isClearingSystemData) {
       return false;
     }
     _isClearingSystemData = true;
@@ -581,13 +841,18 @@ final class SettingsViewModel extends ChangeNotifier
     var cleared = false;
     try {
       await cleaner.clear(clearable);
+      if (_disposed) return false;
       await _loadSystemUsage();
+      if (_disposed) return false;
       cleared = true;
     } on Object {
+      if (_disposed) return false;
       _errorMessage = 'Selected local data could not be cleared.';
     } finally {
       _isClearingSystemData = false;
-      notifyListeners();
+      if (!_disposed) {
+        notifyListeners();
+      }
     }
     return cleared;
   }
@@ -599,6 +864,7 @@ final class SettingsViewModel extends ChangeNotifier
       await gateway.open(category);
       return true;
     } on Object {
+      if (_disposed) return false;
       _errorMessage = 'The DingDong data folder could not be opened.';
       notifyListeners();
       return false;
@@ -607,18 +873,23 @@ final class SettingsViewModel extends ChangeNotifier
 
   Future<void> _loadSystemUsage() async {
     final SystemUsageSource? source = systemUsageSource;
-    if (source == null) {
+    if (_disposed || source == null) {
       return;
     }
     try {
-      _systemUsage = await source.load();
+      final SystemUsageSnapshot snapshot = await source.load();
+      if (_disposed) return;
+      _systemUsage = snapshot;
     } on Object {
-      _systemUsage = null;
+      if (!_disposed) {
+        _systemUsage = null;
+      }
     }
   }
 
   Future<void> _loadApplicationUpdater() async {
     final ApplicationUpdater? updater = _applicationUpdater;
+    if (_disposed) return;
     if (updater == null) {
       _applicationUpdaterSupported = false;
       _applicationUpdateStatus = const ApplicationUpdateStatus(
@@ -627,16 +898,21 @@ final class SettingsViewModel extends ChangeNotifier
       return;
     }
     try {
-      _applicationUpdaterSupported = await updater.isSupported();
-      _applicationUpdateStatus = _applicationUpdaterSupported
+      final bool supported = await updater.isSupported();
+      if (_disposed) return;
+      final ApplicationUpdateStatus status = supported
           ? await updater.readStatus()
           : const ApplicationUpdateStatus(
               phase: ApplicationUpdatePhase.unsupported,
             );
-      if (_applicationUpdateStatus.isBusy) {
+      if (_disposed) return;
+      _applicationUpdaterSupported = supported;
+      _applicationUpdateStatus = status;
+      if (status.isBusy) {
         _startApplicationUpdatePolling();
       }
     } on Object {
+      if (_disposed) return;
       _applicationUpdaterSupported = false;
       _applicationUpdateStatus = const ApplicationUpdateStatus(
         phase: ApplicationUpdatePhase.unsupported,
@@ -645,6 +921,7 @@ final class SettingsViewModel extends ChangeNotifier
   }
 
   void _startApplicationUpdatePolling() {
+    if (_disposed) return;
     _applicationUpdatePollTimer?.cancel();
     _applicationUpdatePollTimer = Timer.periodic(
       const Duration(milliseconds: 250),
@@ -654,12 +931,13 @@ final class SettingsViewModel extends ChangeNotifier
 
   Future<void> _refreshApplicationUpdater() async {
     final ApplicationUpdater? updater = _applicationUpdater;
-    if (updater == null || _isPollingApplicationUpdater) {
+    if (_disposed || updater == null || _isPollingApplicationUpdater) {
       return;
     }
     _isPollingApplicationUpdater = true;
     try {
       final ApplicationUpdateStatus status = await updater.readStatus();
+      if (_disposed) return;
       if (status != _applicationUpdateStatus) {
         _applicationUpdateStatus = status;
         notifyListeners();
@@ -668,6 +946,7 @@ final class SettingsViewModel extends ChangeNotifier
         _applicationUpdatePollTimer?.cancel();
       }
     } on Object catch (error) {
+      if (_disposed) return;
       _applicationUpdateStatus = ApplicationUpdateStatus(
         phase: ApplicationUpdatePhase.failed,
         message: error.toString(),
@@ -690,7 +969,9 @@ final class SettingsViewModel extends ChangeNotifier
   void dispose() {
     _disposed = true;
     _applicationUpdatePollTimer?.cancel();
+    _applicationUpdatePollTimer = null;
     _backgroundReleaseUpdateCheckTimer?.cancel();
+    _backgroundReleaseUpdateCheckTimer = null;
     super.dispose();
   }
 
@@ -705,6 +986,7 @@ final class SettingsViewModel extends ChangeNotifier
       final AppSettings snapshot = _settings;
       try {
         await _repository.save(snapshot);
+        await _onSettingsSaved?.call();
         _errorMessage = null;
       } on Object {
         _errorMessage = 'Settings could not be saved.';

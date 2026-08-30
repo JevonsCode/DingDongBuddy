@@ -17,11 +17,16 @@ final class _ManagedDeviceSession {
     required this.handle,
     required this.room,
     required this.deviceId,
+    required this.connectionSide,
   });
 
   final DeviceLinkSessionHandle handle;
   final String room;
+  final DeviceLinkConnectionSide connectionSide;
   String? deviceId;
+  bool helloSent = false;
+  bool snapshotPending = false;
+  bool active = true;
   StreamSubscription<void>? subscription;
 }
 

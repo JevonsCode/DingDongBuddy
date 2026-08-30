@@ -64,7 +64,9 @@ class _CompactClipboardToolbar extends StatelessWidget {
                     controller: searchController,
                     onChanged: viewModel.setQuery,
                     height: 38,
-                    hintText: context.l10n.searchClipboard,
+                    hintText: context.l10n.searchClipboardWithShortcut(
+                      _searchShortcutLabel(defaultTargetPlatform),
+                    ),
                     clearTooltip: context.l10n.clearSearch,
                     style: const TextStyle(fontSize: 12),
                     hintStyle: TextStyle(
@@ -116,6 +118,9 @@ class _CompactClipboardToolbar extends StatelessWidget {
     );
   }
 }
+
+String _searchShortcutLabel(TargetPlatform platform) =>
+    platform == TargetPlatform.macOS ? '⌘F' : 'Ctrl+F';
 
 class _FilterToggleButton extends StatefulWidget {
   const _FilterToggleButton({

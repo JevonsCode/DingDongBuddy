@@ -140,9 +140,9 @@ extension _AgentRouterResourceHandlers on AgentRouter {
     if (store == null) {
       return _resourceUnavailable();
     }
-    final String? typeName = query['type'];
+    final String? typeName = query['type']?.trim().toLowerCase();
     ResourceType? selectedType;
-    if (typeName != null) {
+    if (typeName != null && typeName != 'all') {
       try {
         selectedType = ResourceType.parse(typeName);
       } on FormatException {

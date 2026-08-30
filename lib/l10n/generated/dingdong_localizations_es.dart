@@ -2056,6 +2056,11 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get searchClipboard => 'Buscar portapapeles';
 
   @override
+  String searchClipboardWithShortcut(String shortcut) {
+    return 'Buscar portapapeles  $shortcut';
+  }
+
+  @override
   String get searchClipboardHistory =>
       'Buscar en el historial del portapapeles';
 
@@ -2977,7 +2982,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String connectDingDongToCurrentAgent(String commandPath) {
-    return 'Conecta «$commandPath» al Agent actual como servidor MCP STDIO de usuario llamado dingdong y sin argumentos; conserva la configuración existente y verifica dingdong_bridge. Si se admiten Hooks de finalización de usuario, añade para ese evento un comando Hook con el mismo ejecutable y «--notify-stop --source \"<nombre del Agent actual>\"», luego verifica la alerta.';
+    return 'Conecta «$commandPath» al Agent actual como servidor MCP STDIO de usuario llamado dingdong y sin argumentos; conserva la configuración existente y verifica dingdong_bridge. Si se admiten Hooks de finalización, añade «--notify-stop --source \"<nombre del Agent actual>\"» y verifica la alerta. Si SessionStart admite startup y resume, añade «--acknowledge-session-start --source \"<nombre del Agent actual>\"» para confirmar solo los recordatorios de la conversación abierta.';
   }
 
   @override
@@ -3107,4 +3112,155 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get httpsOrGitHubFileURL => 'URL HTTPS o de archivo de GitHub';
+
+  @override
+  String get connectAnotherComputer => 'Conectar otro ordenador';
+
+  @override
+  String get computerPairingLink => 'Enlace de emparejamiento del ordenador';
+
+  @override
+  String get pastePairingLinkFromOtherComputer =>
+      'Pega el enlace copiado del otro ordenador. Contiene una clave de cifrado; compártelo solo por un canal de confianza.';
+
+  @override
+  String get pastePairingLink => 'Pegar enlace de emparejamiento';
+
+  @override
+  String get connectComputer => 'Conectar ordenador';
+
+  @override
+  String get invalidPairingLink =>
+      'Este enlace no es válido o está incompleto.';
+
+  @override
+  String get copyLinkForAnotherComputer => 'Copiar enlace para otro ordenador';
+
+  @override
+  String get pairingLinkCopied =>
+      'Enlace copiado. Trátalo como una contraseña de un solo uso.';
+
+  @override
+  String get communicationMethod => 'Método de comunicación';
+
+  @override
+  String get automaticRecommended => 'Automático (recomendado)';
+
+  @override
+  String get localNetworkDirect => 'Red local directa';
+
+  @override
+  String get encryptedService => 'Servicio cifrado';
+
+  @override
+  String get localNetworkHandshakeNote =>
+      'El modo de red local usa el servicio solo para la señalización cifrada; el portapapeles y los archivos permanecen en la conexión directa.';
+
+  @override
+  String get computerSyncDefaultsNote =>
+      'Los ordenadores empiezan sin notificaciones ni sincronización automática. Los envíos explícitos se copian al portapapeles del otro ordenador.';
+
+  @override
+  String get sharedFileIsNoLongerAvailable =>
+      'El archivo local ya no está disponible y no se ha enviado.';
+
+  @override
+  String get sharedFileIsLargerThan25MiB =>
+      'El archivo supera los 25 MiB y no se ha enviado.';
+
+  @override
+  String get systemSelectionTools => 'Herramientas de selección del sistema';
+
+  @override
+  String get systemSelectionToolsDescription =>
+      'Muestra una barra en apps que permiten leer el texto seleccionado. Copiar es local; traducir y explicar requieren tu servicio de modelos configurado.';
+
+  @override
+  String get enableSystemSelectionTools => 'Activar herramientas de selección';
+
+  @override
+  String get enableSystemSelectionToolsDescription =>
+      'Desactivado por defecto. Al apagarlo, DingDong no escucha selecciones ni solicita modelos.';
+
+  @override
+  String get selectionPluginRunning => 'En ejecución';
+
+  @override
+  String get selectionPluginPermissionNeeded =>
+      'Activado · requiere permiso de Accesibilidad';
+
+  @override
+  String get selectionPluginStopped => 'Detenido';
+
+  @override
+  String get selectionModelProvider => 'Proveedor del modelo';
+
+  @override
+  String get selectionModelEndpoint => 'Dirección del servicio';
+
+  @override
+  String get selectionModelName => 'Modelo';
+
+  @override
+  String get selectionTargetLanguage => 'Traducir a';
+
+  @override
+  String get selectionUnloadLocalModel =>
+      'Descargar el modelo local tras cada respuesta';
+
+  @override
+  String get selectionUnloadLocalModelDescription =>
+      'Reduce la memoria en reposo, pero ralentiza la próxima respuesta.';
+
+  @override
+  String get selectionApiToken => 'Token de API';
+
+  @override
+  String get selectionTokenPlaceholder => 'Pega tu propio token';
+
+  @override
+  String get selectionTokenSaved => 'Guardado de forma segura en el Llavero';
+
+  @override
+  String get selectionTokenNotSaved => 'Sin configurar';
+
+  @override
+  String get saveToken => 'Guardar token';
+
+  @override
+  String get removeToken => 'Eliminar token';
+
+  @override
+  String get selectionConfigurationApply => 'Aplicar configuración del modelo';
+
+  @override
+  String selectionPluginError(String reason) {
+    String _temp0 = intl.Intl.selectLogic(reason, {
+      'invalidEndpoint':
+          'Introduce una dirección sin credenciales, parámetros ni fragmentos.',
+      'emptyModel': 'Introduce el nombre del modelo.',
+      'emptyTargetLanguage': 'Introduce el idioma de destino.',
+      'localEndpointRequired':
+          'Usa una dirección HTTP local para Ollama o LM Studio.',
+      'remoteHttpsRequired': 'Usa HTTPS para un servicio remoto.',
+      'updateFailed':
+          'No se pudo actualizar el complemento. Actualiza su estado e inténtalo de nuevo.',
+      'persistenceFailed':
+          'El estado cambió, pero no se pudo guardar. Comprueba el almacenamiento y vuelve a aplicar.',
+      'unavailable':
+          'El complemento nativo no está disponible. Instala una compilación que incluya la selección del sistema.',
+      'statusUnavailable':
+          'No se pudo leer el estado. Intenta actualizarlo de nuevo.',
+      'permissionSettingsUnavailable':
+          'Abre Accesibilidad en Ajustes del Sistema y permite DingDong.',
+      'tokenRequired': 'Introduce tu propio token de API.',
+      'tokenSaveFailed':
+          'No se pudo guardar el token. Desbloquea el Llavero e inténtalo de nuevo.',
+      'tokenRemoveFailed':
+          'No se pudo eliminar el token. Desbloquea el Llavero e inténtalo de nuevo.',
+      'other':
+          'No se pudo actualizar el complemento. Actualiza su estado e inténtalo de nuevo.',
+    });
+    return '$_temp0';
+  }
 }

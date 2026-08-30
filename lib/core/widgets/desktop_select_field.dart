@@ -1,3 +1,4 @@
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:flutter/material.dart';
 
 /// One value displayed by [DesktopSelectField].
@@ -20,6 +21,7 @@ class DesktopSelectField<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.enabled = true,
+    this.semanticLabel,
     super.key,
   });
 
@@ -27,6 +29,7 @@ class DesktopSelectField<T> extends StatelessWidget {
   final List<DesktopSelectItem<T>> items;
   final ValueChanged<T> onChanged;
   final bool enabled;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -68,50 +71,60 @@ class DesktopSelectField<T> extends StatelessWidget {
             .toList(growable: false),
         builder:
             (BuildContext context, MenuController controller, Widget? child) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: enabled
-                    ? () => controller.isOpen
-                          ? controller.close()
-                          : controller.open()
-                    : null,
-                child: Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 11),
-                  decoration: BoxDecoration(
-                    color: enabled
-                        ? colors.surfaceContainerLow
-                        : colors.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Row(
-                    children: <Widget>[
-                      if (selected.icon != null) ...<Widget>[
-                        selected.icon!,
-                        const SizedBox(width: 8),
-                      ],
-                      Expanded(
-                        child: Text(
-                          selected.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: enabled
-                                ? colors.onSurface
-                                : colors.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
+              return Semantics(
+                button: true,
+                enabled: enabled,
+                expanded: controller.isOpen,
+                label: semanticLabel,
+                value: selected.label,
+                child: ExcludeSemantics(
+                  child: DesktopActionButton(
+                    onPressed: enabled
+                        ? () => controller.isOpen
+                              ? controller.close()
+                              : controller.open()
+                        : null,
+                    height: 38,
+                    style: DesktopActionButton.styleFrom(
+                      foregroundColor: enabled
+                          ? colors.onSurface
+                          : colors.onSurfaceVariant,
+                      backgroundColor: enabled
+                          ? colors.surfaceContainerLow
+                          : colors.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
+                      padding: const EdgeInsets.symmetric(horizontal: 11),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        if (selected.icon != null) ...<Widget>[
+                          selected.icon!,
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(
+                            selected.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        controller.isOpen
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
-                        size: 18,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Icon(
+                          controller.isOpen
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

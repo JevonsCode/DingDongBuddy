@@ -822,7 +822,6 @@ void main() {
     model.clearFilters();
 
     expect(model.hasActiveFilters, isFalse);
-    expect(model.selectedKind, isNull);
     expect(model.selectedCategoryId, isNull);
     expect(model.selectedGroup, isNull);
     expect(model.selectedSourceIds, isEmpty);

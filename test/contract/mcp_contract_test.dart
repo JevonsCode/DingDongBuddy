@@ -177,6 +177,20 @@ void main() {
         toolNamed('dingdong_update_resource')['description'],
         allOf(contains('Prompt or MCP'), contains('Preserve omitted fields')),
       );
+      final Map<String, Object?> searchSchema =
+          toolNamed('dingdong_search_assets')['inputSchema']
+              as Map<String, Object?>;
+      final Map<String, Object?> searchProperties =
+          searchSchema['properties'] as Map<String, Object?>;
+      expect(
+        (searchProperties['type'] as Map<String, Object?>)['enum'],
+        <String>['all', 'prompt', 'skill', 'mcp', 'knowledge'],
+      );
+      expect(
+        toolNamed('dingdong_search_assets')['description'],
+        contains('type="all" or omit type'),
+      );
+      expect(searchProperties, isNot(contains('clipboard')));
       final Map<String, Object?> loadSchema =
           toolNamed('dingdong_load_skill')['inputSchema']
               as Map<String, Object?>;
@@ -236,6 +250,12 @@ void main() {
             .keys,
         containsAll(<String>['workspacePath', 'repositoryUrl', 'source']),
       );
+      final Map<String, Object?> getProperties =
+          (toolNamed('dingdong_get_asset')['inputSchema']
+                  as Map<String, Object?>)['properties']
+              as Map<String, Object?>;
+      expect(getProperties, isNot(contains('includeClipboard')));
+      expect(getProperties, isNot(contains('includeSensitiveClipboard')));
       final Map<String, Object?> bindProperties =
           (toolNamed('dingdong_bind_resource_scope')['inputSchema']
                   as Map<String, Object?>)['properties']

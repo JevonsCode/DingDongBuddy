@@ -1,49 +1,49 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.3",
-  "latestBuild": "58",
-  "publishedAt": "2026-08-24T14:15:56Z",
+  "latestVersion": "1.5.4",
+  "latestBuild": "59",
+  "publishedAt": "2026-08-30T18:02:37Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.3",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.4",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Fixes fresh-install startup and project-scoped MCP delivery so scoped tools remain available when the task context matches.",
-    "Streams phone uploads to bounded temporary files, limits concurrent transfers and encrypted queues, and caps Agent, MCP, and Skill memory paths.",
-    "Keeps mobile Agent reminder urgency and exact seen state in sync while hardening PWA upgrades, pairing validation, accessibility, and maintainability."
+    "Adds optional macOS system selection tools for copy, translation and explanation, with permission checks and separately stored model credentials.",
+    "Adds computer-to-computer sharing and explicit transport preferences while keeping automatic clipboard sync off for new peers.",
+    "Improves Agent conversation acknowledgement, clipboard keyboard actions and settings synchronization, removes redundant code, and expands desktop release checks."
   ],
   "notesByLanguage": {
     "en": [
-      "Fixes fresh-install startup and project-scoped MCP delivery so scoped tools remain available when the task context matches.",
-      "Streams phone uploads to bounded temporary files, limits concurrent transfers and encrypted queues, and caps Agent, MCP, and Skill memory paths.",
-      "Keeps mobile Agent reminder urgency and exact seen state in sync while hardening PWA upgrades, pairing validation, accessibility, and maintainability."
+      "Adds optional macOS system selection tools for copy, translation and explanation, with permission checks and separately stored model credentials.",
+      "Adds computer-to-computer sharing and explicit transport preferences while keeping automatic clipboard sync off for new peers.",
+      "Improves Agent conversation acknowledgement, clipboard keyboard actions and settings synchronization, removes redundant code, and expands desktop release checks."
     ],
     "zh": [
-      "修复全新安装启动与项目/仓库作用域 MCP 交付，任务上下文匹配时作用域工具可正常使用。",
-      "手机上传流式写入有上限的临时文件，限制并发传输与加密消息队列，并为 Agent、MCP、Skill 内存路径建立硬上限。",
-      "手机端同步提醒紧急程度和精确已读状态，同时加强 PWA 升级、配对校验、可访问性和可维护性。"
+      "新增默认关闭的 macOS 系统划词工具，支持复制、翻译和解释，并提供权限检查与独立的模型凭据存储。",
+      "新增电脑间分享和明确的传输模式，新连接的电脑默认不自动同步剪贴板。",
+      "改进 Agent 会话已读确认、剪贴板键盘操作和设置同步，清理重复代码并扩展桌面发布验收。"
     ],
     "es": [
-      "Corrige el inicio de instalaciones nuevas y la entrega de MCP con alcance de proyecto o repositorio cuando coincide el contexto de la tarea.",
-      "Transmite las cargas del teléfono a archivos temporales acotados, limita transferencias y colas cifradas, y fija límites de memoria para Agent, MCP y Skill.",
-      "Sincroniza la urgencia y el estado visto exacto de los avisos móviles, y refuerza las actualizaciones, la validación de emparejamiento, la accesibilidad y el mantenimiento de la PWA."
+      "Añade herramientas opcionales de selección de texto en macOS para copiar, traducir y explicar, con comprobaciones de permisos y credenciales separadas.",
+      "Añade transferencias entre ordenadores y preferencias de transporte explícitas; la sincronización automática del portapapeles empieza desactivada para nuevos equipos.",
+      "Mejora la confirmación de conversaciones de Agent, los atajos y la sincronización de ajustes, elimina código redundante y amplía las comprobaciones de escritorio."
     ]
   }
 }

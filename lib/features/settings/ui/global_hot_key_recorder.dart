@@ -331,7 +331,3 @@ class _WorkspaceShortcutRecorderState extends State<WorkspaceShortcutRecorder> {
     );
   }
 }
-
-String? globalHotKeyKeyForLogicalKey(LogicalKeyboardKey key) {
-  return shortcutKeyForLogicalKey(key);
-}

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/features/agent_api/data/completion_hook_notifier.dart';
+import 'package:dingdong/features/agent_api/data/conversation_opened_hook_notifier.dart';
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
 
@@ -14,6 +15,13 @@ Future<void> main(List<String> arguments) async {
   try {
     if (arguments.contains('--notify-stop')) {
       await _notifyStop(
+        transport,
+        sourceOverride: _argumentValue(arguments, '--source'),
+      );
+      return;
+    }
+    if (arguments.contains('--acknowledge-session-start')) {
+      await _acknowledgeSessionStart(
         transport,
         sourceOverride: _argumentValue(arguments, '--source'),
       );
@@ -32,6 +40,21 @@ Future<void> main(List<String> arguments) async {
   } finally {
     transport.close(force: true);
   }
+}
+
+Future<void> _acknowledgeSessionStart(
+  DartIoMcpHttpTransport transport, {
+  String? sourceOverride,
+}) async {
+  final String hookInput = await stdin.transform(utf8.decoder).join();
+  try {
+    await ConversationOpenedHookNotifier(
+      transport,
+    ).notify(hookInput, sourceOverride: sourceOverride);
+  } on Object {
+    // Reminder acknowledgement must never block Codex's SessionStart lifecycle.
+  }
+  stdout.write('{}');
 }
 
 Future<void> _notifyStop(

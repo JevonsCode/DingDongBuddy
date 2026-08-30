@@ -7,6 +7,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/utils/uuid.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_compatibility_routes.dart';
 import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
@@ -40,6 +41,8 @@ final class AgentRouter {
     void Function(DingRequest request)? onDing,
     void Function(DingRequest request)? onSuppressedDing,
     FutureOr<void> Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
+    FutureOr<int> Function(AgentConversationTarget target)?
+    onAgentConversationOpened,
     ClipboardCaptureService? clipboardCaptureService,
     ClipboardGateway? clipboardGateway,
     ClipboardStore? clipboardStore,
@@ -60,6 +63,7 @@ final class AgentRouter {
   }) : _onDing = onDing ?? _ignoreDing,
        _onSuppressedDing = onSuppressedDing ?? _ignoreDing,
        _onAgentTaskStarted = onAgentTaskStarted,
+       _onAgentConversationOpened = onAgentConversationOpened,
        _clipboardCaptureService = clipboardCaptureService,
        _clipboardGateway = clipboardGateway,
        _clipboardRoutes = clipboardStore == null
@@ -144,6 +148,8 @@ final class AgentRouter {
   final void Function(DingRequest request) _onSuppressedDing;
   final FutureOr<void> Function(AgentBridgeTaskStart start)?
   _onAgentTaskStarted;
+  final FutureOr<int> Function(AgentConversationTarget target)?
+  _onAgentConversationOpened;
   final ClipboardCaptureService? _clipboardCaptureService;
   final ClipboardGateway? _clipboardGateway;
   final ClipboardRoutes? _clipboardRoutes;
@@ -225,6 +231,51 @@ final class AgentRouter {
       return const HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{'status': 'ok', 'service': 'DingDong'},
+      );
+    }
+    if (request.method == 'POST' &&
+        request.parsedUri.path == '/agent/conversation/opened') {
+      final Object? decoded;
+      try {
+        decoded = jsonDecode(request.body);
+      } on Object {
+        return _invalidConversationOpenedBody();
+      }
+      if (decoded is! Map<String, Object?>) {
+        return _invalidConversationOpenedBody();
+      }
+      final AgentClient client = AgentClient.parse(
+        decoded['client'] ?? decoded['source'],
+      );
+      final String? conversationId = _trimmedText(
+        decoded['conversationId'] ??
+            decoded['conversation_id'] ??
+            decoded['sessionId'] ??
+            decoded['session_id'] ??
+            decoded['threadId'] ??
+            decoded['thread_id'],
+      );
+      if (client == AgentClient.unknown || conversationId == null) {
+        return _invalidConversationOpenedBody();
+      }
+      final AgentConversationTarget target = AgentConversationTarget(
+        client: client,
+        conversationId: conversationId,
+        workspacePath: _trimmedText(
+          decoded['workspacePath'] ??
+              decoded['workspace_path'] ??
+              decoded['cwd'],
+        ),
+      );
+      final int acknowledged =
+          await _onAgentConversationOpened?.call(target) ?? 0;
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': acknowledged > 0 ? 'acknowledged' : 'unchanged',
+          'conversationId': conversationId,
+          'acknowledgedCount': acknowledged,
+        },
       );
     }
     if (request.method == 'POST' && request.parsedUri.path == '/ding') {
@@ -681,6 +732,14 @@ String _englishDefaultDingMessage(String source) =>
 
 String? _notificationSourceKey(String? source) => source?.trim().toLowerCase();
 
+String? _trimmedText(Object? value) {
+  if (value is! String) {
+    return null;
+  }
+  final String trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
 typedef _NotificationDeduplicationKey = ({
   String? source,
   String? conversationId,
@@ -739,6 +798,16 @@ HttpResponseData _resourceUnavailable() {
     json: <String, Object?>{
       'status': 'error',
       'message': 'Resource library is not available',
+    },
+  );
+}
+
+HttpResponseData _invalidConversationOpenedBody() {
+  return const HttpResponseData(
+    statusCode: 400,
+    json: <String, Object?>{
+      'status': 'error',
+      'message': 'A known Agent client and conversation ID are required',
     },
   );
 }

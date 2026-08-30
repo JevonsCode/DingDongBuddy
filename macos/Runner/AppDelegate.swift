@@ -124,6 +124,8 @@ class AppDelegate: FlutterAppDelegate {
   private var activeNotificationSound: NSSound?
   private var updaterChannel: FlutterMethodChannel?
   private var applicationUpdater: DingDongUpdater?
+  private var selectionPluginChannel: FlutterMethodChannel?
+  private var selectionPluginController: SelectionPluginController?
   private let accessibilityPermissionAssistant =
     AccessibilityPermissionAssistant()
   private var desktopShellReady = false
@@ -298,11 +300,66 @@ class AppDelegate: FlutterAppDelegate {
         }
       }
       self.hotKeyChannel = hotKeyChannel
+      let selectionPluginController = SelectionPluginController()
+      selectionPluginController.onOpenAccessibilitySettings = { [weak self] in
+        self?.accessibilityPermissionAssistant.show()
+      }
+      let selectionPluginChannel = FlutterMethodChannel(
+        name: "dingdong/selection_plugin",
+        binaryMessenger: controller.engine.binaryMessenger
+      )
+      selectionPluginChannel.setMethodCallHandler {
+        [weak selectionPluginController] call, result in
+        guard let selectionPluginController else {
+          result(
+            FlutterError(
+              code: "selection_plugin_unavailable",
+              message: "The native selection plugin is unavailable.",
+              details: nil
+            )
+          )
+          return
+        }
+        do {
+          switch call.method {
+          case "applyConfiguration":
+            result(try selectionPluginController.applyConfiguration(call.arguments))
+          case "status":
+            result(selectionPluginController.status())
+          case "openAccessibilitySettings":
+            selectionPluginController.openAccessibilitySettings()
+            result(nil)
+          case "saveToken":
+            guard let values = call.arguments as? [String: Any],
+                  let token = values["token"] as? String else {
+              throw SelectionPluginControllerError.invalidArguments
+            }
+            try selectionPluginController.saveToken(token)
+            result(nil)
+          case "clearToken":
+            try selectionPluginController.clearToken()
+            result(nil)
+          default:
+            result(FlutterMethodNotImplemented)
+          }
+        } catch {
+          result(
+            FlutterError(
+              code: "selection_plugin_error",
+              message: error.localizedDescription,
+              details: nil
+            )
+          )
+        }
+      }
+      self.selectionPluginController = selectionPluginController
+      self.selectionPluginChannel = selectionPluginChannel
       accessibilityPermissionAssistant.onPermissionGranted = { [weak self] in
         self?.hotKeyChannel?.invokeMethod(
           "pastePermissionGranted",
           arguments: nil
         )
+        self?.selectionPluginController?.permissionDidChange()
       }
 
       let modifierChannel = FlutterMethodChannel(
@@ -450,6 +507,7 @@ class AppDelegate: FlutterAppDelegate {
       NSEvent.removeMonitor(modifierMonitor)
     }
     unregisterClipboardHotKey()
+    selectionPluginController?.shutdown()
     super.applicationWillTerminate(notification)
   }
 

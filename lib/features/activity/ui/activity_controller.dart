@@ -196,6 +196,7 @@ final class ActivityController extends ChangeNotifier {
     AgentConversationTarget? conversationTarget,
     AgentNotificationKind notificationKind = AgentNotificationKind.completion,
     ConversationTokenUsage? tokenUsage,
+    bool countAsReminder = true,
   }) {
     final DateTime resolvedCompletedAt = (completedAt ?? _now()).toUtc();
     final String normalizedSource = _normalizedSource(source);
@@ -238,6 +239,7 @@ final class ActivityController extends ChangeNotifier {
         conversationTarget: resolvedTarget,
         notificationKind: notificationKind,
         tokenUsage: tokenUsage,
+        countAsReminder: countAsReminder,
       );
       _activities = <AgentActivity>[
         repeated,
@@ -266,7 +268,8 @@ final class ActivityController extends ChangeNotifier {
       detail: normalizedDetail,
       startedAt: run?.startedAt,
       completedAt: resolvedCompletedAt,
-      unseen: true,
+      unseen: countAsReminder,
+      unseenReminderCount: countAsReminder ? 1 : 0,
       notificationKind: notificationKind,
       conversationTarget: resolvedTarget,
       tokenUsage: tokenUsage,
@@ -290,29 +293,36 @@ final class ActivityController extends ChangeNotifier {
   /// filtered, without creating history, unread state, or a completion count.
   bool discardActiveRun({
     required String source,
-    required AgentConversationTarget target,
+    AgentConversationTarget? target,
   }) {
-    final AgentConversationTarget matchTarget = _targetForSource(
+    final AgentConversationTarget? matchTarget = _targetForSource(
       source: source,
       target: target,
-    )!;
-    final String? conversationId = _trimmed(matchTarget.conversationId);
-    if (conversationId == null) {
-      return false;
-    }
-    final int index = _activeRuns.indexWhere((AgentTaskRun run) {
-      final AgentConversationTarget? runTarget = run.conversationTarget;
-      return _trimmed(runTarget?.conversationId) == conversationId &&
-          runTarget?.client == matchTarget.client;
-    });
-    if (index < 0) {
+    );
+    final String? conversationId = _trimmed(matchTarget?.conversationId);
+    final String? workspace = _normalizedPath(matchTarget?.workspacePath);
+    final String sourceKey = _normalizedSource(source).toLowerCase();
+    final List<AgentTaskRun> matches = _activeRuns
+        .where((AgentTaskRun run) {
+          final AgentConversationTarget? runTarget = run.conversationTarget;
+          if (conversationId != null) {
+            return _trimmed(runTarget?.conversationId) == conversationId &&
+                runTarget?.client == matchTarget?.client;
+          }
+          return run.source.trim().toLowerCase() == sourceKey &&
+              (matchTarget == null ||
+                  matchTarget.client == AgentClient.unknown ||
+                  AgentClient.fromSource(run.source) == matchTarget.client) &&
+              (workspace == null ||
+                  _normalizedPath(runTarget?.workspacePath) == workspace);
+        })
+        .toList(growable: false);
+    // A hook without a conversation id must never guess between active tasks.
+    if (matches.length != 1) {
       return false;
     }
     _activeRuns = _activeRuns
-        .asMap()
-        .entries
-        .where((MapEntry<int, AgentTaskRun> entry) => entry.key != index)
-        .map((MapEntry<int, AgentTaskRun> entry) => entry.value)
+        .where((AgentTaskRun run) => !identical(run, matches.single))
         .toList(growable: false);
     notifyListeners();
     return true;
@@ -345,6 +355,7 @@ final class ActivityController extends ChangeNotifier {
         conversationTarget: target,
         notificationKind: notificationKind,
         tokenUsage: tokenUsage,
+        countAsReminder: false,
       );
       return;
     }
@@ -372,6 +383,7 @@ final class ActivityController extends ChangeNotifier {
       notificationKind: notificationKind,
       tokenUsage: tokenUsage,
       preserveLifecycle: true,
+      countAsReminder: false,
     );
     _activities = <AgentActivity>[
       repeated,
@@ -443,11 +455,16 @@ final class ActivityController extends ChangeNotifier {
     final String? workspace = _normalizedPath(target?.workspacePath);
     final List<int> candidates = <int>[
       for (var index = 0; index < _activeRuns.length; index += 1)
-        if (workspace == null ||
-            _normalizedPath(
-                  _activeRuns[index].conversationTarget?.workspacePath,
-                ) ==
-                workspace)
+        if ((conversationId == null ||
+                _trimmed(
+                      _activeRuns[index].conversationTarget?.conversationId,
+                    ) ==
+                    null) &&
+            (workspace == null ||
+                _normalizedPath(
+                      _activeRuns[index].conversationTarget?.workspacePath,
+                    ) ==
+                    workspace))
           index,
     ];
     if (candidates.isEmpty) {
@@ -476,7 +493,7 @@ final class ActivityController extends ChangeNotifier {
     if (compatibleSource.length == 1) {
       return compatibleSource.single;
     }
-    return candidates.length == 1 ? candidates.single : -1;
+    return -1;
   }
 
   AgentConversationTarget? _targetForSource({
@@ -583,29 +600,55 @@ final class ActivityController extends ChangeNotifier {
   ///
   /// Unknown and already-seen ids are ignored so delayed mobile receipts
   /// cannot affect newer activity.
-  bool markSeen(Iterable<String> activityIds) {
+  /// Returns the number of reminders to acknowledge in the desktop tray,
+  /// including unread repeats grouped into one activity.
+  int markSeen(Iterable<String> activityIds) {
     final Set<String> ids = activityIds
         .map((String id) => id.trim())
         .where((String id) => id.isNotEmpty)
         .toSet();
-    if (ids.isEmpty) return false;
+    if (ids.isEmpty) return 0;
 
-    var changed = false;
+    var acknowledged = 0;
     _activities = _activities
         .map((AgentActivity item) {
           if (!item.unseen || !ids.contains(item.id)) return item;
-          changed = true;
+          acknowledged += item.unseenReminderCount;
           return item.seen();
         })
         .toList(growable: false);
-    if (!changed) return false;
+    if (acknowledged == 0) return 0;
 
     if (unseenCount == 0) {
       _revealActive = false;
     }
     _persist();
     notifyListeners();
-    return true;
+    return acknowledged;
+  }
+
+  /// Marks the unseen activities for one Agent conversation as seen.
+  ///
+  /// The returned count lets the desktop shell reduce its independent durable
+  /// unread badge by exactly the number of reminders that were acknowledged.
+  int markConversationSeen(AgentConversationTarget target) {
+    final String? conversationId = _trimmed(target.conversationId);
+    if (conversationId == null) {
+      return 0;
+    }
+    final AgentConversationTarget normalizedTarget = AgentConversationTarget(
+      client: target.client,
+      conversationId: conversationId,
+      workspacePath: _trimmed(target.workspacePath),
+    );
+    return markSeen(
+      _activities
+          .where(
+            (AgentActivity item) =>
+                _sameConversation(item.conversationTarget, normalizedTarget),
+          )
+          .map((AgentActivity item) => item.id),
+    );
   }
 
   void clear() {

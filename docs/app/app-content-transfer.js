@@ -2,8 +2,8 @@ import {
   base64UrlDecode,
   bytesToBase64,
   utf8ByteLength,
-} from "./app-codecs.js?shell=35";
-import { formatBytes, validDate } from "./app-formatters.js?shell=35";
+} from "./app-codecs.js?shell=38";
+import { formatBytes, validDate } from "./app-formatters.js?shell=38";
 
 // Bounded clipboard/file transfer plus in-memory Agent feed reconciliation.
 export function createContentTransferController({
@@ -42,6 +42,7 @@ export function createContentTransferController({
     if (message.complete !== false) {
       session.lastSyncAt = new Date();
     }
+    session.clipboardRenderRevision += 1;
     if (sessionIsActive(session)) renderClipboard();
     if (rejected && sessionIsActive(session)) {
       showToast("部分文字超过传输上限，请在电脑上改为发送文件");
@@ -59,6 +60,7 @@ export function createContentTransferController({
     sortItems(session);
     session.items = session.items.slice(0, 50);
     session.lastSyncAt = new Date();
+    session.clipboardRenderRevision += 1;
     if (sessionIsActive(session)) renderClipboard();
   }
 
@@ -142,6 +144,7 @@ export function createContentTransferController({
     else session.agentEvents.unshift(event);
     sortAgentEvents(session);
     session.agentEvents = session.agentEvents.slice(0, 50);
+    session.agentRenderRevision += 1;
     if (sessionIsActive(session)) renderAgentEvents();
     else updateAppBadge();
     if (requestNotification) notifyAgentCompletion(message, session);
@@ -163,6 +166,7 @@ export function createContentTransferController({
       .filter((event) => event && typeof event.id === "string")
       .slice(0, 50);
     sortAgentEvents(session);
+    session.agentRenderRevision += 1;
     if (sessionIsActive(session)) renderAgentEvents();
     else updateAppBadge();
   }
@@ -379,13 +383,24 @@ export function createContentTransferController({
       textarea.style.position = "fixed";
       textarea.style.opacity = "0";
       document.body.append(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      textarea.remove();
+      let copied = false;
+      try {
+        textarea.select();
+        copied = document.execCommand("copy");
+      } catch {
+        // Both clipboard APIs may be unavailable in a restricted browser.
+      } finally {
+        textarea.remove();
+      }
+      if (!copied) {
+        showToast("复制失败，请长按文字手动复制");
+        return false;
+      }
     }
     const previous = button.innerHTML;
     button.textContent = "已复制";
     setTimeout(() => (button.innerHTML = previous), 900);
+    return true;
   }
 
   function requestFile(item, session = activeSession()) {

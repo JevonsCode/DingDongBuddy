@@ -58,12 +58,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       'dingdong_get_asset' => _contextualGet(
         path: '/library/${arguments['id'] ?? ''}',
         arguments: arguments,
-        keys: const <String>[
-          'mode',
-          'includeClipboard',
-          'includeSensitiveClipboard',
-          'source',
-        ],
+        keys: const <String>['mode', 'source'],
         extraQuery: const <String, String>{'trackUsage': 'true'},
       ),
       'dingdong_load_skill' => _contextualGet(

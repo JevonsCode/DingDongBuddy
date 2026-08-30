@@ -1,7 +1,7 @@
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=35";
+} from "./notification-policy.js?shell=38";
 import {
   formatBytes,
   formatDuration,
@@ -10,7 +10,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=35";
+} from "./app-formatters.js?shell=38";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -52,7 +52,8 @@ export function createAppRenderer({
     elements["reconnect-button"].textContent = session.connectionSuperseded
       ? "在此连接"
       : "重新连接";
-    elements["offline-banner"].hidden = session.connected;
+    elements["offline-banner"].hidden =
+      session.connected || session.connecting || state.booting;
   }
 
   function renderConnectionSummary() {
@@ -175,6 +176,16 @@ export function createAppRenderer({
     const session = activeSession();
     if (!session) return;
     elements["clipboard-count"].textContent = String(session.items.length);
+    const signature = JSON.stringify([
+      session.pair.room,
+      session.connected,
+      session.lastSyncAt?.getTime() || 0,
+      session.pair.hostName,
+      session.clipboardRenderRevision,
+      session.items.length,
+    ]);
+    if (state.clipboardRenderSignature === signature) return;
+    state.clipboardRenderSignature = signature;
     elements["clipboard-list"].replaceChildren(
       ...session.items.map((item) => createClipboardCard(item, session)),
     );
@@ -247,6 +258,18 @@ export function createAppRenderer({
     elements["agent-count"].textContent = String(unseenCount);
     elements["running-count"].textContent = String(session.agentRuns.length);
     elements["agent-unseen-count"].textContent = String(unseenCount);
+    const signature = JSON.stringify([
+      session.pair.room,
+      session.agentRenderRevision,
+      session.agentRuns.length,
+      session.agentEvents.length,
+    ]);
+    if (state.agentRenderSignature === signature) {
+      updateAppBadge();
+      scheduleAgentSeenAcknowledgement(session);
+      return;
+    }
+    state.agentRenderSignature = signature;
     elements["agent-running-list"].replaceChildren(
       ...session.agentRuns.map(createAgentRunCard),
     );
@@ -339,6 +362,7 @@ export function createAppRenderer({
     for (const event of session.agentEvents) {
       if (seenIds.has(agentActivityKey(event))) event.unseen = false;
     }
+    session.agentRenderRevision += 1;
     if (sessionIsActive(session)) renderAgentEvents();
     else updateAppBadge();
   }

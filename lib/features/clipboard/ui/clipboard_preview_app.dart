@@ -73,6 +73,12 @@ class _ClipboardPreviewAppState extends State<ClipboardPreviewApp> {
     });
   }
 
+  @override
+  void dispose() {
+    unawaited(widget.windowController.setWindowMethodHandler(null));
+    super.dispose();
+  }
+
   Future<void> _close() async {
     await _qrPreviewLauncher.hide();
     await widget.windowController.hide();
@@ -190,6 +196,12 @@ class _ClipboardQrPreviewAppState extends State<ClipboardQrPreviewApp> {
       );
       if (mounted && data != null) setState(() => _data = data);
     });
+  }
+
+  @override
+  void dispose() {
+    unawaited(widget.windowController.setWindowMethodHandler(null));
+    super.dispose();
   }
 
   void _close() => unawaited(_closeAndFocusParent());

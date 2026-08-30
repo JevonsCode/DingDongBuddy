@@ -1,6 +1,6 @@
 import webPush from "web-push";
 
-const serviceVersion = "1.5.3";
+const serviceVersion = "1.5.4";
 const maximumFrameBytes = 256 * 1024;
 const maximumLifecycleTelemetryBytes = 4 * 1024;
 // Web Push providers only guarantee a 4 KiB encrypted message. Keeping the
@@ -771,10 +771,6 @@ function hasLifecycleTelemetryConfiguration(env) {
 
 function isValidMessageId(value) {
   return typeof value === "string" && /^[A-Za-z0-9._:-]{1,160}$/.test(value);
-}
-
-function isAuthorized(request, registration) {
-  return isAuthorizedToken(request, registration.token);
 }
 
 function isAuthorizedToken(request, token) {

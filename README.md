@@ -9,6 +9,12 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
+  <a href="https://github.com/JevonsCode/DingDongCodexPet">DingDong Codex Pet · mascot project</a><br>
+  <sub>The pet repository is currently private; repository access is required.</sub>
+</p>
+
+
+<p align="center">
   <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>Keep connected Agent alerts in one place, with a sound you choose</strong>
 </p>
 
@@ -18,9 +24,9 @@ connects them to supported clients, and gathers their alerts with a desktop
 sound you choose. Important results and selected clipboard items can also reach
 a trusted phone through the mobile PWA.
 
-> **Current release: DingDong 1.5.3.** This stability update fixes fresh-install
-> startup and project-scoped MCP delivery, bounds phone file-transfer and
-> Agent/MCP memory, and makes mobile reminders and PWA upgrades more reliable.
+> **Current release: DingDong 1.5.4.** This update adds optional macOS selection
+> tools and computer-to-computer sharing, improves Agent acknowledgement and
+> settings synchronization, and expands desktop interaction checks.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -36,10 +42,36 @@ stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
 | Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
-| Connected devices | One phone can keep multiple computers paired and online, with per-computer Clipboard, file, draft, and Agent reminder isolation |
+| Connected devices | Pair phones or computers, share Clipboard items and files explicitly, opt into automatic computer sync, and choose direct LAN or encrypted service transport |
 
 Clipboard and resource data stay on this computer by default. The lightweight
 connection relay stores no clipboard or file content.
+
+## Optional system selection tools on macOS
+
+The current source build includes the native selection plugin developed in Fuli.
+Open **Settings → System selection tools**, enable it, and grant DingDong
+Accessibility permission if needed. Select text in an application that exposes
+its selection to macOS, then choose **Copy / Translate / Explain**; `⌥⌘C`
+copies without the floating toolbar.
+
+Copy stays local. Translation and explanation need a model service you configure
+under the same settings section. Local providers require a running loopback
+service and an installed model; cloud providers require your own API token,
+stored in macOS Keychain. Preset model names are editable defaults, not installed
+models or a promise of free service. No text is sent until you choose Translate
+or Explain. Turning the plugin off removes its observers and cancels model work.
+
+This is an optional native feature hosted by DingDong, not a second background
+app or an arbitrary JavaScript plugin loader. The Fuli example's Skill package
+helps Agents work on the plugin; loading that Skill does not enable system text
+selection. Do not run the standalone DingDong Selection helper at the same time,
+as both would listen for the same selections and shortcut.
+
+See [the plugin guide](docs/product/system-selection-plugin.md) for setup,
+troubleshooting, and the distinction between the example and the native host.
+These changes are in the source workspace; an existing release is not upgraded
+until a new application build is installed.
 
 ## Unified Prompt, Skill, and MCP management
 
@@ -85,7 +117,7 @@ and Pi sessions, and can be turned off there.
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.5.3.”
+- “Use this project's release workflow, run every check, and prepare version 1.5.4.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can search before creating or updating Prompt and MCP resources with
@@ -111,6 +143,10 @@ pairings, so ordinary upgrades do not require scanning the QR code again.
 - **Computer → phone:** enable automatic delivery per device to send only new
   clipboard items copied after pairing. Existing history is sent only when you
   choose **Send to Device**.
+- **Computer → computer:** paste the pairing link from the other computer to add
+  it as a trusted device. Notifications and automatic Clipboard sync start off;
+  **Send to Device** writes the selected text or received file path to the other
+  computer's system clipboard. Automatic sync can be enabled per computer.
 - **Phone → computer:** the PWA never reads or watches the phone's system
   clipboard. It sends only text you enter or paste, or a file you select, after
   you tap **Send**.
@@ -132,10 +168,13 @@ pairings, so ordinary upgrades do not require scanning the QR code again.
   settings. The installed Home Screen icon is created by the operating system
   and may require removing and re-adding the PWA before it changes.
 
-DingDong attempts a direct WebRTC connection and falls back to its encrypted
-relay when necessary. The relay forwards encrypted frames and Web Push payloads
-without storing clipboard or file content. Installing the PWA is optional on
-Android; on iPhone and iPad, add it to the Home Screen before enabling Web Push.
+Each computer connection can use **Automatic**, **Local network**, or
+**Encrypted service**. Automatic prefers the direct WebRTC data channel and
+falls back to the encrypted relay. Local-network mode still uses the service for
+encrypted pairing/signalling, but content is sent only over the direct channel.
+The relay forwards encrypted frames and Web Push payloads without storing
+clipboard or file content. Installing the PWA is optional on Android; on iPhone
+and iPad, add it to the Home Screen before enabling Web Push.
 
 The Android Chrome path, including background notification delivery, has been
 tested end to end. The iPhone/iPad flow follows WebKit's Home Screen Web App
@@ -146,7 +185,7 @@ requirements but still needs a recorded real-device release pass.
 Paste this into a local Codex, Claude Code, Cursor, Gemini CLI, or Kiro session:
 
 ```text
-Install DingDong on this computer from https://github.com/JevonsCode/DingDongBuddy. First read and execute https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/INSTALL_WITH_AGENT.md. Complete the app installation, MCP setup, completion Hook setup, and both connection tests; preserve all existing user data and unrelated Agent settings. Do not merely summarize the guide.
+Install DingDong on this computer from https://github.com/JevonsCode/DingDongBuddy. First read and execute https://raw.githubusercontent.com/JevonsCode/DingDongBuddy/main/INSTALL_WITH_AGENT.md. Complete the app installation, MCP setup, completion Hook setup, Codex session acknowledgement when applicable, and all applicable connection tests; preserve all existing user data and unrelated Agent settings. Do not merely summarize the guide.
 ```
 
 The executable, version-independent procedure lives in
@@ -155,9 +194,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-arm64.dmg)
-- [macOS · Intel · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-macos-x64.dmg)
-- [Windows x64 · 1.5.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.3/DingDong-1.5.3-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.5.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-arm64.dmg)
+- [macOS · Intel · 1.5.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-x64.dmg)
+- [Windows x64 · 1.5.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.
@@ -170,7 +209,7 @@ completion-hook, and applicable resource-sync paths end to end.
 
 | Agent | MCP configuration | Completion event | Managed bootstrap | Current verification |
 | --- | --- | --- | --- | --- |
-| Codex | `~/.codex/config.toml` | `Stop` | Prompt Bridge | **Verified end to end on macOS** |
+| Codex | `~/.codex/config.toml` | `Stop`; `SessionStart` acknowledgement | Prompt Bridge | **Verified end to end on macOS** for completion; acknowledgement implemented |
 | Claude Code | `~/.claude.json` | `Stop` | Prompt Bridge | **Verified end to end on macOS** |
 | Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` | None | Implemented; real-client end-to-end verification wanted |
 | Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` | None | Implemented; real-client end-to-end verification wanted |
@@ -178,12 +217,16 @@ completion-hook, and applicable resource-sync paths end to end.
 
 ### How the connection works
 
-DingDong uses two independent native paths:
+DingDong uses three independent native paths for Codex:
 
 1. The MCP bridge exposes `dingdong_bridge`, resource tools, configuration
    tools, and `dingdong_notify`.
 2. A completion Hook runs `dingdong_mcp --notify-stop --source <agent>`
    after the client produces its final response. No second model call is made.
+3. A Codex `SessionStart` Hook limited to `startup|resume` runs
+   `dingdong_mcp --acknowledge-session-start --source Codex`. When Codex opens or
+   resumes a conversation, DingDong marks only that thread's reminders as seen
+   and subtracts their count from the tray badge.
 
 Automatic setup preserves unrelated entries in native files, including
 `~/.codex/config.toml`, `~/.claude/settings.json`,
@@ -242,7 +285,7 @@ The desktop application uses Flutter 3.44.6 and Dart 3.12 or newer.
 flutter pub get
 flutter analyze
 flutter test
-flutter test integration_test/desktop_agent_connection_smoke_test.dart -d macos
+flutter test integration_test/desktop_release_acceptance_test.dart -d macos
 flutter build macos --release
 ```
 

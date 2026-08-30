@@ -60,6 +60,22 @@ final class DeviceLinkStatusEvent extends DeviceLinkSessionEvent {
   final Object? error;
 }
 
+final class DeviceLinkTransportEvent extends DeviceLinkSessionEvent {
+  const DeviceLinkTransportEvent(this.transport);
+
+  final DeviceLinkActiveTransport transport;
+}
+
+/// Reports that the encrypted signalling room has (or has lost) its other
+/// endpoint. This is intentionally separate from content connectivity: LAN
+/// mode may need the relay control plane to reconcile settings before a direct
+/// data channel is available.
+final class DeviceLinkPeerPresenceEvent extends DeviceLinkSessionEvent {
+  const DeviceLinkPeerPresenceEvent(this.present);
+
+  final bool present;
+}
+
 final class DeviceLinkMessageEvent extends DeviceLinkSessionEvent {
   const DeviceLinkMessageEvent(this.message);
 
@@ -76,6 +92,18 @@ abstract interface class DeviceLinkSessionHandle {
   Future<void> send(Map<String, Object?> message);
 
   Future<void> close();
+}
+
+/// Optional route policy supported by the production WebRTC session. Keeping
+/// this separate means small test doubles do not need transport internals.
+abstract interface class ConfigurableDeviceLinkSessionHandle {
+  DeviceLinkTransportPreference get transportPreference;
+
+  set transportPreference(DeviceLinkTransportPreference value);
+
+  DeviceLinkActiveTransport get activeTransport;
+
+  void updateTransportPreference(DeviceLinkTransportPreference value);
 }
 
 typedef DeviceLinkSessionFactory =
@@ -103,21 +131,44 @@ DeviceLinkSessionHandle createDeviceLinkSession({
   );
 }
 
+DeviceLinkSessionHandle createPeerDeviceLinkSession({
+  required Uri relayUrl,
+  required String room,
+  required String secret,
+}) {
+  return WebRtcDeviceLinkSession(
+    relayUrl: relayUrl,
+    room: room,
+    secret: secret,
+    side: DeviceLinkConnectionSide.peer,
+  );
+}
+
 /// macOS/Windows offerer for one trusted PWA or desktop peer.
-final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
+final class WebRtcDeviceLinkSession
+    implements DeviceLinkSessionHandle, ConfigurableDeviceLinkSessionHandle {
   WebRtcDeviceLinkSession({
     required this.relayUrl,
     required this.room,
     required String secret,
+    this.side = DeviceLinkConnectionSide.host,
+    this.transportPreference = DeviceLinkTransportPreference.automatic,
   }) : _codec = SecureMessageCodec.fromBase64Url(secret);
 
   final Uri relayUrl;
   final String room;
+  final DeviceLinkConnectionSide side;
   final SecureMessageCodec _codec;
   final StreamController<DeviceLinkSessionEvent> _events =
       StreamController<DeviceLinkSessionEvent>.broadcast();
   final List<RTCIceCandidate> _pendingRemoteCandidates = <RTCIceCandidate>[];
-  final Queue<String> _incomingEnvelopes = Queue<String>();
+  final Queue<
+    ({String envelope, bool fromRelay, Object source, int generation})
+  >
+  _incomingEnvelopes =
+      Queue<
+        ({String envelope, bool fromRelay, Object source, int generation})
+      >();
 
   WebSocket? _socket;
   StreamSubscription<Object?>? _socketSubscription;
@@ -129,7 +180,31 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   bool _makingOffer = false;
   bool _relayPeerPresent = false;
   bool _drainingIncomingEnvelopes = false;
+  bool _directSendUnavailable = false;
   int _reconnectAttempt = 0;
+  int _relayGeneration = 0;
+  int _peerGeneration = 0;
+  WebSocket? _peerSignallingSocket;
+  int _peerRelayGeneration = -1;
+  @override
+  DeviceLinkTransportPreference transportPreference;
+
+  @override
+  void updateTransportPreference(DeviceLinkTransportPreference value) {
+    if (transportPreference == value) return;
+    transportPreference = value;
+    _refreshConnectionState();
+    if (value == DeviceLinkTransportPreference.serviceRelay) {
+      unawaited(_resetPeer());
+    } else if (side == DeviceLinkConnectionSide.host &&
+        _relayPeerPresent &&
+        !_dataChannelConnected) {
+      unawaited(_makeOffer());
+    }
+  }
+
+  DeviceLinkActiveTransport _activeTransport = DeviceLinkActiveTransport.none;
+  DeviceConnectionStatus? _lastStatus;
   Future<void> _incomingDrain = Future<void>.value();
 
   static const int _maximumQueuedIncomingEnvelopes = 16;
@@ -138,9 +213,23 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   Stream<DeviceLinkSessionEvent> get events => _events.stream;
 
   @override
-  bool get connected => _dataChannelConnected || _relayConnected;
+  bool get connected => activeTransport != DeviceLinkActiveTransport.none;
+
+  @override
+  DeviceLinkActiveTransport get activeTransport {
+    if (transportPreference != DeviceLinkTransportPreference.serviceRelay &&
+        _dataChannelConnected) {
+      return DeviceLinkActiveTransport.localNetwork;
+    }
+    if (transportPreference != DeviceLinkTransportPreference.localNetwork &&
+        _relayConnected) {
+      return DeviceLinkActiveTransport.serviceRelay;
+    }
+    return DeviceLinkActiveTransport.none;
+  }
 
   bool get _dataChannelConnected =>
+      !_directSendUnavailable &&
       _dataChannel?.state == RTCDataChannelState.RTCDataChannelOpen;
 
   bool get _relayConnected =>
@@ -150,47 +239,53 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   Future<void> connect() async {
     if (_closed || _connecting || _socket != null) return;
     _connecting = true;
-    _events.add(const DeviceLinkStatusEvent(DeviceConnectionStatus.connecting));
+    _emitStatus(DeviceConnectionStatus.connecting);
     try {
       final WebSocket socket = await WebSocket.connect(
-        _relaySocketUri(relayUrl, room).toString(),
+        _relaySocketUri(relayUrl, room, side).toString(),
       );
       if (_closed) {
         await socket.close();
         return;
       }
       _socket = socket;
+      final int relayGeneration = ++_relayGeneration;
       socket.pingInterval = const Duration(seconds: 20);
       late final StreamSubscription<Object?> subscription;
       subscription = socket
           .asyncMap<void>((Object? data) async {
-            if (data is String) {
-              await _handleRelayMessage(data);
+            if (data is String && _socketIsCurrent(socket, relayGeneration)) {
+              await _handleRelayMessage(socket, relayGeneration, data);
             }
           })
           .listen(
             null,
-            onError: _handleSocketError,
+            onError: (Object error) =>
+                _handleSocketError(socket, relayGeneration, error),
             onDone: () {
               if (identical(_socketSubscription, subscription)) {
                 _socketSubscription = null;
               }
-              _handleSocketDone(socket);
+              _handleSocketDone(socket, relayGeneration);
             },
             cancelOnError: false,
           );
       _socketSubscription = subscription;
     } on Object catch (error) {
-      _events.add(
-        DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
-      );
+      if (_closed) return;
+      _emitStatus(DeviceConnectionStatus.error, error: error);
       _scheduleReconnect();
     } finally {
       _connecting = false;
     }
   }
 
-  Future<void> _handleRelayMessage(String raw) async {
+  Future<void> _handleRelayMessage(
+    WebSocket source,
+    int relayGeneration,
+    String raw,
+  ) async {
+    if (!_socketIsCurrent(source, relayGeneration)) return;
     try {
       final int rawBytes = utf8.encode(raw).length;
       if (rawBytes > deviceLinkMaximumRelayFrameBytes) {
@@ -203,46 +298,101 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
       final Map<String, Object?> frame = Map<String, Object?>.from(
         jsonDecode(raw) as Map,
       );
+      if (!_socketIsCurrent(source, relayGeneration)) return;
       if (frame['type'] == 'relay') {
         final String? event = frame['event'] as String?;
-        if (event == 'peer_joined') {
+        final String joinedEvent = side == DeviceLinkConnectionSide.host
+            ? 'peer_joined'
+            : 'host_joined';
+        final String leftEvent = side == DeviceLinkConnectionSide.host
+            ? 'peer_left'
+            : 'host_left';
+        if (event == joinedEvent) {
           _relayPeerPresent = true;
           _reconnectAttempt = 0;
-          _events.add(
-            const DeviceLinkStatusEvent(DeviceConnectionStatus.connected),
-          );
-          await _makeOffer();
-        } else if (event == 'peer_left') {
+          _refreshConnectionState();
+          _events.add(const DeviceLinkPeerPresenceEvent(true));
+          if (side == DeviceLinkConnectionSide.host &&
+              transportPreference !=
+                  DeviceLinkTransportPreference.serviceRelay) {
+            await _makeOffer(
+              expectedSocket: source,
+              expectedRelayGeneration: relayGeneration,
+            );
+          }
+        } else if (event == leftEvent) {
           _relayPeerPresent = false;
           await _resetPeer();
-          _events.add(
-            const DeviceLinkStatusEvent(DeviceConnectionStatus.disconnected),
-          );
+          if (!_socketIsCurrent(source, relayGeneration)) return;
+          _refreshConnectionState();
+          _events.add(const DeviceLinkPeerPresenceEvent(false));
         }
         return;
       }
       if (frame['type'] == 'data' && frame['payload'] is String) {
-        _queueIncomingEnvelope(frame['payload']! as String);
+        _queueIncomingEnvelope(
+          frame['payload']! as String,
+          fromRelay: true,
+          source: source,
+          generation: relayGeneration,
+        );
         return;
       }
       if (frame['type'] != 'signal' || frame['payload'] is! String) return;
       final Map<String, Object?> message = await _codec.open(
         frame['payload']! as String,
       );
+      if (!_socketIsCurrent(source, relayGeneration)) return;
       switch (message['type']) {
+        case 'offer':
+          if (side == DeviceLinkConnectionSide.peer &&
+              transportPreference !=
+                  DeviceLinkTransportPreference.serviceRelay) {
+            await _acceptOffer(
+              message,
+              source: source,
+              relayGeneration: relayGeneration,
+            );
+          }
         case 'answer':
+          if (side != DeviceLinkConnectionSide.host) return;
           final RTCPeerConnection? peer = _peerConnection;
-          if (peer == null) return;
+          final int peerGeneration = _peerGeneration;
+          if (peer == null ||
+              !_peerContextIsCurrent(
+                peer,
+                peerGeneration,
+                source,
+                relayGeneration,
+              )) {
+            return;
+          }
           await peer.setRemoteDescription(
             RTCSessionDescription(
               message['sdp']! as String,
               message['sdpType'] as String? ?? 'answer',
             ),
           );
+          if (!_peerContextIsCurrent(
+            peer,
+            peerGeneration,
+            source,
+            relayGeneration,
+          )) {
+            return;
+          }
           for (final RTCIceCandidate candidate in List<RTCIceCandidate>.of(
             _pendingRemoteCandidates,
           )) {
             await peer.addCandidate(candidate);
+            if (!_peerContextIsCurrent(
+              peer,
+              peerGeneration,
+              source,
+              relayGeneration,
+            )) {
+              return;
+            }
           }
           _pendingRemoteCandidates.clear();
         case 'candidate':
@@ -252,8 +402,18 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
             (message['sdpMLineIndex'] as num?)?.toInt(),
           );
           final RTCPeerConnection? peer = _peerConnection;
+          final int peerGeneration = _peerGeneration;
           final RTCSessionDescription? remote = await peer
               ?.getRemoteDescription();
+          if (peer != null &&
+              !_peerContextIsCurrent(
+                peer,
+                peerGeneration,
+                source,
+                relayGeneration,
+              )) {
+            return;
+          }
           if (peer == null || remote == null) {
             _pendingRemoteCandidates.add(candidate);
           } else {
@@ -261,87 +421,273 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
           }
       }
     } on Object catch (error) {
-      _events.add(
-        DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
-      );
+      _emitStatus(DeviceConnectionStatus.error, error: error);
     }
   }
 
-  Future<void> _makeOffer() async {
-    if (_closed || _makingOffer) return;
+  Future<void> _makeOffer({
+    WebSocket? expectedSocket,
+    int? expectedRelayGeneration,
+  }) async {
+    if (_closed ||
+        _makingOffer ||
+        side != DeviceLinkConnectionSide.host ||
+        transportPreference == DeviceLinkTransportPreference.serviceRelay) {
+      return;
+    }
+    final WebSocket? signallingSocket = expectedSocket ?? _socket;
+    final int relayGeneration = expectedRelayGeneration ?? _relayGeneration;
+    if (signallingSocket == null ||
+        !_socketIsCurrent(signallingSocket, relayGeneration)) {
+      return;
+    }
     _makingOffer = true;
     try {
       await _resetPeer();
-      final RTCPeerConnection peer = await createPeerConnection(
-        <String, Object?>{'iceServers': const <Object?>[]},
+      if (_closed ||
+          !_relayPeerPresent ||
+          !_socketIsCurrent(signallingSocket, relayGeneration)) {
+        return;
+      }
+      final int peerGeneration = _peerGeneration;
+      final RTCPeerConnection? peer = await _createPeerConnection(
+        expectedPeerGeneration: peerGeneration,
+        signallingSocket: signallingSocket,
+        relayGeneration: relayGeneration,
       );
-      _peerConnection = peer;
-      peer.onIceCandidate = (RTCIceCandidate candidate) {
-        if ((candidate.candidate ?? '').isEmpty) return;
-        unawaited(
-          _sendSignal(<String, Object?>{
-            'type': 'candidate',
-            'candidate': candidate.candidate,
-            'sdpMid': candidate.sdpMid,
-            'sdpMLineIndex': candidate.sdpMLineIndex,
-          }),
-        );
-      };
-      peer.onConnectionState = (RTCPeerConnectionState state) {
-        if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
-            state ==
-                RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
-          if (!_relayConnected) {
-            _events.add(
-              const DeviceLinkStatusEvent(DeviceConnectionStatus.disconnected),
-            );
-          }
-        }
-      };
+      if (peer == null) return;
       final RTCDataChannel channel = await peer.createDataChannel(
         'dingdong-v1',
         RTCDataChannelInit()
           ..ordered = true
           ..id = 1,
       );
-      _attachDataChannel(channel);
+      if (!_peerContextIsCurrent(
+        peer,
+        peerGeneration,
+        signallingSocket,
+        relayGeneration,
+      )) {
+        await channel.close();
+        return;
+      }
+      _attachDataChannel(channel, peer, peerGeneration);
       final RTCSessionDescription offer = await peer.createOffer(
         <String, Object?>{},
       );
+      if (!_peerContextIsCurrent(
+        peer,
+        peerGeneration,
+        signallingSocket,
+        relayGeneration,
+      )) {
+        return;
+      }
       await peer.setLocalDescription(offer);
-      await _sendSignal(<String, Object?>{
-        'type': 'offer',
-        'sdp': offer.sdp,
-        'sdpType': offer.type ?? 'offer',
-      });
+      if (!_peerContextIsCurrent(
+        peer,
+        peerGeneration,
+        signallingSocket,
+        relayGeneration,
+      )) {
+        return;
+      }
+      await _sendSignal(
+        <String, Object?>{
+          'type': 'offer',
+          'sdp': offer.sdp,
+          'sdpType': offer.type ?? 'offer',
+        },
+        expectedSocket: signallingSocket,
+        expectedRelayGeneration: relayGeneration,
+        expectedPeer: peer,
+        expectedPeerGeneration: peerGeneration,
+      );
     } finally {
       _makingOffer = false;
     }
   }
 
-  void _attachDataChannel(RTCDataChannel channel) {
-    _dataChannel = channel;
-    channel.onDataChannelState = (RTCDataChannelState state) {
-      if (state == RTCDataChannelState.RTCDataChannelOpen) {
-        _reconnectAttempt = 0;
-        _events.add(
-          const DeviceLinkStatusEvent(DeviceConnectionStatus.connected),
-        );
-      } else if (state == RTCDataChannelState.RTCDataChannelClosed) {
-        if (!_relayConnected) {
-          _events.add(
-            const DeviceLinkStatusEvent(DeviceConnectionStatus.disconnected),
-          );
-        }
+  Future<void> _acceptOffer(
+    Map<String, Object?> message, {
+    required WebSocket source,
+    required int relayGeneration,
+  }) async {
+    // ICE callbacks may overtake the offer on the signalling socket. Preserve
+    // candidates received before resetting an older peer connection.
+    final List<RTCIceCandidate> earlyCandidates = List<RTCIceCandidate>.of(
+      _pendingRemoteCandidates,
+    );
+    await _resetPeer();
+    if (_closed || !_socketIsCurrent(source, relayGeneration)) return;
+    final int peerGeneration = _peerGeneration;
+    final RTCPeerConnection? peer = await _createPeerConnection(
+      expectedPeerGeneration: peerGeneration,
+      signallingSocket: source,
+      relayGeneration: relayGeneration,
+      receiveDataChannel: true,
+    );
+    if (peer == null) return;
+    await peer.setRemoteDescription(
+      RTCSessionDescription(
+        message['sdp']! as String,
+        message['sdpType'] as String? ?? 'offer',
+      ),
+    );
+    if (!_peerContextIsCurrent(peer, peerGeneration, source, relayGeneration)) {
+      return;
+    }
+    final List<RTCIceCandidate> candidates = <RTCIceCandidate>[
+      ...earlyCandidates,
+      ..._pendingRemoteCandidates,
+    ];
+    _pendingRemoteCandidates.clear();
+    for (final RTCIceCandidate candidate in candidates) {
+      await peer.addCandidate(candidate);
+      if (!_peerContextIsCurrent(
+        peer,
+        peerGeneration,
+        source,
+        relayGeneration,
+      )) {
+        return;
+      }
+    }
+    final RTCSessionDescription answer = await peer.createAnswer(
+      <String, Object?>{},
+    );
+    if (!_peerContextIsCurrent(peer, peerGeneration, source, relayGeneration)) {
+      return;
+    }
+    await peer.setLocalDescription(answer);
+    if (!_peerContextIsCurrent(peer, peerGeneration, source, relayGeneration)) {
+      return;
+    }
+    await _sendSignal(
+      <String, Object?>{
+        'type': 'answer',
+        'sdp': answer.sdp,
+        'sdpType': answer.type ?? 'answer',
+      },
+      expectedSocket: source,
+      expectedRelayGeneration: relayGeneration,
+      expectedPeer: peer,
+      expectedPeerGeneration: peerGeneration,
+    );
+  }
+
+  Future<RTCPeerConnection?> _createPeerConnection({
+    required int expectedPeerGeneration,
+    required WebSocket signallingSocket,
+    required int relayGeneration,
+    bool receiveDataChannel = false,
+  }) async {
+    final RTCPeerConnection peer = await createPeerConnection(<String, Object?>{
+      'iceServers': const <Object?>[],
+    });
+    if (_closed ||
+        expectedPeerGeneration != _peerGeneration ||
+        !_socketIsCurrent(signallingSocket, relayGeneration)) {
+      await peer.close();
+      return null;
+    }
+    _peerConnection = peer;
+    _peerSignallingSocket = signallingSocket;
+    _peerRelayGeneration = relayGeneration;
+    peer.onIceCandidate = (RTCIceCandidate candidate) {
+      if ((candidate.candidate ?? '').isEmpty ||
+          !_peerContextIsCurrent(
+            peer,
+            expectedPeerGeneration,
+            signallingSocket,
+            relayGeneration,
+          )) {
+        return;
+      }
+      unawaited(
+        _sendSignal(
+          <String, Object?>{
+            'type': 'candidate',
+            'candidate': candidate.candidate,
+            'sdpMid': candidate.sdpMid,
+            'sdpMLineIndex': candidate.sdpMLineIndex,
+          },
+          expectedSocket: signallingSocket,
+          expectedRelayGeneration: relayGeneration,
+          expectedPeer: peer,
+          expectedPeerGeneration: expectedPeerGeneration,
+        ),
+      );
+    };
+    peer.onConnectionState = (_) {
+      if (_peerContextIsCurrent(
+        peer,
+        expectedPeerGeneration,
+        signallingSocket,
+        relayGeneration,
+      )) {
+        _refreshConnectionState();
       }
     };
+    if (receiveDataChannel) {
+      peer.onDataChannel = (RTCDataChannel channel) {
+        _attachDataChannel(channel, peer, expectedPeerGeneration);
+      };
+    }
+    return peer;
+  }
+
+  void _attachDataChannel(
+    RTCDataChannel channel,
+    RTCPeerConnection peer,
+    int peerGeneration,
+  ) {
+    if (_closed ||
+        peerGeneration != _peerGeneration ||
+        !identical(_peerConnection, peer)) {
+      unawaited(channel.close());
+      return;
+    }
+    final RTCDataChannel? previous = _dataChannel;
+    _dataChannel = channel;
+    _directSendUnavailable = false;
+    if (previous != null && !identical(previous, channel)) {
+      unawaited(previous.close());
+    }
+    channel.onDataChannelState = (RTCDataChannelState state) {
+      if (!identical(_peerConnection, peer) ||
+          peerGeneration != _peerGeneration ||
+          !identical(_dataChannel, channel)) {
+        return;
+      }
+      if (state == RTCDataChannelState.RTCDataChannelOpen) {
+        _reconnectAttempt = 0;
+        _directSendUnavailable = false;
+      }
+      _refreshConnectionState();
+    };
     channel.onMessage = (RTCDataChannelMessage data) {
-      if (data.isBinary) return;
-      _queueIncomingEnvelope(data.text);
+      if (data.isBinary ||
+          !identical(_peerConnection, peer) ||
+          peerGeneration != _peerGeneration ||
+          !identical(_dataChannel, channel)) {
+        return;
+      }
+      _queueIncomingEnvelope(
+        data.text,
+        fromRelay: false,
+        source: channel,
+        generation: peerGeneration,
+      );
     };
   }
 
-  void _queueIncomingEnvelope(String envelope) {
+  void _queueIncomingEnvelope(
+    String envelope, {
+    required bool fromRelay,
+    required Object source,
+    required int generation,
+  }) {
     try {
       // Validate the relay representation even when this instance arrived over
       // WebRTC, so a message accepted on the direct path is always safe to send
@@ -353,7 +699,14 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
       );
       return;
     }
-    if (_closed) return;
+    if (_closed ||
+        !_incomingContextIsCurrent(
+          fromRelay: fromRelay,
+          source: source,
+          generation: generation,
+        )) {
+      return;
+    }
     if (_incomingEnvelopes.length >= _maximumQueuedIncomingEnvelopes) {
       _events.add(
         DeviceLinkStatusEvent(
@@ -363,7 +716,12 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
       );
       return;
     }
-    _incomingEnvelopes.addLast(envelope);
+    _incomingEnvelopes.addLast((
+      envelope: envelope,
+      fromRelay: fromRelay,
+      source: source,
+      generation: generation,
+    ));
     if (_drainingIncomingEnvelopes) return;
     _drainingIncomingEnvelopes = true;
     _incomingDrain = _drainIncomingEnvelopes();
@@ -372,9 +730,33 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   Future<void> _drainIncomingEnvelopes() async {
     try {
       while (!_closed && _incomingEnvelopes.isNotEmpty) {
-        final String envelope = _incomingEnvelopes.removeFirst();
+        final ({String envelope, bool fromRelay, Object source, int generation})
+        incoming = _incomingEnvelopes.removeFirst();
         try {
-          _events.add(DeviceLinkMessageEvent(await _codec.open(envelope)));
+          if (!_incomingContextIsCurrent(
+            fromRelay: incoming.fromRelay,
+            source: incoming.source,
+            generation: incoming.generation,
+          )) {
+            continue;
+          }
+          final Map<String, Object?> message = await _codec.open(
+            incoming.envelope,
+          );
+          if (!_incomingContextIsCurrent(
+            fromRelay: incoming.fromRelay,
+            source: incoming.source,
+            generation: incoming.generation,
+          )) {
+            continue;
+          }
+          if (incoming.fromRelay &&
+              transportPreference ==
+                  DeviceLinkTransportPreference.localNetwork &&
+              !_isDeviceLinkControlMessage(message)) {
+            continue;
+          }
+          _events.add(DeviceLinkMessageEvent(message));
         } on Object catch (error) {
           _events.add(
             DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
@@ -390,11 +772,39 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
     }
   }
 
-  Future<void> _sendSignal(Map<String, Object?> signal) async {
-    final WebSocket? socket = _socket;
-    if (socket == null) return;
+  Future<void> _sendSignal(
+    Map<String, Object?> signal, {
+    required WebSocket expectedSocket,
+    required int expectedRelayGeneration,
+    RTCPeerConnection? expectedPeer,
+    int? expectedPeerGeneration,
+  }) async {
+    if (!_socketIsCurrent(expectedSocket, expectedRelayGeneration) ||
+        expectedSocket.readyState != WebSocket.open ||
+        (expectedPeer != null &&
+            !_peerContextIsCurrent(
+              expectedPeer,
+              expectedPeerGeneration ?? _peerGeneration,
+              expectedSocket,
+              expectedRelayGeneration,
+            ))) {
+      return;
+    }
     final String envelope = await _codec.seal(signal);
-    socket.add(encodeDeviceLinkRelayFrame(type: 'signal', envelope: envelope));
+    if (!_socketIsCurrent(expectedSocket, expectedRelayGeneration) ||
+        expectedSocket.readyState != WebSocket.open ||
+        (expectedPeer != null &&
+            !_peerContextIsCurrent(
+              expectedPeer,
+              expectedPeerGeneration ?? _peerGeneration,
+              expectedSocket,
+              expectedRelayGeneration,
+            ))) {
+      return;
+    }
+    expectedSocket.add(
+      encodeDeviceLinkRelayFrame(type: 'signal', envelope: envelope),
+    );
   }
 
   @override
@@ -405,41 +815,104 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
       type: 'data',
       envelope: envelope,
     );
-    if (channel != null && _dataChannelConnected) {
-      await channel.send(RTCDataChannelMessage(envelope));
-      return;
+    final bool controlMessage = _isDeviceLinkControlMessage(message);
+    Object? directSendError;
+    if (transportPreference != DeviceLinkTransportPreference.serviceRelay &&
+        !_directSendUnavailable &&
+        channel != null &&
+        identical(_dataChannel, channel) &&
+        channel.state == RTCDataChannelState.RTCDataChannelOpen) {
+      try {
+        await channel.send(RTCDataChannelMessage(envelope));
+        return;
+      } on Object catch (error) {
+        directSendError = error;
+        if (identical(_dataChannel, channel)) {
+          _directSendUnavailable = true;
+          _refreshConnectionState();
+        }
+      }
     }
     final WebSocket? socket = _socket;
-    if (socket != null && _relayConnected) {
+    if ((transportPreference != DeviceLinkTransportPreference.localNetwork ||
+            controlMessage) &&
+        socket != null &&
+        _relayConnected) {
       socket.add(relayFrame);
       return;
     }
+    if (directSendError != null) throw directSendError;
     throw StateError('The device is not connected.');
   }
 
-  void _handleSocketError(Object error) {
+  bool _socketIsCurrent(WebSocket socket, int generation) =>
+      !_closed && generation == _relayGeneration && identical(_socket, socket);
+
+  bool _peerContextIsCurrent(
+    RTCPeerConnection peer,
+    int peerGeneration,
+    WebSocket signallingSocket,
+    int relayGeneration,
+  ) =>
+      !_closed &&
+      peerGeneration == _peerGeneration &&
+      identical(_peerConnection, peer) &&
+      identical(_peerSignallingSocket, signallingSocket) &&
+      _peerRelayGeneration == relayGeneration &&
+      _socketIsCurrent(signallingSocket, relayGeneration);
+
+  bool _incomingContextIsCurrent({
+    required bool fromRelay,
+    required Object source,
+    required int generation,
+  }) {
+    if (fromRelay) {
+      return source is WebSocket && _socketIsCurrent(source, generation);
+    }
+    return source is RTCDataChannel &&
+        generation == _peerGeneration &&
+        identical(_dataChannel, source);
+  }
+
+  void _handleSocketError(WebSocket socket, int relayGeneration, Object error) {
+    if (!_socketIsCurrent(socket, relayGeneration)) return;
     if (!_dataChannelConnected) {
-      _events.add(
-        DeviceLinkStatusEvent(DeviceConnectionStatus.error, error: error),
-      );
+      _emitStatus(DeviceConnectionStatus.error, error: error);
     }
   }
 
-  void _handleSocketDone(WebSocket socket) {
-    if (!identical(_socket, socket)) return;
+  void _handleSocketDone(WebSocket socket, int relayGeneration) {
+    if (!_socketIsCurrent(socket, relayGeneration)) return;
     final bool replaced = deviceLinkConnectionWasReplaced(
       socket.closeCode,
       socket.closeReason,
     );
     _socket = null;
+    _relayGeneration += 1;
     _relayPeerPresent = false;
+    _pendingRemoteCandidates.clear();
     if (_closed) return;
-    if (!_dataChannelConnected) {
-      _events.add(
-        const DeviceLinkStatusEvent(DeviceConnectionStatus.disconnected),
-      );
-    }
+    _refreshConnectionState();
     if (!replaced) _scheduleReconnect();
+  }
+
+  void _refreshConnectionState() {
+    final DeviceLinkActiveTransport next = activeTransport;
+    if (_activeTransport != next) {
+      _activeTransport = next;
+      _events.add(DeviceLinkTransportEvent(next));
+    }
+    _emitStatus(
+      next == DeviceLinkActiveTransport.none
+          ? DeviceConnectionStatus.disconnected
+          : DeviceConnectionStatus.connected,
+    );
+  }
+
+  void _emitStatus(DeviceConnectionStatus status, {Object? error}) {
+    if (_lastStatus == status && error == null) return;
+    _lastStatus = status;
+    _events.add(DeviceLinkStatusEvent(status, error: error));
   }
 
   void _scheduleReconnect() {
@@ -460,13 +933,18 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
   }
 
   Future<void> _resetPeer() async {
+    _peerGeneration += 1;
     final RTCDataChannel? channel = _dataChannel;
     final RTCPeerConnection? peer = _peerConnection;
     _dataChannel = null;
     _peerConnection = null;
+    _peerSignallingSocket = null;
+    _peerRelayGeneration = -1;
+    _directSendUnavailable = false;
     _pendingRemoteCandidates.clear();
     await channel?.close();
     await peer?.close();
+    _refreshConnectionState();
   }
 
   @override
@@ -483,13 +961,23 @@ final class WebRtcDeviceLinkSession implements DeviceLinkSessionHandle {
     await subscription?.cancel();
     final WebSocket? socket = _socket;
     _socket = null;
+    _relayGeneration += 1;
+    _activeTransport = DeviceLinkActiveTransport.none;
     await socket?.close();
     await _incomingDrain;
     await _events.close();
   }
 }
 
-Uri _relaySocketUri(Uri relayUrl, String room) {
+bool _isDeviceLinkControlMessage(Map<String, Object?> message) =>
+    const <String>{
+      'hello',
+      'welcome',
+      'settings.update',
+      'request.rejected',
+    }.contains(message['type']);
+
+Uri _relaySocketUri(Uri relayUrl, String room, DeviceLinkConnectionSide side) {
   final String basePath = relayUrl.path == '/' ? '' : relayUrl.path;
   return relayUrl.replace(
     scheme: switch (relayUrl.scheme) {
@@ -498,7 +986,7 @@ Uri _relaySocketUri(Uri relayUrl, String room) {
       _ => relayUrl.scheme,
     },
     path: '$basePath/v1/rooms/${Uri.encodeComponent(room)}',
-    queryParameters: const <String, String>{'side': 'host'},
+    queryParameters: <String, String>{'side': side.name},
     fragment: '',
   );
 }

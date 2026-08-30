@@ -13,12 +13,18 @@ abstract interface class DeviceLinkManagement implements Listenable {
   bool get canPair;
 
   DeviceConnectionStatus statusOf(String deviceId);
+  DeviceLinkActiveTransport transportOf(String deviceId);
   bool isConnected(String deviceId);
 
   Future<PendingDevicePairing?> beginPairing();
   Future<void> cancelPairing();
+  Future<void> joinComputer(String pairingLink);
   Future<void> setAutoSendClipboard(String deviceId, bool value);
   Future<void> setAgentNotifications(String deviceId, bool value);
+  Future<void> setTransportPreference(
+    String deviceId,
+    DeviceLinkTransportPreference value,
+  );
   Future<void> disconnect(String deviceId);
   Future<void> reconnect(String deviceId);
   Future<void> deleteDevice(String deviceId);

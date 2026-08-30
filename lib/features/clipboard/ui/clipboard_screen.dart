@@ -80,12 +80,16 @@ class ClipboardScreen extends StatefulWidget {
 
 class _ClipboardScreenState extends State<ClipboardScreen>
     with WidgetsBindingObserver {
+  static const Duration _searchClearHoldDuration = Duration(seconds: 2);
+
   bool _showFilters = false;
   bool _groupModifierPressed = false;
   int _shortcutStartIndex = 0;
   int _groupShortcutStartIndex = 0;
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'clipboard-search');
   late final TextEditingController _searchController;
+  Timer? _searchClearHoldTimer;
+  _SearchShortcutModifier? _searchClearHoldModifier;
 
   @override
   void initState() {
@@ -103,6 +107,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   void didUpdateWidget(covariant ClipboardScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.viewModel != widget.viewModel) {
+      _cancelSearchClearHold();
       oldWidget.viewModel.removeListener(_syncSearchController);
       widget.viewModel.addListener(_syncSearchController);
       _syncSearchController();
@@ -114,6 +119,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
 
   @override
   void dispose() {
+    _cancelSearchClearHold();
     WidgetsBinding.instance.removeObserver(this);
     viewModel.removeListener(_syncSearchController);
     _searchController.dispose();
@@ -125,6 +131,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(widget.settingsViewModel?.refreshQuickPastePermission());
+    } else {
+      _cancelSearchClearHold();
     }
   }
 
@@ -177,6 +185,67 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   }
 
   void _focusSearch() => _searchFocusNode.requestFocus();
+
+  KeyEventResult _handleSearchShortcutKeyEvent(KeyEvent event) {
+    final HardwareKeyboard keyboard = HardwareKeyboard.instance;
+    final _SearchShortcutModifier? activeModifier = _searchClearHoldModifier;
+
+    if (activeModifier != null &&
+        event is KeyUpEvent &&
+        activeModifier.matches(event.logicalKey)) {
+      _cancelSearchClearHold();
+      return KeyEventResult.ignored;
+    }
+
+    if (event.logicalKey != LogicalKeyboardKey.keyF) {
+      return KeyEventResult.ignored;
+    }
+    if (event is KeyUpEvent) {
+      _cancelSearchClearHold();
+      return KeyEventResult.handled;
+    }
+
+    final _SearchShortcutModifier? pressedModifier =
+        _SearchShortcutModifier.pressed(keyboard);
+    if (pressedModifier == null) {
+      return KeyEventResult.ignored;
+    }
+
+    _focusSearch();
+    if (event is KeyDownEvent && _searchClearHoldModifier == null) {
+      _startSearchClearHold(pressedModifier);
+    }
+    return KeyEventResult.handled;
+  }
+
+  void _startSearchClearHold(_SearchShortcutModifier modifier) {
+    if (_searchController.text.isEmpty) {
+      return;
+    }
+    _searchClearHoldModifier = modifier;
+    _searchClearHoldTimer = Timer(_searchClearHoldDuration, () {
+      _searchClearHoldTimer = null;
+      if (!mounted || _searchClearHoldModifier != modifier) {
+        return;
+      }
+      _searchClearHoldModifier = null;
+      final HardwareKeyboard keyboard = HardwareKeyboard.instance;
+      if (!keyboard.logicalKeysPressed.contains(LogicalKeyboardKey.keyF) ||
+          !modifier.isPressed(keyboard) ||
+          _searchController.text.isEmpty) {
+        return;
+      }
+      _searchController.clear();
+      viewModel.setQuery('');
+      _searchFocusNode.requestFocus();
+    });
+  }
+
+  void _cancelSearchClearHold() {
+    _searchClearHoldTimer?.cancel();
+    _searchClearHoldTimer = null;
+    _searchClearHoldModifier = null;
+  }
 
   void _syncSearchController() {
     final String query = viewModel.query;
@@ -243,7 +312,17 @@ class _ClipboardScreenState extends State<ClipboardScreen>
           },
           child: Focus(
             autofocus: true,
+            onFocusChange: (bool focused) {
+              if (!focused) {
+                _cancelSearchClearHold();
+              }
+            },
             onKeyEvent: (FocusNode node, KeyEvent event) {
+              final KeyEventResult searchShortcutResult =
+                  _handleSearchShortcutKeyEvent(event);
+              if (searchShortcutResult == KeyEventResult.handled) {
+                return searchShortcutResult;
+              }
               if (_isGroupModifierKey(
                 event.logicalKey,
                 defaultTargetPlatform,
@@ -485,6 +564,34 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     await onDismissPreview?.call();
     await viewModel.restoreVisibleAt(index, mode: mode);
   }
+}
+
+enum _SearchShortcutModifier {
+  meta,
+  control;
+
+  static _SearchShortcutModifier? pressed(HardwareKeyboard keyboard) {
+    if (keyboard.isMetaPressed) {
+      return meta;
+    }
+    if (keyboard.isControlPressed) {
+      return control;
+    }
+    return null;
+  }
+
+  bool isPressed(HardwareKeyboard keyboard) => switch (this) {
+    meta => keyboard.isMetaPressed,
+    control => keyboard.isControlPressed,
+  };
+
+  bool matches(LogicalKeyboardKey key) => switch (this) {
+    meta =>
+      key == LogicalKeyboardKey.metaLeft || key == LogicalKeyboardKey.metaRight,
+    control =>
+      key == LogicalKeyboardKey.controlLeft ||
+          key == LogicalKeyboardKey.controlRight,
+  };
 }
 
 bool _isGroupModifierKey(LogicalKeyboardKey key, TargetPlatform platform) =>

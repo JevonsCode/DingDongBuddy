@@ -31,6 +31,7 @@ void main() {
             completedAt: completedAt,
             unseen: true,
             repeatCount: 2,
+            unseenReminderCount: 2,
             conversationTarget: const AgentConversationTarget(
               client: AgentClient.codex,
               conversationId: 'thread-1',
@@ -58,6 +59,7 @@ void main() {
     expect(restored.activities.single.startedAt, startedAt);
     expect(restored.activities.single.unseen, isTrue);
     expect(restored.activities.single.repeatCount, 2);
+    expect(restored.activities.single.unseenReminderCount, 2);
     expect(restored.activities.single.tokenUsage?.totalTokens, 12345);
     expect(
       restored.activities.single.conversationTarget?.conversationId,
@@ -91,6 +93,20 @@ void main() {
     final AgentActivityHistory restored = FileAgentActivityStore(file).load();
 
     expect(restored.activities.single.repeatCount, 1);
+    expect(restored.activities.single.unseenReminderCount, 0);
+  });
+
+  test('older unseen records default to one pending reminder', () {
+    final AgentActivity restored = AgentActivity.fromJson(<String, Object?>{
+      'id': 'activity-1',
+      'source': 'Codex',
+      'message': 'Finished',
+      'completedAt': '2026-07-21T10:00:00.000Z',
+      'unseen': true,
+      'repeatCount': 5,
+    });
+
+    expect(restored.unseenReminderCount, 1);
   });
 
   test('file store treats malformed history as empty', () {

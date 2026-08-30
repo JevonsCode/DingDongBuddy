@@ -100,6 +100,8 @@ class ShellScreen extends StatefulWidget {
 }
 
 class _ShellScreenState extends State<ShellScreen> {
+  static const Duration _searchClearHoldDuration = Duration(seconds: 2);
+
   bool _showShortcutHints = false;
   bool _showWorkspaceShortcutHints = false;
   bool _showPlainTextShortcutHints = false;
@@ -115,6 +117,8 @@ class _ShellScreenState extends State<ShellScreen> {
   late int _lastSelectedIndex;
   int _lastDeviceShareRevision = 0;
   bool _deviceShareDialogOpen = false;
+  Timer? _searchClearHoldTimer;
+  _SearchShortcutModifier? _searchClearHoldModifier;
 
   @override
   void initState() {
@@ -137,6 +141,7 @@ class _ShellScreenState extends State<ShellScreen> {
   void didUpdateWidget(covariant ShellScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
+      _cancelSearchClearHold();
       oldWidget.controller.removeListener(_handleNavigationChanged);
       widget.controller.addListener(_handleNavigationChanged);
       _lastClipboardFilterToggleRevision =
@@ -161,6 +166,7 @@ class _ShellScreenState extends State<ShellScreen> {
 
   @override
   void dispose() {
+    _cancelSearchClearHold();
     widget.controller.removeListener(_handleNavigationChanged);
     widget.shortcutHints?.removeListener(_handleExternalShortcutHints);
     widget.deviceLinkController?.removeListener(_handleDeviceLinkChanged);
@@ -169,6 +175,9 @@ class _ShellScreenState extends State<ShellScreen> {
 
   void _handleNavigationChanged() {
     final int selectedIndex = widget.controller.selectedIndex;
+    if (selectedIndex != 2) {
+      _cancelSearchClearHold();
+    }
     if (selectedIndex == 1 && _lastSelectedIndex != 1) {
       widget.libraryViewModel.load();
     }
@@ -266,6 +275,63 @@ class _ShellScreenState extends State<ShellScreen> {
     }
   }
 
+  KeyEventResult _handleSearchShortcutKeyEvent(KeyEvent event) {
+    final _SearchShortcutModifier? activeModifier = _searchClearHoldModifier;
+    if (activeModifier != null &&
+        event is KeyUpEvent &&
+        activeModifier.matches(event.logicalKey)) {
+      _cancelSearchClearHold();
+      return KeyEventResult.ignored;
+    }
+
+    if (event.logicalKey != LogicalKeyboardKey.keyF) {
+      return KeyEventResult.ignored;
+    }
+    if (event is KeyUpEvent) {
+      _cancelSearchClearHold();
+      return KeyEventResult.handled;
+    }
+    if (widget.controller.selectedIndex != 2) {
+      return KeyEventResult.ignored;
+    }
+
+    final HardwareKeyboard keyboard = HardwareKeyboard.instance;
+    final _SearchShortcutModifier? pressedModifier =
+        _SearchShortcutModifier.pressed(keyboard);
+    if (pressedModifier == null) {
+      return KeyEventResult.ignored;
+    }
+
+    widget.controller.requestClipboardSearchFocus();
+    if (event is KeyDownEvent &&
+        _searchClearHoldTimer == null &&
+        widget.clipboardViewModel.query.isNotEmpty) {
+      _searchClearHoldModifier = pressedModifier;
+      _searchClearHoldTimer = Timer(_searchClearHoldDuration, () {
+        _searchClearHoldTimer = null;
+        if (!mounted || _searchClearHoldModifier != pressedModifier) {
+          return;
+        }
+        _searchClearHoldModifier = null;
+        final HardwareKeyboard keyboard = HardwareKeyboard.instance;
+        if (widget.controller.selectedIndex == 2 &&
+            keyboard.logicalKeysPressed.contains(LogicalKeyboardKey.keyF) &&
+            pressedModifier.isPressed(keyboard) &&
+            widget.clipboardViewModel.query.isNotEmpty) {
+          widget.clipboardViewModel.setQuery('');
+          widget.controller.requestClipboardSearchFocus();
+        }
+      });
+    }
+    return KeyEventResult.handled;
+  }
+
+  void _cancelSearchClearHold() {
+    _searchClearHoldTimer?.cancel();
+    _searchClearHoldTimer = null;
+    _searchClearHoldModifier = null;
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     final TargetPlatform platform = defaultTargetPlatform;
     final HardwareKeyboard keyboard = HardwareKeyboard.instance;
@@ -302,6 +368,12 @@ class _ShellScreenState extends State<ShellScreen> {
           _clipboardFiltersExpanded = true;
         }
       });
+    }
+    final KeyEventResult searchShortcutResult = _handleSearchShortcutKeyEvent(
+      event,
+    );
+    if (searchShortcutResult == KeyEventResult.handled) {
+      return searchShortcutResult;
     }
     if (event is KeyDownEvent && widget.controller.selectedIndex == 2) {
       final int? shortcutIndex = _clipboardShortcutIndex(event.logicalKey);
@@ -510,32 +582,24 @@ class _ShellScreenState extends State<ShellScreen> {
             _handleClipboardFilterShortcut,
         const SingleActivator(LogicalKeyboardKey.keyR, control: true):
             _handleClipboardFilterShortcut,
-        const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () {
-          if (widget.controller.selectedIndex == 2) {
-            widget.controller.requestClipboardSearchFocus();
-          }
-        },
-        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
-          if (widget.controller.selectedIndex == 2) {
-            widget.controller.requestClipboardSearchFocus();
-          }
-        },
       },
       child: Focus(
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
         onFocusChange: (bool focused) {
-          if (!focused &&
-              (_showShortcutHints ||
-                  _showWorkspaceShortcutHints ||
-                  _showPlainTextShortcutHints ||
-                  _showGroupShortcutHints)) {
-            setState(() {
-              _showShortcutHints = false;
-              _showWorkspaceShortcutHints = false;
-              _showPlainTextShortcutHints = false;
-              _showGroupShortcutHints = false;
-            });
+          if (!focused) {
+            _cancelSearchClearHold();
+            if (_showShortcutHints ||
+                _showWorkspaceShortcutHints ||
+                _showPlainTextShortcutHints ||
+                _showGroupShortcutHints) {
+              setState(() {
+                _showShortcutHints = false;
+                _showWorkspaceShortcutHints = false;
+                _showPlainTextShortcutHints = false;
+                _showGroupShortcutHints = false;
+              });
+            }
           }
         },
         child: RepaintBoundary(
@@ -556,10 +620,14 @@ class _ShellScreenState extends State<ShellScreen> {
                   animation: Listenable.merge(<Listenable>[
                     widget.issueCenterController,
                     widget.settingsViewModel,
+                    if (widget.deviceLinkController != null)
+                      widget.deviceLinkController!,
                   ]),
                   builder: (BuildContext context, _) => PopupHeader(
                     selectedIndex: widget.controller.selectedIndex,
                     issueCount: widget.issueCenterController.count,
+                    pairedDeviceCount:
+                        widget.deviceLinkController?.devices.length ?? 0,
                     developmentBuild: widget.developmentBuild,
                     updateAvailable:
                         widget
@@ -680,6 +748,34 @@ class _ShellScreenState extends State<ShellScreen> {
       onHideWindow: widget.onHideWindow,
     );
   }
+}
+
+enum _SearchShortcutModifier {
+  meta,
+  control;
+
+  static _SearchShortcutModifier? pressed(HardwareKeyboard keyboard) {
+    if (keyboard.isMetaPressed) {
+      return meta;
+    }
+    if (keyboard.isControlPressed) {
+      return control;
+    }
+    return null;
+  }
+
+  bool isPressed(HardwareKeyboard keyboard) => switch (this) {
+    meta => keyboard.isMetaPressed,
+    control => keyboard.isControlPressed,
+  };
+
+  bool matches(LogicalKeyboardKey key) => switch (this) {
+    meta =>
+      key == LogicalKeyboardKey.metaLeft || key == LogicalKeyboardKey.metaRight,
+    control =>
+      key == LogicalKeyboardKey.controlLeft ||
+          key == LogicalKeyboardKey.controlRight,
+  };
 }
 
 int? _clipboardShortcutIndex(LogicalKeyboardKey key) {

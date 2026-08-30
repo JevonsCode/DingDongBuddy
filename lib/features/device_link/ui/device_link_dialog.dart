@@ -5,6 +5,8 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
+import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
@@ -280,6 +282,12 @@ final class DeviceShareDialog extends StatelessWidget {
                             message = context
                                 .l10n
                                 .theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c;
+                          } else if (error
+                              is DeviceLinkFileUnavailableException) {
+                            message =
+                                context.l10n.sharedFileIsNoLongerAvailable;
+                          } else if (error is DeviceLinkFileTooLargeException) {
+                            message = context.l10n.sharedFileIsLargerThan25MiB;
                           } else {
                             message =
                                 context.l10n.theDeviceDisconnectedBeforeSending;
@@ -430,22 +438,62 @@ class _DeviceCard extends StatelessWidget {
               onChanged: (bool value) =>
                   unawaited(controller.setAutoSendClipboard(device.id, value)),
             ),
-            _DeviceSettingRow(
-              key: Key('device-agent-notifications-${device.id}'),
-              title: context.l10n.agentCompletion,
-              subtitle: device.receiveAgentNotifications
-                  ? device.vibrationEnabled
-                        ? context.l10n.enabledPhoneVibrationIsOn
-                        : context.l10n.enabledPhoneVibrationIsOff
-                  : context.l10n.completionNotificationsAreOffForThisDevice,
-              semanticLabel: context.l10n.agentCompletionNotificationsForName(
-                device.name,
+            if (device.kind == LinkedDeviceKind.phone)
+              _DeviceSettingRow(
+                key: Key('device-agent-notifications-${device.id}'),
+                title: context.l10n.agentCompletion,
+                subtitle: device.receiveAgentNotifications
+                    ? device.vibrationEnabled
+                          ? context.l10n.enabledPhoneVibrationIsOn
+                          : context.l10n.enabledPhoneVibrationIsOff
+                    : context.l10n.completionNotificationsAreOffForThisDevice,
+                semanticLabel: context.l10n.agentCompletionNotificationsForName(
+                  device.name,
+                ),
+                value: device.receiveAgentNotifications,
+                onChanged: (bool value) => unawaited(
+                  controller.setAgentNotifications(device.id, value),
+                ),
               ),
-              value: device.receiveAgentNotifications,
-              onChanged: (bool value) =>
-                  unawaited(controller.setAgentNotifications(device.id, value)),
-            ),
-            const SizedBox(height: 8),
+            if (device.kind == LinkedDeviceKind.computer) ...<Widget>[
+              const SizedBox(height: 8),
+              _SectionLabel(label: context.l10n.communicationMethod),
+              const SizedBox(height: 7),
+              DesktopSelectField<DeviceLinkTransportPreference>(
+                key: Key('device-transport-${device.id}'),
+                semanticLabel: context.l10n.communicationMethod,
+                value: device.transportPreference,
+                items: <DesktopSelectItem<DeviceLinkTransportPreference>>[
+                  DesktopSelectItem<DeviceLinkTransportPreference>(
+                    value: DeviceLinkTransportPreference.automatic,
+                    label: context.l10n.automaticRecommended,
+                    icon: const Icon(Icons.alt_route_rounded, size: 16),
+                  ),
+                  DesktopSelectItem<DeviceLinkTransportPreference>(
+                    value: DeviceLinkTransportPreference.localNetwork,
+                    label: context.l10n.localNetworkDirect,
+                    icon: const Icon(Icons.lan_outlined, size: 16),
+                  ),
+                  DesktopSelectItem<DeviceLinkTransportPreference>(
+                    value: DeviceLinkTransportPreference.serviceRelay,
+                    label: context.l10n.encryptedService,
+                    icon: const Icon(Icons.cloud_outlined, size: 16),
+                  ),
+                ],
+                onChanged: (DeviceLinkTransportPreference value) => unawaited(
+                  controller.setTransportPreference(device.id, value),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _transportDescription(context, controller, device),
+                key: Key('device-transport-description-${device.id}'),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              ),
+            ],
+            const SizedBox(height: 10),
             _SectionLabel(label: context.l10n.connection),
             const SizedBox(height: 7),
             Row(
@@ -619,18 +667,41 @@ class _PairingStart extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        DesktopActionButton(
-          key: const Key('device-begin-pairing'),
-          label: context.l10n.showPairingQR,
-          semanticLabel: context.l10n.showQRCodeToPairATrustedDevice,
-          icon: Icons.qr_code_2_rounded,
-          tone: DesktopActionTone.primary,
-          autofocus: controller.canPair,
-          onPressed: controller.canPair
-              ? () => unawaited(controller.beginPairing())
-              : null,
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: DesktopActionButton(
+                key: const Key('device-begin-pairing'),
+                label: context.l10n.showPairingQR,
+                semanticLabel: context.l10n.showQRCodeToPairATrustedDevice,
+                icon: Icons.qr_code_2_rounded,
+                tone: DesktopActionTone.primary,
+                autofocus: controller.canPair,
+                onPressed: controller.canPair
+                    ? () => unawaited(controller.beginPairing())
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DesktopActionButton(
+                key: const Key('device-join-computer'),
+                label: context.l10n.connectAnotherComputer,
+                icon: Icons.computer_rounded,
+                onPressed: () => unawaited(_showComputerPairingDialog(context)),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Future<void> _showComputerPairingDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) =>
+          _ComputerPairingDialog(controller: controller),
     );
   }
 }
@@ -716,6 +787,13 @@ class _PairingQr extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         DesktopActionButton(
+          key: const Key('device-copy-computer-link'),
+          label: context.l10n.copyLinkForAnotherComputer,
+          icon: Icons.copy_rounded,
+          onPressed: () => unawaited(_copyPairingLink(context)),
+        ),
+        const SizedBox(height: 8),
+        DesktopActionButton(
           key: const Key('device-cancel-pairing'),
           label: context.l10n.cancelPairing,
           semanticLabel: context.l10n.cancelDevicePairing,
@@ -723,6 +801,113 @@ class _PairingQr extends StatelessWidget {
           onPressed: () => unawaited(controller.cancelPairing()),
         ),
       ],
+    );
+  }
+
+  Future<void> _copyPairingLink(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: pairing.url.toString()));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.pairingLinkCopied)));
+  }
+}
+
+class _ComputerPairingDialog extends StatefulWidget {
+  const _ComputerPairingDialog({required this.controller});
+
+  final DeviceLinkManagement controller;
+
+  @override
+  State<_ComputerPairingDialog> createState() => _ComputerPairingDialogState();
+}
+
+class _ComputerPairingDialogState extends State<_ComputerPairingDialog> {
+  final TextEditingController _controller = TextEditingController();
+  String? _error;
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await widget.controller.joinComputer(_controller.text);
+      if (mounted) Navigator.pop(context);
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = context.l10n.invalidPairingLink;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DesktopDialogFrame(
+      dialogKey: const Key('device-computer-pairing-dialog'),
+      width: 460,
+      maxHeight: 420,
+      header: DesktopDialogHeader(
+        title: Text(context.l10n.computerPairingLink),
+        subtitle: Text(context.l10n.pastePairingLinkFromOtherComputer),
+        leading: const Icon(Icons.computer_rounded, size: 21),
+        onClose: _submitting ? null : () => Navigator.pop(context),
+      ),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          DesktopTextField(
+            key: const Key('device-computer-pairing-input'),
+            controller: _controller,
+            autofocus: true,
+            enabled: !_submitting,
+            maxLines: 3,
+            minLines: 2,
+            decoration: InputDecoration(
+              hintText: context.l10n.pastePairingLink,
+              errorText: _error,
+            ),
+            onSubmitted: (_) => unawaited(_submit()),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            context.l10n.computerSyncDefaultsNote,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              DesktopActionButton(
+                label: context.l10n.cancel,
+                onPressed: _submitting ? null : () => Navigator.pop(context),
+              ),
+              DesktopActionButton(
+                key: const Key('device-computer-pairing-submit'),
+                label: context.l10n.connectComputer,
+                icon: Icons.link_rounded,
+                tone: DesktopActionTone.primary,
+                onPressed: _submitting ? null : () => unawaited(_submit()),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1021,6 +1206,29 @@ IconData _deviceIcon(LinkedDeviceKind kind) => switch (kind) {
   LinkedDeviceKind.computer => Icons.computer_rounded,
   LinkedDeviceKind.phone => Icons.phone_iphone_rounded,
 };
+
+String _transportDescription(
+  BuildContext context,
+  DeviceLinkManagement controller,
+  LinkedDevice device,
+) {
+  if (device.transportPreference ==
+      DeviceLinkTransportPreference.localNetwork) {
+    return context.l10n.localNetworkHandshakeNote;
+  }
+  return switch (controller.transportOf(device.id)) {
+    DeviceLinkActiveTransport.localNetwork => context.l10n.localNetworkDirect,
+    DeviceLinkActiveTransport.serviceRelay => context.l10n.encryptedService,
+    DeviceLinkActiveTransport.none => switch (device.transportPreference) {
+      DeviceLinkTransportPreference.automatic =>
+        context.l10n.automaticRecommended,
+      DeviceLinkTransportPreference.localNetwork =>
+        context.l10n.localNetworkDirect,
+      DeviceLinkTransportPreference.serviceRelay =>
+        context.l10n.encryptedService,
+    },
+  };
+}
 
 _StatusPalette _statusPalette(
   ColorScheme colors,

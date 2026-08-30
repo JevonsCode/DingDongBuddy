@@ -40,7 +40,11 @@ void main() {
     final TestDefaultBinaryMessenger messenger =
         tester.binding.defaultBinaryMessenger;
     final List<MethodCall> windowCalls = <MethodCall>[];
-    messenger.setMockMethodCallHandler(channels, (_) async => null);
+    final List<MethodCall> channelCalls = <MethodCall>[];
+    messenger.setMockMethodCallHandler(channels, (MethodCall call) async {
+      channelCalls.add(call);
+      return null;
+    });
     messenger.setMockMethodCallHandler(registry, (MethodCall call) async {
       if (call.method == 'getWindowDefinition') {
         return <String, String>{
@@ -109,6 +113,35 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
+    expect(
+      channelCalls,
+      contains(
+        isA<MethodCall>()
+            .having(
+              (MethodCall call) => call.method,
+              'method',
+              'unregisterMethodHandler',
+            )
+            .having(
+              (MethodCall call) =>
+                  (call.arguments as Map<Object?, Object?>)['channel'],
+              'channel',
+              'mixin.one/window_controller/resource-close-test',
+            ),
+      ),
+    );
+
+    windowCalls.clear();
+    await _sendWindowMethod(
+      messenger,
+      channel: 'mixin.one/window_controller/resource-close-test',
+      method: 'window_focus',
+    );
+    await tester.pump();
+    expect(
+      windowCalls.map((MethodCall call) => call.method),
+      isNot(contains('focus')),
+    );
     debugDefaultTargetPlatformOverride = null;
   });
 

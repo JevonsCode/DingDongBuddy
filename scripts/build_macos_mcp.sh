@@ -59,10 +59,15 @@ if ! /usr/bin/grep -q '"result"' "$smoke_output" \
   exit 70
 fi
 
-# Stop hooks expect an exit-zero, output-free command even if DingDong is not
-# currently running. Use an isolated home so this build-time smoke test cannot
-# connect to a running DingDong instance or pollute the user's Agent history.
+# Lifecycle hooks expect an exit-zero, output-free command even if DingDong is
+# not currently running. Use an isolated home so these build-time smoke tests
+# cannot connect to a running DingDong instance or pollute Agent history.
 /usr/bin/printf '%s' '{"hook_event_name":"Stop"}' \
   | HOME="$smoke_home" "$executable" --notify-stop
+# Omit the session id so this branch is exercised without contacting any
+# locally running DingDong instance during packaging.
+/usr/bin/printf '%s' \
+  '{"hook_event_name":"SessionStart","source":"resume"}' \
+  | "$executable" --acknowledge-session-start
 
 echo "Built and tested DingDong MCP for $expected_architecture"

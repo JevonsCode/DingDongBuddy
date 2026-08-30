@@ -17,6 +17,7 @@ class PopupHeader extends StatelessWidget {
   const PopupHeader({
     required this.selectedIndex,
     required this.issueCount,
+    this.pairedDeviceCount = 0,
     required this.updateAvailable,
     required this.showShortcutHints,
     required this.workspaceShortcuts,
@@ -36,6 +37,7 @@ class PopupHeader extends StatelessWidget {
 
   final int selectedIndex;
   final int issueCount;
+  final int pairedDeviceCount;
   final bool updateAvailable;
   final bool showShortcutHints;
   final WorkspaceShortcuts workspaceShortcuts;
@@ -138,6 +140,7 @@ class PopupHeader extends StatelessWidget {
                       key: const Key('popup-open-connections'),
                       tooltip: context.l10n.connectedDevices,
                       symbol: 'link',
+                      badgeCount: pairedDeviceCount,
                       onPressed: onConnections,
                     ),
                     const SizedBox(width: 5),
@@ -296,31 +299,72 @@ class _HeaderButton extends StatelessWidget {
     required this.tooltip,
     required this.symbol,
     required this.onPressed,
+    this.badgeCount = 0,
     super.key,
   });
 
   final String tooltip;
   final String symbol;
   final VoidCallback? onPressed;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
+    final String semanticLabel = badgeCount > 0
+        ? '$tooltip, ${context.l10n.countPairedDevices(badgeCount)}'
+        : tooltip;
     return Semantics(
       button: true,
       enabled: onPressed != null,
-      label: tooltip,
+      label: semanticLabel,
       child: ExcludeSemantics(
         child: DesktopIconButton(
-          tooltip: tooltip,
+          tooltip: semanticLabel,
           onPressed: onPressed,
           size: 30,
           iconSize: 15,
           backgroundColor: PopupStyle.of(context).surfaceSoft,
           foregroundColor: PopupStyle.of(context).textSecondary,
-          icon: PopupSymbolIcon(
-            symbol,
-            size: 15,
-            color: PopupStyle.of(context).textSecondary,
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: <Widget>[
+              PopupSymbolIcon(
+                symbol,
+                size: 15,
+                color: PopupStyle.of(context).textSecondary,
+              ),
+              if (badgeCount > 0)
+                Positioned(
+                  top: -7,
+                  right: -9,
+                  child: Container(
+                    key: const Key('popup-connection-count'),
+                    constraints: const BoxConstraints(
+                      minWidth: 15,
+                      minHeight: 15,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: PopupStyle.of(context).accent,
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                        color: PopupStyle.of(context).surface,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      badgeCount > 99 ? '99+' : '$badgeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        height: 1,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

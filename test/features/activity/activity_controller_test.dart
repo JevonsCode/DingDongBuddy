@@ -3,6 +3,7 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
+import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -195,6 +196,69 @@ void main() {
     expect(controller.activeRuns.single.task, 'Main task');
   });
 
+  test(
+    'filtered completion without a target closes only its unique source',
+    () {
+      final ActivityController controller = ActivityController();
+      addTearDown(controller.dispose);
+      for (final String source in <String>['Codex', 'Claude Code']) {
+        controller.recordTaskStarted(
+          source: source,
+          task: '$source task',
+          startedAt: DateTime.utc(2026, 8, 30),
+          workspacePath: '/workspace',
+        );
+      }
+
+      expect(controller.discardActiveRun(source: ' codex '), isTrue);
+      expect(controller.activeRuns.single.source, 'Claude Code');
+      expect(controller.discardActiveRun(source: 'Codex'), isFalse);
+      expect(controller.activities, isEmpty);
+      expect(controller.unseenCount, 0);
+      expect(controller.recentCount, 0);
+    },
+  );
+
+  test(
+    'filtered completion never guesses between two tasks from one Agent',
+    () {
+      final ActivityController controller = ActivityController();
+      addTearDown(controller.dispose);
+      for (final String workspace in <String>['/first', '/second']) {
+        controller.recordTaskStarted(
+          source: 'Codex',
+          task: workspace,
+          startedAt: DateTime.utc(2026, 8, 30),
+          workspacePath: workspace,
+        );
+      }
+
+      expect(controller.discardActiveRun(source: 'Codex'), isFalse);
+      expect(controller.activeRuns, hasLength(2));
+      expect(
+        controller.discardActiveRun(
+          source: 'Codex',
+          target: const AgentConversationTarget(
+            client: AgentClient.codex,
+            workspacePath: '/first',
+          ),
+        ),
+        isTrue,
+      );
+      expect(controller.activeRuns.single.task, '/second');
+      expect(
+        controller.discardActiveRun(
+          source: 'Codex',
+          target: const AgentConversationTarget(
+            client: AgentClient.claudeCode,
+            workspacePath: '/second',
+          ),
+        ),
+        isFalse,
+      );
+    },
+  );
+
   test('conversation ids are isolated between known Agent clients', () {
     var id = 0;
     final ActivityController controller = ActivityController(
@@ -242,6 +306,66 @@ void main() {
     expect(controller.activities.first.task, 'Codex task');
   });
 
+  test('an unrelated completion never consumes the only running task', () {
+    final ActivityController controller = ActivityController();
+    addTearDown(controller.dispose);
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: 'Still running',
+      startedAt: DateTime.utc(2026, 8, 30),
+      workspacePath: '/workspace',
+      conversationId: 'active-thread',
+    );
+
+    controller.record(source: 'Claude Code', message: 'Other Agent finished');
+    controller.record(
+      source: 'Codex',
+      message: 'Other conversation finished',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'other-thread',
+        workspacePath: '/workspace',
+      ),
+    );
+    expect(controller.activeRuns.single.task, 'Still running');
+    expect(
+      controller.activities.every((item) => item.startedAt == null),
+      isTrue,
+    );
+  });
+
+  test(
+    'completion with a new id can match an unidentified start from its source',
+    () {
+      final ActivityController controller = ActivityController();
+      addTearDown(controller.dispose);
+      controller.recordTaskStarted(
+        source: 'Codex',
+        task: 'Started before the conversation id was known',
+        startedAt: DateTime.utc(2026, 8, 30),
+        workspacePath: '/workspace',
+      );
+      controller.record(
+        source: 'Codex',
+        message: 'Finished',
+        conversationTarget: const AgentConversationTarget(
+          client: AgentClient.codex,
+          conversationId: 'discovered-thread',
+          workspacePath: '/workspace',
+        ),
+      );
+      expect(controller.activeRuns, isEmpty);
+      expect(
+        controller.activities.single.task,
+        'Started before the conversation id was known',
+      );
+      expect(
+        controller.activities.single.conversationTarget?.conversationId,
+        'discovered-thread',
+      );
+    },
+  );
+
   test('notification stays unseen until the Dynamic reveal finishes', () {
     final ActivityController controller = ActivityController(
       idGenerator: () => 'activity-1',
@@ -274,7 +398,7 @@ void main() {
 
     expect(
       controller.markSeen(<String>['activity-1', 'missing', 'activity-1']),
-      isTrue,
+      1,
     );
     expect(controller.activities, hasLength(2));
     expect(controller.activities.first.id, 'activity-2');
@@ -282,8 +406,150 @@ void main() {
     expect(controller.activities.last.id, 'activity-1');
     expect(controller.activities.last.unseen, isFalse);
     expect(controller.unseenCount, 1);
-    expect(controller.markSeen(<String>['activity-1', 'missing']), isFalse);
+    expect(controller.markSeen(<String>['activity-1', 'missing']), 0);
   });
+
+  test(
+    'mobile receipts drain grouped tray reminders without clearing others',
+    () async {
+      var id = 0;
+      var trayCount = 0;
+      final InMemoryAgentActivityStore store = InMemoryAgentActivityStore();
+      final ActivityController controller = ActivityController(
+        store: store,
+        idGenerator: () => 'activity-${++id}',
+      );
+      addTearDown(controller.dispose);
+      final TrayUnreadController tray = TrayUnreadController(
+        apply:
+            ({
+              required bool hot,
+              required String title,
+              required int iconSize,
+              required int unreadCount,
+            }) async {
+              trayCount = unreadCount;
+            },
+      );
+      const AgentConversationTarget target = AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'mobile-receipt-test',
+      );
+      for (var round = 0; round < 2; round++) {
+        controller.record(
+          source: 'Codex',
+          message: 'Reminder $round',
+          conversationTarget: target,
+        );
+        await tray.markUnread();
+      }
+      controller.record(source: 'Claude Code', message: 'Separate reminder');
+      await tray.markUnread();
+      controller.requestReveal();
+      expect(trayCount, 3);
+      expect(controller.unseenCount, 2);
+
+      await tray.acknowledgeCount(
+        controller.markSeen(<String>[' activity-1 ', 'missing', 'activity-1']),
+      );
+      expect(trayCount, 1);
+      expect(controller.unseenCount, 1);
+      expect(controller.revealActive, isTrue);
+      expect(store.load().activities.last.unseenReminderCount, 0);
+
+      await tray.acknowledgeCount(controller.markSeen(<String>['activity-1']));
+      expect(trayCount, 1);
+      await tray.acknowledgeCount(controller.markSeen(<String>['activity-2']));
+      expect(trayCount, 0);
+      expect(controller.revealActive, isFalse);
+    },
+  );
+
+  test('opening a Codex conversation marks only its reminders as seen', () {
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      groupRepeatedAgentSessions: false,
+      idGenerator: () => 'activity-${++id}',
+      now: () => DateTime.utc(2026, 8, 27, 9),
+    );
+    const AgentConversationTarget codexTarget = AgentConversationTarget(
+      client: AgentClient.codex,
+      conversationId: 'shared-thread',
+    );
+    controller.record(
+      source: 'Codex',
+      message: 'First Codex reminder',
+      conversationTarget: codexTarget,
+    );
+    controller.record(
+      source: 'Claude Code',
+      message: 'Claude reminder',
+      conversationTarget: const AgentConversationTarget(
+        client: AgentClient.claudeCode,
+        conversationId: 'shared-thread',
+      ),
+    );
+    controller.record(
+      source: 'Codex',
+      message: 'Second Codex reminder',
+      conversationTarget: codexTarget,
+    );
+
+    expect(controller.markConversationSeen(codexTarget), 2);
+    expect(controller.unseenCount, 1);
+    expect(
+      controller.activities
+          .where((item) => item.source == 'Codex')
+          .every((item) => !item.unseen),
+      isTrue,
+    );
+    expect(
+      controller.activities
+          .singleWhere((item) => item.source == 'Claude Code')
+          .unseen,
+      isTrue,
+    );
+    expect(controller.markConversationSeen(codexTarget), 0);
+  });
+
+  test(
+    'opening a grouped conversation acknowledges only its unread repeats',
+    () {
+      final ActivityController controller = ActivityController(
+        idGenerator: () => 'activity-1',
+        now: () => DateTime.utc(2026, 8, 27, 9),
+      );
+      const AgentConversationTarget target = AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-1',
+      );
+      controller.record(
+        source: 'Codex',
+        message: 'First reminder',
+        conversationTarget: target,
+      );
+      controller.record(
+        source: 'Codex',
+        message: 'Second reminder',
+        conversationTarget: target,
+      );
+
+      expect(controller.activities.single.repeatCount, 2);
+      expect(controller.activities.single.unseenReminderCount, 2);
+      expect(controller.markConversationSeen(target), 2);
+      expect(controller.activities.single.unseenReminderCount, 0);
+
+      controller.record(
+        source: 'Codex',
+        message: 'Third reminder',
+        conversationTarget: target,
+      );
+
+      expect(controller.activities.single.repeatCount, 3);
+      expect(controller.activities.single.unseenReminderCount, 1);
+      expect(controller.markConversationSeen(target), 1);
+    },
+  );
 
   test('suppressed completion hook enriches the latest matching item', () {
     final ActivityController controller = ActivityController(
@@ -402,6 +668,7 @@ void main() {
 
       expect(controller.activities, hasLength(1));
       expect(controller.activities.single.repeatCount, 2);
+      expect(controller.activities.single.unseenReminderCount, 1);
       expect(controller.activities.single.message, 'Fallback reminder');
       expect(
         controller.activities.single.conversationTarget?.conversationId,
@@ -410,6 +677,27 @@ void main() {
       expect(controller.recentCount, 1);
     },
   );
+
+  test('an ungrouped suppressed hook does not create an unread reminder', () {
+    final ActivityController controller = ActivityController(
+      groupRepeatedAgentSessions: false,
+      idGenerator: () => 'activity-1',
+      now: () => DateTime.utc(2026, 7, 12, 10),
+    );
+
+    controller.recordRepeat(
+      source: 'Codex',
+      message: 'Fallback reminder',
+      target: const AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'thread-1',
+      ),
+    );
+
+    expect(controller.activities, hasLength(1));
+    expect(controller.activities.single.unseen, isFalse);
+    expect(controller.activities.single.unseenReminderCount, 0);
+  });
 
   test('detail retention defaults to 500 without capping the recent count', () {
     var id = 0;

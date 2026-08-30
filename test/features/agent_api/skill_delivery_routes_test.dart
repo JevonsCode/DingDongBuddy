@@ -8,7 +8,9 @@ import 'package:dingdong/features/agent_api/data/http_request_data.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/skill_deployment_store.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 
@@ -161,6 +163,7 @@ void main() {
       var saveCount = 0;
       final AgentRouter router = AgentRouter(
         resourceStore: _CountingResourceStore(store, () => saveCount += 1),
+        triggerGroupStore: InMemoryTriggerGroupStore(),
       );
 
       Future<HttpResponseData> update({
@@ -206,6 +209,245 @@ void main() {
       expect(stored.skillProjectPaths, <String>[
         firstProject.resolveSymbolicLinksSync(),
       ]);
+    },
+  );
+
+  test(
+    'nativeProject creates and reuses an exact scope for dynamic Agents',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-delivery-exact-scope-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory project = Directory(path.join(temp.path, 'project'))
+        ..createSync();
+      final Directory child = Directory(path.join(project.path, 'child'))
+        ..createSync();
+      final Directory sibling = Directory(path.join(temp.path, 'sibling'))
+        ..createSync();
+      final DateTime now = DateTime.utc(2026, 8, 12);
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'skill-1',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content: '---\nname: reviewer\ndescription: Review changes\n---\n',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+      var nextId = 0;
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        idGenerator: () => 'generated-${++nextId}',
+        now: () => now,
+      );
+
+      Future<HttpResponseData> setDelivery(String agentId) => router.route(
+        HttpRequestData(
+          method: 'PUT',
+          uri: '/library/skills/skill-1/delivery',
+          body: jsonEncode(<String, Object?>{
+            'enabled': true,
+            'agentId': agentId,
+            'mode': 'nativeProject',
+            'projectPaths': <String>[project.path],
+          }),
+        ),
+      );
+
+      final HttpResponseData first = await setDelivery('codex');
+      final List<TriggerGroup> afterFirst = await groups.load();
+      final Resource scoped = (await resources.load()).single;
+      final String projectPath = project.resolveSymbolicLinksSync();
+
+      expect(first.statusCode, 200);
+      expect(afterFirst, hasLength(1));
+      expect(scoped.strictProjectSkill, isTrue);
+      expect(scoped.triggerGroupIds, <String>[afterFirst.single.id]);
+      expect(scoped.skillProjectPaths, <String>[projectPath]);
+      expect(afterFirst.single.rules, hasLength(1));
+      expect(
+        afterFirst.single.rules.single.field,
+        TriggerRuleField.projectPath,
+      );
+      expect(
+        afterFirst.single.rules.single.operator,
+        TriggerRuleOperator.equals,
+      );
+      expect(afterFirst.single.rules.single.value, projectPath);
+
+      final HttpResponseData reused = await setDelivery('gemini');
+      expect(reused.statusCode, 200);
+      expect(await groups.load(), hasLength(1));
+      expect((await resources.load()).single.triggerGroupIds, <String>[
+        afterFirst.single.id,
+      ]);
+
+      Future<List<Object?>> bridgeSkills(Directory workspace) async {
+        final HttpResponseData response = await router.route(
+          HttpRequestData(
+            method: 'POST',
+            uri: '/agent/bridge',
+            body: jsonEncode(<String, Object?>{
+              'task': 'review',
+              'source': 'Claude Code',
+              'workspacePath': workspace.resolveSymbolicLinksSync(),
+            }),
+          ),
+        );
+        return (response.json['active'] as Map<String, Object?>)['skills']
+            as List<Object?>;
+      }
+
+      expect(await bridgeSkills(project), hasLength(1));
+      expect(await bridgeSkills(child), isEmpty);
+      expect(await bridgeSkills(sibling), isEmpty);
+
+      final HttpResponseData loaded = await router.route(
+        HttpRequestData(
+          method: 'GET',
+          uri: Uri(
+            path: '/agent/skills/load',
+            queryParameters: <String, String>{
+              'name': 'reviewer',
+              'source': 'Claude Code',
+              'workspacePath': projectPath,
+            },
+          ).toString(),
+        ),
+      );
+      final HttpResponseData outside = await router.route(
+        HttpRequestData(
+          method: 'GET',
+          uri: Uri(
+            path: '/agent/skills/load',
+            queryParameters: <String, String>{
+              'name': 'reviewer',
+              'source': 'Claude Code',
+              'workspacePath': child.resolveSymbolicLinksSync(),
+            },
+          ).toString(),
+        ),
+      );
+      expect(loaded.statusCode, 200);
+      expect(outside.statusCode, 404);
+    },
+  );
+
+  test(
+    'nativeProject does not reuse a broader existing trigger group',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-delivery-conservative-scope-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory project = Directory(path.join(temp.path, 'project'))
+        ..createSync();
+      final DateTime now = DateTime.utc(2026, 8, 12);
+      final TriggerGroup broad = TriggerGroup(
+        id: 'broad',
+        name: 'Broad project scope',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.contains,
+            value: temp.path,
+          ),
+        ],
+        createdAt: now,
+        updatedAt: now,
+      );
+      final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'skill-1',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content: '---\nname: reviewer\ndescription: Review changes\n---\n',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore(
+        <TriggerGroup>[broad],
+      );
+      final AgentRouter router = AgentRouter(
+        resourceStore: resources,
+        triggerGroupStore: groups,
+        idGenerator: () => 'generated-scope',
+        now: () => now,
+      );
+
+      final HttpResponseData response = await router.route(
+        HttpRequestData(
+          method: 'PUT',
+          uri: '/library/skills/skill-1/delivery',
+          body: jsonEncode(<String, Object?>{
+            'enabled': true,
+            'agentId': 'codex',
+            'mode': 'nativeProject',
+            'projectPaths': <String>[project.path],
+          }),
+        ),
+      );
+
+      expect(response.statusCode, 200);
+      final List<TriggerGroup> storedGroups = await groups.load();
+      expect(storedGroups, hasLength(2));
+      expect(storedGroups.first, broad);
+      final Resource stored = (await resources.load()).single;
+      expect(stored.triggerGroupIds, <String>[storedGroups.last.id]);
+      expect(stored.triggerGroupIds, isNot(contains('broad')));
+      expect(stored.skillProjectPaths, <String>[
+        project.resolveSymbolicLinksSync(),
+      ]);
+    },
+  );
+
+  test(
+    'nativeProject rolls back a new trigger group when resource save fails',
+    () async {
+      final Directory project = Directory.systemTemp.createTempSync(
+        'dingdong-delivery-rollback-',
+      );
+      addTearDown(() => project.deleteSync(recursive: true));
+      final DateTime now = DateTime.utc(2026, 8, 12);
+      final InMemoryResourceStore delegate = InMemoryResourceStore(<Resource>[
+        Resource(
+          id: 'skill-1',
+          type: ResourceType.skill,
+          title: 'Reviewer',
+          content: '---\nname: reviewer\ndescription: Review changes\n---\n',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final InMemoryTriggerGroupStore groups = InMemoryTriggerGroupStore();
+      final AgentRouter router = AgentRouter(
+        resourceStore: _FailingSaveResourceStore(delegate),
+        triggerGroupStore: groups,
+        idGenerator: () => 'generated-scope',
+        now: () => now,
+      );
+
+      final HttpResponseData response = await router.route(
+        HttpRequestData(
+          method: 'PUT',
+          uri: '/library/skills/skill-1/delivery',
+          body: jsonEncode(<String, Object?>{
+            'enabled': true,
+            'agentId': 'codex',
+            'mode': 'nativeProject',
+            'projectPaths': <String>[project.path],
+          }),
+        ),
+      );
+
+      expect(response.statusCode, 400);
+      expect(await groups.load(), isEmpty);
+      expect((await delegate.load()).single.triggerGroupIds, isEmpty);
     },
   );
 
@@ -499,6 +741,20 @@ final class _CountingResourceStore implements ResourceStore {
   Future<void> save(List<Resource> resources) {
     onSave();
     return delegate.save(resources);
+  }
+}
+
+final class _FailingSaveResourceStore implements ResourceStore {
+  _FailingSaveResourceStore(this.delegate);
+
+  final ResourceStore delegate;
+
+  @override
+  Future<List<Resource>> load() => delegate.load();
+
+  @override
+  Future<void> save(List<Resource> resources) {
+    throw StateError('resource save failed for rollback test');
   }
 }
 

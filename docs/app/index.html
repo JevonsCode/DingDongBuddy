@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=35" />
+    <link rel="stylesheet" href="./styles.css?shell=38" />
   </head>
   <body>
     <div class="app-shell">
@@ -26,12 +26,12 @@
               id="device-status-button"
               class="device-status-button"
               type="button"
-              aria-label="等待连接，0 台在线，点击查看电脑"
+              aria-label="正在恢复设备连接"
             >
-              <span id="connection-label">等待连接</span>
+              <span id="connection-label">正在恢复设备</span>
               <span class="online-summary">
                 <i id="online-dot" data-online="false" aria-hidden="true"></i>
-                <span id="online-count">0 台在线</span>
+                <span id="online-count">读取中</span>
               </span>
             </button>
           </div>
@@ -53,6 +53,12 @@
       </section>
 
       <main id="app-main">
+        <section id="boot-view" class="boot-view" aria-live="polite">
+          <img src="../assets/dingdong-thinking-icon.png" alt="" />
+          <h2>正在恢复设备</h2>
+          <p>正在读取已保存的电脑并恢复安全连接…</p>
+        </section>
+
         <section id="pwa-launcher-view" class="pwa-launcher-view" hidden>
           <img src="../assets/dingdong-pwa-192.png" alt="DingDong" />
           <p class="eyebrow">DingDong App</p>
@@ -74,7 +80,7 @@
           <button id="cancel-pair" class="quiet-button" type="button">取消</button>
         </section>
 
-        <section id="empty-view" class="empty-view">
+        <section id="empty-view" class="empty-view" hidden>
           <span class="sleeping-mascot" role="img" aria-label="DingDong 正在等待">
             <img
               class="sleeping-mascot-frame sleeping-mascot-frame-one"
@@ -306,7 +312,7 @@
           <div>
             <strong>PWA 更新</strong>
             <span id="pwa-update-status" role="status" aria-live="polite">
-              当前版本 1.5.3 · 联网时自动保持最新
+              当前版本 1.5.4 · 联网时自动保持最新
             </span>
           </div>
           <button id="pwa-update-button" class="small-button" type="button">
@@ -431,6 +437,6 @@
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-    <script type="module" src="./app.js?shell=35"></script>
+    <script type="module" src="./app.js?shell=38"></script>
   </body>
 </html>

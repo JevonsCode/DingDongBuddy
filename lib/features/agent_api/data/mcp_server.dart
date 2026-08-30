@@ -38,7 +38,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.5.3',
+              'version': '1.5.4',
             },
             'instructions': dingDongAgentBridgeGuidance,
           },
@@ -125,7 +125,7 @@ final class McpServer {
       name: 'dingdong_search_assets',
       title: 'Search DingDong Assets',
       description:
-          'Search DingDong resources and return bounded metadata plus excerpts. Clipboard content remains hidden by default.',
+          'Search DingDong library resources and return bounded metadata plus excerpts. Use type="all" or omit type to search every library resource.',
       properties: <String, Object?>{
         'query': _stringProperty(),
         'type': _enumProperty(<String>[
@@ -134,7 +134,6 @@ final class McpServer {
           'skill',
           'mcp',
           'knowledge',
-          'clipboard',
         ]),
         'limit': _integerProperty(maximum: 80),
       },
@@ -187,8 +186,6 @@ final class McpServer {
       properties: <String, Object?>{
         'id': _stringProperty(),
         'mode': _enumProperty(<String>['summary', 'full']),
-        'includeClipboard': _booleanProperty(),
-        'includeSensitiveClipboard': _booleanProperty(),
         'workspacePath': _stringProperty(
           description:
               'Current project directory. DingDong fills this automatically when omitted.',

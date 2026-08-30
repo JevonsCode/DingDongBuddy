@@ -115,6 +115,8 @@ jobs:
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
       - run: flutter analyze
+      - name: Test the native selection host
+        run: xcrun swift test --package-path macos/Runner/SelectionPlugin
       - name: Run tests with visual goldens
         if: matrix.arch == 'arm64'
         run: flutter test

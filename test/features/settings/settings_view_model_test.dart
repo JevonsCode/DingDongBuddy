@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
@@ -488,10 +490,10 @@ void main() {
     final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
       ReleaseMetadata(
         app: 'DingDong',
-        latestVersion: '1.5.4',
+        latestVersion: '99.0.0',
         latestBuild: '59',
         website: Uri.parse('https://example.com/dingdong'),
-        releasePage: Uri.parse('https://example.com/dingdong/releases/1.5.4'),
+        releasePage: Uri.parse('https://example.com/dingdong/releases/99.0.0'),
         notes: const <String>['Faster history search'],
       ),
     );
@@ -507,11 +509,11 @@ void main() {
     await model.reportProblem();
     await model.requestFeature();
 
-    expect(model.releaseStatus.latestVersion, '1.5.4');
+    expect(model.releaseStatus.latestVersion, '99.0.0');
     expect(model.releaseStatus.isUpdateAvailable, isTrue);
     expect(model.releaseStatus.notes, <String>['Faster history search']);
     expect(links.opened, <Uri>[
-      Uri.parse('https://example.com/dingdong/releases/1.5.4'),
+      Uri.parse('https://example.com/dingdong/releases/99.0.0'),
       defaultBugReportUri,
       defaultFeatureRequestUri,
     ]);
@@ -524,7 +526,7 @@ void main() {
         final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
           ReleaseMetadata(
             app: 'DingDong',
-            latestVersion: '1.5.4',
+            latestVersion: '99.0.0',
             website: Uri.parse('https://example.com/dingdong'),
             releasePage: Uri.parse('https://example.com/dingdong/releases'),
           ),
@@ -555,6 +557,38 @@ void main() {
         time.flushMicrotasks();
         expect(source.fetchCount, 2);
       });
+    },
+  );
+
+  test(
+    'application updater refresh does not notify or restart after disposal',
+    () async {
+      final _CompleterApplicationUpdater updater =
+          _CompleterApplicationUpdater();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+        applicationUpdater: updater,
+      );
+      await model.load();
+      var notifications = 0;
+      model.addListener(() => notifications += 1);
+
+      final Future<void> install = model.installLatestUpdate();
+      await updater.refreshStarted.future;
+      model.dispose();
+      updater.pendingStatus.complete(
+        const ApplicationUpdateStatus(
+          phase: ApplicationUpdatePhase.downloading,
+          progress: 0.5,
+          targetVersion: '99.0.0',
+        ),
+      );
+      await install;
+      final int readsAfterDispose = updater.readCount;
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+
+      expect(notifications, 0);
+      expect(updater.readCount, readsAfterDispose);
     },
   );
 
@@ -616,6 +650,26 @@ void main() {
     expect(permission.inspectCount, 2);
   });
 
+  test('quick paste refresh does not notify after disposal', () async {
+    final _CompleterQuickPastePermission permission =
+        _CompleterQuickPastePermission();
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      quickPastePermissionGateway: permission,
+    );
+    var notifications = 0;
+    model.addListener(() => notifications += 1);
+
+    final Future<void> refresh = model.refreshQuickPastePermission();
+    expect(permission.inspectCount, 1);
+    model.dispose();
+    permission.result.complete(true);
+    await refresh;
+
+    expect(notifications, 0);
+    expect(model.isQuickPastePermissionGranted, isNull);
+  });
+
   test('MCP setup prompt is a concise actionable English request', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
     const String commandPath = r'C:\Program Files\DingDong\dingdong-mcp.exe';
@@ -630,6 +684,8 @@ void main() {
     expect(prompt, contains('user-level STDIO MCP server named dingdong'));
     expect(prompt, contains('dingdong_bridge'));
     expect(prompt, contains('--notify-stop --source'));
+    expect(prompt, contains('--acknowledge-session-start --source'));
+    expect(prompt, contains('SessionStart'));
     expect(prompt, contains('same executable'));
     expect(prompt, contains('with no args'));
     expect(prompt, contains('Hook command'));
@@ -666,6 +722,8 @@ void main() {
       expect(prompt, contains('名为 dingdong 的用户级 STDIO MCP'));
       expect(prompt, contains('dingdong_bridge'));
       expect(prompt, contains('--notify-stop --source'));
+      expect(prompt, contains('--acknowledge-session-start --source'));
+      expect(prompt, contains('SessionStart'));
       expect(prompt, contains('同一程序'));
       expect(prompt, contains('不加 args'));
       expect(prompt, contains('配置 Hook 命令'));
@@ -758,6 +816,30 @@ void main() {
     },
   );
 
+  test(
+    'system usage refresh does not notify or mutate after disposal',
+    () async {
+      final _CompleterSystemUsageSource source = _CompleterSystemUsageSource();
+      final SettingsViewModel model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+        systemUsageSource: source,
+      );
+      var notifications = 0;
+      model.addListener(() => notifications += 1);
+
+      final Future<void> refresh = model.refreshSystemUsage();
+      expect(source.loadCount, 1);
+      model.dispose();
+      source.result.complete(
+        const SystemUsageSnapshot(residentMemoryBytes: 64, storageBytes: 128),
+      );
+      await refresh;
+
+      expect(notifications, 0);
+      expect(model.systemUsage, isNull);
+    },
+  );
+
   test('selected system data is cleared and usage is loaded again', () async {
     final _SystemUsageSource source = _SystemUsageSource();
     final _SystemDataCleaner cleaner = _SystemDataCleaner(source);
@@ -801,6 +883,18 @@ final class _SystemUsageSource implements SystemUsageSource {
   }
 }
 
+final class _CompleterSystemUsageSource implements SystemUsageSource {
+  int loadCount = 0;
+  final Completer<SystemUsageSnapshot> result =
+      Completer<SystemUsageSnapshot>();
+
+  @override
+  Future<SystemUsageSnapshot> load() {
+    loadCount += 1;
+    return result.future;
+  }
+}
+
 final class _SystemDataCleaner implements SystemDataCleaner {
   _SystemDataCleaner(this.source);
 
@@ -835,6 +929,33 @@ final class _FakeApplicationUpdater implements ApplicationUpdater {
   Future<ApplicationUpdateStatus> readStatus() async => status;
 }
 
+final class _CompleterApplicationUpdater implements ApplicationUpdater {
+  int readCount = 0;
+  final Completer<void> refreshStarted = Completer<void>();
+  final Completer<ApplicationUpdateStatus> pendingStatus =
+      Completer<ApplicationUpdateStatus>();
+
+  @override
+  Future<void> installLatest() async {}
+
+  @override
+  Future<bool> isSupported() async => true;
+
+  @override
+  Future<ApplicationUpdateStatus> readStatus() {
+    readCount += 1;
+    if (readCount == 1) {
+      return Future<ApplicationUpdateStatus>.value(
+        const ApplicationUpdateStatus(),
+      );
+    }
+    if (!refreshStarted.isCompleted) {
+      refreshStarted.complete();
+    }
+    return pendingStatus.future;
+  }
+}
+
 final class _FakeQuickPastePermission implements QuickPastePermissionGateway {
   bool granted = false;
   int openCount = 0;
@@ -850,6 +971,21 @@ final class _FakeQuickPastePermission implements QuickPastePermissionGateway {
   Future<void> openSettings() async {
     openCount += 1;
   }
+}
+
+final class _CompleterQuickPastePermission
+    implements QuickPastePermissionGateway {
+  int inspectCount = 0;
+  final Completer<bool> result = Completer<bool>();
+
+  @override
+  Future<bool> isGranted() {
+    inspectCount += 1;
+    return result.future;
+  }
+
+  @override
+  Future<void> openSettings() async {}
 }
 
 final class _FakeReleaseMetadataSource implements ReleaseMetadataSource {

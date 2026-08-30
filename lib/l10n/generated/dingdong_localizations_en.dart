@@ -2024,6 +2024,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get searchClipboard => 'Search clipboard';
 
   @override
+  String searchClipboardWithShortcut(String shortcut) {
+    return 'Search clipboard  $shortcut';
+  }
+
+  @override
   String get searchClipboardHistory => 'Search clipboard history';
 
   @override
@@ -2937,7 +2942,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String connectDingDongToCurrentAgent(String commandPath) {
-    return 'Connect ‘$commandPath’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If user-level task-completion Hooks are supported, add a Hook command for that event using the same executable with ‘--notify-stop --source \"<current Agent name>\"’, then verify the alert.';
+    return 'Connect ‘$commandPath’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If task-completion Hooks are supported, set the Hook command to the same executable plus ‘--notify-stop --source \"<current Agent name>\"’ and verify the alert. If SessionStart supports startup and resume, add ‘--acknowledge-session-start --source \"<current Agent name>\"’ so opening a conversation acknowledges only its reminders.';
   }
 
   @override
@@ -3065,4 +3070,154 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get httpsOrGitHubFileURL => 'HTTPS or GitHub file URL';
+
+  @override
+  String get connectAnotherComputer => 'Connect another computer';
+
+  @override
+  String get computerPairingLink => 'Computer pairing link';
+
+  @override
+  String get pastePairingLinkFromOtherComputer =>
+      'Paste the pairing link copied from the other computer. It contains an encryption key, so only share it through a channel you trust.';
+
+  @override
+  String get pastePairingLink => 'Paste pairing link';
+
+  @override
+  String get connectComputer => 'Connect computer';
+
+  @override
+  String get invalidPairingLink =>
+      'This pairing link is invalid or incomplete.';
+
+  @override
+  String get copyLinkForAnotherComputer => 'Copy link for another computer';
+
+  @override
+  String get pairingLinkCopied =>
+      'Pairing link copied. Treat it like a one-time password.';
+
+  @override
+  String get communicationMethod => 'Communication method';
+
+  @override
+  String get automaticRecommended => 'Automatic (recommended)';
+
+  @override
+  String get localNetworkDirect => 'Local network direct';
+
+  @override
+  String get encryptedService => 'Encrypted service';
+
+  @override
+  String get localNetworkHandshakeNote =>
+      'Local-network mode uses the service only for encrypted signalling; clipboard and file bodies stay on the direct connection.';
+
+  @override
+  String get computerSyncDefaultsNote =>
+      'Computers start with notifications and automatic clipboard sync off. Explicit shares are copied to the other computer\'s system clipboard.';
+
+  @override
+  String get sharedFileIsNoLongerAvailable =>
+      'The local file is no longer available and was not sent.';
+
+  @override
+  String get sharedFileIsLargerThan25MiB =>
+      'The file is larger than 25 MiB and was not sent.';
+
+  @override
+  String get systemSelectionTools => 'System selection tools';
+
+  @override
+  String get systemSelectionToolsDescription =>
+      'Show a toolbar in apps that expose selected text. Copy stays local; translation and explanations need your configured model service.';
+
+  @override
+  String get enableSystemSelectionTools => 'Enable system selection tools';
+
+  @override
+  String get enableSystemSelectionToolsDescription =>
+      'Off by default. When off, DingDong installs no selection listener and makes no model requests.';
+
+  @override
+  String get selectionPluginRunning => 'Running';
+
+  @override
+  String get selectionPluginPermissionNeeded =>
+      'Enabled · Accessibility permission required';
+
+  @override
+  String get selectionPluginStopped => 'Stopped';
+
+  @override
+  String get selectionModelProvider => 'Model provider';
+
+  @override
+  String get selectionModelEndpoint => 'Service address';
+
+  @override
+  String get selectionModelName => 'Model';
+
+  @override
+  String get selectionTargetLanguage => 'Translate to';
+
+  @override
+  String get selectionUnloadLocalModel =>
+      'Unload the local model after each answer';
+
+  @override
+  String get selectionUnloadLocalModelDescription =>
+      'Uses less memory between selections, with a slower next answer.';
+
+  @override
+  String get selectionApiToken => 'API token';
+
+  @override
+  String get selectionTokenPlaceholder => 'Paste your own token';
+
+  @override
+  String get selectionTokenSaved => 'Saved securely in Keychain';
+
+  @override
+  String get selectionTokenNotSaved => 'Not configured';
+
+  @override
+  String get saveToken => 'Save token';
+
+  @override
+  String get removeToken => 'Remove token';
+
+  @override
+  String get selectionConfigurationApply => 'Apply model settings';
+
+  @override
+  String selectionPluginError(String reason) {
+    String _temp0 = intl.Intl.selectLogic(reason, {
+      'invalidEndpoint':
+          'Enter a service address without credentials, query parameters or fragments.',
+      'emptyModel': 'Enter a model name.',
+      'emptyTargetLanguage': 'Enter a target language.',
+      'localEndpointRequired':
+          'Use a loopback HTTP address for Ollama or LM Studio.',
+      'remoteHttpsRequired': 'Use HTTPS for a remote model service.',
+      'updateFailed':
+          'Could not update the plugin. Refresh its status and try again.',
+      'persistenceFailed':
+          'The plugin changed, but its settings could not be saved. Check local storage and apply again.',
+      'unavailable':
+          'The native plugin is unavailable. Install a build that includes system selection tools.',
+      'statusUnavailable':
+          'Could not read the plugin status. Try refreshing again.',
+      'permissionSettingsUnavailable':
+          'Open Accessibility settings in System Settings and grant DingDong permission.',
+      'tokenRequired': 'Enter your own API token.',
+      'tokenSaveFailed':
+          'Could not save the token. Unlock Keychain and try again.',
+      'tokenRemoveFailed':
+          'Could not remove the token. Unlock Keychain and try again.',
+      'other': 'Could not update the plugin. Refresh its status and try again.',
+    });
+    return '$_temp0';
+  }
 }

@@ -68,9 +68,8 @@ button {
   justify-content: space-between;
   min-height: 76px;
   padding: 13px 17px;
-  background: rgb(255 254 252 / 94%);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(18px);
 }
 
 .brand-lockup {
@@ -278,6 +277,7 @@ main {
   margin-top: 24px;
 }
 
+.boot-view,
 .pair-view,
 .empty-view {
   display: flex;
@@ -286,6 +286,25 @@ main {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+.boot-view img {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 16px;
+  object-fit: contain;
+}
+
+.boot-view h2 {
+  font-size: 20px;
+}
+
+.boot-view p {
+  max-width: 320px;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .pair-view[hidden],
@@ -613,6 +632,7 @@ main {
 
 .clipboard-card,
 .agent-card {
+  contain: layout paint style;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 13px;

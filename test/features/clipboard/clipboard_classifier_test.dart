@@ -34,6 +34,15 @@ void main() {
     ]);
   });
 
+  test('DingDong pairing links are never eligible for automatic sync', () {
+    final ClipboardClassification result = ClipboardClassifier.classify(
+      'https://dingdong.example/app/#pair=${List<String>.filled(60, 'a').join()}',
+    );
+
+    expect(result.title, 'DingDong pairing link');
+    expect(result.tags, containsAll(<String>['sensitive', 'pairing-key']));
+  });
+
   test('JSON objects are titled from sorted top-level keys', () {
     final ClipboardClassification result = ClipboardClassifier.classify(
       '{"z":1,"alpha":2,"middle":3,"ignored":4}',

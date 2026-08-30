@@ -164,6 +164,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
 
   @override
   void dispose() {
+    unawaited(widget.windowController.setWindowMethodHandler(null));
     widget.agentAdapterController?.dispose();
     super.dispose();
   }

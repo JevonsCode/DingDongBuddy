@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
@@ -67,6 +68,59 @@ void main() {
       'service': 'DingDong',
     });
   });
+
+  test('POST /agent/conversation/opened acknowledges only its target', () async {
+    AgentConversationTarget? received;
+    final AgentRouter router = AgentRouter(
+      onAgentConversationOpened: (AgentConversationTarget target) {
+        received = target;
+        return 2;
+      },
+    );
+
+    final response = await router.route(
+      const HttpRequestData(
+        method: 'POST',
+        uri: '/agent/conversation/opened',
+        body:
+            '{"source":"Codex","conversationId":" thread-1 ","workspacePath":"/workspace/dingdong"}',
+      ),
+    );
+
+    expect(response.statusCode, 200);
+    expect(response.json, <String, Object?>{
+      'status': 'acknowledged',
+      'conversationId': 'thread-1',
+      'acknowledgedCount': 2,
+    });
+    expect(received?.client, AgentClient.codex);
+    expect(received?.conversationId, 'thread-1');
+    expect(received?.workspacePath, '/workspace/dingdong');
+  });
+
+  test(
+    'POST /agent/conversation/opened rejects an unknown conversation',
+    () async {
+      var called = false;
+      final AgentRouter router = AgentRouter(
+        onAgentConversationOpened: (_) {
+          called = true;
+          return 1;
+        },
+      );
+
+      final response = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/conversation/opened',
+          body: '{"source":"Unknown","conversationId":""}',
+        ),
+      );
+
+      expect(response.statusCode, 400);
+      expect(called, isFalse);
+    },
+  );
 
   test('POST /ding parses, clamps, and forwards the notification', () async {
     DingRequest? received;
@@ -360,6 +414,9 @@ void main() {
     final listed = await router.route(
       const HttpRequestData(method: 'GET', uri: '/library?q=triage'),
     );
+    final listedWithAll = await router.route(
+      const HttpRequestData(method: 'GET', uri: '/library?q=triage&type=all'),
+    );
 
     expect(created.statusCode, 201);
     expect(created.json['status'], 'created');
@@ -374,6 +431,8 @@ void main() {
       'dingdong',
     ]);
     expect(items.single as Map<String, Object?>, isNot(contains('content')));
+    expect(listedWithAll.statusCode, 200);
+    expect(listedWithAll.json['items'], listed.json['items']);
   });
 
   test(

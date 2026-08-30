@@ -3651,6 +3651,12 @@ abstract class DingDongLocalizations {
   /// **'Search clipboard'**
   String get searchClipboard;
 
+  /// Clipboard search placeholder with its platform shortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Search clipboard  {shortcut}'**
+  String searchClipboardWithShortcut(String shortcut);
+
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
@@ -5208,7 +5214,7 @@ abstract class DingDongLocalizations {
   /// Short actionable setup instruction copied by the user.
   ///
   /// In en, this message translates to:
-  /// **'Connect ‘{commandPath}’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If user-level task-completion Hooks are supported, add a Hook command for that event using the same executable with ‘--notify-stop --source \"<current Agent name>\"’, then verify the alert.'**
+  /// **'Connect ‘{commandPath}’ to the current Agent as a user-level STDIO MCP server named dingdong with no args; preserve existing settings and verify dingdong_bridge. If task-completion Hooks are supported, set the Hook command to the same executable plus ‘--notify-stop --source \"<current Agent name>\"’ and verify the alert. If SessionStart supports startup and resume, add ‘--acknowledge-session-start --source \"<current Agent name>\"’ so opening a conversation acknowledges only its reminders.'**
   String connectDingDongToCurrentAgent(String commandPath);
 
   /// DingDong built-in interface copy.
@@ -5432,6 +5438,228 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'HTTPS or GitHub file URL'**
   String get httpsOrGitHubFileURL;
+
+  /// Action that imports a trusted pairing link on a second computer.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect another computer'**
+  String get connectAnotherComputer;
+
+  /// Title for the desktop-to-desktop pairing dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer pairing link'**
+  String get computerPairingLink;
+
+  /// Security guidance for desktop-to-desktop pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the pairing link copied from the other computer. It contains an encryption key, so only share it through a channel you trust.'**
+  String get pastePairingLinkFromOtherComputer;
+
+  /// Placeholder for the desktop pairing link field.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste pairing link'**
+  String get pastePairingLink;
+
+  /// Confirms a desktop-to-desktop pairing link.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect computer'**
+  String get connectComputer;
+
+  /// Shown when a desktop pairing link cannot be decoded.
+  ///
+  /// In en, this message translates to:
+  /// **'This pairing link is invalid or incomplete.'**
+  String get invalidPairingLink;
+
+  /// Copies the current encrypted pairing link for desktop import.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link for another computer'**
+  String get copyLinkForAnotherComputer;
+
+  /// Confirmation after copying a pairing link.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing link copied. Treat it like a one-time password.'**
+  String get pairingLinkCopied;
+
+  /// Label for the per-device transport preference.
+  ///
+  /// In en, this message translates to:
+  /// **'Communication method'**
+  String get communicationMethod;
+
+  /// Transport option that prefers direct WebRTC and falls back to relay.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (recommended)'**
+  String get automaticRecommended;
+
+  /// Transport option that sends content only over direct WebRTC.
+  ///
+  /// In en, this message translates to:
+  /// **'Local network direct'**
+  String get localNetworkDirect;
+
+  /// Transport option that sends encrypted content through the relay service.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted service'**
+  String get encryptedService;
+
+  /// Clarifies that local-network mode still uses relay signalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Local-network mode uses the service only for encrypted signalling; clipboard and file bodies stay on the direct connection.'**
+  String get localNetworkHandshakeNote;
+
+  /// Explains safe defaults for desktop-to-desktop links.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers start with notifications and automatic clipboard sync off. Explicit shares are copied to the other computer\'s system clipboard.'**
+  String get computerSyncDefaultsNote;
+
+  /// Explains why an explicit device file share failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The local file is no longer available and was not sent.'**
+  String get sharedFileIsNoLongerAvailable;
+
+  /// Explains the device file transfer limit.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is larger than 25 MiB and was not sent.'**
+  String get sharedFileIsLargerThan25MiB;
+
+  /// Settings title for the optional system-wide text selection plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'System selection tools'**
+  String get systemSelectionTools;
+
+  /// Privacy and behavior summary for the system selection plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a toolbar in apps that expose selected text. Copy stays local; translation and explanations need your configured model service.'**
+  String get systemSelectionToolsDescription;
+
+  /// Switch label for the system selection plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable system selection tools'**
+  String get enableSystemSelectionTools;
+
+  /// Lifecycle explanation for the system selection plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. When off, DingDong installs no selection listener and makes no model requests.'**
+  String get enableSystemSelectionToolsDescription;
+
+  /// Runtime state for an active system selection plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get selectionPluginRunning;
+
+  /// Runtime state when selection is enabled but host permission is missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled · Accessibility permission required'**
+  String get selectionPluginPermissionNeeded;
+
+  /// Runtime state when the system selection plugin is disabled or not running.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get selectionPluginStopped;
+
+  /// Settings label for model backend.
+  ///
+  /// In en, this message translates to:
+  /// **'Model provider'**
+  String get selectionModelProvider;
+
+  /// Settings label for model service endpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Service address'**
+  String get selectionModelEndpoint;
+
+  /// Settings label for model name.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get selectionModelName;
+
+  /// Settings label for translation target language.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to'**
+  String get selectionTargetLanguage;
+
+  /// Low-memory option for a local model backend.
+  ///
+  /// In en, this message translates to:
+  /// **'Unload the local model after each answer'**
+  String get selectionUnloadLocalModel;
+
+  /// Tradeoff description for unloading a local model.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses less memory between selections, with a slower next answer.'**
+  String get selectionUnloadLocalModelDescription;
+
+  /// Settings label for a user-provided model API token.
+  ///
+  /// In en, this message translates to:
+  /// **'API token'**
+  String get selectionApiToken;
+
+  /// Placeholder for the secret token field.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your own token'**
+  String get selectionTokenPlaceholder;
+
+  /// Token is present in native secure storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved securely in Keychain'**
+  String get selectionTokenSaved;
+
+  /// No token is present in native secure storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get selectionTokenNotSaved;
+
+  /// Action that saves a user-provided API token.
+  ///
+  /// In en, this message translates to:
+  /// **'Save token'**
+  String get saveToken;
+
+  /// Action that removes a user-provided API token.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove token'**
+  String get removeToken;
+
+  /// Action that validates and persists selection model settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply model settings'**
+  String get selectionConfigurationApply;
+
+  /// Actionable native selection plugin validation and runtime errors.
+  ///
+  /// In en, this message translates to:
+  /// **'{reason, select, invalidEndpoint{Enter a service address without credentials, query parameters or fragments.} emptyModel{Enter a model name.} emptyTargetLanguage{Enter a target language.} localEndpointRequired{Use a loopback HTTP address for Ollama or LM Studio.} remoteHttpsRequired{Use HTTPS for a remote model service.} updateFailed{Could not update the plugin. Refresh its status and try again.} persistenceFailed{The plugin changed, but its settings could not be saved. Check local storage and apply again.} unavailable{The native plugin is unavailable. Install a build that includes system selection tools.} statusUnavailable{Could not read the plugin status. Try refreshing again.} permissionSettingsUnavailable{Open Accessibility settings in System Settings and grant DingDong permission.} tokenRequired{Enter your own API token.} tokenSaveFailed{Could not save the token. Unlock Keychain and try again.} tokenRemoveFailed{Could not remove the token. Unlock Keychain and try again.} other{Could not update the plugin. Refresh its status and try again.}}'**
+  String selectionPluginError(String reason);
 }
 
 class _DingDongLocalizationsDelegate

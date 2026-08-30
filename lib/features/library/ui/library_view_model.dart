@@ -7,7 +7,6 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_import_history.dart';
-import 'package:dingdong/features/library/domain/library_importer.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
@@ -20,7 +19,6 @@ final class LibraryViewModel extends ChangeNotifier {
     this._repository, {
     String Function()? idGenerator,
     DateTime Function()? now,
-    LibraryImporter? importer,
     this.updateFetcher,
     this.skillPackageInstaller,
     TriggerGroupStore? triggerGroupStore,
@@ -30,9 +28,7 @@ final class LibraryViewModel extends ChangeNotifier {
        _now = now ?? _utcNow,
        _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
        _importHistoryStore =
-           importHistoryStore ?? InMemoryLibraryImportHistoryStore(),
-       _importer =
-           importer ?? LibraryImporter(idGenerator: idGenerator, now: now) {
+           importHistoryStore ?? InMemoryLibraryImportHistoryStore() {
     _revisionSubscription = revisions?.changes
         .where((DataCollection change) => change == DataCollection.library)
         .listen((_) => unawaited(load()));
@@ -41,7 +37,6 @@ final class LibraryViewModel extends ChangeNotifier {
   final ResourceStore _repository;
   final String Function() _idGenerator;
   final DateTime Function() _now;
-  final LibraryImporter _importer;
   final ResourceUpdateFetcher? updateFetcher;
   final SkillPackageInstaller? skillPackageInstaller;
   final TriggerGroupStore _triggerGroupStore;
@@ -554,15 +549,6 @@ final class LibraryViewModel extends ChangeNotifier {
     return updated;
   }
 
-  Future<String> fetchUpdateContent(String updateUrl) async {
-    final ResourceUpdateFetcher? fetcher = updateFetcher;
-    final String link = updateUrl.trim();
-    if (fetcher == null || link.isEmpty) {
-      throw StateError('Resource update is unavailable.');
-    }
-    return fetcher.fetch(Uri.parse(link));
-  }
-
   Future<SkillPackageInstallResult> installSkillPackage(
     String updateUrl,
   ) async {
@@ -572,26 +558,6 @@ final class LibraryViewModel extends ChangeNotifier {
       throw StateError('Skill package installation is unavailable.');
     }
     return installer.install(Uri.parse(link));
-  }
-
-  Future<LibraryImportResult> importDirectory({
-    required ResourceType type,
-    required String path,
-    String? group,
-    List<String>? tags,
-  }) async {
-    final LibraryImportResult result = await _importer.scan(
-      LibraryImportRequest(type: type, path: path, group: group, tags: tags),
-      existing: _resources,
-    );
-    if (result.imported.isNotEmpty) {
-      _resources = <Resource>[..._resources, ...result.imported];
-      await _repository.save(_resources);
-      _selectedResource = result.imported.first;
-      _isCreating = false;
-      notifyListeners();
-    }
-    return result;
   }
 
   Future<LibraryBundleImportResult> importBundleJson(String contents) async {

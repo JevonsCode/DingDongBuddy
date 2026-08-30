@@ -395,6 +395,39 @@ final class LibraryRoutes {
           code: 'skill_project_scope_conflict',
         );
       }
+      List<String> resolvedTriggerGroupIds = existing.triggerGroupIds;
+      List<String> resolvedNativeProjectPaths = const <String>[];
+      _StrictProjectScopeResolution? strictProjectScope;
+      if (mode == SkillDeliveryMode.nativeProject) {
+        final TriggerGroupStore? triggerGroupStore = _triggerGroupStore;
+        if (triggerGroupStore == null) {
+          return _invalidUpdate(
+            'nativeProject requires trigger groups to be available',
+          );
+        }
+        final List<TriggerGroup> currentGroups = List<TriggerGroup>.of(
+          await triggerGroupStore.load(),
+        );
+        try {
+          strictProjectScope = _resolveStrictProjectScope(
+            existing: existing,
+            requestedProjectPaths: List<String>.of(projectPaths)..sort(),
+            currentGroups: currentGroups,
+            sharedWithAnotherAgent: anotherAgentUsesProjectDelivery,
+          );
+        } on FormatException catch (error) {
+          if (anotherAgentUsesProjectDelivery) {
+            return _skillConflict(
+              'Existing project-native delivery has an invalid exact project '
+              'scope: ${error.message}',
+              code: 'skill_project_scope_invalid',
+            );
+          }
+          return _invalidUpdate(error.message.toString());
+        }
+        resolvedTriggerGroupIds = strictProjectScope.triggerGroupIds;
+        resolvedNativeProjectPaths = strictProjectScope.projectPaths;
+      }
       final Map<String, SkillDeliveryMode> delivery =
           <String, SkillDeliveryMode>{...existing.skillDeliveryByAgent};
       final Map<String, bool> hooks = <String, bool>{
@@ -415,14 +448,14 @@ final class LibraryRoutes {
       );
       final List<String> resolvedProjectPaths =
           mode == SkillDeliveryMode.nativeProject
-          ? (anotherAgentUsesProjectDelivery
-                ? existing.skillProjectPaths
-                : (List<String>.of(projectPaths)..sort()))
+          ? resolvedNativeProjectPaths
           : (hasProjectNative ? existing.skillProjectPaths : const <String>[]);
       final Resource candidate = existing.copyWith(
         enabled: decoded['enabled'] as bool? ?? existing.enabled,
         triggerGroupIds: mode == SkillDeliveryMode.nativeUser
             ? const <String>[]
+            : mode == SkillDeliveryMode.nativeProject
+            ? resolvedTriggerGroupIds
             : existing.triggerGroupIds,
         skillDeliveryByAgent: delivery,
         skillHooksEnabledByAgent: hooks,
@@ -445,7 +478,16 @@ final class LibraryRoutes {
       }
       final Resource updated = candidate.copyWith(updatedAt: _now().toUtc());
       resources[index] = updated;
-      await _store.save(resources);
+      final _StrictProjectScopeResolution? scope = strictProjectScope;
+      if (scope != null && scope.groupsChanged) {
+        await _saveProjectScopeAndResource(
+          previousGroups: scope.previousGroups,
+          proposedGroups: scope.proposedGroups,
+          proposedResources: resources,
+        );
+      } else {
+        await _store.save(resources);
+      }
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{
@@ -496,6 +538,201 @@ final class LibraryRoutes {
 
   static bool _sameStringSet(List<String> first, List<String> second) =>
       first.length == second.length && first.toSet().containsAll(second);
+
+  _StrictProjectScopeResolution _resolveStrictProjectScope({
+    required Resource existing,
+    required List<String> requestedProjectPaths,
+    required List<TriggerGroup> currentGroups,
+    required bool sharedWithAnotherAgent,
+  }) {
+    final Map<String, TriggerGroup> groupsById = <String, TriggerGroup>{
+      for (final TriggerGroup group in currentGroups) group.id: group,
+    };
+    if (sharedWithAnotherAgent) {
+      if (existing.triggerGroupIds.isEmpty ||
+          existing.skillProjectPaths.isEmpty) {
+        throw const FormatException(
+          'the existing shared scope is missing its exact trigger group',
+        );
+      }
+      final List<String> resolved = resolveStrictSkillProjectPaths(
+        existing.triggerGroupIds,
+        groupsById,
+      );
+      if (!_sameStringSet(resolved, existing.skillProjectPaths)) {
+        throw const FormatException(
+          'the existing shared scope no longer matches its trigger group',
+        );
+      }
+      return _StrictProjectScopeResolution(
+        previousGroups: currentGroups,
+        proposedGroups: currentGroups,
+        triggerGroupIds: existing.triggerGroupIds,
+        projectPaths: List<String>.of(resolved)..sort(),
+      );
+    }
+
+    final List<String> requested = requestedProjectPaths.toSet().toList()
+      ..sort();
+    if (requested.isEmpty) {
+      throw const FormatException(
+        'nativeProject requires an existing absolute project path',
+      );
+    }
+
+    // A pre-existing valid scope on this Skill is safe to reuse when it is
+    // exactly the requested set. Invalid or broader metadata is replaced by
+    // newly-created exact groups without mutating the old groups.
+    if (existing.triggerGroupIds.isNotEmpty &&
+        existing.skillProjectPaths.isNotEmpty) {
+      try {
+        final List<String> resolved = resolveStrictSkillProjectPaths(
+          existing.triggerGroupIds,
+          groupsById,
+        );
+        if (_sameStringSet(resolved, requested)) {
+          return _StrictProjectScopeResolution(
+            previousGroups: currentGroups,
+            proposedGroups: currentGroups,
+            triggerGroupIds: existing.triggerGroupIds,
+            projectPaths: List<String>.of(resolved)..sort(),
+          );
+        }
+      } on FormatException {
+        // Fall through and establish a fresh, exact scope below. The old
+        // trigger groups are left untouched and are not retained on the
+        // Skill, so a broad or drifted rule cannot widen this delivery.
+      }
+    }
+
+    final Set<String> requestedSet = requested.toSet();
+    final List<TriggerGroup> selected = <TriggerGroup>[];
+    final Set<String> selectedPaths = <String>{};
+    final List<({TriggerGroup group, List<String> paths})> exactGroups =
+        <({TriggerGroup group, List<String> paths})>[];
+    for (final TriggerGroup group in currentGroups) {
+      try {
+        final List<String> paths = resolveStrictSkillProjectPaths(<String>[
+          group.id,
+        ], groupsById);
+        if (paths.isNotEmpty && paths.every(requestedSet.contains)) {
+          exactGroups.add((group: group, paths: paths));
+        }
+      } on FormatException {
+        // A group with a broad, mixed, missing, or otherwise invalid rule is
+        // never reused for strict project delivery.
+      }
+    }
+    final ({TriggerGroup group, List<String> paths})? fullMatch = exactGroups
+        .where(
+          (({TriggerGroup group, List<String> paths}) match) =>
+              _sameStringSet(match.paths, requested),
+        )
+        .firstOrNull;
+    if (fullMatch != null) {
+      selected.add(fullMatch.group);
+      selectedPaths.addAll(fullMatch.paths);
+    } else {
+      for (final String requestedPath in requested) {
+        final ({TriggerGroup group, List<String> paths})? singleMatch =
+            exactGroups
+                .where(
+                  (({TriggerGroup group, List<String> paths}) match) =>
+                      match.paths.length == 1 &&
+                      match.paths.single == requestedPath,
+                )
+                .firstOrNull;
+        if (singleMatch != null) {
+          selected.add(singleMatch.group);
+          selectedPaths.add(requestedPath);
+        }
+      }
+    }
+
+    final Set<String> usedIds = currentGroups
+        .map((TriggerGroup group) => group.id)
+        .toSet();
+    final List<TriggerGroup> proposed = List<TriggerGroup>.of(currentGroups);
+    for (final String requestedPath in requested.where(
+      (String value) => !selectedPaths.contains(value),
+    )) {
+      final String id = _nextTriggerGroupId(usedIds);
+      usedIds.add(id);
+      final DateTime timestamp = _now().toUtc();
+      final TriggerGroup group = TriggerGroup(
+        id: id,
+        name: 'DingDong project: $requestedPath',
+        rules: <TriggerRule>[
+          TriggerRule(
+            field: TriggerRuleField.projectPath,
+            operator: TriggerRuleOperator.equals,
+            value: requestedPath,
+          ),
+        ],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      );
+      proposed.add(group);
+      selected.add(group);
+      selectedPaths.add(requestedPath);
+    }
+    final List<String> selectedIds = selected
+        .map((TriggerGroup group) => group.id)
+        .toList(growable: false);
+    final Map<String, TriggerGroup> proposedById = <String, TriggerGroup>{
+      for (final TriggerGroup group in proposed) group.id: group,
+    };
+    final List<String> resolved = resolveStrictSkillProjectPaths(
+      selectedIds,
+      proposedById,
+    );
+    if (!_sameStringSet(resolved, requested)) {
+      throw const FormatException(
+        'nativeProject could not establish an exact project trigger group',
+      );
+    }
+    return _StrictProjectScopeResolution(
+      previousGroups: currentGroups,
+      proposedGroups: proposed,
+      triggerGroupIds: selectedIds,
+      projectPaths: List<String>.of(resolved)..sort(),
+    );
+  }
+
+  String _nextTriggerGroupId(Set<String> usedIds) {
+    final String generated = _idGenerator().trim();
+    final String base = generated.isEmpty ? 'project-scope' : generated;
+    var candidate = base;
+    var suffix = 1;
+    while (usedIds.contains(candidate)) {
+      candidate = '$base-$suffix';
+      suffix += 1;
+    }
+    return candidate;
+  }
+
+  Future<void> _saveProjectScopeAndResource({
+    required List<TriggerGroup> previousGroups,
+    required List<TriggerGroup> proposedGroups,
+    required List<Resource> proposedResources,
+  }) async {
+    final TriggerGroupStore? triggerGroupStore = _triggerGroupStore;
+    if (triggerGroupStore == null) {
+      throw StateError('nativeProject requires trigger groups to be available');
+    }
+    await triggerGroupStore.save(proposedGroups);
+    try {
+      await _store.save(proposedResources);
+    } on Object catch (error, stackTrace) {
+      try {
+        await triggerGroupStore.save(previousGroups);
+      } on Object {
+        // Preserve the original failure; the unused group is safer than a
+        // resource that points at a partially-written broad scope.
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
 
   Future<HttpResponseData> skillDeployments(String id) async {
     final SkillDeploymentStore? store = _skillDeploymentStore;
@@ -873,11 +1110,10 @@ final class LibraryRoutes {
           'clipboardIncluded': false,
           'sensitiveClipboardIncluded': false,
           'hiddenClipboardItems': matched.length - visible.length,
-          'default':
-              'clipboard resources are excluded unless includeClipboard=true',
+          'default': 'library exports always exclude clipboard resources',
           'sensitiveDefault':
-              'sensitive clipboard records are excluded unless '
-              'includeSensitiveClipboard=true',
+              'clipboard access requires the separate clipboard API and '
+              'its content and sensitivity permissions',
         },
         'counts': <String, Object?>{
           'matched': matched.length,
@@ -1166,6 +1402,37 @@ HttpResponseData _invalidResourceType() {
       'message': 'Invalid resource type',
     },
   );
+}
+
+final class _StrictProjectScopeResolution {
+  _StrictProjectScopeResolution({
+    required List<TriggerGroup> previousGroups,
+    required List<TriggerGroup> proposedGroups,
+    required List<String> triggerGroupIds,
+    required List<String> projectPaths,
+  }) : previousGroups = List<TriggerGroup>.unmodifiable(previousGroups),
+       proposedGroups = List<TriggerGroup>.unmodifiable(proposedGroups),
+       triggerGroupIds = List<String>.unmodifiable(triggerGroupIds),
+       projectPaths = List<String>.unmodifiable(projectPaths);
+
+  final List<TriggerGroup> previousGroups;
+  final List<TriggerGroup> proposedGroups;
+  final List<String> triggerGroupIds;
+  final List<String> projectPaths;
+
+  bool get groupsChanged => !_sameTriggerGroups(previousGroups, proposedGroups);
+}
+
+bool _sameTriggerGroups(List<TriggerGroup> first, List<TriggerGroup> second) {
+  if (first.length != second.length) {
+    return false;
+  }
+  for (var index = 0; index < first.length; index += 1) {
+    if (first[index] != second[index]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 DateTime _utcNow() => DateTime.now().toUtc();

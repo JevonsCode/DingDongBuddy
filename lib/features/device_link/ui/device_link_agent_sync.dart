@@ -6,7 +6,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
     LinkedDevice device,
     Map<String, Object?> message,
   ) async {
-    final Uri? relay = _relayBaseUrl;
+    final Uri? relay = device.relayUrl ?? _relayBaseUrl;
     if (relay == null) return;
     final SecureMessageCodec codec = SecureMessageCodec.fromBase64Url(
       device.secret,
@@ -130,6 +130,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
 
   Future<void> _broadcastAgentState() async {
     for (final LinkedDevice device in _devices) {
+      if (device.kind == LinkedDeviceKind.computer) continue;
       if (!isConnected(device.id)) continue;
       try {
         await _sendAgentState(_sessionForDevice(device.id));

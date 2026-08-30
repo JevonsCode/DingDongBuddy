@@ -139,6 +139,9 @@ abstract final class ClipboardClassifier {
   }
 
   static String? _sensitiveKind(String text) {
+    if (RegExp(r'(?:^|#)pair=[A-Za-z0-9_-]{40,}$').hasMatch(text)) {
+      return 'pairing-key';
+    }
     if (RegExp(r'-----BEGIN [A-Z ]*PRIVATE KEY-----').hasMatch(text)) {
       return 'private-key';
     }
@@ -161,6 +164,7 @@ String _sensitiveTitle(String kind) {
     'private-key' => 'Private key',
     'aws-key' => 'AWS key',
     'github-token' => 'GitHub token',
+    'pairing-key' => 'DingDong pairing link',
     _ => 'API key or token',
   };
 }

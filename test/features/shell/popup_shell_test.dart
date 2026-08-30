@@ -21,6 +21,7 @@ import 'package:dingdong/features/settings/domain/settings_window_launcher.dart'
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
+import 'package:dingdong/features/shell/ui/popup_header.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -44,6 +45,51 @@ void testWidgetsOnPlatform(
 }
 
 void main() {
+  testWidgets('connection header shows the paired-device count badge', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 390,
+              child: PopupHeader(
+                selectedIndex: 0,
+                issueCount: 0,
+                pairedDeviceCount: 3,
+                updateAvailable: false,
+                showShortcutHints: false,
+                workspaceShortcuts: WorkspaceShortcuts.defaultValue,
+                mascotShakeRevision: 0,
+                mascotState: TrayBuddyState.normal,
+                onSelected: (_) {},
+                onIssues: () {},
+                onBrand: () {},
+                onConnections: () {},
+                onSettings: () {},
+                onVersion: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('popup-connection-count')), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    final Semantics semantics = tester.widget<Semantics>(
+      find
+          .descendant(
+            of: find.byKey(const Key('popup-open-connections')),
+            matching: find.byType(Semantics),
+          )
+          .first,
+    );
+    expect(semantics.properties.label, contains('3'));
+  });
+
   testWidgets('quick-launch surface is a compact three-tab popup', (
     WidgetTester tester,
   ) async {
@@ -111,6 +157,13 @@ void main() {
     expect(search.backgroundColor, PopupStyle.dark.field);
     expect(search.borderColor, PopupStyle.dark.border);
     expect(search.foregroundColor, PopupStyle.dark.textSecondary);
+    expect(
+      search.hintText,
+      defaultTargetPlatform == TargetPlatform.macOS
+          ? 'Search clipboard  ⌘F'
+          : 'Search clipboard  Ctrl+F',
+    );
+    expect(find.byKey(const Key('clipboard-search-shortcut')), findsNothing);
 
     final Finder tile = find.byType(ClipboardListTile);
     final Material tileSurface = tester.widget<Material>(
@@ -1022,7 +1075,7 @@ description: Use when product decisions should follow saved preferences.
     (WidgetTester tester) async {
       final SettingsViewModel settings = SettingsViewModel(
         SettingsRepository(MemoryPreferencesBackend()),
-        releaseMetadataSource: const _ReleaseSource(latestVersion: '1.5.4'),
+        releaseMetadataSource: const _ReleaseSource(latestVersion: '99.0.0'),
       );
       addTearDown(settings.dispose);
       await settings.load();
@@ -1293,6 +1346,70 @@ description: Use when product decisions should follow saved preferences.
 
       expect(controller.selectedIndex, 0);
       expect(find.byKey(const Key('today-open-clipboard')), findsOneWidget);
+    },
+  );
+
+  testWidgetsOnPlatform(
+    'Command-F hold clears search after starting from the popup header',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(390, 760);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final ShellController controller = ShellController(initialIndex: 2);
+      addTearDown(controller.dispose);
+      final ClipboardRecord record = ClipboardRecord(
+        id: 'search-hold',
+        group: 'Clipboard',
+        title: 'Search hold',
+        content: 'Search hold value',
+        tags: const <String>['clipboard', 'text'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 8, 27),
+        updatedAt: DateTime.utc(2026, 8, 27),
+      );
+      await tester.pumpWidget(
+        DingDongApp(
+          shellController: controller,
+          clipboardStore: InMemoryClipboardStore(<ClipboardRecord>[record]),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final Finder search = find.byKey(const Key('clipboard-search'));
+      final Finder editableFinder = find.descendant(
+        of: search,
+        matching: find.byType(EditableText),
+      );
+      await tester.enterText(search, 'hold');
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(
+        tester.widget<EditableText>(editableFinder).focusNode.hasFocus,
+        isFalse,
+      );
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyF);
+      await tester.pump(const Duration(milliseconds: 1999));
+      expect(
+        tester.widget<EditableText>(editableFinder).controller.text,
+        'hold',
+      );
+
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(tester.widget<EditableText>(editableFinder).controller.text, '');
+      expect(
+        tester.widget<EditableText>(editableFinder).focusNode.hasFocus,
+        isTrue,
+      );
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     },
   );
 

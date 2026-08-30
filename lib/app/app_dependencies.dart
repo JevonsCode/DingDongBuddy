@@ -251,6 +251,8 @@ final class AppDependencies {
     Future<void> Function(DingRequest request)? onSuppressedNotification,
     Future<void> Function(DingRequest request)? onFilteredNotification,
     void Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
+    FutureOr<int> Function(AgentConversationTarget target)?
+    onAgentConversationOpened,
     NotificationDeliveryFailureObserver? onNotificationDeliveryFailure,
     CodexVoiceNotificationDetector? isCodexVoiceNotification,
     SubagentNotificationDetector? isSubagentNotification,
@@ -357,6 +359,7 @@ final class AppDependencies {
         }
         onAgentTaskStarted?.call(start);
       },
+      onAgentConversationOpened: onAgentConversationOpened,
       onDing: (request) => unawaited(() async {
         final AppSettings settings = await settingsRepository.load();
         await deliverAgentNotification(

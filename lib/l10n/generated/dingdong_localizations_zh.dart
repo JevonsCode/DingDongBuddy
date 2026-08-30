@@ -580,7 +580,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String countPairedDevices(Object count) {
-    return '已连接 $count 台设备';
+    return '已配对 $count 台设备';
   }
 
   @override
@@ -1972,6 +1972,11 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get searchClipboard => '搜索剪贴板';
 
   @override
+  String searchClipboardWithShortcut(String shortcut) {
+    return '搜索剪贴板  $shortcut';
+  }
+
+  @override
   String get searchClipboardHistory => '搜索剪贴板历史';
 
   @override
@@ -2862,7 +2867,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String connectDingDongToCurrentAgent(String commandPath) {
-    return '请将「$commandPath」接入当前 Agent，配置为名为 dingdong 的用户级 STDIO MCP（不加 args），保留现有配置，并验证 dingdong_bridge。若支持用户级任务完成 Hook，再为任务完成事件配置 Hook 命令：同一程序加上「--notify-stop --source \"<当前 Agent 名称>\"」，并验证提醒。';
+    return '请将「$commandPath」接入当前 Agent，配置为名为 dingdong 的用户级 STDIO MCP（不加 args），保留现有配置，并验证 dingdong_bridge。若支持任务完成 Hook，配置 Hook 命令为同一程序加「--notify-stop --source \"<当前 Agent 名称>\"」并验证提醒。若 SessionStart 支持 startup 和 resume，再配置同一程序加「--acknowledge-session-start --source \"<当前 Agent 名称>\"」，使打开对话时只核销对应提醒。';
   }
 
   @override
@@ -2986,4 +2991,137 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get httpsOrGitHubFileURL => 'HTTPS 或 GitHub 文件 URL';
+
+  @override
+  String get connectAnotherComputer => '连接另一台电脑';
+
+  @override
+  String get computerPairingLink => '电脑连接链接';
+
+  @override
+  String get pastePairingLinkFromOtherComputer =>
+      '粘贴从另一台电脑复制的连接链接。链接包含加密密钥，请只通过你信任的方式传递。';
+
+  @override
+  String get pastePairingLink => '粘贴连接链接';
+
+  @override
+  String get connectComputer => '连接电脑';
+
+  @override
+  String get invalidPairingLink => '这个连接链接无效或不完整。';
+
+  @override
+  String get copyLinkForAnotherComputer => '复制给另一台电脑';
+
+  @override
+  String get pairingLinkCopied => '连接链接已复制，请像一次性密码一样妥善传递。';
+
+  @override
+  String get communicationMethod => '通信方式';
+
+  @override
+  String get automaticRecommended => '自动（推荐）';
+
+  @override
+  String get localNetworkDirect => '局域网直连';
+
+  @override
+  String get encryptedService => '加密服务';
+
+  @override
+  String get localNetworkHandshakeNote => '局域网模式仍会使用服务完成加密握手，但剪贴板与文件正文只走电脑间直连。';
+
+  @override
+  String get computerSyncDefaultsNote =>
+      '电脑设备默认关闭提醒和自动同步；只有主动分享后，内容才会写入对方的系统剪贴板。';
+
+  @override
+  String get sharedFileIsNoLongerAvailable => '本地文件已不存在，因此没有发送。';
+
+  @override
+  String get sharedFileIsLargerThan25MiB => '文件超过 25 MiB，因此没有发送。';
+
+  @override
+  String get systemSelectionTools => '系统级划词工具';
+
+  @override
+  String get systemSelectionToolsDescription =>
+      '在支持读取选区的 App 中显示轻量工具条。复制始终本地完成；翻译和解释需要你配置可用的模型服务。';
+
+  @override
+  String get enableSystemSelectionTools => '打开系统级划词工具';
+
+  @override
+  String get enableSystemSelectionToolsDescription =>
+      '默认关闭。关闭后 DingDong 不安装划词监听，也不会请求模型。';
+
+  @override
+  String get selectionPluginRunning => '运行中';
+
+  @override
+  String get selectionPluginPermissionNeeded => '已打开 · 需要辅助功能权限';
+
+  @override
+  String get selectionPluginStopped => '已停止';
+
+  @override
+  String get selectionModelProvider => '模型服务';
+
+  @override
+  String get selectionModelEndpoint => '服务地址';
+
+  @override
+  String get selectionModelName => '模型';
+
+  @override
+  String get selectionTargetLanguage => '翻译为';
+
+  @override
+  String get selectionUnloadLocalModel => '每次回答后卸载本地模型';
+
+  @override
+  String get selectionUnloadLocalModelDescription => '降低空闲内存占用，但下一次回答会稍慢。';
+
+  @override
+  String get selectionApiToken => 'API Token';
+
+  @override
+  String get selectionTokenPlaceholder => '粘贴你自己的 Token';
+
+  @override
+  String get selectionTokenSaved => '已安全保存到钥匙串';
+
+  @override
+  String get selectionTokenNotSaved => '未配置';
+
+  @override
+  String get saveToken => '保存 Token';
+
+  @override
+  String get removeToken => '移除 Token';
+
+  @override
+  String get selectionConfigurationApply => '应用模型设置';
+
+  @override
+  String selectionPluginError(String reason) {
+    String _temp0 = intl.Intl.selectLogic(reason, {
+      'invalidEndpoint': '请输入不含账号、查询参数或片段的服务地址。',
+      'emptyModel': '请输入模型名称。',
+      'emptyTargetLanguage': '请输入目标语言。',
+      'localEndpointRequired': 'Ollama 和 LM Studio 必须使用本机回环 HTTP 地址。',
+      'remoteHttpsRequired': '远程模型服务必须使用 HTTPS。',
+      'updateFailed': '插件更新失败，请刷新状态后重试。',
+      'persistenceFailed': '插件状态已改变，但设置保存失败。请检查本机存储后重新应用。',
+      'unavailable': '原生插件不可用，请安装包含系统划词功能的构建。',
+      'statusUnavailable': '无法读取插件状态，请再次刷新。',
+      'permissionSettingsUnavailable': '请打开系统设置中的辅助功能设置，允许 DingDong。',
+      'tokenRequired': '请输入你自己的 API Token。',
+      'tokenSaveFailed': 'Token 保存失败，请解锁钥匙串后重试。',
+      'tokenRemoveFailed': 'Token 移除失败，请解锁钥匙串后重试。',
+      'other': '插件更新失败，请刷新状态后重试。',
+    });
+    return '$_temp0';
+  }
 }

@@ -1,3 +1,94 @@
+# DingDong 1.5.4
+
+DingDong 1.5.4 brings optional system selection tools to macOS, connects trusted
+computers, and tightens the interaction and lifecycle paths used by Agent work.
+
+- Enable **System selection tools** in Settings to copy, translate or explain
+  selected text. This is off by default and requires Accessibility permission
+  for the running DingDong app. Translation and explanation need your own
+  available model service; no model or API credit is bundled.
+- Model credentials are isolated by provider and origin in the macOS Keychain.
+  Disabling the feature cancels monitoring and pending requests; changing
+  providers clears unsaved Token input. Do not run the standalone selection
+  helper alongside the built-in host.
+- Link another computer and choose automatic, local-network or encrypted-service
+  transport. New computer links start with automatic clipboard sync and Agent
+  reminders off; explicit sends remain under your control.
+- Agent session-start acknowledgement clears the matching conversation's unread
+  reminders. Clipboard keyboard actions and settings-window synchronization keep
+  their state when switching or reopening views.
+- Mobile read receipts clear the corresponding tray count, per-device relay
+  settings also apply to background push, and unrelated completion events no
+  longer consume a running conversation. Project-native Skills establish an
+  exact scope that also works for Agents using dynamic delivery.
+- MCP search accepts its documented `all` filter while keeping clipboard data
+  private. Closed windows release their callbacks, and the mobile page reports
+  copy failures and prevents duplicate pairing submissions.
+- Shared Swift sources replace duplicate copies, unused interfaces are removed,
+  and native-host interaction journeys join the release checks. The README and
+  website also link to the DingDong Codex Pet project (repository access required).
+
+All supported desktop packages use the stable `latest` release channel. System
+selection tools are macOS-only; the other desktop changes also apply to Windows.
+
+---
+
+# DingDong 1.5.4
+
+DingDong 1.5.4 为 macOS 加入可选的系统划词工具，支持可信电脑之间互联，
+并改进 Agent 工作中的交互和会话状态处理。
+
+- 在设置中开启“系统级划词”，即可复制、翻译或解释选中的文本。功能默认关闭，
+  需要为当前 DingDong 应用授予辅助功能权限；翻译和解释需要自行配置可用模型服务，
+  不附带模型或 API 额度。
+- 模型 Token 按 Provider 和服务来源隔离存入 macOS 钥匙串。关闭功能会取消监听与
+  未完成请求；切换 Provider 会清空未保存的 Token。不要同时运行独立划词助手。
+- 可以连接另一台电脑，并选择自动、局域网或加密服务传输。新电脑连接的自动剪贴板
+  同步和 Agent 提醒默认关闭；主动发送仍由用户控制。
+- Agent 会话启动确认只清除对应会话的未读提醒；剪贴板键盘操作和设置窗口同步
+  在切换、关闭和重开后保持状态。
+- 手机已读回执同步清除对应托盘计数，自定义设备中继同样用于后台推送；不同会话
+  的完成事件不会误结束已有任务。项目原生 Skill 自动绑定精确项目范围，也能供其他
+  使用动态投递的 Agent 在该项目中加载。
+- MCP 搜索支持声明的 `all` 筛选，并继续隔离剪贴板内容。关闭窗口会释放回调；
+  手机页面会提示复制失败，并避免重复提交配对。
+- 合并重复 Swift 源码、删除未使用接口，并增加真实桌面宿主的交互验收。README
+  与官网同时增加 DingDong Codex Pet 项目链接，访问该仓库需要权限。
+
+全部受支持的桌面安装包使用正式版 `latest` 通道。系统划词仅支持 macOS，
+其他桌面改进也适用于 Windows。
+
+---
+
+# DingDong 1.5.4
+
+DingDong 1.5.4 incorpora herramientas opcionales de selección de texto en macOS,
+conecta ordenadores de confianza y mejora las interacciones y el estado de Agent.
+
+- Las herramientas de selección están desactivadas inicialmente y requieren
+  permiso de Accesibilidad. Copiar no necesita modelo; traducir y explicar
+  requieren un servicio configurado por el usuario, sin modelos ni créditos incluidos.
+- Las credenciales se separan por proveedor y origen en el Llavero de macOS.
+  Desactivar cancela la monitorización y las solicitudes; cambiar de proveedor
+  borra el Token que aún no se haya guardado. Utiliza un solo asistente de selección.
+- Los enlaces entre ordenadores permiten transporte automático, de red local o
+  mediante el servicio cifrado. La sincronización automática del portapapeles y
+  los avisos de Agent empiezan desactivados para cada nuevo equipo.
+- La confirmación al abrir una sesión solo marca sus propios avisos como vistos.
+  Mejoran los atajos, la persistencia de ajustes y las comprobaciones de escritorio;
+  se elimina código redundante y se enlaza DingDong Codex Pet (requiere acceso).
+- Los recibos móviles actualizan el contador de la bandeja y las notificaciones
+  usan el servidor de cada dispositivo. Las Skills nativas del proyecto conservan
+  un ámbito exacto también para otros Agents con entrega dinámica.
+- La búsqueda MCP admite `all` sin exponer el portapapeles. Se liberan las
+  devoluciones de llamada al cerrar ventanas, se informan los errores de copia
+  y se evitan confirmaciones duplicadas de emparejamiento.
+
+Los paquetes compatibles usan el canal estable `latest`. La selección del sistema
+es exclusiva de macOS; los demás cambios de escritorio también llegan a Windows.
+
+---
+
 # DingDong 1.5.3
 
 DingDong 1.5.3 hardens fresh-install startup, scoped Agent resources, mobile
