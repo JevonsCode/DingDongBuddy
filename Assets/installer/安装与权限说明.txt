@@ -9,12 +9,19 @@ Installation and Permissions Guide
 
 二、辅助功能权限 / Accessibility
 
-只有“快速粘贴到上一个应用”需要此权限。普通剪贴板历史与搜索不需要。
+“快速粘贴到上一个应用”和可选的“系统级划词”需要此权限。
+普通剪贴板历史与搜索不需要。
 
 1. 打开“系统设置 → 隐私与安全性 → 辅助功能”。
 2. 找到 DingDong 并打开开关。
 3. 如果列表中没有 DingDong，点击“+”，从“应用程序”中选择 DingDong。
 4. 回到 DingDong；如果功能仍未生效，请退出并重新打开应用。
+
+系统级划词默认关闭。安装 1.5.4 或更新版本后，在“设置 → 系统级划词”中开启。
+在支持 macOS 选区读取的应用里选中文字，然后点击“复制 / 翻译 / 解释”；
+也可按 Option + Command + C 直接复制。复制不需要模型服务。
+翻译和解释需要在同一设置区域配置可用的模型服务与所需凭据。
+请勿同时运行独立的 DingDong Selection 助手，以免重复响应选区和快捷键。
 
 三、剪贴板访问 / Clipboard Access
 
@@ -34,5 +41,10 @@ DingDong 不需要“完全磁盘访问权限”或“屏幕录制权限”。
 English summary
 
 Drag DingDong to Applications. On first launch, right-click DingDong and choose Open.
-Enable Accessibility only if you use Quick Paste. Allow clipboard access if macOS asks.
+Enable Accessibility if you use Quick Paste or the optional system selection tools.
+In version 1.5.4 or later, enable Settings → System selection tools to copy,
+translate, or explain selected text. Option + Command + C copies directly.
+Copy needs no model service; translation and explanation require your configured service.
+Do not run the standalone DingDong Selection helper at the same time.
+Allow clipboard access if macOS asks.
 Full Disk Access and Screen Recording are not required.

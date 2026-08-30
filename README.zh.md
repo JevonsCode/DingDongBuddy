@@ -44,7 +44,7 @@ Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或�
 
 ## 可选的 macOS 系统级划词
 
-当前源码已接入在 Fuli 项目中开发的原生划词插件。打开“**设置 → 系统级划词**”，
+DingDong 1.5.4 已接入在 Fuli 项目中开发的原生划词插件。打开“**设置 → 系统级划词**”，
 主动开启，并按提示授予 **DingDong** 辅助功能权限。在支持 macOS 选区读取的应用里
 选中文字，即可点击“**复制 / 翻译 / 解释**”；也可按 `⌥⌘C` 直接复制。
 
@@ -59,7 +59,7 @@ macOS 钥匙串。预设模型名是可编辑的配置默认值，不表示已�
 和同一快捷键。
 
 配置与排查见[系统划词插件使用说明](docs/product/system-selection-plugin.md)。
-这是当前源码工作区的接入结果；已安装的正式版本需要换成包含此功能的新构建才会出现入口。
+需要安装 1.5.4 或更新版本才会出现此入口；旧版本需先更新应用。
 
 ## 统一管理 Prompt、Skill 和 MCP
 
@@ -277,7 +277,11 @@ flutter build macos --release
 发布门禁还会要求 PWA / 中继来自同一个提交：可以在配置好受保护的
 `device-link-production` 环境后通过 **Device link Cloudflare** 工作流部署，
 也可以从这个已测试的干净提交用已授权 Wrangler 携带准确 SHA 部署。随后自动化创建
-`v<version>` 标签并发布签名的 macOS、Windows、MCP 与更新源文件。官网只会在
+`v<version>` 标签并发布 macOS、Windows 安装包、随包 MCP 和更新源文件。
+macOS 自动更新 ZIP 使用 Sparkle Ed25519 签名。Developer ID 签名与 Apple 公证
+需要配置相应证书和账户凭据；未配置时，macOS 包使用 ad-hoc 完整性签名，首次打开
+可能需要在系统设置中确认。当前 Windows 发布流程未配置 Authenticode 发布者签名。
+官网只会在
 下载制品已经存在后，从同一个版本
 标签部署。
 

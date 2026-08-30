@@ -1821,11 +1821,15 @@ Future<void> _flushEvents() async {
 }
 
 Future<void> _waitUntil(bool Function() condition) async {
-  for (var index = 0; index < 100; index += 1) {
-    if (condition()) return;
+  // Real file I/O can exceed 500 ms on a contended CI runner. Wait for the
+  // observed result before teardown closes the still-active fake session.
+  final Stopwatch elapsed = Stopwatch()..start();
+  while (!condition()) {
+    if (elapsed.elapsed >= const Duration(seconds: 5)) {
+      fail('Timed out waiting for the asynchronous device-link operation.');
+    }
     await Future<void>.delayed(const Duration(milliseconds: 5));
   }
-  fail('Timed out waiting for the asynchronous device-link operation.');
 }
 
 final class _Harness {

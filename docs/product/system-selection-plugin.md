@@ -1,7 +1,7 @@
 # 系统划词插件使用说明
 
-当前源码把 Fuli 的 `examples/dingdong-selection-plugin` 原生能力接入了
-DingDong 主程序。这个入口只出现在包含该功能的 macOS 构建里；旧的正式安装包
+DingDong 1.5.4 把 Fuli 的 `examples/dingdong-selection-plugin` 原生能力接入了
+DingDong 主程序。这个入口需要 macOS 上的 1.5.4 或更新版本；旧的正式安装包
 不会因为 Agent 加载了 Skill 而自动获得划词功能。
 
 ## 开始使用

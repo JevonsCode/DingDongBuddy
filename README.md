@@ -49,7 +49,7 @@ connection relay stores no clipboard or file content.
 
 ## Optional system selection tools on macOS
 
-The current source build includes the native selection plugin developed in Fuli.
+DingDong 1.5.4 includes the native selection plugin developed in Fuli.
 Open **Settings → System selection tools**, enable it, and grant DingDong
 Accessibility permission if needed. Select text in an application that exposes
 its selection to macOS, then choose **Copy / Translate / Explain**; `⌥⌘C`
@@ -70,8 +70,8 @@ as both would listen for the same selections and shortcut.
 
 See [the plugin guide](docs/product/system-selection-plugin.md) for setup,
 troubleshooting, and the distinction between the example and the native host.
-These changes are in the source workspace; an existing release is not upgraded
-until a new application build is installed.
+Install version 1.5.4 or later to see this setting; older installed versions do
+not gain the feature until the application is updated.
 
 ## Unified Prompt, Skill, and MCP management
 
@@ -316,8 +316,13 @@ publishes the tested tag as a prerelease. After the Flutter desktop workflow pas
 commit. Deploy it either through **Device link Cloudflare** after configuring
 its protected `device-link-production` environment, or from that clean tested
 checkout with authenticated Wrangler and the exact release SHA. Automation then
-creates `v<version>` and publishes the signed macOS, Windows, MCP, and
-update-feed assets. The website is deployed from that release tag
+creates `v<version>` and publishes macOS and Windows packages with their bundled
+MCP executables and update feeds. macOS update ZIPs carry Sparkle Ed25519
+signatures. Developer ID signing and Apple notarization require the corresponding
+certificate and account secrets; without them, macOS bundles use ad-hoc integrity
+signatures and may require first-launch approval in System Settings. The current
+Windows workflow does not apply an Authenticode publisher signature.
+The website is deployed from that release tag
 only after its downloadable packages exist.
 
 See [release notes](docs/release-notes.md) and the
