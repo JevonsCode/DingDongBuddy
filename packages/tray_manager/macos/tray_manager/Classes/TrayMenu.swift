@@ -7,7 +7,7 @@
 
 import AppKit
 
-public class TrayMenu: NSMenu, NSMenuDelegate {
+public class TrayMenu: NSMenu {
     public var onMenuItemClick:((NSMenuItem) -> Void)?
     
     public override init(title: String) {
@@ -47,8 +47,6 @@ public class TrayMenu: NSMenu, NSMenuDelegate {
             menuItem.target = self
             
             switch (type) {
-            case "separator":
-                break
             case "submenu":
                 if let submenuDict = itemDict["submenu"] as? NSDictionary {
                     let submenu = TrayMenu(submenuDict as! [String : Any])
@@ -58,20 +56,17 @@ public class TrayMenu: NSMenu, NSMenuDelegate {
                     }
                     self.setSubmenu(submenu, for: menuItem)
                 }
-                break
             case "checkbox":
                 if (checked == nil) {
                     menuItem.state = .mixed
                 } else {
                     menuItem.state = checked! ? .on : .off
                 }
-                break
             default:
                 break
             }
             self.addItem(menuItem)
         }
-        self.delegate = self
     }
     
     @objc func statusItemMenuButtonClicked(_ sender: Any?) {
@@ -79,11 +74,5 @@ public class TrayMenu: NSMenu, NSMenuDelegate {
             let menuItem = sender as! NSMenuItem
             self.onMenuItemClick!(menuItem)
         }
-    }
-    
-    // NSMenuDelegate
-    
-    public func menuDidClose(_ menu: NSMenu) {
-        
     }
 }

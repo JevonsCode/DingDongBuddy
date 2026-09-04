@@ -607,7 +607,7 @@ void main() {
     final Directory directory = await Directory.systemTemp.createTemp(
       'dingdong-computer-peer-test-',
     );
-    final MemoryDeviceLinkStore store = MemoryDeviceLinkStore();
+    final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore();
     final _FakeDeviceLinkSession peerSession = _FakeDeviceLinkSession()
       ..allowControlPlaneSend = true;
     Uri? connectedRelay;
@@ -699,7 +699,7 @@ void main() {
         manuallyDisconnected: false,
         pairedAt: DateTime.utc(2026, 8, 8),
       );
-      final MemoryDeviceLinkStore store = MemoryDeviceLinkStore(
+      final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore(
         DeviceLinkDocument(
           localDevice: const LocalDeviceIdentity(
             id: 'desktop-one',
@@ -756,7 +756,7 @@ void main() {
         manuallyDisconnected: false,
         pairedAt: DateTime.utc(2026, 8, 8),
       );
-      final MemoryDeviceLinkStore store = MemoryDeviceLinkStore(
+      final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore(
         DeviceLinkDocument(
           localDevice: const LocalDeviceIdentity(
             id: 'desktop-local',
@@ -1037,7 +1037,7 @@ void main() {
     final Directory directory = await Directory.systemTemp.createTemp(
       'dingdong-pairing-test-',
     );
-    final MemoryDeviceLinkStore store = MemoryDeviceLinkStore();
+    final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore();
     final InMemoryClipboardStore clipboardStore = InMemoryClipboardStore(
       <ClipboardRecord>[_record('existing', '电脑主机列表内容')],
     );
@@ -1119,7 +1119,7 @@ void main() {
         manuallyDisconnected: false,
         pairedAt: DateTime.utc(2026, 8, 8),
       );
-      final MemoryDeviceLinkStore store = MemoryDeviceLinkStore(
+      final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore(
         DeviceLinkDocument(
           localDevice: const LocalDeviceIdentity(
             id: 'desktop-one',
@@ -1737,7 +1737,7 @@ Future<_Harness> _connectedHarness({
     pairedAt: DateTime.utc(2026, 8, 8),
     sharedClipboardItemIds: sharedClipboardItemIds,
   );
-  final MemoryDeviceLinkStore store = MemoryDeviceLinkStore(
+  final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore(
     DeviceLinkDocument(
       localDevice: const LocalDeviceIdentity(
         id: 'desktop-one',
@@ -1843,7 +1843,7 @@ final class _Harness {
 
   final DeviceLinkController controller;
   final _FakeDeviceLinkSession session;
-  final MemoryDeviceLinkStore store;
+  final _MemoryDeviceLinkStore store;
   final InMemoryClipboardStore clipboardStore;
   final Directory directory;
 
@@ -1911,6 +1911,20 @@ final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
     if (_eventsClosed) return;
     _eventsClosed = true;
     await _events.close();
+  }
+}
+
+final class _MemoryDeviceLinkStore implements DeviceLinkStore {
+  _MemoryDeviceLinkStore([this.document]);
+
+  DeviceLinkDocument? document;
+
+  @override
+  Future<DeviceLinkDocument?> load() async => document;
+
+  @override
+  Future<void> save(DeviceLinkDocument value) async {
+    document = value;
   }
 }
 

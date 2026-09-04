@@ -2,14 +2,14 @@ import {
   relayConnectionWasReplaced,
   shouldReconnectRelay,
 } from "./connection-policy.js";
-import { pairingsMatch } from "./pairing-state.js?shell=38";
-import { wantsAgentNotifications } from "./notification-policy.js?shell=38";
+import { pairingsMatch } from "./pairing-state.js?shell=39";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=39";
 import {
   encodeRelayFrame,
   importAesKey,
   openEnvelope,
   sealEnvelope,
-} from "./app-codecs.js?shell=38";
+} from "./app-codecs.js?shell=39";
 
 // Encrypted relay/WebRTC lifecycle and ordered inbound message dispatch.
 export function createConnectionController({

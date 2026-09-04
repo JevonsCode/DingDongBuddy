@@ -27,10 +27,7 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
     
     var trayIcon: TrayIcon?
     var trayMenu: TrayMenu?
-    //    var statusItem: NSStatusItem = NSStatusItem();
-    
-    var _inited: Bool = false;
-    
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "tray_manager", binaryMessenger: registrar.messenger)
         let instance = TrayManagerPlugin()
@@ -42,77 +39,31 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         switch call.method {
         case "destroy":
             destroy(call, result: result)
-            break
         case "getBounds":
             getBounds(call, result: result)
-            break
         case "getTaskbarSurfaceIsLight":
             getTaskbarSurfaceIsLight(call, result: result)
-            break
         case "setIcon":
             setIcon(call, result: result)
-            break
         case "setIconPosition":
             setIconPosition(call, result: result)
-            break
         case "shakeIcon":
             shakeIcon(call, result: result)
-            break
         case "nudgeIcon":
             nudgeIcon(call, result: result)
-            break
         case "setToolTip":
             setToolTip(call, result: result)
-            break
         case "setTitle":
             setTitle(call, result: result)
-            break
         case "setContextMenu":
             setContextMenu(call, result: result)
-            break
         case "popUpContextMenu":
             popUpContextMenu(call, result: result)
-            break
         default:
             result(FlutterMethodNotImplemented)
         }
     }
-    
-    //    private func _init() {
-    //        statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
-    //        if let button = statusItem.button {
-    //            button.action = #selector(self.statusItemButtonClicked(sender:))
-    //            button.target = self
-    //            button.sendAction(on: [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp])
-    //            _inited = true
-    //        }
-    //    }
-    
-    @objc func statusItemButtonClicked(sender: NSStatusBarButton) {
-        let event = NSApp.currentEvent!
-        var methodName: String?
-        
-        switch event.type {
-        case NSEvent.EventType.leftMouseDown:
-            methodName = kEventOnTrayIconMouseDown
-            break
-        case NSEvent.EventType.leftMouseUp:
-            methodName = kEventOnTrayIconMouseUp
-            break
-        case NSEvent.EventType.rightMouseDown:
-            methodName = kEventOnTrayIconRightMouseDown
-            break
-        case NSEvent.EventType.rightMouseUp:
-            methodName = kEventOnTrayIconRightMouseUp
-            break
-        default:
-            break
-        }
-        if (methodName != nil) {
-            channel.invokeMethod(methodName!, arguments: nil, result: nil)
-        }
-    }
-    
+
     public func destroy(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if (trayIcon?.statusItem != nil) {
             NSStatusBar.system.removeStatusItem((trayIcon?.statusItem)!)
@@ -240,7 +191,7 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             strongSelf.channel.invokeMethod(kEventOnTrayMenuItemClick, arguments: args, result: nil)
         }
         trayMenu?.delegate = self
-        
+
         result(true)
     }
     
@@ -251,9 +202,6 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         }
         result(true)
     }
-    
-    // NSMenuDelegate
-    
     public func menuDidClose(_ menu: NSMenu) {
         trayIcon?.statusItem?.menu = nil
     }

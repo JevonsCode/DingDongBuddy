@@ -77,13 +77,6 @@ final class ClipboardRecord {
         .toList(growable: false);
   }
 
-  /// Legacy grouping hint. Permanent archive protection now comes exclusively
-  /// from the separate archive store, never from this history-row property.
-  bool get isArchived => groupNames.any((String value) {
-    final String normalized = value.trim().toLowerCase();
-    return normalized == 'archive' || !isAutomaticClipboardGroup(value);
-  });
-
   /// Every user-defined group this record belongs to, in display order.
   List<String> get groupNames {
     final Set<String> seen = <String>{};

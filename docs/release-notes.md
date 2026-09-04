@@ -1,3 +1,35 @@
+# DingDong 1.5.5
+
+DingDong 1.5.5 fixes workspace shortcut switching and macOS tray badge alignment,
+and removes redundant code.
+
+- Refines macOS tray unread badges with balanced horizontal padding and vertically centered counts.
+- Fixes stuck shortcut hints after releasing Ctrl and restores consecutive Ctrl+Q/W/E workspace switching.
+- Consolidates duplicate UUID and clipboard shortcut handling, and removes unused code and website icons.
+
+---
+
+# DingDong 1.5.5
+
+DingDong 1.5.5 修复工作区快捷键切换与 macOS 托盘徽标对齐，并清理冗余代码。
+
+- 调整 macOS 托盘未读徽标的左右留白，使数字垂直居中。
+- 修复松开 Ctrl 后快捷键提示仍残留、连续 Ctrl+Q/W/E 切换失效的问题。
+- 合并重复 UUID 与剪贴板快捷键处理，清理无用代码和闲置网页图标。
+
+---
+
+# DingDong 1.5.5
+
+DingDong 1.5.5 corrige los atajos de cambio de vista y la alineación de los
+distintivos de macOS, y elimina código redundante.
+
+- Ajusta los distintivos de no leídos de macOS con márgenes equilibrados y números centrados verticalmente.
+- Corrige la ayuda de atajos que quedaba visible al soltar Ctrl y permite cambios consecutivos con Ctrl+Q/W/E.
+- Consolida el código duplicado de UUID y atajos del portapapeles, y elimina código e iconos web sin uso.
+
+---
+
 # DingDong 1.5.4
 
 DingDong 1.5.4 brings optional system selection tools to macOS, connects trusted

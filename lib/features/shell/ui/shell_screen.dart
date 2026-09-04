@@ -13,6 +13,7 @@ import 'package:dingdong/features/agent_api/ui/agent_api_screen.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_shortcuts.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
@@ -118,7 +119,7 @@ class _ShellScreenState extends State<ShellScreen> {
   int _lastDeviceShareRevision = 0;
   bool _deviceShareDialogOpen = false;
   Timer? _searchClearHoldTimer;
-  _SearchShortcutModifier? _searchClearHoldModifier;
+  ClipboardSearchModifier? _searchClearHoldModifier;
 
   @override
   void initState() {
@@ -276,7 +277,7 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   KeyEventResult _handleSearchShortcutKeyEvent(KeyEvent event) {
-    final _SearchShortcutModifier? activeModifier = _searchClearHoldModifier;
+    final ClipboardSearchModifier? activeModifier = _searchClearHoldModifier;
     if (activeModifier != null &&
         event is KeyUpEvent &&
         activeModifier.matches(event.logicalKey)) {
@@ -296,8 +297,8 @@ class _ShellScreenState extends State<ShellScreen> {
     }
 
     final HardwareKeyboard keyboard = HardwareKeyboard.instance;
-    final _SearchShortcutModifier? pressedModifier =
-        _SearchShortcutModifier.pressed(keyboard);
+    final ClipboardSearchModifier? pressedModifier =
+        ClipboardSearchModifier.pressed(keyboard);
     if (pressedModifier == null) {
       return KeyEventResult.ignored;
     }
@@ -352,7 +353,7 @@ class _ShellScreenState extends State<ShellScreen> {
         showPrimary &&
         usesMetaAsPrimaryModifier(platform) &&
         keyboard.isAltPressed;
-    final bool showGroups = _groupNavigationModifierPressed(keyboard, platform);
+    final bool showGroups = isClipboardGroupModifierPressed(keyboard, platform);
     if (showPrimary != _showShortcutHints ||
         showWorkspace != _showWorkspaceShortcutHints ||
         showPlainText != _showPlainTextShortcutHints ||
@@ -376,7 +377,7 @@ class _ShellScreenState extends State<ShellScreen> {
       return searchShortcutResult;
     }
     if (event is KeyDownEvent && widget.controller.selectedIndex == 2) {
-      final int? shortcutIndex = _clipboardShortcutIndex(event.logicalKey);
+      final int? shortcutIndex = clipboardShortcutIndex(event.logicalKey);
       if (shortcutIndex != null &&
           shortcutIndex < 5 &&
           showGroups &&
@@ -583,7 +584,10 @@ class _ShellScreenState extends State<ShellScreen> {
         const SingleActivator(LogicalKeyboardKey.keyR, control: true):
             _handleClipboardFilterShortcut,
       },
-      child: Focus(
+      // A removed workspace must fall back inside the panel's shortcut tree,
+      // even when no previously focused child remains in the route's history.
+      child: FocusScope(
+        debugLabel: 'popup-shell-shortcuts',
         autofocus: true,
         onKeyEvent: _handleKeyEvent,
         onFocusChange: (bool focused) {
@@ -749,56 +753,6 @@ class _ShellScreenState extends State<ShellScreen> {
     );
   }
 }
-
-enum _SearchShortcutModifier {
-  meta,
-  control;
-
-  static _SearchShortcutModifier? pressed(HardwareKeyboard keyboard) {
-    if (keyboard.isMetaPressed) {
-      return meta;
-    }
-    if (keyboard.isControlPressed) {
-      return control;
-    }
-    return null;
-  }
-
-  bool isPressed(HardwareKeyboard keyboard) => switch (this) {
-    meta => keyboard.isMetaPressed,
-    control => keyboard.isControlPressed,
-  };
-
-  bool matches(LogicalKeyboardKey key) => switch (this) {
-    meta =>
-      key == LogicalKeyboardKey.metaLeft || key == LogicalKeyboardKey.metaRight,
-    control =>
-      key == LogicalKeyboardKey.controlLeft ||
-          key == LogicalKeyboardKey.controlRight,
-  };
-}
-
-int? _clipboardShortcutIndex(LogicalKeyboardKey key) {
-  final int index = const <LogicalKeyboardKey>[
-    LogicalKeyboardKey.digit1,
-    LogicalKeyboardKey.digit2,
-    LogicalKeyboardKey.digit3,
-    LogicalKeyboardKey.digit4,
-    LogicalKeyboardKey.digit5,
-    LogicalKeyboardKey.digit6,
-    LogicalKeyboardKey.digit7,
-    LogicalKeyboardKey.digit8,
-    LogicalKeyboardKey.digit9,
-  ].indexOf(key);
-  return index < 0 ? null : index;
-}
-
-bool _groupNavigationModifierPressed(
-  HardwareKeyboard keyboard,
-  TargetPlatform platform,
-) => usesMetaAsPrimaryModifier(platform)
-    ? keyboard.isControlPressed
-    : keyboard.isAltPressed;
 
 final class _CalloutHidingResourceManagerLauncher
     implements ResourceManagerLauncher, ClipboardCategoryManagerLauncher {

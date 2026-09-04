@@ -1,20 +1,5 @@
 part of 'clipboard_screen.dart';
 
-int? _numberShortcutIndex(LogicalKeyboardKey key) {
-  final int index = const <LogicalKeyboardKey>[
-    LogicalKeyboardKey.digit1,
-    LogicalKeyboardKey.digit2,
-    LogicalKeyboardKey.digit3,
-    LogicalKeyboardKey.digit4,
-    LogicalKeyboardKey.digit5,
-    LogicalKeyboardKey.digit6,
-    LogicalKeyboardKey.digit7,
-    LogicalKeyboardKey.digit8,
-    LogicalKeyboardKey.digit9,
-  ].indexOf(key);
-  return index < 0 ? null : index;
-}
-
 class _CompactClipboardToolbar extends StatelessWidget {
   const _CompactClipboardToolbar({
     required this.viewModel,

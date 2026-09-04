@@ -1,11 +1,11 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
 import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
@@ -24,7 +24,7 @@ final class ClipboardCaptureService {
        _store = store,
        _imageStoreDirectory = imageStoreDirectory,
        _onCaptured = onCaptured,
-       _idGenerator = idGenerator ?? _generateUuid,
+       _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? _utcNow;
 
   final ClipboardGateway _gateway;
@@ -336,17 +336,3 @@ const Set<String> _imageExtensions = <String>{
 };
 
 DateTime _utcNow() => DateTime.now().toUtc();
-
-String _generateUuid() {
-  final Random random = Random.secure();
-  final List<int> bytes = List<int>.generate(16, (_) => random.nextInt(256));
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  final String hex = bytes
-      .map((int byte) => byte.toRadixString(16).padLeft(2, '0'))
-      .join();
-  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
-          '${hex.substring(12, 16)}-${hex.substring(16, 20)}-'
-          '${hex.substring(20)}'
-      .toUpperCase();
-}

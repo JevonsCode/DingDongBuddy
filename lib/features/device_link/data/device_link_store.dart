@@ -182,17 +182,3 @@ final class FileDeviceLinkStore implements DeviceLinkStore {
     }
   }
 }
-
-final class MemoryDeviceLinkStore implements DeviceLinkStore {
-  MemoryDeviceLinkStore([this.document]);
-
-  DeviceLinkDocument? document;
-
-  @override
-  Future<DeviceLinkDocument?> load() async => document;
-
-  @override
-  Future<void> save(DeviceLinkDocument value) async {
-    document = value;
-  }
-}

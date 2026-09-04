@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CoreText
 import QuartzCore
 
 public class TrayIcon: NSView {
@@ -16,6 +17,7 @@ public class TrayIcon: NSView {
     public var onAppearanceChanged:((Bool) -> Void)?
     
     var statusItem: NSStatusItem?
+    private var unreadBadgeTitle: NSAttributedString?
     
     public init() {
         super.init(frame: NSRect.zero)
@@ -50,6 +52,7 @@ public class TrayIcon: NSView {
 
 
         self.frame = statusItem!.button!.frame
+        needsDisplay = true
     }
     
     public func setImagePosition(_ imagePosition: String) {
@@ -100,14 +103,23 @@ public class TrayIcon: NSView {
 
         if isUnreadBadge {
             button.title = ""
-            button.attributedTitle = NSAttributedString(
-                string: " \(countText)\u{2009}",
+            let badgeTitle = NSAttributedString(
+                string: " \(countText)",
                 attributes: [
                     .foregroundColor: NSColor.white,
-                    .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold),
-                    .baselineOffset: -1.0
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
                 ]
             )
+            unreadBadgeTitle = badgeTitle
+            // Keep AppKit's image/title spacing and accessible title, but draw
+            // the visible count ourselves: NSStatusBarButton ignores baselineOffset.
+            let layoutTitle = NSMutableAttributedString(attributedString: badgeTitle)
+            layoutTitle.addAttribute(
+                .foregroundColor,
+                value: NSColor.clear,
+                range: NSRange(location: 0, length: layoutTitle.length)
+            )
+            button.attributedTitle = layoutTitle
             button.imagePosition = .imageLeading
             button.wantsLayer = true
             button.layer?.backgroundColor = badgeBackgroundColor(badgeColorRgb)
@@ -115,6 +127,7 @@ public class TrayIcon: NSView {
             button.layer?.masksToBounds = true
             statusItem?.length = countText.count > 2 ? 65 : 55
         } else {
+            unreadBadgeTitle = nil
             button.title = title
             button.attributedTitle = NSAttributedString(string: title)
             button.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
@@ -127,6 +140,27 @@ public class TrayIcon: NSView {
                 : NSStatusItem.variableLength
         }
         self.frame = statusItem!.button!.frame
+        needsDisplay = true
+    }
+
+    public override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        guard let title = unreadBadgeTitle,
+              let button = statusItem?.button,
+              let cell = button.cell,
+              let context = NSGraphicsContext.current?.cgContext else { return }
+
+        let line = CTLineCreateWithAttributedString(title)
+        let glyphBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
+        let titleRect = convert(cell.titleRect(forBounds: button.bounds), from: button)
+        context.saveGState()
+        context.textMatrix = .identity
+        context.textPosition = CGPoint(
+            x: titleRect.minX,
+            y: bounds.midY - glyphBounds.midY
+        )
+        CTLineDraw(line, context)
+        context.restoreGState()
     }
 
     private func badgeBackgroundColor(_ rgb: UInt32?) -> CGColor {

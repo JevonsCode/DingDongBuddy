@@ -40,8 +40,6 @@ class LibraryScreen extends StatefulWidget {
 class LibraryScreenState extends State<LibraryScreen> {
   bool _editorDirty = false;
 
-  bool get hasUnsavedChanges => _editorDirty;
-
   Future<bool> confirmDiscardChanges() async {
     if (!_editorDirty) {
       return true;

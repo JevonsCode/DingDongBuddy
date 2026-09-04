@@ -3,7 +3,7 @@ import {
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=38";
+} from "./app-platform.js?shell=39";
 
 // PWA installation and shell-update lifecycle.
 export function createInstallationController({

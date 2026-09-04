@@ -2,8 +2,8 @@ import {
   base64UrlDecode,
   bytesToBase64,
   utf8ByteLength,
-} from "./app-codecs.js?shell=38";
-import { formatBytes, validDate } from "./app-formatters.js?shell=38";
+} from "./app-codecs.js?shell=39";
+import { formatBytes, validDate } from "./app-formatters.js?shell=39";
 
 // Bounded clipboard/file transfer plus in-memory Agent feed reconciliation.
 export function createContentTransferController({

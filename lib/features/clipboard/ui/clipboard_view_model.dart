@@ -2,12 +2,12 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
+import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -48,7 +48,7 @@ final class ClipboardViewModel extends ChangeNotifier {
        _captureService = captureService,
        _gateway = gateway,
        _resourceStore = resourceStore,
-       _idGenerator = idGenerator ?? _generateUuid,
+       _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? _utcNow,
        _quickPasteGateway = quickPasteGateway,
        _revisions = revisions,
@@ -91,17 +91,6 @@ final class ClipboardViewModel extends ChangeNotifier {
   String? get selectedCategoryId => _selectedCategoryId;
 
   ClipboardSortMode get sortMode => _sortMode;
-
-  /// Most recent real clipboard capture, excluding archive edits.
-  DateTime? get lastClipboardUsedAt {
-    DateTime? latest;
-    for (final ClipboardRecord record in _records) {
-      if (latest == null || record.updatedAt.isAfter(latest)) {
-        latest = record.updatedAt;
-      }
-    }
-    return latest;
-  }
 
   bool get hasActiveFilters =>
       _selectedCategoryId != null ||
@@ -198,13 +187,6 @@ final class ClipboardViewModel extends ChangeNotifier {
       ..._records,
       ..._archives.map((ClipboardArchiveEntry entry) => entry.record),
     ]..sort(compareClipboardRecords);
-    return List<ClipboardRecord>.unmodifiable(records);
-  }
-
-  List<ClipboardRecord> get archiveRecords {
-    final List<ClipboardRecord> records =
-        _archives.map((ClipboardArchiveEntry entry) => entry.record).toList()
-          ..sort(compareClipboardRecords);
     return List<ClipboardRecord>.unmodifiable(records);
   }
 
@@ -1061,17 +1043,3 @@ List<String> _uniqueGroups(Iterable<String> values) {
 }
 
 DateTime _utcNow() => DateTime.now().toUtc();
-
-String _generateUuid() {
-  final Random random = Random.secure();
-  final List<int> bytes = List<int>.generate(16, (_) => random.nextInt(256));
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  final String hex = bytes
-      .map((int byte) => byte.toRadixString(16).padLeft(2, '0'))
-      .join();
-  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
-          '${hex.substring(12, 16)}-${hex.substring(16, 20)}-'
-          '${hex.substring(20)}'
-      .toUpperCase();
-}

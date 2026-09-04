@@ -1,49 +1,49 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.4",
-  "latestBuild": "59",
-  "publishedAt": "2026-08-30T18:02:37Z",
+  "latestVersion": "1.5.5",
+  "latestBuild": "60",
+  "publishedAt": "2026-09-04T03:42:26Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.4",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.5",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.4/DingDong-1.5.4-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds optional macOS system selection tools for copy, translation and explanation, with permission checks and separately stored model credentials.",
-    "Adds computer-to-computer sharing and explicit transport preferences while keeping automatic clipboard sync off for new peers.",
-    "Improves Agent conversation acknowledgement, clipboard keyboard actions and settings synchronization, removes redundant code, and expands desktop release checks."
+    "Refines macOS tray unread badges with balanced horizontal padding and vertically centered counts.",
+    "Fixes stuck shortcut hints after releasing Ctrl and restores consecutive Ctrl+Q/W/E workspace switching.",
+    "Consolidates duplicate UUID and clipboard shortcut handling, and removes unused code and website icons."
   ],
   "notesByLanguage": {
     "en": [
-      "Adds optional macOS system selection tools for copy, translation and explanation, with permission checks and separately stored model credentials.",
-      "Adds computer-to-computer sharing and explicit transport preferences while keeping automatic clipboard sync off for new peers.",
-      "Improves Agent conversation acknowledgement, clipboard keyboard actions and settings synchronization, removes redundant code, and expands desktop release checks."
+      "Refines macOS tray unread badges with balanced horizontal padding and vertically centered counts.",
+      "Fixes stuck shortcut hints after releasing Ctrl and restores consecutive Ctrl+Q/W/E workspace switching.",
+      "Consolidates duplicate UUID and clipboard shortcut handling, and removes unused code and website icons."
     ],
     "zh": [
-      "新增默认关闭的 macOS 系统划词工具，支持复制、翻译和解释，并提供权限检查与独立的模型凭据存储。",
-      "新增电脑间分享和明确的传输模式，新连接的电脑默认不自动同步剪贴板。",
-      "改进 Agent 会话已读确认、剪贴板键盘操作和设置同步，清理重复代码并扩展桌面发布验收。"
+      "调整 macOS 托盘未读徽标的左右留白，使数字垂直居中。",
+      "修复松开 Ctrl 后快捷键提示仍残留、连续 Ctrl+Q/W/E 切换失效的问题。",
+      "合并重复 UUID 与剪贴板快捷键处理，清理无用代码和闲置网页图标。"
     ],
     "es": [
-      "Añade herramientas opcionales de selección de texto en macOS para copiar, traducir y explicar, con comprobaciones de permisos y credenciales separadas.",
-      "Añade transferencias entre ordenadores y preferencias de transporte explícitas; la sincronización automática del portapapeles empieza desactivada para nuevos equipos.",
-      "Mejora la confirmación de conversaciones de Agent, los atajos y la sincronización de ajustes, elimina código redundante y amplía las comprobaciones de escritorio."
+      "Ajusta los distintivos de no leídos de macOS con márgenes equilibrados y números centrados verticalmente.",
+      "Corrige la ayuda de atajos que quedaba visible al soltar Ctrl y permite cambios consecutivos con Ctrl+Q/W/E.",
+      "Consolida el código duplicado de UUID y atajos del portapapeles, y elimina código e iconos web sin uso."
     ]
   }
 }

@@ -81,7 +81,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.5.4 from pubspec', () {
+  test('desktop hosts consume application version 1.5.5 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -91,26 +91,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.5.4+59'));
+    expect(pubspec, contains('version: 1.5.5+60'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.5.4';"),
+      contains("const String currentAppVersion = '1.5.5';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '59';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '60';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.5.4'"),
+      contains("'version': '1.5.5'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.5.4'"),
+      contains("'version': '1.5.5'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,4,59'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.4"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,5,5,60'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.5.5"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -445,7 +445,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.5.4</span>'));
+    expect(website, contains('<span class="demo-version">v1.5.5</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -592,7 +592,6 @@ void main() {
       'today',
       'library',
       'clipboard',
-      'refresh',
       'settings',
       'collapse',
       'manage',
@@ -600,7 +599,6 @@ void main() {
       'prompt',
       'skill',
       'mcp',
-      'enabled',
       'copy',
       'edit',
       'delete',
@@ -608,18 +606,21 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.5.4"'));
-    expect(releaseMetadata, contains('"latestBuild": "59"'));
+    expect(releaseMetadata, contains('"latestVersion": "1.5.5"'));
+    expect(releaseMetadata, contains('"latestBuild": "60"'));
     expect(releaseMetadata, contains('"prerelease": false'));
     expect(
       releaseMetadata,
-      contains('Adds optional macOS system selection tools'),
+      contains('Refines macOS tray unread badges'),
     );
-    expect(releaseMetadata, contains('Adds computer-to-computer sharing'));
+    expect(
+      releaseMetadata,
+      contains('Fixes stuck shortcut hints after releasing Ctrl'),
+    );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));
-    expect(releaseMetadata, contains('DingDong-1.5.4-windows-x64-Setup.exe'));
+    expect(releaseMetadata, contains('DingDong-1.5.5-windows-x64-Setup.exe'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {

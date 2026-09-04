@@ -6,12 +6,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=38";
+} from "./notification-policy.js?shell=39";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=38";
+} from "./pairing-state.js?shell=39";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -20,20 +20,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=38";
-import { createInstallationController } from "./app-installation.js?shell=38";
-import { createAgentNotificationController } from "./app-notifications.js?shell=38";
-import { createAppRenderer } from "./app-rendering.js?shell=38";
-import { createConnectionController } from "./app-connection.js?shell=38";
-import { createDeviceSettingsController } from "./app-settings.js?shell=38";
-import { createPairingController } from "./app-pairing.js?shell=38";
-import { createContentTransferController } from "./app-content-transfer.js?shell=38";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=39";
+import { createInstallationController } from "./app-installation.js?shell=39";
+import { createAgentNotificationController } from "./app-notifications.js?shell=39";
+import { createAppRenderer } from "./app-rendering.js?shell=39";
+import { createConnectionController } from "./app-connection.js?shell=39";
+import { createDeviceSettingsController } from "./app-settings.js?shell=39";
+import { createPairingController } from "./app-pairing.js?shell=39";
+import { createContentTransferController } from "./app-content-transfer.js?shell=39";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=38";
+} from "./app-platform.js?shell=39";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -54,8 +54,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.5.4";
-const currentPwaShellVersion = 38;
+const currentPwaVersion = "1.5.5";
+const currentPwaShellVersion = 39;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;

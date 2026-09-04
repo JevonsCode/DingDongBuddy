@@ -1,7 +1,7 @@
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=38";
+} from "./notification-policy.js?shell=39";
 import {
   formatBytes,
   formatDuration,
@@ -10,7 +10,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=38";
+} from "./app-formatters.js?shell=39";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({

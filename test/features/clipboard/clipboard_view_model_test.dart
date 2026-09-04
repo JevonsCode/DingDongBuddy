@@ -384,8 +384,8 @@ void main() {
 
     expect(model.selectedRecord?.group, isEmpty);
     expect(model.selectedRecord?.tags, contains('alias:build'));
-    expect(model.archiveRecords.single.groupNames, <String>['Release']);
-    expect(model.archiveRecords.single.content, 'flutter build windows');
+    expect(store.listArchives().single.record.groupNames, <String>['Release']);
+    expect(store.listArchives().single.record.content, 'flutter build windows');
     model.deleteSelected();
     expect(store.list(limit: 10), isEmpty);
     expect(store.listArchives(), hasLength(1));
@@ -766,10 +766,10 @@ void main() {
           ),
       isTrue,
     );
-    expect(model.archiveRecords, hasLength(2));
+    expect(store.listArchives(), hasLength(2));
     expect(
-      model.archiveRecords.every(
-        (ClipboardRecord item) => item.groupNames.contains('项目归档'),
+      store.listArchives().every(
+        (ClipboardArchiveEntry entry) => entry.record.groupNames.contains('项目归档'),
       ),
       isTrue,
     );
@@ -1035,7 +1035,7 @@ void main() {
     expect(store.list(limit: 10), hasLength(2));
     expect(model.selectedGroup, isNull);
     expect(model.groups, <String>['参考']);
-    expect(model.archiveRecords.single.groupNames, <String>['参考']);
+    expect(store.listArchives().single.record.groupNames, <String>['参考']);
     expect(store.list(limit: 10), hasLength(2));
     expect(
       store.list(limit: 10).every((item) => item.groupNames.isEmpty),

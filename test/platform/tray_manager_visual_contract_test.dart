@@ -560,7 +560,6 @@ void main() {
     expect(gateway, contains('await trayManager.setTitle(\n        title,'));
     expect(plugin, contains('args["badgeColorRgb"] as? NSNumber'));
     expect(source, contains('style == "unreadBadge" && !countText.isEmpty'));
-    expect(source, contains('.baselineOffset: -1.0'));
     expect(source, contains('let value = rgb ?? 0xDB7333'));
     expect(source, contains('let red = CGFloat((value >> 16) & 0xFF) / 255'));
     expect(source, contains('button.layer?.backgroundColor = nil'));

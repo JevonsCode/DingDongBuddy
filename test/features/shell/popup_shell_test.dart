@@ -1349,6 +1349,86 @@ description: Use when product decisions should follow saved preferences.
     },
   );
 
+  for (final TargetPlatform platform in <TargetPlatform>[
+    TargetPlatform.macOS,
+    TargetPlatform.windows,
+  ]) {
+    testWidgetsOnPlatform(
+      'workspace shortcuts keep working after each page rebuild on $platform',
+      platform,
+      (WidgetTester tester) async {
+        final ShellController controller = ShellController(initialIndex: 2);
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(DingDongApp(shellController: controller));
+        await tester.pumpAndSettle();
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump();
+        controller.requestClipboardSearchFocus();
+        await tester.pumpAndSettle();
+
+        final LogicalKeyboardKey modifier = platform == TargetPlatform.macOS
+            ? LogicalKeyboardKey.controlLeft
+            : LogicalKeyboardKey.altLeft;
+        final String hint = platform == TargetPlatform.macOS ? '⌃ Q' : 'Alt Q';
+        await tester.sendKeyDownEvent(modifier);
+        for (final (LogicalKeyboardKey key, int index) in <
+          (LogicalKeyboardKey, int)
+        >[
+          (LogicalKeyboardKey.keyW, 1),
+          (LogicalKeyboardKey.keyQ, 0),
+          (LogicalKeyboardKey.keyE, 2),
+          (LogicalKeyboardKey.keyQ, 0),
+          (LogicalKeyboardKey.keyW, 1),
+        ]) {
+          await tester.sendKeyEvent(key);
+          // Let the previously focused workspace unmount before the next key.
+          await tester.pumpAndSettle();
+          expect(controller.selectedIndex, index);
+          expect(find.text(hint), findsOneWidget);
+        }
+        await tester.sendKeyUpEvent(modifier);
+        await tester.pump();
+        expect(find.text(hint), findsNothing);
+      },
+    );
+  }
+
+  for (final (LogicalKeyboardKey key, int index) in <
+    (LogicalKeyboardKey, int)
+  >[(LogicalKeyboardKey.keyQ, 0), (LogicalKeyboardKey.keyW, 1)]) {
+    testWidgetsOnPlatform(
+      'Control release clears hints after leaving clipboard search for $index',
+      TargetPlatform.macOS,
+      (WidgetTester tester) async {
+        final ShellController controller = ShellController(initialIndex: 2);
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(DingDongApp(shellController: controller));
+        await tester.pumpAndSettle();
+        // Re-enter through a child after the route's focus history was cleared.
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump();
+        controller.requestClipboardSearchFocus();
+        await tester.pumpAndSettle();
+
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(key);
+        await tester.pumpAndSettle();
+        expect(controller.selectedIndex, index);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pump();
+        expect(find.text('⌃ Q'), findsNothing);
+
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyE);
+        await tester.pumpAndSettle();
+        expect(controller.selectedIndex, 2);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pump();
+        expect(find.text('⌃ Q'), findsNothing);
+      },
+    );
+  }
+
   testWidgetsOnPlatform(
     'Command-F hold clears search after starting from the popup header',
     TargetPlatform.macOS,

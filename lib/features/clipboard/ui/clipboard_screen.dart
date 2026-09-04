@@ -17,6 +17,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart'
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_shortcuts.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
@@ -89,7 +90,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
   final FocusNode _searchFocusNode = FocusNode(debugLabel: 'clipboard-search');
   late final TextEditingController _searchController;
   Timer? _searchClearHoldTimer;
-  _SearchShortcutModifier? _searchClearHoldModifier;
+  ClipboardSearchModifier? _searchClearHoldModifier;
 
   @override
   void initState() {
@@ -188,7 +189,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
 
   KeyEventResult _handleSearchShortcutKeyEvent(KeyEvent event) {
     final HardwareKeyboard keyboard = HardwareKeyboard.instance;
-    final _SearchShortcutModifier? activeModifier = _searchClearHoldModifier;
+    final ClipboardSearchModifier? activeModifier = _searchClearHoldModifier;
 
     if (activeModifier != null &&
         event is KeyUpEvent &&
@@ -205,8 +206,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
       return KeyEventResult.handled;
     }
 
-    final _SearchShortcutModifier? pressedModifier =
-        _SearchShortcutModifier.pressed(keyboard);
+    final ClipboardSearchModifier? pressedModifier =
+        ClipboardSearchModifier.pressed(keyboard);
     if (pressedModifier == null) {
       return KeyEventResult.ignored;
     }
@@ -218,7 +219,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     return KeyEventResult.handled;
   }
 
-  void _startSearchClearHold(_SearchShortcutModifier modifier) {
+  void _startSearchClearHold(ClipboardSearchModifier modifier) {
     if (_searchController.text.isEmpty) {
       return;
     }
@@ -323,7 +324,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
               if (searchShortcutResult == KeyEventResult.handled) {
                 return searchShortcutResult;
               }
-              if (_isGroupModifierKey(
+              if (isClipboardGroupModifierKey(
                 event.logicalKey,
                 defaultTargetPlatform,
               )) {
@@ -386,10 +387,15 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                 unawaited(_useSelectedClipboardItem());
                 return KeyEventResult.handled;
               }
-              final int? shortcutIndex = _numberShortcutIndex(event.logicalKey);
+              final int? shortcutIndex = clipboardShortcutIndex(
+                event.logicalKey,
+              );
               if (shortcutIndex != null &&
                   shortcutIndex < 5 &&
-                  _isGroupModifierPressed(keyboard, defaultTargetPlatform) &&
+                  isClipboardGroupModifierPressed(
+                    keyboard,
+                    defaultTargetPlatform,
+                  ) &&
                   viewModel.groups.isNotEmpty) {
                 _revealGroups();
                 viewModel.selectGroupAt(
@@ -565,44 +571,3 @@ class _ClipboardScreenState extends State<ClipboardScreen>
     await viewModel.restoreVisibleAt(index, mode: mode);
   }
 }
-
-enum _SearchShortcutModifier {
-  meta,
-  control;
-
-  static _SearchShortcutModifier? pressed(HardwareKeyboard keyboard) {
-    if (keyboard.isMetaPressed) {
-      return meta;
-    }
-    if (keyboard.isControlPressed) {
-      return control;
-    }
-    return null;
-  }
-
-  bool isPressed(HardwareKeyboard keyboard) => switch (this) {
-    meta => keyboard.isMetaPressed,
-    control => keyboard.isControlPressed,
-  };
-
-  bool matches(LogicalKeyboardKey key) => switch (this) {
-    meta =>
-      key == LogicalKeyboardKey.metaLeft || key == LogicalKeyboardKey.metaRight,
-    control =>
-      key == LogicalKeyboardKey.controlLeft ||
-          key == LogicalKeyboardKey.controlRight,
-  };
-}
-
-bool _isGroupModifierKey(LogicalKeyboardKey key, TargetPlatform platform) =>
-    usesMetaAsPrimaryModifier(platform)
-    ? key == LogicalKeyboardKey.controlLeft ||
-          key == LogicalKeyboardKey.controlRight
-    : key == LogicalKeyboardKey.altLeft || key == LogicalKeyboardKey.altRight;
-
-bool _isGroupModifierPressed(
-  HardwareKeyboard keyboard,
-  TargetPlatform platform,
-) => usesMetaAsPrimaryModifier(platform)
-    ? keyboard.isControlPressed
-    : keyboard.isAltPressed;

@@ -558,10 +558,6 @@ void main() {
         records.any((ClipboardRecord item) => item.id == 'old-archive'),
         isFalse,
       );
-      expect(
-        records.where((ClipboardRecord item) => !item.isArchived),
-        hasLength(20),
-      );
     },
   );
 
