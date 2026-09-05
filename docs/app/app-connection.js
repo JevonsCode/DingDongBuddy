@@ -2,16 +2,24 @@ import {
   relayConnectionWasReplaced,
   shouldReconnectRelay,
 } from "./connection-policy.js";
-import { pairingsMatch } from "./pairing-state.js?shell=39";
-import { wantsAgentNotifications } from "./notification-policy.js?shell=39";
+import { pairingsMatch } from "./pairing-state.js?shell=40";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=40";
 import {
+  encodedEnvelopeByteLength,
   encodeRelayFrame,
   importAesKey,
+  maximumRelayFrameBytes,
   openEnvelope,
+  relayFrameByteLength,
   sealEnvelope,
-} from "./app-codecs.js?shell=39";
+} from "./app-codecs.js?shell=40";
 
 // Encrypted relay/WebRTC lifecycle and ordered inbound message dispatch.
+export const maximumQueuedInboundEntries = 256;
+export const maximumQueuedInboundBytes = maximumRelayFrameBytes * 32;
+export const maximumPendingRemoteCandidates = 256;
+export const maximumPendingRemoteCandidateBytes = maximumRelayFrameBytes * 4;
+
 export function createConnectionController({
   state,
   initialReconnectDelayMs,
@@ -29,6 +37,8 @@ export function createConnectionController({
   beginDownload,
   receiveDownloadChunk,
   finishDownload,
+  clearDownloads,
+  showToast = () => {},
 }) {
   async function connect(session = activeSession()) {
     if (
@@ -64,25 +74,21 @@ export function createConnectionController({
       const socket = new WebSocket(relay);
       const context = { ...attempt, key, socket };
       session.socket = socket;
-      session.relayFrames = Promise.resolve();
+      const relayQueue = resetRelayQueue(session);
+      context.relayQueue = relayQueue;
       socket.addEventListener("message", (event) => {
-        if (!relayContextIsCurrent(context)) return;
-        session.relayFrames = session.relayFrames
-          .then(() =>
-            relayContextIsCurrent(context)
-              ? handleRelayFrame(event.data, context)
-              : undefined,
-          )
-          .catch((error) => connectionErrorForContext(error, context));
+        // The bounded queue serializes handleRelayFrame(event.data, context).
+        queueRelayFrame(event.data, context);
       });
       socket.addEventListener("close", (event) => {
         if (!relayContextIsCurrent(context)) return;
         session.socket = null;
+        resetRelayQueue(session);
         session.relayHostPresent = false;
         session.connecting = false;
         session.connected = session.channel?.readyState === "open";
         session.connectionSuperseded = relayConnectionWasReplaced(event);
-        if (!session.connected) session.items = [];
+        if (!session.connected) clearDisconnectedContent(session);
         render();
         if (shouldReconnectRelay(event, session.pair)) {
           const reconnectDelay = session.reconnectDelayMs;
@@ -110,6 +116,8 @@ export function createConnectionController({
       Boolean(session) &&
       state.sessions.get(context.pair?.room) === session &&
       context.connectionGeneration === session.connectionGeneration &&
+      (context.contentGeneration === undefined ||
+        context.contentGeneration === session.contentGeneration) &&
       pairingsMatch(context.pair, session.pair)
     );
   }
@@ -154,6 +162,107 @@ export function createConnectionController({
     connectionError(error, context.session);
   }
 
+  function createQueueState(chain = Promise.resolve()) {
+    const queue = {
+      chain,
+      count: 0,
+      bytes: 0,
+      entries: new Set(),
+      cancelled: false,
+    };
+    queue.cancel = () => {
+      queue.cancelled = true;
+      for (const entry of queue.entries) entry.payload = null;
+    };
+    return queue;
+  }
+
+  function resetRelayQueue(session) {
+    session.relayQueue?.cancel?.();
+    const queue = createQueueState();
+    session.relayQueue = queue;
+    session.relayFrames = queue.chain;
+    return queue;
+  }
+
+  function resetIncomingQueue(session) {
+    session.incomingQueue?.cancel?.();
+    const queue = createQueueState();
+    session.incomingQueue = queue;
+    session.incomingMessages = queue.chain;
+    return queue;
+  }
+
+  function incomingQueueFor(session) {
+    const chain = session.incomingMessages || Promise.resolve();
+    if (session.incomingQueue?.chain === chain) return session.incomingQueue;
+    session.incomingQueue?.cancel?.();
+    const queue = createQueueState(chain);
+    session.incomingQueue = queue;
+    return queue;
+  }
+
+  function releaseQueueBudget(queue, bytes) {
+    queue.count = Math.max(0, queue.count - 1);
+    queue.bytes = Math.max(0, queue.bytes - bytes);
+  }
+
+  function inboundQueueOverflowError() {
+    const error = new Error("连接消息队列已满");
+    error.code = "inbound-queue-overflow";
+    return error;
+  }
+
+  function closeForInboundLimit(error, context) {
+    if (!connectionContextIsCurrent(context)) return;
+    const message =
+      error?.code === "relay-frame-too-large"
+        ? "收到的连接消息超过 256 KB，已断开，请重新连接"
+        : "连接消息过多，已断开，请重新连接";
+    showToast(message);
+    closeConnection(context.session);
+    render();
+  }
+
+  function queueRelayFrame(raw, context) {
+    if (!relayContextIsCurrent(context)) return;
+    let bytes;
+    try {
+      bytes = relayFrameByteLength(raw);
+    } catch (error) {
+      closeForInboundLimit(error, context);
+      return;
+    }
+    const session = context.session;
+    const queue = context.relayQueue;
+    if (!queue || session.relayQueue !== queue) return;
+    if (
+      queue.count >= maximumQueuedInboundEntries ||
+      queue.bytes + bytes > maximumQueuedInboundBytes
+    ) {
+      closeForInboundLimit(inboundQueueOverflowError(), context);
+      return;
+    }
+    queue.count += 1;
+    queue.bytes += bytes;
+    const entry = { payload: raw, bytes };
+    queue.entries.add(entry);
+    session.relayFrames = session.relayFrames
+      .then(() => {
+        if (queue.cancelled || entry.payload === null) return;
+        return relayContextIsCurrent(context)
+          ? handleRelayFrame(entry.payload, context)
+          : undefined;
+      })
+      .catch((error) => connectionErrorForContext(error, context))
+      .finally(() => {
+        queue.entries.delete(entry);
+        entry.payload = null;
+        releaseQueueBudget(queue, entry.bytes);
+      });
+    queue.chain = session.relayFrames;
+  }
+
   function sessionContextFrom(context) {
     return {
       session: context.session,
@@ -168,6 +277,12 @@ export function createConnectionController({
     const session = context.session;
     const frame = JSON.parse(raw);
     if (frame.type === "relay") {
+      if (frame.event === "ready" && !session.connected && !session.relayHostPresent) {
+        // The relay is reachable; a missing host is an offline computer, not
+        // an indefinitely pending connection attempt.
+        session.connecting = false;
+        render();
+      }
       if (frame.event === "host_joined") {
         session.relayHostPresent = true;
         await markConnected(sessionContextFrom(context));
@@ -177,7 +292,7 @@ export function createConnectionController({
         session.relayHostPresent = false;
         session.helloSent = false;
         session.connected = session.channel?.readyState === "open";
-        if (!session.connected) session.items = [];
+        if (!session.connected) clearDisconnectedContent(session);
         render();
       }
       return;
@@ -187,7 +302,16 @@ export function createConnectionController({
       return;
     }
     if (frame.type !== "signal" || typeof frame.payload !== "string") return;
-    const signal = await openEnvelope(frame.payload, context.key);
+    let signal;
+    try {
+      signal = await openEnvelope(frame.payload, context.key);
+    } catch (error) {
+      if (error?.code === "relay-frame-too-large") {
+        closeForInboundLimit(error, context);
+        return;
+      }
+      throw error;
+    }
     if (!relayContextIsCurrent(context)) return;
     if (signal.type === "offer") {
       await acceptOffer(signal, context);
@@ -201,7 +325,30 @@ export function createConnectionController({
       if (peer?.remoteDescription) {
         await peer.addIceCandidate(candidate);
       } else {
+        let candidateBytes;
+        try {
+          candidateBytes = relayFrameByteLength(
+            JSON.stringify({
+              candidate: signal.candidate,
+              sdpMid: signal.sdpMid,
+              sdpMLineIndex: signal.sdpMLineIndex,
+            }),
+          );
+        } catch (error) {
+          closeForInboundLimit(error, context);
+          return;
+        }
+        if (
+          session.remoteCandidates.length >= maximumPendingRemoteCandidates ||
+          (session.remoteCandidateBytes || 0) + candidateBytes >
+            maximumPendingRemoteCandidateBytes
+        ) {
+          closeForInboundLimit(inboundQueueOverflowError(), context);
+          return;
+        }
         session.remoteCandidates.push(candidate);
+        session.remoteCandidateBytes =
+          (session.remoteCandidateBytes || 0) + candidateBytes;
       }
     }
   }
@@ -242,7 +389,7 @@ export function createConnectionController({
         session.connected =
           session.relayHostPresent &&
           session.socket?.readyState === WebSocket.OPEN;
-        if (!session.connected) session.items = [];
+        if (!session.connected) clearDisconnectedContent(session);
         render();
       }
     });
@@ -253,7 +400,9 @@ export function createConnectionController({
     if (!peerContextIsCurrent(context) || !relayContextIsCurrent(relayContext)) {
       return;
     }
-    for (const candidate of session.remoteCandidates.splice(0)) {
+    const pendingCandidates = session.remoteCandidates.splice(0);
+    session.remoteCandidateBytes = 0;
+    for (const candidate of pendingCandidates) {
       await peer.addIceCandidate(candidate);
       if (!peerContextIsCurrent(context)) return;
     }
@@ -290,7 +439,7 @@ export function createConnectionController({
       session.connected =
         session.relayHostPresent &&
         session.socket?.readyState === WebSocket.OPEN;
-      if (!session.connected) session.items = [];
+      if (!session.connected) clearDisconnectedContent(session);
       render();
     });
     channel.addEventListener("message", (event) => {
@@ -339,14 +488,54 @@ export function createConnectionController({
   function queueIncomingEnvelope(envelope, context) {
     if (!connectionContextIsCurrent(context)) return;
     const session = context.session;
-    session.incomingMessages = session.incomingMessages
+    if (!session.connected) return;
+    let bytes;
+    try {
+      bytes = encodedEnvelopeByteLength(envelope);
+    } catch (error) {
+      closeForInboundLimit(error, context);
+      return;
+    }
+    const contentGeneration = session.contentGeneration;
+    const queue = incomingQueueFor(session);
+    if (
+      queue.count >= maximumQueuedInboundEntries ||
+      queue.bytes + bytes > maximumQueuedInboundBytes
+    ) {
+      closeForInboundLimit(inboundQueueOverflowError(), context);
+      return;
+    }
+    queue.count += 1;
+    queue.bytes += bytes;
+    const entry = { payload: envelope, bytes };
+    queue.entries.add(entry);
+    const pending = queue.chain
       .then(async () => {
-        if (!connectionContextIsCurrent(context)) return;
-        const message = await openEnvelope(envelope, context.key);
-        if (!connectionContextIsCurrent(context)) return;
+        if (queue.cancelled || entry.payload === null) return;
+        if (!connectionContextIsCurrent(context) || !session.connected ||
+            contentGeneration !== session.contentGeneration) return;
+        // The bounded entry carries the value passed to openEnvelope(envelope, context.key).
+        const message = await openEnvelope(entry.payload, context.key);
+        if (!connectionContextIsCurrent(context) || !session.connected ||
+            contentGeneration !== session.contentGeneration) return;
         await handleDeviceMessage(message, session);
       })
-      .catch((error) => connectionErrorForContext(error, context));
+      .catch((error) => {
+        if (
+          connectionContextIsCurrent(context) &&
+          session.connected &&
+          contentGeneration === session.contentGeneration
+        ) {
+          connectionError(error, session);
+        }
+      })
+      .finally(() => {
+        queue.entries.delete(entry);
+        entry.payload = null;
+        releaseQueueBudget(queue, entry.bytes);
+      });
+    queue.chain = pending;
+    session.incomingMessages = pending;
   }
 
   async function sendSignal(signal, context, peer = null) {
@@ -366,24 +555,61 @@ export function createConnectionController({
     if (!context?.key || !sessionContextIsCurrent(context)) {
       throw new Error("连接已经变化，请重试");
     }
+    const session = context.session;
     const envelope = await sealEnvelope(message, context.key);
     const relayFrame = encodeRelayFrame("data", envelope);
     if (!sessionContextIsCurrent(context)) {
       throw new Error("连接已经变化，请重试");
     }
-    const session = context.session;
+    const transport = messageTransport(session, context);
+    if (!transport) {
+      throw new Error("电脑当前不在线");
+    }
+    if (transport.kind === "channel") {
+      transport.target.send(envelope);
+      return transport;
+    }
+    if (transport.kind === "relay") {
+      // Relay fallback remains the equivalent of session.socket.send(relayFrame).
+      transport.target.send(relayFrame);
+      return transport;
+    }
+    throw new Error("连接传输已经变化，请重新发送文件");
+  }
+
+  function messageTransport(session, context) {
+    const pin = context?.transport;
+    if (pin !== undefined && pin !== null) {
+      const kind = pin?.kind;
+      const target = kind === "channel" ? session.channel : session.socket;
+      const expectedTarget = pin?.target;
+      if (
+        kind === "channel" &&
+        target?.readyState === "open" &&
+        expectedTarget === target
+      ) {
+        return { kind, target };
+      }
+      if (
+        kind === "relay" &&
+        target?.readyState === WebSocket.OPEN &&
+        session.relayHostPresent &&
+        expectedTarget === target
+      ) {
+        return { kind, target };
+      }
+      throw new Error("连接传输已经变化，请重新发送文件");
+    }
     if (session.channel?.readyState === "open") {
-      session.channel.send(envelope);
-      return;
+      return { kind: "channel", target: session.channel };
     }
     if (
       session.socket?.readyState === WebSocket.OPEN &&
       session.relayHostPresent
     ) {
-      session.socket.send(relayFrame);
-      return;
+      return { kind: "relay", target: session.socket };
     }
-    throw new Error("电脑当前不在线");
+    return null;
   }
 
   function currentSessionContext(session) {
@@ -393,6 +619,7 @@ export function createConnectionController({
           pair: { ...session.pair },
           key: session.signalKey,
           connectionGeneration: session.connectionGeneration,
+          contentGeneration: session.contentGeneration,
         }
       : null;
   }
@@ -445,16 +672,25 @@ export function createConnectionController({
     session.socket = null;
     closePeer(session);
     session.signalKey = null;
-    session.relayFrames = Promise.resolve();
-    session.incomingMessages = Promise.resolve();
+    resetRelayQueue(session);
+    resetIncomingQueue(session);
     session.connected = false;
     session.connecting = false;
     session.relayHostPresent = false;
     session.helloSent = false;
+    clearDisconnectedContent(session);
+  }
+
+  function clearDisconnectedContent(session) {
+    session.contentGeneration = (session.contentGeneration || 0) + 1;
     session.items = [];
+    session.clipboardRenderRevision += 1;
     session.lastSyncAt = null;
-    session.downloads.clear();
+    clearDownloads(session);
     session.outgoingRequests.clear();
+    resetIncomingQueue(session);
+    session.remoteCandidates = [];
+    session.remoteCandidateBytes = 0;
   }
 
   function closePeer(session) {
@@ -463,6 +699,7 @@ export function createConnectionController({
     session.channel = null;
     session.peer = null;
     session.remoteCandidates = [];
+    session.remoteCandidateBytes = 0;
     channel?.close();
     peer?.close();
   }
@@ -480,7 +717,7 @@ export function createConnectionController({
       session.channel?.readyState === "open" ||
       (session.relayHostPresent &&
         session.socket?.readyState === WebSocket.OPEN);
-    if (!session.connected) session.items = [];
+    if (!session.connected) clearDisconnectedContent(session);
     render();
   }
 

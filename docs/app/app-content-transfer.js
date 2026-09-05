@@ -2,8 +2,8 @@ import {
   base64UrlDecode,
   bytesToBase64,
   utf8ByteLength,
-} from "./app-codecs.js?shell=39";
-import { formatBytes, validDate } from "./app-formatters.js?shell=39";
+} from "./app-codecs.js?shell=40";
+import { formatBytes, validDate } from "./app-formatters.js?shell=40";
 
 // Bounded clipboard/file transfer plus in-memory Agent feed reconciliation.
 export function createContentTransferController({
@@ -14,6 +14,7 @@ export function createContentTransferController({
   fileChunkBytes,
   maximumConcurrentDownloads,
   maximumEncodedFileChunkLength,
+  downloadIdleTimeoutMs = 60_000,
   activeSession,
   sessionIsActive,
   renderClipboard,
@@ -185,16 +186,21 @@ export function createContentTransferController({
 
   async function sendComposerContent() {
     const session = activeSession();
+    if (session?.sending) return;
     if (!session?.connected) {
       showToast("电脑离线，暂时不能发送");
       return;
     }
-    const text = elements["message-input"].value.trim();
+    const draft = elements["message-input"].value;
+    const text = draft.trim();
     const file = session.selectedFile;
-    elements["send-button"].disabled = true;
+    if (!file && !text) return;
+    const context = currentSessionContext(session);
+    session.sending = true;
+    updateSendButton();
     try {
       if (file) {
-        await sendFile(file, session);
+        await sendFile(file, session, context);
         showToast(`文件已发送到 ${session.pair.hostName}`);
       } else if (text) {
         if (utf8ByteLength(text) > maximumClipboardTextBytes) {
@@ -209,7 +215,7 @@ export function createContentTransferController({
               requestId,
               content: text,
             },
-            currentSessionContext(session),
+            context,
           );
         } catch (error) {
           session.outgoingRequests.delete(requestId);
@@ -219,24 +225,32 @@ export function createContentTransferController({
       } else {
         return;
       }
-      session.draftText = "";
-      session.selectedFile = null;
+      // A user may keep typing or select the next file during the transfer.
+      // Only retire the content this operation actually sent.
+      if (!file && session.draftText === draft) session.draftText = "";
+      const clearFile = file && session.selectedFile === file;
+      if (clearFile) session.selectedFile = null;
       if (sessionIsActive(session)) {
-        elements["message-input"].value = "";
-        resizeComposerInput();
-        clearSelectedFile();
+        if (!file && elements["message-input"].value === draft) {
+          elements["message-input"].value = "";
+          resizeComposerInput();
+        }
+        if (clearFile) clearSelectedFile();
       }
     } catch (error) {
-      showToast(error?.message || "发送失败，请检查连接");
+      showToast(["NotReadableError", "NotFoundError"].includes(error?.name)
+        ? "无法读取这个文件，请重新选择后发送"
+        : error?.message || "发送失败，请检查连接");
     } finally {
+      session.sending = false;
       updateSendButton();
     }
   }
 
-  async function sendFile(file, session) {
+  async function sendFile(file, session, context) {
     if (file.size > maximumFileBytes) throw new Error("文件超过 25 MB");
     const transferId = `upload-${crypto.randomUUID()}`;
-    await sendMessage(
+    const transport = await sendMessage(
       {
         type: "file.start",
         transferId,
@@ -244,14 +258,20 @@ export function createContentTransferController({
         size: file.size,
         mime: file.type || "application/octet-stream",
       },
-      currentSessionContext(session),
+      context,
     );
+    // Keep every part on the transport that carried file.start. Switching
+    // from a buffered RTC channel to relay (or the reverse) can let file.end
+    // overtake chunks that are still queued on the first transport.
+    const transferContext = transport
+      ? { ...context, transport }
+      : context;
     let index = 0;
     for (let offset = 0; offset < file.size; offset += fileChunkBytes) {
       const bytes = new Uint8Array(
         await file.slice(offset, offset + fileChunkBytes).arrayBuffer(),
       );
-      await waitForDataChannelBuffer(session);
+      await waitForTransportBuffer(session, transferContext);
       await sendMessage(
         {
           type: "file.chunk",
@@ -259,18 +279,48 @@ export function createContentTransferController({
           index,
           data: bytesToBase64(bytes),
         },
-        currentSessionContext(session),
+        transferContext,
       );
       index += 1;
     }
     await sendMessage(
       { type: "file.end", transferId },
-      currentSessionContext(session),
+      transferContext,
     );
   }
 
-  async function waitForDataChannelBuffer(session) {
-    while (session.channel?.bufferedAmount > 1024 * 1024) {
+  async function waitForTransportBuffer(session, context) {
+    const startedAt = Date.now();
+    while (true) {
+      const current = currentSessionContext(session);
+      if (!session.connected || current?.key !== context?.key ||
+          current?.connectionGeneration !== context?.connectionGeneration ||
+          current?.contentGeneration !== context?.contentGeneration) {
+        throw new Error("连接已经变化，请重新发送文件");
+      }
+      const transport = context?.transport;
+      const kind = transport?.kind;
+      const target = transport
+        ? transport.target
+        : session.channel?.readyState === "open"
+          ? session.channel
+          : session.socket;
+      const currentTarget = kind === "channel" ? session.channel : session.socket;
+      const pinnedTransportReady =
+        kind === "channel"
+          ? target?.readyState === "open" && currentTarget === target
+          : kind === "relay"
+            ? target?.readyState === WebSocket.OPEN &&
+              session.relayHostPresent &&
+              currentTarget === target
+            : false;
+      if (transport && !pinnedTransportReady) {
+        throw new Error("连接传输已经变化，请重新发送文件");
+      }
+      if (!(target?.bufferedAmount > 1024 * 1024)) return;
+      if (Date.now() - startedAt >= 15_000) {
+        throw new Error("文件发送超时，请检查连接后重试");
+      }
       await new Promise((resolve) => setTimeout(resolve, 12));
     }
   }
@@ -306,6 +356,7 @@ export function createContentTransferController({
     }
     download.chunks[message.index] = bytes;
     download.received += bytes.byteLength;
+    refreshDownloadTimeout(message.transferId, download, session);
   }
 
   function beginDownload(message, session) {
@@ -325,26 +376,48 @@ export function createContentTransferController({
     }
     const rawName = typeof message.name === "string" ? message.name : "DingDong 文件";
     const safeName = rawName.split(/[\\/]/).filter(Boolean).at(-1)?.slice(0, 180);
-    session.downloads.set(transferId, {
+    removeDownload(transferId, session);
+    const download = {
       itemId: message.itemId,
       name: safeName || "DingDong 文件",
       size,
       expectedChunks: Math.ceil(size / fileChunkBytes),
       chunks: [],
       received: 0,
-    });
+      timer: null,
+    };
+    session.downloads.set(transferId, download);
+    refreshDownloadTimeout(transferId, download, session);
+  }
+
+  function refreshDownloadTimeout(transferId, download, session) {
+    clearTimeout(download.timer);
+    download.timer = setTimeout(() => {
+      removeDownload(transferId, session);
+      if (sessionIsActive(session)) showToast("文件接收超时，请重新下载");
+    }, downloadIdleTimeoutMs);
+  }
+
+  function removeDownload(transferId, session) {
+    const download = session.downloads.get(transferId);
+    clearTimeout(download?.timer);
+    session.downloads.delete(transferId);
+    return download;
+  }
+
+  function clearDownloads(session) {
+    for (const transferId of session.downloads.keys()) removeDownload(transferId, session);
   }
 
   function rejectDownload(transferId, session) {
-    if (typeof transferId === "string") session.downloads.delete(transferId);
+    if (typeof transferId === "string") removeDownload(transferId, session);
     if (sessionIsActive(session)) {
       showToast("文件数据无效或超过 25 MB，已停止接收");
     }
   }
 
   function finishDownload(transferId, session) {
-    const download = session.downloads.get(transferId);
-    session.downloads.delete(transferId);
+    const download = removeDownload(transferId, session);
     const completeChunks = download
       ? Array.from(
           { length: download.expectedChunks },
@@ -365,11 +438,18 @@ export function createContentTransferController({
       return;
     }
     const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = download.name;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    const revokeTimer = setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    try {
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = download.name;
+      anchor.click();
+    } catch {
+      clearTimeout(revokeTimer);
+      URL.revokeObjectURL(url);
+      showToast("无法保存文件，请重新下载");
+      return;
+    }
     showToast(`${session.pair.hostName} 的文件已准备好，请保存到手机`);
   }
 
@@ -415,6 +495,7 @@ export function createContentTransferController({
     return {
       agentActivityKey,
       beginDownload,
+      clearDownloads,
       copyItem,
       finishDownload,
       handleRequestRejected,

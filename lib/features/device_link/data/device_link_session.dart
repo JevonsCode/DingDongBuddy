@@ -5,9 +5,15 @@ import 'dart:io';
 
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 const int deviceLinkMaximumRelayFrameBytes = 256 * 1024;
+const int deviceLinkMaximumDataChannelBufferedBytes = 1024 * 1024;
+const Duration deviceLinkDataChannelBackpressureTimeout = Duration(seconds: 15);
+const Duration deviceLinkDataChannelBackpressurePollInterval = Duration(
+  milliseconds: 12,
+);
 
 final class DeviceLinkFrameTooLargeException implements Exception {
   const DeviceLinkFrameTooLargeException({
@@ -154,6 +160,18 @@ final class WebRtcDeviceLinkSession
     this.side = DeviceLinkConnectionSide.host,
     this.transportPreference = DeviceLinkTransportPreference.automatic,
   }) : _codec = SecureMessageCodec.fromBase64Url(secret);
+
+  @visibleForTesting
+  WebRtcDeviceLinkSession.forTesting({
+    required this.relayUrl,
+    required this.room,
+    required String secret,
+    required RTCDataChannel dataChannel,
+    this.side = DeviceLinkConnectionSide.host,
+    this.transportPreference = DeviceLinkTransportPreference.automatic,
+  }) : _codec = SecureMessageCodec.fromBase64Url(secret) {
+    _dataChannel = dataChannel;
+  }
 
   final Uri relayUrl;
   final String room;
@@ -810,19 +828,31 @@ final class WebRtcDeviceLinkSession
   @override
   Future<void> send(Map<String, Object?> message) async {
     final RTCDataChannel? channel = _dataChannel;
+    final int peerGeneration = _peerGeneration;
+    final bool hasDirectCandidate =
+        channel != null &&
+        transportPreference != DeviceLinkTransportPreference.serviceRelay &&
+        !_directSendUnavailable &&
+        channel.state == RTCDataChannelState.RTCDataChannelOpen;
     final String envelope = await _codec.seal(message);
     final String relayFrame = encodeDeviceLinkRelayFrame(
       type: 'data',
       envelope: envelope,
     );
     final bool controlMessage = _isDeviceLinkControlMessage(message);
+    bool attemptedDirectSend = false;
     Object? directSendError;
     if (transportPreference != DeviceLinkTransportPreference.serviceRelay &&
         !_directSendUnavailable &&
         channel != null &&
         identical(_dataChannel, channel) &&
         channel.state == RTCDataChannelState.RTCDataChannelOpen) {
+      attemptedDirectSend = true;
       try {
+        await _waitForDataChannelBuffer(channel, peerGeneration);
+        if (!_dataChannelContextIsCurrent(channel, peerGeneration)) {
+          throw StateError('The device connection changed while sending.');
+        }
         await channel.send(RTCDataChannelMessage(envelope));
         return;
       } on Object catch (error) {
@@ -832,6 +862,12 @@ final class WebRtcDeviceLinkSession
           _refreshConnectionState();
         }
       }
+    }
+    if (_isOrderedFileMessage(message) &&
+        (directSendError != null ||
+            (hasDirectCandidate && !attemptedDirectSend))) {
+      throw directSendError ??
+          StateError('The device connection changed while sending.');
     }
     final WebSocket? socket = _socket;
     if ((transportPreference != DeviceLinkTransportPreference.localNetwork ||
@@ -843,6 +879,57 @@ final class WebRtcDeviceLinkSession
     }
     if (directSendError != null) throw directSendError;
     throw StateError('The device is not connected.');
+  }
+
+  bool _dataChannelContextIsCurrent(
+    RTCDataChannel channel,
+    int peerGeneration,
+  ) =>
+      !_closed &&
+      transportPreference != DeviceLinkTransportPreference.serviceRelay &&
+      !_directSendUnavailable &&
+      peerGeneration == _peerGeneration &&
+      identical(_dataChannel, channel) &&
+      channel.state == RTCDataChannelState.RTCDataChannelOpen;
+
+  Future<void> _waitForDataChannelBuffer(
+    RTCDataChannel channel,
+    int peerGeneration,
+  ) async {
+    final Stopwatch elapsed = Stopwatch()..start();
+    while (true) {
+      if (!_dataChannelContextIsCurrent(channel, peerGeneration)) {
+        throw StateError('The device connection changed while sending.');
+      }
+      final int remainingMilliseconds =
+          deviceLinkDataChannelBackpressureTimeout.inMilliseconds -
+          elapsed.elapsedMilliseconds;
+      if (remainingMilliseconds <= 0) {
+        throw TimeoutException('The device data channel stayed backpressured.');
+      }
+      final int bufferedAmount = await channel.getBufferedAmount().timeout(
+        Duration(milliseconds: remainingMilliseconds),
+      );
+      if (!_dataChannelContextIsCurrent(channel, peerGeneration)) {
+        throw StateError('The device connection changed while sending.');
+      }
+      if (bufferedAmount <= deviceLinkMaximumDataChannelBufferedBytes) return;
+      if (elapsed.elapsed >= deviceLinkDataChannelBackpressureTimeout) {
+        throw TimeoutException('The device data channel stayed backpressured.');
+      }
+      final int remainingAfterRead =
+          deviceLinkDataChannelBackpressureTimeout.inMilliseconds -
+          elapsed.elapsedMilliseconds;
+      await Future<void>.delayed(
+        Duration(
+          milliseconds:
+              remainingAfterRead <
+                  deviceLinkDataChannelBackpressurePollInterval.inMilliseconds
+              ? remainingAfterRead
+              : deviceLinkDataChannelBackpressurePollInterval.inMilliseconds,
+        ),
+      );
+    }
   }
 
   bool _socketIsCurrent(WebSocket socket, int generation) =>
@@ -976,6 +1063,9 @@ bool _isDeviceLinkControlMessage(Map<String, Object?> message) =>
       'settings.update',
       'request.rejected',
     }.contains(message['type']);
+
+bool _isOrderedFileMessage(Map<String, Object?> message) =>
+    message['type'] == 'file.chunk' || message['type'] == 'file.end';
 
 Uri _relaySocketUri(Uri relayUrl, String room, DeviceLinkConnectionSide side) {
   final String basePath = relayUrl.path == '/' ? '' : relayUrl.path;

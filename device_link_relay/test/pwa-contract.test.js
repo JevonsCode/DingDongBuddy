@@ -123,7 +123,7 @@ test("phone text and files are uploaded only from the explicit Send action", () 
     appSource,
     /type: "clipboard\.create",\s*requestId,\s*content: text/,
   );
-  assert.match(appSource, /await sendFile\(file, session\)/);
+  assert.match(appSource, /await sendFile\(file, session, context\)/);
   assert.match(pageSource, /只有点击“发送”后，内容才会进入电脑的剪贴板列表。/);
   assert.match(pageSource, /placeholder="输入或手动粘贴内容…"/);
 });
@@ -201,7 +201,7 @@ test("incoming phone downloads enforce the same 25 MB safety boundary", () => {
   assert.match(appSource, /message\.data\.length > maximumEncodedFileChunkLength/);
   assert.match(appSource, /bytes\.byteLength > fileChunkBytes/);
   assert.match(appSource, /message\.index >= download\.expectedChunks/);
-  assert.match(appSource, /session\.downloads\.clear\(\)/);
+  assert.match(appSource, /clearDownloads\(session\)/);
 });
 
 test("host clipboard content stays memory-only and is cleared on disconnect", () => {
@@ -220,18 +220,18 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v39/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v40/);
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1\.5\.5"/);
-  assert.match(appSource, /const currentPwaShellVersion = 39/);
-  assert.match(pageSource, /styles\.css\?shell=39/);
-  assert.match(pageSource, /app\.js\?shell=39/);
-  assert.match(appSource, /notification-policy\.js\?shell=39/);
-  assert.match(appSource, /pairing-state\.js\?shell=39/);
+  assert.match(appSource, /const currentPwaVersion = "1\.5\.6"/);
+  assert.match(appSource, /const currentPwaShellVersion = 40/);
+  assert.match(pageSource, /styles\.css\?shell=40/);
+  assert.match(pageSource, /app\.js\?shell=40/);
+  assert.match(appSource, /notification-policy\.js\?shell=40/);
+  assert.match(appSource, /pairing-state\.js\?shell=40/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -239,12 +239,12 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v39/);
-  assert.match(serviceWorkerSource, /styles\.css\?shell=39/);
-  assert.match(serviceWorkerSource, /app\.js\?shell=39/);
-  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=39/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v40/);
+  assert.match(serviceWorkerSource, /styles\.css\?shell=40/);
+  assert.match(serviceWorkerSource, /app\.js\?shell=40/);
+  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=40/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.5.5", shell: 39 });
+  assert.deepEqual(pwaVersion, { version: "1.5.6", shell: 40 });
 });
 
 test("PWA hydration stays neutral until saved device state is restored", () => {

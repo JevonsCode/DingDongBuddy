@@ -1,49 +1,53 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.5",
-  "latestBuild": "60",
-  "publishedAt": "2026-09-04T03:42:26Z",
+  "latestVersion": "1.5.6",
+  "latestBuild": "61",
+  "publishedAt": "2026-09-05T05:29:42Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.5",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.6",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Refines macOS tray unread badges with balanced horizontal padding and vertically centered counts.",
-    "Fixes stuck shortcut hints after releasing Ctrl and restores consecutive Ctrl+Q/W/E workspace switching.",
-    "Consolidates duplicate UUID and clipboard shortcut handling, and removes unused code and website icons."
+    "Adds bounded file-transfer buffering and aborts transfers when their route changes to prevent mixed-channel ordering failures.",
+    "Releases interrupted mobile downloads, bounds PWA inbound queues, and closes IndexedDB connections on failed transactions.",
+    "Preserves drafts and newly selected files while sending, prevents duplicate sends, and clarifies file errors and offline states.",
+    "Fixes long device names on small screens, adds accessible dialog/input labels, and preserves concurrent notification deduplication records."
   ],
   "notesByLanguage": {
     "en": [
-      "Refines macOS tray unread badges with balanced horizontal padding and vertically centered counts.",
-      "Fixes stuck shortcut hints after releasing Ctrl and restores consecutive Ctrl+Q/W/E workspace switching.",
-      "Consolidates duplicate UUID and clipboard shortcut handling, and removes unused code and website icons."
+      "Adds bounded file-transfer buffering and aborts transfers when their route changes to prevent mixed-channel ordering failures.",
+      "Releases interrupted mobile downloads, bounds PWA inbound queues, and closes IndexedDB connections on failed transactions.",
+      "Preserves drafts and newly selected files while sending, prevents duplicate sends, and clarifies file errors and offline states.",
+      "Fixes long device names on small screens, adds accessible dialog/input labels, and preserves concurrent notification deduplication records."
     ],
     "zh": [
-      "调整 macOS 托盘未读徽标的左右留白，使数字垂直居中。",
-      "修复松开 Ctrl 后快捷键提示仍残留、连续 Ctrl+Q/W/E 切换失效的问题。",
-      "合并重复 UUID 与剪贴板快捷键处理，清理无用代码和闲置网页图标。"
+      "限制文件传输缓冲，传输方式变化时停止旧传输，避免跨通道分块乱序。",
+      "释放手机中断下载的内存，为 PWA 入站队列设置上限，修复 IndexedDB 失败事务的资源清理。",
+      "发送时保留继续编辑的草稿与新选文件，防止重复发送，并改进文件错误与离线提示。",
+      "修复窄屏长设备名布局，补齐弹窗和输入框可访问名称，避免并发通知去重记录互相覆盖。"
     ],
     "es": [
-      "Ajusta los distintivos de no leídos de macOS con márgenes equilibrados y números centrados verticalmente.",
-      "Corrige la ayuda de atajos que quedaba visible al soltar Ctrl y permite cambios consecutivos con Ctrl+Q/W/E.",
-      "Consolida el código duplicado de UUID y atajos del portapapeles, y elimina código e iconos web sin uso."
+      "Limita los búferes de archivos y detiene una transferencia si cambia su ruta para evitar mensajes fuera de orden entre canales.",
+      "Libera las descargas móviles interrumpidas, limita las colas de entrada de la PWA y cierra IndexedDB cuando falla una transacción.",
+      "Conserva los borradores y archivos nuevos durante el envío, evita envíos duplicados y aclara los errores y estados sin conexión.",
+      "Corrige los nombres largos en pantallas pequeñas, añade etiquetas accesibles y conserva los registros de notificaciones concurrentes."
     ]
   }
 }

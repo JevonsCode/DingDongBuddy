@@ -1,9 +1,10 @@
-const cacheName = "dingdong-app-shell-v39";
+const cacheName = "dingdong-app-shell-v40";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const completionVibrationPattern = [180, 80, 280];
 const attentionVibrationPattern = [300, 100, 300, 100, 650];
 const agentLaunchIntentKey = "agent-launch-intent";
+let notificationLedgerTail = Promise.resolve();
 
 self.addEventListener("install", (event) => {
   const scope = new URL(self.registration.scope);
@@ -16,23 +17,23 @@ self.addEventListener("install", (event) => {
         cache.addAll([
           base,
           `${base}index.html`,
-          `${base}styles.css?shell=39`,
-          `${base}app.js?shell=39`,
-          `${base}app-codecs.js?shell=39`,
-          `${base}app-connection.js?shell=39`,
-          `${base}app-content-transfer.js?shell=39`,
-          `${base}app-formatters.js?shell=39`,
-          `${base}app-installation.js?shell=39`,
-          `${base}app-notifications.js?shell=39`,
-          `${base}app-pairing.js?shell=39`,
-          `${base}app-platform.js?shell=39`,
-          `${base}app-rendering.js?shell=39`,
-          `${base}app-settings.js?shell=39`,
-          `${base}app-storage.js?shell=39`,
+          `${base}styles.css?shell=40`,
+          `${base}app.js?shell=40`,
+          `${base}app-codecs.js?shell=40`,
+          `${base}app-connection.js?shell=40`,
+          `${base}app-content-transfer.js?shell=40`,
+          `${base}app-formatters.js?shell=40`,
+          `${base}app-installation.js?shell=40`,
+          `${base}app-notifications.js?shell=40`,
+          `${base}app-pairing.js?shell=40`,
+          `${base}app-platform.js?shell=40`,
+          `${base}app-rendering.js?shell=40`,
+          `${base}app-settings.js?shell=40`,
+          `${base}app-storage.js?shell=40`,
           `${base}connection-policy.js`,
-          `${base}notification-policy.js?shell=39`,
+          `${base}notification-policy.js?shell=40`,
           `${base}device-name.js`,
-          `${base}pairing-state.js?shell=39`,
+          `${base}pairing-state.js?shell=40`,
           `${base}content-navigation.js`,
           `${base}manifest.webmanifest`,
           `${base}version.json`,
@@ -493,10 +494,7 @@ async function showAgentCompletionNotification(message, pair) {
       }
     }
     await setWorkerAppBadge();
-    ledger[notificationKey] = Date.now();
-    await idbSet("notification-ledger", trimNotificationLedger(ledger)).catch(
-      () => {},
-    );
+    await queueNotificationLedgerUpdate(notificationKey).catch(() => {});
     return "created";
   })();
   notificationJobs.set(notificationKey, job);
@@ -507,6 +505,19 @@ async function showAgentCompletionNotification(message, pair) {
       notificationJobs.delete(notificationKey);
     }
   }
+}
+
+function queueNotificationLedgerUpdate(notificationKey) {
+  const next = notificationLedgerTail.then(async () => {
+    const ledger = await notificationLedger();
+    ledger[notificationKey] = Date.now();
+    await idbSet("notification-ledger", trimNotificationLedger(ledger));
+  });
+  notificationLedgerTail = next.then(
+    () => {},
+    () => {},
+  );
+  return next;
 }
 
 function agentMessageNeedsAttention(message) {
@@ -900,25 +911,76 @@ function openDatabase() {
   });
 }
 
-async function idbGet(key) {
-  const database = await openDatabase();
-  const value = await new Promise((resolve, reject) => {
-    const transaction = database.transaction("settings", "readonly");
-    const request = transaction.objectStore("settings").get(key);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+function transactionFailure(transaction, message) {
+  return transaction?.error || new Error(message);
+}
+
+function runTransaction(database, mode, operation) {
+  return new Promise((resolve, reject) => {
+    let transaction;
+    let result;
+    let settled = false;
+    const rejectTransaction = (error, message) => {
+      if (settled) return;
+      settled = true;
+      reject(error || transactionFailure(transaction, message));
+    };
+
+    try {
+      transaction = database.transaction("settings", mode);
+      transaction.oncomplete = () => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+      transaction.onerror = () =>
+        rejectTransaction(null, "IndexedDB transaction failed");
+      transaction.onabort = () =>
+        rejectTransaction(null, "IndexedDB transaction aborted");
+      operation(
+        transaction,
+        (value) => {
+          result = value;
+        },
+        rejectTransaction,
+      );
+    } catch (error) {
+      rejectTransaction(error, "IndexedDB transaction failed");
+      try {
+        transaction?.abort();
+      } catch {
+        // The operation error is the useful failure when abort itself fails.
+      }
+    }
   });
-  database.close();
-  return value;
+}
+
+async function withDatabase(operation) {
+  const database = await openDatabase();
+  try {
+    return await operation(database);
+  } finally {
+    database.close();
+  }
+}
+
+async function idbGet(key) {
+  return withDatabase((database) =>
+    runTransaction(database, "readonly", (transaction, setResult, fail) => {
+      const request = transaction.objectStore("settings").get(key);
+      request.onsuccess = () => setResult(request.result);
+      request.onerror = () =>
+        fail(request.error, "IndexedDB request failed");
+    }),
+  );
 }
 
 async function idbSet(key, value) {
-  const database = await openDatabase();
-  await new Promise((resolve, reject) => {
-    const transaction = database.transaction("settings", "readwrite");
-    const request = transaction.objectStore("settings").put(value, key);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
-  database.close();
+  return withDatabase((database) =>
+    runTransaction(database, "readwrite", (transaction, _setResult, fail) => {
+      const request = transaction.objectStore("settings").put(value, key);
+      request.onerror = () =>
+        fail(request.error, "IndexedDB request failed");
+    }),
+  );
 }

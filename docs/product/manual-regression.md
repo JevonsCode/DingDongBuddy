@@ -1,4 +1,4 @@
-# DingDong 1.5.5 Manual Regression Checklist
+# DingDong 1.5.6 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,22 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## PWA transfer and memory regression (1.5.6)
+
+- Send a 25 MiB synthetic file from macOS to Android and verify the saved size
+  and SHA-256; verify a mobile upload through both direct and relay routes.
+- Change transport during a transfer: the old operation must stop, and a fresh
+  retry must succeed without mixing chunks across channels.
+- Interrupt a partial download or leave it idle: buffers and timers are released;
+  late decrypted frames must not restore disconnected clipboard content.
+- Keep typing or select a replacement file during send: the new draft/selection
+  survives, and repeated Send clicks do not duplicate the operation.
+- At 320 CSS pixels, test an 80-character device name, settings, send target and
+  close buttons. Check actual landscape rotation and the Android soft keyboard.
+- Reload offline after Service Worker installation. Verify correct offline status;
+  installation, lock-screen push and system file-picker paths require separate
+  real-device acceptance and must not be inferred from synthetic file tests.
 
 ## System selection tools (macOS)
 
@@ -672,8 +688,8 @@ third-party Agent accounts or remote model availability have been verified.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.5.5` build `60` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.5.5.60` and product name `DingDong`.
+- The macOS release app metadata is version `1.5.6` build `61` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.5.6.61` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -681,7 +697,7 @@ third-party Agent accounts or remote model availability have been verified.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.5.5` and that exact commit SHA; every
+  `/v1/health` must report version `1.5.6` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`

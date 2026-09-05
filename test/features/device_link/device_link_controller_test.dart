@@ -1002,6 +1002,71 @@ void main() {
   );
 
   test(
+    'computer file transfer aborts when transport changes between chunks',
+    () async {
+      final Directory sourceDirectory = await Directory.systemTemp.createTemp(
+        'dingdong-file-transport-change-test-',
+      );
+      final File source = File('${sourceDirectory.path}/sample.bin');
+      await source.writeAsBytes(List<int>.filled(64 * 1024, 7));
+      final ClipboardRecord fileRecord = ClipboardRecord(
+        id: 'computer-file-transport-change',
+        group: 'Files',
+        title: 'sample.bin',
+        content: source.path,
+        tags: const <String>['clipboard', 'file', 'file-url'],
+        pinned: false,
+        enabled: true,
+        activation: 'taskMatch',
+        createdAt: DateTime.utc(2026, 8, 8),
+        updatedAt: DateTime.utc(2026, 8, 8),
+      );
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        deviceKind: LinkedDeviceKind.computer,
+        clipboardRecords: <ClipboardRecord>[fileRecord],
+      );
+      addTearDown(() async {
+        await harness.dispose();
+        await sourceDirectory.delete(recursive: true);
+      });
+      harness.session.onSend = (Map<String, Object?> message) {
+        if (message['type'] == 'file.chunk') {
+          harness.session.activeTransportValue =
+              DeviceLinkActiveTransport.serviceRelay;
+        }
+      };
+
+      await expectLater(
+        harness.controller.shareRecord(fileRecord, 'phone-one'),
+        throwsStateError,
+      );
+      expect(
+        harness.session.sent.map((Map<String, Object?> frame) => frame['type']),
+        <Object?>['file.start', 'file.chunk'],
+      );
+      expect(
+        harness.store.document!.devices.single.sharedClipboardItemIds,
+        isEmpty,
+      );
+
+      harness.session
+        ..onSend = null
+        ..sent.clear();
+      await harness.controller.shareRecord(fileRecord, 'phone-one');
+
+      expect(
+        harness.session.sent.map((Map<String, Object?> frame) => frame['type']),
+        <Object?>['file.start', 'file.chunk', 'file.chunk', 'file.end'],
+      );
+      expect(
+        harness.store.document!.devices.single.sharedClipboardItemIds,
+        <String>[fileRecord.id],
+      );
+    },
+  );
+
+  test(
     'computer content reaches the system clipboard without a sync loop',
     () async {
       final _MemoryClipboardGateway systemClipboard = _MemoryClipboardGateway();
@@ -1854,7 +1919,8 @@ final class _Harness {
   }
 }
 
-final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
+final class _FakeDeviceLinkSession
+    implements DeviceLinkSessionHandle, ConfigurableDeviceLinkSessionHandle {
   _FakeDeviceLinkSession({this.keepEventsOpenAfterClose = false});
 
   final StreamController<DeviceLinkSessionEvent> _events =
@@ -1868,9 +1934,26 @@ final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
   bool _eventsClosed = false;
   String? failOnMessageType;
   int connectCalls = 0;
+  DeviceLinkTransportPreference transportPreferenceValue =
+      DeviceLinkTransportPreference.automatic;
+  DeviceLinkActiveTransport activeTransportValue =
+      DeviceLinkActiveTransport.localNetwork;
+  void Function(Map<String, Object?> message)? onSend;
 
   @override
   bool get connected => connectedValue;
+
+  @override
+  DeviceLinkTransportPreference get transportPreference =>
+      transportPreferenceValue;
+
+  @override
+  set transportPreference(DeviceLinkTransportPreference value) {
+    transportPreferenceValue = value;
+  }
+
+  @override
+  DeviceLinkActiveTransport get activeTransport => activeTransportValue;
 
   @override
   Stream<DeviceLinkSessionEvent> get events => _events.stream;
@@ -1897,6 +1980,12 @@ final class _FakeDeviceLinkSession implements DeviceLinkSessionHandle {
       throw StateError('simulated send failure');
     }
     sent.add(message);
+    onSend?.call(message);
+  }
+
+  @override
+  void updateTransportPreference(DeviceLinkTransportPreference value) {
+    transportPreferenceValue = value;
   }
 
   @override

@@ -6,12 +6,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=39";
+} from "./notification-policy.js?shell=40";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=39";
+} from "./pairing-state.js?shell=40";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -20,20 +20,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=39";
-import { createInstallationController } from "./app-installation.js?shell=39";
-import { createAgentNotificationController } from "./app-notifications.js?shell=39";
-import { createAppRenderer } from "./app-rendering.js?shell=39";
-import { createConnectionController } from "./app-connection.js?shell=39";
-import { createDeviceSettingsController } from "./app-settings.js?shell=39";
-import { createPairingController } from "./app-pairing.js?shell=39";
-import { createContentTransferController } from "./app-content-transfer.js?shell=39";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=40";
+import { createInstallationController } from "./app-installation.js?shell=40";
+import { createAgentNotificationController } from "./app-notifications.js?shell=40";
+import { createAppRenderer } from "./app-rendering.js?shell=40";
+import { createConnectionController } from "./app-connection.js?shell=40";
+import { createDeviceSettingsController } from "./app-settings.js?shell=40";
+import { createPairingController } from "./app-pairing.js?shell=40";
+import { createContentTransferController } from "./app-content-transfer.js?shell=40";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=39";
+} from "./app-platform.js?shell=40";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -54,8 +54,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.5.5";
-const currentPwaShellVersion = 39;
+const currentPwaVersion = "1.5.6";
+const currentPwaShellVersion = 40;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;
@@ -121,6 +121,7 @@ function createDeviceSession(pair) {
     relayFrames: Promise.resolve(),
     incomingMessages: Promise.resolve(),
     connectionGeneration: 0,
+    contentGeneration: 0,
     relayGeneration: 0,
     items: [],
     clipboardRenderRevision: 0,
@@ -130,6 +131,7 @@ function createDeviceSession(pair) {
     downloads: new Map(),
     outgoingRequests: new Set(),
     selectedFile: null,
+    sending: false,
     draftText: "",
     lastSyncAt: null,
     reconnectTimer: null,
@@ -399,6 +401,8 @@ const { closeConnection, connect, currentSessionContext, sendMessage } =
     beginDownload: (...args) => beginDownload(...args),
     receiveDownloadChunk: (...args) => receiveDownloadChunk(...args),
     finishDownload: (...args) => finishDownload(...args),
+    clearDownloads: (...args) => clearDownloads(...args),
+    showToast,
   });
 
 const {
@@ -462,6 +466,7 @@ const {
 const {
   agentActivityKey,
   beginDownload,
+  clearDownloads,
   copyItem,
   finishDownload,
   handleRequestRejected,

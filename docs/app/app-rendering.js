@@ -1,7 +1,7 @@
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=39";
+} from "./notification-policy.js?shell=40";
 import {
   formatBytes,
   formatDuration,
@@ -10,7 +10,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=39";
+} from "./app-formatters.js?shell=40";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -488,8 +488,10 @@ export function createAppRenderer({
   function updateSendButton() {
     const session = activeSession();
     elements["send-button"].disabled =
-      !session?.connected ||
+      !session?.connected || session.sending ||
       (!session.selectedFile && !elements["message-input"].value.trim());
+    elements["send-button"].textContent = session?.sending ? "发送中…" : "发送";
+    elements["send-button"].setAttribute("aria-busy", String(Boolean(session?.sending)));
   }
 
 

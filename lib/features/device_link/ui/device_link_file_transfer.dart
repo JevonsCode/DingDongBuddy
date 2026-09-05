@@ -362,25 +362,38 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     required int size,
   }) async {
     final String transferId = 'download-${_randomToken(12)}';
-    await managed.handle.send(<String, Object?>{
+    final DeviceLinkSessionHandle handle = managed.handle;
+    final DeviceLinkActiveTransport? transferTransport =
+        handle is ConfigurableDeviceLinkSessionHandle
+        ? (handle as ConfigurableDeviceLinkSessionHandle).activeTransport
+        : null;
+    _ensureFileTransferCanContinue(managed, transferTransport);
+    await handle.send(<String, Object?>{
       'type': 'file.start',
       'transferId': transferId,
       'itemId': record.id,
       'name': path.basename(file.path),
       'size': size,
     });
+    _ensureFileTransferCanContinue(managed, transferTransport);
     final RandomAccessFile input = await file.open();
     var index = 0;
     try {
       while (true) {
+        _ensureFileTransferCanContinue(managed, transferTransport);
         final Uint8List chunk = await input.read(_fileChunkBytes);
-        if (chunk.isEmpty) break;
-        await managed.handle.send(<String, Object?>{
+        if (chunk.isEmpty) {
+          _ensureFileTransferCanContinue(managed, transferTransport);
+          break;
+        }
+        _ensureFileTransferCanContinue(managed, transferTransport);
+        await handle.send(<String, Object?>{
           'type': 'file.chunk',
           'transferId': transferId,
           'index': index,
           'data': base64Encode(chunk),
         });
+        _ensureFileTransferCanContinue(managed, transferTransport);
         index += 1;
         if (index % 16 == 0) {
           await Future<void>.delayed(const Duration(milliseconds: 8));
@@ -389,10 +402,27 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     } finally {
       await input.close();
     }
-    await managed.handle.send(<String, Object?>{
+    _ensureFileTransferCanContinue(managed, transferTransport);
+    await handle.send(<String, Object?>{
       'type': 'file.end',
       'transferId': transferId,
       'itemId': record.id,
     });
+  }
+
+  void _ensureFileTransferCanContinue(
+    _ManagedDeviceSession managed,
+    DeviceLinkActiveTransport? expectedTransport,
+  ) {
+    if (!_sessionIsCurrent(managed) || !managed.handle.connected) {
+      throw StateError('The device connection changed during file transfer.');
+    }
+    if (expectedTransport == null) return;
+    final DeviceLinkSessionHandle handle = managed.handle;
+    if (handle is! ConfigurableDeviceLinkSessionHandle ||
+        (handle as ConfigurableDeviceLinkSessionHandle).activeTransport !=
+            expectedTransport) {
+      throw StateError('The device transport changed during file transfer.');
+    }
   }
 }

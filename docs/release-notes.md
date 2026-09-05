@@ -1,3 +1,36 @@
+# DingDong 1.5.6
+
+DingDong 1.5.6 improves Android PWA reliability, file transfers and memory cleanup.
+
+- Adds bounded file-transfer buffering and aborts transfers when their route changes to prevent mixed-channel ordering failures.
+- Releases interrupted mobile downloads, bounds PWA inbound queues, and closes IndexedDB connections on failed transactions.
+- Preserves drafts and newly selected files while sending, prevents duplicate sends, and clarifies file errors and offline states.
+- Fixes long device names on small screens, adds accessible dialog/input labels, and preserves concurrent notification deduplication records.
+
+---
+
+# DingDong 1.5.6
+
+DingDong 1.5.6 改进 Android PWA 稳定性、文件传输和内存回收。
+
+- 限制文件传输缓冲，传输方式变化时停止旧传输，避免跨通道分块乱序。
+- 释放手机中断下载的内存，为 PWA 入站队列设置上限，修复 IndexedDB 失败事务的资源清理。
+- 发送时保留继续编辑的草稿与新选文件，防止重复发送，并改进文件错误与离线提示。
+- 修复窄屏长设备名布局，补齐弹窗和输入框可访问名称，避免并发通知去重记录互相覆盖。
+
+---
+
+# DingDong 1.5.6
+
+DingDong 1.5.6 mejora la estabilidad de la PWA de Android, las transferencias y la liberación de memoria.
+
+- Limita los búferes de archivos y detiene una transferencia si cambia su ruta para evitar mensajes fuera de orden entre canales.
+- Libera las descargas móviles interrumpidas, limita las colas de entrada de la PWA y cierra IndexedDB cuando falla una transacción.
+- Conserva los borradores y archivos nuevos durante el envío, evita envíos duplicados y aclara los errores y estados sin conexión.
+- Corrige los nombres largos en pantallas pequeñas, añade etiquetas accesibles y conserva los registros de notificaciones concurrentes.
+
+---
+
 # DingDong 1.5.5
 
 DingDong 1.5.5 fixes workspace shortcut switching and macOS tray badge alignment,
