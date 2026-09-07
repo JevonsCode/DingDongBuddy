@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createECDH, createHmac, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import webPush from "web-push";
 
 import {
   createWebPushRequest,
@@ -146,8 +147,8 @@ test("replacing a peer does not publish a stale peer-left event", () => {
 test("background notifications use modern Web Push with high urgency", () => {
   const subscriber = createECDH("prime256v1");
   subscriber.generateKeys();
-  const vapid = createECDH("prime256v1");
-  vapid.generateKeys();
+  // The library pads short EC private keys to the 32 bytes VAPID requires.
+  const vapid = webPush.generateVAPIDKeys();
   const request = createWebPushRequest(
     {
       endpoint: "https://fcm.googleapis.com/fcm/send/dingdong-test",
@@ -163,8 +164,8 @@ test("background notifications use modern Web Push with high urgency", () => {
     },
     {
       subject: "mailto:dingdong@example.com",
-      publicKey: vapid.getPublicKey().toString("base64url"),
-      privateKey: vapid.getPrivateKey().toString("base64url"),
+      publicKey: vapid.publicKey,
+      privateKey: vapid.privateKey,
     },
   );
 
