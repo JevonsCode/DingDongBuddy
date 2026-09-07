@@ -1504,3 +1504,32 @@ main {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* File actions remain a single vertical group on compact screens. */
+.clipboard-file-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+.clipboard-file-actions .card-copy { justify-content: center; }
+.preview-button { background: var(--field); color: var(--accent); }
+.clipboard-meta { flex-wrap: wrap; gap: 6px 12px; line-height: 1.5; }
+.clipboard-meta > span:first-child { min-width: 0; overflow-wrap: anywhere; flex: 1; }
+.clipboard-meta time { flex-shrink: 0; }
+.download-receipt { flex-basis: 100%; color: var(--accent); }
+.image-preview-dialog { width: min(calc(100% - 28px), 780px); }
+.image-preview-content {
+  padding: 18px;
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.image-preview-content .dialog-header { gap: 12px; }
+.image-preview-content .dialog-header > div { flex: 1; }
+.image-preview-content h2 { font-size: 16px; overflow-wrap: anywhere; }
+.image-preview-content .quiet-button { width: auto; padding-inline: 12px; flex-shrink: 0; min-height: 44px; }
+.image-preview-viewport { overflow: auto; margin-block: 16px; text-align: center; }
+.image-preview-viewport img { max-width: 100%; max-height: 60dvh; object-fit: contain; }
+#image-preview-status { font-size: 13px; line-height: 1.6; margin-block: 12px; }
+#image-preview-save { width: 100%; min-height: 44px; }

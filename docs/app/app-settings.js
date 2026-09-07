@@ -1,7 +1,8 @@
-import { wantsAgentNotifications } from "./notification-policy.js?shell=40";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=41";
 
 // Connected-device settings, capability diagnostics, and destructive actions.
 export function createDeviceSettingsController({
+  clearDownloadHistory = () => {},
   state,
   elements,
   directVibrationPattern,
@@ -100,6 +101,7 @@ export function createDeviceSettingsController({
       await disableAgentNotifications(session);
       closeConnection(session);
       state.sessions.delete(session.pair.room);
+      clearDownloadHistory(session.pair.room);
       state.activeRoom = state.sessions.keys().next().value || null;
       await resetNotificationRuntime(session);
       savePairings();

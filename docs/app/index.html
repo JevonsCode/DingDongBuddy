@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=40" />
+    <link rel="stylesheet" href="./styles.css?shell=41" />
   </head>
   <body>
     <div class="app-shell">
@@ -313,7 +313,7 @@
           <div>
             <strong>PWA 更新</strong>
             <span id="pwa-update-status" role="status" aria-live="polite">
-              当前版本 1.5.6 · 联网时自动保持最新
+              当前版本 1.5.7 · 联网时自动保持最新
             </span>
           </div>
           <button id="pwa-update-button" class="small-button" type="button">
@@ -438,6 +438,21 @@
     </dialog>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-    <script type="module" src="./app.js?shell=40"></script>
+    <dialog id="image-preview-dialog" class="settings-dialog image-preview-dialog"
+      aria-labelledby="image-preview-title" aria-describedby="image-preview-status">
+      <div class="image-preview-content">
+        <div class="dialog-header">
+          <div><h2 id="image-preview-title">图片预览</h2></div>
+          <button id="image-preview-close" class="quiet-button" type="button" autofocus>关闭</button>
+        </div>
+        <div class="image-preview-viewport">
+          <img id="image-preview-image" alt="" hidden />
+        </div>
+        <p id="image-preview-status" role="status">正在获取图片…</p>
+        <button id="image-preview-save" class="primary-button" type="button" disabled>下载图片</button>
+      </div>
+    </dialog>
+
+    <script type="module" src="./app.js?shell=41"></script>
   </body>
 </html>

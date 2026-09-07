@@ -1,7 +1,8 @@
+import { imageMimeType } from "./app-file-actions.js?shell=41";
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=40";
+} from "./notification-policy.js?shell=41";
 import {
   formatBytes,
   formatDuration,
@@ -10,7 +11,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=40";
+} from "./app-formatters.js?shell=41";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -28,6 +29,7 @@ export function createAppRenderer({
   render,
   invalidateFallbackFeedPanelHeight,
   requestFile,
+  fileActions,
   copyItem,
   agentActivityKey,
   notificationsCanRunInCurrentSurface,
@@ -123,6 +125,7 @@ export function createAppRenderer({
     if (previousSession) {
       previousSession.draftText = elements["message-input"].value;
     }
+    if (previousSession !== session) fileActions?.closePreview();
     state.activeRoom = room;
     localStorage.setItem(storageKeys.pairings, JSON.stringify(pairingRegistrySnapshot()));
     localStorage.setItem(storageKeys.pair, JSON.stringify(session.pair));
@@ -205,7 +208,7 @@ export function createAppRenderer({
     const kind = document.createElement("div");
     kind.className = "kind-icon";
     const icon = document.createElement("img");
-    icon.src = iconForKind(item.kind);
+    icon.src = iconForKind(imageMimeType(item) ? "image" : item.kind);
     icon.alt = "";
     kind.append(icon);
 
@@ -221,12 +224,28 @@ export function createAppRenderer({
         : item.content || "内容不可用";
     copy.append(title, content);
 
+    const actions = document.createElement("div");
+    actions.className = "clipboard-file-actions";
+    const downloadedAt = fileActions?.history.get(session, item);
+    const pending = session.fileRequests?.get(item.id);
     const action = document.createElement("button");
     action.className = "card-copy";
     action.type = "button";
     if (item.fileName) {
-      action.textContent = item.downloadable === false ? "过大" : "下载";
-      action.disabled = item.downloadable === false || !session.connected;
+      action.textContent = item.downloadable === false ? "过大"
+        : pending ? "获取中…" : downloadedAt ? "再次下载" : "下载";
+      action.disabled = item.downloadable === false || !session.connected || Boolean(pending);
+      action.setAttribute("aria-label", `${action.textContent} ${item.fileName}`);
+      if (imageMimeType(item) && !item.sensitive) {
+        const preview = document.createElement("button");
+        preview.type = "button";
+        preview.className = "card-copy preview-button";
+        preview.textContent = "预览";
+        preview.disabled = action.disabled;
+        preview.setAttribute("aria-label", `预览 ${item.fileName}`);
+        preview.addEventListener("click", () => requestFile(item, session, { preview: true }));
+        actions.append(preview);
+      }
       action.addEventListener("click", () => requestFile(item, session));
     } else {
       const actionIcon = document.createElement("img");
@@ -236,15 +255,25 @@ export function createAppRenderer({
       action.disabled = item.sensitive || typeof item.content !== "string";
       action.addEventListener("click", () => copyItem(item, action));
     }
-    main.append(kind, copy, action);
+    actions.append(action);
+    main.append(kind, copy, actions);
 
     const meta = document.createElement("div");
     meta.className = "clipboard-meta";
     const source = document.createElement("span");
     source.textContent = item.sources?.at(-1) || session.pair.hostName;
-    const time = document.createElement("span");
-    time.textContent = formatTime(item.updatedAt ? new Date(item.updatedAt) : new Date());
+    const time = document.createElement("time");
+    const date = validDate(item.updatedAt) || validDate(item.createdAt);
+    time.textContent = formatTime(date);
+    if (date) time.dateTime = date.toISOString();
     meta.append(source, time);
+    if (downloadedAt) {
+      const receipt = document.createElement("span");
+      receipt.className = "download-receipt";
+      receipt.textContent = `已下载 · ${formatTime(downloadedAt)}`;
+      receipt.title = "记录已发起的下载，实际保存结果请在系统下载中确认。清除浏览器数据会清除此记录。";
+      meta.append(receipt);
+    }
     card.append(main, meta);
     return card;
   }

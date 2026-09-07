@@ -24,8 +24,8 @@ connects them to supported clients, and gathers their alerts with a desktop
 sound you choose. Important results and selected clipboard items can also reach
 a trusted phone through the mobile PWA.
 
-> **Current release: DingDong 1.5.6.** Improves Android PWA file transfers,
-> releases interrupted-download memory, and fixes composer and small-screen behavior.
+> **Current release: DingDong 1.5.7.** Adds PWA image previews, full dates,
+> and persistent download records with clear save-status explanations.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -116,7 +116,7 @@ and Pi sessions, and can be turned off there.
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.5.6.”
+- “Use this project's release workflow, run every check, and prepare version 1.5.7.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can search before creating or updating Prompt and MCP resources with
@@ -193,9 +193,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon · 1.5.6](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-macos-arm64.dmg)
-- [macOS · Intel · 1.5.6](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-macos-x64.dmg)
-- [Windows x64 · 1.5.6](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-arm64.dmg)
+- [macOS · Intel · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-x64.dmg)
+- [Windows x64 · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

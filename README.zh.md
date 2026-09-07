@@ -22,8 +22,8 @@ DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记�
 Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent 提醒统一收在一起，
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
-> **当前版本：DingDong 1.5.5。** 修复工作区快捷键切换与 macOS 托盘徽标对齐，
-> 并清理冗余代码和闲置网页资源。
+> **当前版本：DingDong 1.5.7。** 新增 PWA 图片预览、完整日期显示和本机下载记录，
+> 同时改进窄屏预览布局与预览内存回收。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -102,7 +102,7 @@ Skill 名称后的 `*` 表示本轮已加载完整 Skill；没有 `*` 则只是�
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.5.5。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.5.7。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
 Agent 会先搜索去重，再通过 `dingdong_create_resource` 和
@@ -163,9 +163,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片 · 1.5.5](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-macos-arm64.dmg)
-- [macOS · Intel · 1.5.5](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-macos-x64.dmg)
-- [Windows x64 · 1.5.5](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.5/DingDong-1.5.5-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-arm64.dmg)
+- [macOS · Intel · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-x64.dmg)
+- [Windows x64 · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

@@ -108,6 +108,7 @@ function transferFixture(t, options = {}) {
     sending: false,
     selectedFile: options.selectedFile || null,
     draftText: options.draftText ?? input.value,
+    items: options.items || [],
     outgoingRequests: new Set(),
     downloads: new Map(),
     connectionGeneration: 1,
@@ -127,6 +128,7 @@ function transferFixture(t, options = {}) {
   };
   const controller = createContentTransferController({
     elements,
+    fileActions: options.fileActions,
     maximumFileBytes: 25 * 1024 * 1024,
     maximumClipboardTextBytes: 128 * 1024,
     maximumClipboardItemBytes: 256 * 1024,
@@ -180,6 +182,68 @@ function transferFixture(t, options = {}) {
     clearSelectedFileCalls,
   };
 }
+
+test("repeated file clicks send one request and route its complete bytes to preview only", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const token = {};
+  const previews = [];
+  const fixture = transferFixture(t, { fileActions: {
+    openPreview: () => token,
+    showPreview: (...args) => previews.push(args),
+    saveFile: assert.fail,
+    failPreview: assert.fail,
+    closePreview() {},
+  } });
+  const item = { id: "image", fileName: "photo.png", fileSize: 4 };
+  await fixture.controller.requestFile(item, fixture.session, { preview: true });
+  await fixture.controller.requestFile(item, fixture.session);
+  assert.equal(fixture.sent.length, 1);
+  fixture.controller.beginDownload({ transferId: "image-transfer", itemId: item.id, name: item.fileName, size: 4 }, fixture.session);
+  fixture.controller.receiveDownloadChunk({ transferId: "image-transfer", index: 0, data: "AQIDBA" }, fixture.session);
+  fixture.controller.finishDownload("image-transfer", fixture.session);
+  assert.equal(previews.length, 1);
+  assert.equal(previews[0][0], token);
+  assert.equal(previews[0][1].size, 4);
+  assert.equal(fixture.session.fileRequests.size, 0);
+  t.mock.timers.tick(1000);
+});
+
+test("missing file responses time out, unlock retry, and disconnect clears pending requests", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const fixture = transferFixture(t);
+  const item = { id: "missing", fileName: "missing.txt" };
+  await fixture.controller.requestFile(item, fixture.session);
+  t.mock.timers.tick(101);
+  assert.equal(fixture.session.fileRequests.size, 0);
+  assert.match(fixture.toasts.at(-1), /电脑未返回文件/);
+  await fixture.controller.requestFile(item, fixture.session);
+  fixture.controller.clearDownloads(fixture.session);
+  assert.equal(fixture.session.fileRequests.size, 0);
+  const count = fixture.toasts.length;
+  t.mock.timers.tick(101);
+  assert.equal(fixture.toasts.length, count);
+});
+
+test("a late preview after request timeout keeps its cancelled intent and never auto-saves", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const token = { cancelled: false };
+  const seen = [];
+  const fixture = transferFixture(t, { fileActions: {
+    openPreview: () => token,
+    showPreview: (intent) => seen.push(intent),
+    saveFile: assert.fail,
+    failPreview() {},
+    closePreview() {},
+  } });
+  const item = { id: "late", fileName: "late.png", fileSize: 0 };
+  await fixture.controller.requestFile(item, fixture.session, { preview: true });
+  t.mock.timers.tick(101);
+  assert.equal(token.cancelled, true);
+  fixture.controller.beginDownload({ transferId: "late-transfer", itemId: item.id, name: item.fileName, size: 0 }, fixture.session);
+  fixture.controller.finishDownload("late-transfer", fixture.session);
+  assert.equal(seen[0], token);
+  assert.equal(seen[0].cancelled, true);
+});
 
 test("a second composer send is ignored while the first is in flight", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });

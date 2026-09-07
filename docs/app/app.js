@@ -1,3 +1,4 @@
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=41";
 import {
   defaultDeviceName,
   detectDeviceName,
@@ -6,12 +7,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=40";
+} from "./notification-policy.js?shell=41";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=40";
+} from "./pairing-state.js?shell=41";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -20,20 +21,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=40";
-import { createInstallationController } from "./app-installation.js?shell=40";
-import { createAgentNotificationController } from "./app-notifications.js?shell=40";
-import { createAppRenderer } from "./app-rendering.js?shell=40";
-import { createConnectionController } from "./app-connection.js?shell=40";
-import { createDeviceSettingsController } from "./app-settings.js?shell=40";
-import { createPairingController } from "./app-pairing.js?shell=40";
-import { createContentTransferController } from "./app-content-transfer.js?shell=40";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=41";
+import { createInstallationController } from "./app-installation.js?shell=41";
+import { createAgentNotificationController } from "./app-notifications.js?shell=41";
+import { createAppRenderer } from "./app-rendering.js?shell=41";
+import { createConnectionController } from "./app-connection.js?shell=41";
+import { createDeviceSettingsController } from "./app-settings.js?shell=41";
+import { createPairingController } from "./app-pairing.js?shell=41";
+import { createContentTransferController } from "./app-content-transfer.js?shell=41";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=40";
+} from "./app-platform.js?shell=41";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -54,8 +55,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.5.6";
-const currentPwaShellVersion = 40;
+const currentPwaVersion = "1.5.7";
+const currentPwaShellVersion = 41;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;
@@ -263,9 +264,30 @@ const elements = Object.fromEntries(
     "delete-device-dialog",
     "delete-device-name",
     "confirm-delete-device",
+    "image-preview-dialog",
+    "image-preview-title",
+    "image-preview-image",
+    "image-preview-status",
+    "image-preview-close",
+    "image-preview-save",
     "toast",
   ].map((id) => [id, document.getElementById(id)]),
 );
+
+const fileActions = createFileActions({
+  elements,
+  showToast,
+  onChange(session) {
+    session.clipboardRenderRevision += 1;
+    if (sessionIsActive(session)) renderClipboard();
+  },
+});
+window.addEventListener("pagehide", () => fileActions.closePreview());
+window.addEventListener("storage", (event) => {
+  if (event.key !== downloadHistoryKey && event.key !== null) return;
+  for (const session of state.sessions.values()) session.clipboardRenderRevision += 1;
+  renderClipboard();
+});
 
 // Browser installation and shell updates own their timers and status UI.
 const {
@@ -362,6 +384,7 @@ const {
   updateAppBadge,
   updateSendButton,
 } = createAppRenderer({
+  fileActions,
   state,
   elements,
   storageKeys,
@@ -412,6 +435,7 @@ const {
   sendSettings,
   testDeviceVibration,
 } = createDeviceSettingsController({
+  clearDownloadHistory: (room) => fileActions.history.clearRoom(room),
   state,
   elements,
   directVibrationPattern,
@@ -478,6 +502,7 @@ const {
   sendComposerContent,
   upsertClipboardItem,
 } = createContentTransferController({
+  fileActions,
   elements,
   maximumFileBytes,
   maximumClipboardTextBytes,

@@ -1,3 +1,36 @@
+# DingDong 1.5.7
+
+DingDong 1.5.7 adds PWA image previews, full dates and persistent download records.
+
+- Adds in-app image previews with download fallback for unsupported formats and releases preview memory when closed or disconnected.
+- Shows full local dates and times in PWA content and activity, including the year, instead of time alone.
+- Remembers up to 300 download records on this browser and distinguishes files by device and file version. The downloaded label records that saving was initiated; browsers cannot confirm completion on disk.
+- Prevents duplicate file requests and accidental downloads from expired previews, and fixes preview controls on narrow screens.
+
+---
+
+# DingDong 1.5.7
+
+DingDong 1.5.7 新增 PWA 图片预览、完整日期和持久下载记录。
+
+- 新增应用内图片预览，不支持的格式可继续下载，关闭预览或断开设备时及时释放预览内存。
+- PWA 内容与动态显示本地完整日期和时间，包含年份，不再只显示时分。
+- 当前浏览器最多保留 300 条下载记录，按设备和文件版本区分。“已下载”表示已发起保存，浏览器无法确认文件最终落盘。
+- 防止重复请求文件和过期预览意外触发下载，修复窄屏预览按钮布局。
+
+---
+
+# DingDong 1.5.7
+
+DingDong 1.5.7 añade vistas previas, fechas completas y registros de descarga en la PWA.
+
+- Añade vistas previas de imágenes con descarga alternativa para formatos no compatibles y libera la memoria al cerrar o desconectar.
+- Muestra la fecha y hora local completas, incluido el año, en el contenido y la actividad de la PWA.
+- Guarda hasta 300 registros de descarga en este navegador, separados por dispositivo y versión del archivo. La etiqueta indica que se inició el guardado; el navegador no puede confirmar que terminó en disco.
+- Evita solicitudes duplicadas y descargas accidentales de vistas previas caducadas, y corrige los controles en pantallas estrechas.
+
+---
+
 # DingDong 1.5.6
 
 DingDong 1.5.6 improves Android PWA reliability, file transfers and memory cleanup.

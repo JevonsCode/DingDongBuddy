@@ -26,15 +26,20 @@ function kindLabel(kind) {
 }
 
 function formatTime(value) {
-  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return "";
+  const date = validDate(value);
+  if (!date) return "未记录";
   return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour12: false,
     hour: "2-digit",
     minute: "2-digit",
-  }).format(value);
+  }).format(date);
 }
 
 function validDate(value) {
-  if (!value) return null;
+  if (value === null || value === undefined || value === "") return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
@@ -43,6 +48,7 @@ function formatLifecycleTime(value) {
   const date = validDate(value);
   if (!date) return "未记录";
   return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",

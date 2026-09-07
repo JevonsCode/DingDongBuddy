@@ -2,8 +2,10 @@ import {
   base64UrlDecode,
   bytesToBase64,
   utf8ByteLength,
-} from "./app-codecs.js?shell=40";
-import { formatBytes, validDate } from "./app-formatters.js?shell=40";
+} from "./app-codecs.js?shell=41";
+import { formatBytes, validDate } from "./app-formatters.js?shell=41";
+
+import { createFileActions } from "./app-file-actions.js?shell=41";
 
 // Bounded clipboard/file transfer plus in-memory Agent feed reconciliation.
 export function createContentTransferController({
@@ -27,7 +29,24 @@ export function createContentTransferController({
   resizeComposerInput,
   updateSendButton,
   showToast,
+  fileActions,
 }) {
+  fileActions ||= createFileActions({ showToast, onChange: refreshFileState });
+
+  function refreshFileState(session) {
+    session.clipboardRenderRevision = (session.clipboardRenderRevision || 0) + 1;
+    if (sessionIsActive(session)) renderClipboard();
+  }
+
+  function removeFileRequest(itemId, session) {
+    const request = session.fileRequests?.get(itemId);
+    if (request) {
+      clearTimeout(request.timer);
+      session.fileRequests.delete(itemId);
+      refreshFileState(session);
+    }
+    return request;
+  }
   function receiveClipboardSnapshot(message, session) {
     if (message.reset !== false) session.items = [];
     let rejected = false;
@@ -377,7 +396,12 @@ export function createContentTransferController({
     const rawName = typeof message.name === "string" ? message.name : "DingDong 文件";
     const safeName = rawName.split(/[\\/]/).filter(Boolean).at(-1)?.slice(0, 180);
     removeDownload(transferId, session);
+    const request = session.fileRequests?.get(message.itemId) || session.fileIntents?.get(message.itemId);
+    if (request) clearTimeout(request.timer);
+    const item = request?.item || session.items?.find((item) => item.id === message.itemId);
     const download = {
+      item: item ? { ...item, fileSize: size } : null,
+      preview: request?.preview,
       itemId: message.itemId,
       name: safeName || "DingDong 文件",
       size,
@@ -394,6 +418,9 @@ export function createContentTransferController({
     clearTimeout(download.timer);
     download.timer = setTimeout(() => {
       removeDownload(transferId, session);
+      removeFileRequest(download.itemId, session);
+      fileActions.failPreview(download.preview, "图片接收超时，请关闭后重试");
+      if (download.preview) download.preview.cancelled = true;
       if (sessionIsActive(session)) showToast("文件接收超时，请重新下载");
     }, downloadIdleTimeoutMs);
   }
@@ -407,10 +434,20 @@ export function createContentTransferController({
 
   function clearDownloads(session) {
     for (const transferId of session.downloads.keys()) removeDownload(transferId, session);
+    for (const itemId of session.fileRequests?.keys() || []) removeFileRequest(itemId, session);
+    session.fileIntents?.clear();
+    fileActions.closePreview(session);
   }
 
   function rejectDownload(transferId, session) {
-    if (typeof transferId === "string") removeDownload(transferId, session);
+    if (typeof transferId === "string") {
+      const download = removeDownload(transferId, session);
+      if (download) {
+        removeFileRequest(download.itemId, session);
+        fileActions.failPreview(download.preview, "图片数据无效，请关闭后重试");
+        if (download.preview) download.preview.cancelled = true;
+      }
+    }
     if (sessionIsActive(session)) {
       showToast("文件数据无效或超过 25 MB，已停止接收");
     }
@@ -418,6 +455,7 @@ export function createContentTransferController({
 
   function finishDownload(transferId, session) {
     const download = removeDownload(transferId, session);
+    if (download) removeFileRequest(download.itemId, session);
     const completeChunks = download
       ? Array.from(
           { length: download.expectedChunks },
@@ -429,28 +467,21 @@ export function createContentTransferController({
       download.received !== download.size ||
       completeChunks.some((chunk) => !chunk)
     ) {
+      fileActions.failPreview(download?.preview, "图片接收不完整，请关闭后重试");
       if (sessionIsActive(session)) showToast("文件接收不完整，请重试");
       return;
     }
     const blob = new Blob(completeChunks);
     if (blob.size !== download.size) {
+      fileActions.failPreview(download?.preview, "图片接收不完整，请关闭后重试");
       if (sessionIsActive(session)) showToast("文件接收不完整，请重试");
       return;
     }
-    const url = URL.createObjectURL(blob);
-    const revokeTimer = setTimeout(() => URL.revokeObjectURL(url), 30_000);
-    try {
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = download.name;
-      anchor.click();
-    } catch {
-      clearTimeout(revokeTimer);
-      URL.revokeObjectURL(url);
-      showToast("无法保存文件，请重新下载");
-      return;
+    if (download.preview) {
+      fileActions.showPreview(download.preview, blob, download);
+    } else {
+      fileActions.saveFile(blob, download, session);
     }
-    showToast(`${session.pair.hostName} 的文件已准备好，请保存到手机`);
   }
 
   async function copyItem(item, button) {
@@ -483,12 +514,47 @@ export function createContentTransferController({
     return true;
   }
 
-  function requestFile(item, session = activeSession()) {
-    sendMessage(
-      { type: "file.request", itemId: item.id },
-      currentSessionContext(session),
-    ).catch((error) => showToast(error?.message || "无法下载文件"));
-    showToast("正在从电脑获取文件…");
+  async function requestFile(item, session = activeSession(), { preview = false } = {}) {
+    if (!session?.connected || item.downloadable === false) {
+      showToast("请连接电脑后重试，文件不能超过 25 MB");
+      return;
+    }
+    session.fileRequests ||= new Map();
+    if (session.fileRequests.has(item.id)) return;
+    if (session.fileRequests.size >= maximumConcurrentDownloads) {
+      showToast("正在接收其他文件，请稍后重试");
+      return;
+    }
+    const token = preview ? fileActions.openPreview(item, session) : null;
+    if (preview && !token) return;
+    const request = { item: { ...item }, preview: token, timer: null };
+    session.fileRequests.set(item.id, request);
+    // Keep bounded intent metadata: a late preview response must never auto-save.
+    session.fileIntents ||= new Map();
+    session.fileIntents.delete(item.id);
+    session.fileIntents.set(item.id, request);
+    while (session.fileIntents.size > 50) session.fileIntents.delete(session.fileIntents.keys().next().value);
+    request.timer = setTimeout(() => {
+      if (session.fileRequests.get(item.id) !== request) return;
+      removeFileRequest(item.id, session);
+      fileActions.failPreview(token, "电脑未返回图片，请关闭后重试");
+      if (token) token.cancelled = true;
+      if (sessionIsActive(session)) showToast("电脑未返回文件，请确认文件仍存在后重试");
+    }, downloadIdleTimeoutMs);
+    refreshFileState(session);
+    if (!preview) showToast("正在从电脑获取文件…");
+    try {
+      await sendMessage(
+        { type: "file.request", itemId: item.id },
+        currentSessionContext(session),
+      );
+    } catch (error) {
+      if (session.fileRequests.get(item.id) !== request) return;
+      removeFileRequest(item.id, session);
+      fileActions.failPreview(token, "获取图片失败，请关闭后重试");
+      if (token) token.cancelled = true;
+      if (sessionIsActive(session)) showToast(error?.message || "无法下载文件");
+    }
   }
 
 

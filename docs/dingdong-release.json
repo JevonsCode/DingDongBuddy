@@ -1,53 +1,53 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.6",
-  "latestBuild": "61",
-  "publishedAt": "2026-09-05T05:29:42Z",
+  "latestVersion": "1.5.7",
+  "latestBuild": "62",
+  "publishedAt": "2026-09-07T09:20:37Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.6",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.7",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.6/DingDong-1.5.6-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds bounded file-transfer buffering and aborts transfers when their route changes to prevent mixed-channel ordering failures.",
-    "Releases interrupted mobile downloads, bounds PWA inbound queues, and closes IndexedDB connections on failed transactions.",
-    "Preserves drafts and newly selected files while sending, prevents duplicate sends, and clarifies file errors and offline states.",
-    "Fixes long device names on small screens, adds accessible dialog/input labels, and preserves concurrent notification deduplication records."
+    "Adds in-app image previews with download fallback for unsupported formats and releases preview memory when closed or disconnected.",
+    "Shows full local dates and times in PWA content and activity, including the year, instead of time alone.",
+    "Remembers up to 300 download records on this browser and distinguishes files by device and file version. The downloaded label records that saving was initiated; browsers cannot confirm completion on disk.",
+    "Prevents duplicate file requests and accidental downloads from expired previews, and fixes preview controls on narrow screens."
   ],
   "notesByLanguage": {
     "en": [
-      "Adds bounded file-transfer buffering and aborts transfers when their route changes to prevent mixed-channel ordering failures.",
-      "Releases interrupted mobile downloads, bounds PWA inbound queues, and closes IndexedDB connections on failed transactions.",
-      "Preserves drafts and newly selected files while sending, prevents duplicate sends, and clarifies file errors and offline states.",
-      "Fixes long device names on small screens, adds accessible dialog/input labels, and preserves concurrent notification deduplication records."
+      "Adds in-app image previews with download fallback for unsupported formats and releases preview memory when closed or disconnected.",
+      "Shows full local dates and times in PWA content and activity, including the year, instead of time alone.",
+      "Remembers up to 300 download records on this browser and distinguishes files by device and file version. The downloaded label records that saving was initiated; browsers cannot confirm completion on disk.",
+      "Prevents duplicate file requests and accidental downloads from expired previews, and fixes preview controls on narrow screens."
     ],
     "zh": [
-      "限制文件传输缓冲，传输方式变化时停止旧传输，避免跨通道分块乱序。",
-      "释放手机中断下载的内存，为 PWA 入站队列设置上限，修复 IndexedDB 失败事务的资源清理。",
-      "发送时保留继续编辑的草稿与新选文件，防止重复发送，并改进文件错误与离线提示。",
-      "修复窄屏长设备名布局，补齐弹窗和输入框可访问名称，避免并发通知去重记录互相覆盖。"
+      "新增应用内图片预览，不支持的格式可继续下载，关闭预览或断开设备时及时释放预览内存。",
+      "PWA 内容与动态显示本地完整日期和时间，包含年份，不再只显示时分。",
+      "当前浏览器最多保留 300 条下载记录，按设备和文件版本区分。“已下载”表示已发起保存，浏览器无法确认文件最终落盘。",
+      "防止重复请求文件和过期预览意外触发下载，修复窄屏预览按钮布局。"
     ],
     "es": [
-      "Limita los búferes de archivos y detiene una transferencia si cambia su ruta para evitar mensajes fuera de orden entre canales.",
-      "Libera las descargas móviles interrumpidas, limita las colas de entrada de la PWA y cierra IndexedDB cuando falla una transacción.",
-      "Conserva los borradores y archivos nuevos durante el envío, evita envíos duplicados y aclara los errores y estados sin conexión.",
-      "Corrige los nombres largos en pantallas pequeñas, añade etiquetas accesibles y conserva los registros de notificaciones concurrentes."
+      "Añade vistas previas de imágenes con descarga alternativa para formatos no compatibles y libera la memoria al cerrar o desconectar.",
+      "Muestra la fecha y hora local completas, incluido el año, en el contenido y la actividad de la PWA.",
+      "Guarda hasta 300 registros de descarga en este navegador, separados por dispositivo y versión del archivo. La etiqueta indica que se inició el guardado; el navegador no puede confirmar que terminó en disco.",
+      "Evita solicitudes duplicadas y descargas accidentales de vistas previas caducadas, y corrige los controles en pantallas estrechas."
     ]
   }
 }
