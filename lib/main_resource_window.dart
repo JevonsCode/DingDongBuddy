@@ -154,6 +154,22 @@ Future<void> _runResourceManagerWindow(
     );
   }
   final settings = await SettingsRepository(SharedPreferencesBackend()).load();
+  final pluginHost = parentWindowId == null
+      ? null
+      : MultiWindowSettingsHostBridge(parentWindowId);
+  final pluginSettings = SettingsViewModel(
+    SettingsRepository(
+      SharedPreferencesBackend(),
+      defaultTrayNotificationColor: paths.development
+          ? TrayNotificationColor.pink
+          : TrayNotificationColor.orange,
+    ),
+    selectionOnlyPersistence: true,
+    selectionPluginGateway: Platform.isMacOS ? pluginHost : null,
+    restoreSelectionPluginOnLoad: false,
+    onSettingsSaved: pluginHost?.notifyChanged,
+  );
+  await pluginSettings.load();
   final ActivityController activityController =
       ActivityController(
           store: FileAgentActivityStore(paths.agentActivityFile),
@@ -207,6 +223,8 @@ Future<void> _runResourceManagerWindow(
       settings: settings,
       windowController: windowController,
       initialDestination: initialDestination,
+      jevAction: pluginHost?.jevAction,
+      pluginSettings: pluginSettings,
       openClipboardCategoriesOnLaunch:
           arguments['openClipboardCategories'] == true,
       resourceManagerLauncher: MultiWindowResourceManagerLauncher(

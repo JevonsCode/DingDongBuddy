@@ -110,7 +110,7 @@ final class SelectionPluginController {
       "running": lifecycle.isEnabled && listening &&
         permissionPort.status.isGranted,
       "permissionGranted": permissionPort.status.isGranted,
-      "tokenConfigured": configuration.requiresToken && tokenStore.containsToken(
+      "tokenConfigured": configuration.supportsToken && tokenStore.containsToken(
         account: tokenAccount(for: configuration)
       )
     ]
@@ -283,7 +283,7 @@ final class SelectionPluginController {
     let requestConfiguration = configuration
     let token: String?
     do {
-      token = requestConfiguration.requiresToken
+      token = requestConfiguration.supportsToken
         ? try tokenStore.load(account: tokenAccount(for: requestConfiguration))
         : nil
     } catch {

@@ -11,6 +11,7 @@ enum DesktopShellCommand {
   toggleClipboardFilters,
   focusClipboardSearch,
   showResourceManager,
+  showPluginMarket,
   showSettings,
   showAbout,
   hideDockIcon,

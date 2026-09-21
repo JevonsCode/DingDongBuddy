@@ -689,6 +689,10 @@ List<MenuItem> desktopTrayContextMenuItems({
     onClick: (_) => onCommand(DesktopShellCommand.showResourceManager),
   ),
   MenuItem(
+    label: strings.pluginMarket,
+    onClick: (_) => onCommand(DesktopShellCommand.showPluginMarket),
+  ),
+  MenuItem(
     label: strings.settings2,
     onClick: (_) => onCommand(DesktopShellCommand.showSettings),
   ),

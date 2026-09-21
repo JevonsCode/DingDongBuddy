@@ -52,6 +52,7 @@ final class AgentBridge {
     this.loadConversationFooterSymbols,
     this.loadShowConversationTokenUsage,
     this.loadConversationTokenUsage,
+    this.loadJevUsage,
     AgentRepositoryUrlResolver? repositoryUrlResolver,
   }) : _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
        _now = now ?? DateTime.now,
@@ -68,6 +69,7 @@ final class AgentBridge {
   loadConversationFooterSymbols;
   final Future<bool> Function()? loadShowConversationTokenUsage;
   final ConversationTokenUsageLoader? loadConversationTokenUsage;
+  final JevUsageLoader? loadJevUsage;
 
   static const int _maximumSkillPackageFiles = 200;
   static const int _maximumSkillFileBytes = 5 * 1024 * 1024;
@@ -280,6 +282,13 @@ final class AgentBridge {
         items: conversationItems,
         symbols: footerSymbols,
         tokenUsage: tokenUsage,
+        jevUsage: await _loadJevUsage(
+          ConversationTokenUsageRequest(
+            source: source,
+            conversationId: conversationId,
+            workspacePath: context.projectPath,
+          ),
+        ),
       );
 
       List<Map<String, Object?>> items(ResourceType type) {
@@ -459,6 +468,17 @@ final class AgentBridge {
           .sanitized();
     } on Object {
       return ConversationFooterSymbols.defaultValue;
+    }
+  }
+
+  Future<Map<String, Object?>?> _loadJevUsage(
+    ConversationTokenUsageRequest request,
+  ) async {
+    try {
+      if (await loadShowConversationTokenUsage?.call() != true) return null;
+      return await loadJevUsage?.call(request);
+    } on Object {
+      return null;
     }
   }
 

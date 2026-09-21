@@ -1,3 +1,31 @@
+# DingDong 1.6.0
+
+- Adds a dedicated Plugins page in Resource Manager, with Jev available to install when needed and more plugins planned.
+- Jev provides judgments, choices and scores for Agents, with its own API key and separate Token usage. Current pricing is linked to the official site.
+- Moves macOS system selection tools into Plugins and adds Anthropic-compatible reverse proxies and optional local proxy Tokens.
+- Adds an optional Claude Code status line that keeps an existing HUD and displays actual DingDong resource receipts and main-session Token usage.
+- The device connection badge now counts connected devices only, excluding connecting and offline devices.
+---
+
+# DingDong 1.6.0
+
+- 资源管理新增独立“插件”页面，Jev 按需安装，更多插件陆续增加中。
+- Jev 可为 Agent 做判断、选择和评分，独立配置 API Key、查看 Token 用量，价格说明直接链接官网。
+- macOS 系统划词归入插件页，翻译和解释新增 Anthropic 兼容反向代理及本地代理 Token 支持。
+- 新增可选的 Claude Code 本地状态栏，保留原 HUD，展示实际资源回执与主会话累计 Token。
+- 设备连接角标只统计已连接设备，连接中和未连接不再计数。
+---
+
+# DingDong 1.6.0
+
+- Añade una página de Plugins en Recursos, con instalación opcional de Jev y más plugins en preparación.
+- Jev ofrece juicios, elecciones y puntuaciones para Agents, con clave API y consumo de tokens independientes. Los precios se consultan en el sitio oficial.
+- Las herramientas de selección de macOS pasan a Plugins y admiten proxies compatibles con Anthropic y tokens opcionales para proxies locales.
+- Añade una línea de estado opcional para Claude Code que conserva el HUD existente y muestra recursos reales y tokens acumulados de la sesión principal.
+- El indicador de dispositivos cuenta solo conexiones activas, sin incluir dispositivos desconectados o en proceso de conexión.
+
+---
+
 # DingDong 1.5.7
 
 DingDong 1.5.7 adds PWA image previews, full dates and persistent download records.

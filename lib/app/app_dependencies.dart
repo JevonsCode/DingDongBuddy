@@ -20,6 +20,9 @@ import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dar
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
+import 'package:dingdong/features/jev/data/jev_factory.dart';
+import 'package:dingdong/features/jev/data/jev_routes.dart';
+import 'package:dingdong/features/jev/data/jev_service.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -227,6 +230,7 @@ Future<void> _observeNotificationDelivery({
 /// Composition root for production repositories and long-lived services.
 final class AppDependencies {
   AppDependencies._({
+    required this.jev,
     required this.clipboardStore,
     required this.clipboardGateway,
     required this.clipboardCaptureService,
@@ -341,7 +345,17 @@ final class AppDependencies {
         NativeNotificationGateway();
     final LocalConversationTokenUsageResolver tokenUsageResolver =
         LocalConversationTokenUsageResolver();
+    final JevService jev = openJevService(paths);
     final AgentRouter router = AgentRouter(
+      jevRoutes: JevRoutes(jev),
+      loadJevUsage: (request) async {
+        final id = request.conversationId;
+        if (!jev.store.installed || id == null || id.isEmpty) return null;
+        final usage = jev.store.usage(source: request.source, conversation: id);
+        return usage['requests'] == 0
+            ? null
+            : {...usage, 'scope': 'current_conversation'};
+      },
       defaultDingMessage: (String source) async {
         final AppSettings settings = await settingsRepository.load();
         return appLocalizationsFor(
@@ -422,6 +436,7 @@ final class AppDependencies {
       onShowUi: onShowUi,
     );
     return AppDependencies._(
+      jev: jev,
       clipboardStore: clipboardStore,
       clipboardGateway: clipboardGateway,
       clipboardCaptureService: clipboardCaptureService,
@@ -438,6 +453,7 @@ final class AppDependencies {
     );
   }
 
+  final JevService jev;
   final AppDataPaths paths;
   final ClipboardGateway clipboardGateway;
   final ClipboardCaptureService clipboardCaptureService;

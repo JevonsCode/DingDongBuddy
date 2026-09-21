@@ -1135,6 +1135,12 @@ abstract class DingDongLocalizations {
   /// **'{count} items · {description}'**
   String countItemsDescription(Object count, Object description);
 
+  /// Number of devices with an active connection in the header badge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} connected devices'**
+  String countConnectedDevices(Object count);
+
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
@@ -5619,6 +5625,12 @@ abstract class DingDongLocalizations {
   /// **'API token'**
   String get selectionApiToken;
 
+  /// Token hint for a local compatible model proxy
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: enter a token if your proxy requires authentication'**
+  String get selectionTokenOptionalPlaceholder;
+
   /// Placeholder for the secret token field.
   ///
   /// In en, this message translates to:
@@ -5660,6 +5672,234 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'{reason, select, invalidEndpoint{Enter a service address without credentials, query parameters or fragments.} emptyModel{Enter a model name.} emptyTargetLanguage{Enter a target language.} localEndpointRequired{Use a loopback HTTP address for Ollama or LM Studio.} remoteHttpsRequired{Use HTTPS for a remote model service.} updateFailed{Could not update the plugin. Refresh its status and try again.} persistenceFailed{The plugin changed, but its settings could not be saved. Check local storage and apply again.} unavailable{The native plugin is unavailable. Install a build that includes system selection tools.} statusUnavailable{Could not read the plugin status. Try refreshing again.} permissionSettingsUnavailable{Open Accessibility settings in System Settings and grant DingDong permission.} tokenRequired{Enter your own API token.} tokenSaveFailed{Could not save the token. Unlock Keychain and try again.} tokenRemoveFailed{Could not remove the token. Unlock Keychain and try again.} other{Could not update the plugin. Refresh its status and try again.}}'**
   String selectionPluginError(String reason);
+
+  /// Jev optional plugin settings: jevDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Fast judgments, classification and scoring for your Agents.'**
+  String get jevDescription;
+
+  /// Jev optional plugin settings: jevBundled
+  ///
+  /// In en, this message translates to:
+  /// **'Install from DingDong when you need it.'**
+  String get jevBundled;
+
+  /// Jev optional plugin settings: jevInstall
+  ///
+  /// In en, this message translates to:
+  /// **'Install Jev'**
+  String get jevInstall;
+
+  /// Jev optional plugin settings: jevUninstall
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall'**
+  String get jevUninstall;
+
+  /// Jev optional plugin settings: jevUninstallHint
+  ///
+  /// In en, this message translates to:
+  /// **'Uninstall disables new calls and removes the saved key. Usage history is retained. Requests already sent may still be billed.'**
+  String get jevUninstallHint;
+
+  /// Jev optional plugin settings: jevKeyLabel
+  ///
+  /// In en, this message translates to:
+  /// **'TypeSafe API Key'**
+  String get jevKeyLabel;
+
+  /// Jev optional plugin settings: jevKeySaved
+  ///
+  /// In en, this message translates to:
+  /// **'Key saved in system secure storage'**
+  String get jevKeySaved;
+
+  /// Jev optional plugin settings: jevKeyMissing
+  ///
+  /// In en, this message translates to:
+  /// **'Add your TypeSafe API key to get started'**
+  String get jevKeyMissing;
+
+  /// Jev optional plugin settings: jevSaveKey
+  ///
+  /// In en, this message translates to:
+  /// **'Save key'**
+  String get jevSaveKey;
+
+  /// Jev optional plugin settings: jevRemoveKey
+  ///
+  /// In en, this message translates to:
+  /// **'Remove key'**
+  String get jevRemoveKey;
+
+  /// Jev optional plugin settings: jevEnable
+  ///
+  /// In en, this message translates to:
+  /// **'Allow paid Jev calls'**
+  String get jevEnable;
+
+  /// Jev optional plugin settings: jevEnableHint
+  ///
+  /// In en, this message translates to:
+  /// **'Only when an Agent invokes Jev. Supplied text is sent to TypeSafe; the Agent’s main model stays the same.'**
+  String get jevEnableHint;
+
+  /// Jev optional plugin settings: jevConsole
+  ///
+  /// In en, this message translates to:
+  /// **'Account & billing'**
+  String get jevConsole;
+
+  /// Jev optional plugin settings: jevVerify
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection (billable)'**
+  String get jevVerify;
+
+  /// Jev optional plugin settings: jevVerified
+  ///
+  /// In en, this message translates to:
+  /// **'Real Jev request succeeded; usage has been recorded.'**
+  String get jevVerified;
+
+  /// Jev optional plugin settings: jevRefresh
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh usage'**
+  String get jevRefresh;
+
+  /// Jev optional plugin settings: jevUsageTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Jev usage'**
+  String get jevUsageTitle;
+
+  /// Jev optional plugin settings: jevUsageHint
+  ///
+  /// In en, this message translates to:
+  /// **'Token usage reported by this plugin on this device. Other applications are not included.'**
+  String get jevUsageHint;
+
+  /// Jev optional plugin settings: jevToday
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get jevToday;
+
+  /// Jev optional plugin settings: jevAllTime
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get jevAllTime;
+
+  /// Jev optional plugin settings: jevRequests
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get jevRequests;
+
+  /// Jev optional plugin settings: jevInput
+  ///
+  /// In en, this message translates to:
+  /// **'Input tokens'**
+  String get jevInput;
+
+  /// Jev optional plugin settings: jevOutput
+  ///
+  /// In en, this message translates to:
+  /// **'Output tokens'**
+  String get jevOutput;
+
+  /// Jev optional plugin settings: jevUnknown
+  ///
+  /// In en, this message translates to:
+  /// **'Requests with unknown usage'**
+  String get jevUnknown;
+
+  /// Jev optional plugin settings: jevEmpty
+  ///
+  /// In en, this message translates to:
+  /// **'No Jev calls recorded yet.'**
+  String get jevEmpty;
+
+  /// Jev optional plugin settings: jevRetry
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get jevRetry;
+
+  /// Jev optional plugin settings: jevStorageError
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access local secure storage. Retry or check system keychain access.'**
+  String get jevStorageError;
+
+  /// Jev optional plugin settings: jevKeyError
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a complete API key before enabling calls. Saving a new key pauses calls until you enable them again.'**
+  String get jevKeyError;
+
+  /// Jev optional plugin settings: jevDisabledError
+  ///
+  /// In en, this message translates to:
+  /// **'Install Jev, save a key and allow paid calls first.'**
+  String get jevDisabledError;
+
+  /// Jev optional plugin settings: jevRequestError
+  ///
+  /// In en, this message translates to:
+  /// **'Jev did not return a valid result. Check the account, key and network. No automatic retry; usage may be unknown.'**
+  String get jevRequestError;
+
+  /// Jev optional plugin settings: jevReconnect
+  ///
+  /// In en, this message translates to:
+  /// **'After installing, reconnect DingDong MCP in your Agent to discover Jev tools.'**
+  String get jevReconnect;
+
+  /// Optional plugin management: plugins
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get plugins;
+
+  /// Optional plugin management: pluginMarket
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin market'**
+  String get pluginMarket;
+
+  /// Optional plugin management: pluginMarketDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and manage optional DingDong features.'**
+  String get pluginMarketDescription;
+
+  /// Optional plugin management: pluginOpen
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get pluginOpen;
+
+  /// Optional plugin management: pluginBack
+  ///
+  /// In en, this message translates to:
+  /// **'Back to plugins'**
+  String get pluginBack;
+
+  /// Optional plugin management: pluginUnavailable
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin controls are unavailable. Reopen this window from DingDong.'**
+  String get pluginUnavailable;
+
+  /// Optional plugin management: jevWebsite
+  ///
+  /// In en, this message translates to:
+  /// **'Official website'**
+  String get jevWebsite;
 }
 
 class _DingDongLocalizationsDelegate

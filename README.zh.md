@@ -22,8 +22,8 @@ DingDong 是为内容工作和本地 Agent 设计的桌面伴侣：剪贴板记�
 Prompt、Skill、MCP 只维护一份并接入常用客户端；接入的 Agent 提醒统一收在一起，
 桌面提示声可以选内置、系统声音或自己的音频，重要结果和选中的剪贴板内容也能送到可信手机。
 
-> **当前版本：DingDong 1.5.7。** 新增 PWA 图片预览、完整日期显示和本机下载记录，
-> 同时改进窄屏预览布局与预览内存回收。
+> **当前版本：DingDong 1.6.0。** 资源管理新增插件页，支持按需安装 Jev、独立查看 Token 用量，
+> macOS 划词也搬进来了。更多插件陆续增加中。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -42,9 +42,15 @@ Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或�
 
 剪贴板和资源数据默认只保存在这台电脑上；轻量连接中继不会保存剪贴板或文件正文。
 
+## 插件，按需启用
+
+在“资源管理 → 插件”中管理可选功能。Jev 默认不安装，安装后配置自己的 API Key，
+可供 Agent 做判断、选择和评分，并独立显示 Token 用量。调用价格以 [Jev 官网](https://typesafe.ai/)
+为准。更多插件陆续增加中。
+
 ## 可选的 macOS 系统级划词
 
-DingDong 1.5.4 已接入在 Fuli 项目中开发的原生划词插件。打开“**设置 → 系统级划词**”，
+DingDong 1.5.4 已接入在 Fuli 项目中开发的原生划词插件。打开“**资源管理 → 插件 → 系统级划词**”，
 主动开启，并按提示授予 **DingDong** 辅助功能权限。在支持 macOS 选区读取的应用里
 选中文字，即可点击“**复制 / 翻译 / 解释**”；也可按 `⌥⌘C` 直接复制。
 
@@ -102,7 +108,7 @@ Skill 名称后的 `*` 表示本轮已加载完整 Skill；没有 `*` 则只是�
 配置相应资源后，可以直接这样和 AI 对话：
 
 - “按这个项目的 UI 规范检查页面，把发现的问题直接改好。”
-- “按这个项目的发布流程跑完所有检查，准备发布 1.5.7。”
+- “按这个项目的发布流程跑完所有检查，准备发布 1.6.0。”
 - “用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”
 
 Agent 会先搜索去重，再通过 `dingdong_create_resource` 和
@@ -163,9 +169,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片 · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-arm64.dmg)
-- [macOS · Intel · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-x64.dmg)
-- [Windows x64 · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-arm64.dmg)
+- [macOS · Intel · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-x64.dmg)
+- [Windows x64 · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

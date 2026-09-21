@@ -19,11 +19,14 @@ import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_screen.dart';
+import 'package:dingdong/features/jev/ui/jev_plugin_section.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
+import 'package:dingdong/features/plugins/ui/plugins_screen.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/material.dart';
@@ -47,9 +50,13 @@ class ResourceManagerApp extends StatefulWidget {
     this.desktopContextMenuGateway,
     this.onLoadHostIssues,
     this.onOpenExternalLink,
+    this.jevAction,
+    this.pluginSettings,
     super.key,
   });
 
+  final JevAction? jevAction;
+  final SettingsViewModel? pluginSettings;
   final LibraryViewModel viewModel;
   final ClipboardViewModel clipboardViewModel;
   final ActivityController activityController;
@@ -99,6 +106,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
             await widget.viewModel.load();
             widget.clipboardViewModel.load();
             widget.activityController.reload();
+            await widget.pluginSettings?.load();
             _preflightActivityTargets();
             await widget.agentAdapterController?.load();
             final ResourceManagerDestination destination =
@@ -166,6 +174,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   void dispose() {
     unawaited(widget.windowController.setWindowMethodHandler(null));
     widget.agentAdapterController?.dispose();
+    widget.pluginSettings?.dispose();
     super.dispose();
   }
 
@@ -308,6 +317,10 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                             : AgentAdapterScreen(
                                 controller: widget.agentAdapterController!,
                               ),
+                      ResourceManagerDestination.plugins => PluginsScreen(
+                        jevAction: widget.jevAction,
+                        selectionViewModel: widget.pluginSettings,
+                      ),
                       ResourceManagerDestination.issues => IssueCenterScreen(
                         controller: widget.issueCenterController,
                         onOpenResource: _openIssueResource,
@@ -405,6 +418,16 @@ class _WorkspaceSidebar extends StatelessWidget {
                     selectedIndex == ResourceManagerDestination.resources.index,
                 onTap: () =>
                     onSelected(ResourceManagerDestination.resources.index),
+              ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-plugins'),
+                icon: Icons.extension_outlined,
+                label: context.l10n.plugins,
+                selected:
+                    selectedIndex == ResourceManagerDestination.plugins.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.plugins.index),
               ),
               const SizedBox(height: 3),
               _SidebarItem(

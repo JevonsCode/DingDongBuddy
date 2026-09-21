@@ -7,6 +7,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('plugin window saves preserve unrelated newer settings', () async {
+    final repository = SettingsRepository(MemoryPreferencesBackend());
+    final model = SettingsViewModel(
+      repository,
+      selectionOnlyPersistence: true,
+      selectionPluginGateway: _Gateway(permissionGranted: true),
+      restoreSelectionPluginOnLoad: false,
+    );
+    await model.load();
+    await repository.save(model.settings.copyWith(apiPort: 4321));
+    await model.setSelectionPluginEnabled(true);
+    final saved = await repository.load();
+    expect(saved.apiPort, 4321);
+    expect(saved.selectionPlugin.enabled, isTrue);
+    model.dispose();
+  });
+
   testWidgets('user explicitly enables the system selection plugin', (
     WidgetTester tester,
   ) async {
@@ -53,6 +70,50 @@ void main() {
       model.settings.selectionPlugin.withProvider(
         SelectionModelProvider.openRouter,
       ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SelectionPluginSection(viewModel: model),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('settings-selection-token')),
+      'user-token',
+    );
+    await tester.tap(find.byKey(const Key('settings-selection-token-save')));
+    await tester.pumpAndSettle();
+
+    expect(gateway.token, 'user-token');
+    expect(find.text('Saved securely in Keychain'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('settings-selection-token-clear')),
+    );
+    await tester.tap(find.byKey(const Key('settings-selection-token-clear')));
+    await tester.pumpAndSettle();
+    expect(gateway.token, isNull);
+  });
+
+  testWidgets('local Anthropic proxy exposes optional token save and remove', (
+    WidgetTester tester,
+  ) async {
+    final _Gateway gateway = _Gateway(permissionGranted: true);
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      selectionPluginGateway: gateway,
+    );
+    await model.load();
+    await model.setSelectionPluginConfiguration(
+      model.settings.selectionPlugin
+          .withProvider(SelectionModelProvider.anthropicCompatible)
+          .copyWith(endpoint: 'http://127.0.0.1:3456/v1'),
     );
 
     await tester.pumpWidget(

@@ -14,6 +14,7 @@ final class DesktopShellService {
     this.onClipboardMonitoringChanged,
     this.onClearClipboardHistory,
     this.onShowResourceManager,
+    this.onShowPluginMarket,
     this.onShowSettings,
     this.onShowAbout,
     this.onShowDeviceLinks,
@@ -30,6 +31,7 @@ final class DesktopShellService {
   final Future<void> Function(bool enabled)? onClipboardMonitoringChanged;
   final Future<void> Function()? onClearClipboardHistory;
   final Future<void> Function()? onShowResourceManager;
+  final Future<void> Function()? onShowPluginMarket;
   final Future<void> Function()? onShowSettings;
   final Future<void> Function()? onShowAbout;
   final Future<void> Function()? onShowDeviceLinks;
@@ -91,6 +93,8 @@ final class DesktopShellService {
         controller.requestClipboardSearchFocus();
       case DesktopShellCommand.showResourceManager:
         await onShowResourceManager?.call();
+      case DesktopShellCommand.showPluginMarket:
+        await onShowPluginMarket?.call();
       case DesktopShellCommand.showSettings:
         await onShowSettings?.call();
       case DesktopShellCommand.showAbout:

@@ -165,6 +165,9 @@ final class DeviceLinkController extends ChangeNotifier
   LocalDeviceIdentity get localDevice => _localDevice;
   @override
   List<LinkedDevice> get devices => List<LinkedDevice>.unmodifiable(_devices);
+  int get connectedDeviceCount =>
+      _devices.where((LinkedDevice device) => isConnected(device.id)).length;
+
   @override
   PendingDevicePairing? get pendingPairing => _pendingPairing;
   @override

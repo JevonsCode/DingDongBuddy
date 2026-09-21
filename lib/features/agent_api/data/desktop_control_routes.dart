@@ -62,6 +62,7 @@ final class DesktopControlRoutes {
         'clipboard' => 2,
         'api' || 'agent-api' => 3,
         'settings' => 4,
+        'plugins' || 'market' => 5,
         _ => null,
       };
       if (index == null) {
@@ -78,7 +79,8 @@ final class DesktopControlRoutes {
             1 => 'library',
             2 => 'clipboard',
             3 => 'api',
-            _ => 'settings',
+            4 => 'settings',
+            _ => 'plugins',
           },
         },
       );

@@ -231,6 +231,22 @@ final class SettingsRepository {
       ),
     ]);
   }
+
+  /// Plugin windows update only their own keys, preserving general settings
+  /// that may have changed in another open window.
+  Future<void> saveSelectionPlugin(SelectionPluginConfiguration value) async {
+    await Future.wait([
+      _backend.write(_selectionEnabledKey, value.enabled),
+      _backend.write(_selectionProviderKey, value.provider.name),
+      _backend.write(_selectionEndpointKey, value.endpoint),
+      _backend.write(_selectionModelKey, value.model),
+      _backend.write(_selectionTargetLanguageKey, value.targetLanguage),
+      _backend.write(
+        _selectionUnloadLocalModelKey,
+        value.unloadLocalModelAfterResponse,
+      ),
+    ]);
+  }
 }
 
 const String _monitoringKey = 'dingdong.clipboard.monitoring';

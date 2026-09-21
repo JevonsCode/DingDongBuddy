@@ -20,6 +20,7 @@ final class SettingsViewModel extends ChangeNotifier
     implements ClipboardSettingsController {
   SettingsViewModel(
     this._repository, {
+    this.selectionOnlyPersistence = false,
     ClipboardMonitoring? clipboardMonitoring,
     LaunchAtStartup? launchAtStartup,
     Future<void> Function(double value)? onWindowOpacityChanged,
@@ -58,6 +59,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onSettingsSaved = onSettingsSaved,
        _now = now ?? DateTime.now;
 
+  final bool selectionOnlyPersistence;
   final SettingsRepository _repository;
   final ClipboardMonitoring? _clipboardMonitoring;
   final LaunchAtStartup? _launchAtStartup;
@@ -985,7 +987,11 @@ final class SettingsViewModel extends ChangeNotifier
       _savePending = false;
       final AppSettings snapshot = _settings;
       try {
-        await _repository.save(snapshot);
+        if (selectionOnlyPersistence) {
+          await _repository.saveSelectionPlugin(snapshot.selectionPlugin);
+        } else {
+          await _repository.save(snapshot);
+        }
         await _onSettingsSaved?.call();
         _errorMessage = null;
       } on Object {

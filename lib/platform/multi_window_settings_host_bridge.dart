@@ -23,6 +23,17 @@ final class MultiWindowSettingsHostBridge
   MultiWindowSettingsHostBridge(String parentWindowId)
     : _parent = WindowController.fromWindowId(parentWindowId);
 
+  Future<Map<String, Object?>> jevAction(
+    String action,
+    Map<String, Object?> arguments,
+  ) async {
+    final result = await _parent.invokeMethod<Object?>('settings_jev', {
+      'action': action,
+      'arguments': arguments,
+    });
+    return Map<String, Object?>.from(result! as Map);
+  }
+
   final WindowController _parent;
   bool _isRunning = false;
 

@@ -161,6 +161,68 @@ final class ModelProviderTests: XCTestCase {
         )
     }
 
+    func testAnthropicProxyUsesMessagesProtocolAndOptionalBearerToken() throws {
+        for base in ["http://127.0.0.1:3456", "http://127.0.0.1:3456/v1/"] {
+            let configuration = ModelConfiguration(
+                provider: .anthropicCompatible, baseURL: URL(string: base)!,
+                model: "proxy-model", targetLanguage: "简体中文",
+                unloadLocalModelAfterResponse: false
+            )
+            XCTAssertTrue(configuration.supportsToken)
+            XCTAssertFalse(configuration.requiresToken)
+            let request = try ModelRequestFactory.makeRequest(
+                action: .translate, text: "Hello", configuration: configuration, token: " proxy-token "
+            )
+            XCTAssertEqual(request.url?.path, "/v1/messages")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer proxy-token")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "anthropic-version"), "2023-06-01")
+            let data = try XCTUnwrap(request.httpBody)
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            XCTAssertNotNil(body["system"] as? String)
+            XCTAssertEqual(body["max_tokens"] as? Int, 768)
+            let messages = try XCTUnwrap(body["messages"] as? [[String: String]])
+            XCTAssertEqual(messages.map { $0["role"] }, ["user"])
+            XCTAssertTrue(messages[0]["content"]?.contains("Hello") == true)
+            XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("proxy-token"))
+            let unauthenticated = try ModelRequestFactory.makeRequest(
+                action: .explain, text: "Hello", configuration: configuration, token: nil
+            )
+            XCTAssertNil(unauthenticated.value(forHTTPHeaderField: "Authorization"))
+        }
+    }
+
+    func testCompatibleLocalProxySendsOptionalTokenAndRemoteRequiresIt() throws {
+        for provider in [ModelProviderKind.openAICompatible, .anthropicCompatible] {
+            var configuration = ModelConfiguration(
+                provider: provider, baseURL: URL(string: "http://localhost:3456/v1")!,
+                model: "proxy-model", targetLanguage: "简体中文",
+                unloadLocalModelAfterResponse: false
+            )
+            let request = try ModelRequestFactory.makeRequest(
+                action: .explain, text: "Hello", configuration: configuration, token: "local-token"
+            )
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer local-token")
+            configuration.baseURL = URL(string: "https://proxy.example/v1")!
+            XCTAssertThrowsError(try ModelRequestFactory.makeRequest(
+                action: .translate, text: "Hello", configuration: configuration, token: nil
+            )) { XCTAssertEqual($0 as? ModelClientError, .tokenRequired) }
+            configuration.baseURL = URL(string: "http://proxy.example/v1")!
+            XCTAssertThrowsError(try ModelRequestFactory.makeRequest(
+                action: .translate, text: "Hello", configuration: configuration, token: "token"
+            )) { XCTAssertEqual($0 as? ModelClientError, .insecureRemoteEndpoint) }
+        }
+    }
+
+    func testAnthropicParserReturnsOnlyTextBlocks() throws {
+        let response = Data(#"{"content":[{"type":"thinking","thinking":"private"},{"type":"text","text":"你好"},{"type":"tool_use","name":"ignored"},{"type":"text","text":"世界"}]}"#.utf8)
+        XCTAssertEqual(try ModelResponseParser.parse(response, provider: .anthropicCompatible), "你好\n世界")
+        for value in [#"{"content":[]}"#, #"{"content":[{"type":"thinking","thinking":"private"}]}"#] {
+            XCTAssertThrowsError(try ModelResponseParser.parse(Data(value.utf8), provider: .anthropicCompatible)) {
+                XCTAssertEqual($0 as? ModelClientError, .invalidResponse)
+            }
+        }
+    }
+
     func testOversizedProviderResponseIsRejectedBeforeParsing() {
         let oversized = Data(repeating: 0x20, count: ModelResponseParser.maximumResponseBytes + 1)
 

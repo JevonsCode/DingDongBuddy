@@ -40,6 +40,31 @@ void main() {
     expect(secure.requiresToken, isTrue);
   });
 
+  test(
+    'Anthropic proxy supports optional local tokens and persists its protocol',
+    () {
+      final configuration = const SelectionPluginConfiguration()
+          .withProvider(SelectionModelProvider.anthropicCompatible)
+          .copyWith(endpoint: 'http://127.0.0.1:3456/v1', model: 'proxy-model');
+      expect(configuration.validationError, isNull);
+      expect(configuration.supportsToken, isTrue);
+      expect(configuration.requiresToken, isFalse);
+      expect(
+        SelectionModelProvider.parse(
+          configuration.toPlatformArguments()['provider'],
+        ),
+        SelectionModelProvider.anthropicCompatible,
+      );
+      expect(
+        configuration
+            .copyWith(endpoint: 'https://proxy.example/v1')
+            .requiresToken,
+        isTrue,
+      );
+      expect(const SelectionPluginConfiguration().supportsToken, isFalse);
+    },
+  );
+
   test('loopback OpenAI-compatible servers remain token optional', () {
     final SelectionPluginConfiguration configuration =
         const SelectionPluginConfiguration().copyWith(

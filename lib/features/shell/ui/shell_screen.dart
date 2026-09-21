@@ -630,8 +630,8 @@ class _ShellScreenState extends State<ShellScreen> {
                   builder: (BuildContext context, _) => PopupHeader(
                     selectedIndex: widget.controller.selectedIndex,
                     issueCount: widget.issueCenterController.count,
-                    pairedDeviceCount:
-                        widget.deviceLinkController?.devices.length ?? 0,
+                    connectedDeviceCount:
+                        widget.deviceLinkController?.connectedDeviceCount ?? 0,
                     developmentBuild: widget.developmentBuild,
                     updateAvailable:
                         widget

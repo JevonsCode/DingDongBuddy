@@ -138,8 +138,8 @@ List<int> _versionParts(String value) {
       .toList(growable: false);
 }
 
-const String currentAppVersion = '1.5.7';
-const String currentAppBuild = '62';
+const String currentAppVersion = '1.6.0';
+const String currentAppBuild = '63';
 const Duration backgroundReleaseUpdateCheckInterval = Duration(hours: 7);
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',

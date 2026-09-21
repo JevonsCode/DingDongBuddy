@@ -3,12 +3,27 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/app/app_data_paths.dart';
+import 'package:dingdong/features/agent_api/data/claude_conversation_status_line.dart';
 import 'package:dingdong/features/agent_api/data/completion_hook_notifier.dart';
 import 'package:dingdong/features/agent_api/data/conversation_opened_hook_notifier.dart';
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
 
 Future<void> main(List<String> arguments) async {
+  if (arguments.contains('--claude-statusline')) {
+    final input = await stdin.transform(utf8.decoder).join();
+    final lines = await Future.wait(<Future<String>>[
+      runPreviousClaudeStatusLine(
+        _argumentValue(arguments, '--previous-statusline-file'),
+        input,
+      ),
+      ClaudeConversationStatusLine.fromInput(input),
+    ]);
+    for (final line in lines.where((line) => line.isNotEmpty)) {
+      stdout.writeln(line);
+    }
+    return;
+  }
   final DartIoMcpHttpTransport transport = DartIoMcpHttpTransport(
     AppDataPaths.current().activePortFile,
   );

@@ -1,4 +1,4 @@
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=41";
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=42";
 import {
   defaultDeviceName,
   detectDeviceName,
@@ -7,12 +7,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=41";
+} from "./notification-policy.js?shell=42";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=41";
+} from "./pairing-state.js?shell=42";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -21,20 +21,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=41";
-import { createInstallationController } from "./app-installation.js?shell=41";
-import { createAgentNotificationController } from "./app-notifications.js?shell=41";
-import { createAppRenderer } from "./app-rendering.js?shell=41";
-import { createConnectionController } from "./app-connection.js?shell=41";
-import { createDeviceSettingsController } from "./app-settings.js?shell=41";
-import { createPairingController } from "./app-pairing.js?shell=41";
-import { createContentTransferController } from "./app-content-transfer.js?shell=41";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=42";
+import { createInstallationController } from "./app-installation.js?shell=42";
+import { createAgentNotificationController } from "./app-notifications.js?shell=42";
+import { createAppRenderer } from "./app-rendering.js?shell=42";
+import { createConnectionController } from "./app-connection.js?shell=42";
+import { createDeviceSettingsController } from "./app-settings.js?shell=42";
+import { createPairingController } from "./app-pairing.js?shell=42";
+import { createContentTransferController } from "./app-content-transfer.js?shell=42";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=41";
+} from "./app-platform.js?shell=42";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -55,8 +55,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.5.7";
-const currentPwaShellVersion = 41;
+const currentPwaVersion = "1.6.0";
+const currentPwaShellVersion = 42;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;

@@ -579,6 +579,11 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   }
 
   @override
+  String countConnectedDevices(Object count) {
+    return '已连接 $count 台设备';
+  }
+
+  @override
   String countPairedDevices(Object count) {
     return '已配对 $count 台设备';
   }
@@ -3087,6 +3092,9 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get selectionApiToken => 'API Token';
 
   @override
+  String get selectionTokenOptionalPlaceholder => '可选：代理需要认证时填写 Token';
+
+  @override
   String get selectionTokenPlaceholder => '粘贴你自己的 Token';
 
   @override
@@ -3124,4 +3132,119 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get jevDescription => '为 Agent 提供快速判断、分类与评分。';
+
+  @override
+  String get jevBundled => '随 DingDong 提供，可按需安装。';
+
+  @override
+  String get jevInstall => '安装 Jev';
+
+  @override
+  String get jevUninstall => '卸载';
+
+  @override
+  String get jevUninstallHint => '卸载会停止新调用并移除密钥，保留用量记录。已发出的请求仍可能计费。';
+
+  @override
+  String get jevKeyLabel => 'TypeSafe API Key';
+
+  @override
+  String get jevKeySaved => '密钥已存入系统安全存储';
+
+  @override
+  String get jevKeyMissing => '填写 TypeSafe API Key 后即可配置调用';
+
+  @override
+  String get jevSaveKey => '保存密钥';
+
+  @override
+  String get jevRemoveKey => '移除密钥';
+
+  @override
+  String get jevEnable => '允许 Jev 计费调用';
+
+  @override
+  String get jevEnableHint =>
+      '仅在 Agent 调用 Jev 时发送请求；相关文本会发送至 TypeSafe，Agent 主模型保持原样。';
+
+  @override
+  String get jevConsole => '账号与账单';
+
+  @override
+  String get jevVerify => '验证连接（计费）';
+
+  @override
+  String get jevVerified => 'Jev 真实请求成功，用量已记录。';
+
+  @override
+  String get jevRefresh => '刷新用量';
+
+  @override
+  String get jevUsageTitle => 'Jev 独立用量';
+
+  @override
+  String get jevUsageHint => '仅统计本机插件收到的 Token 用量，不包含其他应用的调用。';
+
+  @override
+  String get jevToday => '今日';
+
+  @override
+  String get jevAllTime => '累计';
+
+  @override
+  String get jevRequests => '请求次数';
+
+  @override
+  String get jevInput => '输入 Token';
+
+  @override
+  String get jevOutput => '输出 Token';
+
+  @override
+  String get jevUnknown => '用量未知的请求';
+
+  @override
+  String get jevEmpty => '尚无 Jev 调用记录。';
+
+  @override
+  String get jevRetry => '重试';
+
+  @override
+  String get jevStorageError => '无法访问本机安全存储，请重试或检查系统钥匙串访问权限。';
+
+  @override
+  String get jevKeyError => '请填写完整的 API Key。保存新密钥后会暂停调用，需重新开启。';
+
+  @override
+  String get jevDisabledError => '请先安装 Jev、保存密钥并允许计费调用。';
+
+  @override
+  String get jevRequestError => 'Jev 未返回有效结果，请检查账号、密钥及网络。没有自动重试，本次用量可能未知。';
+
+  @override
+  String get jevReconnect => '安装后，在 Agent 中重连 DingDong MCP 以发现 Jev 工具。';
+
+  @override
+  String get plugins => '插件';
+
+  @override
+  String get pluginMarket => '插件市场';
+
+  @override
+  String get pluginMarketDescription => '按需选择和管理 DingDong 的扩展功能。';
+
+  @override
+  String get pluginOpen => '管理';
+
+  @override
+  String get pluginBack => '返回插件';
+
+  @override
+  String get pluginUnavailable => '暂时无法加载插件，请从 DingDong 重新打开此窗口。';
+
+  @override
+  String get jevWebsite => '官方网站';
 }

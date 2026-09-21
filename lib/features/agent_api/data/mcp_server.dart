@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
+import 'package:dingdong/features/jev/data/jev_mcp_tools.dart';
 
 /// Executes one advertised MCP tool against DingDong's local services.
 abstract interface class McpToolExecutor {
@@ -38,7 +39,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.5.7',
+              'version': '1.6.0',
             },
             'instructions': dingDongAgentBridgeGuidance,
           },
@@ -48,7 +49,9 @@ final class McpServer {
         return jsonEncode(<String, Object?>{
           'jsonrpc': '2.0',
           'id': id,
-          'result': <String, Object?>{'tools': tools},
+          'result': <String, Object?>{
+            'tools': [...tools, ...await _jevTools()],
+          },
         });
       }
       if (method == 'tools/call') {
@@ -89,6 +92,15 @@ final class McpServer {
       return _error(id: id, code: -32601, message: 'Method not found');
     } on Object {
       return _error(id: null, code: -32700, message: 'Parse error');
+    }
+  }
+
+  Future<List<Map<String, Object?>>> _jevTools() async {
+    try {
+      final status = await _executor?.execute('dingdong_jev_status', {});
+      return status?['installed'] == true ? jevMcpTools : [];
+    } on Object {
+      return [];
     }
   }
 

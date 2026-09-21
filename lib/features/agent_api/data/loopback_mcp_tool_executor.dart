@@ -40,6 +40,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
   final String? Function() _conversationIdResolver;
   final String? Function() _sourceResolver;
   String? _lastBridgeSource;
+  String? _lastBridgeConversationId;
 
   @override
   Future<Map<String, Object?>> execute(
@@ -47,6 +48,29 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     Map<String, Object?> arguments,
   ) async {
     return switch (name) {
+      'dingdong_jev_status' => _transport.request(
+        method: 'GET',
+        path: '/plugins/jev/status',
+      ),
+      'dingdong_jev_check' ||
+      'dingdong_jev_choose' ||
+      'dingdong_jev_score' => _transport.request(
+        method: 'POST',
+        path: '/plugins/jev/${name.substring('dingdong_jev_'.length)}',
+        body: {
+          ...arguments,
+          'source':
+              arguments['source'] ??
+              _lastBridgeSource ??
+              _sourceResolver() ??
+              'Agent',
+          'conversationId':
+              arguments['conversationId'] ??
+              _lastBridgeConversationId ??
+              _conversationIdResolver() ??
+              '',
+        },
+      ),
       'dingdong_bridge' => _bridge(arguments),
       'dingdong_search_assets' => _transport.request(
         method: 'GET',
@@ -243,6 +267,7 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
   }
 
   Future<Map<String, Object?>> _bridge(Map<String, Object?> arguments) async {
+    _lastBridgeConversationId = null;
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
     final String directory =
         (body['workspacePath'] as String? ?? '').trim().isEmpty
@@ -282,6 +307,8 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       _lastBridgeSource = null;
       return response;
     }
+    final requestedId = (body['conversationId'] as String? ?? '').trim();
+    _lastBridgeConversationId = requestedId.isEmpty ? null : requestedId;
     final String? source = _responseSource(response);
     if (source != null) {
       _lastBridgeSource = source;

@@ -800,6 +800,11 @@
       }
     }
   },
+  "countConnectedDevices": "已连接 {count} 台设备",
+  "@countConnectedDevices": {
+    "description": "Number of devices with an active connection in the header badge.",
+    "placeholders": {"count": {"type": "Object"}}
+  },
   "countPairedDevices": "已配对 {count} 台设备",
   "@countPairedDevices": {
     "description": "DingDong built-in interface copy.",
@@ -4027,37 +4032,69 @@
     "description": "DingDong built-in interface copy."
   },
   "connectAnotherComputer": "连接另一台电脑",
-  "@connectAnotherComputer": {"description": "Action that imports a trusted pairing link on a second computer."},
+  "@connectAnotherComputer": {
+    "description": "Action that imports a trusted pairing link on a second computer."
+  },
   "computerPairingLink": "电脑连接链接",
-  "@computerPairingLink": {"description": "Title for the desktop-to-desktop pairing dialog."},
+  "@computerPairingLink": {
+    "description": "Title for the desktop-to-desktop pairing dialog."
+  },
   "pastePairingLinkFromOtherComputer": "粘贴从另一台电脑复制的连接链接。链接包含加密密钥，请只通过你信任的方式传递。",
-  "@pastePairingLinkFromOtherComputer": {"description": "Security guidance for desktop-to-desktop pairing."},
+  "@pastePairingLinkFromOtherComputer": {
+    "description": "Security guidance for desktop-to-desktop pairing."
+  },
   "pastePairingLink": "粘贴连接链接",
-  "@pastePairingLink": {"description": "Placeholder for the desktop pairing link field."},
+  "@pastePairingLink": {
+    "description": "Placeholder for the desktop pairing link field."
+  },
   "connectComputer": "连接电脑",
-  "@connectComputer": {"description": "Confirms a desktop-to-desktop pairing link."},
+  "@connectComputer": {
+    "description": "Confirms a desktop-to-desktop pairing link."
+  },
   "invalidPairingLink": "这个连接链接无效或不完整。",
-  "@invalidPairingLink": {"description": "Shown when a desktop pairing link cannot be decoded."},
+  "@invalidPairingLink": {
+    "description": "Shown when a desktop pairing link cannot be decoded."
+  },
   "copyLinkForAnotherComputer": "复制给另一台电脑",
-  "@copyLinkForAnotherComputer": {"description": "Copies the current encrypted pairing link for desktop import."},
+  "@copyLinkForAnotherComputer": {
+    "description": "Copies the current encrypted pairing link for desktop import."
+  },
   "pairingLinkCopied": "连接链接已复制，请像一次性密码一样妥善传递。",
-  "@pairingLinkCopied": {"description": "Confirmation after copying a pairing link."},
+  "@pairingLinkCopied": {
+    "description": "Confirmation after copying a pairing link."
+  },
   "communicationMethod": "通信方式",
-  "@communicationMethod": {"description": "Label for the per-device transport preference."},
+  "@communicationMethod": {
+    "description": "Label for the per-device transport preference."
+  },
   "automaticRecommended": "自动（推荐）",
-  "@automaticRecommended": {"description": "Transport option that prefers direct WebRTC and falls back to relay."},
+  "@automaticRecommended": {
+    "description": "Transport option that prefers direct WebRTC and falls back to relay."
+  },
   "localNetworkDirect": "局域网直连",
-  "@localNetworkDirect": {"description": "Transport option that sends content only over direct WebRTC."},
+  "@localNetworkDirect": {
+    "description": "Transport option that sends content only over direct WebRTC."
+  },
   "encryptedService": "加密服务",
-  "@encryptedService": {"description": "Transport option that sends encrypted content through the relay service."},
+  "@encryptedService": {
+    "description": "Transport option that sends encrypted content through the relay service."
+  },
   "localNetworkHandshakeNote": "局域网模式仍会使用服务完成加密握手，但剪贴板与文件正文只走电脑间直连。",
-  "@localNetworkHandshakeNote": {"description": "Clarifies that local-network mode still uses relay signalling."},
+  "@localNetworkHandshakeNote": {
+    "description": "Clarifies that local-network mode still uses relay signalling."
+  },
   "computerSyncDefaultsNote": "电脑设备默认关闭提醒和自动同步；只有主动分享后，内容才会写入对方的系统剪贴板。",
-  "@computerSyncDefaultsNote": {"description": "Explains safe defaults for desktop-to-desktop links."},
+  "@computerSyncDefaultsNote": {
+    "description": "Explains safe defaults for desktop-to-desktop links."
+  },
   "sharedFileIsNoLongerAvailable": "本地文件已不存在，因此没有发送。",
-  "@sharedFileIsNoLongerAvailable": {"description": "Explains why an explicit device file share failed."},
+  "@sharedFileIsNoLongerAvailable": {
+    "description": "Explains why an explicit device file share failed."
+  },
   "sharedFileIsLargerThan25MiB": "文件超过 25 MiB，因此没有发送。",
-  "@sharedFileIsLargerThan25MiB": {"description": "Explains the device file transfer limit."},
+  "@sharedFileIsLargerThan25MiB": {
+    "description": "Explains the device file transfer limit."
+  },
   "systemSelectionTools": "系统级划词工具",
   "@systemSelectionTools": {
     "description": "Settings title for the optional system-wide text selection plugin."
@@ -4114,6 +4151,10 @@
   "@selectionApiToken": {
     "description": "Settings label for a user-provided model API token."
   },
+  "selectionTokenOptionalPlaceholder": "可选：代理需要认证时填写 Token",
+  "@selectionTokenOptionalPlaceholder": {
+    "description": "Token hint for a local compatible model proxy"
+  },
   "selectionTokenPlaceholder": "粘贴你自己的 Token",
   "@selectionTokenPlaceholder": {
     "description": "Placeholder for the secret token field."
@@ -4146,5 +4187,157 @@
         "type": "String"
       }
     }
+  },
+  "jevDescription": "为 Agent 提供快速判断、分类与评分。",
+  "jevBundled": "随 DingDong 提供，可按需安装。",
+  "jevInstall": "安装 Jev",
+  "jevUninstall": "卸载",
+  "jevUninstallHint": "卸载会停止新调用并移除密钥，保留用量记录。已发出的请求仍可能计费。",
+  "jevKeyLabel": "TypeSafe API Key",
+  "jevKeySaved": "密钥已存入系统安全存储",
+  "jevKeyMissing": "填写 TypeSafe API Key 后即可配置调用",
+  "jevSaveKey": "保存密钥",
+  "jevRemoveKey": "移除密钥",
+  "jevEnable": "允许 Jev 计费调用",
+  "jevEnableHint": "仅在 Agent 调用 Jev 时发送请求；相关文本会发送至 TypeSafe，Agent 主模型保持原样。",
+  "jevConsole": "账号与账单",
+  "jevVerify": "验证连接（计费）",
+  "jevVerified": "Jev 真实请求成功，用量已记录。",
+  "jevRefresh": "刷新用量",
+  "jevUsageTitle": "Jev 独立用量",
+  "jevUsageHint": "仅统计本机插件收到的 Token 用量，不包含其他应用的调用。",
+  "jevToday": "今日",
+  "jevAllTime": "累计",
+  "jevRequests": "请求次数",
+  "jevInput": "输入 Token",
+  "jevOutput": "输出 Token",
+  "jevUnknown": "用量未知的请求",
+  "jevEmpty": "尚无 Jev 调用记录。",
+  "jevRetry": "重试",
+  "jevStorageError": "无法访问本机安全存储，请重试或检查系统钥匙串访问权限。",
+  "jevKeyError": "请填写完整的 API Key。保存新密钥后会暂停调用，需重新开启。",
+  "jevDisabledError": "请先安装 Jev、保存密钥并允许计费调用。",
+  "jevRequestError": "Jev 未返回有效结果，请检查账号、密钥及网络。没有自动重试，本次用量可能未知。",
+  "jevReconnect": "安装后，在 Agent 中重连 DingDong MCP 以发现 Jev 工具。",
+  "@jevDescription": {
+    "description": "Jev optional plugin settings: jevDescription"
+  },
+  "@jevBundled": {
+    "description": "Jev optional plugin settings: jevBundled"
+  },
+  "@jevInstall": {
+    "description": "Jev optional plugin settings: jevInstall"
+  },
+  "@jevUninstall": {
+    "description": "Jev optional plugin settings: jevUninstall"
+  },
+  "@jevUninstallHint": {
+    "description": "Jev optional plugin settings: jevUninstallHint"
+  },
+  "@jevKeyLabel": {
+    "description": "Jev optional plugin settings: jevKeyLabel"
+  },
+  "@jevKeySaved": {
+    "description": "Jev optional plugin settings: jevKeySaved"
+  },
+  "@jevKeyMissing": {
+    "description": "Jev optional plugin settings: jevKeyMissing"
+  },
+  "@jevSaveKey": {
+    "description": "Jev optional plugin settings: jevSaveKey"
+  },
+  "@jevRemoveKey": {
+    "description": "Jev optional plugin settings: jevRemoveKey"
+  },
+  "@jevEnable": {
+    "description": "Jev optional plugin settings: jevEnable"
+  },
+  "@jevEnableHint": {
+    "description": "Jev optional plugin settings: jevEnableHint"
+  },
+  "@jevConsole": {
+    "description": "Jev optional plugin settings: jevConsole"
+  },
+  "@jevVerify": {
+    "description": "Jev optional plugin settings: jevVerify"
+  },
+  "@jevVerified": {
+    "description": "Jev optional plugin settings: jevVerified"
+  },
+  "@jevRefresh": {
+    "description": "Jev optional plugin settings: jevRefresh"
+  },
+  "@jevUsageTitle": {
+    "description": "Jev optional plugin settings: jevUsageTitle"
+  },
+  "@jevUsageHint": {
+    "description": "Jev optional plugin settings: jevUsageHint"
+  },
+  "@jevToday": {
+    "description": "Jev optional plugin settings: jevToday"
+  },
+  "@jevAllTime": {
+    "description": "Jev optional plugin settings: jevAllTime"
+  },
+  "@jevRequests": {
+    "description": "Jev optional plugin settings: jevRequests"
+  },
+  "@jevInput": {
+    "description": "Jev optional plugin settings: jevInput"
+  },
+  "@jevOutput": {
+    "description": "Jev optional plugin settings: jevOutput"
+  },
+  "@jevUnknown": {
+    "description": "Jev optional plugin settings: jevUnknown"
+  },
+  "@jevEmpty": {
+    "description": "Jev optional plugin settings: jevEmpty"
+  },
+  "@jevRetry": {
+    "description": "Jev optional plugin settings: jevRetry"
+  },
+  "@jevStorageError": {
+    "description": "Jev optional plugin settings: jevStorageError"
+  },
+  "@jevKeyError": {
+    "description": "Jev optional plugin settings: jevKeyError"
+  },
+  "@jevDisabledError": {
+    "description": "Jev optional plugin settings: jevDisabledError"
+  },
+  "@jevRequestError": {
+    "description": "Jev optional plugin settings: jevRequestError"
+  },
+  "@jevReconnect": {
+    "description": "Jev optional plugin settings: jevReconnect"
+  },
+  "plugins": "插件",
+  "pluginMarket": "插件市场",
+  "pluginMarketDescription": "按需选择和管理 DingDong 的扩展功能。",
+  "pluginOpen": "管理",
+  "pluginBack": "返回插件",
+  "pluginUnavailable": "暂时无法加载插件，请从 DingDong 重新打开此窗口。",
+  "jevWebsite": "官方网站",
+  "@plugins": {
+    "description": "Optional plugin management: plugins"
+  },
+  "@pluginMarket": {
+    "description": "Optional plugin management: pluginMarket"
+  },
+  "@pluginMarketDescription": {
+    "description": "Optional plugin management: pluginMarketDescription"
+  },
+  "@pluginOpen": {
+    "description": "Optional plugin management: pluginOpen"
+  },
+  "@pluginBack": {
+    "description": "Optional plugin management: pluginBack"
+  },
+  "@pluginUnavailable": {
+    "description": "Optional plugin management: pluginUnavailable"
+  },
+  "@jevWebsite": {
+    "description": "Optional plugin management: jevWebsite"
   }
 }

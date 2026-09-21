@@ -20,6 +20,7 @@ final class AgentCompatibilityRoutes {
     this.loadConversationFooterSymbols,
     this.loadShowConversationTokenUsage,
     this.loadConversationTokenUsage,
+    this.loadJevUsage,
     DateTime Function()? now,
     Uri? baseUri,
   }) : _now = now ?? _utcNow,
@@ -33,6 +34,7 @@ final class AgentCompatibilityRoutes {
   loadConversationFooterSymbols;
   final Future<bool> Function()? loadShowConversationTokenUsage;
   final ConversationTokenUsageLoader? loadConversationTokenUsage;
+  final JevUsageLoader? loadJevUsage;
   final DateTime Function() _now;
   Uri _baseUri;
 
@@ -58,6 +60,7 @@ final class AgentCompatibilityRoutes {
           loadConversationFooterSymbols: loadConversationFooterSymbols,
           loadShowConversationTokenUsage: loadShowConversationTokenUsage,
           loadConversationTokenUsage: loadConversationTokenUsage,
+          loadJevUsage: loadJevUsage,
           now: _now,
         ).respond(
           jsonEncode(<String, Object?>{

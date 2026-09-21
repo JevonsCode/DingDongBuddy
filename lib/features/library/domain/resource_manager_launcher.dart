@@ -5,7 +5,8 @@ enum ResourceManagerDestination {
   clipboard,
   recentAgents,
   agentAdapters,
-  issues;
+  issues,
+  plugins;
 
   static ResourceManagerDestination parse(Object? value) {
     return values.firstWhere(

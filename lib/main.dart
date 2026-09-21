@@ -306,6 +306,14 @@ Future<void> main(List<String> arguments) async {
         unawaited(settingsWindowLauncher.show());
         return;
       }
+      if (index == 5) {
+        unawaited(
+          resourceManagerLauncher.show(
+            destination: ResourceManagerDestination.plugins,
+          ),
+        );
+        return;
+      }
       shellController.open(index);
       unawaited(shellGateway.showAndFocus());
     },
@@ -438,6 +446,12 @@ Future<void> main(List<String> arguments) async {
       await shellGateway.hide();
       await resourceManagerLauncher.show();
     },
+    onShowPluginMarket: () async {
+      await shellGateway.hide();
+      await resourceManagerLauncher.show(
+        destination: ResourceManagerDestination.plugins,
+      );
+    },
     onShowSettings: () async {
       await shellGateway.hide();
       await settingsWindowLauncher.show();
@@ -487,6 +501,12 @@ Future<void> main(List<String> arguments) async {
       case 'settings_quick_open':
         await quickPasteGateway.openSettings();
         return null;
+      case 'settings_jev':
+        final values = Map<String, Object?>.from(call.arguments! as Map);
+        return dependencies.jev.manage(
+          values['action']! as String,
+          Map<String, Object?>.from(values['arguments']! as Map),
+        );
       case 'settings_selection_apply':
         final Map<Object?, Object?> values = call.arguments! as Map;
         return (await selectionPluginGateway.apply(

@@ -45,7 +45,7 @@ void testWidgetsOnPlatform(
 }
 
 void main() {
-  testWidgets('connection header shows the paired-device count badge', (
+  testWidgets('connection header shows the connected-device count badge', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -58,7 +58,7 @@ void main() {
               child: PopupHeader(
                 selectedIndex: 0,
                 issueCount: 0,
-                pairedDeviceCount: 3,
+                connectedDeviceCount: 3,
                 updateAvailable: false,
                 showShortcutHints: false,
                 workspaceShortcuts: WorkspaceShortcuts.defaultValue,
@@ -87,7 +87,7 @@ void main() {
           )
           .first,
     );
-    expect(semantics.properties.label, contains('3'));
+    expect(semantics.properties.label, contains('3 connected devices'));
   });
 
   testWidgets('quick-launch surface is a compact three-tab popup', (
@@ -1371,15 +1371,14 @@ description: Use when product decisions should follow saved preferences.
             : LogicalKeyboardKey.altLeft;
         final String hint = platform == TargetPlatform.macOS ? '⌃ Q' : 'Alt Q';
         await tester.sendKeyDownEvent(modifier);
-        for (final (LogicalKeyboardKey key, int index) in <
-          (LogicalKeyboardKey, int)
-        >[
-          (LogicalKeyboardKey.keyW, 1),
-          (LogicalKeyboardKey.keyQ, 0),
-          (LogicalKeyboardKey.keyE, 2),
-          (LogicalKeyboardKey.keyQ, 0),
-          (LogicalKeyboardKey.keyW, 1),
-        ]) {
+        for (final (LogicalKeyboardKey key, int index)
+            in <(LogicalKeyboardKey, int)>[
+              (LogicalKeyboardKey.keyW, 1),
+              (LogicalKeyboardKey.keyQ, 0),
+              (LogicalKeyboardKey.keyE, 2),
+              (LogicalKeyboardKey.keyQ, 0),
+              (LogicalKeyboardKey.keyW, 1),
+            ]) {
           await tester.sendKeyEvent(key);
           // Let the previously focused workspace unmount before the next key.
           await tester.pumpAndSettle();
@@ -1393,9 +1392,10 @@ description: Use when product decisions should follow saved preferences.
     );
   }
 
-  for (final (LogicalKeyboardKey key, int index) in <
-    (LogicalKeyboardKey, int)
-  >[(LogicalKeyboardKey.keyQ, 0), (LogicalKeyboardKey.keyW, 1)]) {
+  for (final (LogicalKeyboardKey key, int index) in <(LogicalKeyboardKey, int)>[
+    (LogicalKeyboardKey.keyQ, 0),
+    (LogicalKeyboardKey.keyW, 1),
+  ]) {
     testWidgetsOnPlatform(
       'Control release clears hints after leaving clipboard search for $index',
       TargetPlatform.macOS,

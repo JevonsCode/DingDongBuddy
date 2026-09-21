@@ -5,6 +5,42 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
+  test(
+    'Jev inherits only the current successful bridge conversation',
+    () async {
+      final transport = _RecordingMcpHttpTransport();
+      final executor = LoopbackMcpToolExecutor(
+        transport,
+        currentDirectory: () => '/workspace/test',
+        repositoryUrlResolver: (_) async => null,
+        conversationIdResolver: () => null,
+        sourceResolver: () => 'Codex',
+      );
+      await executor.execute('dingdong_bridge', {
+        'conversationId': 'explicit-one',
+      });
+      await executor.execute('dingdong_jev_check', {
+        'state': 'test',
+        'instructions': 'test?',
+      });
+      expect(transport.body?['conversationId'], 'explicit-one');
+      await executor.execute('dingdong_jev_check', {
+        'conversationId': 'explicit-override',
+      });
+      expect(transport.body?['conversationId'], 'explicit-override');
+      await executor.execute('dingdong_bridge', {});
+      await executor.execute('dingdong_jev_check', {});
+      expect(transport.body?['conversationId'], '');
+      await executor.execute('dingdong_bridge', {
+        'conversationId': 'explicit-two',
+      });
+      transport.response = {'status': 'error'};
+      await executor.execute('dingdong_bridge', {'conversationId': 'failed'});
+      await executor.execute('dingdong_jev_check', {});
+      expect(transport.body?['conversationId'], '');
+    },
+  );
+
   test('notify maps to the stable ding loopback route', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);

@@ -248,7 +248,7 @@ class _SelectionPluginSectionState extends State<SelectionPluginSection> {
                   tone: DesktopActionTone.soft,
                 ),
               ),
-              if (configuration.requiresToken) ...<Widget>[
+              if (configuration.supportsToken) ...<Widget>[
                 const SizedBox(height: 12),
                 _SettingLine(
                   label: context.l10n.selectionApiToken,
@@ -262,7 +262,11 @@ class _SelectionPluginSectionState extends State<SelectionPluginSection> {
                           controller: _tokenController,
                           obscureText: true,
                           decoration: InputDecoration(
-                            hintText: context.l10n.selectionTokenPlaceholder,
+                            hintText: configuration.requiresToken
+                                ? context.l10n.selectionTokenPlaceholder
+                                : context
+                                      .l10n
+                                      .selectionTokenOptionalPlaceholder,
                           ),
                         ),
                         const SizedBox(height: 7),
@@ -403,4 +407,5 @@ String _providerLabel(SelectionModelProvider provider) => switch (provider) {
   SelectionModelProvider.openRouter => 'OpenRouter',
   SelectionModelProvider.gemini => 'Gemini',
   SelectionModelProvider.openAICompatible => 'OpenAI-compatible',
+  SelectionModelProvider.anthropicCompatible => 'Anthropic-compatible',
 };

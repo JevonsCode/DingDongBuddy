@@ -6,10 +6,10 @@ DingDong 主程序。这个入口需要 macOS 上的 1.5.4 或更新版本；旧
 
 ## 开始使用
 
-1. 打开 DingDong 的“设置”，找到“系统级划词”，开启开关。
+1. 打开 DingDong 的“资源管理 → 插件”，管理“系统级划词”并开启开关。
 2. 如果显示需要辅助功能权限，点击权限助手，在 macOS“系统设置 → 隐私与安全性
    → 辅助功能”中允许当前运行的 DingDong。DEV 构建与正式应用是不同的权限身份。
-3. 返回设置并点击“刷新状态”。显示“运行中”后，在支持辅助功能选区的应用里选中文字。
+3. 返回插件页面并点击“刷新状态”。显示“运行中”后，在支持辅助功能选区的应用里选中文字。
 4. 点击浮层的“复制”“翻译”或“解释”。`⌥⌘C` 可以直接复制；如果应用没有暴露安全的
    选区，插件会提示无法读取，此时请使用应用自己的复制功能。
 
@@ -26,7 +26,8 @@ DingDong 主程序。这个入口需要 macOS 上的 1.5.4 或更新版本；旧
 | Ollama | 自行安装并启动本地服务，填入已安装模型的名称；可选择回复后卸载模型 |
 | LM Studio | 启动本地兼容服务，填入服务实际提供的模型名；自动卸载在 LM Studio 内配置 |
 | OpenRouter / Gemini | 填入可用服务地址、模型名和你自己的 API Token |
-| OpenAI-compatible | 填入兼容服务地址和模型名；远程服务必须为 HTTPS，并使用自己的 Token |
+| OpenAI-compatible | OpenAI Chat Completions 兼容服务，包括反向代理；本机 HTTP 服务可选 Token，远程 HTTPS 服务需要 Token |
+| Anthropic-compatible | Anthropic Messages 兼容服务，包括 Kiro 类反向代理；本机 HTTP 服务可选 Token，远程 HTTPS 服务需要 Token |
 
 先应用模型设置，再保存 Token。Token 按 Provider、协议、主机和端口隔离存入
 macOS 钥匙串；换到其他服务地址时不会沿用原地址的 Token。Token 不写入偏好设置、
@@ -44,6 +45,25 @@ macOS 钥匙串；换到其他服务地址时不会沿用原地址的 Token。To
 只有主动选择翻译或解释才会把当前选区发送给所选 Provider。划词模块不单独持久化
 选区；主动点击复制后，文本会进入系统剪贴板，并按你的剪贴板历史设置处理。
 每次最多处理 10,000 个字符，网络响应超过 1 MiB 会被拒绝。
+
+## 使用反向代理
+
+在模型服务中选择代理实际支持的协议。OpenAI-compatible 使用 `chat/completions`，
+Anthropic-compatible 使用 `messages`，两者不能只改模型名称来互换。
+
+例如本机 Kiro 代理支持 Anthropic Messages 时，选择 **Anthropic-compatible**，
+地址填写 `http://127.0.0.1:3456/v1`，模型名称填写代理实际提供的 ID。
+模型列表中的 ID 应原样填写，包括点号、连字符等。Anthropic 地址也可填写服务根地址，
+此时插件会追加 `/v1/messages`；有路径前缀时请填写到 `/v1`，不要填写完整的 `/messages`。
+OpenAI 兼容代理地址应填写到其 API 根路径，例如 `http://127.0.0.1:1234/v1`。
+
+若代理启用了认证，在 API Token 中填写**代理接入 Token**并保存；没有认证可留空。
+插件通过 `Authorization: Bearer` 发送 Token，不会自动读取 Claude Code 配置或 Kiro 登录凭据。
+Anthropic 请求遵循 [Messages API](https://platform.claude.com/docs/en/api/http/messages)
+及 [认证文档](https://platform.claude.com/docs/en/manage-claude/authentication)。
+
+出现 HTTP 503 时，需要检查代理的上游服务。代理健康检查正常或能列出模型，
+不代表该模型能够完成推理；插件不会自动改用其他服务。
 
 ## 与 Fuli 示例、Skill 的关系
 

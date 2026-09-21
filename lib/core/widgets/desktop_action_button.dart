@@ -121,8 +121,12 @@ class DesktopActionButton extends StatelessWidget {
         }
         return palette.background;
       }),
-      textStyle: const WidgetStatePropertyAll<TextStyle>(
-        TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.1),
+      textStyle: WidgetStatePropertyAll<TextStyle>(
+        (Theme.of(context).textTheme.labelLarge ?? const TextStyle()).copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          height: 1.1,
+        ),
       ),
       mouseCursor: WidgetStatePropertyAll<MouseCursor>(
         enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,

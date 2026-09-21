@@ -593,6 +593,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   }
 
   @override
+  String countConnectedDevices(Object count) {
+    return '$count connected devices';
+  }
+
+  @override
   String countPairedDevices(Object count) {
     return '$count paired devices';
   }
@@ -3174,6 +3179,10 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get selectionApiToken => 'API token';
 
   @override
+  String get selectionTokenOptionalPlaceholder =>
+      'Optional: enter a token if your proxy requires authentication';
+
+  @override
   String get selectionTokenPlaceholder => 'Paste your own token';
 
   @override
@@ -3220,4 +3229,130 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get jevDescription =>
+      'Fast judgments, classification and scoring for your Agents.';
+
+  @override
+  String get jevBundled => 'Install from DingDong when you need it.';
+
+  @override
+  String get jevInstall => 'Install Jev';
+
+  @override
+  String get jevUninstall => 'Uninstall';
+
+  @override
+  String get jevUninstallHint =>
+      'Uninstall disables new calls and removes the saved key. Usage history is retained. Requests already sent may still be billed.';
+
+  @override
+  String get jevKeyLabel => 'TypeSafe API Key';
+
+  @override
+  String get jevKeySaved => 'Key saved in system secure storage';
+
+  @override
+  String get jevKeyMissing => 'Add your TypeSafe API key to get started';
+
+  @override
+  String get jevSaveKey => 'Save key';
+
+  @override
+  String get jevRemoveKey => 'Remove key';
+
+  @override
+  String get jevEnable => 'Allow paid Jev calls';
+
+  @override
+  String get jevEnableHint =>
+      'Only when an Agent invokes Jev. Supplied text is sent to TypeSafe; the Agent’s main model stays the same.';
+
+  @override
+  String get jevConsole => 'Account & billing';
+
+  @override
+  String get jevVerify => 'Test connection (billable)';
+
+  @override
+  String get jevVerified =>
+      'Real Jev request succeeded; usage has been recorded.';
+
+  @override
+  String get jevRefresh => 'Refresh usage';
+
+  @override
+  String get jevUsageTitle => 'Jev usage';
+
+  @override
+  String get jevUsageHint =>
+      'Token usage reported by this plugin on this device. Other applications are not included.';
+
+  @override
+  String get jevToday => 'Today';
+
+  @override
+  String get jevAllTime => 'All time';
+
+  @override
+  String get jevRequests => 'Requests';
+
+  @override
+  String get jevInput => 'Input tokens';
+
+  @override
+  String get jevOutput => 'Output tokens';
+
+  @override
+  String get jevUnknown => 'Requests with unknown usage';
+
+  @override
+  String get jevEmpty => 'No Jev calls recorded yet.';
+
+  @override
+  String get jevRetry => 'Try again';
+
+  @override
+  String get jevStorageError =>
+      'Could not access local secure storage. Retry or check system keychain access.';
+
+  @override
+  String get jevKeyError =>
+      'Enter a complete API key before enabling calls. Saving a new key pauses calls until you enable them again.';
+
+  @override
+  String get jevDisabledError =>
+      'Install Jev, save a key and allow paid calls first.';
+
+  @override
+  String get jevRequestError =>
+      'Jev did not return a valid result. Check the account, key and network. No automatic retry; usage may be unknown.';
+
+  @override
+  String get jevReconnect =>
+      'After installing, reconnect DingDong MCP in your Agent to discover Jev tools.';
+
+  @override
+  String get plugins => 'Plugins';
+
+  @override
+  String get pluginMarket => 'Plugin market';
+
+  @override
+  String get pluginMarketDescription =>
+      'Browse and manage optional DingDong features.';
+
+  @override
+  String get pluginOpen => 'Manage';
+
+  @override
+  String get pluginBack => 'Back to plugins';
+
+  @override
+  String get pluginUnavailable =>
+      'Plugin controls are unavailable. Reopen this window from DingDong.';
+
+  @override
+  String get jevWebsite => 'Official website';
 }

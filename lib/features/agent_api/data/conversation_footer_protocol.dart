@@ -24,6 +24,7 @@ Map<String, Object?> buildDingDongConversationFooter({
   String label = 'DingDong',
   ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
   ConversationTokenUsage? tokenUsage,
+  Map<String, Object?>? jevUsage,
 }) {
   final ConversationFooterSymbols normalizedSymbols = symbols.sanitized();
   final String normalizedLabel = _boundedFooterText(
@@ -47,9 +48,16 @@ Map<String, Object?> buildDingDongConversationFooter({
   final String markdownTokens = normalizedItems
       .map((Map<String, Object?> item) => item['lineToken']! as String)
       .join(' | ');
-  final String tokenUsageText = tokenUsage == null
-      ? ''
-      : '${formatCompactConversationTokenCount(tokenUsage.totalTokens)} Token';
+  final jevTokens = jevUsage?['total_tokens'];
+  final unknown = jevUsage?['unknown_usage_requests'];
+  final validJev =
+      jevTokens is int && jevTokens >= 0 && unknown is int && unknown >= 0;
+  final String tokenUsageText = [
+    if (tokenUsage != null)
+      '${formatCompactConversationTokenCount(tokenUsage.totalTokens)} Token',
+    if (validJev)
+      'Jev ${formatCompactConversationTokenCount(jevTokens)} Token${unknown > 0 ? ' (+$unknown unknown)' : ''}',
+  ].join(' · ');
   final String tokenUsageSuffix = tokenUsageText.isEmpty
       ? ''
       : ' · $tokenUsageText';
@@ -74,6 +82,7 @@ Map<String, Object?> buildDingDongConversationFooter({
     // top-level flag remains the preferred shape for new integrations.
     'visible': normalizedItems.isNotEmpty,
     if (tokenUsage != null) 'tokenUsage': tokenUsage.toJson(),
+    if (validJev) 'jevUsage': jevUsage,
   };
 
   return <String, Object?>{

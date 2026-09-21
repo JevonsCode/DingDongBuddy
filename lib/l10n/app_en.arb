@@ -800,6 +800,11 @@
       }
     }
   },
+  "countConnectedDevices": "{count} connected devices",
+  "@countConnectedDevices": {
+    "description": "Number of devices with an active connection in the header badge.",
+    "placeholders": {"count": {"type": "Object"}}
+  },
   "countPairedDevices": "{count} paired devices",
   "@countPairedDevices": {
     "description": "DingDong built-in interface copy.",
@@ -4027,37 +4032,69 @@
     "description": "DingDong built-in interface copy."
   },
   "connectAnotherComputer": "Connect another computer",
-  "@connectAnotherComputer": {"description": "Action that imports a trusted pairing link on a second computer."},
+  "@connectAnotherComputer": {
+    "description": "Action that imports a trusted pairing link on a second computer."
+  },
   "computerPairingLink": "Computer pairing link",
-  "@computerPairingLink": {"description": "Title for the desktop-to-desktop pairing dialog."},
+  "@computerPairingLink": {
+    "description": "Title for the desktop-to-desktop pairing dialog."
+  },
   "pastePairingLinkFromOtherComputer": "Paste the pairing link copied from the other computer. It contains an encryption key, so only share it through a channel you trust.",
-  "@pastePairingLinkFromOtherComputer": {"description": "Security guidance for desktop-to-desktop pairing."},
+  "@pastePairingLinkFromOtherComputer": {
+    "description": "Security guidance for desktop-to-desktop pairing."
+  },
   "pastePairingLink": "Paste pairing link",
-  "@pastePairingLink": {"description": "Placeholder for the desktop pairing link field."},
+  "@pastePairingLink": {
+    "description": "Placeholder for the desktop pairing link field."
+  },
   "connectComputer": "Connect computer",
-  "@connectComputer": {"description": "Confirms a desktop-to-desktop pairing link."},
+  "@connectComputer": {
+    "description": "Confirms a desktop-to-desktop pairing link."
+  },
   "invalidPairingLink": "This pairing link is invalid or incomplete.",
-  "@invalidPairingLink": {"description": "Shown when a desktop pairing link cannot be decoded."},
+  "@invalidPairingLink": {
+    "description": "Shown when a desktop pairing link cannot be decoded."
+  },
   "copyLinkForAnotherComputer": "Copy link for another computer",
-  "@copyLinkForAnotherComputer": {"description": "Copies the current encrypted pairing link for desktop import."},
+  "@copyLinkForAnotherComputer": {
+    "description": "Copies the current encrypted pairing link for desktop import."
+  },
   "pairingLinkCopied": "Pairing link copied. Treat it like a one-time password.",
-  "@pairingLinkCopied": {"description": "Confirmation after copying a pairing link."},
+  "@pairingLinkCopied": {
+    "description": "Confirmation after copying a pairing link."
+  },
   "communicationMethod": "Communication method",
-  "@communicationMethod": {"description": "Label for the per-device transport preference."},
+  "@communicationMethod": {
+    "description": "Label for the per-device transport preference."
+  },
   "automaticRecommended": "Automatic (recommended)",
-  "@automaticRecommended": {"description": "Transport option that prefers direct WebRTC and falls back to relay."},
+  "@automaticRecommended": {
+    "description": "Transport option that prefers direct WebRTC and falls back to relay."
+  },
   "localNetworkDirect": "Local network direct",
-  "@localNetworkDirect": {"description": "Transport option that sends content only over direct WebRTC."},
+  "@localNetworkDirect": {
+    "description": "Transport option that sends content only over direct WebRTC."
+  },
   "encryptedService": "Encrypted service",
-  "@encryptedService": {"description": "Transport option that sends encrypted content through the relay service."},
+  "@encryptedService": {
+    "description": "Transport option that sends encrypted content through the relay service."
+  },
   "localNetworkHandshakeNote": "Local-network mode uses the service only for encrypted signalling; clipboard and file bodies stay on the direct connection.",
-  "@localNetworkHandshakeNote": {"description": "Clarifies that local-network mode still uses relay signalling."},
+  "@localNetworkHandshakeNote": {
+    "description": "Clarifies that local-network mode still uses relay signalling."
+  },
   "computerSyncDefaultsNote": "Computers start with notifications and automatic clipboard sync off. Explicit shares are copied to the other computer's system clipboard.",
-  "@computerSyncDefaultsNote": {"description": "Explains safe defaults for desktop-to-desktop links."},
+  "@computerSyncDefaultsNote": {
+    "description": "Explains safe defaults for desktop-to-desktop links."
+  },
   "sharedFileIsNoLongerAvailable": "The local file is no longer available and was not sent.",
-  "@sharedFileIsNoLongerAvailable": {"description": "Explains why an explicit device file share failed."},
+  "@sharedFileIsNoLongerAvailable": {
+    "description": "Explains why an explicit device file share failed."
+  },
   "sharedFileIsLargerThan25MiB": "The file is larger than 25 MiB and was not sent.",
-  "@sharedFileIsLargerThan25MiB": {"description": "Explains the device file transfer limit."},
+  "@sharedFileIsLargerThan25MiB": {
+    "description": "Explains the device file transfer limit."
+  },
   "systemSelectionTools": "System selection tools",
   "@systemSelectionTools": {
     "description": "Settings title for the optional system-wide text selection plugin."
@@ -4114,6 +4151,10 @@
   "@selectionApiToken": {
     "description": "Settings label for a user-provided model API token."
   },
+  "selectionTokenOptionalPlaceholder": "Optional: enter a token if your proxy requires authentication",
+  "@selectionTokenOptionalPlaceholder": {
+    "description": "Token hint for a local compatible model proxy"
+  },
   "selectionTokenPlaceholder": "Paste your own token",
   "@selectionTokenPlaceholder": {
     "description": "Placeholder for the secret token field."
@@ -4146,5 +4187,157 @@
         "type": "String"
       }
     }
+  },
+  "jevDescription": "Fast judgments, classification and scoring for your Agents.",
+  "@jevDescription": {
+    "description": "Jev optional plugin settings: jevDescription"
+  },
+  "jevBundled": "Install from DingDong when you need it.",
+  "@jevBundled": {
+    "description": "Jev optional plugin settings: jevBundled"
+  },
+  "jevInstall": "Install Jev",
+  "@jevInstall": {
+    "description": "Jev optional plugin settings: jevInstall"
+  },
+  "jevUninstall": "Uninstall",
+  "@jevUninstall": {
+    "description": "Jev optional plugin settings: jevUninstall"
+  },
+  "jevUninstallHint": "Uninstall disables new calls and removes the saved key. Usage history is retained. Requests already sent may still be billed.",
+  "@jevUninstallHint": {
+    "description": "Jev optional plugin settings: jevUninstallHint"
+  },
+  "jevKeyLabel": "TypeSafe API Key",
+  "@jevKeyLabel": {
+    "description": "Jev optional plugin settings: jevKeyLabel"
+  },
+  "jevKeySaved": "Key saved in system secure storage",
+  "@jevKeySaved": {
+    "description": "Jev optional plugin settings: jevKeySaved"
+  },
+  "jevKeyMissing": "Add your TypeSafe API key to get started",
+  "@jevKeyMissing": {
+    "description": "Jev optional plugin settings: jevKeyMissing"
+  },
+  "jevSaveKey": "Save key",
+  "@jevSaveKey": {
+    "description": "Jev optional plugin settings: jevSaveKey"
+  },
+  "jevRemoveKey": "Remove key",
+  "@jevRemoveKey": {
+    "description": "Jev optional plugin settings: jevRemoveKey"
+  },
+  "jevEnable": "Allow paid Jev calls",
+  "@jevEnable": {
+    "description": "Jev optional plugin settings: jevEnable"
+  },
+  "jevEnableHint": "Only when an Agent invokes Jev. Supplied text is sent to TypeSafe; the Agent’s main model stays the same.",
+  "@jevEnableHint": {
+    "description": "Jev optional plugin settings: jevEnableHint"
+  },
+  "jevConsole": "Account & billing",
+  "@jevConsole": {
+    "description": "Jev optional plugin settings: jevConsole"
+  },
+  "jevVerify": "Test connection (billable)",
+  "@jevVerify": {
+    "description": "Jev optional plugin settings: jevVerify"
+  },
+  "jevVerified": "Real Jev request succeeded; usage has been recorded.",
+  "@jevVerified": {
+    "description": "Jev optional plugin settings: jevVerified"
+  },
+  "jevRefresh": "Refresh usage",
+  "@jevRefresh": {
+    "description": "Jev optional plugin settings: jevRefresh"
+  },
+  "jevUsageTitle": "Jev usage",
+  "@jevUsageTitle": {
+    "description": "Jev optional plugin settings: jevUsageTitle"
+  },
+  "jevUsageHint": "Token usage reported by this plugin on this device. Other applications are not included.",
+  "@jevUsageHint": {
+    "description": "Jev optional plugin settings: jevUsageHint"
+  },
+  "jevToday": "Today",
+  "@jevToday": {
+    "description": "Jev optional plugin settings: jevToday"
+  },
+  "jevAllTime": "All time",
+  "@jevAllTime": {
+    "description": "Jev optional plugin settings: jevAllTime"
+  },
+  "jevRequests": "Requests",
+  "@jevRequests": {
+    "description": "Jev optional plugin settings: jevRequests"
+  },
+  "jevInput": "Input tokens",
+  "@jevInput": {
+    "description": "Jev optional plugin settings: jevInput"
+  },
+  "jevOutput": "Output tokens",
+  "@jevOutput": {
+    "description": "Jev optional plugin settings: jevOutput"
+  },
+  "jevUnknown": "Requests with unknown usage",
+  "@jevUnknown": {
+    "description": "Jev optional plugin settings: jevUnknown"
+  },
+  "jevEmpty": "No Jev calls recorded yet.",
+  "@jevEmpty": {
+    "description": "Jev optional plugin settings: jevEmpty"
+  },
+  "jevRetry": "Try again",
+  "@jevRetry": {
+    "description": "Jev optional plugin settings: jevRetry"
+  },
+  "jevStorageError": "Could not access local secure storage. Retry or check system keychain access.",
+  "@jevStorageError": {
+    "description": "Jev optional plugin settings: jevStorageError"
+  },
+  "jevKeyError": "Enter a complete API key before enabling calls. Saving a new key pauses calls until you enable them again.",
+  "@jevKeyError": {
+    "description": "Jev optional plugin settings: jevKeyError"
+  },
+  "jevDisabledError": "Install Jev, save a key and allow paid calls first.",
+  "@jevDisabledError": {
+    "description": "Jev optional plugin settings: jevDisabledError"
+  },
+  "jevRequestError": "Jev did not return a valid result. Check the account, key and network. No automatic retry; usage may be unknown.",
+  "@jevRequestError": {
+    "description": "Jev optional plugin settings: jevRequestError"
+  },
+  "jevReconnect": "After installing, reconnect DingDong MCP in your Agent to discover Jev tools.",
+  "@jevReconnect": {
+    "description": "Jev optional plugin settings: jevReconnect"
+  },
+  "plugins": "Plugins",
+  "pluginMarket": "Plugin market",
+  "pluginMarketDescription": "Browse and manage optional DingDong features.",
+  "pluginOpen": "Manage",
+  "pluginBack": "Back to plugins",
+  "pluginUnavailable": "Plugin controls are unavailable. Reopen this window from DingDong.",
+  "jevWebsite": "Official website",
+  "@plugins": {
+    "description": "Optional plugin management: plugins"
+  },
+  "@pluginMarket": {
+    "description": "Optional plugin management: pluginMarket"
+  },
+  "@pluginMarketDescription": {
+    "description": "Optional plugin management: pluginMarketDescription"
+  },
+  "@pluginOpen": {
+    "description": "Optional plugin management: pluginOpen"
+  },
+  "@pluginBack": {
+    "description": "Optional plugin management: pluginBack"
+  },
+  "@pluginUnavailable": {
+    "description": "Optional plugin management: pluginUnavailable"
+  },
+  "@jevWebsite": {
+    "description": "Optional plugin management: jevWebsite"
   }
 }

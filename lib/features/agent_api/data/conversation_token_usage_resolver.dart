@@ -19,6 +19,11 @@ final class ConversationTokenUsageRequest {
   final String? transcriptPath;
 }
 
+typedef JevUsageLoader =
+    Future<Map<String, Object?>?> Function(
+      ConversationTokenUsageRequest request,
+    );
+
 typedef ConversationTokenUsageLoader =
     Future<ConversationTokenUsage?> Function(
       ConversationTokenUsageRequest request,

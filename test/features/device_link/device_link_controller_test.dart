@@ -593,7 +593,9 @@ void main() {
       final _Harness harness = await _connectedHarness(autoSend: false);
       addTearDown(harness.dispose);
 
+      expect(harness.controller.connectedDeviceCount, 1);
       await harness.controller.disconnect('phone-one');
+      expect(harness.controller.connectedDeviceCount, 0);
       expect(harness.controller.devices.single.manuallyDisconnected, isTrue);
       expect(harness.session.closed, isTrue);
 
@@ -824,6 +826,7 @@ void main() {
         controller.statusOf(existing.id),
         DeviceConnectionStatus.connecting,
       );
+      expect(controller.connectedDeviceCount, 0);
       expect(clipboardStore.list(limit: 10), isEmpty);
       expect(systemClipboard.text, isNull);
     },

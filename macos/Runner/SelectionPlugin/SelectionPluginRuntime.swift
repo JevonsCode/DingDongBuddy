@@ -253,6 +253,7 @@ public enum ModelProviderKind: String, CaseIterable, Codable, Sendable {
     case openRouter
     case gemini
     case openAICompatible
+    case anthropicCompatible
 }
 
 public enum ModelPreset: String, CaseIterable, Sendable {
@@ -283,11 +284,15 @@ public struct ModelConfiguration: Codable, Equatable, Sendable {
         self.unloadLocalModelAfterResponse = unloadLocalModelAfterResponse
     }
 
+    public var supportsToken: Bool {
+        provider != .ollama && provider != .lmStudio
+    }
+
     public var requiresToken: Bool {
         switch provider {
         case .openRouter, .gemini:
             return true
-        case .openAICompatible:
+        case .openAICompatible, .anthropicCompatible:
             return !baseURL.isLoopbackHTTP
         case .ollama, .lmStudio:
             return false
@@ -397,7 +402,14 @@ public enum ModelRequestFactory {
             throw ModelClientError.tokenRequired
         }
 
-        let path = configuration.provider == .ollama ? "api/chat" : "chat/completions"
+        let path: String
+        switch configuration.provider {
+        case .ollama: path = "api/chat"
+        case .anthropicCompatible:
+            path = configuration.baseURL.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).isEmpty
+                ? "v1/messages" : "messages"
+        default: path = "chat/completions"
+        }
         guard let endpoint = appending(path: path, to: configuration.baseURL) else {
             throw ModelClientError.invalidEndpoint
         }
@@ -417,6 +429,10 @@ public enum ModelRequestFactory {
             "messages": messages,
             "stream": false
         ]
+        if configuration.provider == .anthropicCompatible {
+            body["system"] = prompt.system
+            body["messages"] = [["role": "user", "content": prompt.user]]
+        }
         if configuration.provider == .ollama {
             body["think"] = false
             body["keep_alive"] = configuration.unloadLocalModelAfterResponse ? 0 : "5m"
@@ -429,7 +445,10 @@ public enum ModelRequestFactory {
         request.httpMethod = "POST"
         request.timeoutInterval = 90
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if configuration.requiresToken, let normalizedToken, !normalizedToken.isEmpty {
+        if configuration.provider == .anthropicCompatible {
+            request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        }
+        if configuration.supportsToken, let normalizedToken, !normalizedToken.isEmpty {
             request.setValue("Bearer \(normalizedToken)", forHTTPHeaderField: "Authorization")
         }
         request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [.sortedKeys])
@@ -481,6 +500,9 @@ public enum ModelResponseParser {
         let content: String?
         if provider == .ollama {
             content = try JSONDecoder().decode(OllamaResponse.self, from: data).message.content
+        } else if provider == .anthropicCompatible {
+            content = try JSONDecoder().decode(AnthropicResponse.self, from: data)
+                .content.filter { $0.type == "text" }.compactMap(\.text).joined(separator: "\n")
         } else {
             content = try JSONDecoder().decode(CompatibleResponse.self, from: data)
                 .choices.first?.message.content
@@ -599,6 +621,14 @@ private final class SameOriginRedirectDelegate: NSObject, URLSessionTaskDelegate
 private struct OllamaResponse: Decodable {
     struct Message: Decodable { let content: String }
     let message: Message
+}
+
+private struct AnthropicResponse: Decodable {
+    struct Block: Decodable {
+        let type: String
+        let text: String?
+    }
+    let content: [Block]
 }
 
 private struct CompatibleResponse: Decodable {

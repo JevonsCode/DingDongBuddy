@@ -24,8 +24,8 @@ connects them to supported clients, and gathers their alerts with a desktop
 sound you choose. Important results and selected clipboard items can also reach
 a trusted phone through the mobile PWA.
 
-> **Current release: DingDong 1.5.7.** Adds PWA image previews, full dates,
-> and persistent download records with clear save-status explanations.
+> **Current release: DingDong 1.6.0.** Adds a Plugins page with optional Jev installation,
+> separate Token usage, and macOS selection tools. More plugins are on the way.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -49,7 +49,7 @@ connection relay stores no clipboard or file content.
 ## Optional system selection tools on macOS
 
 DingDong 1.5.4 includes the native selection plugin developed in Fuli.
-Open **Settings → System selection tools**, enable it, and grant DingDong
+Open **Resource Manager → Plugins → System selection tools**, enable it, and grant DingDong
 Accessibility permission if needed. Select text in an application that exposes
 its selection to macOS, then choose **Copy / Translate / Explain**; `⌥⌘C`
 copies without the floating toolbar.
@@ -116,7 +116,7 @@ and Pi sessions, and can be turned off there.
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.5.7.”
+- “Use this project's release workflow, run every check, and prepare version 1.6.0.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can search before creating or updating Prompt and MCP resources with
@@ -193,9 +193,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-arm64.dmg)
-- [macOS · Intel · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-x64.dmg)
-- [Windows x64 · 1.5.7](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-arm64.dmg)
+- [macOS · Intel · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-x64.dmg)
+- [Windows x64 · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

@@ -173,6 +173,7 @@ void main() {
       final List<bool> monitoringChanges = <bool>[];
       int clearCount = 0;
       int resourceManagerCount = 0;
+      int pluginMarketCount = 0;
       int settingsCount = 0;
       int aboutCount = 0;
       int deviceLinksCount = 0;
@@ -191,6 +192,9 @@ void main() {
         },
         onShowResourceManager: () async {
           resourceManagerCount += 1;
+        },
+        onShowPluginMarket: () async {
+          pluginMarketCount += 1;
         },
         onShowSettings: () async {
           settingsCount += 1;
@@ -214,6 +218,7 @@ void main() {
       gateway.emit(DesktopShellCommand.stopClipboardMonitoring);
       gateway.emit(DesktopShellCommand.clearClipboardHistory);
       gateway.emit(DesktopShellCommand.showResourceManager);
+      gateway.emit(DesktopShellCommand.showPluginMarket);
       gateway.emit(DesktopShellCommand.showSettings);
       gateway.emit(DesktopShellCommand.showAbout);
       gateway.emit(DesktopShellCommand.showDeviceLinks);
@@ -225,6 +230,7 @@ void main() {
       expect(monitoringChanges, <bool>[true, false]);
       expect(clearCount, 1);
       expect(resourceManagerCount, 1);
+      expect(pluginMarketCount, 1);
       expect(settingsCount, 1);
       expect(aboutCount, 1);
       expect(deviceLinksCount, 1);

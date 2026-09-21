@@ -4,7 +4,8 @@ enum SelectionModelProvider {
   lmStudio,
   openRouter,
   gemini,
-  openAICompatible;
+  openAICompatible,
+  anthropicCompatible;
 
   static SelectionModelProvider parse(Object? value) {
     return values.firstWhere(
@@ -55,12 +56,15 @@ final class SelectionPluginConfiguration {
       provider == SelectionModelProvider.ollama ||
       provider == SelectionModelProvider.lmStudio;
 
+  bool get supportsToken => !isLocalProvider;
+
   bool get requiresToken {
     if (provider == SelectionModelProvider.openRouter ||
         provider == SelectionModelProvider.gemini) {
       return true;
     }
-    if (provider != SelectionModelProvider.openAICompatible) {
+    if (provider != SelectionModelProvider.openAICompatible &&
+        provider != SelectionModelProvider.anthropicCompatible) {
       return false;
     }
     return !_isLoopbackHttp(_parsedEndpoint);
@@ -155,6 +159,11 @@ final class SelectionPluginConfiguration {
           SelectionModelProvider.gemini => (
             endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai',
             model: 'gemini-flash-lite-latest',
+            unload: false,
+          ),
+          SelectionModelProvider.anthropicCompatible => (
+            endpoint: 'https://api.anthropic.com/v1',
+            model: 'claude-sonnet-4-6',
             unload: false,
           ),
           SelectionModelProvider.openAICompatible => (

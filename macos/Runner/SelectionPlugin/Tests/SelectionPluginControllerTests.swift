@@ -109,6 +109,25 @@ final class SelectionPluginControllerTests: XCTestCase {
         }
     }
 
+    func testLocalProxyTokensStayBoundToProviderAndService() async throws {
+        try await MainActor.run {
+            let controller = SelectionPluginController(permissionPort: DeniedPermission(), tokenStore: MemoryTokens())
+            defer { controller.shutdown() }
+            var config = arguments(.ollama)
+            config["provider"] = "anthropicCompatible"
+            config["endpoint"] = "http://127.0.0.1:3456/v1"
+            XCTAssertEqual(try controller.applyConfiguration(config)["tokenConfigured"], false)
+            try controller.saveToken("local-proxy-fixture")
+            XCTAssertEqual(controller.status()["tokenConfigured"], true)
+            config["endpoint"] = "http://127.0.0.1:3457/v1"
+            XCTAssertEqual(try controller.applyConfiguration(config)["tokenConfigured"], false)
+            config["endpoint"] = "http://127.0.0.1:3456/v1"
+            XCTAssertEqual(try controller.applyConfiguration(config)["tokenConfigured"], true)
+            config["provider"] = "openAICompatible"
+            XCTAssertEqual(try controller.applyConfiguration(config)["tokenConfigured"], false)
+        }
+    }
+
     func testTokenDoesNotFollowProviderToAnotherServiceAddress() async throws {
         try await MainActor.run {
             let controller = SelectionPluginController(

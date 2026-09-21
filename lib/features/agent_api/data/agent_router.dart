@@ -25,6 +25,7 @@ import 'package:dingdong/features/agent_api/data/trigger_group_routes.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
+import 'package:dingdong/features/jev/data/jev_routes.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/skill_deployment_store.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -38,6 +39,7 @@ part 'agent_router_resource_handlers.dart';
 /// Routes DingDong's stable loopback API without depending on socket IO.
 final class AgentRouter {
   AgentRouter({
+    this.jevRoutes,
     void Function(DingRequest request)? onDing,
     void Function(DingRequest request)? onSuppressedDing,
     FutureOr<void> Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
@@ -57,6 +59,7 @@ final class AgentRouter {
     Future<ConversationFooterSymbols> Function()? loadConversationFooterSymbols,
     Future<bool> Function()? loadShowConversationTokenUsage,
     ConversationTokenUsageLoader? loadConversationTokenUsage,
+    this.loadJevUsage,
     FutureOr<String> Function(String source)? defaultDingMessage,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
@@ -108,6 +111,7 @@ final class AgentRouter {
                loadConversationFooterSymbols: loadConversationFooterSymbols,
                loadShowConversationTokenUsage: loadShowConversationTokenUsage,
                loadConversationTokenUsage: loadConversationTokenUsage,
+               loadJevUsage: loadJevUsage,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -144,6 +148,8 @@ final class AgentRouter {
        _loadConversationTokenUsage = loadConversationTokenUsage,
        _defaultDingMessage = defaultDingMessage ?? _englishDefaultDingMessage;
 
+  final JevRoutes? jevRoutes;
+  final JevUsageLoader? loadJevUsage;
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
   final FutureOr<void> Function(AgentBridgeTaskStart start)?
@@ -183,6 +189,8 @@ final class AgentRouter {
   }
 
   Future<HttpResponseData> route(HttpRequestData request) async {
+    final jevResponse = await jevRoutes?.route(request);
+    if (jevResponse != null) return jevResponse;
     if (_requestsClipboardContent(request) &&
         !await _isAgentClipboardContentAllowed()) {
       return const HttpResponseData(
@@ -368,6 +376,7 @@ final class AgentRouter {
         loadConversationFooterSymbols: _loadConversationFooterSymbols,
         loadShowConversationTokenUsage: _loadShowConversationTokenUsage,
         loadConversationTokenUsage: _loadConversationTokenUsage,
+        loadJevUsage: loadJevUsage,
       ).respond(request.body);
     }
     if (request.method == 'GET' &&

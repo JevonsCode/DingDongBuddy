@@ -1,53 +1,57 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.5.7",
-  "latestBuild": "62",
-  "publishedAt": "2026-09-07T09:20:37Z",
+  "latestVersion": "1.6.0",
+  "latestBuild": "63",
+  "publishedAt": "2026-09-21T11:58:03Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.5.7",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.0",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.5.7/DingDong-1.5.7-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds in-app image previews with download fallback for unsupported formats and releases preview memory when closed or disconnected.",
-    "Shows full local dates and times in PWA content and activity, including the year, instead of time alone.",
-    "Remembers up to 300 download records on this browser and distinguishes files by device and file version. The downloaded label records that saving was initiated; browsers cannot confirm completion on disk.",
-    "Prevents duplicate file requests and accidental downloads from expired previews, and fixes preview controls on narrow screens."
+    "Adds a dedicated Plugins page in Resource Manager, with Jev available to install when needed and more plugins planned.",
+    "Jev provides judgments, choices and scores for Agents, with its own API key and separate Token usage. Current pricing is linked to the official site.",
+    "Moves macOS system selection tools into Plugins and adds Anthropic-compatible reverse proxies and optional local proxy Tokens.",
+    "Adds an optional Claude Code status line that keeps an existing HUD and displays actual DingDong resource receipts and main-session Token usage.",
+    "The device connection badge now counts connected devices only, excluding connecting and offline devices."
   ],
   "notesByLanguage": {
     "en": [
-      "Adds in-app image previews with download fallback for unsupported formats and releases preview memory when closed or disconnected.",
-      "Shows full local dates and times in PWA content and activity, including the year, instead of time alone.",
-      "Remembers up to 300 download records on this browser and distinguishes files by device and file version. The downloaded label records that saving was initiated; browsers cannot confirm completion on disk.",
-      "Prevents duplicate file requests and accidental downloads from expired previews, and fixes preview controls on narrow screens."
+      "Adds a dedicated Plugins page in Resource Manager, with Jev available to install when needed and more plugins planned.",
+      "Jev provides judgments, choices and scores for Agents, with its own API key and separate Token usage. Current pricing is linked to the official site.",
+      "Moves macOS system selection tools into Plugins and adds Anthropic-compatible reverse proxies and optional local proxy Tokens.",
+      "Adds an optional Claude Code status line that keeps an existing HUD and displays actual DingDong resource receipts and main-session Token usage.",
+      "The device connection badge now counts connected devices only, excluding connecting and offline devices."
     ],
     "zh": [
-      "新增应用内图片预览，不支持的格式可继续下载，关闭预览或断开设备时及时释放预览内存。",
-      "PWA 内容与动态显示本地完整日期和时间，包含年份，不再只显示时分。",
-      "当前浏览器最多保留 300 条下载记录，按设备和文件版本区分。“已下载”表示已发起保存，浏览器无法确认文件最终落盘。",
-      "防止重复请求文件和过期预览意外触发下载，修复窄屏预览按钮布局。"
+      "资源管理新增独立“插件”页面，Jev 按需安装，更多插件陆续增加中。",
+      "Jev 可为 Agent 做判断、选择和评分，独立配置 API Key、查看 Token 用量，价格说明直接链接官网。",
+      "macOS 系统划词归入插件页，翻译和解释新增 Anthropic 兼容反向代理及本地代理 Token 支持。",
+      "新增可选的 Claude Code 本地状态栏，保留原 HUD，展示实际资源回执与主会话累计 Token。",
+      "设备连接角标只统计已连接设备，连接中和未连接不再计数。"
     ],
     "es": [
-      "Añade vistas previas de imágenes con descarga alternativa para formatos no compatibles y libera la memoria al cerrar o desconectar.",
-      "Muestra la fecha y hora local completas, incluido el año, en el contenido y la actividad de la PWA.",
-      "Guarda hasta 300 registros de descarga en este navegador, separados por dispositivo y versión del archivo. La etiqueta indica que se inició el guardado; el navegador no puede confirmar que terminó en disco.",
-      "Evita solicitudes duplicadas y descargas accidentales de vistas previas caducadas, y corrige los controles en pantallas estrechas."
+      "Añade una página de Plugins en Recursos, con instalación opcional de Jev y más plugins en preparación.",
+      "Jev ofrece juicios, elecciones y puntuaciones para Agents, con clave API y consumo de tokens independientes. Los precios se consultan en el sitio oficial.",
+      "Las herramientas de selección de macOS pasan a Plugins y admiten proxies compatibles con Anthropic y tokens opcionales para proxies locales.",
+      "Añade una línea de estado opcional para Claude Code que conserva el HUD existente y muestra recursos reales y tokens acumulados de la sesión principal.",
+      "El indicador de dispositivos cuenta solo conexiones activas, sin incluir dispositivos desconectados o en proceso de conexión."
     ]
   }
 }

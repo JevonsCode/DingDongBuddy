@@ -17,7 +17,7 @@ class PopupHeader extends StatelessWidget {
   const PopupHeader({
     required this.selectedIndex,
     required this.issueCount,
-    this.pairedDeviceCount = 0,
+    this.connectedDeviceCount = 0,
     required this.updateAvailable,
     required this.showShortcutHints,
     required this.workspaceShortcuts,
@@ -37,7 +37,7 @@ class PopupHeader extends StatelessWidget {
 
   final int selectedIndex;
   final int issueCount;
-  final int pairedDeviceCount;
+  final int connectedDeviceCount;
   final bool updateAvailable;
   final bool showShortcutHints;
   final WorkspaceShortcuts workspaceShortcuts;
@@ -140,7 +140,7 @@ class PopupHeader extends StatelessWidget {
                       key: const Key('popup-open-connections'),
                       tooltip: context.l10n.connectedDevices,
                       symbol: 'link',
-                      badgeCount: pairedDeviceCount,
+                      badgeCount: connectedDeviceCount,
                       onPressed: onConnections,
                     ),
                     const SizedBox(width: 5),
@@ -311,7 +311,7 @@ class _HeaderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String semanticLabel = badgeCount > 0
-        ? '$tooltip, ${context.l10n.countPairedDevices(badgeCount)}'
+        ? '$tooltip, ${context.l10n.countConnectedDevices(badgeCount)}'
         : tooltip;
     return Semantics(
       button: true,

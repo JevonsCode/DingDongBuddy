@@ -604,6 +604,11 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   }
 
   @override
+  String countConnectedDevices(Object count) {
+    return '$count dispositivos conectados';
+  }
+
+  @override
   String countPairedDevices(Object count) {
     return 'Dispositivos emparejados $count';
   }
@@ -3216,6 +3221,10 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get selectionApiToken => 'Token de API';
 
   @override
+  String get selectionTokenOptionalPlaceholder =>
+      'Opcional: introduce un token si tu proxy requiere autenticación';
+
+  @override
   String get selectionTokenPlaceholder => 'Pega tu propio token';
 
   @override
@@ -3263,4 +3272,130 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get jevDescription =>
+      'Decisiones, clasificación y puntuación para tus agentes.';
+
+  @override
+  String get jevBundled => 'Disponible para instalar desde DingDong.';
+
+  @override
+  String get jevInstall => 'Instalar Jev';
+
+  @override
+  String get jevUninstall => 'Desinstalar';
+
+  @override
+  String get jevUninstallHint =>
+      'Desinstalar detiene nuevas llamadas y elimina la clave; conserva el historial. Las solicitudes enviadas aún pueden cobrarse.';
+
+  @override
+  String get jevKeyLabel => 'API Key de TypeSafe';
+
+  @override
+  String get jevKeySaved =>
+      'Clave guardada en el almacenamiento seguro del sistema';
+
+  @override
+  String get jevKeyMissing => 'Añade tu API Key de TypeSafe para empezar';
+
+  @override
+  String get jevSaveKey => 'Guardar clave';
+
+  @override
+  String get jevRemoveKey => 'Eliminar clave';
+
+  @override
+  String get jevEnable => 'Permitir llamadas de pago a Jev';
+
+  @override
+  String get jevEnableHint =>
+      'Solo cuando un agente invoca Jev. El texto se envía a TypeSafe; el modelo principal no cambia.';
+
+  @override
+  String get jevConsole => 'Cuenta y facturación';
+
+  @override
+  String get jevVerify => 'Probar conexión (de pago)';
+
+  @override
+  String get jevVerified => 'Solicitud real a Jev completada; uso registrado.';
+
+  @override
+  String get jevRefresh => 'Actualizar uso';
+
+  @override
+  String get jevUsageTitle => 'Uso de Jev';
+
+  @override
+  String get jevUsageHint =>
+      'Tokens registrados por este complemento en este dispositivo. No incluye otras aplicaciones.';
+
+  @override
+  String get jevToday => 'Hoy';
+
+  @override
+  String get jevAllTime => 'Total';
+
+  @override
+  String get jevRequests => 'Solicitudes';
+
+  @override
+  String get jevInput => 'Tokens de entrada';
+
+  @override
+  String get jevOutput => 'Tokens de salida';
+
+  @override
+  String get jevUnknown => 'Solicitudes con uso desconocido';
+
+  @override
+  String get jevEmpty => 'Aún no hay llamadas de Jev registradas.';
+
+  @override
+  String get jevRetry => 'Reintentar';
+
+  @override
+  String get jevStorageError =>
+      'No se pudo acceder al almacenamiento seguro. Reintenta o revisa los permisos.';
+
+  @override
+  String get jevKeyError =>
+      'Introduce una API Key completa. Al guardar una nueva clave se pausan las llamadas hasta que las actives.';
+
+  @override
+  String get jevDisabledError =>
+      'Instala Jev, guarda una clave y permite llamadas de pago primero.';
+
+  @override
+  String get jevRequestError =>
+      'Jev no devolvió un resultado válido. Revisa la cuenta, clave y red. Sin reintentos automáticos; el uso puede ser desconocido.';
+
+  @override
+  String get jevReconnect =>
+      'Tras instalar, reconecta DingDong MCP en tu agente para descubrir Jev.';
+
+  @override
+  String get plugins => 'Complementos';
+
+  @override
+  String get pluginMarket => 'Mercado de complementos';
+
+  @override
+  String get pluginMarketDescription =>
+      'Explora y gestiona las funciones opcionales de DingDong.';
+
+  @override
+  String get pluginOpen => 'Gestionar';
+
+  @override
+  String get pluginBack => 'Volver a complementos';
+
+  @override
+  String get pluginUnavailable =>
+      'Los controles no están disponibles. Vuelve a abrir esta ventana desde DingDong.';
+
+  @override
+  String get jevWebsite => 'Sitio oficial';
 }
