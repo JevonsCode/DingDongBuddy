@@ -1901,6 +1901,13 @@ h3 {
   text-decoration: none;
 }
 
+.agent-support-note {
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .conversation-heading {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);

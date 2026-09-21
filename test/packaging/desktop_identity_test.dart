@@ -460,12 +460,12 @@ void main() {
     expect(website, contains('id="resources"'));
     expect(website, contains('class="resource-map"'));
     expect(website, contains('class="conversation-grid"'));
-    expect(website, contains('"hero.title.clipboard": "清晰管理剪贴板列表"'));
-    expect(website, contains('"hero.title.resources": "统一管理提示词、Skill、MCP"'));
-    expect(website, contains('"hero.title.alerts": "统一收集 Agent 的提醒"'));
+    expect(website, contains('"hero.title.clipboard": "刚复制的东西，一搜就有"'));
+    expect(website, contains('"hero.title.resources": "Agent 资源，放在一起管"'));
+    expect(website, contains('"hero.title.alerts": "任务有消息，叮咚提醒你"'));
     expect(
       website,
-      contains('"hero.title.alerts": "Collect Agent alerts in one place."'),
+      contains('"hero.title.alerts": "Hear when a task needs you."'),
     );
     expect(
       website.indexOf('class="actions"'),
@@ -516,7 +516,7 @@ void main() {
     expect(website, isNot(contains('chatFooter.samplePromptReady')));
     expect(
       website,
-      contains('"chatFooter.sampleAnswer": "已经改好了，页面布局和本地预览都检查过了。"'),
+      contains('"chatFooter.sampleAnswer": "改好了，页面布局和本地预览都检查过了。"'),
     );
     expect(website, isNot(contains('chatFooter.sampleLabel')));
     expect(website, isNot(contains('chatFooter.sampleReceiptLabel')));
@@ -524,9 +524,9 @@ void main() {
     expect(website, contains('class="device-showcase"'));
     expect(
       website,
-      contains('"devices.newOnlyTitle": "Automatic means new items only"'),
+      contains('"devices.newOnlyTitle": "Auto-send starts with new items"'),
     );
-    expect(website, contains('"devices.phonePrivateTitle": "手机剪贴板保持私密"'));
+    expect(website, contains('"devices.phonePrivateTitle": "手机剪贴板留在手机上"'));
     expect(website, contains('"devices.illustration": "界面示意"'));
     expect(website, contains('Android 不安装也能直接使用网页'));
     expect(website, contains('swipe between them on mobile'));
@@ -535,9 +535,9 @@ void main() {
     expect(website, contains('点击通知会直接进入 Agent 提醒'));
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
-    expect(website, contains('快捷键帮你高效处理内容工作'));
-    expect(website, contains('让每个接入的 Agent，都用你挑的声音回来报到'));
-    expect(website, contains('先去喝口水，等熟悉的那一声把你叫回来。'));
+    expect(website, contains('快捷键，换成自己顺手的'));
+    expect(website, contains('挑一声你听得出来的叮咚'));
+    expect(website, contains('下面几个声音，先听听再选。'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
