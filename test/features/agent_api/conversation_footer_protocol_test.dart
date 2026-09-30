@@ -189,22 +189,79 @@ void main() {
         source: ConversationTokenUsageSource.codex,
         totalTokens: 12500,
         inputTokens: 12000,
-        outputTokens: 450,
+        outputTokens: 500,
+        cachedInputTokens: 8000,
       ),
     );
     final Map<String, Object?> capsule =
         conversation['capsule']! as Map<String, Object?>;
 
-    expect(conversation['line'], 'DingDong · ♥ Reply marker · 12.5K Token');
+    expect(
+      conversation['line'],
+      'DingDong · ♥ Reply marker · 输入 12K · 输出 500 · 命中缓存 8K · 非缓存 4.5K',
+    );
     expect(
       conversation['fallbackLine'],
-      'DingDong · ♥ Reply marker · 12.5K Token',
+      'DingDong · ♥ Reply marker · 输入 12K · 输出 500 · 命中缓存 8K · 非缓存 4.5K',
     );
-    expect(conversation['ansiLine'], contains('12.5K Token'));
+    expect(
+      conversation['ansiLine'],
+      contains('输入 12K · 输出 500 · 命中缓存 8K · 非缓存 4.5K'),
+    );
     expect(
       capsule['tokenUsage'],
       containsPair('source', ConversationTokenUsageSource.codex.apiValue),
     );
+  });
+
+  test(
+    'Claude and Pi input includes cache once while Codex already includes it',
+    () {
+      for (final source in ConversationTokenUsageSource.values) {
+        final result = buildDingDongConversationFooter(
+          items: [
+            {'title': 'Rules', 'type': 'prompt'},
+          ],
+          tokenUsage: ConversationTokenUsage(
+            source: source,
+            totalTokens: source == ConversationTokenUsageSource.codex
+                ? 120
+                : 190,
+            inputTokens: 100,
+            outputTokens: 20,
+            cachedInputTokens: 60,
+            cacheWriteInputTokens: 10,
+          ),
+        );
+        expect(
+          result['line'],
+          contains(
+            source == ConversationTokenUsageSource.codex
+                ? '输入 100 · 输出 20 · 命中缓存 60'
+                : '输入 170 · 输出 20 · 命中缓存 60',
+          ),
+        );
+        expect(
+          result['line'],
+          contains(
+            source == ConversationTokenUsageSource.codex ? '非缓存 60' : '非缓存 130',
+          ),
+        );
+      }
+    },
+  );
+
+  test('legacy total-only snapshots do not claim zero breakdowns', () {
+    final result = buildDingDongConversationFooter(
+      items: [
+        {'title': 'Rules', 'type': 'prompt'},
+      ],
+      tokenUsage: const ConversationTokenUsage(
+        source: ConversationTokenUsageSource.codex,
+        totalTokens: 100,
+      ),
+    );
+    expect(result['line'], endsWith('100 Token'));
   });
 
   test('token formatting stays compact in the footer and exact in hover', () {
@@ -214,4 +271,46 @@ void main() {
     expect(formatCompactConversationTokenCount(1240000), '1.2M');
     expect(formatExactConversationTokenCount(12456789), '12,456,789');
   });
+
+  test(
+    'fully cached input leaves only output; inconsistent cache remains unknown',
+    () {
+      for (final cache in [100, 101]) {
+        final result = buildDingDongConversationFooter(
+          items: [
+            {'title': 'Rules', 'type': 'prompt'},
+          ],
+          tokenUsage: ConversationTokenUsage(
+            source: ConversationTokenUsageSource.codex,
+            totalTokens: 120,
+            inputTokens: 100,
+            outputTokens: 20,
+            cachedInputTokens: cache,
+          ),
+        );
+        expect(result['line'], contains(cache == 100 ? '非缓存 20' : '120 Token'));
+      }
+    },
+  );
+
+  test(
+    'Jev money values are ignored and unknown cache is not treated as zero',
+    () {
+      final result = buildDingDongConversationFooter(
+        items: [
+          {'title': 'Jev', 'type': 'mcp'},
+        ],
+        jevUsage: {
+          'total_tokens': 308,
+          'input_tokens': 300,
+          'output_tokens': 8,
+          'unknown_usage_requests': 0,
+          'estimated_usd': 0.0000126,
+          'is_bill': false,
+        },
+      );
+      expect(result['line'], contains('Jev 308 Token'));
+      expect((result['capsule'] as Map)['tokenUsage'], isNull);
+    },
+  );
 }

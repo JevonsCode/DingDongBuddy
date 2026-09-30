@@ -265,7 +265,7 @@ third-party Agent accounts or remote model availability have been verified.
 - Send text at the 128 KiB UTF-8 boundary and one byte beyond it. The boundary
   item arrives without closing the relay; the oversized item is rejected with
   a clear message suggesting a file instead.
-- Transfer a file immediately below 25 MB. A file above 25 MB is rejected.
+- Transfer a file immediately below 25 MB. Above 25 MB, legacy and unverified routes reject or wait; verified local v2 routes continue.
   Disconnect before downloading a computer-hosted file and confirm it is no
   longer available; reconnecting does not expose unsent history.
 - Start three phone-to-computer file uploads concurrently, then attempt a
@@ -346,7 +346,7 @@ third-party Agent accounts or remote model availability have been verified.
   visible by default in that order.
 - The 1.3 Connected Devices section is visible in English and Chinese, labels
   its composed product preview as an illustration, and accurately states the
-  new-item-only, explicit phone Send, 25 MB, disconnect, and system-vibration
+  new-item-only, explicit phone Send, route-dependent file limits, disconnect, and system-vibration
   boundaries.
 
 ## Resource library
@@ -545,8 +545,14 @@ third-party Agent accounts or remote model availability have been verified.
   a restart. Restore defaults and verify the preview returns to `♥`, `♦`, `♠`.
 - **Show conversation Token usage** is on by default. When enabled, a Bridge
   response for a supported Codex, Claude Code, or Pi conversation appends one
-  compact exact total after the resource footer, for example
-  `DingDong · ♥ · 12.4K Token`. Unsupported clients, missing session evidence,
+  input/output/cache-hit/non-cached token breakdown after the resource footer, for example
+  `DingDong · ♥ Rules · 输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K`
+  (synthetic example). Input includes cache reads/writes; never add cache hits
+  again. Non-cached tokens = input − cache hits + output; cache writes remain
+  included. Missing or inconsistent breakdowns must fall back to the old total
+  (e.g. `12.4K Token`), including after saving and restoring the activity. Explicit
+  zero cache hits still enable details. Jev retains its old separate total.
+  Monetary amounts must not appear. Unsupported clients, missing session evidence,
   malformed logs, and resolver failures omit the suffix instead of estimating.
   Turn it off and verify Bridge and completion notifications do not read local
   conversation usage files.
@@ -723,3 +729,13 @@ third-party Agent accounts or remote model availability have been verified.
 - The app copied from the DMG passes `codesign --verify --deep --strict`.
 - On Apple Silicon and Intel Macs, the installed app remains alive for at least 30 seconds and creates no new DingDong crash report.
 - A tag build creates macOS DMG/ZIP plus Windows Setup/update-feed artifacts without modifying release metadata automatically.
+
+
+## File transfer 1.6.1
+
+- Pair updated desktop and mobile clients; send a file in both directions and check byte progress, speed, pause, resume and cancel. Repeat the same completed download.
+- Transfer a file larger than 25 MB on a verified local WebRTC route. Change to relay mid-transfer: bytes stop and the UI waits for LAN; reconnect and verify file contents. Unknown routes, VPN interfaces and legacy clients retain the 25 MB boundary.
+- Keep both apps open for automatic reconnect. Browser background throttling can pause delivery; returning to the page resumes when connected. Closing the sender discards its source handle and requires a new send.
+- Mobile downloads use origin-private browser storage. Unsupported browsers retain the 25 MB limit; quota failures keep a retryable state. Cancel removes partial data; abandoned temporary files are cleaned after 24 hours on later transfers. File bodies never enter the relay's persistent storage.
+- Confirm downloaded files in the system file manager: “transfer complete” confirms reception, while browser save completion is controlled by the browser.
+- Check 320 px mobile width, long filenames, keyboard focus, and desktop Chinese/English/Spanish at narrow widths.

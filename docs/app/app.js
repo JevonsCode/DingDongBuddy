@@ -1,4 +1,5 @@
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=42";
+import { renderTransferProgress } from './transfer-progress.js?shell=43';
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=43";
 import {
   defaultDeviceName,
   detectDeviceName,
@@ -7,12 +8,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=42";
+} from "./notification-policy.js?shell=43";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=42";
+} from "./pairing-state.js?shell=43";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -21,20 +22,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=42";
-import { createInstallationController } from "./app-installation.js?shell=42";
-import { createAgentNotificationController } from "./app-notifications.js?shell=42";
-import { createAppRenderer } from "./app-rendering.js?shell=42";
-import { createConnectionController } from "./app-connection.js?shell=42";
-import { createDeviceSettingsController } from "./app-settings.js?shell=42";
-import { createPairingController } from "./app-pairing.js?shell=42";
-import { createContentTransferController } from "./app-content-transfer.js?shell=42";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=43";
+import { createInstallationController } from "./app-installation.js?shell=43";
+import { createAgentNotificationController } from "./app-notifications.js?shell=43";
+import { createAppRenderer } from "./app-rendering.js?shell=43";
+import { createConnectionController } from "./app-connection.js?shell=43";
+import { createDeviceSettingsController } from "./app-settings.js?shell=43";
+import { createPairingController } from "./app-pairing.js?shell=43";
+import { createContentTransferController } from "./app-content-transfer.js?shell=43";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=42";
+} from "./app-platform.js?shell=43";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -55,8 +56,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.6.0";
-const currentPwaShellVersion = 42;
+const currentPwaVersion = "1.6.1";
+const currentPwaShellVersion = 43;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;
@@ -425,6 +426,7 @@ const { closeConnection, connect, currentSessionContext, sendMessage } =
     receiveDownloadChunk: (...args) => receiveDownloadChunk(...args),
     finishDownload: (...args) => finishDownload(...args),
     clearDownloads: (...args) => clearDownloads(...args),
+    handleFileTransfer: (...args) => handleFileTransfer(...args),
     showToast,
   });
 
@@ -494,6 +496,7 @@ const {
   copyItem,
   finishDownload,
   handleRequestRejected,
+  handleFileTransfer,
   receiveAgentEvent,
   receiveAgentState,
   receiveClipboardSnapshot,
@@ -503,6 +506,7 @@ const {
   upsertClipboardItem,
 } = createContentTransferController({
   fileActions,
+  renderTransfers: (session) => renderTransferProgress(document.getElementById("transfer-progress"), session),
   elements,
   maximumFileBytes,
   maximumClipboardTextBytes,
@@ -775,9 +779,9 @@ function wireInteractions() {
   });
   elements["file-input"].addEventListener("change", (event) => {
     const file = event.target.files?.[0] || null;
-    if (file && file.size > maximumFileBytes) {
+    if (file && file.size > maximumFileBytes && activeSession()?.verifiedLan !== true) {
       event.target.value = "";
-      showToast("单个文件上限为 25 MB");
+      showToast("大于 25 MB 的文件需要局域网直连，请将设备连接到同一网络");
       return;
     }
     const session = activeSession();
@@ -1028,6 +1032,7 @@ function render() {
     return;
   }
   const session = activeSession();
+  renderTransferProgress(document.getElementById("transfer-progress"), session);
   const hasPair = Boolean(session);
   const confirmingPair = Boolean(state.pendingPair);
   if (browserPwaLauncher) {
@@ -1207,6 +1212,9 @@ function showToast(message) {
 
 async function handleVisibilityChange() {
   if (document.visibilityState !== "visible") return;
+  for (const connectedSession of state.sessions.values()) {
+    if (connectedSession.connected) connectedSession.fileTransfers?.retryWaiting();
+  }
   const session = activeSession();
   refreshInstallState().catch(() => {});
   await refreshNotificationPermission({ force: true });

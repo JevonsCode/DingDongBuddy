@@ -61,11 +61,11 @@ void main() {
     expect(website, contains('class="conversation-receipt"'));
     expect(
       website,
-      contains('Every final reply leaves a little resource receipt.'),
+      contains('See which resources were available.'),
     );
-    expect(website, contains('每次答完，都留一张资源小票'));
-    expect(website, contains('not necessarily succeeded'));
-    expect(website, contains('不表示调用成功'));
+    expect(website, contains('看看这轮有哪些资源'));
+    expect(website, contains('even if the call failed'));
+    expect(website, contains('即使那次调用失败也会标记'));
     expect(
       english,
       contains('### A resource receipt at the end of each reply'),

@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=42" />
+    <link rel="stylesheet" href="./styles.css?shell=43" />
   </head>
   <body>
     <div class="app-shell">
@@ -115,6 +115,7 @@
             <button id="enable-notifications" class="small-button accent" type="button">开启</button>
           </div>
 
+          <section id="transfer-progress" class="transfer-panel" aria-label="文件传输" hidden></section>
           <nav id="content-tabs" class="segmented-tabs" aria-label="内容类型" role="tablist">
             <button
               id="clipboard-tab"
@@ -453,6 +454,6 @@
       </div>
     </dialog>
 
-    <script type="module" src="./app.js?shell=42"></script>
+    <script type="module" src="./app.js?shell=43"></script>
   </body>
 </html>

@@ -42,14 +42,14 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.6.0', (
+  testWidgets('DingDong starts with the Dynamic workspace at version 1.6.1', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const DingDongApp());
 
     expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.6.0')), findsOneWidget);
-    expect(find.text('v1.6.0'), findsOneWidget);
+    expect(find.byKey(const Key('app-version-1.6.1')), findsOneWidget);
+    expect(find.text('v1.6.1'), findsOneWidget);
     expect(find.byKey(const Key('popup-development-badge')), findsNothing);
     expect(find.text('Resource library'), findsOneWidget);
     expect(find.text('Clipboard history'), findsOneWidget);
@@ -674,6 +674,9 @@ void main() {
       tokenUsage: const ConversationTokenUsage(
         source: ConversationTokenUsageSource.codex,
         totalTokens: 1234567,
+        inputTokens: 1200000,
+        outputTokens: 34567,
+        cachedInputTokens: 1000000,
       ),
     );
 
@@ -702,7 +705,7 @@ void main() {
     );
     expect(
       repeatTooltip.message,
-      'This conversation has notified you 2 times and used 1,234,567 tokens.',
+      '2 notifications for this conversation\nInput 1,200,000 · Output 34,567 · Cache hits 1,000,000 · Non-cached 234,567',
     );
     final Rect cardRect = tester.getRect(
       find.byKey(const Key('activity-repeated-long-agent')),

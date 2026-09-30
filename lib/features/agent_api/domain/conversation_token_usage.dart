@@ -31,12 +31,23 @@ final class ConversationTokenUsage {
   const ConversationTokenUsage({
     required this.source,
     required this.totalTokens,
-    this.inputTokens = 0,
-    this.outputTokens = 0,
-    this.cachedInputTokens = 0,
-    this.cacheWriteInputTokens = 0,
+    int? inputTokens,
+    int? outputTokens,
+    int? cachedInputTokens,
+    int? cacheWriteInputTokens,
     this.reasoningOutputTokens = 0,
-  });
+    bool breakdownComplete = true,
+  }) : inputTokens = inputTokens ?? 0,
+       outputTokens = outputTokens ?? 0,
+       cachedInputTokens = cachedInputTokens ?? 0,
+       cacheWriteInputTokens = cacheWriteInputTokens ?? 0,
+       _hasReportedBreakdown =
+           breakdownComplete &&
+           inputTokens != null &&
+           outputTokens != null &&
+           cachedInputTokens != null &&
+           (source == ConversationTokenUsageSource.codex ||
+               cacheWriteInputTokens != null);
 
   static ConversationTokenUsage? tryParse(Object? value) {
     if (value is! Map<Object?, Object?>) {
@@ -55,11 +66,13 @@ final class ConversationTokenUsage {
     return ConversationTokenUsage(
       source: source,
       totalTokens: totalTokens,
-      inputTokens: _nonNegativeInt(json['inputTokens']) ?? 0,
-      outputTokens: _nonNegativeInt(json['outputTokens']) ?? 0,
-      cachedInputTokens: _nonNegativeInt(json['cachedInputTokens']) ?? 0,
-      cacheWriteInputTokens:
-          _nonNegativeInt(json['cacheWriteInputTokens']) ?? 0,
+      inputTokens: _nonNegativeInt(json['inputTokens']),
+      outputTokens: _nonNegativeInt(json['outputTokens']),
+      cachedInputTokens: _nonNegativeInt(json['cachedInputTokens']),
+      cacheWriteInputTokens: _nonNegativeInt(json['cacheWriteInputTokens']),
+      // Older writers filled missing fields with zero. Without provenance,
+      // preserve their total but do not claim that all details were reported.
+      breakdownComplete: json['breakdownComplete'] == true,
       reasoningOutputTokens:
           _nonNegativeInt(json['reasoningOutputTokens']) ?? 0,
     );
@@ -72,16 +85,56 @@ final class ConversationTokenUsage {
   final int cachedInputTokens;
   final int cacheWriteInputTokens;
   final int reasoningOutputTokens;
+  final bool _hasReportedBreakdown;
+
+  /// Preserve source fields for old snapshots; normalize only for display.
+  /// Claude Code and Pi report cache reads/writes separately from fresh input.
+  int get totalInputTokens => switch (source) {
+    ConversationTokenUsageSource.codex => inputTokens,
+    _ => inputTokens + cachedInputTokens + cacheWriteInputTokens,
+  };
+
+  bool get hasTokenBreakdown =>
+      _hasReportedBreakdown &&
+      inputTokens >= 0 &&
+      outputTokens >= 0 &&
+      cachedInputTokens >= 0 &&
+      cacheWriteInputTokens >= 0 &&
+      cachedInputTokens <= totalInputTokens &&
+      totalInputTokens + outputTokens == totalTokens;
+
+  /// Uncached input (including cache writes) plus output. This is a token
+  /// count, not a billing total: cache hits may also incur discounted charges.
+  int? get nonCachedTokens =>
+      !hasTokenBreakdown || cachedInputTokens > totalInputTokens
+      ? null
+      : totalInputTokens - cachedInputTokens + outputTokens;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'source': source.apiValue,
     'totalTokens': totalTokens,
     'inputTokens': inputTokens,
+    'breakdownComplete': hasTokenBreakdown,
+    if (hasTokenBreakdown) 'totalInputTokens': totalInputTokens,
+    if (nonCachedTokens != null) 'nonCachedTokens': nonCachedTokens,
     'outputTokens': outputTokens,
     'cachedInputTokens': cachedInputTokens,
     'cacheWriteInputTokens': cacheWriteInputTokens,
     'reasoningOutputTokens': reasoningOutputTokens,
   };
+}
+
+/// All token values are cumulative. Cache hits are part of total input.
+String formatConversationTokenUsage(ConversationTokenUsage usage) {
+  if (!usage.hasTokenBreakdown) {
+    return '${formatCompactConversationTokenCount(usage.totalTokens)} Token';
+  }
+  String count(int value) => formatCompactConversationTokenCount(value);
+  final nonCached = usage.nonCachedTokens;
+  return '输入 ${count(usage.totalInputTokens)} · '
+      '输出 ${count(usage.outputTokens)} · '
+      '命中缓存 ${count(usage.cachedInputTokens)} · '
+      '非缓存 ${count(nonCached!)}';
 }
 
 /// Compact footer rendering such as `12.4K Token`.

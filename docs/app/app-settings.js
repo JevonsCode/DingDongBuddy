@@ -1,4 +1,4 @@
-import { wantsAgentNotifications } from "./notification-policy.js?shell=42";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=43";
 
 // Connected-device settings, capability diagnostics, and destructive actions.
 export function createDeviceSettingsController({
@@ -99,6 +99,7 @@ export function createDeviceSettingsController({
     elements["confirm-delete-device"].textContent = "删除中…";
     try {
       await disableAgentNotifications(session);
+      await session.fileTransfers?.dispose({ remove: true });
       closeConnection(session);
       state.sessions.delete(session.pair.room);
       clearDownloadHistory(session.pair.room);

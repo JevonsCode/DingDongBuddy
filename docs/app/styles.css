@@ -1533,3 +1533,28 @@ main {
 .image-preview-viewport img { max-width: 100%; max-height: 60dvh; object-fit: contain; }
 #image-preview-status { font-size: 13px; line-height: 1.6; margin-block: 12px; }
 #image-preview-save { width: 100%; min-height: 44px; }
+
+/* File transfer is persistent task feedback, separate from the clipboard feed. */
+.transfer-panel { margin: 12px 18px 18px; padding: 0 0 4px; border-bottom: 1px solid var(--border); }
+.transfer-heading { margin: 0 0 8px; font-size: 14px; font-weight: 650; }
+.transfer-row { padding: 12px 0; }
+.transfer-row + .transfer-row { border-top: 1px solid var(--border); }
+.transfer-title-line, .transfer-bottom { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.transfer-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.transfer-percent { flex-shrink: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.transfer-meta { margin: 5px 0 10px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.transfer-row progress { display: block; appearance: none; width: 100%; height: 5px; border: 0; border-radius: 4px; overflow: hidden; background: var(--border); accent-color: var(--accent); }
+.transfer-row progress::-webkit-progress-bar { background: var(--border); }
+.transfer-row progress::-webkit-progress-value { background: var(--accent); }
+.transfer-row progress::-moz-progress-bar { background: var(--accent); }
+.transfer-bottom { margin-top: 5px; align-items: flex-start; }
+.transfer-status { padding-top: 9px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.transfer-actions { display: flex; flex-shrink: 0; gap: 3px; }
+.transfer-action { min-width: 44px; min-height: 40px; padding: 8px; border: 0; border-radius: 6px; background: transparent; color: var(--accent); font-size: 13px; cursor: pointer; }
+.transfer-action:hover { background: var(--accent-soft); }
+.transfer-row[data-status="paused"] progress::-webkit-progress-value,
+.transfer-row[data-status="waiting"] progress::-webkit-progress-value { background: var(--text-secondary); }
+@media (max-width: 360px) {
+  .transfer-panel { margin-inline: 12px; }
+  .transfer-bottom { gap: 6px; }
+}

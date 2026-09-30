@@ -2197,7 +2197,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397 =>
-      'Se muestra solo cuando Codex, Claude Code o Pi proporcionan un uso local exacto. Los Agents no admitidos no se estiman.';
+      'Muestra entrada, salida, caché y tokens sin caché si los datos están completos; de lo contrario conserva el total original. Sin caché = entrada − caché + salida. La vista previa usa cifras de ejemplo.';
 
   @override
   String get skill => 'Skill';
@@ -3330,7 +3330,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get jevUsageHint =>
-      'Tokens registrados por este complemento en este dispositivo. No incluye otras aplicaciones.';
+      'Solo se cuenta el uso recibido por este complemento. Sin datos de caché, el pie conserva el total original de Jev y la tabla conserva la entrada y salida notificadas.';
 
   @override
   String get jevToday => 'Hoy';
@@ -3398,4 +3398,70 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get jevWebsite => 'Sitio oficial';
+
+  @override
+  String conversationUsageDetails(
+    String input,
+    String output,
+    String cached,
+    String nonCached,
+  ) {
+    return 'Entrada $input · Salida $output · Caché $cached · Sin caché $nonCached';
+  }
+
+  @override
+  String get fileTransfers => 'Transferencias de archivos';
+
+  @override
+  String transferSendingTo(String device) {
+    return 'Enviando a $device';
+  }
+
+  @override
+  String transferReceivingFrom(String device) {
+    return 'Recibiendo de $device';
+  }
+
+  @override
+  String get pauseTransfer => 'Pausar';
+
+  @override
+  String get resumeTransfer => 'Continuar';
+
+  @override
+  String get cancelTransfer => 'Cancelar';
+
+  @override
+  String fileTransferStatus(String state) {
+    String _temp0 = intl.Intl.selectLogic(state, {
+      'preparing': 'Preparando',
+      'transferring': 'Transfiriendo',
+      'verifying': 'Confirmando archivo',
+      'waiting': 'Esperando conexión',
+      'paused': 'En pausa',
+      'failed': 'Transferencia incompleta',
+      'completed': 'Transferencia completa',
+      'cancelled': 'Cancelada',
+      'other': 'Preparando',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String fileTransferIssue(String code) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'waiting_lan': 'Esperando una conexión local. Progreso guardado.',
+      'connection_lost': 'Sin conexión. Se reanudará al reconectar.',
+      'source_changed': 'El archivo cambió. Selecciónalo de nuevo.',
+      'storage_error': 'No se puede escribir. Comprueba el espacio disponible.',
+      'storage_unsupported':
+          'Este navegador no admite archivos grandes locales.',
+      'checksum_failed': 'Falló la verificación. Inténtalo de nuevo.',
+      'too_many_transfers': 'Espera a que termine otra transferencia.',
+      'restart_required': 'Se perdió el progreso del receptor. Envía de nuevo.',
+      'invalid_offset': 'El progreso no coincide. Envía de nuevo.',
+      'other': 'Transferencia incompleta. Inténtalo de nuevo.',
+    });
+    return '$_temp0';
+  }
 }

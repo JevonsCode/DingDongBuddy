@@ -3888,7 +3888,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Shown only when Codex, Claude Code, or Pi provides exact local usage. Unsupported Agents are not estimated.'**
+  /// **'Shows input, output, cache hits and non-cached tokens when details are complete; otherwise keeps the original total Token count. Non-cached = input − cache hits + output. Preview numbers are examples.'**
   String get shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397;
 
   /// DingDong built-in interface copy.
@@ -5778,7 +5778,7 @@ abstract class DingDongLocalizations {
   /// Jev optional plugin settings: jevUsageHint
   ///
   /// In en, this message translates to:
-  /// **'Token usage reported by this plugin on this device. Other applications are not included.'**
+  /// **'Only Token usage received by this device’s plugin is counted. Without cache details, the footer keeps the original Jev total. This table keeps the reported input/output counts.'**
   String get jevUsageHint;
 
   /// Jev optional plugin settings: jevToday
@@ -5900,6 +5900,65 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Official website'**
   String get jevWebsite;
+
+  /// Conversation cumulative token counts. Input includes cache; nonCached = input - cache hits + output.
+  ///
+  /// In en, this message translates to:
+  /// **'Input {input} · Output {output} · Cache hits {cached} · Non-cached {nonCached}'**
+  String conversationUsageDetails(
+    String input,
+    String output,
+    String cached,
+    String nonCached,
+  );
+
+  /// File transfer progress and controls
+  ///
+  /// In en, this message translates to:
+  /// **'File transfers'**
+  String get fileTransfers;
+
+  /// No description provided for @transferSendingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending to {device}'**
+  String transferSendingTo(String device);
+
+  /// No description provided for @transferReceivingFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving from {device}'**
+  String transferReceivingFrom(String device);
+
+  /// File transfer progress and controls
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pauseTransfer;
+
+  /// File transfer progress and controls
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resumeTransfer;
+
+  /// File transfer progress and controls
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelTransfer;
+
+  /// No description provided for @fileTransferStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} other{Preparing}}'**
+  String fileTransferStatus(String state);
+
+  /// No description provided for @fileTransferIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}'**
+  String fileTransferIssue(String code);
 }
 
 class _DingDongLocalizationsDelegate

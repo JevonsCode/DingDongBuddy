@@ -803,7 +803,11 @@
   "countConnectedDevices": "已连接 {count} 台设备",
   "@countConnectedDevices": {
     "description": "Number of devices with an active connection in the header badge.",
-    "placeholders": {"count": {"type": "Object"}}
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
   },
   "countPairedDevices": "已配对 {count} 台设备",
   "@countPairedDevices": {
@@ -2875,7 +2879,7 @@
   "@showTheSleepingMascotBrieflyThenRestoreTheCurrentState": {
     "description": "DingDong built-in interface copy."
   },
-  "shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": "仅在 Codex、Claude Code 或 Pi 可提供本机精确用量时显示；不支持的 Agent 不做估算。",
+  "shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": "明细完整时显示输入、输出、缓存命中与非缓存 Token；明细不足时自动退回原来的总 Token。非缓存 = 输入 − 缓存命中 + 输出。预览数字为示例。",
   "@shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": {
     "description": "DingDong built-in interface copy."
   },
@@ -4205,7 +4209,7 @@
   "jevVerified": "Jev 真实请求成功，用量已记录。",
   "jevRefresh": "刷新用量",
   "jevUsageTitle": "Jev 独立用量",
-  "jevUsageHint": "仅统计本机插件收到的 Token 用量，不包含其他应用的调用。",
+  "jevUsageHint": "仅统计本机插件收到的 Token 用量。缺少缓存明细时，页脚保留原来的 Jev 总 Token；本表保留已上报的输入、输出用量。",
   "jevToday": "今日",
   "jevAllTime": "累计",
   "jevRequests": "请求次数",
@@ -4339,5 +4343,71 @@
   },
   "@jevWebsite": {
     "description": "Optional plugin management: jevWebsite"
+  },
+  "conversationUsageDetails": "输入 {input} · 输出 {output} · 命中缓存 {cached} · 非缓存 {nonCached}",
+  "@conversationUsageDetails": {
+    "description": "Conversation cumulative token counts. Input includes cache; nonCached = input - cache hits + output.",
+    "placeholders": {
+      "input": {
+        "type": "String"
+      },
+      "output": {
+        "type": "String"
+      },
+      "cached": {
+        "type": "String"
+      },
+      "nonCached": {
+        "type": "String"
+      }
+    }
+  },
+  "fileTransfers": "文件传输",
+  "transferSendingTo": "发送到 {device}",
+  "transferReceivingFrom": "接收自 {device}",
+  "pauseTransfer": "暂停",
+  "resumeTransfer": "继续",
+  "cancelTransfer": "取消",
+  "fileTransferStatus": "{state, select, preparing{准备传输} transferring{传输中} verifying{确认文件} waiting{等待连接恢复} paused{已暂停} failed{传输未完成} completed{传输完成} cancelled{已取消} other{准备传输}}",
+  "fileTransferIssue": "{code, select, waiting_lan{等待局域网直连，进度已保留} connection_lost{连接中断，恢复后自动继续} source_changed{源文件已改变，请重新选择} storage_error{无法写入文件，请检查剩余存储空间} storage_unsupported{此浏览器不支持大文件本地暂存} checksum_failed{文件校验失败，请重试} too_many_transfers{请等待其他文件完成} restart_required{接收端进度已清除，请重新发送} invalid_offset{传输进度不一致，请重新发送} other{传输未完成，请重试}}",
+  "@transferSendingTo": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@transferReceivingFrom": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileTransferStatus": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileTransferIssue": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileTransfers": {
+    "description": "File transfer progress and controls"
+  },
+  "@pauseTransfer": {
+    "description": "File transfer progress and controls"
+  },
+  "@resumeTransfer": {
+    "description": "File transfer progress and controls"
+  },
+  "@cancelTransfer": {
+    "description": "File transfer progress and controls"
   }
 }

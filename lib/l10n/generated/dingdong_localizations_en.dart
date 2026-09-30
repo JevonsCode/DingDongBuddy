@@ -2161,7 +2161,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397 =>
-      'Shown only when Codex, Claude Code, or Pi provides exact local usage. Unsupported Agents are not estimated.';
+      'Shows input, output, cache hits and non-cached tokens when details are complete; otherwise keeps the original total Token count. Non-cached = input − cache hits + output. Preview numbers are examples.';
 
   @override
   String get skill => 'Skill';
@@ -3287,7 +3287,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get jevUsageHint =>
-      'Token usage reported by this plugin on this device. Other applications are not included.';
+      'Only Token usage received by this device’s plugin is counted. Without cache details, the footer keeps the original Jev total. This table keeps the reported input/output counts.';
 
   @override
   String get jevToday => 'Today';
@@ -3355,4 +3355,70 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get jevWebsite => 'Official website';
+
+  @override
+  String conversationUsageDetails(
+    String input,
+    String output,
+    String cached,
+    String nonCached,
+  ) {
+    return 'Input $input · Output $output · Cache hits $cached · Non-cached $nonCached';
+  }
+
+  @override
+  String get fileTransfers => 'File transfers';
+
+  @override
+  String transferSendingTo(String device) {
+    return 'Sending to $device';
+  }
+
+  @override
+  String transferReceivingFrom(String device) {
+    return 'Receiving from $device';
+  }
+
+  @override
+  String get pauseTransfer => 'Pause';
+
+  @override
+  String get resumeTransfer => 'Resume';
+
+  @override
+  String get cancelTransfer => 'Cancel';
+
+  @override
+  String fileTransferStatus(String state) {
+    String _temp0 = intl.Intl.selectLogic(state, {
+      'preparing': 'Preparing',
+      'transferring': 'Transferring',
+      'verifying': 'Confirming file',
+      'waiting': 'Waiting to reconnect',
+      'paused': 'Paused',
+      'failed': 'Transfer incomplete',
+      'completed': 'Transfer complete',
+      'cancelled': 'Cancelled',
+      'other': 'Preparing',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String fileTransferIssue(String code) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'waiting_lan':
+          'Waiting for a local network connection. Progress is saved.',
+      'connection_lost': 'Connection lost. Resumes when reconnected.',
+      'source_changed': 'The source file changed. Select it again.',
+      'storage_error': 'Cannot write the file. Check available storage.',
+      'storage_unsupported': 'This browser cannot store large files locally.',
+      'checksum_failed': 'File verification failed. Try again.',
+      'too_many_transfers': 'Wait for another transfer to finish.',
+      'restart_required': 'The receiving device lost its progress. Send again.',
+      'invalid_offset': 'Transfer progress does not match. Send again.',
+      'other': 'Transfer incomplete. Try again.',
+    });
+    return '$_temp0';
+  }
 }

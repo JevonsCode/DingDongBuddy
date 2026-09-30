@@ -1,9 +1,9 @@
 import { parseContentTabLaunch } from "./content-navigation.js";
-import { base64UrlDecode } from "./app-codecs.js?shell=42";
+import { base64UrlDecode } from "./app-codecs.js?shell=43";
 import {
   isScannedPairing,
   pairingsMatch,
-} from "./pairing-state.js?shell=42";
+} from "./pairing-state.js?shell=43";
 
 // QR launch capture, multi-device replacement, and explicit pairing confirmation.
 export function createPairingController({
@@ -147,7 +147,8 @@ export function createPairingController({
       const previousSession = sessionForRoom(pair.room);
       if (previousSession && !pairingsMatch(previousSession.pair, pair)) {
         invalidateNotificationOperations(previousSession);
-        closeConnection(previousSession);
+        await previousSession.fileTransfers?.dispose({ remove: true });
+      closeConnection(previousSession);
         const previousPairSnapshot = { ...previousSession.pair };
         state.sessions.delete(previousPairSnapshot.room);
         await persistPairingsForWorker().catch(() => {});

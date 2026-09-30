@@ -53,10 +53,8 @@ Map<String, Object?> buildDingDongConversationFooter({
   final validJev =
       jevTokens is int && jevTokens >= 0 && unknown is int && unknown >= 0;
   final String tokenUsageText = [
-    if (tokenUsage != null)
-      '${formatCompactConversationTokenCount(tokenUsage.totalTokens)} Token',
-    if (validJev)
-      'Jev ${formatCompactConversationTokenCount(jevTokens)} Token${unknown > 0 ? ' (+$unknown unknown)' : ''}',
+    if (tokenUsage != null) formatConversationTokenUsage(tokenUsage),
+    if (validJev) _jevUsageText(jevUsage!, unknown),
   ].join(' · ');
   final String tokenUsageSuffix = tokenUsageText.isEmpty
       ? ''
@@ -107,6 +105,12 @@ Map<String, Object?> buildDingDongConversationFooter({
     'fallbackLine': fallbackLine,
     'titles': titles,
   };
+}
+
+String _jevUsageText(Map<String, Object?> usage, int unknown) {
+  // Jev has no cache breakdown; keep its original independent total.
+  return 'Jev ${formatCompactConversationTokenCount(usage['total_tokens']! as int)} Token'
+      '${unknown > 0 ? ' (+$unknown unknown)' : ''}';
 }
 
 /// Removes presentation-controlled fields and recomputes truthful markers.

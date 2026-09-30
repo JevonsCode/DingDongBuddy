@@ -1,8 +1,8 @@
-import { imageMimeType } from "./app-file-actions.js?shell=42";
+import { imageMimeType } from "./app-file-actions.js?shell=43";
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=42";
+} from "./notification-policy.js?shell=43";
 import {
   formatBytes,
   formatDuration,
@@ -11,7 +11,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=42";
+} from "./app-formatters.js?shell=43";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -101,7 +101,7 @@ export function createAppRenderer({
     dot.dataset.online = String(session.connected);
     const transport = session.connected
       ? session.channel?.readyState === "open"
-        ? "在线 · 局域网直连"
+        ? session.verifiedLan ? "在线 · 局域网直连" : "在线 · 设备直连"
         : "在线 · 端到端加密中继"
       : session.connecting
         ? "连接中"

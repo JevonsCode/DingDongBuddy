@@ -803,7 +803,11 @@
   "countConnectedDevices": "{count} connected devices",
   "@countConnectedDevices": {
     "description": "Number of devices with an active connection in the header badge.",
-    "placeholders": {"count": {"type": "Object"}}
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
   },
   "countPairedDevices": "{count} paired devices",
   "@countPairedDevices": {
@@ -2875,7 +2879,7 @@
   "@showTheSleepingMascotBrieflyThenRestoreTheCurrentState": {
     "description": "DingDong built-in interface copy."
   },
-  "shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": "Shown only when Codex, Claude Code, or Pi provides exact local usage. Unsupported Agents are not estimated.",
+  "shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": "Shows input, output, cache hits and non-cached tokens when details are complete; otherwise keeps the original total Token count. Non-cached = input − cache hits + output. Preview numbers are examples.",
   "@shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397": {
     "description": "DingDong built-in interface copy."
   },
@@ -4256,7 +4260,7 @@
   "@jevUsageTitle": {
     "description": "Jev optional plugin settings: jevUsageTitle"
   },
-  "jevUsageHint": "Token usage reported by this plugin on this device. Other applications are not included.",
+  "jevUsageHint": "Only Token usage received by this device’s plugin is counted. Without cache details, the footer keeps the original Jev total. This table keeps the reported input/output counts.",
   "@jevUsageHint": {
     "description": "Jev optional plugin settings: jevUsageHint"
   },
@@ -4339,5 +4343,71 @@
   },
   "@jevWebsite": {
     "description": "Optional plugin management: jevWebsite"
+  },
+  "conversationUsageDetails": "Input {input} · Output {output} · Cache hits {cached} · Non-cached {nonCached}",
+  "@conversationUsageDetails": {
+    "description": "Conversation cumulative token counts. Input includes cache; nonCached = input - cache hits + output.",
+    "placeholders": {
+      "input": {
+        "type": "String"
+      },
+      "output": {
+        "type": "String"
+      },
+      "cached": {
+        "type": "String"
+      },
+      "nonCached": {
+        "type": "String"
+      }
+    }
+  },
+  "fileTransfers": "File transfers",
+  "transferSendingTo": "Sending to {device}",
+  "transferReceivingFrom": "Receiving from {device}",
+  "pauseTransfer": "Pause",
+  "resumeTransfer": "Resume",
+  "cancelTransfer": "Cancel",
+  "fileTransferStatus": "{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} other{Preparing}}",
+  "fileTransferIssue": "{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}",
+  "@transferSendingTo": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@transferReceivingFrom": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileTransferStatus": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileTransferIssue": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "@fileTransfers": {
+    "description": "File transfer progress and controls"
+  },
+  "@pauseTransfer": {
+    "description": "File transfer progress and controls"
+  },
+  "@resumeTransfer": {
+    "description": "File transfer progress and controls"
+  },
+  "@cancelTransfer": {
+    "description": "File transfer progress and controls"
   }
 }

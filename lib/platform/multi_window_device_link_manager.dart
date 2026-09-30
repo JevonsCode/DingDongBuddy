@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -87,6 +89,10 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
     'pairing': controller.pendingPairing?.toJson(),
     'pairingStatus': controller.pairingStatus.name,
     'canPair': controller.canPair,
+    if (controller is FileTransferManagement)
+      'fileTransfers': (controller as FileTransferManagement).fileTransfers
+          .map((view) => view.toJson())
+          .toList(),
   };
 }
 
@@ -96,6 +102,21 @@ Future<Object?> handleDeviceLinkManagerHostCall(
   MethodCall call,
 ) async {
   switch (call.method) {
+    case 'device_link_transfer_control':
+      if (controller is FileTransferManagement) {
+        final values = call.arguments! as Map;
+        // Resume can run for minutes; do not hold the child-window method open.
+        unawaited(
+          (controller as FileTransferManagement)
+              .controlFileTransfer(
+                values['id'] as String,
+                values['deviceId'] as String,
+                values['action'] as String,
+              )
+              .catchError((Object _) {}),
+        );
+      }
+      return null;
     case deviceLinkManagerSnapshotMethod:
       return encodeDeviceLinkManagerSnapshot(controller);
     case deviceLinkManagerBeginPairingMethod:
@@ -143,6 +164,7 @@ Future<Object?> handleDeviceLinkManagerHostCall(
 }
 
 bool isDeviceLinkManagerHostMethod(String method) => const <String>{
+  'device_link_transfer_control',
   deviceLinkManagerSnapshotMethod,
   deviceLinkManagerBeginPairingMethod,
   deviceLinkManagerCancelPairingMethod,
@@ -157,7 +179,7 @@ bool isDeviceLinkManagerHostMethod(String method) => const <String>{
 
 /// Child-window presentation proxy. It never creates a second RTC session.
 final class RemoteDeviceLinkManagement extends ChangeNotifier
-    implements DeviceLinkManagement {
+    implements DeviceLinkManagement, FileTransferManagement {
   factory RemoteDeviceLinkManagement({
     required WindowController parentController,
   }) => RemoteDeviceLinkManagement._(parentController);
@@ -179,6 +201,20 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
   bool _canPair = false;
   bool _disposed = false;
+  @override
+  List<FileTransfer> fileTransfers = const [];
+  @override
+  Future<void> controlFileTransfer(
+    String id,
+    String deviceId,
+    String action,
+  ) async {
+    await _parentController.invokeMethod<void>('device_link_transfer_control', {
+      'id': id,
+      'deviceId': deviceId,
+      'action': action,
+    });
+  }
 
   @override
   LocalDeviceIdentity get localDevice => _localDevice;
@@ -213,6 +249,10 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
     );
     if (response is! Map) return;
     final Map<String, Object?> json = Map<String, Object?>.from(response);
+    fileTransfers = (json['fileTransfers'] as List? ?? [])
+        .whereType<Map>()
+        .map((entry) => FileTransfer.fromJson(Map<String, Object?>.from(entry)))
+        .toList();
     _localDevice = LocalDeviceIdentity.fromJson(
       Map<String, Object?>.from(json['localDevice']! as Map),
     );

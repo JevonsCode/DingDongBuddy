@@ -98,6 +98,7 @@ extension _DeviceLinkPersistence on DeviceLinkController {
     await session.subscription?.cancel();
     final String? deviceId = session.deviceId;
     if (deviceId != null) {
+      _resumableFiles.disconnected(deviceId);
       _transports[deviceId] = DeviceLinkActiveTransport.none;
       await _discardIncomingFileUploadsForDevice(deviceId);
     }

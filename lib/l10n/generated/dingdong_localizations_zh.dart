@@ -2106,7 +2106,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get shownOnlyWhenCodexClaudeCodeOrPiProvidesExactLocalUsage_7e557397 =>
-      '仅在 Codex、Claude Code 或 Pi 可提供本机精确用量时显示；不支持的 Agent 不做估算。';
+      '明细完整时显示输入、输出、缓存命中与非缓存 Token；明细不足时自动退回原来的总 Token。非缓存 = 输入 − 缓存命中 + 输出。预览数字为示例。';
 
   @override
   String get skill => 'Skill';
@@ -3186,7 +3186,8 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get jevUsageTitle => 'Jev 独立用量';
 
   @override
-  String get jevUsageHint => '仅统计本机插件收到的 Token 用量，不包含其他应用的调用。';
+  String get jevUsageHint =>
+      '仅统计本机插件收到的 Token 用量。缺少缓存明细时，页脚保留原来的 Jev 总 Token；本表保留已上报的输入、输出用量。';
 
   @override
   String get jevToday => '今日';
@@ -3247,4 +3248,69 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get jevWebsite => '官方网站';
+
+  @override
+  String conversationUsageDetails(
+    String input,
+    String output,
+    String cached,
+    String nonCached,
+  ) {
+    return '输入 $input · 输出 $output · 命中缓存 $cached · 非缓存 $nonCached';
+  }
+
+  @override
+  String get fileTransfers => '文件传输';
+
+  @override
+  String transferSendingTo(String device) {
+    return '发送到 $device';
+  }
+
+  @override
+  String transferReceivingFrom(String device) {
+    return '接收自 $device';
+  }
+
+  @override
+  String get pauseTransfer => '暂停';
+
+  @override
+  String get resumeTransfer => '继续';
+
+  @override
+  String get cancelTransfer => '取消';
+
+  @override
+  String fileTransferStatus(String state) {
+    String _temp0 = intl.Intl.selectLogic(state, {
+      'preparing': '准备传输',
+      'transferring': '传输中',
+      'verifying': '确认文件',
+      'waiting': '等待连接恢复',
+      'paused': '已暂停',
+      'failed': '传输未完成',
+      'completed': '传输完成',
+      'cancelled': '已取消',
+      'other': '准备传输',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String fileTransferIssue(String code) {
+    String _temp0 = intl.Intl.selectLogic(code, {
+      'waiting_lan': '等待局域网直连，进度已保留',
+      'connection_lost': '连接中断，恢复后自动继续',
+      'source_changed': '源文件已改变，请重新选择',
+      'storage_error': '无法写入文件，请检查剩余存储空间',
+      'storage_unsupported': '此浏览器不支持大文件本地暂存',
+      'checksum_failed': '文件校验失败，请重试',
+      'too_many_transfers': '请等待其他文件完成',
+      'restart_required': '接收端进度已清除，请重新发送',
+      'invalid_offset': '传输进度不一致，请重新发送',
+      'other': '传输未完成，请重试',
+    });
+    return '$_temp0';
+  }
 }

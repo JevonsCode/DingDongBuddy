@@ -255,16 +255,11 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                             message:
                                 widget.showConversationTokenUsage &&
                                     widget.activity.tokenUsage != null
-                                ? context.l10n
-                                      .thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3(
-                                        widget.activity.repeatCount,
-                                        formatExactConversationTokenCount(
-                                          widget
-                                              .activity
-                                              .tokenUsage!
-                                              .totalTokens,
-                                        ),
-                                      )
+                                ? conversationUsageTooltip(
+                                    context.l10n,
+                                    widget.activity.repeatCount,
+                                    widget.activity.tokenUsage!,
+                                  )
                                 : context.l10n
                                       .repeatcountNotificationsForThisConversation(
                                         widget.activity.repeatCount,

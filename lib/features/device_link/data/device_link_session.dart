@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dingdong/features/device_link/data/device_link_lan.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -112,6 +113,10 @@ abstract interface class ConfigurableDeviceLinkSessionHandle {
   void updateTransportPreference(DeviceLinkTransportPreference value);
 }
 
+abstract interface class LanVerifiedDeviceLinkSessionHandle {
+  Future<bool> verifyLocalNetwork();
+}
+
 typedef DeviceLinkSessionFactory =
     DeviceLinkSessionHandle Function({
       required Uri relayUrl,
@@ -152,7 +157,10 @@ DeviceLinkSessionHandle createPeerDeviceLinkSession({
 
 /// macOS/Windows offerer for one trusted PWA or desktop peer.
 final class WebRtcDeviceLinkSession
-    implements DeviceLinkSessionHandle, ConfigurableDeviceLinkSessionHandle {
+    implements
+        DeviceLinkSessionHandle,
+        ConfigurableDeviceLinkSessionHandle,
+        LanVerifiedDeviceLinkSessionHandle {
   WebRtcDeviceLinkSession({
     required this.relayUrl,
     required this.room,
@@ -768,6 +776,7 @@ final class WebRtcDeviceLinkSession
           )) {
             continue;
           }
+          if (incoming.fromRelay && message['lanOnly'] == true) continue;
           if (incoming.fromRelay &&
               transportPreference ==
                   DeviceLinkTransportPreference.localNetwork &&
@@ -840,6 +849,10 @@ final class WebRtcDeviceLinkSession
       envelope: envelope,
     );
     final bool controlMessage = _isDeviceLinkControlMessage(message);
+    final bool lanOnly = message['lanOnly'] == true;
+    if (lanOnly && !await verifyLocalNetwork()) {
+      throw StateError('Waiting for a verified local network connection.');
+    }
     bool attemptedDirectSend = false;
     Object? directSendError;
     if (transportPreference != DeviceLinkTransportPreference.serviceRelay &&
@@ -848,14 +861,20 @@ final class WebRtcDeviceLinkSession
         identical(_dataChannel, channel) &&
         channel.state == RTCDataChannelState.RTCDataChannelOpen) {
       attemptedDirectSend = true;
+      var routeNoLongerLocal = false;
       try {
         await _waitForDataChannelBuffer(channel, peerGeneration);
         if (!_dataChannelContextIsCurrent(channel, peerGeneration)) {
           throw StateError('The device connection changed while sending.');
         }
+        if (lanOnly && !await verifyLocalNetwork()) {
+          routeNoLongerLocal = true;
+          throw StateError('Waiting for LAN.');
+        }
         await channel.send(RTCDataChannelMessage(envelope));
         return;
       } on Object catch (error) {
+        if (routeNoLongerLocal) rethrow;
         directSendError = error;
         if (identical(_dataChannel, channel)) {
           _directSendUnavailable = true;
@@ -870,6 +889,9 @@ final class WebRtcDeviceLinkSession
           StateError('The device connection changed while sending.');
     }
     final WebSocket? socket = _socket;
+    if (lanOnly) {
+      throw StateError('Large files cannot use the relay.');
+    }
     if ((transportPreference != DeviceLinkTransportPreference.localNetwork ||
             controlMessage) &&
         socket != null &&
@@ -879,6 +901,35 @@ final class WebRtcDeviceLinkSession
     }
     if (directSendError != null) throw directSendError;
     throw StateError('The device is not connected.');
+  }
+
+  @override
+  Future<bool> verifyLocalNetwork() async {
+    final peer = _peerConnection;
+    final channel = _dataChannel;
+    if (peer == null ||
+        channel == null ||
+        activeTransport != DeviceLinkActiveTransport.localNetwork) {
+      return false;
+    }
+    try {
+      final reports = await peer.getStats().timeout(const Duration(seconds: 2));
+      return identical(peer, _peerConnection) &&
+          identical(channel, _dataChannel) &&
+          channel.state == RTCDataChannelState.RTCDataChannelOpen &&
+          activeTransport == DeviceLinkActiveTransport.localNetwork &&
+          isVerifiedLanCandidatePair(
+            reports.map(
+              (report) => <String, Object?>{
+                ...Map<String, Object?>.from(report.values),
+                'id': report.id,
+                'type': report.type,
+              },
+            ),
+          );
+    } on Object {
+      return false;
+    }
   }
 
   bool _dataChannelContextIsCurrent(

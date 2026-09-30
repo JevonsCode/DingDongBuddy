@@ -102,7 +102,7 @@ line to the final reply, showing the Prompts active for this task, matching
 Skills, and available MCP connections:
 
 ```text
-DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub* · 12.4K Token
+DingDong · ♥ Project rules | ♦ Release flow* | ♠ GitHub* · 输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K
 ```
 
 An `*` after a Skill means the full Skill was loaded during this task; without
@@ -111,7 +111,14 @@ was actually called; it does not claim the call succeeded. Prompt items stay
 unmarked because delivery is observable but semantic compliance is not.
 Customize all three symbols under **Settings → Agent reply footer**. Exact
 conversation Token usage is shown by default for supported Codex, Claude Code,
-and Pi sessions, and can be turned off there.
+and Pi sessions, and can be turned off there. The example above uses synthetic
+counts. Input includes cache reads and writes; cache hits are a subset of input,
+not an additional total. Non-cached tokens = input − cache hits + output
+(including cache writes). This is a token count, not a monetary amount or a
+complete billing total: cache hits may also be billed at a discounted rate.
+Only complete, consistent breakdowns use the four-field view. Missing or invalid
+details and legacy snapshots fall back to the original total, such as `12.4K Token`;
+when no usage is available, the suffix is omitted.
 
 Examples after the corresponding resources are configured:
 
@@ -149,8 +156,7 @@ pairings, so ordinary upgrades do not require scanning the QR code again.
 - **Phone → computer:** the PWA never reads or watches the phone's system
   clipboard. It sends only text you enter or paste, or a file you select, after
   you tap **Send**.
-- **Files:** transfers are limited to 25 MB. Computer-hosted items remain
-  available only while the source computer and receiving device are connected.
+- **Files:** updated clients automatically remove the 25 MB limit on verified local connections; relay, remote, unknown and legacy routes keep it. Both ends show confirmed progress with pause/resume/cancel. Keep the apps open to resume after interruptions. Mobile large downloads require browser local storage, with abandoned partials cleaned after 24 hours on later transfers. Computer-hosted files require the source computer to stay connected.
 - **Agent reminders:** mobile cards distinguish ordinary completion from work
   that needs attention and include context plus real lifecycle times. System
   notifications carry task context and an open action, with different requested

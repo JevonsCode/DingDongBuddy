@@ -195,6 +195,9 @@ void main() {
         return const ConversationTokenUsage(
           source: ConversationTokenUsageSource.codex,
           totalTokens: 12500,
+          inputTokens: 12000,
+          outputTokens: 500,
+          cachedInputTokens: 8000,
         );
       }
 
@@ -207,7 +210,7 @@ void main() {
       expect(loads, 0);
       expect(
         (disabled.json['conversation']! as Map<String, Object?>)['line'],
-        isNot(contains('Token')),
+        isNot(contains('输入')),
       );
 
       final enabled = await AgentBridge(
@@ -219,7 +222,7 @@ void main() {
       expect(loads, 1);
       expect(
         (enabled.json['conversation']! as Map<String, Object?>)['line'],
-        'DingDong · ♥ Visible ... · 12.5K Token',
+        'DingDong · ♥ Visible ... · 输入 12K · 输出 500 · 命中缓存 8K · 非缓存 4.5K',
       );
     },
   );

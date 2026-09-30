@@ -138,9 +138,9 @@ final class LocalConversationTokenUsageResolver {
       latest = ConversationTokenUsage(
         source: ConversationTokenUsageSource.codex,
         totalTokens: totalTokens,
-        inputTokens: _tokenInt(total?['input_tokens']) ?? 0,
-        outputTokens: _tokenInt(total?['output_tokens']) ?? 0,
-        cachedInputTokens: _tokenInt(total?['cached_input_tokens']) ?? 0,
+        inputTokens: _tokenInt(total?['input_tokens']),
+        outputTokens: _tokenInt(total?['output_tokens']),
+        cachedInputTokens: _tokenInt(total?['cached_input_tokens']),
         cacheWriteInputTokens:
             _tokenInt(total?['cache_write_input_tokens']) ?? 0,
         reasoningOutputTokens:
@@ -192,6 +192,7 @@ final class LocalConversationTokenUsageResolver {
     int cacheRead = 0;
     int cacheWrite = 0;
     int fallbackIdentity = 0;
+    bool breakdownComplete = true;
     for (final File file in transcripts) {
       await for (final String line in _lines(file)) {
         if (!line.contains('"usage"')) {
@@ -214,6 +215,14 @@ final class LocalConversationTokenUsageResolver {
         if (!seenResponses.add(identity)) {
           continue;
         }
+        breakdownComplete =
+            breakdownComplete &&
+            const [
+              'input_tokens',
+              'output_tokens',
+              'cache_read_input_tokens',
+              'cache_creation_input_tokens',
+            ].every((key) => _tokenInt(usage[key]) != null);
         input += _tokenInt(usage['input_tokens']) ?? 0;
         output += _tokenInt(usage['output_tokens']) ?? 0;
         cacheRead += _tokenInt(usage['cache_read_input_tokens']) ?? 0;
@@ -225,6 +234,7 @@ final class LocalConversationTokenUsageResolver {
         ? null
         : ConversationTokenUsage(
             source: ConversationTokenUsageSource.claudeCode,
+            breakdownComplete: breakdownComplete,
             totalTokens: total,
             inputTokens: input,
             outputTokens: output,
@@ -250,6 +260,8 @@ final class LocalConversationTokenUsageResolver {
     int cacheRead = 0;
     int cacheWrite = 0;
     int reasoning = 0;
+    int total = 0;
+    bool breakdownComplete = true;
     await for (final String line in _lines(transcript)) {
       if (!line.contains('"usage"')) {
         continue;
@@ -269,17 +281,34 @@ final class LocalConversationTokenUsageResolver {
       if (usage == null) {
         continue;
       }
+      final int entryTotal = const [
+        'input',
+        'output',
+        'cacheRead',
+        'cacheWrite',
+      ].fold(0, (sum, key) => sum + (_tokenInt(usage![key]) ?? 0));
+      final int? reportedTotal = _tokenInt(usage['totalTokens']);
+      total += reportedTotal ?? entryTotal;
+      breakdownComplete =
+          breakdownComplete &&
+          (reportedTotal == null || reportedTotal == entryTotal) &&
+          const [
+            'input',
+            'output',
+            'cacheRead',
+            'cacheWrite',
+          ].every((key) => _tokenInt(usage![key]) != null);
       input += _tokenInt(usage['input']) ?? 0;
       output += _tokenInt(usage['output']) ?? 0;
       cacheRead += _tokenInt(usage['cacheRead']) ?? 0;
       cacheWrite += _tokenInt(usage['cacheWrite']) ?? 0;
       reasoning += _tokenInt(usage['reasoning']) ?? 0;
     }
-    final int total = input + output + cacheRead + cacheWrite;
     return total <= 0
         ? null
         : ConversationTokenUsage(
             source: ConversationTokenUsageSource.pi,
+            breakdownComplete: breakdownComplete,
             totalTokens: total,
             inputTokens: input,
             outputTokens: output,

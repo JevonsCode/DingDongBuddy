@@ -16,9 +16,11 @@ import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/device_link_store.dart';
+import 'package:dingdong/features/device_link/data/resumable_file_transfer.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:path/path.dart' as path;
@@ -28,6 +30,7 @@ import 'package:path/path.dart' as path;
 part 'device_link_agent_sync.dart';
 part 'device_link_file_transfer.dart';
 part 'device_link_persistence.dart';
+part 'device_link_resumable_transfer.dart';
 part 'device_link_session_protocol.dart';
 part 'device_link_support.dart';
 
@@ -83,7 +86,7 @@ final class DeviceLinkFileTooLargeException implements Exception {
 }
 
 final class DeviceLinkController extends ChangeNotifier
-    implements DeviceLinkManagement {
+    implements DeviceLinkManagement, FileTransferManagement {
   factory DeviceLinkController({
     required DeviceLinkStore store,
     required ClipboardStore clipboardStore,
@@ -158,6 +161,31 @@ final class DeviceLinkController extends ChangeNotifier
   int _shareRequestRevision = 0;
   bool _started = false;
   bool _disposed = false;
+  Timer? _fileMaintenance;
+  Timer? _fileProgressNotification;
+  late final ResumableFileTransfers _resumableFiles = ResumableFileTransfers(
+    directory: _transferDirectory,
+    send: (peer, message) => _sessionForDevice(peer).handle.send(message),
+    isLan: _verifiedLan,
+    onChange: _notifyFileProgress,
+    onReceived: _receiveResumableFile,
+  );
+
+  @override
+  List<FileTransfer> get fileTransfers => _resumableFiles.transfers;
+
+  @override
+  Future<void> controlFileTransfer(String id, String deviceId, String action) =>
+      _resumableFiles.control(deviceId, id, action);
+
+  void _notifyFileProgress() {
+    if (_disposed || _fileProgressNotification != null) return;
+    _fileProgressNotification = Timer(const Duration(milliseconds: 120), () {
+      _fileProgressNotification = null;
+      _notifyIfActive();
+    });
+  }
+
   Future<void> _agentSyncTail = Future<void>.value();
   Future<void> _deviceMutationTail = Future<void>.value();
 
@@ -198,6 +226,16 @@ final class DeviceLinkController extends ChangeNotifier
       document?.devices ?? const <LinkedDevice>[],
     );
     if (document == null) await _persist();
+    _fileMaintenance = Timer.periodic(const Duration(seconds: 2), (_) {
+      for (final managed in _sessionsByRoom.values.toList()) {
+        if (managed.fileProtocol >= 2 && managed.handle.connected) {
+          unawaited(_announceFileCapabilities(managed));
+          if (managed.deviceId != null) {
+            _resumableFiles.retryWaiting(managed.deviceId!);
+          }
+        }
+      }
+    });
     for (final LinkedDevice device in _devices) {
       _statuses[device.id] = DeviceConnectionStatus.disconnected;
       _transports[device.id] = DeviceLinkActiveTransport.none;
@@ -466,6 +504,7 @@ final class DeviceLinkController extends ChangeNotifier
 
   @override
   Future<void> deleteDevice(String deviceId) async {
+    await _resumableFiles.forgetPeer(deviceId);
     final LinkedDevice device = _device(deviceId);
     await _removeSession(device.room);
     _statuses.remove(deviceId);
@@ -480,6 +519,9 @@ final class DeviceLinkController extends ChangeNotifier
   }
 
   Future<void> shutdown() async {
+    _fileMaintenance?.cancel();
+    _fileProgressNotification?.cancel();
+    await _resumableFiles.dispose();
     final List<String> rooms = _sessionsByRoom.keys.toList(growable: false);
     for (final String room in rooms) {
       await _removeSession(room);

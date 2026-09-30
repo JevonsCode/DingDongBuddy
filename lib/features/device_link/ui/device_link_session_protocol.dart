@@ -83,7 +83,9 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
           if (!_sessionIsCurrent(managed)) return;
           await _sendPeerHello(managed);
         } else if (event.status != DeviceConnectionStatus.connecting) {
+          _resumableFiles.disconnected(deviceId);
           managed.helloSent = false;
+          managed.announcedLan = null;
           _transports[deviceId] = DeviceLinkActiveTransport.none;
         }
       }
@@ -102,6 +104,8 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
       final String? deviceId = managed.deviceId;
       if (deviceId != null) {
         _transports[deviceId] = event.transport;
+        managed.announcedLan = null;
+        unawaited(_announceFileCapabilities(managed));
         if (event.transport == DeviceLinkActiveTransport.localNetwork &&
             managed.snapshotPending) {
           try {
@@ -131,6 +135,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     try {
       await managed.handle.send(<String, Object?>{
         'type': 'hello',
+        'fileTransferVersion': 2,
         'device': <String, Object?>{
           ..._localDevice.toJson(),
           'kind': 'computer',
@@ -157,6 +162,15 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     final String? deviceId = managed.deviceId;
     if (deviceId == null) return;
     final LinkedDevice device = _device(deviceId);
+    if (type == 'transfer.probe') {
+      managed.announcedLan = null;
+      await _announceFileCapabilities(managed);
+      return;
+    }
+    if (type?.startsWith('transfer.') == true && managed.fileProtocol >= 2) {
+      await _resumableFiles.handle(deviceId, message);
+      return;
+    }
     switch (type) {
       case 'welcome':
         await _handleWelcome(managed, message);
@@ -170,6 +184,17 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
         await _finishFileUpload(device, message);
       case 'file.request':
         await _sendRequestedFile(managed, message['itemId'] as String? ?? '');
+      case 'file.request.v2':
+        if (managed.fileProtocol >= 2) {
+          // Replies must continue to drain while the sender waits for an ACK.
+          unawaited(
+            _sendRequestedFile(
+              managed,
+              message['itemId'] as String? ?? '',
+              resumable: true,
+            ).catchError((Object _) => false),
+          );
+        }
       case 'settings.update':
         final Object? vibration = message['vibrationEnabled'];
         final Object? agentNotifications = message['agentNotificationsEnabled'];
@@ -229,6 +254,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     if (rawHost is! Map) return;
     final Map<String, Object?> host = Map<String, Object?>.from(rawHost);
     final String hostId = (host['id'] as String? ?? '').trim();
+    managed.fileProtocol = message['fileTransferVersion'] == 2 ? 2 : 1;
     final String? deviceId = managed.deviceId;
     if (deviceId == null || hostId != deviceId) {
       throw const FormatException('The paired computer identity changed.');
@@ -262,6 +288,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     Map<String, Object?> message,
   ) async {
     if (!_sessionIsCurrent(managed)) return;
+    managed.fileProtocol = message['fileTransferVersion'] == 2 ? 2 : 1;
     final Map<String, Object?> remote = Map<String, Object?>.from(
       message['device']! as Map,
     );
@@ -352,6 +379,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     if (!_sessionIsCurrent(managed)) return;
     await managed.handle.send(<String, Object?>{
       'type': 'welcome',
+      'fileTransferVersion': 2,
       'host': <String, Object?>{..._localDevice.toJson(), 'kind': 'computer'},
       'permissions': <String, Object?>{
         'autoSendClipboard': device.autoSendClipboard,

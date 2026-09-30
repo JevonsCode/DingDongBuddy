@@ -36,8 +36,10 @@ It does not provide a replacement conversational model or execution permission.
 
 The interface links to the [official website](https://typesafe.ai/) and the
 TypeSafe account console for current pricing and bills. It does not embed a
-price table, claim free calls, or display locally estimated costs. The Token
-ledger remains independent from other Agent usage.
+price table, claim free calls, or display monetary amounts. The Token ledger
+remains independent from other Agent usage. Without a cache counter, the footer
+falls back to its original total and the plugin table retains input/output rows. Existing
+internal cost estimates are not used by this token-only display.
 
 Sources: [models](https://docs.typesafe.ai/models),
 [HTTP API](https://docs.typesafe.ai/api),

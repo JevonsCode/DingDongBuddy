@@ -524,3 +524,23 @@ test("backpressure aborts a file send when its content generation changes", asyn
   assert.equal(fixture.session.sending, false);
   assert.equal(fixture.toasts.length, 1);
 });
+
+test('v2 timed-out and cancelled download intents cannot authorize a later file', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let saves = 0;
+  const fixture = transferFixture(t, { fileActions: { closePreview() {}, failPreview() {}, saveFile() { saves++; return true; } } });
+  fixture.session.fileProtocol = 2;
+  const item = { id: 'file-item', fileName: 'empty.txt', fileSize: 0, downloadable: true };
+  const offer = (id) => ({type:'transfer.offer', id, request:'r', itemId:item.id, name:item.fileName, size:0, fingerprint:'0'});
+  await fixture.controller.requestFile(item);
+  t.mock.timers.tick(101);
+  await fixture.controller.handleFileTransfer(offer('late'), fixture.session);
+  assert.equal(fixture.sent.at(-1).message.error, 'invalid_metadata');
+  assert.equal(fixture.session.fileTransfers.transfers.length, 0);
+  await fixture.controller.requestFile(item);
+  await fixture.controller.handleFileTransfer(offer('cancelled'), fixture.session);
+  await fixture.session.fileTransfers.control('cancelled', 'cancel');
+  await fixture.controller.handleFileTransfer(offer('new-after-cancel'), fixture.session);
+  assert.equal(fixture.sent.at(-1).message.error, 'invalid_metadata');
+  assert.equal(saves, 0);
+});

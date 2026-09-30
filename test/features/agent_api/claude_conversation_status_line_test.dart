@@ -141,7 +141,90 @@ void main() {
           },
         ),
       );
-      expect(renderer.render(ansi: false), endsWith('350 Token'));
+      expect(
+        renderer.render(ansi: false),
+        endsWith('输入 310 · 输出 40 · 命中缓存 200 · 非缓存 150'),
+      );
+    },
+  );
+  test(
+    'statusline shows non-cached tokens regardless of monetary cost',
+    () async {
+      final dir = await Directory.systemTemp.createTemp(
+        'jvs-a-cost-statusline-',
+      );
+      addTearDown(() => dir.delete(recursive: true));
+      final rendererRows = [
+        row('assistant', [
+          {
+            'type': 'tool_use',
+            'id': 'b',
+            'name': 'mcp__dingdong__dingdong_bridge',
+          },
+        ]),
+        row('user', [
+          {
+            'type': 'tool_result',
+            'tool_use_id': 'b',
+            'content': jsonEncode(bridge([item('p', '♥ Rules', 'prompt')])),
+          },
+        ]),
+        row(
+          'assistant',
+          [],
+          usage: {
+            'input_tokens': 100,
+            'output_tokens': 40,
+            'cache_read_input_tokens': 200,
+            'cache_creation_input_tokens': 0,
+          },
+        ),
+      ];
+      final file = File('${dir.path}/cost-session.jsonl');
+      await file.writeAsString(rendererRows.map(jsonEncode).join('\n'));
+      for (final cost in [0.000012, 0, -1, '0.5']) {
+        final line = await ClaudeConversationStatusLine.fromInput(
+          jsonEncode({
+            'session_id': 'cost-session',
+            'transcript_path': file.path,
+            'cost': {'total_cost_usd': cost},
+          }),
+        );
+        expect(line, contains('输入 300 · 输出 40 · 命中缓存 200'));
+        expect(line, contains('非缓存 140'));
+        expect(line, isNot(contains(r'US$')));
+      }
+    },
+  );
+  test(
+    'missing cache falls back to the old total; an explicit zero enables details',
+    () {
+      final renderer = ClaudeConversationStatusLine();
+      receipt(
+        renderer,
+        'dingdong_bridge',
+        bridge([item('p', '♥ Rules', 'prompt')]),
+      );
+      renderer.accept(
+        row('assistant', [], usage: {'input_tokens': 100, 'output_tokens': 40}),
+      );
+      expect(renderer.render(ansi: false), endsWith('140 Token'));
+      renderer.accept(
+        row(
+          'assistant',
+          [],
+          usage: {
+            'input_tokens': 100,
+            'output_tokens': 40,
+            'cache_read_input_tokens': 0,
+            'cache_creation_input_tokens': 0,
+          },
+        ),
+      );
+      expect(
+        renderer.render(ansi: false),
+        endsWith('输入 100 · 输出 40 · 命中缓存 0 · 非缓存 140'),
+      );
     },
   );
   test('terminal escape sequences in a receipt are stripped', () {

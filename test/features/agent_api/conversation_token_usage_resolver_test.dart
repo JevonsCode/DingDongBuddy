@@ -78,6 +78,99 @@ void main() {
   );
 
   test(
+    'Codex preserves missing cache availability through persistence',
+    () async {
+      final file = File(path.join(codex.path, 'fallback-codex.jsonl'));
+      final line =
+          jsonDecode(_codexTokenLine(total: 120, input: 100, output: 20))
+              as Map;
+      final payload = line['payload'] as Map;
+      final info = payload['info'] as Map;
+      final counts = info['total_token_usage'] as Map;
+      counts.remove('cached_input_tokens');
+      await file.writeAsString(jsonEncode(line));
+      final usage = await resolver.resolve(
+        const ConversationTokenUsageRequest(
+          source: 'Codex',
+          conversationId: 'fallback-codex',
+        ),
+      );
+      expect(usage, isNotNull);
+      expect(formatConversationTokenUsage(usage!), '120 Token');
+      expect(
+        formatConversationTokenUsage(
+          ConversationTokenUsage.tryParse(usage.toJson())!,
+        ),
+        '120 Token',
+      );
+      counts['cached_input_tokens'] = 0;
+      await file.writeAsString(jsonEncode(line));
+      final complete = await resolver.resolve(
+        const ConversationTokenUsageRequest(
+          source: 'Codex',
+          conversationId: 'fallback-codex',
+        ),
+      );
+      expect(
+        formatConversationTokenUsage(complete!),
+        '输入 100 · 输出 20 · 命中缓存 0 · 非缓存 120',
+      );
+    },
+  );
+
+  test(
+    'incomplete Claude and Pi records fall back to their legacy or reported totals',
+    () async {
+      final claudeRow =
+          jsonDecode(
+                _claudeAssistantLine(
+                  messageId: 'missing-write',
+                  input: 100,
+                  output: 20,
+                  cacheRead: 50,
+                  cacheWrite: 10,
+                ),
+              )
+              as Map;
+      ((claudeRow['message'] as Map)['usage'] as Map).remove(
+        'cache_creation_input_tokens',
+      );
+      await File(
+        path.join(claude.path, 'fallback-claude.jsonl'),
+      ).writeAsString(jsonEncode(claudeRow));
+      final claudeUsage = await resolver.resolve(
+        const ConversationTokenUsageRequest(
+          source: 'Claude Code',
+          conversationId: 'fallback-claude',
+        ),
+      );
+      expect(formatConversationTokenUsage(claudeUsage!), '170 Token');
+      final piRow =
+          jsonDecode(
+                _piMessageLine(
+                  role: 'assistant',
+                  input: 100,
+                  output: 20,
+                  cacheRead: 50,
+                  cacheWrite: 10,
+                ),
+              )
+              as Map;
+      ((piRow['message'] as Map)['usage'] as Map).remove('cacheWrite');
+      await File(
+        path.join(pi.path, 'fallback-pi.jsonl'),
+      ).writeAsString(jsonEncode(piRow));
+      final piUsage = await resolver.resolve(
+        const ConversationTokenUsageRequest(
+          source: 'Pi',
+          conversationId: 'fallback-pi',
+        ),
+      );
+      expect(formatConversationTokenUsage(piUsage!), '180 Token');
+    },
+  );
+
+  test(
     'Codex falls back to the newest exact-workspace session without an id',
     () async {
       final Directory day = await Directory(

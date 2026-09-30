@@ -19,6 +19,82 @@ import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('LAN capability is resent after a direct route reconnects', () async {
+    final harness = await _connectedHarness(autoSend: false);
+    addTearDown(harness.dispose);
+    harness.session.emit(
+      const DeviceLinkMessageEvent({
+        'type': 'hello',
+        'fileTransferVersion': 2,
+        'device': {'id': 'phone-one', 'name': 'Phone', 'kind': 'phone'},
+      }),
+    );
+    await _flushEvents();
+    for (final transport in [
+      DeviceLinkActiveTransport.localNetwork,
+      DeviceLinkActiveTransport.serviceRelay,
+      DeviceLinkActiveTransport.localNetwork,
+    ]) {
+      harness.session.activeTransportValue = transport;
+      harness.session.emit(DeviceLinkTransportEvent(transport));
+      await _flushEvents();
+      final capabilities = harness.session.sent
+          .where((message) => message['type'] == 'file.capabilities')
+          .toList();
+      expect(
+        capabilities.last['lan'],
+        transport == DeviceLinkActiveTransport.localNetwork,
+      );
+    }
+    expect(
+      harness.session.sent
+          .where(
+            (message) =>
+                message['type'] == 'file.capabilities' &&
+                message['lan'] == true,
+          )
+          .length,
+      greaterThanOrEqualTo(2),
+    );
+  });
+
+  test(
+    'manual disconnect retains a received file breakpoint as waiting',
+    () async {
+      final harness = await _connectedHarness(autoSend: false);
+      addTearDown(harness.dispose);
+      harness.session.emit(
+        const DeviceLinkMessageEvent({
+          'type': 'hello',
+          'fileTransferVersion': 2,
+          'device': {'id': 'phone-one', 'name': 'Phone', 'kind': 'phone'},
+        }),
+      );
+      await _flushEvents();
+      harness.session.emit(
+        const DeviceLinkMessageEvent({
+          'type': 'transfer.offer',
+          'id': 'partial',
+          'request': '1',
+          'name': 'sample.bin',
+          'size': 100,
+          'fingerprint': 'sample',
+        }),
+      );
+      for (
+        var i = 0;
+        i < 200 && harness.controller.fileTransfers.isEmpty;
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      expect(harness.controller.fileTransfers.single.status, 'transferring');
+      await harness.controller.disconnect('phone-one');
+      expect(harness.controller.fileTransfers.single.status, 'waiting');
+      expect(harness.controller.fileTransfers.single.detail, 'connection_lost');
+    },
+  );
+
   group('device link security envelope', () {
     test('legacy linked devices authorize no clipboard history', () {
       final LinkedDevice device = LinkedDevice.fromJson(<String, Object?>{
@@ -1923,8 +1999,14 @@ final class _Harness {
 }
 
 final class _FakeDeviceLinkSession
-    implements DeviceLinkSessionHandle, ConfigurableDeviceLinkSessionHandle {
+    implements
+        DeviceLinkSessionHandle,
+        ConfigurableDeviceLinkSessionHandle,
+        LanVerifiedDeviceLinkSessionHandle {
   _FakeDeviceLinkSession({this.keepEventsOpenAfterClose = false});
+  @override
+  Future<bool> verifyLocalNetwork() async =>
+      activeTransportValue == DeviceLinkActiveTransport.localNetwork;
 
   final StreamController<DeviceLinkSessionEvent> _events =
       StreamController<DeviceLinkSessionEvent>.broadcast(sync: true);

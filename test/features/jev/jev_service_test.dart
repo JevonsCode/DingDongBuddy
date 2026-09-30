@@ -326,9 +326,17 @@ void main() {
         items: [
           {'type': 'mcp', 'title': 'Jev'},
         ],
-        jevUsage: {'total_tokens': 308, 'unknown_usage_requests': 1},
+        jevUsage: {
+          'total_tokens': 308,
+          'input_tokens': 300,
+          'output_tokens': 8,
+          'unknown_usage_requests': 1,
+          'estimated_usd': 0.0000126,
+          'is_bill': false,
+        },
       );
       expect(footer['line'], contains('Jev 308 Token (+1 unknown)'));
+      expect(footer['line'], isNot(contains('US\$')));
       expect((footer['capsule'] as Map)['tokenUsage'], isNull);
     },
   );

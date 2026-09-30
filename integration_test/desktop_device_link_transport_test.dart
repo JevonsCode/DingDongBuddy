@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
+import 'package:dingdong/features/device_link/data/resumable_file_transfer.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -53,7 +55,10 @@ void main() {
           (peer, receivedByPeer),
         ])
           session.events.listen((event) {
-            if (event is DeviceLinkMessageEvent) messages.add(event.message);
+            if (event is DeviceLinkMessageEvent &&
+                !(event.message['type'] as String).startsWith('transfer.')) {
+              messages.add(event.message);
+            }
             if (event is DeviceLinkStatusEvent && event.error != null) {
               failures.add(event.error!);
             }
@@ -91,6 +96,16 @@ void main() {
             peer.activeTransport == DeviceLinkActiveTransport.localNetwork,
         failures,
       );
+      expect(
+        await host.verifyLocalNetwork(),
+        isTrue,
+        reason: 'Native host must verify its selected LAN route',
+      );
+      expect(
+        await peer.verifyLocalNetwork(),
+        isTrue,
+        reason: 'Native peer must verify its selected LAN route',
+      );
       await peer.send(<String, Object?>{
         'type': 'clipboard.create',
         'content': 'Native data channel test fixture',
@@ -104,6 +119,70 @@ void main() {
         relay.frames.any((frame) => frame.contains('Native data channel')),
         isFalse,
       );
+
+      final folder = await Directory.systemTemp.createTemp(
+        'dingdong-native-transfer-',
+      );
+      addTearDown(() => folder.delete(recursive: true));
+      final source = File('${folder.path}/large.bin');
+      final writer = await source.open(mode: FileMode.write);
+      await writer.truncate(relayFileLimit + 17);
+      await writer.setPosition(relayFileLimit);
+      await writer.writeString('large LAN fixture');
+      await writer.close();
+      File? result;
+      final sender = ResumableFileTransfers(
+        directory: Directory('${folder.path}/a'),
+        isLan: (_) => host.verifyLocalNetwork(),
+        send: (_, message) => host.send(message),
+        onChange: () {},
+        onReceived: (_, _, _) async {},
+      );
+      final receiver = ResumableFileTransfers(
+        directory: Directory('${folder.path}/b'),
+        isLan: (_) => peer.verifyLocalNetwork(),
+        send: (_, message) => peer.send(message),
+        onChange: () {},
+        onReceived: (_, file, _) async => result = file,
+      );
+      subscriptions.add(
+        host.events.listen((event) {
+          if (event is DeviceLinkMessageEvent) {
+            unawaited(sender.handle('peer', event.message));
+          }
+        }),
+      );
+      subscriptions.add(
+        peer.events.listen((event) {
+          if (event is DeviceLinkMessageEvent) {
+            unawaited(receiver.handle('host', event.message));
+          }
+        }),
+      );
+      addTearDown(sender.dispose);
+      addTearDown(receiver.dispose);
+      FileTransfer? finished;
+      unawaited(
+        sender
+            .sendFile('peer', source, name: '大文件验收样本.bin')
+            .then((view) => finished = view),
+      );
+      for (var i = 0; i < 1800 && finished?.status != 'completed'; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        if (i % 10 == 0 && finished?.status == 'waiting') {
+          sender.retryWaiting('peer');
+        }
+      }
+      expect(
+        finished?.status,
+        'completed',
+        reason: '${finished?.detail} at ${finished?.bytes}',
+      );
+      expect(await result!.length(), await source.length());
+      final reader = await result!.open();
+      await reader.setPosition(relayFileLimit);
+      expect(utf8.decode(await reader.read(17)), 'large LAN fixture');
+      await reader.close();
 
       host.updateTransportPreference(
         DeviceLinkTransportPreference.localNetwork,
@@ -135,7 +214,7 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     },
-    timeout: const Timeout(Duration(minutes: 2)),
+    timeout: const Timeout(Duration(minutes: 4)),
   );
 }
 

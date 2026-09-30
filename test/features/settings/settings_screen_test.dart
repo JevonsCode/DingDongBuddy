@@ -549,7 +549,9 @@ void main() {
     expect(tester.widget<TextField>(skill).controller!.text, '♦');
     expect(tester.widget<TextField>(mcp).controller!.text, '♠');
     expect(
-      find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 12.4K Token'),
+      find.text(
+        'DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K',
+      ),
       findsOneWidget,
     );
 
@@ -574,7 +576,9 @@ void main() {
       custom,
     );
     expect(
-      find.text('DingDong · ◇ Prompt | ◆ Skill* | ● MCP · 12.4K Token'),
+      find.text(
+        'DingDong · ◇ Prompt | ◆ Skill* | ● MCP · 输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K',
+      ),
       findsOneWidget,
     );
 
@@ -599,7 +603,9 @@ void main() {
     expect(tester.widget<TextField>(skill).controller!.text, '♦');
     expect(tester.widget<TextField>(mcp).controller!.text, '♠');
     expect(
-      find.text('DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 12.4K Token'),
+      find.text(
+        'DingDong · ♥ Prompt | ♦ Skill* | ♠ MCP · 输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K',
+      ),
       findsOneWidget,
     );
     expect(
@@ -637,7 +643,10 @@ void main() {
     await tester.ensureVisible(compactSwitch);
     await tester.pumpAndSettle();
     expect(model.settings.showConversationTokenUsage, isTrue);
-    expect(find.textContaining('12.4K Token'), findsOneWidget);
+    expect(
+      find.textContaining('输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K'),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const Key('settings-conversation-footer-marker-help')),
       findsOneWidget,
@@ -653,7 +662,10 @@ void main() {
       backend.values['dingdong.agentApi.showConversationTokenUsage'],
       isFalse,
     );
-    expect(find.textContaining('12.4K Token'), findsNothing);
+    expect(
+      find.textContaining('输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K'),
+      findsNothing,
+    );
   });
 
   testWidgets('sound picker keeps the DingDong family and supports preview', (

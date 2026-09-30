@@ -1,57 +1,53 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.6.0",
-  "latestBuild": "63",
-  "publishedAt": "2026-09-21T11:58:03Z",
+  "latestVersion": "1.6.1",
+  "latestBuild": "64",
+  "publishedAt": "2026-09-30T08:32:13Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.0",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.1",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.1/DingDong-1.6.1-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.1/DingDong-1.6.1-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.1/DingDong-1.6.1-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds a dedicated Plugins page in Resource Manager, with Jev available to install when needed and more plugins planned.",
-    "Jev provides judgments, choices and scores for Agents, with its own API key and separate Token usage. Current pricing is linked to the official site.",
-    "Moves macOS system selection tools into Plugins and adds Anthropic-compatible reverse proxies and optional local proxy Tokens.",
-    "Adds an optional Claude Code status line that keeps an existing HUD and displays actual DingDong resource receipts and main-session Token usage.",
-    "The device connection badge now counts connected devices only, excluding connecting and offline devices."
+    "Adds receiver-confirmed file progress, transfer speed, pause, resume and cancel on desktop and mobile.",
+    "Automatically verifies local WebRTC routes and removes the 25 MB product limit on verified local connections. Relay, cross-network and unknown routes retain the limit; large files wait for a local route.",
+    "Resumes interrupted transfers while the apps remain open, with bounded-memory streaming and per-chunk integrity checks. Mobile large downloads require browser local file storage; closing the sender requires a new transfer.",
+    "Shows input, output, cache-hit and non-cached Token counts when complete data is available, and keeps the previous total-only display when it is not. These are Token counts, not monetary costs."
   ],
   "notesByLanguage": {
     "en": [
-      "Adds a dedicated Plugins page in Resource Manager, with Jev available to install when needed and more plugins planned.",
-      "Jev provides judgments, choices and scores for Agents, with its own API key and separate Token usage. Current pricing is linked to the official site.",
-      "Moves macOS system selection tools into Plugins and adds Anthropic-compatible reverse proxies and optional local proxy Tokens.",
-      "Adds an optional Claude Code status line that keeps an existing HUD and displays actual DingDong resource receipts and main-session Token usage.",
-      "The device connection badge now counts connected devices only, excluding connecting and offline devices."
+      "Adds receiver-confirmed file progress, transfer speed, pause, resume and cancel on desktop and mobile.",
+      "Automatically verifies local WebRTC routes and removes the 25 MB product limit on verified local connections. Relay, cross-network and unknown routes retain the limit; large files wait for a local route.",
+      "Resumes interrupted transfers while the apps remain open, with bounded-memory streaming and per-chunk integrity checks. Mobile large downloads require browser local file storage; closing the sender requires a new transfer.",
+      "Shows input, output, cache-hit and non-cached Token counts when complete data is available, and keeps the previous total-only display when it is not. These are Token counts, not monetary costs."
     ],
     "zh": [
-      "资源管理新增独立“插件”页面，Jev 按需安装，更多插件陆续增加中。",
-      "Jev 可为 Agent 做判断、选择和评分，独立配置 API Key、查看 Token 用量，价格说明直接链接官网。",
-      "macOS 系统划词归入插件页，翻译和解释新增 Anthropic 兼容反向代理及本地代理 Token 支持。",
-      "新增可选的 Claude Code 本地状态栏，保留原 HUD，展示实际资源回执与主会话累计 Token。",
-      "设备连接角标只统计已连接设备，连接中和未连接不再计数。"
+      "电脑和手机新增文件进度条、已传大小、速度，以及暂停、继续和取消。",
+      "自动核验局域网直连，确认后取消单文件 25 MB 的产品上限；中继、跨网和无法确认的路径仍保留上限，大文件会等待局域网恢复。",
+      "应用保持打开时，断线后可从已确认的位置续传；分块读写和校验降低大文件内存占用。手机大文件下载需要浏览器支持本地暂存，关闭发送端后需要重新发送。",
+      "Token 数据完整时显示输入、输出、缓存命中和未缓存用量；数据缺失时自动保留原来的总量展示。这里统计的是 Token，不是金额。"
     ],
     "es": [
-      "Añade una página de Plugins en Recursos, con instalación opcional de Jev y más plugins en preparación.",
-      "Jev ofrece juicios, elecciones y puntuaciones para Agents, con clave API y consumo de tokens independientes. Los precios se consultan en el sitio oficial.",
-      "Las herramientas de selección de macOS pasan a Plugins y admiten proxies compatibles con Anthropic y tokens opcionales para proxies locales.",
-      "Añade una línea de estado opcional para Claude Code que conserva el HUD existente y muestra recursos reales y tokens acumulados de la sesión principal.",
-      "El indicador de dispositivos cuenta solo conexiones activas, sin incluir dispositivos desconectados o en proceso de conexión."
+      "Añade progreso confirmado por el receptor, velocidad, pausa, reanudación y cancelación en escritorio y móvil.",
+      "Elimina el límite de 25 MB en rutas locales WebRTC verificadas automáticamente. Mantiene el límite en rutas remotas, de retransmisión o desconocidas; los archivos grandes esperan una ruta local.",
+      "Reanuda las interrupciones mientras las aplicaciones siguen abiertas, con escritura por bloques y comprobación de integridad. Las descargas móviles grandes necesitan almacenamiento local del navegador; cerrar el emisor exige un nuevo envío.",
+      "Muestra tokens de entrada, salida, caché y sin caché cuando hay datos completos; de lo contrario conserva el total anterior. Son cantidades de tokens, no importes monetarios."
     ]
   }
 }

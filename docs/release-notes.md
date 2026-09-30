@@ -1,3 +1,28 @@
+# DingDong 1.6.1
+
+- Adds receiver-confirmed file progress, transfer speed, pause, resume and cancel on desktop and mobile.
+- Automatically verifies local WebRTC routes and removes the 25 MB product limit on verified local connections. Relay, cross-network and unknown routes retain the limit; large files wait for a local route.
+- Resumes interrupted transfers while the apps remain open, with bounded-memory streaming and per-chunk integrity checks. Mobile large downloads require browser local file storage; closing the sender requires a new transfer.
+- Shows input, output, cache-hit and non-cached Token counts when complete data is available, and keeps the previous total-only display when it is not. These are Token counts, not monetary costs.
+---
+
+# DingDong 1.6.1
+
+- 电脑和手机新增文件进度条、已传大小、速度，以及暂停、继续和取消。
+- 自动核验局域网直连，确认后取消单文件 25 MB 的产品上限；中继、跨网和无法确认的路径仍保留上限，大文件会等待局域网恢复。
+- 应用保持打开时，断线后可从已确认的位置续传；分块读写和校验降低大文件内存占用。手机大文件下载需要浏览器支持本地暂存，关闭发送端后需要重新发送。
+- Token 数据完整时显示输入、输出、缓存命中和未缓存用量；数据缺失时自动保留原来的总量展示。这里统计的是 Token，不是金额。
+---
+
+# DingDong 1.6.1
+
+- Añade progreso confirmado por el receptor, velocidad, pausa, reanudación y cancelación en escritorio y móvil.
+- Elimina el límite de 25 MB en rutas locales WebRTC verificadas automáticamente. Mantiene el límite en rutas remotas, de retransmisión o desconocidas; los archivos grandes esperan una ruta local.
+- Reanuda las interrupciones mientras las aplicaciones siguen abiertas, con escritura por bloques y comprobación de integridad. Las descargas móviles grandes necesitan almacenamiento local del navegador; cerrar el emisor exige un nuevo envío.
+- Muestra tokens de entrada, salida, caché y sin caché cuando hay datos completos; de lo contrario conserva el total anterior. Son cantidades de tokens, no importes monetarios.
+
+---
+
 # DingDong 1.6.0
 
 - Adds a dedicated Plugins page in Resource Manager, with Jev available to install when needed and more plugins planned.

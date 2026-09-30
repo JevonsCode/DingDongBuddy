@@ -73,6 +73,31 @@ Future<void> pump(
 }
 
 void main() {
+  testWidgets(
+    'unknown cache does not become a zero or fabricated non-cached count',
+    (tester) async {
+      await pump(
+        tester,
+        (_, _) async => {
+          ...state(installed: true),
+          'usage': {
+            ...usage,
+            'requests': 2,
+            'input_tokens': 300,
+            'output_tokens': 8,
+            'estimated_usd': 0.0000126,
+            'unknown_usage_requests': 1,
+            'is_bill': false,
+          },
+        },
+      );
+      expect(find.text('Cache hits'), findsNothing);
+      expect(find.text('Non-cached tokens'), findsNothing);
+      expect(find.textContaining('US\$'), findsNothing);
+      expect(find.text('Input tokens'), findsOneWidget);
+      expect(find.text('Output tokens'), findsOneWidget);
+    },
+  );
   testWidgets('opt-in lifecycle, key clearing and no implicit live test', (
     tester,
   ) async {

@@ -192,6 +192,9 @@ void main() {
                 tokenUsage: const ConversationTokenUsage(
                   source: ConversationTokenUsageSource.codex,
                   totalTokens: 1234567,
+                  inputTokens: 1200000,
+                  outputTokens: 34567,
+                  cachedInputTokens: 1000000,
                 ),
                 conversationTarget: const AgentConversationTarget(
                   client: AgentClient.codex,
@@ -348,7 +351,10 @@ void main() {
           matching: find.byType(Tooltip),
         ),
       );
-      expect(repeatTooltip.message, '本轮会话已经提醒 2 次，共消耗 1,234,567 Token');
+      expect(
+        repeatTooltip.message,
+        '此会话已提醒 2 次\n输入 1,200,000 · 输出 34,567 · 命中缓存 1,000,000 · 非缓存 234,567',
+      );
       expect(
         tester
             .getRect(

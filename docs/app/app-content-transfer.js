@@ -2,10 +2,11 @@ import {
   base64UrlDecode,
   bytesToBase64,
   utf8ByteLength,
-} from "./app-codecs.js?shell=42";
-import { formatBytes, validDate } from "./app-formatters.js?shell=42";
+} from "./app-codecs.js?shell=43";
+import { formatBytes, validDate } from "./app-formatters.js?shell=43";
 
-import { createFileActions } from "./app-file-actions.js?shell=42";
+import { createFileActions } from "./app-file-actions.js?shell=43";
+import { createResumableTransfers } from './resumable-transfer.js?shell=43';
 
 // Bounded clipboard/file transfer plus in-memory Agent feed reconciliation.
 export function createContentTransferController({
@@ -30,8 +31,51 @@ export function createContentTransferController({
   updateSendButton,
   showToast,
   fileActions,
+  renderTransfers = () => {},
 }) {
   fileActions ||= createFileActions({ showToast, onChange: refreshFileState });
+
+  function resumable(session) {
+    if (session.fileTransfers) return session.fileTransfers;
+    let redraw;
+    session.fileTransfers = createResumableTransfers({
+      peer: session.pair.room,
+      acceptOffer(offer) {
+        const intent = session.fileIntents?.get(offer.itemId);
+        if (!intent || intent.expired || intent.cancelled ||
+          (intent.transferId && intent.transferId !== offer.id)) return false;
+        intent.transferId = offer.id;
+        return true;
+      },
+      isLan: () => session.verifiedLan === true && session.channel?.readyState === 'open',
+      send: (message) => sendMessage(message, currentSessionContext(session)),
+      onChange() {
+        for (const transfer of session.fileTransfers.transfers) {
+          if (!transfer.sending && transfer.itemId) {
+            removeFileRequest(transfer.itemId, session);
+            const intent = session.fileIntents?.get(transfer.itemId);
+            if (intent?.transferId === transfer.id && transfer.status === 'cancelled') intent.cancelled = true;
+          }
+        }
+        if (!redraw) redraw = setTimeout(() => { redraw = null; if (sessionIsActive(session)) renderTransfers(session); }, 120);
+      },
+      async onReceived(file, transfer) {
+        const intent = session.fileIntents?.get(transfer.itemId);
+        if (!intent || intent.transferId !== transfer.id || intent.cancelled || intent.expired) throw new Error('unsolicited_file');
+        const download = { name: transfer.name, itemId: transfer.itemId, item: intent.item };
+        if (intent.preview) {
+          if (!intent.preview.cancelled) fileActions.showPreview(intent.preview, file, download);
+        } else {
+          if (!fileActions.saveFile(file, download, session)) throw new Error('save_failed');
+        }
+      },
+    });
+    return session.fileTransfers;
+  }
+
+  async function handleFileTransfer(message, session) {
+    if (session.fileProtocol >= 2) await resumable(session).handle(message);
+  }
 
   function refreshFileState(session) {
     session.clipboardRenderRevision = (session.clipboardRenderRevision || 0) + 1;
@@ -219,7 +263,12 @@ export function createContentTransferController({
     updateSendButton();
     try {
       if (file) {
-        await sendFile(file, session, context);
+        if (session.fileProtocol >= 2) {
+          const transfer = await resumable(session).sendFile(file);
+          if (transfer.status !== 'completed') return;
+        } else {
+          await sendFile(file, session, context);
+        }
         showToast(`文件已发送到 ${session.pair.hostName}`);
       } else if (text) {
         if (utf8ByteLength(text) > maximumClipboardTextBytes) {
@@ -435,7 +484,8 @@ export function createContentTransferController({
   function clearDownloads(session) {
     for (const transferId of session.downloads.keys()) removeDownload(transferId, session);
     for (const itemId of session.fileRequests?.keys() || []) removeFileRequest(itemId, session);
-    session.fileIntents?.clear();
+    if (!session.fileTransfers) session.fileIntents?.clear();
+    else for (const intent of session.fileIntents?.values() || []) { if (!intent.transferId) intent.expired = true; }
     fileActions.closePreview(session);
   }
 
@@ -515,14 +565,27 @@ export function createContentTransferController({
   }
 
   async function requestFile(item, session = activeSession(), { preview = false } = {}) {
-    if (!session?.connected || item.downloadable === false) {
+    if (!session?.connected || (item.downloadable === false && session.fileProtocol !== 2)) {
       showToast("请连接电脑后重试，文件不能超过 25 MB");
+      return;
+    }
+    if (session.fileProtocol >= 2 && item.fileSize > maximumFileBytes && !session.verifiedLan) {
+      showToast('大于 25 MB 的文件需要局域网直连，请将设备连接到同一网络');
+      return;
+    }
+    const activeTransfer = session.fileTransfers?.transfers.find((transfer) => !transfer.sending && transfer.itemId === item.id && !['completed', 'cancelled'].includes(transfer.status));
+    if (activeTransfer) {
+      if (['paused', 'waiting', 'failed'].includes(activeTransfer.status)) await session.fileTransfers.control(activeTransfer.id, 'resume');
       return;
     }
     session.fileRequests ||= new Map();
     if (session.fileRequests.has(item.id)) return;
     if (session.fileRequests.size >= maximumConcurrentDownloads) {
       showToast("正在接收其他文件，请稍后重试");
+      return;
+    }
+    if (preview && item.fileSize > maximumFileBytes) {
+      showToast('大图片请下载后查看，避免浏览器内存不足');
       return;
     }
     const token = preview ? fileActions.openPreview(item, session) : null;
@@ -536,6 +599,7 @@ export function createContentTransferController({
     while (session.fileIntents.size > 50) session.fileIntents.delete(session.fileIntents.keys().next().value);
     request.timer = setTimeout(() => {
       if (session.fileRequests.get(item.id) !== request) return;
+      request.expired = true;
       removeFileRequest(item.id, session);
       fileActions.failPreview(token, "电脑未返回图片，请关闭后重试");
       if (token) token.cancelled = true;
@@ -545,11 +609,12 @@ export function createContentTransferController({
     if (!preview) showToast("正在从电脑获取文件…");
     try {
       await sendMessage(
-        { type: "file.request", itemId: item.id },
+        { type: session.fileProtocol >= 2 ? 'file.request.v2' : 'file.request', itemId: item.id },
         currentSessionContext(session),
       );
     } catch (error) {
       if (session.fileRequests.get(item.id) !== request) return;
+      request.expired = true;
       removeFileRequest(item.id, session);
       fileActions.failPreview(token, "获取图片失败，请关闭后重试");
       if (token) token.cancelled = true;
@@ -559,6 +624,7 @@ export function createContentTransferController({
 
 
     return {
+      handleFileTransfer,
       agentActivityKey,
       beginDownload,
       clearDownloads,

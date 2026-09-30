@@ -19,6 +19,18 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
           throw const DeviceLinkFileUnavailableException();
         }
         final int size = file.lengthSync();
+        if (managed.fileProtocol >= 2) {
+          final transfer = await _resumableFiles.sendFile(
+            deviceId,
+            file,
+            name: path.basename(file.path),
+            itemId: record.id,
+          );
+          if (transfer.status == 'completed') {
+            await _rememberSharedClipboardItem(deviceId, record.id);
+          }
+          return;
+        }
         if (size > deviceLinkMaximumFileBytes) {
           throw DeviceLinkFileTooLargeException(actualBytes: size);
         }
@@ -40,7 +52,10 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       await _rememberSharedClipboardItem(deviceId, record.id);
       return;
     }
-    final Map<String, Object?> payload = _recordPayload(record);
+    final Map<String, Object?> payload = _recordPayload(
+      record,
+      largeFiles: managed.fileProtocol >= 2,
+    );
     await managed.handle.send(<String, Object?>{
       'type': 'clipboard.upsert',
       'manual': manual,
@@ -80,7 +95,7 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
           'type': 'clipboard.upsert',
           'manual': false,
           'snapshot': true,
-          'item': _recordPayload(record),
+          'item': _recordPayload(record, largeFiles: managed.fileProtocol >= 2),
         });
       } on DeviceLinkTextTooLargeException catch (error) {
         debugPrint(
@@ -109,7 +124,10 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     });
   }
 
-  Map<String, Object?> _recordPayload(ClipboardRecord record) {
+  Map<String, Object?> _recordPayload(
+    ClipboardRecord record, {
+    bool largeFiles = false,
+  }) {
     final File? file = _firstExistingFile(record);
     final bool fileBacked = file != null;
     if (!record.sensitive && !fileBacked) {
@@ -130,7 +148,8 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       if (fileBacked) ...<String, Object?>{
         'fileName': path.basename(file.path),
         'fileSize': file.lengthSync(),
-        'downloadable': file.lengthSync() <= deviceLinkMaximumFileBytes,
+        'downloadable':
+            largeFiles || file.lengthSync() <= deviceLinkMaximumFileBytes,
       },
     };
   }
@@ -330,8 +349,9 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
 
   Future<bool> _sendRequestedFile(
     _ManagedDeviceSession managed,
-    String itemId,
-  ) async {
+    String itemId, {
+    bool resumable = false,
+  }) async {
     final String? deviceId = managed.deviceId;
     if (deviceId == null ||
         !_device(deviceId).sharedClipboardItemIds.contains(itemId)) {
@@ -350,6 +370,15 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     final File? file = record == null ? null : _firstExistingFile(record);
     if (file == null) return false;
     final int size = file.lengthSync();
+    if (resumable && managed.fileProtocol >= 2) {
+      await _resumableFiles.sendFile(
+        deviceId,
+        file,
+        name: path.basename(file.path),
+        itemId: itemId,
+      );
+      return true;
+    }
     if (size > deviceLinkMaximumFileBytes) return false;
     await _sendFileRecord(managed, record!, file, size: size);
     return true;

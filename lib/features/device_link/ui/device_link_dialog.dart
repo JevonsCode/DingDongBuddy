@@ -11,6 +11,7 @@ import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
+import 'package:dingdong/features/device_link/ui/file_transfer_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -43,6 +44,7 @@ final class DeviceLinkManagerScreen extends StatelessWidget {
                     children: <Widget>[
                       _WorkspaceHeader(controller: controller),
                       const SizedBox(height: 18),
+                      FileTransferList(controller: controller),
                       LayoutBuilder(
                         builder: (BuildContext context, BoxConstraints bounds) {
                           final Widget pairing = _PairingCard(
@@ -234,72 +236,103 @@ final class DeviceShareDialog extends StatelessWidget {
             leading: const Icon(Icons.send_to_mobile_rounded, size: 21),
             onClose: () => Navigator.pop(context),
           ),
-          body: connected.isEmpty
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    const Icon(Icons.devices_other_rounded, size: 36),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.l10n.noDeviceIsOnlineConnectOneFirst,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    DesktopActionButton(
-                      label: context.l10n.gotIt,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                )
-              : ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: connected.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (BuildContext context, int index) {
-                    final LinkedDevice device = connected[index];
-                    return DesktopActionButton(
-                      key: Key('send-to-device-${device.id}'),
-                      label: device.name,
-                      icon: _deviceIcon(device.kind),
-                      tone: index == 0
-                          ? DesktopActionTone.primary
-                          : DesktopActionTone.neutral,
-                      height: 44,
-                      onPressed: () => unawaited(() async {
-                        try {
-                          await controller.shareRecord(record, device.id);
-                          controller.clearPendingShare();
-                          if (context.mounted) Navigator.pop(context, true);
-                        } on Object catch (error) {
-                          if (!context.mounted) return;
-                          final String message;
-                          if (error is DeviceLinkTextTooLargeException) {
-                            message = context
-                                .l10n
-                                .textIsLargerThan128KiBAndWasNotSent;
-                          } else if (error
-                              is DeviceLinkFrameTooLargeException) {
-                            message = context
-                                .l10n
-                                .theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c;
-                          } else if (error
-                              is DeviceLinkFileUnavailableException) {
-                            message =
-                                context.l10n.sharedFileIsNoLongerAvailable;
-                          } else if (error is DeviceLinkFileTooLargeException) {
-                            message = context.l10n.sharedFileIsLargerThan25MiB;
-                          } else {
-                            message =
-                                context.l10n.theDeviceDisconnectedBeforeSending;
-                          }
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(message)));
-                        }
-                      }()),
-                    );
-                  },
-                ),
+          body: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FileTransferList(controller: controller),
+                connected.isEmpty
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          const Icon(Icons.devices_other_rounded, size: 36),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.l10n.noDeviceIsOnlineConnectOneFirst,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          DesktopActionButton(
+                            label: context.l10n.gotIt,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      )
+                    : ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: connected.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (BuildContext context, int index) {
+                          final LinkedDevice device = connected[index];
+                          return DesktopActionButton(
+                            key: Key('send-to-device-${device.id}'),
+                            label: device.name,
+                            icon: _deviceIcon(device.kind),
+                            tone: index == 0
+                                ? DesktopActionTone.primary
+                                : DesktopActionTone.neutral,
+                            height: 44,
+                            onPressed:
+                                controller.fileTransfers.any(
+                                  (transfer) =>
+                                      transfer.deviceId == device.id &&
+                                      transfer.itemId == record.id &&
+                                      !transfer.terminal,
+                                )
+                                ? null
+                                : () => unawaited(() async {
+                                    try {
+                                      await controller.shareRecord(
+                                        record,
+                                        device.id,
+                                      );
+                                      controller.clearPendingShare();
+                                      if (context.mounted &&
+                                          record.filePaths.isEmpty) {
+                                        Navigator.pop(context, true);
+                                      }
+                                    } on Object catch (error) {
+                                      if (!context.mounted) return;
+                                      final String message;
+                                      if (error
+                                          is DeviceLinkTextTooLargeException) {
+                                        message = context
+                                            .l10n
+                                            .textIsLargerThan128KiBAndWasNotSent;
+                                      } else if (error
+                                          is DeviceLinkFrameTooLargeException) {
+                                        message = context
+                                            .l10n
+                                            .theEncryptedMessageIsLargerThanThe256KiBRelayLimitAndWas_3231b01c;
+                                      } else if (error
+                                          is DeviceLinkFileUnavailableException) {
+                                        message = context
+                                            .l10n
+                                            .sharedFileIsNoLongerAvailable;
+                                      } else if (error
+                                          is DeviceLinkFileTooLargeException) {
+                                        message = context
+                                            .l10n
+                                            .sharedFileIsLargerThan25MiB;
+                                      } else {
+                                        message = context
+                                            .l10n
+                                            .theDeviceDisconnectedBeforeSending;
+                                      }
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(message)),
+                                      );
+                                    }
+                                  }()),
+                          );
+                        },
+                      ),
+              ],
+            ),
+          ),
         );
       },
     );

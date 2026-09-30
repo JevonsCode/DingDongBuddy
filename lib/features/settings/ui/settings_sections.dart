@@ -187,6 +187,9 @@ class _ConversationFooterSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final ConversationFooterSymbols symbols =
         settings.conversationFooterSymbols;
+    final usagePreview = settings.showConversationTokenUsage
+        ? ' · ${formatConversationTokenUsage(const ConversationTokenUsage(source: ConversationTokenUsageSource.codex, totalTokens: 12400, inputTokens: 12000, outputTokens: 400, cachedInputTokens: 8000))}'
+        : '';
     return _SettingsSection(
       title: context.l10n.agentReplyFooter,
       description: context
@@ -254,7 +257,7 @@ class _ConversationFooterSettingsSection extends StatelessWidget {
                 SelectableText(
                   'DingDong · ${symbols.prompt} Prompt | '
                   '${symbols.skill} Skill* | ${symbols.mcp} MCP'
-                  '${settings.showConversationTokenUsage ? ' · 12.4K Token' : ''}',
+                  '$usagePreview',
                   key: const Key('settings-conversation-footer-preview'),
                   textAlign: TextAlign.end,
                   style: Theme.of(context).textTheme.bodySmall,

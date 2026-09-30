@@ -10,7 +10,7 @@ final class ClaudeConversationStatusLine {
   final Map<String, String> _calls = <String, String>{};
   final Map<String, Map<String, Object?>> _items =
       <String, Map<String, Object?>>{};
-  final Map<String, int> _usage = <String, int>{};
+  final Map<String, Map<String, int?>> _usage = <String, Map<String, int?>>{};
   bool _loaded = false;
   bool _showTokens = false;
   int _anonymousResponse = 0;
@@ -35,12 +35,15 @@ final class ClaudeConversationStatusLine {
             message?['id'] ??
             row['uuid'] ??
             'anonymous-${_anonymousResponse++}';
-        _usage[identity.toString()] = <String>[
-          'input_tokens',
-          'output_tokens',
-          'cache_read_input_tokens',
-          'cache_creation_input_tokens',
-        ].fold(0, (total, key) => total + _count(usage[key]));
+        _usage[identity.toString()] = {
+          for (final key in const [
+            'input_tokens',
+            'output_tokens',
+            'cache_read_input_tokens',
+            'cache_creation_input_tokens',
+          ])
+            key: _count(usage[key]),
+        };
       }
     }
     if (content is! List) return;
@@ -128,9 +131,28 @@ final class ClaudeConversationStatusLine {
       else
         '本轮无可见资源',
     ];
-    final total = _usage.values.fold(0, (a, b) => a + b);
+    int sum(String key) => _usage.values.fold(0, (a, b) => a + (b[key] ?? 0));
+    final input = sum('input_tokens');
+    final output = sum('output_tokens');
+    final cacheRead = sum('cache_read_input_tokens');
+    final cacheWrite = sum('cache_creation_input_tokens');
+    final total = input + output + cacheRead + cacheWrite;
     if (_showTokens && total > 0) {
-      parts.add('${formatCompactConversationTokenCount(total)} Token');
+      parts.add(
+        formatConversationTokenUsage(
+          ConversationTokenUsage(
+            source: ConversationTokenUsageSource.claudeCode,
+            breakdownComplete: _usage.values.every(
+              (counts) => counts.values.every((count) => count != null),
+            ),
+            totalTokens: total,
+            inputTokens: input,
+            outputTokens: output,
+            cachedInputTokens: cacheRead,
+            cacheWriteInputTokens: cacheWrite,
+          ),
+        ),
+      );
     }
     return parts.join(' · ');
   }
@@ -176,7 +198,7 @@ final class ClaudeConversationStatusLine {
 
 Map<String, Object?>? _object(Object? value) =>
     value is Map<String, Object?> ? value : null;
-int _count(Object? value) => value is int && value >= 0 ? value : 0;
+int? _count(Object? value) => value is int && value >= 0 ? value : null;
 Map<String, Object?>? _result(Object? content) {
   final texts = content is String
       ? <String>[content]

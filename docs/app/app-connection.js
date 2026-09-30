@@ -2,8 +2,8 @@ import {
   relayConnectionWasReplaced,
   shouldReconnectRelay,
 } from "./connection-policy.js";
-import { pairingsMatch } from "./pairing-state.js?shell=42";
-import { wantsAgentNotifications } from "./notification-policy.js?shell=42";
+import { pairingsMatch } from "./pairing-state.js?shell=43";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=43";
 import {
   encodedEnvelopeByteLength,
   encodeRelayFrame,
@@ -12,7 +12,7 @@ import {
   openEnvelope,
   relayFrameByteLength,
   sealEnvelope,
-} from "./app-codecs.js?shell=42";
+} from "./app-codecs.js?shell=43";
 
 // Encrypted relay/WebRTC lifecycle and ordered inbound message dispatch.
 export const maximumQueuedInboundEntries = 256;
@@ -38,6 +38,7 @@ export function createConnectionController({
   receiveDownloadChunk,
   finishDownload,
   clearDownloads,
+  handleFileTransfer = async () => {},
   showToast = () => {},
 }) {
   async function connect(session = activeSession()) {
@@ -425,16 +426,20 @@ export function createConnectionController({
 
   function attachDataChannel(channel, peerContext) {
     const session = peerContext.session;
+    session.verifiedLan = false;
     session.channel = channel;
     const context = { ...peerContext, channel };
     channel.addEventListener("open", () => {
       if (!channelContextIsCurrent(context)) return;
+      void sendMessage({type: 'transfer.probe'}, currentSessionContext(session)).catch(() => {});
       markConnected(sessionContextFrom(context)).catch((error) =>
         connectionErrorForContext(error, context),
       );
     });
     channel.addEventListener("close", () => {
       if (!channelContextIsCurrent(context)) return;
+      session.verifiedLan = false;
+      void session.fileTransfers?.suspend();
       session.channel = null;
       session.connected =
         session.relayHostPresent &&
@@ -461,6 +466,7 @@ export function createConnectionController({
       await sendMessage(
         {
           type: "hello",
+          fileTransferVersion: 2,
           device: {
             id: state.identity.id,
             name: state.identity.name,
@@ -518,7 +524,7 @@ export function createConnectionController({
         const message = await openEnvelope(entry.payload, context.key);
         if (!connectionContextIsCurrent(context) || !session.connected ||
             contentGeneration !== session.contentGeneration) return;
-        await handleDeviceMessage(message, session);
+        await handleDeviceMessage(message, session, Boolean(context.channel && context.channel === session.channel));
       })
       .catch((error) => {
         if (
@@ -564,6 +570,10 @@ export function createConnectionController({
     const transport = messageTransport(session, context);
     if (!transport) {
       throw new Error("电脑当前不在线");
+    }
+    if (message.lanOnly === true &&
+        (transport.kind !== 'channel' || session.verifiedLan !== true)) {
+      throw new Error('waiting_lan');
     }
     if (transport.kind === "channel") {
       transport.target.send(envelope);
@@ -624,13 +634,25 @@ export function createConnectionController({
       : null;
   }
 
-  async function handleDeviceMessage(message, session) {
+  async function handleDeviceMessage(message, session, direct = false) {
+    if (message.type?.startsWith('transfer.')) {
+      if (message.lanOnly === true && !direct) return;
+      await handleFileTransfer(message, session);
+      return;
+    }
     switch (message.type) {
       case "welcome":
+        session.fileProtocol = message.fileTransferVersion === 2 ? 2 : 1;
         if (message.host?.name) {
           session.pair.hostName = message.host.name;
           savePairings();
         }
+        render();
+        break;
+      case 'file.capabilities':
+        session.fileProtocol = message.version === 2 ? 2 : 1;
+        session.verifiedLan = direct && message.lan === true;
+        session.fileTransfers?.retryWaiting();
         render();
         break;
       case "clipboard.snapshot":
@@ -682,6 +704,8 @@ export function createConnectionController({
   }
 
   function clearDisconnectedContent(session) {
+    session.verifiedLan = false;
+    session.fileTransfers?.suspend().catch(() => {});
     session.contentGeneration = (session.contentGeneration || 0) + 1;
     session.items = [];
     session.clipboardRenderRevision += 1;
@@ -694,6 +718,7 @@ export function createConnectionController({
   }
 
   function closePeer(session) {
+    session.verifiedLan = false;
     const channel = session.channel;
     const peer = session.peer;
     session.channel = null;

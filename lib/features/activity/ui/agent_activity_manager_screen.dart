@@ -7,7 +7,7 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
-import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
+import 'package:dingdong/features/activity/ui/conversation_usage_tooltip.dart';
 import 'package:flutter/material.dart';
 
 /// Full-detail Agent completion history for the manager window.
@@ -228,13 +228,11 @@ class _ActivityHistoryRow extends StatelessWidget {
                             message:
                                 showConversationTokenUsage &&
                                     activity.tokenUsage != null
-                                ? context.l10n
-                                      .thisConversationHasNotifiedYouRepeatCountTimesAndUsed_3d5931a3(
-                                        activity.repeatCount,
-                                        formatExactConversationTokenCount(
-                                          activity.tokenUsage!.totalTokens,
-                                        ),
-                                      )
+                                ? conversationUsageTooltip(
+                                    context.l10n,
+                                    activity.repeatCount,
+                                    activity.tokenUsage!,
+                                  )
                                 : context.l10n
                                       .repeatcountNotificationsForThisConversation(
                                         activity.repeatCount,

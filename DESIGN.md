@@ -309,3 +309,8 @@ Clipboard category rules are a management-window job. The compact clipboard popu
 - **Don't** hide complete resource editing inside a narrow persistent inspector.
 - **Don't** open the clipboard category-rule editor inside the compact popup.
 - **Don't** promote screenshot or fixture dimensions into global tokens.
+
+
+### File Transfer Progress
+
+Desktop and mobile transfer progress follows the continuous-list rule: filename and percentage above a thin meter, byte counts and speed as supporting text, and pause/resume/cancel alongside the status. The mobile list uses the existing 14px filename/section type size; its 5px progress track has 4px corner rounding. These compact meter dimensions are deliberate and do not change general control radii. Pause and reconnect states keep the confirmed byte count visible. Buttons retain keyboard focus when their action changes between pause and resume.
