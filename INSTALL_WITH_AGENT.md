@@ -90,6 +90,15 @@ resolved release version and filename match the manifest before opening it.
    Start menu shortcut. The connection executable is relative to that installed
    app directory at `mcp\bundle\bin\dingdong_mcp.exe`. Verify the exact file;
    do not guess an installation directory.
+4. A packaged Agent host can redirect `%LOCALAPPDATA%` into its own
+   `Packages\<Agent package>\LocalCache` directory. Inspect the running
+   DingDong process's actual executable path as well as its displayed version.
+   A healthy redirected copy does not verify the user's existing installation.
+   If redirection occurs, launch the verified installer through the Windows
+   desktop shell (for example, from File Explorer), then start the installed
+   app through that shell and verify its process path again. Preserve the
+   existing app data and Agent configuration; do not change Windows security
+   settings to work around an installation or desktop-control failure.
 
 ## 3. Verify first launch
 

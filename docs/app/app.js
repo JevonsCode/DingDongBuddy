@@ -1,5 +1,5 @@
-import { renderTransferProgress } from './transfer-progress.js?shell=43';
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=43";
+import { renderTransferProgress } from './transfer-progress.js?shell=44';
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=44";
 import {
   defaultDeviceName,
   detectDeviceName,
@@ -8,12 +8,12 @@ import {
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=43";
+} from "./notification-policy.js?shell=44";
 import {
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=43";
+} from "./pairing-state.js?shell=44";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -22,20 +22,20 @@ import {
   isContentTab,
   parseContentTabLaunch,
 } from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=43";
-import { createInstallationController } from "./app-installation.js?shell=43";
-import { createAgentNotificationController } from "./app-notifications.js?shell=43";
-import { createAppRenderer } from "./app-rendering.js?shell=43";
-import { createConnectionController } from "./app-connection.js?shell=43";
-import { createDeviceSettingsController } from "./app-settings.js?shell=43";
-import { createPairingController } from "./app-pairing.js?shell=43";
-import { createContentTransferController } from "./app-content-transfer.js?shell=43";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=44";
+import { createInstallationController } from "./app-installation.js?shell=44";
+import { createAgentNotificationController } from "./app-notifications.js?shell=44";
+import { createAppRenderer } from "./app-rendering.js?shell=44";
+import { createConnectionController } from "./app-connection.js?shell=44";
+import { createDeviceSettingsController } from "./app-settings.js?shell=44";
+import { createPairingController } from "./app-pairing.js?shell=44";
+import { createContentTransferController } from "./app-content-transfer.js?shell=44";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=43";
+} from "./app-platform.js?shell=44";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -56,8 +56,8 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.6.1";
-const currentPwaShellVersion = 43;
+const currentPwaVersion = "1.6.2";
+const currentPwaShellVersion = 44;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;

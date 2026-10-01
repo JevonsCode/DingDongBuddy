@@ -19,8 +19,16 @@ void main() {
         ..createSync();
       final File source = File(path.join(sourceDirectory.path, 'original.png'))
         ..writeAsBytesSync(<int>[1, 2, 3]);
-      final Link link = Link(path.join(cacheDirectory.path, 'linked.png'))
-        ..createSync(source.path);
+      final Link link = Link(path.join(cacheDirectory.path, 'linked.png'));
+      try {
+        link.createSync(source.path);
+      } on FileSystemException catch (error) {
+        if (!Platform.isWindows || error.osError?.errorCode != 1314) {
+          rethrow;
+        }
+        markTestSkipped('Windows did not grant symlink creation privileges.');
+        return;
+      }
 
       final int deleted = pruneUnreferencedManagedClipboardImages(
         const <Never>[],

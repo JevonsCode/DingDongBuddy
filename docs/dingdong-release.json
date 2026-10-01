@@ -1,53 +1,57 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.6.1",
-  "latestBuild": "64",
-  "publishedAt": "2026-09-30T08:32:13Z",
+  "latestVersion": "1.6.2",
+  "latestBuild": "65",
+  "publishedAt": "2026-10-01T21:13:28Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.1",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.2",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.1/DingDong-1.6.1-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.1/DingDong-1.6.1-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.1/DingDong-1.6.1-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds receiver-confirmed file progress, transfer speed, pause, resume and cancel on desktop and mobile.",
-    "Automatically verifies local WebRTC routes and removes the 25 MB product limit on verified local connections. Relay, cross-network and unknown routes retain the limit; large files wait for a local route.",
-    "Resumes interrupted transfers while the apps remain open, with bounded-memory streaming and per-chunk integrity checks. Mobile large downloads require browser local file storage; closing the sender requires a new transfer.",
-    "Shows input, output, cache-hit and non-cached Token counts when complete data is available, and keeps the previous total-only display when it is not. These are Token counts, not monetary costs."
+    "Fixes Windows regression checks on accounts without symbolic-link privileges while retaining ordinary path-boundary validation.",
+    "Synchronizes desktop, MCP and web version information and refreshes outdated download links.",
+    "Clarifies Windows installation verification for Agents running inside an MSIX package.",
+    "Fixes PWA tests when the repository is nested under a CommonJS project by declaring its ES module boundary.",
+    "Updates the Cloudflare deployment toolchain to resolve reported development-dependency vulnerabilities."
   ],
   "notesByLanguage": {
     "en": [
-      "Adds receiver-confirmed file progress, transfer speed, pause, resume and cancel on desktop and mobile.",
-      "Automatically verifies local WebRTC routes and removes the 25 MB product limit on verified local connections. Relay, cross-network and unknown routes retain the limit; large files wait for a local route.",
-      "Resumes interrupted transfers while the apps remain open, with bounded-memory streaming and per-chunk integrity checks. Mobile large downloads require browser local file storage; closing the sender requires a new transfer.",
-      "Shows input, output, cache-hit and non-cached Token counts when complete data is available, and keeps the previous total-only display when it is not. These are Token counts, not monetary costs."
+      "Fixes Windows regression checks on accounts without symbolic-link privileges while retaining ordinary path-boundary validation.",
+      "Synchronizes desktop, MCP and web version information and refreshes outdated download links.",
+      "Clarifies Windows installation verification for Agents running inside an MSIX package.",
+      "Fixes PWA tests when the repository is nested under a CommonJS project by declaring its ES module boundary.",
+      "Updates the Cloudflare deployment toolchain to resolve reported development-dependency vulnerabilities."
     ],
     "zh": [
-      "电脑和手机新增文件进度条、已传大小、速度，以及暂停、继续和取消。",
-      "自动核验局域网直连，确认后取消单文件 25 MB 的产品上限；中继、跨网和无法确认的路径仍保留上限，大文件会等待局域网恢复。",
-      "应用保持打开时，断线后可从已确认的位置续传；分块读写和校验降低大文件内存占用。手机大文件下载需要浏览器支持本地暂存，关闭发送端后需要重新发送。",
-      "Token 数据完整时显示输入、输出、缓存命中和未缓存用量；数据缺失时自动保留原来的总量展示。这里统计的是 Token，不是金额。"
+      "修复缺少符号链接权限的 Windows 账户上的回归测试，并继续独立校验普通路径边界。",
+      "统一桌面、MCP 和网页端版本信息，更新过期的下载链接。",
+      "补充 MSIX 打包 Agent 环境下的 Windows 安装位置验证说明。",
+      "为 PWA 声明独立的 ES Module 配置，修复仓库位于 CommonJS 项目下时的测试加载失败。",
+      "更新 Cloudflare 部署工具依赖，修复依赖审计发现的开发工具漏洞。"
     ],
     "es": [
-      "Añade progreso confirmado por el receptor, velocidad, pausa, reanudación y cancelación en escritorio y móvil.",
-      "Elimina el límite de 25 MB en rutas locales WebRTC verificadas automáticamente. Mantiene el límite en rutas remotas, de retransmisión o desconocidas; los archivos grandes esperan una ruta local.",
-      "Reanuda las interrupciones mientras las aplicaciones siguen abiertas, con escritura por bloques y comprobación de integridad. Las descargas móviles grandes necesitan almacenamiento local del navegador; cerrar el emisor exige un nuevo envío.",
-      "Muestra tokens de entrada, salida, caché y sin caché cuando hay datos completos; de lo contrario conserva el total anterior. Son cantidades de tokens, no importes monetarios."
+      "Corrige las pruebas de Windows en cuentas sin permisos para enlaces simbólicos, conservando la validación de límites de rutas normales.",
+      "Sincroniza las versiones de escritorio, MCP y web, y actualiza los enlaces de descarga antiguos.",
+      "Aclara la verificación de instalación de Windows para agentes ejecutados dentro de un paquete MSIX.",
+      "Declara el ámbito ES Module de la PWA para que sus pruebas funcionen dentro de proyectos CommonJS.",
+      "Actualiza las herramientas de despliegue de Cloudflare y corrige las vulnerabilidades detectadas en dependencias de desarrollo."
     ]
   }
 }

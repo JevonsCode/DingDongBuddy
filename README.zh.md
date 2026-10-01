@@ -172,9 +172,9 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 
 手动下载：
 
-- [macOS · Apple 芯片 · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-arm64.dmg)
-- [macOS · Intel · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-x64.dmg)
-- [Windows x64 · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-arm64.dmg)
+- [macOS · Intel · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-x64.dmg)
+- [Windows x64 · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

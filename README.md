@@ -199,9 +199,9 @@ it does not clone or build the repository.
 
 Manual downloads:
 
-- [macOS · Apple silicon · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-arm64.dmg)
-- [macOS · Intel · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-macos-x64.dmg)
-- [Windows x64 · 1.6.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.0/DingDong-1.6.0-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-arm64.dmg)
+- [macOS · Intel · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-x64.dmg)
+- [Windows x64 · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

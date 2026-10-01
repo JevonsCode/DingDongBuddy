@@ -167,55 +167,65 @@ void main() {
     },
   );
 
-  test(
-    'paths outside home and symlinks escaping home remain visible as invalid',
-    () async {
-      final Directory temporary = Directory.systemTemp.createTempSync(
-        'dingdong-agent-adapters-',
-      );
-      addTearDown(() => temporary.deleteSync(recursive: true));
-      final Directory home = Directory('${temporary.path}/home')..createSync();
-      final Directory outside = Directory('${temporary.path}/outside')
-        ..createSync();
-      await Link('${home.path}/escaped').create(outside.path);
-      final Directory adapters = Directory('${temporary.path}/adapters')
-        ..createSync();
-      final AgentAdapterRepository repository = AgentAdapterRepository(
-        userDirectory: adapters,
-        historyDirectory: Directory('${temporary.path}/history'),
-        homeDirectory: home.path,
-        loadBuiltIns: () async => <String, String>{},
-      );
+  for (final bool useSymlink in <bool>[false, true]) {
+    test(
+      useSymlink
+          ? 'symlinks escaping home remain visible as invalid'
+          : 'paths outside home remain visible as invalid',
+      () async {
+        final Directory temporary = Directory.systemTemp.createTempSync(
+          'dingdong-agent-adapters-',
+        );
+        addTearDown(() => temporary.deleteSync(recursive: true));
+        final Directory home = Directory('${temporary.path}/home')
+          ..createSync();
+        final Directory outside = Directory('${temporary.path}/outside')
+          ..createSync();
+        if (useSymlink) {
+          try {
+            await Link('${home.path}/escaped').create(outside.path);
+          } on FileSystemException catch (error) {
+            if (!Platform.isWindows || error.osError?.errorCode != 1314) {
+              rethrow;
+            }
+            markTestSkipped(
+              'Windows did not grant symlink creation privileges.',
+            );
+            return;
+          }
+        }
+        final Directory adapters = Directory('${temporary.path}/adapters')
+          ..createSync();
+        final AgentAdapterRepository repository = AgentAdapterRepository(
+          userDirectory: adapters,
+          historyDirectory: Directory('${temporary.path}/history'),
+          homeDirectory: home.path,
+          loadBuiltIns: () async => <String, String>{},
+        );
 
-      await File('${adapters.path}/absolute.yaml').writeAsString('''
+        await File('${adapters.path}/outside.yaml').writeAsString('''
 schemaVersion: 1
-id: absolute
-displayName: Absolute
+id: outside
+displayName: Outside
 detect:
-  directory: ${outside.path}
-''');
-      await File('${adapters.path}/symlink.yaml').writeAsString('''
-schemaVersion: 1
-id: symlink
-displayName: Symlink
-detect:
-  directory: ~/escaped
+  directory: ${useSymlink ? '~/escaped' : outside.path}
 ''');
 
-      final AgentAdapterCatalog catalog = await repository.load();
+        final AgentAdapterCatalog catalog = await repository.load();
 
-      expect(catalog.entries, hasLength(2));
-      expect(
-        catalog.entries.map((AgentAdapterEntry entry) => entry.isValid),
-        everyElement(isFalse),
-      );
-      expect(
-        catalog.entries.map((AgentAdapterEntry entry) => entry.error),
-        everyElement(contains('inside')),
-      );
-      expect(repository.loadEffectiveAdapters(), throwsFormatException);
-    },
-  );
+        expect(catalog.entries, hasLength(1));
+        expect(
+          catalog.entries.map((AgentAdapterEntry entry) => entry.isValid),
+          everyElement(isFalse),
+        );
+        expect(
+          catalog.entries.map((AgentAdapterEntry entry) => entry.error),
+          everyElement(contains('inside')),
+        );
+        expect(repository.loadEffectiveAdapters(), throwsFormatException);
+      },
+    );
+  }
 }
 
 const String _codex = '''

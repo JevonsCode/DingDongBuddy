@@ -1,3 +1,36 @@
+# DingDong 1.6.2
+
+- Fixes Windows regression checks on accounts without symbolic-link privileges while retaining ordinary path-boundary validation.
+- Synchronizes desktop, MCP and web version information and refreshes outdated download links.
+- Clarifies Windows installation verification for Agents running inside an MSIX package.
+- Fixes PWA tests when the repository is nested under a CommonJS project by declaring its ES module boundary.
+- Updates the Cloudflare deployment toolchain to resolve reported development-dependency vulnerabilities.
+
+
+---
+
+# DingDong 1.6.2
+
+- 修复缺少符号链接权限的 Windows 账户上的回归测试，并继续独立校验普通路径边界。
+- 统一桌面、MCP 和网页端版本信息，更新过期的下载链接。
+- 补充 MSIX 打包 Agent 环境下的 Windows 安装位置验证说明。
+- 为 PWA 声明独立的 ES Module 配置，修复仓库位于 CommonJS 项目下时的测试加载失败。
+- 更新 Cloudflare 部署工具依赖，修复依赖审计发现的开发工具漏洞。
+
+
+---
+
+# DingDong 1.6.2
+
+- Corrige las pruebas de Windows en cuentas sin permisos para enlaces simbólicos, conservando la validación de límites de rutas normales.
+- Sincroniza las versiones de escritorio, MCP y web, y actualiza los enlaces de descarga antiguos.
+- Aclara la verificación de instalación de Windows para agentes ejecutados dentro de un paquete MSIX.
+- Declara el ámbito ES Module de la PWA para que sus pruebas funcionen dentro de proyectos CommonJS.
+- Actualiza las herramientas de despliegue de Cloudflare y corrige las vulnerabilidades detectadas en dependencias de desarrollo.
+
+
+---
+
 # DingDong 1.6.1
 
 - Adds receiver-confirmed file progress, transfer speed, pause, resume and cancel on desktop and mobile.

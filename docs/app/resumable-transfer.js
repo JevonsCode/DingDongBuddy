@@ -1,5 +1,5 @@
-import { bytesToBase64, base64UrlDecode } from './app-codecs.js?shell=43';
-import { openTransferSink, relayFileLimit } from './file-transfer-storage.js?shell=43';
+import { bytesToBase64, base64UrlDecode } from './app-codecs.js?shell=44';
+import { openTransferSink, relayFileLimit } from './file-transfer-storage.js?shell=44';
 const chunkBytes = 32768;
 const terminal = (view) => ['completed', 'cancelled'].includes(view.status);
 const digest = async (bytes) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
