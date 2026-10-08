@@ -107,7 +107,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get agentCompletion => 'Agent completion';
 
   @override
-  String get agentCompletionNotifications => 'Agent completion notifications';
+  String get agentCompletionNotifications => 'Unified completion alerts';
 
   @override
   String agentCompletionNotificationsForName(Object name) {
@@ -333,7 +333,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4 =>
-      'Choose which Agent events should notify you, then customize the alert sound and color.';
+      'Collect events from connected Agents in one inbox, with shared sound and color settings. Clients such as Codex already have their own completion alerts; adjust them to avoid duplicate reminders.';
 
   @override
   String get clean => 'Clean';
@@ -1442,7 +1442,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get newestFirstClickAResumableItemToReturnToItsConversation =>
-      'Newest first. Click a resumable item to return to its conversation.';
+      'One inbox for connected Agent events. Newest first; open a supported item to return to its conversation.';
 
   @override
   String get noAgentCompletionsYet => 'No Agent completions yet';
@@ -3421,4 +3421,160 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get tokenUsageTitle => 'Token history';
+
+  @override
+  String get tokenUsageSubtitle => 'Daily usage across your local Agents.';
+
+  @override
+  String get tokenUsageLocalOnly => 'Stored on this device';
+
+  @override
+  String get tokenUsageRefresh => 'Refresh local history';
+
+  @override
+  String get tokenUsageToday => 'Today';
+
+  @override
+  String get tokenUsagePeriodTotal => 'Year total';
+
+  @override
+  String get tokenUsageActiveDays => 'Days with recorded usage';
+
+  @override
+  String get tokenUsageTokens => 'tokens';
+
+  @override
+  String get tokenUsageYear => 'Year';
+
+  @override
+  String get tokenUsageAllAgents => 'All Agents';
+
+  @override
+  String get tokenUsageDailyActivity => 'Daily activity';
+
+  @override
+  String get tokenUsageLess => 'Less';
+
+  @override
+  String get tokenUsageMore => 'More';
+
+  @override
+  String tokenUsageDayTooltip(String date, String count) {
+    return '$date: $count recorded tokens';
+  }
+
+  @override
+  String get tokenUsageDayDetail => 'Daily detail';
+
+  @override
+  String get tokenUsageNoDayRecords => 'No token usage recorded for this day.';
+
+  @override
+  String get tokenUsageTotal => 'Total';
+
+  @override
+  String get tokenUsageInput => 'Input';
+
+  @override
+  String get tokenUsageOutput => 'Output';
+
+  @override
+  String get tokenUsageCacheRead => 'Cache read';
+
+  @override
+  String get tokenUsageCacheWrite => 'Cache write';
+
+  @override
+  String get tokenUsageReasoning => 'Reasoning';
+
+  @override
+  String get tokenUsageNonCached => 'Noncached input + output';
+
+  @override
+  String get tokenUsageNotReported => 'Not reported';
+
+  @override
+  String get tokenUsageBreakdownNote =>
+      'Cache reads and writes are included in input; reasoning is included in output. Token counts are not billing amounts.';
+
+  @override
+  String get tokenUsagePartialDetail =>
+      'Some records report only a total; missing details remain unknown.';
+
+  @override
+  String get tokenUsageCoverageTitle => 'Local data coverage';
+
+  @override
+  String get tokenUsageCoverageNote =>
+      'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.';
+
+  @override
+  String get tokenUsageAvailable => 'Logs found';
+
+  @override
+  String get tokenUsageMissing => 'No local logs found';
+
+  @override
+  String get tokenUsageUnreadable => 'Some logs could not be read';
+
+  @override
+  String get tokenUsageLoading => 'Reading local token history…';
+
+  @override
+  String get tokenUsageError =>
+      'Local history could not be refreshed. Try again.';
+
+  @override
+  String get tokenUsageEmpty => 'Your token history starts here.';
+
+  @override
+  String get tokenUsageEmptyBody =>
+      'Use a supported Agent, then refresh to import its local usage records.';
+
+  @override
+  String get tokenUsageStorageUnavailable =>
+      'Local storage is unavailable; these records are not saved yet.';
+
+  @override
+  String tokenUsageLastRefreshed(String time) {
+    return 'Refreshed $time';
+  }
+
+  @override
+  String tokenUsageRecords(String count) {
+    return '$count records';
+  }
+
+  @override
+  String tokenUsageSkippedRecords(String count) {
+    return '$count incomplete records were skipped';
+  }
+
+  @override
+  String tokenUsagePendingFiles(String count) {
+    return '$count files have unfinished records; refresh to continue';
+  }
+
+  @override
+  String get tokenUsageLowerBoundNote =>
+      'Some records are incomplete; totals marked ≥ show at least this many tokens.';
+
+  @override
+  String get clipboardManagementSubtitle =>
+      'Find copied text, images, links and file paths. Classify, preview, reuse or save useful content.';
+
+  @override
+  String get tokenUsageDateAttributionNote =>
+      'Some cumulative records are incomplete. The recorded total is retained, but allocation to individual days may be incomplete.';
+
+  @override
+  String get tokenUsageIncompleteCumulativeNote =>
+      'Some cumulative records have no exact total and cannot be counted yet. Missing counts do not mean zero usage.';
+
+  @override
+  String get tokenUsageAmbiguousCumulativeNote =>
+      'The order of some cumulative records is uncertain. These recorded totals and daily allocations may be incomplete.';
 }

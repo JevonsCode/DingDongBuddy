@@ -27,6 +27,8 @@ import 'package:dingdong/features/library/ui/resource_editor.dart';
 import 'package:dingdong/features/plugins/ui/plugins_screen.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
+import 'package:dingdong/features/token_usage/ui/token_usage_screen.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/material.dart';
@@ -52,11 +54,15 @@ class ResourceManagerApp extends StatefulWidget {
     this.onOpenExternalLink,
     this.jevAction,
     this.pluginSettings,
+    this.tokenUsageController,
+    this.onCloseTokenUsage,
     super.key,
   });
 
   final JevAction? jevAction;
   final SettingsViewModel? pluginSettings;
+  final TokenUsageController? tokenUsageController;
+  final Future<void> Function()? onCloseTokenUsage;
   final LibraryViewModel viewModel;
   final ClipboardViewModel clipboardViewModel;
   final ActivityController activityController;
@@ -175,6 +181,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
     unawaited(widget.windowController.setWindowMethodHandler(null));
     widget.agentAdapterController?.dispose();
     widget.pluginSettings?.dispose();
+    widget.tokenUsageController?.dispose();
+    final closeTokenUsage = widget.onCloseTokenUsage;
+    if (closeTokenUsage != null) unawaited(closeTokenUsage());
     super.dispose();
   }
 
@@ -325,6 +334,16 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                         controller: widget.issueCenterController,
                         onOpenResource: _openIssueResource,
                       ),
+                      ResourceManagerDestination.tokenUsage =>
+                        widget.tokenUsageController == null
+                            ? Center(
+                                child: Text(
+                                  context.l10n.tokenUsageStorageUnavailable,
+                                ),
+                              )
+                            : TokenUsageScreen(
+                                controller: widget.tokenUsageController!,
+                              ),
                     },
                   ),
                 ],
@@ -449,6 +468,17 @@ class _WorkspaceSidebar extends StatelessWidget {
                     ResourceManagerDestination.recentAgents.index,
                 onTap: () =>
                     onSelected(ResourceManagerDestination.recentAgents.index),
+              ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-token-usage'),
+                icon: Icons.calendar_month_outlined,
+                label: context.l10n.tokenUsageTitle,
+                selected:
+                    selectedIndex ==
+                    ResourceManagerDestination.tokenUsage.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.tokenUsage.index),
               ),
               const SizedBox(height: 3),
               _SidebarItem(

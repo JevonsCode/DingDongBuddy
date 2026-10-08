@@ -9,6 +9,7 @@ import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/dingdong_app.dart';
+import 'package:dingdong/app/token_usage_background_service.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
@@ -63,6 +64,8 @@ import 'package:dingdong/features/shell/ui/development_test_panel_app.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/features/telemetry/data/http_lifecycle_telemetry_gateway.dart';
 import 'package:dingdong/features/telemetry/data/lifecycle_telemetry_controller.dart';
+import 'package:dingdong/features/token_usage/data/local_token_usage_repository.dart';
+import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
@@ -692,8 +695,14 @@ Future<void> main(List<String> arguments) async {
   }
 
   await windowController.setWindowMethodHandler(handleChildWindowCall);
+  final tokenUsageBackgroundService = TokenUsageBackgroundService(
+    LocalTokenUsageRepository(
+      databasePath: appDataPaths.tokenUsageDatabaseFile.path,
+    ),
+  );
   runApp(
     DingDongApp(
+      tokenUsageBackgroundService: tokenUsageBackgroundService,
       activityController: activityController,
       developmentBuild: appDataPaths.development,
       agentConversationLauncher: agentConversationLauncher,
@@ -731,6 +740,7 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await WidgetsBinding.instance.endOfFrame;
+  tokenUsageBackgroundService.start();
   unawaited(
     lifecycleTelemetryController.setEnabled(
       startupSettings.lifecycleTelemetryEnabled,

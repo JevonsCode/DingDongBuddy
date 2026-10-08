@@ -109,7 +109,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get agentCompletionNotifications =>
-      'Notificaciones de finalización de Agent';
+      'Avisos unificados de finalización';
 
   @override
   String agentCompletionNotificationsForName(Object name) {
@@ -340,7 +340,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4 =>
-      'Elija qué eventos Agent deben notificarle y luego personalice el sonido y el color de la alerta.';
+      'Reúne eventos de Agents conectados en una bandeja, con sonido y color comunes. Clientes como Codex ya tienen avisos propios; ajústalos para evitar avisos duplicados.';
 
   @override
   String get clean => 'Limpio';
@@ -1463,7 +1463,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get newestFirstClickAResumableItemToReturnToItsConversation =>
-      'Lo más nuevo primero. Haga clic en un elemento reanudable para regresar a su conversación.';
+      'Una bandeja para eventos de Agents conectados. Los más recientes primero; abre un elemento compatible para volver a su conversación.';
 
   @override
   String get noAgentCompletionsYet => 'Aún no se han completado Agent';
@@ -3464,4 +3464,161 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get tokenUsageTitle => 'Historial de tokens';
+
+  @override
+  String get tokenUsageSubtitle => 'Uso diario de tus Agents locales.';
+
+  @override
+  String get tokenUsageLocalOnly => 'Guardado en este dispositivo';
+
+  @override
+  String get tokenUsageRefresh => 'Actualizar historial local';
+
+  @override
+  String get tokenUsageToday => 'Hoy';
+
+  @override
+  String get tokenUsagePeriodTotal => 'Total del año';
+
+  @override
+  String get tokenUsageActiveDays => 'Días con uso registrado';
+
+  @override
+  String get tokenUsageTokens => 'tokens';
+
+  @override
+  String get tokenUsageYear => 'Año';
+
+  @override
+  String get tokenUsageAllAgents => 'Todos los Agents';
+
+  @override
+  String get tokenUsageDailyActivity => 'Actividad diaria';
+
+  @override
+  String get tokenUsageLess => 'Menos';
+
+  @override
+  String get tokenUsageMore => 'Más';
+
+  @override
+  String tokenUsageDayTooltip(String date, String count) {
+    return '$date: $count tokens registrados';
+  }
+
+  @override
+  String get tokenUsageDayDetail => 'Detalle diario';
+
+  @override
+  String get tokenUsageNoDayRecords =>
+      'No hay uso de tokens registrado para este día.';
+
+  @override
+  String get tokenUsageTotal => 'Total';
+
+  @override
+  String get tokenUsageInput => 'Entrada';
+
+  @override
+  String get tokenUsageOutput => 'Salida';
+
+  @override
+  String get tokenUsageCacheRead => 'Lectura de caché';
+
+  @override
+  String get tokenUsageCacheWrite => 'Escritura de caché';
+
+  @override
+  String get tokenUsageReasoning => 'Razonamiento';
+
+  @override
+  String get tokenUsageNonCached => 'Entrada sin caché + salida';
+
+  @override
+  String get tokenUsageNotReported => 'No informado';
+
+  @override
+  String get tokenUsageBreakdownNote =>
+      'Las lecturas y escrituras de caché están incluidas en la entrada; el razonamiento, en la salida. Los tokens no representan importes facturados.';
+
+  @override
+  String get tokenUsagePartialDetail =>
+      'Algunos registros solo informan el total; los detalles que faltan siguen siendo desconocidos.';
+
+  @override
+  String get tokenUsageCoverageTitle => 'Cobertura de datos locales';
+
+  @override
+  String get tokenUsageCoverageNote =>
+      'Solo se cuenta el uso informado en registros locales de Agents compatibles. Los registros ausentes o no compatibles no indican uso cero. No se sube ningún dato.';
+
+  @override
+  String get tokenUsageAvailable => 'Registros encontrados';
+
+  @override
+  String get tokenUsageMissing => 'No hay registros locales';
+
+  @override
+  String get tokenUsageUnreadable => 'No se pudieron leer algunos registros';
+
+  @override
+  String get tokenUsageLoading => 'Leyendo el historial local…';
+
+  @override
+  String get tokenUsageError =>
+      'No se pudo actualizar el historial local. Inténtalo de nuevo.';
+
+  @override
+  String get tokenUsageEmpty => 'Tu historial de tokens empieza aquí.';
+
+  @override
+  String get tokenUsageEmptyBody =>
+      'Usa un Agent compatible y actualiza para importar sus registros locales de uso.';
+
+  @override
+  String get tokenUsageStorageUnavailable =>
+      'El almacenamiento local no está disponible; estos registros aún no se han guardado.';
+
+  @override
+  String tokenUsageLastRefreshed(String time) {
+    return 'Actualizado $time';
+  }
+
+  @override
+  String tokenUsageRecords(String count) {
+    return '$count registros';
+  }
+
+  @override
+  String tokenUsageSkippedRecords(String count) {
+    return 'Se omitieron $count registros incompletos';
+  }
+
+  @override
+  String tokenUsagePendingFiles(String count) {
+    return '$count archivos tienen registros sin terminar; actualiza para continuar';
+  }
+
+  @override
+  String get tokenUsageLowerBoundNote =>
+      'Algunos registros están incompletos; los totales marcados con ≥ muestran como mínimo esos tokens.';
+
+  @override
+  String get clipboardManagementSubtitle =>
+      'Encuentra texto, imágenes, enlaces y rutas copiados. Clasifica, previsualiza, reutiliza o guarda contenido útil.';
+
+  @override
+  String get tokenUsageDateAttributionNote =>
+      'Algunos registros acumulados están incompletos. Se conserva el total registrado, pero su distribución por días puede estar incompleta.';
+
+  @override
+  String get tokenUsageIncompleteCumulativeNote =>
+      'Algunos registros acumulados no tienen un total exacto y aún no pueden contarse. Los datos ausentes no indican uso cero.';
+
+  @override
+  String get tokenUsageAmbiguousCumulativeNote =>
+      'El orden de algunos registros acumulados es incierto. Los totales registrados y su distribución diaria pueden estar incompletos.';
 }

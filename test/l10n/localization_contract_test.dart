@@ -51,6 +51,8 @@ void main() {
       'skill',
       'skill2',
       'skills',
+      'tokenUsageTokens',
+      'tokenUsageTotal',
     };
     final shared = english.keys
         .where((String key) => !key.startsWith('@'))

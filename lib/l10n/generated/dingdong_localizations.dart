@@ -274,7 +274,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Agent completion notifications'**
+  /// **'Unified completion alerts'**
   String get agentCompletionNotifications;
 
   /// DingDong built-in interface copy.
@@ -688,7 +688,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Choose which Agent events should notify you, then customize the alert sound and color.'**
+  /// **'Collect events from connected Agents in one inbox, with shared sound and color settings. Clients such as Codex already have their own completion alerts; adjust them to avoid duplicate reminders.'**
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4;
 
   /// DingDong built-in interface copy.
@@ -2611,7 +2611,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Newest first. Click a resumable item to return to its conversation.'**
+  /// **'One inbox for connected Agent events. Newest first; open a supported item to return to its conversation.'**
   String get newestFirstClickAResumableItemToReturnToItsConversation;
 
   /// DingDong built-in interface copy.
@@ -5959,6 +5959,276 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}'**
   String fileTransferIssue(String code);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Token history'**
+  String get tokenUsageTitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily usage across your local Agents.'**
+  String get tokenUsageSubtitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on this device'**
+  String get tokenUsageLocalOnly;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh local history'**
+  String get tokenUsageRefresh;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get tokenUsageToday;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Year total'**
+  String get tokenUsagePeriodTotal;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Days with recorded usage'**
+  String get tokenUsageActiveDays;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'tokens'**
+  String get tokenUsageTokens;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get tokenUsageYear;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'All Agents'**
+  String get tokenUsageAllAgents;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily activity'**
+  String get tokenUsageDailyActivity;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get tokenUsageLess;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get tokenUsageMore;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {count} recorded tokens'**
+  String tokenUsageDayTooltip(String date, String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily detail'**
+  String get tokenUsageDayDetail;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'No token usage recorded for this day.'**
+  String get tokenUsageNoDayRecords;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get tokenUsageTotal;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get tokenUsageInput;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Output'**
+  String get tokenUsageOutput;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache read'**
+  String get tokenUsageCacheRead;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache write'**
+  String get tokenUsageCacheWrite;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning'**
+  String get tokenUsageReasoning;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Noncached input + output'**
+  String get tokenUsageNonCached;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported'**
+  String get tokenUsageNotReported;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache reads and writes are included in input; reasoning is included in output. Token counts are not billing amounts.'**
+  String get tokenUsageBreakdownNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some records report only a total; missing details remain unknown.'**
+  String get tokenUsagePartialDetail;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data coverage'**
+  String get tokenUsageCoverageTitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.'**
+  String get tokenUsageCoverageNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs found'**
+  String get tokenUsageAvailable;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'No local logs found'**
+  String get tokenUsageMissing;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some logs could not be read'**
+  String get tokenUsageUnreadable;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading local token history…'**
+  String get tokenUsageLoading;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Local history could not be refreshed. Try again.'**
+  String get tokenUsageError;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Your token history starts here.'**
+  String get tokenUsageEmpty;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a supported Agent, then refresh to import its local usage records.'**
+  String get tokenUsageEmptyBody;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage is unavailable; these records are not saved yet.'**
+  String get tokenUsageStorageUnavailable;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshed {time}'**
+  String tokenUsageLastRefreshed(String time);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} records'**
+  String tokenUsageRecords(String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} incomplete records were skipped'**
+  String tokenUsageSkippedRecords(String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files have unfinished records; refresh to continue'**
+  String tokenUsagePendingFiles(String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some records are incomplete; totals marked ≥ show at least this many tokens.'**
+  String get tokenUsageLowerBoundNote;
+
+  /// Clipboard manager purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Find copied text, images, links and file paths. Classify, preview, reuse or save useful content.'**
+  String get clipboardManagementSubtitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some cumulative records are incomplete. The recorded total is retained, but allocation to individual days may be incomplete.'**
+  String get tokenUsageDateAttributionNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some cumulative records have no exact total and cannot be counted yet. Missing counts do not mean zero usage.'**
+  String get tokenUsageIncompleteCumulativeNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'The order of some cumulative records is uncertain. These recorded totals and daily allocations may be incomplete.'**
+  String get tokenUsageAmbiguousCumulativeNote;
 }
 
 class _DingDongLocalizationsDelegate

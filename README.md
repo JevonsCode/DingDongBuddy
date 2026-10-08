@@ -15,17 +15,19 @@
 
 
 <p align="center">
-  <strong>Clear clipboard history<br>Manage Prompts, Skills, and MCP in one place<br>Keep connected Agent alerts in one place, with a sound you choose</strong>
+  <strong>Organize copied content and reuse it<br>Manage Prompts, Skills, and MCP in one place<br>A shared inbox for connected Agent events, with a sound you choose</strong>
 </p>
 
-DingDong is a local desktop companion for content-heavy Agent work. It keeps
-clipboard history searchable, manages reusable Agent resources in one place,
-connects them to supported clients, and gathers their alerts with a desktop
-sound you choose. Important results and selected clipboard items can also reach
-a trusted phone through the mobile PWA.
+DingDong is a free, open-source desktop companion for content work and local
+Agents. Classify, search, preview, and reuse copied text, images, and files;
+maintain Prompts, Skills, and MCP connections in one place; and review events
+from connected Agents with the notification sound you choose. Selected content
+and important reminders can also reach a trusted phone through the mobile PWA.
 
-> **Current release: DingDong 1.6.0.** Adds a Plugins page with optional Jev installation,
-> separate Token usage, and macOS selection tools. More plugins are on the way.
+> **Development version: DingDong 1.7.0 (build 66).** Adds local daily Token history
+> and a heatmap for supported Codex, Claude Code, and Pi sources. This feature is
+> in development; the published downloads below remain **1.6.2**, with the Plugins
+> page, optional Jev integration, and macOS selection tools.
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -35,16 +37,52 @@ stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 
 | Area | What you get |
 | --- | --- |
-| Clipboard | Searchable text, links, images, files, paths, and commands; groups, matching rules, preview, system open, copy, share, and QR Code |
+| Clipboard content | Search and classify text, links, images, files, paths, and commands; groups, matching rules, pin saved items, preview, system open, copy, paste, share, and QR Code |
 | Prompt | Full instructions delivered automatically when enabled scope rules match the current task |
 | Skill | Complete packages with `SKILL.md`, scripts, references, and assets; summary-first discovery and on-demand loading |
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
 | Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
+| Local Token history · 1.7.0 development | Daily history and heatmap for supported Codex, Claude Code, and Pi sources; filter by year and source and inspect a day's counts |
 | Connected devices | Pair phones or computers, share Clipboard items and files explicitly, opt into automatic computer sync, and choose direct LAN or encrypted service transport |
 
 Clipboard and resource data stay on this computer by default. The lightweight
 connection relay stores no clipboard or file content.
+
+## Clipboard content you can find and reuse
+
+Keep useful snippets, links, screenshots, and file references within reach.
+Use content classifications and groups to narrow the view, search for a record,
+preview it before reuse, and pin saved items you return to often. Copy or paste
+an item back into your editor, open a file in its system application, or share
+only the item you choose with a trusted device.
+
+Clipboard monitoring starts off. Records stay local by default, and Agent
+access to their content is a separate setting that also starts off. Copied
+files and images can remain references to their original local paths;
+screenshots without a source path use managed local storage and follow retention.
+
+## A shared inbox for connected Agent events
+
+Codex already has completion notifications. DingDong gives events from connected
+Agents one place to review, with unread state, history, and preferences for which
+events should notify you and which sound they use. Completion, blockers, and
+requests for a decision stay distinguishable. The client's own notifications
+are not automatically replaced; choose your preferred setup in each client.
+
+## Local daily Token history · 1.7.0 development preview
+
+Open **Resource Manager → Token history** in the development version to see a
+daily heatmap, filter by year or source, and inspect a day's usage. Supported
+sources are **Codex, Claude Code, and Pi** when usable local usage evidence exists.
+Repeated cumulative records are deduplicated; incomplete daily totals are shown
+as lower bounds with `≥`. Missing evidence remains unknown rather than an
+invented zero.
+
+This history stores numeric usage aggregates locally, not conversation text,
+and is separate from anonymous installation statistics. Token counts show
+usage, not money or a complete bill. The 1.6.2 downloads do not include this
+development feature.
 
 ## Optional system selection tools on macOS
 
@@ -123,7 +161,7 @@ when no usage is available, the suffix is omitted.
 Examples after the corresponding resources are configured:
 
 - “Review this page against our project UI rules and fix the problems.”
-- “Use this project's release workflow, run every check, and prepare version 1.6.0.”
+- “Use this project's release workflow, run every check, and prepare the next release.”
 - “Use my GitHub tools to find why the latest main workflow failed.”
 
 Agents can search before creating or updating Prompt and MCP resources with
@@ -197,7 +235,7 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Manual downloads:
+Published stable downloads · 1.6.2:
 
 - [macOS · Apple silicon · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-arm64.dmg)
 - [macOS · Intel · 1.6.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.2/DingDong-1.6.2-macos-x64.dmg)
@@ -232,6 +270,10 @@ DingDong uses three independent native paths for Codex:
    `dingdong_mcp --acknowledge-session-start --source Codex`. When Codex opens or
    resumes a conversation, DingDong marks only that thread's reminders as seen
    and subtracts their count from the tray badge.
+
+When the completion Hook is configured, the Agent does not need to call
+`dingdong_notify` again for the same completed task. Use that tool for blockers,
+requests for user attention, or clients without a completion Hook.
 
 Automatic setup preserves unrelated entries in native files, including
 `~/.codex/config.toml`, `~/.claude/settings.json`,
@@ -277,6 +319,8 @@ The global panel shortcut and all workspace shortcuts are configurable in
 - Clipboard history, resources, settings, and Agent activity are local by default.
 - The loopback API listens only on localhost.
 - Clipboard content access for Agents is off by default; metadata remains available.
+- Anonymous installation and upgrade statistics are on by default and can be turned off in Settings. Their payload contains installation/event identifiers, version/build, platform/architecture, and event time; it excludes clipboard content, resources, conversation text, and local Token history.
+- Local Token history stores numeric aggregates on this computer; unavailable evidence is unknown and partial totals are marked as lower bounds.
 - Device-link payloads are end-to-end encrypted; the connection relay does not store clipboard or file content.
 - The phone PWA never reads the phone's clipboard and sends content only after an explicit **Send** action.
 - Existing client configuration unrelated to DingDong is preserved during sync.

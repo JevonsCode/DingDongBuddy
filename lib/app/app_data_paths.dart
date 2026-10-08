@@ -56,6 +56,10 @@ final class AppDataPaths {
     '${applicationSupportDirectory.path}${_separator}clipboard-history.sqlite',
   );
 
+  File get tokenUsageDatabaseFile => File(
+    '${applicationSupportDirectory.path}${_separator}token-usage.sqlite',
+  );
+
   File get clipboardCategoryRulesFile => File(
     '${applicationSupportDirectory.path}${_separator}clipboard-category-rules.json',
   );

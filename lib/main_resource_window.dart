@@ -213,8 +213,16 @@ Future<void> _runResourceManagerWindow(
     titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.waitUntilReadyToShow(options);
+  final tokenUsageRepository = LocalTokenUsageRepository(
+    databasePath: paths.tokenUsageDatabaseFile.path,
+  );
+  final tokenUsageController = TokenUsageController.fromRepository(
+    tokenUsageRepository,
+  );
   runApp(
     ResourceManagerApp(
+      tokenUsageController: tokenUsageController,
+      onCloseTokenUsage: tokenUsageRepository.close,
       viewModel: viewModel,
       clipboardViewModel: clipboardViewModel,
       activityController: activityController,

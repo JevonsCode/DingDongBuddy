@@ -81,7 +81,7 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.6.2 from pubspec', () {
+  test('desktop hosts consume application version 1.7.0-dev.1 from pubspec', () {
     final String pubspec = File('pubspec.yaml').readAsStringSync();
     final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
     final String windowsResources = File(
@@ -91,26 +91,26 @@ void main() {
       'lib/features/settings/domain/release_update.dart',
     ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.6.2+65'));
+    expect(pubspec, contains('version: 1.7.0-dev.1+66'));
     expect(
       releaseVersion,
-      contains("const String currentAppVersion = '1.6.2';"),
+      contains("const String currentAppVersion = '1.7.0-dev.1';"),
     );
-    expect(releaseVersion, contains("const String currentAppBuild = '65';"));
+    expect(releaseVersion, contains("const String currentAppBuild = '66';"));
     expect(
       File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.6.2'"),
+      contains("'version': '1.7.0-dev.1'"),
     );
     expect(
       File(
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
       ).readAsStringSync(),
-      contains("'version': '1.6.2'"),
+      contains("'version': '1.7.0-dev.1'"),
     );
     expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
     expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,6,2,65'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.6.2"'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,66'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.7.0-dev.1"'));
   });
 
   test('macOS About uses the canonical DingDong logo', () {
@@ -460,12 +460,12 @@ void main() {
     expect(website, contains('id="resources"'));
     expect(website, contains('class="resource-map"'));
     expect(website, contains('class="conversation-grid"'));
-    expect(website, contains('"hero.title.clipboard": "刚复制的东西，一搜就有"'));
+    expect(website, contains('"hero.title.clipboard": "复制的内容，找到就能用"'));
     expect(website, contains('"hero.title.resources": "Agent 资源，放在一起管"'));
-    expect(website, contains('"hero.title.alerts": "任务有消息，叮咚提醒你"'));
+    expect(website, contains('"hero.title.alerts": "几个 Agent 的消息，一起收好"'));
     expect(
       website,
-      contains('"hero.title.alerts": "Hear when a task needs you."'),
+      contains('"hero.title.alerts": "Connected Agent events, in one inbox."'),
     );
     expect(
       website.indexOf('class="actions"'),

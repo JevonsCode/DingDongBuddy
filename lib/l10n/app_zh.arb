@@ -132,7 +132,7 @@
   "@agentCompletion": {
     "description": "DingDong built-in interface copy."
   },
-  "agentCompletionNotifications": "Agent 完成提醒",
+  "agentCompletionNotifications": "统一完成提醒",
   "@agentCompletionNotifications": {
     "description": "DingDong built-in interface copy."
   },
@@ -430,7 +430,7 @@
   "@chooseRules": {
     "description": "DingDong built-in interface copy."
   },
-  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "选择哪些 Agent 事件需要提醒，再自定义提示声音和颜色。",
+  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "把已接入 Agent 的事件统一收口，集中查看，并统一设置声音和颜色。Codex 等客户端已有自己的完成提醒，可按需要调整，避免重复提醒。",
   "@chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": {
     "description": "DingDong built-in interface copy."
   },
@@ -1931,7 +1931,7 @@
   "@newTriggerGroup": {
     "description": "DingDong built-in interface copy."
   },
-  "newestFirstClickAResumableItemToReturnToItsConversation": "按时间倒序排列；点击可恢复的记录可返回对应对话。",
+  "newestFirstClickAResumableItemToReturnToItsConversation": "已接入 Agent 的提醒在这里统一查看。按时间倒序排列，支持的记录可直接回到会话。",
   "@newestFirstClickAResumableItemToReturnToItsConversation": {
     "description": "DingDong built-in interface copy."
   },
@@ -4409,5 +4409,213 @@
   },
   "@cancelTransfer": {
     "description": "File transfer progress and controls"
+  },
+  "tokenUsageTitle": "Token 用量",
+  "@tokenUsageTitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageSubtitle": "每天用了多少 Token，一眼看清。",
+  "@tokenUsageSubtitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLocalOnly": "仅保存在本机",
+  "@tokenUsageLocalOnly": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageRefresh": "刷新本地记录",
+  "@tokenUsageRefresh": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageToday": "今天",
+  "@tokenUsageToday": {
+    "description": "Local token history interface."
+  },
+  "tokenUsagePeriodTotal": "全年用量",
+  "@tokenUsagePeriodTotal": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageActiveDays": "有用量记录的天数",
+  "@tokenUsageActiveDays": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageTokens": "Token",
+  "@tokenUsageTokens": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageYear": "年份",
+  "@tokenUsageYear": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAllAgents": "全部 Agent",
+  "@tokenUsageAllAgents": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageDailyActivity": "每日用量",
+  "@tokenUsageDailyActivity": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLess": "少",
+  "@tokenUsageLess": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageMore": "多",
+  "@tokenUsageMore": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageDayTooltip": "{date}：已记录 {count} Token",
+  "@tokenUsageDayTooltip": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageDayDetail": "当日明细",
+  "@tokenUsageDayDetail": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNoDayRecords": "这一天还没有 Token 用量记录。",
+  "@tokenUsageNoDayRecords": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageTotal": "总用量",
+  "@tokenUsageTotal": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageInput": "输入",
+  "@tokenUsageInput": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageOutput": "输出",
+  "@tokenUsageOutput": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCacheRead": "缓存读取",
+  "@tokenUsageCacheRead": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCacheWrite": "缓存写入",
+  "@tokenUsageCacheWrite": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageReasoning": "推理",
+  "@tokenUsageReasoning": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNonCached": "未命中缓存的输入 + 输出",
+  "@tokenUsageNonCached": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNotReported": "未提供",
+  "@tokenUsageNotReported": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageBreakdownNote": "缓存读取、写入已包含在输入中，推理已包含在输出中。Token 数量不代表计费金额。",
+  "@tokenUsageBreakdownNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsagePartialDetail": "部分记录只提供总用量，缺少的明细会保留为未知。",
+  "@tokenUsagePartialDetail": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCoverageTitle": "本地数据覆盖",
+  "@tokenUsageCoverageTitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCoverageNote": "只统计支持的 Agent 本地日志中已提供的用量。未支持或未找到日志不代表用量为零，数据不会上传。",
+  "@tokenUsageCoverageNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAvailable": "已找到日志",
+  "@tokenUsageAvailable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageMissing": "未找到本地日志",
+  "@tokenUsageMissing": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageUnreadable": "部分日志无法读取",
+  "@tokenUsageUnreadable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLoading": "正在读取本地用量…",
+  "@tokenUsageLoading": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageError": "本地记录刷新失败，请重试。",
+  "@tokenUsageError": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageEmpty": "从这里开始记录你的 Token 用量。",
+  "@tokenUsageEmpty": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageEmptyBody": "使用支持的 Agent 后，刷新即可导入本地用量记录。",
+  "@tokenUsageEmptyBody": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageStorageUnavailable": "本地存储暂不可用，这些记录尚未保存。",
+  "@tokenUsageStorageUnavailable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLastRefreshed": "更新于 {time}",
+  "@tokenUsageLastRefreshed": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageRecords": "{count} 条记录",
+  "@tokenUsageRecords": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageSkippedRecords": "已跳过 {count} 条不完整记录",
+  "@tokenUsageSkippedRecords": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsagePendingFiles": "还有 {count} 个文件包含未完成记录，刷新可继续",
+  "@tokenUsagePendingFiles": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageLowerBoundNote": "部分记录不完整，标有 ≥ 的总用量表示至少已用这些 Token。",
+  "@tokenUsageLowerBoundNote": {
+    "description": "Local token history interface."
+  },
+  "clipboardManagementSubtitle": "找回复制过的文字、图片、链接和文件路径，分类、预览、复用，也能保存常用内容。",
+  "@clipboardManagementSubtitle": {
+    "description": "Clipboard manager purpose."
+  },
+  "tokenUsageDateAttributionNote": "部分累计记录不完整，已保留有据可查的总用量，但分配到具体日期的明细可能不完整。",
+  "@tokenUsageDateAttributionNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageIncompleteCumulativeNote": "部分累计记录未提供准确总量，暂无法计入；缺少记录不代表用量为零。",
+  "@tokenUsageIncompleteCumulativeNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAmbiguousCumulativeNote": "部分累计记录的顺序无法确认，已记录的总量和每日明细可能不完整。",
+  "@tokenUsageAmbiguousCumulativeNote": {
+    "description": "Local token history interface."
   }
 }

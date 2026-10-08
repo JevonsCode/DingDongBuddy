@@ -168,6 +168,16 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        context.l10n.clipboardManagementSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Row(
                       children: <Widget>[
