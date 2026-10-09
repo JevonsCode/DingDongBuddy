@@ -26,6 +26,8 @@ final class SecureJevVault implements JevVault {
     mOptions: MacOsOptions(usesDataProtectionKeychain: false),
   );
   @override
+  Future<bool> containsKey() => _storage.containsKey(key: key);
+  @override
   Future<String?> read() => _storage.read(key: key);
   @override
   Future<void> write(String value) => _storage.write(key: key, value: value);

@@ -4,17 +4,21 @@ import 'dart:convert';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
+import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
 import 'package:dingdong/features/jev/data/jev_routes.dart';
 import 'package:dingdong/features/jev/data/jev_service.dart';
 import 'package:dingdong/features/jev/data/jev_store.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class FakeVault implements JevVault {
   String? value;
   bool failDelete = false;
+  @override
+  Future<bool> containsKey() async => value?.isNotEmpty == true;
   @override
   Future<String?> read() async => value;
   @override
@@ -71,6 +75,72 @@ void main() {
     await service.saveKey('test-key-only-not-a-real-secret');
     await service.setEnabled(true);
   }
+
+  test('status reports readiness without reading the credential', () async {
+    await ready();
+    final metadataVault = _WaitingVault(Completer<String?>())
+      ..value = vault.value;
+    final other = JevService(store, metadataVault);
+    fakeAsync((async) {
+      Map<String, Object?>? status;
+      other.status().then((value) => status = value);
+      async.flushMicrotasks();
+
+      expect(status, isNotNull);
+      expect(status!['configured'], true);
+      expect(status!['ready'], true);
+      expect(jsonEncode(status), isNot(contains(vault.value!)));
+      expect(calls, 0);
+      expect(store.usage()['requests'], 0);
+    });
+  });
+  test('stalled vault metadata returns a bounded status error', () async {
+    await ready();
+    final gate = Completer<bool>();
+    final metadataVault = _WaitingPresenceVault(gate)..value = vault.value;
+    final routes = JevRoutes(JevService(store, metadataVault));
+    fakeAsync((async) {
+      HttpResponseData? response;
+      routes
+          .route(
+            const HttpRequestData(method: 'GET', uri: '/plugins/jev/status'),
+          )
+          .then((value) => response = value);
+      async.flushMicrotasks();
+      expect(response, isNull);
+      async.elapse(const Duration(seconds: 2));
+      async.flushMicrotasks();
+
+      expect(response, isNotNull);
+      expect(response!.statusCode, 400);
+      expect(response!.json['message'], 'local_storage_failed');
+      expect(store.installed, true);
+      expect(store.enabled, true);
+      expect(metadataVault.value, vault.value);
+      expect(store.usage()['requests'], 0);
+      gate.completeError(StateError('late-vault-failure'));
+      async.flushMicrotasks();
+      expect(response!.json['message'], 'local_storage_failed');
+    });
+  });
+  test('vault metadata errors do not report a missing credential', () async {
+    await ready();
+    final metadataVault = _FailingPresenceVault()..value = vault.value;
+    final other = JevService(store, metadataVault);
+    await expectLater(
+      other.status(),
+      throwsA(
+        isA<JevException>().having(
+          (error) => error.code,
+          'code',
+          'local_storage_failed',
+        ),
+      ),
+    );
+    expect(store.installed, true);
+    expect(store.enabled, true);
+    expect(metadataVault.value, vault.value);
+  });
 
   test('install and key save are free; explicit opt-in required', () async {
     expect((await service.status())['installed'], false);
@@ -347,6 +417,18 @@ class _WaitingVault extends FakeVault {
   final Completer<String?> gate;
   @override
   Future<String?> read() => gate.future;
+}
+
+class _WaitingPresenceVault extends FakeVault {
+  _WaitingPresenceVault(this.gate);
+  final Completer<bool> gate;
+  @override
+  Future<bool> containsKey() => gate.future;
+}
+
+class _FailingPresenceVault extends FakeVault {
+  @override
+  Future<bool> containsKey() async => throw StateError('vault-failure');
 }
 
 class _Transport implements McpHttpTransport {

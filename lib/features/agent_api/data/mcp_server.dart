@@ -97,8 +97,13 @@ final class McpServer {
 
   Future<List<Map<String, Object?>>> _jevTools() async {
     try {
-      final status = await _executor?.execute('dingdong_jev_status', {});
-      return status?['installed'] == true ? jevMcpTools : [];
+      final executor = _executor;
+      if (executor == null) return [];
+      // Optional Jev discovery must not block the built-in MCP tools.
+      final status = await executor
+          .execute('dingdong_jev_status', {})
+          .timeout(const Duration(seconds: 3));
+      return status['installed'] == true ? jevMcpTools : [];
     } on Object {
       return [];
     }

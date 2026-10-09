@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dingdong/features/jev/data/jev_store.dart';
 
 abstract interface class JevVault {
+  Future<bool> containsKey();
   Future<String?> read();
   Future<void> write(String value);
   Future<void> delete();
@@ -85,7 +86,17 @@ final class JevService {
 
   Future<Map<String, Object?>> status() async {
     final installed = store.installed;
-    final configured = installed && (await vault.read())?.isNotEmpty == true;
+    var configured = false;
+    if (installed) {
+      try {
+        // Status needs presence metadata, not a credential read that may prompt.
+        configured = await vault.containsKey().timeout(
+          const Duration(seconds: 2),
+        );
+      } on Object {
+        throw const JevException('local_storage_failed');
+      }
+    }
     final now = _now();
     return {
       'installed': installed,

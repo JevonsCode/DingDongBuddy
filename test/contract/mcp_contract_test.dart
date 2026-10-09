@@ -1,9 +1,46 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('Jev discovery timeout preserves built-in tools and later requests', () {
+    final status = Completer<Map<String, Object?>>();
+    final server = McpServer(executor: _WaitingJevExecutor(status));
+    fakeAsync((async) {
+      String? output;
+      server
+          .handleLine('{"jsonrpc":"2.0","id":1,"method":"tools/list"}')
+          .then((value) => output = value);
+      async.flushMicrotasks();
+      expect(output, isNull);
+      async.elapse(const Duration(seconds: 3));
+      async.flushMicrotasks();
+
+      expect(output, isNotNull);
+      final response = jsonDecode(output!) as Map<String, Object?>;
+      final result = response['result']! as Map<String, Object?>;
+      expect(result['tools'], McpServer.tools);
+      expect(response['id'], 1);
+
+      String? next;
+      server
+          .handleLine(
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"dingdong_notify","arguments":{}}}',
+          )
+          .then((value) => next = value);
+      async.flushMicrotasks();
+      final nextResponse = jsonDecode(next!) as Map<String, Object?>;
+      final nextResult = nextResponse['result']! as Map<String, Object?>;
+      expect(nextResult['isError'], false);
+      status.completeError(StateError('late-status-failure'));
+      async.flushMicrotasks();
+      expect(result['tools'], McpServer.tools);
+    });
+  });
+
   test(
     'initialize advertises durable DingDong workflow instructions',
     () async {
@@ -417,5 +454,19 @@ final class _FakeMcpToolExecutor implements McpToolExecutor {
     this.name = name;
     this.arguments = arguments;
     return <String, Object?>{'status': 'triggered'};
+  }
+}
+
+final class _WaitingJevExecutor implements McpToolExecutor {
+  _WaitingJevExecutor(this.status);
+  final Completer<Map<String, Object?>> status;
+
+  @override
+  Future<Map<String, Object?>> execute(
+    String name,
+    Map<String, Object?> arguments,
+  ) {
+    if (name == 'dingdong_jev_status') return status.future;
+    return Future.value(<String, Object?>{'status': 'triggered'});
   }
 }
