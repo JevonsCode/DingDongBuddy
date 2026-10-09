@@ -114,9 +114,11 @@ class PopupHeader extends StatelessWidget {
                                   const _DevelopmentBadge(),
                                 ],
                                 const SizedBox(width: 3),
-                                _VersionButton(
-                                  updateAvailable: updateAvailable,
-                                  onPressed: onVersion,
+                                Flexible(
+                                  child: _VersionButton(
+                                    updateAvailable: updateAvailable,
+                                    onPressed: onVersion,
+                                  ),
                                 ),
                               ],
                             ),
@@ -253,40 +255,47 @@ class _VersionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      child: GestureDetector(
-        key: const Key('popup-app-version'),
-        onTap: onPressed,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                'v$currentAppVersion',
-                key: Key('app-version-$currentAppVersion'),
-                style: TextStyle(
-                  color: PopupStyle.of(context).textSecondary,
-                  fontSize: 9,
-                  height: 1,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (updateAvailable) ...<Widget>[
-                const SizedBox(width: 3),
-                Container(
-                  key: const Key('popup-version-update-dot'),
-                  width: 5,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: PopupStyle.of(context).development,
-                    shape: BoxShape.circle,
+    return Tooltip(
+      message: 'v$currentAppVersion',
+      child: Semantics(
+        button: true,
+        child: GestureDetector(
+          key: const Key('popup-app-version'),
+          onTap: onPressed,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Flexible(
+                  child: Text(
+                    'v$currentAppVersion',
+                    key: Key('app-version-$currentAppVersion'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textSecondary,
+                      fontSize: 9,
+                      height: 1,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
+                if (updateAvailable) ...<Widget>[
+                  const SizedBox(width: 3),
+                  Container(
+                    key: const Key('popup-version-update-dot'),
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: PopupStyle.of(context).development,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

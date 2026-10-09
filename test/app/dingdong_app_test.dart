@@ -42,19 +42,20 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.6.4', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const DingDongApp());
+  testWidgets(
+    'DingDong starts with the Dynamic workspace at version 1.7.0-dev.2',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
 
-    expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.6.4')), findsOneWidget);
-    expect(find.text('v1.6.4'), findsOneWidget);
-    expect(find.byKey(const Key('popup-development-badge')), findsNothing);
-    expect(find.text('Resource library'), findsOneWidget);
-    expect(find.text('Clipboard history'), findsOneWidget);
-    expect(find.text('API | Agent connections'), findsOneWidget);
-  });
+      expect(find.text('Dynamic'), findsWidgets);
+      expect(find.byKey(const Key('app-version-1.7.0-dev.2')), findsOneWidget);
+      expect(find.text('v1.7.0-dev.2'), findsOneWidget);
+      expect(find.byKey(const Key('popup-development-badge')), findsNothing);
+      expect(find.text('Resource library'), findsOneWidget);
+      expect(find.text('Clipboard history'), findsOneWidget);
+      expect(find.text('API | Agent connections'), findsOneWidget);
+    },
+  );
 
   testWidgets('development build is visibly labeled beside DingDong', (
     WidgetTester tester,

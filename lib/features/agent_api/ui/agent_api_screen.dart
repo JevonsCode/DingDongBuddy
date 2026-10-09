@@ -71,7 +71,6 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
   void initState() {
     super.initState();
     _setGateway();
-    _advancedExpanded = widget.focusMcpOnOpen;
     _scheduleHealthCheck();
     if (widget.focusMcpOnOpen) {
       _scheduleMcpFocus();
@@ -90,7 +89,6 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
       _scheduleHealthCheck();
     }
     if (!oldWidget.focusMcpOnOpen && widget.focusMcpOnOpen) {
-      setState(() => _advancedExpanded = true);
       _scheduleMcpFocus();
     }
   }
@@ -302,6 +300,23 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                         ),
                       ],
                       const SizedBox(height: 20),
+                      Column(
+                        key: _mcpAccessKey,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          _SectionTitle(
+                            key: const Key('agent-api-mcp-access'),
+                            title: context.l10n.mcpAccess,
+                            description: context.l10n.agentSetupGettingStarted,
+                          ),
+                          const SizedBox(height: 12),
+                          McpSetupCard(
+                            settingsViewModel: widget.settingsViewModel,
+                            clipboardGateway: widget.clipboardGateway,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
                       _AdvancedDisclosure(
                         expanded: _advancedExpanded,
                         onToggle: () {
@@ -335,40 +350,21 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                         const SizedBox(height: 8),
                         const _EndpointList(),
                         const SizedBox(height: 24),
-                        Column(
-                          key: _mcpAccessKey,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            _SectionTitle(
-                              key: const Key('agent-api-mcp-access'),
-                              title: context.l10n.mcpAccess,
-                              description: context
-                                  .l10n
-                                  .advancedCommandsAndTheInstallationPromptTheirPresence_b84b4903,
-                            ),
-                            const SizedBox(height: 10),
-                            _CommandRow(
-                              command: mcpCommand,
-                              copied: _copiedCommand == mcpCommand,
-                              onCopy: () => _copy(mcpCommand),
-                            ),
-                            const SizedBox(height: 9),
-                            Text(
-                              context
-                                  .l10n
-                                  .theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67,
-                              style: TextStyle(
-                                color: PopupStyle.of(context).textSecondary,
-                                fontSize: 11,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            McpSetupCard(
-                              settingsViewModel: widget.settingsViewModel,
-                              clipboardGateway: widget.clipboardGateway,
-                            ),
-                          ],
+                        _CommandRow(
+                          command: mcpCommand,
+                          copied: _copiedCommand == mcpCommand,
+                          onCopy: () => _copy(mcpCommand),
+                        ),
+                        const SizedBox(height: 9),
+                        Text(
+                          context
+                              .l10n
+                              .theBundledBridgeExposesPromptsSkillsMCPReferencesAnd_a0f4fd67,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).textSecondary,
+                            fontSize: 11,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ],

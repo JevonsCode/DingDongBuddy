@@ -1,5 +1,29 @@
 {
   "@@locale": "es",
+  "agentSetupAdvancedDetailsDescription": "Endpoints y comandos del puente",
+  "@agentSetupAdvancedDetailsDescription": {
+    "description": "Contenido técnico que permanece en los detalles avanzados de conexión."
+  },
+  "gettingStartedConnectAgent": "Conectar un Agent",
+  "@gettingStartedConnectAgent": {
+    "description": "Acción para abrir la configuración de Agent desde la lista de actividad vacía."
+  },
+  "gettingStartedAgentActivityDescription": "Conecta un Agent local para recibir avisos al completar tareas y volver a sus conversaciones desde aquí.",
+  "@gettingStartedAgentActivityDescription": {
+    "description": "Guía inicial cuando no hay eventos de Agent."
+  },
+  "agentSetupGettingStarted": "Copia la instrucción de configuración a tu Agent local y completa una tarea para comprobar que su aviso llega aquí.",
+  "@agentSetupGettingStarted": {
+    "description": "Guía permanente de configuración antes de los detalles avanzados de conexión."
+  },
+  "gettingStartedResourceLibraryEmpty": "Aún no hay recursos",
+  "@gettingStartedResourceLibraryEmpty": {
+    "description": "Título de una biblioteca sin recursos configurables."
+  },
+  "gettingStartedResourceLibraryDescription": "Guarda Prompts, Skills y referencias MCP reutilizables en un solo lugar. Empieza con tu primer recurso.",
+  "@gettingStartedResourceLibraryDescription": {
+    "description": "Guía inicial compartida por los estados vacíos de la biblioteca."
+  },
   "languageEnglish": "Inglés",
   "@languageEnglish": {
     "description": "Nombre visible de la opción de idioma inglés."
@@ -132,7 +156,7 @@
   "@agentCompletion": {
     "description": "DingDong built-in interface copy."
   },
-  "agentCompletionNotifications": "Notificaciones de finalización de Agent",
+  "agentCompletionNotifications": "Avisos unificados de finalización",
   "@agentCompletionNotifications": {
     "description": "DingDong built-in interface copy."
   },
@@ -430,7 +454,7 @@
   "@chooseRules": {
     "description": "DingDong built-in interface copy."
   },
-  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "Elija qué eventos Agent deben notificarle y luego personalice el sonido y el color de la alerta.",
+  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "Reúne eventos de Agents conectados en una bandeja, con sonido y color comunes. Clientes como Codex ya tienen avisos propios; ajústalos para evitar avisos duplicados.",
   "@chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": {
     "description": "DingDong built-in interface copy."
   },
@@ -1931,7 +1955,7 @@
   "@newTriggerGroup": {
     "description": "DingDong built-in interface copy."
   },
-  "newestFirstClickAResumableItemToReturnToItsConversation": "Lo más nuevo primero. Haga clic en un elemento reanudable para regresar a su conversación.",
+  "newestFirstClickAResumableItemToReturnToItsConversation": "Una bandeja para eventos de Agents conectados. Los más recientes primero; abre un elemento compatible para volver a su conversación.",
   "@newestFirstClickAResumableItemToReturnToItsConversation": {
     "description": "DingDong built-in interface copy."
   },
@@ -4409,5 +4433,377 @@
   },
   "@cancelTransfer": {
     "description": "File transfer progress and controls"
+  },
+  "tokenUsageTitle": "Historial de tokens",
+  "@tokenUsageTitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageSubtitle": "Uso diario de tus Agents locales.",
+  "@tokenUsageSubtitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLocalOnly": "Guardado en este dispositivo",
+  "@tokenUsageLocalOnly": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageRefresh": "Actualizar historial local",
+  "@tokenUsageRefresh": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageToday": "Hoy",
+  "@tokenUsageToday": {
+    "description": "Local token history interface."
+  },
+  "tokenUsagePeriodTotal": "Total del año",
+  "@tokenUsagePeriodTotal": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageActiveDays": "Días con uso registrado",
+  "@tokenUsageActiveDays": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageTokens": "tokens",
+  "@tokenUsageTokens": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageYear": "Año",
+  "@tokenUsageYear": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAllAgents": "Todos los Agents",
+  "@tokenUsageAllAgents": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageDailyActivity": "Actividad diaria",
+  "@tokenUsageDailyActivity": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLess": "Menos",
+  "@tokenUsageLess": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageMore": "Más",
+  "@tokenUsageMore": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageDayTooltip": "{date}: {count} tokens registrados",
+  "@tokenUsageDayTooltip": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageDayDetail": "Detalle diario",
+  "@tokenUsageDayDetail": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNoDayRecords": "No hay uso de tokens registrado para este día.",
+  "@tokenUsageNoDayRecords": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageTotal": "Total",
+  "@tokenUsageTotal": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageInput": "Entrada",
+  "@tokenUsageInput": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageOutput": "Salida",
+  "@tokenUsageOutput": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCacheRead": "Lectura de caché",
+  "@tokenUsageCacheRead": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCacheWrite": "Escritura de caché",
+  "@tokenUsageCacheWrite": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageReasoning": "Razonamiento",
+  "@tokenUsageReasoning": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNonCached": "Entrada sin caché + salida",
+  "@tokenUsageNonCached": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNotReported": "No informado",
+  "@tokenUsageNotReported": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageBreakdownNote": "Las lecturas y escrituras de caché están incluidas en la entrada; el razonamiento, en la salida. Los tokens no representan importes facturados.",
+  "@tokenUsageBreakdownNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsagePartialDetail": "Algunos registros solo informan el total; los detalles que faltan siguen siendo desconocidos.",
+  "@tokenUsagePartialDetail": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCoverageTitle": "Cobertura de datos locales",
+  "@tokenUsageCoverageTitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCoverageNote": "Solo se cuenta el uso informado en registros locales de Agents compatibles. Los registros ausentes o no compatibles no indican uso cero. No se sube ningún dato.",
+  "@tokenUsageCoverageNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAvailable": "Registros encontrados",
+  "@tokenUsageAvailable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageMissing": "No hay registros locales",
+  "@tokenUsageMissing": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageUnreadable": "No se pudieron leer algunos registros",
+  "@tokenUsageUnreadable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLoading": "Leyendo el historial local…",
+  "@tokenUsageLoading": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageError": "No se pudo actualizar el historial local. Inténtalo de nuevo.",
+  "@tokenUsageError": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageEmpty": "Tu historial de tokens empieza aquí.",
+  "@tokenUsageEmpty": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageEmptyBody": "Usa un Agent compatible y actualiza para importar sus registros locales de uso.",
+  "@tokenUsageEmptyBody": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageStorageUnavailable": "El almacenamiento local no está disponible; estos registros aún no se han guardado.",
+  "@tokenUsageStorageUnavailable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLastRefreshed": "Actualizado {time}",
+  "@tokenUsageLastRefreshed": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageRecords": "{count} registros",
+  "@tokenUsageRecords": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageSkippedRecords": "Se omitieron {count} registros incompletos",
+  "@tokenUsageSkippedRecords": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsagePendingFiles": "{count} archivos tienen registros sin terminar; actualiza para continuar",
+  "@tokenUsagePendingFiles": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageLowerBoundNote": "Algunos registros están incompletos; los totales marcados con ≥ muestran como mínimo esos tokens.",
+  "@tokenUsageLowerBoundNote": {
+    "description": "Local token history interface."
+  },
+  "clipboardManagementSubtitle": "Encuentra texto, imágenes, enlaces y rutas copiados. Clasifica, previsualiza, reutiliza o guarda contenido útil.",
+  "@clipboardManagementSubtitle": {
+    "description": "Clipboard manager purpose."
+  },
+  "tokenUsageDateAttributionNote": "Algunos registros acumulados están incompletos. Se conserva el total registrado, pero su distribución por días puede estar incompleta.",
+  "@tokenUsageDateAttributionNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageIncompleteCumulativeNote": "Algunos registros acumulados no tienen un total exacto y aún no pueden contarse. Los datos ausentes no indican uso cero.",
+  "@tokenUsageIncompleteCumulativeNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAmbiguousCumulativeNote": "El orden de algunos registros acumulados es incierto. Los totales registrados y su distribución diaria pueden estar incompletos.",
+  "tokenUsageStopRefresh": "Detener esta actualización",
+  "@tokenUsageStopRefresh": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageStopping": "Deteniendo esta actualización…",
+  "@tokenUsageStopping": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageRefreshStopped": "Se detuvo esta actualización. Los registros importados están guardados; actualiza para continuar. Las actualizaciones en segundo plano siguen activadas.",
+  "@tokenUsageRefreshStopped": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageNoRecords": "No hay registros para importar",
+  "@tokenUsageNoRecords": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageFilteredEmpty": "No hay registros en esta selección.",
+  "@tokenUsageFilteredEmpty": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageFilteredEmptyBody": "Elige otro año o Agent, o actualiza para buscar nuevos registros locales.",
+  "@tokenUsageFilteredEmptyBody": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExport": "Exportar CSV",
+  "@tokenUsageExport": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportScope": "Exportar el año y Agent seleccionados a CSV",
+  "@tokenUsageExportScope": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportFileType": "Archivos CSV",
+  "@tokenUsageExportFileType": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportSaved": "CSV de uso de tokens guardado.",
+  "@tokenUsageExportSaved": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportFailed": "No se pudo guardar el CSV. Inténtalo de nuevo en una carpeta con permiso de escritura.",
+  "@tokenUsageExportFailed": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "@tokenUsageAmbiguousCumulativeNote": {
+    "description": "Local token history interface."
+  },
+  "releasePreviewNotice": "Vista previa de desarrollo. La comprobación busca versiones estables. Consulta Versión para ver las notas y Notificar un problema para enviar comentarios. Se usan tus datos locales existentes.",
+  "releasePreviewCurrent": "Vista previa instalada; no hay una versión estable más reciente.",
+  "agentPluginsTitle": "Plugins de Agents",
+  "agentPluginsPageDescription": "Gestiona las extensiones de DingDong y consulta los plugins instalados en tus Agents locales.",
+  "agentPluginsDingDongExtensions": "Extensiones de DingDong",
+  "agentPluginsRead": "Leer inventario local",
+  "agentPluginsRefresh": "Actualizar inventario",
+  "agentPluginsLoading": "Leyendo…",
+  "agentPluginsReadOnlyNote": "Inventario de solo lectura de Codex y Claude Code. Instala, actualiza, activa o elimina estos plugins en su Agent original.",
+  "agentPluginsToolsNote": "Los plugins pueden aportar Skills, servidores MCP y otros componentes. Las herramientas pertenecen a su servidor MCP o anfitrión; esta vista no instala herramientas ni verifica su disponibilidad durante la ejecución.",
+  "agentPluginsNotRead": "El inventario local aún no se ha leído. Se lee bajo demanda, sin consultas periódicas en segundo plano.",
+  "agentPluginsEnablementNote": "Activado significa que la configuración lo indica, no que una llamada haya tenido éxito. Claude Code muestra solo ajustes del usuario; la activación del ámbito del proyecto o local queda sin confirmar.",
+  "agentPluginsEmpty": "El inventario no informó de plugins instalados.",
+  "agentPluginsCodexMissing": "No se encontró una CLI nativa de Codex ejecutable directamente. Haz que esté disponible y actualiza; no se ejecutan scripts envoltorio de shell.",
+  "agentPluginsClaudeMissing": "No se encontró el registro de plugins de Claude Code.",
+  "agentPluginsUnavailable": "No se pudo leer el inventario. Comprueba la instalación del Agent e intenta actualizar.",
+  "agentPluginsInvalid": "El inventario del Agent tiene un formato incompatible o está dañado. Actualiza el Agent e inténtalo de nuevo.",
+  "agentPluginsTimedOut": "Se agotó el tiempo de lectura. Intenta actualizar.",
+  "agentPluginsTooLarge": "El inventario supera el límite de lectura segura y no se cargó.",
+  "agentPluginsEnabled": "Activado en configuración",
+  "agentPluginsDisabled": "Desactivado en configuración",
+  "agentPluginsEnablementUnknown": "Activación sin confirmar",
+  "agentPluginsSourceLocal": "Local",
+  "agentPluginsSourceGit": "Git",
+  "agentPluginsSourceRemote": "Remoto",
+  "agentPluginsSourceMarketplace": "Mercado",
+  "agentPluginsSourceUnknown": "Origen desconocido",
+  "agentPluginsVersion": "Versión",
+  "agentPluginsVersionUnknown": "No informada",
+  "agentPluginsSource": "Origen",
+  "@releasePreviewNotice": {
+    "description": "Development preview release status and feedback guidance."
+  },
+  "@releasePreviewCurrent": {
+    "description": "Development preview release status and feedback guidance."
+  },
+  "@agentPluginsTitle": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsPageDescription": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsDingDongExtensions": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsRead": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsRefresh": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsLoading": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsReadOnlyNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsToolsNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsNotRead": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnablementNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEmpty": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsCodexMissing": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsClaudeMissing": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsUnavailable": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsInvalid": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsTimedOut": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsTooLarge": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnabled": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsDisabled": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnablementUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceLocal": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceGit": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceRemote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceMarketplace": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsVersion": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsVersionUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSource": {
+    "description": "Read-only inventory of plugins installed in native Agents."
   }
 }

@@ -103,6 +103,42 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Technical content remaining in the advanced connection disclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoints and bridge commands'**
+  String get agentSetupAdvancedDetailsDescription;
+
+  /// Action opening Agent setup from the empty activity list.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an Agent'**
+  String get gettingStartedConnectAgent;
+
+  /// First-use guidance when there are no Agent events.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a local Agent to receive task completion reminders and return to its conversations here.'**
+  String get gettingStartedAgentActivityDescription;
+
+  /// Persistent Agent setup guidance above advanced connection details.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the setup instruction to your local Agent, then complete a task to check that its reminder arrives here.'**
+  String get agentSetupGettingStarted;
+
+  /// Title for a resource library with no configurable resources.
+  ///
+  /// In en, this message translates to:
+  /// **'No resources yet'**
+  String get gettingStartedResourceLibraryEmpty;
+
+  /// First-use guidance in both resource library empty states.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep reusable Prompts, Skills and MCP references in one place. Start with your first resource.'**
+  String get gettingStartedResourceLibraryDescription;
+
   /// Display name for the English language option.
   ///
   /// In en, this message translates to:
@@ -274,7 +310,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Agent completion notifications'**
+  /// **'Unified completion alerts'**
   String get agentCompletionNotifications;
 
   /// DingDong built-in interface copy.
@@ -688,7 +724,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Choose which Agent events should notify you, then customize the alert sound and color.'**
+  /// **'Collect events from connected Agents in one inbox, with shared sound and color settings. Clients such as Codex already have their own completion alerts; adjust them to avoid duplicate reminders.'**
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4;
 
   /// DingDong built-in interface copy.
@@ -2611,7 +2647,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Newest first. Click a resumable item to return to its conversation.'**
+  /// **'One inbox for connected Agent events. Newest first; open a supported item to return to its conversation.'**
   String get newestFirstClickAResumableItemToReturnToItsConversation;
 
   /// DingDong built-in interface copy.
@@ -5959,6 +5995,522 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}'**
   String fileTransferIssue(String code);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Token history'**
+  String get tokenUsageTitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily usage across your local Agents.'**
+  String get tokenUsageSubtitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on this device'**
+  String get tokenUsageLocalOnly;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh local history'**
+  String get tokenUsageRefresh;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get tokenUsageToday;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Year total'**
+  String get tokenUsagePeriodTotal;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Days with recorded usage'**
+  String get tokenUsageActiveDays;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'tokens'**
+  String get tokenUsageTokens;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get tokenUsageYear;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'All Agents'**
+  String get tokenUsageAllAgents;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily activity'**
+  String get tokenUsageDailyActivity;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get tokenUsageLess;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get tokenUsageMore;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {count} recorded tokens'**
+  String tokenUsageDayTooltip(String date, String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily detail'**
+  String get tokenUsageDayDetail;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'No token usage recorded for this day.'**
+  String get tokenUsageNoDayRecords;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get tokenUsageTotal;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get tokenUsageInput;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Output'**
+  String get tokenUsageOutput;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache read'**
+  String get tokenUsageCacheRead;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache write'**
+  String get tokenUsageCacheWrite;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning'**
+  String get tokenUsageReasoning;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Noncached input + output'**
+  String get tokenUsageNonCached;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported'**
+  String get tokenUsageNotReported;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache reads and writes are included in input; reasoning is included in output. Token counts are not billing amounts.'**
+  String get tokenUsageBreakdownNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some records report only a total; missing details remain unknown.'**
+  String get tokenUsagePartialDetail;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data coverage'**
+  String get tokenUsageCoverageTitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.'**
+  String get tokenUsageCoverageNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs found'**
+  String get tokenUsageAvailable;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'No local logs found'**
+  String get tokenUsageMissing;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some logs could not be read'**
+  String get tokenUsageUnreadable;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading local token history…'**
+  String get tokenUsageLoading;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Local history could not be refreshed. Try again.'**
+  String get tokenUsageError;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Your token history starts here.'**
+  String get tokenUsageEmpty;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a supported Agent, then refresh to import its local usage records.'**
+  String get tokenUsageEmptyBody;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage is unavailable; these records are not saved yet.'**
+  String get tokenUsageStorageUnavailable;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshed {time}'**
+  String tokenUsageLastRefreshed(String time);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} records'**
+  String tokenUsageRecords(String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} incomplete records were skipped'**
+  String tokenUsageSkippedRecords(String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files have unfinished records; refresh to continue'**
+  String tokenUsagePendingFiles(String count);
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some records are incomplete; totals marked ≥ show at least this many tokens.'**
+  String get tokenUsageLowerBoundNote;
+
+  /// Clipboard manager purpose.
+  ///
+  /// In en, this message translates to:
+  /// **'Find copied text, images, links and file paths. Classify, preview, reuse or save useful content.'**
+  String get clipboardManagementSubtitle;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some cumulative records are incomplete. The recorded total is retained, but allocation to individual days may be incomplete.'**
+  String get tokenUsageDateAttributionNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'Some cumulative records have no exact total and cannot be counted yet. Missing counts do not mean zero usage.'**
+  String get tokenUsageIncompleteCumulativeNote;
+
+  /// Local token history interface.
+  ///
+  /// In en, this message translates to:
+  /// **'The order of some cumulative records is uncertain. These recorded totals and daily allocations may be incomplete.'**
+  String get tokenUsageAmbiguousCumulativeNote;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this refresh'**
+  String get tokenUsageStopRefresh;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping this refresh…'**
+  String get tokenUsageStopping;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'This refresh was stopped. Imported records are saved; refresh to continue. Background updates remain enabled.'**
+  String get tokenUsageRefreshStopped;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'No importable logs found'**
+  String get tokenUsageNoRecords;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'No records in this selection.'**
+  String get tokenUsageFilteredEmpty;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another year or Agent, or refresh to look for new local records.'**
+  String get tokenUsageFilteredEmptyBody;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get tokenUsageExport;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Export selected year and Agent as CSV'**
+  String get tokenUsageExportScope;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV files'**
+  String get tokenUsageExportFileType;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Token usage CSV saved.'**
+  String get tokenUsageExportSaved;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'The CSV could not be saved. Try again and choose a writable folder.'**
+  String get tokenUsageExportFailed;
+
+  /// Development preview release status and feedback guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Development preview. Update checks follow stable releases. Use Release for this preview\'s notes and Report a problem to send feedback. Your existing local data is used.'**
+  String get releasePreviewNotice;
+
+  /// Development preview release status and feedback guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview installed; no newer stable release found.'**
+  String get releasePreviewCurrent;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent plugins'**
+  String get agentPluginsTitle;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage DingDong extensions and inspect plugins installed in your local Agents.'**
+  String get agentPluginsPageDescription;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong extensions'**
+  String get agentPluginsDingDongExtensions;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Read local inventory'**
+  String get agentPluginsRead;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh inventory'**
+  String get agentPluginsRefresh;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading…'**
+  String get agentPluginsLoading;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only inventory for Codex and Claude Code. Install, update, enable or remove these plugins in their native Agent.'**
+  String get agentPluginsReadOnlyNote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins can provide Skills, MCP servers and other components. Tools belong to their MCP server or host; this view does not install tools or verify runtime availability.'**
+  String get agentPluginsToolsNote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The local inventory has not been read. Read it when needed; no background polling.'**
+  String get agentPluginsNotRead;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled means the native configuration reports enabled, not that a tool call succeeded. Claude Code shows user-scope settings only; project/local enablement remains unconfirmed.'**
+  String get agentPluginsEnablementNote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'No installed plugins were reported.'**
+  String get agentPluginsEmpty;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'A directly executable native Codex CLI was not found. Make the native CLI available, then refresh; shell wrappers are not executed.'**
+  String get agentPluginsCodexMissing;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'No Claude Code plugin registry was found.'**
+  String get agentPluginsClaudeMissing;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory could not be read. Check the Agent installation and try refreshing.'**
+  String get agentPluginsUnavailable;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The Agent returned an unsupported or malformed inventory. Update the Agent and try again.'**
+  String get agentPluginsInvalid;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the inventory timed out. Try refreshing.'**
+  String get agentPluginsTimedOut;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory exceeds the safe read limit and was not loaded.'**
+  String get agentPluginsTooLarge;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration enabled'**
+  String get agentPluginsEnabled;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration disabled'**
+  String get agentPluginsDisabled;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Enablement unconfirmed'**
+  String get agentPluginsEnablementUnknown;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get agentPluginsSourceLocal;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Git'**
+  String get agentPluginsSourceGit;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote'**
+  String get agentPluginsSourceRemote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketplace'**
+  String get agentPluginsSourceMarketplace;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown source'**
+  String get agentPluginsSourceUnknown;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get agentPluginsVersion;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreported'**
+  String get agentPluginsVersionUnknown;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get agentPluginsSource;
 }
 
 class _DingDongLocalizationsDelegate

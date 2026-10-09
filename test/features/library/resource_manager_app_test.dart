@@ -17,6 +17,9 @@ import 'package:dingdong/features/library/domain/resource_manager_launcher.dart'
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
+import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
+import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
+import 'package:dingdong/features/token_usage/ui/token_usage_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -240,6 +243,10 @@ void main() {
           _FakeAgentConversationLauncher();
       conversationLauncher.subagentConversationIds.add('subagent-thread');
       conversationLauncher.unavailableConversationIds.add('unknown-thread');
+      final tokenUsageController = TokenUsageController.preview(
+        const TokenUsageSnapshot(),
+      );
+      var closedTokenUsage = false;
       final IssueCenterController issues = IssueCenterController();
       addTearDown(issues.dispose);
 
@@ -258,6 +265,8 @@ void main() {
           ),
           initialDestination: ResourceManagerDestination.recentAgents,
           agentConversationLauncher: conversationLauncher,
+          tokenUsageController: tokenUsageController,
+          onCloseTokenUsage: () async => closedTokenUsage = true,
         ),
       );
       await tester.pump();
@@ -401,6 +410,15 @@ void main() {
       await tester.pump();
       expect(find.byKey(const Key('resource-search')), findsOneWidget);
 
+      await tester.tap(
+        find.byKey(const Key('resource-manager-nav-token-usage')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(TokenUsageScreen), findsOneWidget);
+      expect(find.byKey(const Key('token-usage-period')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('resource-manager-nav-resources')));
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('新建资源'));
       await tester.pump();
       await tester.enterText(
@@ -455,6 +473,7 @@ void main() {
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
+      expect(closedTokenUsage, isTrue);
       activity.dispose();
     },
   );

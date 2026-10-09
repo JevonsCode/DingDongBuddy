@@ -14,6 +14,7 @@ import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
+import 'package:dingdong/features/library/ui/resource_empty_state.dart';
 import 'package:flutter/material.dart';
 
 part 'resource_browser_cards.dart';

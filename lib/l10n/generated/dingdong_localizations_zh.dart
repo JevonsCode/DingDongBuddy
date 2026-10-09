@@ -9,6 +9,27 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get agentSetupAdvancedDetailsDescription => '端点与桥接命令';
+
+  @override
+  String get gettingStartedConnectAgent => '接入 Agent';
+
+  @override
+  String get gettingStartedAgentActivityDescription =>
+      '接入本机 Agent 后，即可接收任务完成提醒，并从这里返回对应对话。';
+
+  @override
+  String get agentSetupGettingStarted =>
+      '把接入指令复制给本机 Agent，再完成一次任务，确认提醒是否出现在这里。';
+
+  @override
+  String get gettingStartedResourceLibraryEmpty => '尚未添加资源';
+
+  @override
+  String get gettingStartedResourceLibraryDescription =>
+      '集中保存可复用的 Prompt、Skill 和 MCP 引用，从添加第一个资源开始。';
+
+  @override
   String get languageEnglish => '英语';
 
   @override
@@ -106,7 +127,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get agentCompletion => 'Agent 完成提醒';
 
   @override
-  String get agentCompletionNotifications => 'Agent 完成提醒';
+  String get agentCompletionNotifications => '统一完成提醒';
 
   @override
   String agentCompletionNotificationsForName(Object name) {
@@ -324,7 +345,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4 =>
-      '选择哪些 Agent 事件需要提醒，再自定义提示声音和颜色。';
+      '把已接入 Agent 的事件统一收口，集中查看，并统一设置声音和颜色。Codex 等客户端已有自己的完成提醒，可按需要调整，避免重复提醒。';
 
   @override
   String get clean => '清理';
@@ -1403,7 +1424,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get newestFirstClickAResumableItemToReturnToItsConversation =>
-      '按时间倒序排列；点击可恢复的记录可返回对应对话。';
+      '已接入 Agent 的提醒在这里统一查看。按时间倒序排列，支持的记录可直接回到会话。';
 
   @override
   String get noAgentCompletionsYet => '暂无 Agent 完成记录';
@@ -3313,4 +3334,284 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get tokenUsageTitle => 'Token 用量';
+
+  @override
+  String get tokenUsageSubtitle => '每天用了多少 Token，一眼看清。';
+
+  @override
+  String get tokenUsageLocalOnly => '仅保存在本机';
+
+  @override
+  String get tokenUsageRefresh => '刷新本地记录';
+
+  @override
+  String get tokenUsageToday => '今天';
+
+  @override
+  String get tokenUsagePeriodTotal => '全年用量';
+
+  @override
+  String get tokenUsageActiveDays => '有用量记录的天数';
+
+  @override
+  String get tokenUsageTokens => 'Token';
+
+  @override
+  String get tokenUsageYear => '年份';
+
+  @override
+  String get tokenUsageAllAgents => '全部 Agent';
+
+  @override
+  String get tokenUsageDailyActivity => '每日用量';
+
+  @override
+  String get tokenUsageLess => '少';
+
+  @override
+  String get tokenUsageMore => '多';
+
+  @override
+  String tokenUsageDayTooltip(String date, String count) {
+    return '$date：已记录 $count Token';
+  }
+
+  @override
+  String get tokenUsageDayDetail => '当日明细';
+
+  @override
+  String get tokenUsageNoDayRecords => '这一天还没有 Token 用量记录。';
+
+  @override
+  String get tokenUsageTotal => '总用量';
+
+  @override
+  String get tokenUsageInput => '输入';
+
+  @override
+  String get tokenUsageOutput => '输出';
+
+  @override
+  String get tokenUsageCacheRead => '缓存读取';
+
+  @override
+  String get tokenUsageCacheWrite => '缓存写入';
+
+  @override
+  String get tokenUsageReasoning => '推理';
+
+  @override
+  String get tokenUsageNonCached => '未命中缓存的输入 + 输出';
+
+  @override
+  String get tokenUsageNotReported => '未提供';
+
+  @override
+  String get tokenUsageBreakdownNote =>
+      '缓存读取、写入已包含在输入中，推理已包含在输出中。Token 数量不代表计费金额。';
+
+  @override
+  String get tokenUsagePartialDetail => '部分记录只提供总用量，缺少的明细会保留为未知。';
+
+  @override
+  String get tokenUsageCoverageTitle => '本地数据覆盖';
+
+  @override
+  String get tokenUsageCoverageNote =>
+      '只统计支持的 Agent 本地日志中已提供的用量。未支持或未找到日志不代表用量为零，数据不会上传。';
+
+  @override
+  String get tokenUsageAvailable => '已找到日志';
+
+  @override
+  String get tokenUsageMissing => '未找到本地日志';
+
+  @override
+  String get tokenUsageUnreadable => '部分日志无法读取';
+
+  @override
+  String get tokenUsageLoading => '正在读取本地用量…';
+
+  @override
+  String get tokenUsageError => '本地记录刷新失败，请重试。';
+
+  @override
+  String get tokenUsageEmpty => '从这里开始记录你的 Token 用量。';
+
+  @override
+  String get tokenUsageEmptyBody => '使用支持的 Agent 后，刷新即可导入本地用量记录。';
+
+  @override
+  String get tokenUsageStorageUnavailable => '本地存储暂不可用，这些记录尚未保存。';
+
+  @override
+  String tokenUsageLastRefreshed(String time) {
+    return '更新于 $time';
+  }
+
+  @override
+  String tokenUsageRecords(String count) {
+    return '$count 条记录';
+  }
+
+  @override
+  String tokenUsageSkippedRecords(String count) {
+    return '已跳过 $count 条不完整记录';
+  }
+
+  @override
+  String tokenUsagePendingFiles(String count) {
+    return '还有 $count 个文件包含未完成记录，刷新可继续';
+  }
+
+  @override
+  String get tokenUsageLowerBoundNote => '部分记录不完整，标有 ≥ 的总用量表示至少已用这些 Token。';
+
+  @override
+  String get clipboardManagementSubtitle =>
+      '找回复制过的文字、图片、链接和文件路径，分类、预览、复用，也能保存常用内容。';
+
+  @override
+  String get tokenUsageDateAttributionNote =>
+      '部分累计记录不完整，已保留有据可查的总用量，但分配到具体日期的明细可能不完整。';
+
+  @override
+  String get tokenUsageIncompleteCumulativeNote =>
+      '部分累计记录未提供准确总量，暂无法计入；缺少记录不代表用量为零。';
+
+  @override
+  String get tokenUsageAmbiguousCumulativeNote =>
+      '部分累计记录的顺序无法确认，已记录的总量和每日明细可能不完整。';
+
+  @override
+  String get tokenUsageStopRefresh => '停止本次刷新';
+
+  @override
+  String get tokenUsageStopping => '正在停止本次刷新…';
+
+  @override
+  String get tokenUsageRefreshStopped => '本次刷新已停止，已导入记录已保存。点击刷新可继续，后台更新仍会运行。';
+
+  @override
+  String get tokenUsageNoRecords => '未找到可导入日志';
+
+  @override
+  String get tokenUsageFilteredEmpty => '当前筛选下暂无记录。';
+
+  @override
+  String get tokenUsageFilteredEmptyBody => '选择其他年份或 Agent，或刷新以查找新的本地记录。';
+
+  @override
+  String get tokenUsageExport => '导出 CSV';
+
+  @override
+  String get tokenUsageExportScope => '将所选年份和 Agent 导出为 CSV';
+
+  @override
+  String get tokenUsageExportFileType => 'CSV 文件';
+
+  @override
+  String get tokenUsageExportSaved => 'Token 用量 CSV 已保存。';
+
+  @override
+  String get tokenUsageExportFailed => 'CSV 保存失败，请重试并选择可写入的文件夹。';
+
+  @override
+  String get releasePreviewNotice =>
+      '当前为开发预览版，更新检查仍跟随正式版。可通过“版本发布”查看本预览说明，通过“报告问题”反馈；使用现有本地数据。';
+
+  @override
+  String get releasePreviewCurrent => '已安装预览版，尚未发现更新的正式版。';
+
+  @override
+  String get agentPluginsTitle => 'Agent 插件';
+
+  @override
+  String get agentPluginsPageDescription =>
+      '管理 DingDong 扩展，并查看本机 Agent 已安装的插件。';
+
+  @override
+  String get agentPluginsDingDongExtensions => 'DingDong 扩展';
+
+  @override
+  String get agentPluginsRead => '读取本机清单';
+
+  @override
+  String get agentPluginsRefresh => '刷新清单';
+
+  @override
+  String get agentPluginsLoading => '正在读取…';
+
+  @override
+  String get agentPluginsReadOnlyNote =>
+      '只读查看 Codex 和 Claude Code 的插件；安装、更新、启停和卸载由原生 Agent 管理。';
+
+  @override
+  String get agentPluginsToolsNote =>
+      '插件可提供 Skill、MCP 等组件。工具归属于 MCP 服务或宿主；此处不安装工具，也不代表运行时可用性已验证。';
+
+  @override
+  String get agentPluginsNotRead => '尚未读取本机清单。按需读取，不在后台轮询。';
+
+  @override
+  String get agentPluginsEnablementNote =>
+      '“配置已启用”来自原生配置，不代表工具已调用成功。Claude Code 仅读取用户级启用配置，项目和本地范围的启用状态仍待确认。';
+
+  @override
+  String get agentPluginsEmpty => '清单未报告已安装插件。';
+
+  @override
+  String get agentPluginsCodexMissing =>
+      '未找到可直接执行的 Codex 原生 CLI。使原生 CLI 可用后刷新；此处不执行 Shell 包装脚本。';
+
+  @override
+  String get agentPluginsClaudeMissing => '未找到 Claude Code 插件注册表。';
+
+  @override
+  String get agentPluginsUnavailable => '暂时无法读取清单，请检查 Agent 安装后重试。';
+
+  @override
+  String get agentPluginsInvalid => 'Agent 清单格式不受支持或已损坏，请更新 Agent 后重试。';
+
+  @override
+  String get agentPluginsTimedOut => '读取清单超时，请重试。';
+
+  @override
+  String get agentPluginsTooLarge => '清单超出安全读取大小，未加载。';
+
+  @override
+  String get agentPluginsEnabled => '配置已启用';
+
+  @override
+  String get agentPluginsDisabled => '配置已禁用';
+
+  @override
+  String get agentPluginsEnablementUnknown => '启用状态待确认';
+
+  @override
+  String get agentPluginsSourceLocal => '本地';
+
+  @override
+  String get agentPluginsSourceGit => 'Git';
+
+  @override
+  String get agentPluginsSourceRemote => '远程';
+
+  @override
+  String get agentPluginsSourceMarketplace => '插件市场';
+
+  @override
+  String get agentPluginsSourceUnknown => '来源未知';
+
+  @override
+  String get agentPluginsVersion => '版本';
+
+  @override
+  String get agentPluginsVersionUnknown => '未报告';
+
+  @override
+  String get agentPluginsSource => '来源';
 }

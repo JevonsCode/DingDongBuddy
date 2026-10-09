@@ -1,5 +1,29 @@
 {
   "@@locale": "zh",
+  "agentSetupAdvancedDetailsDescription": "端点与桥接命令",
+  "@agentSetupAdvancedDetailsDescription": {
+    "description": "高级连接详情中保留的技术内容。"
+  },
+  "gettingStartedConnectAgent": "接入 Agent",
+  "@gettingStartedConnectAgent": {
+    "description": "从 Agent 活动空状态进入接入流程的操作。"
+  },
+  "gettingStartedAgentActivityDescription": "接入本机 Agent 后，即可接收任务完成提醒，并从这里返回对应对话。",
+  "@gettingStartedAgentActivityDescription": {
+    "description": "暂无 Agent 事件时的上手引导。"
+  },
+  "agentSetupGettingStarted": "把接入指令复制给本机 Agent，再完成一次任务，确认提醒是否出现在这里。",
+  "@agentSetupGettingStarted": {
+    "description": "始终显示在高级连接详情之前的 Agent 接入引导。"
+  },
+  "gettingStartedResourceLibraryEmpty": "尚未添加资源",
+  "@gettingStartedResourceLibraryEmpty": {
+    "description": "没有可配置资源时的资源库标题。"
+  },
+  "gettingStartedResourceLibraryDescription": "集中保存可复用的 Prompt、Skill 和 MCP 引用，从添加第一个资源开始。",
+  "@gettingStartedResourceLibraryDescription": {
+    "description": "两个资源库空状态共用的上手引导。"
+  },
   "languageEnglish": "英语",
   "@languageEnglish": {
     "description": "英语语言选项的显示名称。"
@@ -132,7 +156,7 @@
   "@agentCompletion": {
     "description": "DingDong built-in interface copy."
   },
-  "agentCompletionNotifications": "Agent 完成提醒",
+  "agentCompletionNotifications": "统一完成提醒",
   "@agentCompletionNotifications": {
     "description": "DingDong built-in interface copy."
   },
@@ -430,7 +454,7 @@
   "@chooseRules": {
     "description": "DingDong built-in interface copy."
   },
-  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "选择哪些 Agent 事件需要提醒，再自定义提示声音和颜色。",
+  "chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": "把已接入 Agent 的事件统一收口，集中查看，并统一设置声音和颜色。Codex 等客户端已有自己的完成提醒，可按需要调整，避免重复提醒。",
   "@chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4": {
     "description": "DingDong built-in interface copy."
   },
@@ -1931,7 +1955,7 @@
   "@newTriggerGroup": {
     "description": "DingDong built-in interface copy."
   },
-  "newestFirstClickAResumableItemToReturnToItsConversation": "按时间倒序排列；点击可恢复的记录可返回对应对话。",
+  "newestFirstClickAResumableItemToReturnToItsConversation": "已接入 Agent 的提醒在这里统一查看。按时间倒序排列，支持的记录可直接回到会话。",
   "@newestFirstClickAResumableItemToReturnToItsConversation": {
     "description": "DingDong built-in interface copy."
   },
@@ -4409,5 +4433,377 @@
   },
   "@cancelTransfer": {
     "description": "File transfer progress and controls"
+  },
+  "tokenUsageTitle": "Token 用量",
+  "@tokenUsageTitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageSubtitle": "每天用了多少 Token，一眼看清。",
+  "@tokenUsageSubtitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLocalOnly": "仅保存在本机",
+  "@tokenUsageLocalOnly": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageRefresh": "刷新本地记录",
+  "@tokenUsageRefresh": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageToday": "今天",
+  "@tokenUsageToday": {
+    "description": "Local token history interface."
+  },
+  "tokenUsagePeriodTotal": "全年用量",
+  "@tokenUsagePeriodTotal": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageActiveDays": "有用量记录的天数",
+  "@tokenUsageActiveDays": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageTokens": "Token",
+  "@tokenUsageTokens": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageYear": "年份",
+  "@tokenUsageYear": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAllAgents": "全部 Agent",
+  "@tokenUsageAllAgents": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageDailyActivity": "每日用量",
+  "@tokenUsageDailyActivity": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLess": "少",
+  "@tokenUsageLess": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageMore": "多",
+  "@tokenUsageMore": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageDayTooltip": "{date}：已记录 {count} Token",
+  "@tokenUsageDayTooltip": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageDayDetail": "当日明细",
+  "@tokenUsageDayDetail": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNoDayRecords": "这一天还没有 Token 用量记录。",
+  "@tokenUsageNoDayRecords": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageTotal": "总用量",
+  "@tokenUsageTotal": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageInput": "输入",
+  "@tokenUsageInput": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageOutput": "输出",
+  "@tokenUsageOutput": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCacheRead": "缓存读取",
+  "@tokenUsageCacheRead": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCacheWrite": "缓存写入",
+  "@tokenUsageCacheWrite": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageReasoning": "推理",
+  "@tokenUsageReasoning": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNonCached": "未命中缓存的输入 + 输出",
+  "@tokenUsageNonCached": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageNotReported": "未提供",
+  "@tokenUsageNotReported": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageBreakdownNote": "缓存读取、写入已包含在输入中，推理已包含在输出中。Token 数量不代表计费金额。",
+  "@tokenUsageBreakdownNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsagePartialDetail": "部分记录只提供总用量，缺少的明细会保留为未知。",
+  "@tokenUsagePartialDetail": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCoverageTitle": "本地数据覆盖",
+  "@tokenUsageCoverageTitle": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageCoverageNote": "只统计支持的 Agent 本地日志中已提供的用量。未支持或未找到日志不代表用量为零，数据不会上传。",
+  "@tokenUsageCoverageNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAvailable": "已找到日志",
+  "@tokenUsageAvailable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageMissing": "未找到本地日志",
+  "@tokenUsageMissing": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageUnreadable": "部分日志无法读取",
+  "@tokenUsageUnreadable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLoading": "正在读取本地用量…",
+  "@tokenUsageLoading": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageError": "本地记录刷新失败，请重试。",
+  "@tokenUsageError": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageEmpty": "从这里开始记录你的 Token 用量。",
+  "@tokenUsageEmpty": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageEmptyBody": "使用支持的 Agent 后，刷新即可导入本地用量记录。",
+  "@tokenUsageEmptyBody": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageStorageUnavailable": "本地存储暂不可用，这些记录尚未保存。",
+  "@tokenUsageStorageUnavailable": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageLastRefreshed": "更新于 {time}",
+  "@tokenUsageLastRefreshed": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageRecords": "{count} 条记录",
+  "@tokenUsageRecords": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageSkippedRecords": "已跳过 {count} 条不完整记录",
+  "@tokenUsageSkippedRecords": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsagePendingFiles": "还有 {count} 个文件包含未完成记录，刷新可继续",
+  "@tokenUsagePendingFiles": {
+    "description": "Local token history interface.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsageLowerBoundNote": "部分记录不完整，标有 ≥ 的总用量表示至少已用这些 Token。",
+  "@tokenUsageLowerBoundNote": {
+    "description": "Local token history interface."
+  },
+  "clipboardManagementSubtitle": "找回复制过的文字、图片、链接和文件路径，分类、预览、复用，也能保存常用内容。",
+  "@clipboardManagementSubtitle": {
+    "description": "Clipboard manager purpose."
+  },
+  "tokenUsageDateAttributionNote": "部分累计记录不完整，已保留有据可查的总用量，但分配到具体日期的明细可能不完整。",
+  "@tokenUsageDateAttributionNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageIncompleteCumulativeNote": "部分累计记录未提供准确总量，暂无法计入；缺少记录不代表用量为零。",
+  "@tokenUsageIncompleteCumulativeNote": {
+    "description": "Local token history interface."
+  },
+  "tokenUsageAmbiguousCumulativeNote": "部分累计记录的顺序无法确认，已记录的总量和每日明细可能不完整。",
+  "tokenUsageStopRefresh": "停止本次刷新",
+  "@tokenUsageStopRefresh": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageStopping": "正在停止本次刷新…",
+  "@tokenUsageStopping": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageRefreshStopped": "本次刷新已停止，已导入记录已保存。点击刷新可继续，后台更新仍会运行。",
+  "@tokenUsageRefreshStopped": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageNoRecords": "未找到可导入日志",
+  "@tokenUsageNoRecords": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageFilteredEmpty": "当前筛选下暂无记录。",
+  "@tokenUsageFilteredEmpty": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageFilteredEmptyBody": "选择其他年份或 Agent，或刷新以查找新的本地记录。",
+  "@tokenUsageFilteredEmptyBody": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExport": "导出 CSV",
+  "@tokenUsageExport": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportScope": "将所选年份和 Agent 导出为 CSV",
+  "@tokenUsageExportScope": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportFileType": "CSV 文件",
+  "@tokenUsageExportFileType": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportSaved": "Token 用量 CSV 已保存。",
+  "@tokenUsageExportSaved": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportFailed": "CSV 保存失败，请重试并选择可写入的文件夹。",
+  "@tokenUsageExportFailed": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "@tokenUsageAmbiguousCumulativeNote": {
+    "description": "Local token history interface."
+  },
+  "releasePreviewNotice": "当前为开发预览版，更新检查仍跟随正式版。可通过“版本发布”查看本预览说明，通过“报告问题”反馈；使用现有本地数据。",
+  "releasePreviewCurrent": "已安装预览版，尚未发现更新的正式版。",
+  "agentPluginsTitle": "Agent 插件",
+  "agentPluginsPageDescription": "管理 DingDong 扩展，并查看本机 Agent 已安装的插件。",
+  "agentPluginsDingDongExtensions": "DingDong 扩展",
+  "agentPluginsRead": "读取本机清单",
+  "agentPluginsRefresh": "刷新清单",
+  "agentPluginsLoading": "正在读取…",
+  "agentPluginsReadOnlyNote": "只读查看 Codex 和 Claude Code 的插件；安装、更新、启停和卸载由原生 Agent 管理。",
+  "agentPluginsToolsNote": "插件可提供 Skill、MCP 等组件。工具归属于 MCP 服务或宿主；此处不安装工具，也不代表运行时可用性已验证。",
+  "agentPluginsNotRead": "尚未读取本机清单。按需读取，不在后台轮询。",
+  "agentPluginsEnablementNote": "“配置已启用”来自原生配置，不代表工具已调用成功。Claude Code 仅读取用户级启用配置，项目和本地范围的启用状态仍待确认。",
+  "agentPluginsEmpty": "清单未报告已安装插件。",
+  "agentPluginsCodexMissing": "未找到可直接执行的 Codex 原生 CLI。使原生 CLI 可用后刷新；此处不执行 Shell 包装脚本。",
+  "agentPluginsClaudeMissing": "未找到 Claude Code 插件注册表。",
+  "agentPluginsUnavailable": "暂时无法读取清单，请检查 Agent 安装后重试。",
+  "agentPluginsInvalid": "Agent 清单格式不受支持或已损坏，请更新 Agent 后重试。",
+  "agentPluginsTimedOut": "读取清单超时，请重试。",
+  "agentPluginsTooLarge": "清单超出安全读取大小，未加载。",
+  "agentPluginsEnabled": "配置已启用",
+  "agentPluginsDisabled": "配置已禁用",
+  "agentPluginsEnablementUnknown": "启用状态待确认",
+  "agentPluginsSourceLocal": "本地",
+  "agentPluginsSourceGit": "Git",
+  "agentPluginsSourceRemote": "远程",
+  "agentPluginsSourceMarketplace": "插件市场",
+  "agentPluginsSourceUnknown": "来源未知",
+  "agentPluginsVersion": "版本",
+  "agentPluginsVersionUnknown": "未报告",
+  "agentPluginsSource": "来源",
+  "@releasePreviewNotice": {
+    "description": "Development preview release status and feedback guidance."
+  },
+  "@releasePreviewCurrent": {
+    "description": "Development preview release status and feedback guidance."
+  },
+  "@agentPluginsTitle": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsPageDescription": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsDingDongExtensions": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsRead": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsRefresh": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsLoading": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsReadOnlyNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsToolsNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsNotRead": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnablementNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEmpty": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsCodexMissing": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsClaudeMissing": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsUnavailable": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsInvalid": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsTimedOut": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsTooLarge": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnabled": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsDisabled": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnablementUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceLocal": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceGit": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceRemote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceMarketplace": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsVersion": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsVersionUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSource": {
+    "description": "Read-only inventory of plugins installed in native Agents."
   }
 }

@@ -123,6 +123,14 @@ jobs:
       - name: Run tests without architecture-specific visual goldens
         if: matrix.arch == 'x86_64'
         run: flutter test --exclude-tags golden
+      - name: Save actual golden images for review
+        if: failure() && matrix.arch == 'arm64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DingDong-golden-actual-arm64
+          path: test/**/failures/*_testImage.png
+          retention-days: 7
+          if-no-files-found: ignore
       - run: flutter build macos --debug
       - name: Verify macOS thinning contract
         run: |
@@ -140,7 +148,7 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2.23.0
@@ -153,3 +161,67 @@ jobs:
       - run: flutter analyze
       - run: flutter test --exclude-tags golden
       - run: flutter build windows --debug
+      - name: Build Windows release preview
+        run: flutter build windows --release --no-pub
+      - name: Install pinned Velopack packager
+        shell: pwsh
+        run: dotnet tool install --tool-path .tools vpk --version 1.2.0
+      - name: Package Windows preview installer
+        shell: pwsh
+        run: |
+          $versionLine = Get-Content -LiteralPath pubspec.yaml |
+            Where-Object { $_ -match '^version:\s*\S+\s*$' } |
+            Select-Object -First 1
+          if ($null -eq $versionLine) {
+            throw "pubspec.yaml does not contain an application version."
+          }
+          $version = ($versionLine -replace '^version:\s*', '').Trim().Split('+')[0]
+          if ($version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
+            throw "Invalid application package version: $version"
+          }
+          $packDir = "build/windows/x64/runner/Release"
+          $developmentMarkers = Get-ChildItem -LiteralPath $packDir -Recurse `
+            -File -Filter "dingdong-development.marker"
+          if ($developmentMarkers) {
+            throw "A preview installer must use the standard DingDong data directory."
+          }
+          $previewNotes = Join-Path $env:RUNNER_TEMP "dingdong-windows-preview-notes.md"
+          $previewNotesContent = @(
+            "# DingDong $version Windows CI preview"
+            ""
+            "Development preview from commit $env:GITHUB_SHA."
+            "This is not a stable release. See the matching GitHub prerelease for acceptance notes."
+            "It uses the standard DingDong application identity and local data directory."
+            "Back up existing DingDong data before installing this preview."
+          ) -join "`n"
+          Set-Content -LiteralPath $previewNotes -Value $previewNotesContent -Encoding utf8
+          New-Item -ItemType Directory -Force -Path build/windows-preview | Out-Null
+          .\.tools\vpk.exe pack `
+            --packId "JevonsCode.DingDong" `
+            --packVersion $version `
+            --packDir $packDir `
+            --mainExe "DingDong.exe" `
+            --packTitle "DingDong" `
+            --packAuthors "JevonsCode" `
+            --releaseNotes $previewNotes `
+            --icon "windows/runner/resources/app_icon.ico" `
+            --runtime "win-x64" `
+            --channel "win" `
+            --noPortable `
+            --outputDir "build/windows-preview"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Velopack preview packaging failed with exit code $LASTEXITCODE."
+          }
+          $setup = Get-ChildItem -Path build/windows-preview -Filter "*-Setup.exe" |
+            Select-Object -First 1
+          if ($null -eq $setup) {
+            throw "Velopack did not create a preview Setup executable."
+          }
+          Copy-Item -LiteralPath $setup.FullName `
+            "build/windows-preview/DingDong-${version}-windows-x64-Setup.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DingDong-windows-preview
+          path: build/windows-preview/*
+          retention-days: 7
+          if-no-files-found: error

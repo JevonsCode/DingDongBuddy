@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
+import 'package:dingdong/app/token_usage_background_service.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
@@ -56,6 +57,7 @@ import 'package:flutter/material.dart';
 /// Root widget for the DingDong desktop application.
 class DingDongApp extends StatefulWidget {
   const DingDongApp({
+    this.tokenUsageBackgroundService,
     this.activityController,
     this.agentConversationLauncher,
     this.agentBaseUri,
@@ -104,6 +106,7 @@ class DingDongApp extends StatefulWidget {
   });
 
   final ActivityController? activityController;
+  final TokenUsageBackgroundService? tokenUsageBackgroundService;
   final AgentConversationLauncher? agentConversationLauncher;
   final Uri? agentBaseUri;
   final bool developmentBuild;
@@ -217,6 +220,10 @@ class _DingDongAppState extends State<DingDongApp> {
 
   @override
   void dispose() {
+    final tokenUsageBackgroundService = widget.tokenUsageBackgroundService;
+    if (tokenUsageBackgroundService != null) {
+      unawaited(tokenUsageBackgroundService.close());
+    }
     _clipboardViewModel.dispose();
     _libraryViewModel.dispose();
     unawaited(_dataRevisions.dispose());

@@ -9,6 +9,28 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   DingDongLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get agentSetupAdvancedDetailsDescription =>
+      'Endpoints y comandos del puente';
+
+  @override
+  String get gettingStartedConnectAgent => 'Conectar un Agent';
+
+  @override
+  String get gettingStartedAgentActivityDescription =>
+      'Conecta un Agent local para recibir avisos al completar tareas y volver a sus conversaciones desde aquí.';
+
+  @override
+  String get agentSetupGettingStarted =>
+      'Copia la instrucción de configuración a tu Agent local y completa una tarea para comprobar que su aviso llega aquí.';
+
+  @override
+  String get gettingStartedResourceLibraryEmpty => 'Aún no hay recursos';
+
+  @override
+  String get gettingStartedResourceLibraryDescription =>
+      'Guarda Prompts, Skills y referencias MCP reutilizables en un solo lugar. Empieza con tu primer recurso.';
+
+  @override
   String get languageEnglish => 'Inglés';
 
   @override
@@ -109,7 +131,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get agentCompletionNotifications =>
-      'Notificaciones de finalización de Agent';
+      'Avisos unificados de finalización';
 
   @override
   String agentCompletionNotificationsForName(Object name) {
@@ -340,7 +362,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4 =>
-      'Elija qué eventos Agent deben notificarle y luego personalice el sonido y el color de la alerta.';
+      'Reúne eventos de Agents conectados en una bandeja, con sonido y color comunes. Clientes como Codex ya tienen avisos propios; ajústalos para evitar avisos duplicados.';
 
   @override
   String get clean => 'Limpio';
@@ -1463,7 +1485,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get newestFirstClickAResumableItemToReturnToItsConversation =>
-      'Lo más nuevo primero. Haga clic en un elemento reanudable para regresar a su conversación.';
+      'Una bandeja para eventos de Agents conectados. Los más recientes primero; abre un elemento compatible para volver a su conversación.';
 
   @override
   String get noAgentCompletionsYet => 'Aún no se han completado Agent';
@@ -3464,4 +3486,302 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get tokenUsageTitle => 'Historial de tokens';
+
+  @override
+  String get tokenUsageSubtitle => 'Uso diario de tus Agents locales.';
+
+  @override
+  String get tokenUsageLocalOnly => 'Guardado en este dispositivo';
+
+  @override
+  String get tokenUsageRefresh => 'Actualizar historial local';
+
+  @override
+  String get tokenUsageToday => 'Hoy';
+
+  @override
+  String get tokenUsagePeriodTotal => 'Total del año';
+
+  @override
+  String get tokenUsageActiveDays => 'Días con uso registrado';
+
+  @override
+  String get tokenUsageTokens => 'tokens';
+
+  @override
+  String get tokenUsageYear => 'Año';
+
+  @override
+  String get tokenUsageAllAgents => 'Todos los Agents';
+
+  @override
+  String get tokenUsageDailyActivity => 'Actividad diaria';
+
+  @override
+  String get tokenUsageLess => 'Menos';
+
+  @override
+  String get tokenUsageMore => 'Más';
+
+  @override
+  String tokenUsageDayTooltip(String date, String count) {
+    return '$date: $count tokens registrados';
+  }
+
+  @override
+  String get tokenUsageDayDetail => 'Detalle diario';
+
+  @override
+  String get tokenUsageNoDayRecords =>
+      'No hay uso de tokens registrado para este día.';
+
+  @override
+  String get tokenUsageTotal => 'Total';
+
+  @override
+  String get tokenUsageInput => 'Entrada';
+
+  @override
+  String get tokenUsageOutput => 'Salida';
+
+  @override
+  String get tokenUsageCacheRead => 'Lectura de caché';
+
+  @override
+  String get tokenUsageCacheWrite => 'Escritura de caché';
+
+  @override
+  String get tokenUsageReasoning => 'Razonamiento';
+
+  @override
+  String get tokenUsageNonCached => 'Entrada sin caché + salida';
+
+  @override
+  String get tokenUsageNotReported => 'No informado';
+
+  @override
+  String get tokenUsageBreakdownNote =>
+      'Las lecturas y escrituras de caché están incluidas en la entrada; el razonamiento, en la salida. Los tokens no representan importes facturados.';
+
+  @override
+  String get tokenUsagePartialDetail =>
+      'Algunos registros solo informan el total; los detalles que faltan siguen siendo desconocidos.';
+
+  @override
+  String get tokenUsageCoverageTitle => 'Cobertura de datos locales';
+
+  @override
+  String get tokenUsageCoverageNote =>
+      'Solo se cuenta el uso informado en registros locales de Agents compatibles. Los registros ausentes o no compatibles no indican uso cero. No se sube ningún dato.';
+
+  @override
+  String get tokenUsageAvailable => 'Registros encontrados';
+
+  @override
+  String get tokenUsageMissing => 'No hay registros locales';
+
+  @override
+  String get tokenUsageUnreadable => 'No se pudieron leer algunos registros';
+
+  @override
+  String get tokenUsageLoading => 'Leyendo el historial local…';
+
+  @override
+  String get tokenUsageError =>
+      'No se pudo actualizar el historial local. Inténtalo de nuevo.';
+
+  @override
+  String get tokenUsageEmpty => 'Tu historial de tokens empieza aquí.';
+
+  @override
+  String get tokenUsageEmptyBody =>
+      'Usa un Agent compatible y actualiza para importar sus registros locales de uso.';
+
+  @override
+  String get tokenUsageStorageUnavailable =>
+      'El almacenamiento local no está disponible; estos registros aún no se han guardado.';
+
+  @override
+  String tokenUsageLastRefreshed(String time) {
+    return 'Actualizado $time';
+  }
+
+  @override
+  String tokenUsageRecords(String count) {
+    return '$count registros';
+  }
+
+  @override
+  String tokenUsageSkippedRecords(String count) {
+    return 'Se omitieron $count registros incompletos';
+  }
+
+  @override
+  String tokenUsagePendingFiles(String count) {
+    return '$count archivos tienen registros sin terminar; actualiza para continuar';
+  }
+
+  @override
+  String get tokenUsageLowerBoundNote =>
+      'Algunos registros están incompletos; los totales marcados con ≥ muestran como mínimo esos tokens.';
+
+  @override
+  String get clipboardManagementSubtitle =>
+      'Encuentra texto, imágenes, enlaces y rutas copiados. Clasifica, previsualiza, reutiliza o guarda contenido útil.';
+
+  @override
+  String get tokenUsageDateAttributionNote =>
+      'Algunos registros acumulados están incompletos. Se conserva el total registrado, pero su distribución por días puede estar incompleta.';
+
+  @override
+  String get tokenUsageIncompleteCumulativeNote =>
+      'Algunos registros acumulados no tienen un total exacto y aún no pueden contarse. Los datos ausentes no indican uso cero.';
+
+  @override
+  String get tokenUsageAmbiguousCumulativeNote =>
+      'El orden de algunos registros acumulados es incierto. Los totales registrados y su distribución diaria pueden estar incompletos.';
+
+  @override
+  String get tokenUsageStopRefresh => 'Detener esta actualización';
+
+  @override
+  String get tokenUsageStopping => 'Deteniendo esta actualización…';
+
+  @override
+  String get tokenUsageRefreshStopped =>
+      'Se detuvo esta actualización. Los registros importados están guardados; actualiza para continuar. Las actualizaciones en segundo plano siguen activadas.';
+
+  @override
+  String get tokenUsageNoRecords => 'No hay registros para importar';
+
+  @override
+  String get tokenUsageFilteredEmpty => 'No hay registros en esta selección.';
+
+  @override
+  String get tokenUsageFilteredEmptyBody =>
+      'Elige otro año o Agent, o actualiza para buscar nuevos registros locales.';
+
+  @override
+  String get tokenUsageExport => 'Exportar CSV';
+
+  @override
+  String get tokenUsageExportScope =>
+      'Exportar el año y Agent seleccionados a CSV';
+
+  @override
+  String get tokenUsageExportFileType => 'Archivos CSV';
+
+  @override
+  String get tokenUsageExportSaved => 'CSV de uso de tokens guardado.';
+
+  @override
+  String get tokenUsageExportFailed =>
+      'No se pudo guardar el CSV. Inténtalo de nuevo en una carpeta con permiso de escritura.';
+
+  @override
+  String get releasePreviewNotice =>
+      'Vista previa de desarrollo. La comprobación busca versiones estables. Consulta Versión para ver las notas y Notificar un problema para enviar comentarios. Se usan tus datos locales existentes.';
+
+  @override
+  String get releasePreviewCurrent =>
+      'Vista previa instalada; no hay una versión estable más reciente.';
+
+  @override
+  String get agentPluginsTitle => 'Plugins de Agents';
+
+  @override
+  String get agentPluginsPageDescription =>
+      'Gestiona las extensiones de DingDong y consulta los plugins instalados en tus Agents locales.';
+
+  @override
+  String get agentPluginsDingDongExtensions => 'Extensiones de DingDong';
+
+  @override
+  String get agentPluginsRead => 'Leer inventario local';
+
+  @override
+  String get agentPluginsRefresh => 'Actualizar inventario';
+
+  @override
+  String get agentPluginsLoading => 'Leyendo…';
+
+  @override
+  String get agentPluginsReadOnlyNote =>
+      'Inventario de solo lectura de Codex y Claude Code. Instala, actualiza, activa o elimina estos plugins en su Agent original.';
+
+  @override
+  String get agentPluginsToolsNote =>
+      'Los plugins pueden aportar Skills, servidores MCP y otros componentes. Las herramientas pertenecen a su servidor MCP o anfitrión; esta vista no instala herramientas ni verifica su disponibilidad durante la ejecución.';
+
+  @override
+  String get agentPluginsNotRead =>
+      'El inventario local aún no se ha leído. Se lee bajo demanda, sin consultas periódicas en segundo plano.';
+
+  @override
+  String get agentPluginsEnablementNote =>
+      'Activado significa que la configuración lo indica, no que una llamada haya tenido éxito. Claude Code muestra solo ajustes del usuario; la activación del ámbito del proyecto o local queda sin confirmar.';
+
+  @override
+  String get agentPluginsEmpty =>
+      'El inventario no informó de plugins instalados.';
+
+  @override
+  String get agentPluginsCodexMissing =>
+      'No se encontró una CLI nativa de Codex ejecutable directamente. Haz que esté disponible y actualiza; no se ejecutan scripts envoltorio de shell.';
+
+  @override
+  String get agentPluginsClaudeMissing =>
+      'No se encontró el registro de plugins de Claude Code.';
+
+  @override
+  String get agentPluginsUnavailable =>
+      'No se pudo leer el inventario. Comprueba la instalación del Agent e intenta actualizar.';
+
+  @override
+  String get agentPluginsInvalid =>
+      'El inventario del Agent tiene un formato incompatible o está dañado. Actualiza el Agent e inténtalo de nuevo.';
+
+  @override
+  String get agentPluginsTimedOut =>
+      'Se agotó el tiempo de lectura. Intenta actualizar.';
+
+  @override
+  String get agentPluginsTooLarge =>
+      'El inventario supera el límite de lectura segura y no se cargó.';
+
+  @override
+  String get agentPluginsEnabled => 'Activado en configuración';
+
+  @override
+  String get agentPluginsDisabled => 'Desactivado en configuración';
+
+  @override
+  String get agentPluginsEnablementUnknown => 'Activación sin confirmar';
+
+  @override
+  String get agentPluginsSourceLocal => 'Local';
+
+  @override
+  String get agentPluginsSourceGit => 'Git';
+
+  @override
+  String get agentPluginsSourceRemote => 'Remoto';
+
+  @override
+  String get agentPluginsSourceMarketplace => 'Mercado';
+
+  @override
+  String get agentPluginsSourceUnknown => 'Origen desconocido';
+
+  @override
+  String get agentPluginsVersion => 'Versión';
+
+  @override
+  String get agentPluginsVersionUnknown => 'No informada';
+
+  @override
+  String get agentPluginsSource => 'Origen';
 }

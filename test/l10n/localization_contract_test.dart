@@ -38,6 +38,8 @@ void main() {
 
   test('Spanish is complete instead of silently falling back to English', () {
     const intentionallyShared = <String>{
+      'agentPluginsSourceLocal',
+      'agentPluginsSourceGit',
       'actionCountTimes',
       'categoryRuleKeywordsExample',
       'general',
@@ -51,6 +53,8 @@ void main() {
       'skill',
       'skill2',
       'skills',
+      'tokenUsageTokens',
+      'tokenUsageTotal',
     };
     final shared = english.keys
         .where((String key) => !key.startsWith('@'))

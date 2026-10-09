@@ -6,7 +6,8 @@ enum ResourceManagerDestination {
   recentAgents,
   agentAdapters,
   issues,
-  plugins;
+  plugins,
+  tokenUsage;
 
   static ResourceManagerDestination parse(Object? value) {
     return values.firstWhere(

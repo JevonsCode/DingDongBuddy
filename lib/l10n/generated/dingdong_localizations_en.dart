@@ -9,6 +9,28 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get agentSetupAdvancedDetailsDescription =>
+      'Endpoints and bridge commands';
+
+  @override
+  String get gettingStartedConnectAgent => 'Connect an Agent';
+
+  @override
+  String get gettingStartedAgentActivityDescription =>
+      'Connect a local Agent to receive task completion reminders and return to its conversations here.';
+
+  @override
+  String get agentSetupGettingStarted =>
+      'Copy the setup instruction to your local Agent, then complete a task to check that its reminder arrives here.';
+
+  @override
+  String get gettingStartedResourceLibraryEmpty => 'No resources yet';
+
+  @override
+  String get gettingStartedResourceLibraryDescription =>
+      'Keep reusable Prompts, Skills and MCP references in one place. Start with your first resource.';
+
+  @override
   String get languageEnglish => 'English';
 
   @override
@@ -107,7 +129,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get agentCompletion => 'Agent completion';
 
   @override
-  String get agentCompletionNotifications => 'Agent completion notifications';
+  String get agentCompletionNotifications => 'Unified completion alerts';
 
   @override
   String agentCompletionNotificationsForName(Object name) {
@@ -333,7 +355,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4 =>
-      'Choose which Agent events should notify you, then customize the alert sound and color.';
+      'Collect events from connected Agents in one inbox, with shared sound and color settings. Clients such as Codex already have their own completion alerts; adjust them to avoid duplicate reminders.';
 
   @override
   String get clean => 'Clean';
@@ -1442,7 +1464,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get newestFirstClickAResumableItemToReturnToItsConversation =>
-      'Newest first. Click a resumable item to return to its conversation.';
+      'One inbox for connected Agent events. Newest first; open a supported item to return to its conversation.';
 
   @override
   String get noAgentCompletionsYet => 'No Agent completions yet';
@@ -3421,4 +3443,299 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get tokenUsageTitle => 'Token history';
+
+  @override
+  String get tokenUsageSubtitle => 'Daily usage across your local Agents.';
+
+  @override
+  String get tokenUsageLocalOnly => 'Stored on this device';
+
+  @override
+  String get tokenUsageRefresh => 'Refresh local history';
+
+  @override
+  String get tokenUsageToday => 'Today';
+
+  @override
+  String get tokenUsagePeriodTotal => 'Year total';
+
+  @override
+  String get tokenUsageActiveDays => 'Days with recorded usage';
+
+  @override
+  String get tokenUsageTokens => 'tokens';
+
+  @override
+  String get tokenUsageYear => 'Year';
+
+  @override
+  String get tokenUsageAllAgents => 'All Agents';
+
+  @override
+  String get tokenUsageDailyActivity => 'Daily activity';
+
+  @override
+  String get tokenUsageLess => 'Less';
+
+  @override
+  String get tokenUsageMore => 'More';
+
+  @override
+  String tokenUsageDayTooltip(String date, String count) {
+    return '$date: $count recorded tokens';
+  }
+
+  @override
+  String get tokenUsageDayDetail => 'Daily detail';
+
+  @override
+  String get tokenUsageNoDayRecords => 'No token usage recorded for this day.';
+
+  @override
+  String get tokenUsageTotal => 'Total';
+
+  @override
+  String get tokenUsageInput => 'Input';
+
+  @override
+  String get tokenUsageOutput => 'Output';
+
+  @override
+  String get tokenUsageCacheRead => 'Cache read';
+
+  @override
+  String get tokenUsageCacheWrite => 'Cache write';
+
+  @override
+  String get tokenUsageReasoning => 'Reasoning';
+
+  @override
+  String get tokenUsageNonCached => 'Noncached input + output';
+
+  @override
+  String get tokenUsageNotReported => 'Not reported';
+
+  @override
+  String get tokenUsageBreakdownNote =>
+      'Cache reads and writes are included in input; reasoning is included in output. Token counts are not billing amounts.';
+
+  @override
+  String get tokenUsagePartialDetail =>
+      'Some records report only a total; missing details remain unknown.';
+
+  @override
+  String get tokenUsageCoverageTitle => 'Local data coverage';
+
+  @override
+  String get tokenUsageCoverageNote =>
+      'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.';
+
+  @override
+  String get tokenUsageAvailable => 'Logs found';
+
+  @override
+  String get tokenUsageMissing => 'No local logs found';
+
+  @override
+  String get tokenUsageUnreadable => 'Some logs could not be read';
+
+  @override
+  String get tokenUsageLoading => 'Reading local token history…';
+
+  @override
+  String get tokenUsageError =>
+      'Local history could not be refreshed. Try again.';
+
+  @override
+  String get tokenUsageEmpty => 'Your token history starts here.';
+
+  @override
+  String get tokenUsageEmptyBody =>
+      'Use a supported Agent, then refresh to import its local usage records.';
+
+  @override
+  String get tokenUsageStorageUnavailable =>
+      'Local storage is unavailable; these records are not saved yet.';
+
+  @override
+  String tokenUsageLastRefreshed(String time) {
+    return 'Refreshed $time';
+  }
+
+  @override
+  String tokenUsageRecords(String count) {
+    return '$count records';
+  }
+
+  @override
+  String tokenUsageSkippedRecords(String count) {
+    return '$count incomplete records were skipped';
+  }
+
+  @override
+  String tokenUsagePendingFiles(String count) {
+    return '$count files have unfinished records; refresh to continue';
+  }
+
+  @override
+  String get tokenUsageLowerBoundNote =>
+      'Some records are incomplete; totals marked ≥ show at least this many tokens.';
+
+  @override
+  String get clipboardManagementSubtitle =>
+      'Find copied text, images, links and file paths. Classify, preview, reuse or save useful content.';
+
+  @override
+  String get tokenUsageDateAttributionNote =>
+      'Some cumulative records are incomplete. The recorded total is retained, but allocation to individual days may be incomplete.';
+
+  @override
+  String get tokenUsageIncompleteCumulativeNote =>
+      'Some cumulative records have no exact total and cannot be counted yet. Missing counts do not mean zero usage.';
+
+  @override
+  String get tokenUsageAmbiguousCumulativeNote =>
+      'The order of some cumulative records is uncertain. These recorded totals and daily allocations may be incomplete.';
+
+  @override
+  String get tokenUsageStopRefresh => 'Stop this refresh';
+
+  @override
+  String get tokenUsageStopping => 'Stopping this refresh…';
+
+  @override
+  String get tokenUsageRefreshStopped =>
+      'This refresh was stopped. Imported records are saved; refresh to continue. Background updates remain enabled.';
+
+  @override
+  String get tokenUsageNoRecords => 'No importable logs found';
+
+  @override
+  String get tokenUsageFilteredEmpty => 'No records in this selection.';
+
+  @override
+  String get tokenUsageFilteredEmptyBody =>
+      'Choose another year or Agent, or refresh to look for new local records.';
+
+  @override
+  String get tokenUsageExport => 'Export CSV';
+
+  @override
+  String get tokenUsageExportScope => 'Export selected year and Agent as CSV';
+
+  @override
+  String get tokenUsageExportFileType => 'CSV files';
+
+  @override
+  String get tokenUsageExportSaved => 'Token usage CSV saved.';
+
+  @override
+  String get tokenUsageExportFailed =>
+      'The CSV could not be saved. Try again and choose a writable folder.';
+
+  @override
+  String get releasePreviewNotice =>
+      'Development preview. Update checks follow stable releases. Use Release for this preview\'s notes and Report a problem to send feedback. Your existing local data is used.';
+
+  @override
+  String get releasePreviewCurrent =>
+      'Preview installed; no newer stable release found.';
+
+  @override
+  String get agentPluginsTitle => 'Agent plugins';
+
+  @override
+  String get agentPluginsPageDescription =>
+      'Manage DingDong extensions and inspect plugins installed in your local Agents.';
+
+  @override
+  String get agentPluginsDingDongExtensions => 'DingDong extensions';
+
+  @override
+  String get agentPluginsRead => 'Read local inventory';
+
+  @override
+  String get agentPluginsRefresh => 'Refresh inventory';
+
+  @override
+  String get agentPluginsLoading => 'Reading…';
+
+  @override
+  String get agentPluginsReadOnlyNote =>
+      'Read-only inventory for Codex and Claude Code. Install, update, enable or remove these plugins in their native Agent.';
+
+  @override
+  String get agentPluginsToolsNote =>
+      'Plugins can provide Skills, MCP servers and other components. Tools belong to their MCP server or host; this view does not install tools or verify runtime availability.';
+
+  @override
+  String get agentPluginsNotRead =>
+      'The local inventory has not been read. Read it when needed; no background polling.';
+
+  @override
+  String get agentPluginsEnablementNote =>
+      'Enabled means the native configuration reports enabled, not that a tool call succeeded. Claude Code shows user-scope settings only; project/local enablement remains unconfirmed.';
+
+  @override
+  String get agentPluginsEmpty => 'No installed plugins were reported.';
+
+  @override
+  String get agentPluginsCodexMissing =>
+      'A directly executable native Codex CLI was not found. Make the native CLI available, then refresh; shell wrappers are not executed.';
+
+  @override
+  String get agentPluginsClaudeMissing =>
+      'No Claude Code plugin registry was found.';
+
+  @override
+  String get agentPluginsUnavailable =>
+      'The inventory could not be read. Check the Agent installation and try refreshing.';
+
+  @override
+  String get agentPluginsInvalid =>
+      'The Agent returned an unsupported or malformed inventory. Update the Agent and try again.';
+
+  @override
+  String get agentPluginsTimedOut =>
+      'Reading the inventory timed out. Try refreshing.';
+
+  @override
+  String get agentPluginsTooLarge =>
+      'The inventory exceeds the safe read limit and was not loaded.';
+
+  @override
+  String get agentPluginsEnabled => 'Configuration enabled';
+
+  @override
+  String get agentPluginsDisabled => 'Configuration disabled';
+
+  @override
+  String get agentPluginsEnablementUnknown => 'Enablement unconfirmed';
+
+  @override
+  String get agentPluginsSourceLocal => 'Local';
+
+  @override
+  String get agentPluginsSourceGit => 'Git';
+
+  @override
+  String get agentPluginsSourceRemote => 'Remote';
+
+  @override
+  String get agentPluginsSourceMarketplace => 'Marketplace';
+
+  @override
+  String get agentPluginsSourceUnknown => 'Unknown source';
+
+  @override
+  String get agentPluginsVersion => 'Version';
+
+  @override
+  String get agentPluginsVersionUnknown => 'Unreported';
+
+  @override
+  String get agentPluginsSource => 'Source';
 }
