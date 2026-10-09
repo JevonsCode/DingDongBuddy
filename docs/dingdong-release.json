@@ -25,25 +25,25 @@
     }
   },
   "notes": [
-    "Fixes internal Codex background-task alerts when subagent notifications are turned off, including current ChatGPT and Codex desktop installations.",
-    "Prevents duplicate completion callbacks from playing sounds or flashing again while retaining activity history updates.",
-    "Keeps completion alerts independent of attention-alert deduplication so muted attention alerts do not hide task completion."
+    "Fixes internal Codex background tasks triggering alerts on macOS when subagent notifications are disabled.",
+    "Fixes repeated sounds and flashes for the same task completion.",
+    "Fixes missing task-completion alerts when attention notifications are disabled."
   ],
   "notesByLanguage": {
     "en": [
-      "Fixes internal Codex background-task alerts when subagent notifications are turned off, including current ChatGPT and Codex desktop installations.",
-      "Prevents duplicate completion callbacks from playing sounds or flashing again while retaining activity history updates.",
-      "Keeps completion alerts independent of attention-alert deduplication so muted attention alerts do not hide task completion."
+      "Fixes internal Codex background tasks triggering alerts on macOS when subagent notifications are disabled.",
+      "Fixes repeated sounds and flashes for the same task completion.",
+      "Fixes missing task-completion alerts when attention notifications are disabled."
     ],
     "zh": [
-      "适配新版 ChatGPT 和 Codex 桌面应用，修复关闭子 Agent 提醒后仍收到内部后台任务通知的问题。",
-      "修复重复完成回调再次响铃或闪烁的问题，同时保留活动记录的合并更新。",
-      "完成提醒与需要处理的提醒分别去重，避免关闭处理提醒后漏掉正常完成通知。"
+      "修复 macOS 上关闭子 Agent 提醒后，部分 Codex 内部后台任务仍触发通知的问题。",
+      "修复同一任务完成后重复响铃和闪烁的问题。",
+      "修复关闭“需要处理”提醒后，正常完成提醒偶尔丢失的问题。"
     ],
     "es": [
-      "Corrige los avisos de tareas internas de Codex cuando las notificaciones de subagentes están desactivadas, también en las versiones actuales de ChatGPT y Codex para escritorio.",
-      "Evita que las notificaciones de finalización duplicadas repitan sonidos o destellos, conservando las actualizaciones del historial.",
-      "Separa la deduplicación de los avisos de atención y finalización para que silenciar los primeros no oculte las tareas completadas."
+      "Corrige los avisos de tareas internas de Codex en macOS cuando las notificaciones de subagentes están desactivadas.",
+      "Corrige los sonidos y destellos repetidos al finalizar una misma tarea.",
+      "Corrige la pérdida de avisos de finalización cuando las notificaciones de atención están desactivadas."
     ]
   }
 }

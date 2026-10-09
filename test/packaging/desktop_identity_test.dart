@@ -611,11 +611,11 @@ void main() {
     expect(releaseMetadata, contains('"prerelease": false'));
     expect(
       releaseMetadata,
-      contains('Fixes internal Codex background-task alerts'),
+      contains('Fixes internal Codex background tasks'),
     );
     expect(
       releaseMetadata,
-      contains('Prevents duplicate completion callbacks'),
+      contains('Fixes repeated sounds and flashes'),
     );
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
