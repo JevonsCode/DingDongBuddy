@@ -23,10 +23,12 @@ final class NativeCodexAppServerConnectionFactory
   NativeCodexAppServerConnectionFactory({
     required this.homeDirectory,
     this.executableCandidates = const <String>[],
-  });
+    Map<String, String>? environment,
+  }) : environment = environment ?? Platform.environment;
 
   final String homeDirectory;
   final List<String> executableCandidates;
+  final Map<String, String> environment;
 
   @override
   Future<CodexAppServerConnection> open() async {
@@ -34,25 +36,40 @@ final class NativeCodexAppServerConnectionFactory
     return StdioCodexAppServerConnection.start(
       executable,
       workingDirectory: homeDirectory,
+      environment: environment,
     );
   }
 
   Future<String> _findExecutable() async {
     final List<String> candidates = <String>[
       ...executableCandidates,
-      if ((Platform.environment['CODEX_CLI_PATH'] ?? '').trim().isNotEmpty)
-        Platform.environment['CODEX_CLI_PATH']!.trim(),
-      if (Platform.isMacOS) ...<String>[
-        '/Applications/ChatGPT.app/Contents/Resources/codex',
-        path.join(
-          homeDirectory,
-          'Applications',
-          'ChatGPT.app',
-          'Contents',
-          'Resources',
-          'codex',
-        ),
-      ],
+      if ((environment['CODEX_CLI_PATH'] ?? '').trim().isNotEmpty)
+        environment['CODEX_CLI_PATH']!.trim(),
+      // Finder-launched apps do not inherit the user's shell PATH. Current
+      // desktop releases nest the CLI in CodexCLI.app; keep the legacy layout
+      // for older installations and prefer a user's own Applications folder.
+      if (Platform.isMacOS)
+        for (final String directory in <String>[
+          path.join(homeDirectory, 'Applications'),
+          '/Applications',
+        ])
+          for (final String application in <String>[
+            'ChatGPT.app',
+            'Codex.app',
+          ]) ...<String>[
+            path.joinAll(<String>[
+              directory,
+              application,
+              'Contents',
+              'Resources',
+              'codex-cli',
+              'CodexCLI.app',
+              'Contents',
+              'MacOS',
+              'codex',
+            ]),
+            path.join(directory, application, 'Contents', 'Resources', 'codex'),
+          ],
     ];
     for (final String candidate in candidates) {
       if (path.isAbsolute(candidate) && await File(candidate).exists()) {
@@ -60,9 +77,12 @@ final class NativeCodexAppServerConnectionFactory
       }
     }
 
-    final ProcessResult located = Platform.isWindows
-        ? await Process.run('where.exe', const <String>['codex.exe'])
-        : await Process.run('/usr/bin/which', const <String>['codex']);
+    final ProcessResult located = await Process.run(
+      Platform.isWindows ? 'where.exe' : '/usr/bin/which',
+      <String>[Platform.isWindows ? 'codex.exe' : 'codex'],
+      environment: environment,
+      includeParentEnvironment: false,
+    );
     if (located.exitCode == 0) {
       for (final String line in const LineSplitter().convert(
         located.stdout.toString(),
@@ -91,13 +111,17 @@ final class StdioCodexAppServerConnection implements CodexAppServerConnection {
   static Future<StdioCodexAppServerConnection> start(
     String executable, {
     required String workingDirectory,
+    Map<String, String>? environment,
   }) async {
     final Process process;
     try {
-      process = await Process.start(executable, const <String>[
-        'app-server',
-        '--stdio',
-      ], workingDirectory: workingDirectory);
+      process = await Process.start(
+        executable,
+        const <String>['app-server', '--stdio'],
+        workingDirectory: workingDirectory,
+        environment: environment,
+        includeParentEnvironment: environment == null,
+      );
     } on ProcessException catch (error) {
       throw CodexAppServerUnavailableException(
         'Codex App Server could not start: ${error.message}',
@@ -116,7 +140,7 @@ final class StdioCodexAppServerConnection implements CodexAppServerConnection {
         'clientInfo': <String, Object?>{
           'name': 'dingdong',
           'title': 'DingDong',
-          'version': '1.6.3',
+          'version': '1.6.4',
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,

@@ -212,6 +212,40 @@ void main() {
       expect(nativeSounds, <DingSound>[DingSound.dingCrisp]);
       expect(companionSounds, <DingSound>[DingSound.dingCrisp]);
     });
+
+    test(
+      'deduplicated completion only enriches history without alerting',
+      () async {
+        var nativeCalls = 0;
+        var historyCalls = 0;
+
+        await deliverAgentNotification(
+          request: const DingRequest(source: 'Codex', fallback: true),
+          settings: const AppSettings(),
+          suppressNativeNotification: true,
+          nativeDelivery: (_) async => nativeCalls += 1,
+          companionDelivery: (_) async => historyCalls += 1,
+        );
+
+        expect(nativeCalls, 0);
+        expect(historyCalls, 1);
+      },
+    );
+
+    test('a fallback without a primary notification still alerts', () async {
+      var nativeCalls = 0;
+      var companionCalls = 0;
+
+      await deliverAgentNotification(
+        request: const DingRequest(source: 'Codex', fallback: true),
+        settings: const AppSettings(),
+        nativeDelivery: (_) async => nativeCalls += 1,
+        companionDelivery: (_) async => companionCalls += 1,
+      );
+
+      expect(nativeCalls, 1);
+      expect(companionCalls, 1);
+    });
   });
 
   group('subagent task-start preference', () {

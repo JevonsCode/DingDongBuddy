@@ -1,4 +1,4 @@
-# DingDong 1.6.3 Manual Regression Checklist
+# DingDong 1.6.4 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -707,8 +707,8 @@ third-party Agent accounts or remote model availability have been verified.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.6.3` build `66` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.6.3.66` and product name `DingDong`.
+- The macOS release app metadata is version `1.6.4` build `67` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.6.4.67` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -716,7 +716,7 @@ third-party Agent accounts or remote model availability have been verified.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.6.3` and that exact commit SHA; every
+  `/v1/health` must report version `1.6.4` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`
@@ -746,3 +746,11 @@ third-party Agent accounts or remote model availability have been verified.
 - With Jev installed and configured, GET `/plugins/jev/status` reports readiness without reading the credential value. A stalled vault metadata lookup returns `local_storage_failed` within two seconds and preserves the installed/enabled state, credentials, and usage ledger.
 - If Jev status is unavailable or never responds, MCP `tools/list` returns all built-in tools within three seconds; subsequent requests continue. When status succeeds for an installed plugin, all four Jev tools remain discoverable.
 - Run development and production dependency audits after a clean install. Both must report zero vulnerabilities; the locked deployment chain contains Wrangler 4.149.0 and sharp 0.35.5.
+
+
+## Codex notification filtering and deduplication (1.6.4)
+
+- Launch DingDong from Finder with a GUI-only PATH and no CODEX_CLI_PATH. Current ChatGPT.app and Codex.app nested CLI bundles must remain discoverable in user and system Applications folders; explicit executable overrides retain precedence.
+- With subagent notifications off, primary and fallback callbacks for a known internal, non-persisted Codex thread must not play sound, flash, or add/update activity history. A persisted main conversation remains identifiable and openable.
+- A deduplicated completion callback may enrich the existing activity record, but must not deliver a second native sound or flash. A fallback without a matching primary still notifies once.
+- With attention notifications off and completion notifications on, an attention signal must not consume the next completion callback, with or without an explicit conversation ID.

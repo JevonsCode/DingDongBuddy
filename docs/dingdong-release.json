@@ -1,49 +1,49 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.6.3",
-  "latestBuild": "66",
-  "publishedAt": "2026-10-09T10:16:48Z",
+  "latestVersion": "1.6.4",
+  "latestBuild": "67",
+  "publishedAt": "2026-10-09T14:34:06Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.3",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.4",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.3/DingDong-1.6.3-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.3/DingDong-1.6.3-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.3/DingDong-1.6.3-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Fixes stalled Jev status checks by checking credential presence without reading the API key.",
-    "Keeps MCP tool discovery responsive: built-in tools remain available when Jev status times out.",
-    "Updates deployment tooling to fix the sharp vulnerability; development and production dependency audits report no vulnerabilities."
+    "Fixes internal Codex background-task alerts when subagent notifications are turned off, including current ChatGPT and Codex desktop installations.",
+    "Prevents duplicate completion callbacks from playing sounds or flashing again while retaining activity history updates.",
+    "Keeps completion alerts independent of attention-alert deduplication so muted attention alerts do not hide task completion."
   ],
   "notesByLanguage": {
     "en": [
-      "Fixes stalled Jev status checks by checking credential presence without reading the API key.",
-      "Keeps MCP tool discovery responsive: built-in tools remain available when Jev status times out.",
-      "Updates deployment tooling to fix the sharp vulnerability; development and production dependency audits report no vulnerabilities."
+      "Fixes internal Codex background-task alerts when subagent notifications are turned off, including current ChatGPT and Codex desktop installations.",
+      "Prevents duplicate completion callbacks from playing sounds or flashing again while retaining activity history updates.",
+      "Keeps completion alerts independent of attention-alert deduplication so muted attention alerts do not hide task completion."
     ],
     "zh": [
-      "修复 Jev 状态查询卡住的问题，状态检查改为查询凭据是否存在，不再读取 API Key。",
-      "为 MCP 工具发现增加超时保护；Jev 状态暂不可用时，内置工具仍可正常列出。",
-      "升级部署工具依赖，修复 sharp 高危漏洞，开发及生产依赖审计均无漏洞。"
+      "适配新版 ChatGPT 和 Codex 桌面应用，修复关闭子 Agent 提醒后仍收到内部后台任务通知的问题。",
+      "修复重复完成回调再次响铃或闪烁的问题，同时保留活动记录的合并更新。",
+      "完成提醒与需要处理的提醒分别去重，避免关闭处理提醒后漏掉正常完成通知。"
     ],
     "es": [
-      "Corrige las consultas de estado de Jev bloqueadas comprobando la existencia de credenciales sin leer la clave API.",
-      "Mantiene disponible el catálogo de herramientas MCP cuando la consulta de estado de Jev supera el tiempo límite.",
-      "Actualiza las herramientas de despliegue para corregir la vulnerabilidad de sharp; las auditorías de dependencias de desarrollo y producción no detectan vulnerabilidades."
+      "Corrige los avisos de tareas internas de Codex cuando las notificaciones de subagentes están desactivadas, también en las versiones actuales de ChatGPT y Codex para escritorio.",
+      "Evita que las notificaciones de finalización duplicadas repitan sonidos o destellos, conservando las actualizaciones del historial.",
+      "Separa la deduplicación de los avisos de atención y finalización para que silenciar los primeros no oculte las tareas completadas."
     ]
   }
 }

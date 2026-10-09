@@ -1,3 +1,27 @@
+# DingDong 1.6.4
+
+- Fixes internal Codex background-task alerts when subagent notifications are turned off, including current ChatGPT and Codex desktop installations.
+- Prevents duplicate completion callbacks from playing sounds or flashing again while retaining activity history updates.
+- Keeps completion alerts independent of attention-alert deduplication so muted attention alerts do not hide task completion.
+
+---
+
+# DingDong 1.6.4
+
+- 适配新版 ChatGPT 和 Codex 桌面应用，修复关闭子 Agent 提醒后仍收到内部后台任务通知的问题。
+- 修复重复完成回调再次响铃或闪烁的问题，同时保留活动记录的合并更新。
+- 完成提醒与需要处理的提醒分别去重，避免关闭处理提醒后漏掉正常完成通知。
+
+---
+
+# DingDong 1.6.4
+
+- Corrige los avisos de tareas internas de Codex cuando las notificaciones de subagentes están desactivadas, también en las versiones actuales de ChatGPT y Codex para escritorio.
+- Evita que las notificaciones de finalización duplicadas repitan sonidos o destellos, conservando las actualizaciones del historial.
+- Separa la deduplicación de los avisos de atención y finalización para que silenciar los primeros no oculte las tareas completadas.
+
+---
+
 # DingDong 1.6.3
 
 - Fixes stalled Jev status checks by checking credential presence without reading the API key.

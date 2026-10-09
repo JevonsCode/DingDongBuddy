@@ -133,12 +133,14 @@ Future<bool> shouldRecordAgentTaskStart({
 /// Resolves the saved sound and fans out only notifications allowed by the
 /// subagent preference. Both primary and deduplicated hook deliveries use this
 /// same boundary so no reminder side effect can bypass the setting.
+/// A deduplicated hook may enrich history but must not play or flash again.
 Future<void> deliverAgentNotification({
   required DingRequest request,
   required AppSettings settings,
   required Future<void> Function(DingRequest request) nativeDelivery,
   Future<void> Function(DingRequest request)? companionDelivery,
   Future<void> Function(DingRequest request)? onFiltered,
+  bool suppressNativeNotification = false,
   CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
   NotificationDeliveryFailureObserver? onFailure,
@@ -156,7 +158,11 @@ Future<void> deliverAgentNotification({
       ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
       : request;
   await deliverNotificationIndependently(
-    nativeDelivery: () => nativeDelivery(resolvedRequest),
+    nativeDelivery: () async {
+      if (!suppressNativeNotification) {
+        await nativeDelivery(resolvedRequest);
+      }
+    },
     companionDelivery: companionDelivery == null
         ? null
         : () => companionDelivery(resolvedRequest),
@@ -396,6 +402,7 @@ final class AppDependencies {
         await deliverAgentNotification(
           request: request,
           settings: settings,
+          suppressNativeNotification: true,
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
                 resolvedRequest,

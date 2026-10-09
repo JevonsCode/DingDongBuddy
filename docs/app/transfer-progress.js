@@ -1,4 +1,4 @@
-import { formatBytes } from './app-formatters.js?shell=45';
+import { formatBytes } from './app-formatters.js?shell=46';
 const labels = { preparing: '准备传输', transferring: '传输中', verifying: '确认文件',
   waiting: '等待连接恢复', paused: '已暂停', failed: '传输未完成', completed: '传输完成', cancelled: '已取消' };
 const issues = { waiting_lan: '等待局域网直连 · 进度已保留', connection_lost: '连接中断 · 恢复后自动继续',

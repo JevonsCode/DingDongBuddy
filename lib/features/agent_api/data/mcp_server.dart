@@ -39,7 +39,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.6.3',
+              'version': '1.6.4',
             },
             'instructions': dingDongAgentBridgeGuidance,
           },

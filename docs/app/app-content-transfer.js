@@ -2,11 +2,11 @@ import {
   base64UrlDecode,
   bytesToBase64,
   utf8ByteLength,
-} from "./app-codecs.js?shell=45";
-import { formatBytes, validDate } from "./app-formatters.js?shell=45";
+} from "./app-codecs.js?shell=46";
+import { formatBytes, validDate } from "./app-formatters.js?shell=46";
 
-import { createFileActions } from "./app-file-actions.js?shell=45";
-import { createResumableTransfers } from './resumable-transfer.js?shell=45';
+import { createFileActions } from "./app-file-actions.js?shell=46";
+import { createResumableTransfers } from './resumable-transfer.js?shell=46';
 
 // Bounded clipboard/file transfer plus in-memory Agent feed reconciliation.
 export function createContentTransferController({

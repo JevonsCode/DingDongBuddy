@@ -8,6 +8,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_compatibility_routes.dart';
 import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
@@ -319,6 +320,7 @@ final class AgentRouter {
             primaryDingAt = _recentPrimaryDings.remove((
               source: notificationKey.source,
               conversationId: null,
+              notificationKind: notificationKey.notificationKind,
             ));
           }
           if (primaryDingAt != null) {
@@ -752,6 +754,7 @@ String? _trimmedText(Object? value) {
 typedef _NotificationDeduplicationKey = ({
   String? source,
   String? conversationId,
+  AgentNotificationKind notificationKind,
 });
 
 _NotificationDeduplicationKey _notificationDeduplicationKey(
@@ -765,6 +768,7 @@ _NotificationDeduplicationKey _notificationDeduplicationKey(
   return (
     source: _notificationSourceKey(request.source),
     conversationId: conversationId,
+    notificationKind: request.notificationKind,
   );
 }
 

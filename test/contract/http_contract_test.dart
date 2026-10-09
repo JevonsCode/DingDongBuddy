@@ -366,6 +366,43 @@ void main() {
     expect(suppressedCount, 1);
   });
 
+  for (final bool identified in <bool>[false, true]) {
+    test(
+      'attention does not consume a completion fallback ($identified)',
+      () async {
+        var delivered = 0;
+        var suppressed = 0;
+        final router = AgentRouter(
+          onDing: (_) => delivered += 1,
+          onSuppressedDing: (_) => suppressed += 1,
+        );
+        await router.route(
+          HttpRequestData(
+            method: 'POST',
+            uri: '/ding',
+            body: jsonEncode(<String, Object?>{
+              'source': 'Codex',
+              'message': 'Needs input',
+              'notificationKind': 'attention',
+              if (identified) 'conversationId': 'thread-1',
+            }),
+          ),
+        );
+        final response = await router.route(
+          const HttpRequestData(
+            method: 'POST',
+            uri: '/ding',
+            body:
+                '{"source":"Codex","message":"Done","conversationId":"thread-1","fallback":true}',
+          ),
+        );
+        expect(response.json['status'], 'triggered');
+        expect(delivered, 2);
+        expect(suppressed, 0);
+      },
+    );
+  }
+
   test('fallback-only notifications are never deduplicated', () async {
     int notificationCount = 0;
     DateTime now = DateTime.utc(2026, 7, 17, 12);
