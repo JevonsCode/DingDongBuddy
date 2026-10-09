@@ -162,11 +162,6 @@ class _TokenUsageHeatmapState extends State<TokenUsageHeatmap> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            Text(
-              context.l10n.tokenUsageLess,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(width: 8),
             for (final Color color in palette)
               Container(
                 width: 12,
@@ -177,11 +172,6 @@ class _TokenUsageHeatmapState extends State<TokenUsageHeatmap> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            const SizedBox(width: 4),
-            Text(
-              context.l10n.tokenUsageMore,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
           ],
         ),
       ],
