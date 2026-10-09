@@ -1,3 +1,27 @@
+# DingDong 1.6.3
+
+- Fixes stalled Jev status checks by checking credential presence without reading the API key.
+- Keeps MCP tool discovery responsive: built-in tools remain available when Jev status times out.
+- Updates deployment tooling to fix the sharp vulnerability; development and production dependency audits report no vulnerabilities.
+
+---
+
+# DingDong 1.6.3
+
+- 修复 Jev 状态查询卡住的问题，状态检查改为查询凭据是否存在，不再读取 API Key。
+- 为 MCP 工具发现增加超时保护；Jev 状态暂不可用时，内置工具仍可正常列出。
+- 升级部署工具依赖，修复 sharp 高危漏洞，开发及生产依赖审计均无漏洞。
+
+---
+
+# DingDong 1.6.3
+
+- Corrige las consultas de estado de Jev bloqueadas comprobando la existencia de credenciales sin leer la clave API.
+- Mantiene disponible el catálogo de herramientas MCP cuando la consulta de estado de Jev supera el tiempo límite.
+- Actualiza las herramientas de despliegue para corregir la vulnerabilidad de sharp; las auditorías de dependencias de desarrollo y producción no detectan vulnerabilidades.
+
+---
+
 # DingDong 1.6.2
 
 - Fixes Windows regression checks on accounts without symbolic-link privileges while retaining ordinary path-boundary validation.

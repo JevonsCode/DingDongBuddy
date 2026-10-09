@@ -221,18 +221,18 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v44/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v45/);
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1\.6\.2"/);
-  assert.match(appSource, /const currentPwaShellVersion = 44/);
-  assert.match(pageSource, /styles\.css\?shell=44/);
-  assert.match(pageSource, /app\.js\?shell=44/);
-  assert.match(appSource, /notification-policy\.js\?shell=44/);
-  assert.match(appSource, /pairing-state\.js\?shell=44/);
+  assert.match(appSource, /const currentPwaVersion = "1\.6\.3"/);
+  assert.match(appSource, /const currentPwaShellVersion = 45/);
+  assert.match(pageSource, /styles\.css\?shell=45/);
+  assert.match(pageSource, /app\.js\?shell=45/);
+  assert.match(appSource, /notification-policy\.js\?shell=45/);
+  assert.match(appSource, /pairing-state\.js\?shell=45/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -240,12 +240,12 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v44/);
-  assert.match(serviceWorkerSource, /styles\.css\?shell=44/);
-  assert.match(serviceWorkerSource, /app\.js\?shell=44/);
-  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=44/);
+  assert.match(serviceWorkerSource, /dingdong-app-shell-v45/);
+  assert.match(serviceWorkerSource, /styles\.css\?shell=45/);
+  assert.match(serviceWorkerSource, /app\.js\?shell=45/);
+  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=45/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.6.2", shell: 44 });
+  assert.deepEqual(pwaVersion, { version: "1.6.3", shell: 45 });
 });
 
 test("PWA hydration stays neutral until saved device state is restored", () => {

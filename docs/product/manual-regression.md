@@ -1,4 +1,4 @@
-# DingDong 1.6.2 Manual Regression Checklist
+# DingDong 1.6.3 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -707,8 +707,8 @@ third-party Agent accounts or remote model availability have been verified.
   permission state. The visible yellow **Open settings** banner splits into two
   jagged fragments, emits a short amber particle burst, and then collapses
   exactly once; reopening Clipboard does not replay the completion animation.
-- The macOS release app metadata is version `1.6.2` build `65` and bundle id `com.dingdongbuddy.app`.
-- The Windows executable metadata is version `1.6.2.65` and product name `DingDong`.
+- The macOS release app metadata is version `1.6.3` build `66` and bundle id `com.dingdongbuddy.app`.
+- The Windows executable metadata is version `1.6.3.66` and product name `DingDong`.
 - Node 22 runs `npm ci`, `npm run check`, and a Wrangler dry-run for the PWA
   and relay before the desktop workflow can authorize a release.
 - Deploy the device-link Worker from the tested `main` commit either through a
@@ -716,7 +716,7 @@ third-party Agent accounts or remote model availability have been verified.
   authenticated Wrangler session that supplies the exact release SHA. Finish
   before the desktop CI gate completes, or rerun the failed gate after
   deployment. Production
-  `/v1/health` must report version `1.6.2` and that exact commit SHA; every
+  `/v1/health` must report version `1.6.3` and that exact commit SHA; every
   allowlisted PWA asset hash and the CSP, HSTS, and nosniff headers must match.
 - GitHub Pages remains unchanged while packages build. After the GitHub Release
   assets exist, the Release workflow sends a `deploy-release-pages`
@@ -739,3 +739,10 @@ third-party Agent accounts or remote model availability have been verified.
 - Mobile downloads use origin-private browser storage. Unsupported browsers retain the 25 MB limit; quota failures keep a retryable state. Cancel removes partial data; abandoned temporary files are cleaned after 24 hours on later transfers. File bodies never enter the relay's persistent storage.
 - Confirm downloaded files in the system file manager: “transfer complete” confirms reception, while browser save completion is controlled by the browser.
 - Check 320 px mobile width, long filenames, keyboard focus, and desktop Chinese/English/Spanish at narrow widths.
+
+
+## Jev status and MCP discovery (1.6.3)
+
+- With Jev installed and configured, GET `/plugins/jev/status` reports readiness without reading the credential value. A stalled vault metadata lookup returns `local_storage_failed` within two seconds and preserves the installed/enabled state, credentials, and usage ledger.
+- If Jev status is unavailable or never responds, MCP `tools/list` returns all built-in tools within three seconds; subsequent requests continue. When status succeeds for an installed plugin, all four Jev tools remain discoverable.
+- Run development and production dependency audits after a clean install. Both must report zero vulnerabilities; the locked deployment chain contains Wrangler 4.149.0 and sharp 0.35.5.
