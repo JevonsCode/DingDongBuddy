@@ -428,7 +428,7 @@ class _AdvancedDisclosure extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          context.l10n.endpointsCommandsAndSetupPrompt,
+                          context.l10n.agentSetupAdvancedDetailsDescription,
                           style: TextStyle(
                             color: PopupStyle.of(context).textSecondary,
                             fontSize: 10,

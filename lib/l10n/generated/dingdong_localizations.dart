@@ -103,6 +103,42 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Technical content remaining in the advanced connection disclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoints and bridge commands'**
+  String get agentSetupAdvancedDetailsDescription;
+
+  /// Action opening Agent setup from the empty activity list.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect an Agent'**
+  String get gettingStartedConnectAgent;
+
+  /// First-use guidance when there are no Agent events.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a local Agent to receive task completion reminders and return to its conversations here.'**
+  String get gettingStartedAgentActivityDescription;
+
+  /// Persistent Agent setup guidance above advanced connection details.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the setup instruction to your local Agent, then complete a task to check that its reminder arrives here.'**
+  String get agentSetupGettingStarted;
+
+  /// Title for a resource library with no configurable resources.
+  ///
+  /// In en, this message translates to:
+  /// **'No resources yet'**
+  String get gettingStartedResourceLibraryEmpty;
+
+  /// First-use guidance in both resource library empty states.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep reusable Prompts, Skills and MCP references in one place. Start with your first resource.'**
+  String get gettingStartedResourceLibraryDescription;
+
   /// Display name for the English language option.
   ///
   /// In en, this message translates to:
@@ -6229,6 +6265,252 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'The order of some cumulative records is uncertain. These recorded totals and daily allocations may be incomplete.'**
   String get tokenUsageAmbiguousCumulativeNote;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this refresh'**
+  String get tokenUsageStopRefresh;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping this refresh…'**
+  String get tokenUsageStopping;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'This refresh was stopped. Imported records are saved; refresh to continue. Background updates remain enabled.'**
+  String get tokenUsageRefreshStopped;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'No importable logs found'**
+  String get tokenUsageNoRecords;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'No records in this selection.'**
+  String get tokenUsageFilteredEmpty;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another year or Agent, or refresh to look for new local records.'**
+  String get tokenUsageFilteredEmptyBody;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get tokenUsageExport;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Export selected year and Agent as CSV'**
+  String get tokenUsageExportScope;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV files'**
+  String get tokenUsageExportFileType;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Token usage CSV saved.'**
+  String get tokenUsageExportSaved;
+
+  /// Local token history controls, export and diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'The CSV could not be saved. Try again and choose a writable folder.'**
+  String get tokenUsageExportFailed;
+
+  /// Development preview release status and feedback guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Development preview. Update checks follow stable releases. Use Release for this preview\'s notes and Report a problem to send feedback. Your existing local data is used.'**
+  String get releasePreviewNotice;
+
+  /// Development preview release status and feedback guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview installed; no newer stable release found.'**
+  String get releasePreviewCurrent;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent plugins'**
+  String get agentPluginsTitle;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage DingDong extensions and inspect plugins installed in your local Agents.'**
+  String get agentPluginsPageDescription;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong extensions'**
+  String get agentPluginsDingDongExtensions;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Read local inventory'**
+  String get agentPluginsRead;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh inventory'**
+  String get agentPluginsRefresh;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading…'**
+  String get agentPluginsLoading;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only inventory for Codex and Claude Code. Install, update, enable or remove these plugins in their native Agent.'**
+  String get agentPluginsReadOnlyNote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins can provide Skills, MCP servers and other components. Tools belong to their MCP server or host; this view does not install tools or verify runtime availability.'**
+  String get agentPluginsToolsNote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The local inventory has not been read. Read it when needed; no background polling.'**
+  String get agentPluginsNotRead;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled means the native configuration reports enabled, not that a tool call succeeded. Claude Code shows user-scope settings only; project/local enablement remains unconfirmed.'**
+  String get agentPluginsEnablementNote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'No installed plugins were reported.'**
+  String get agentPluginsEmpty;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'A directly executable native Codex CLI was not found. Make the native CLI available, then refresh; shell wrappers are not executed.'**
+  String get agentPluginsCodexMissing;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'No Claude Code plugin registry was found.'**
+  String get agentPluginsClaudeMissing;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory could not be read. Check the Agent installation and try refreshing.'**
+  String get agentPluginsUnavailable;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The Agent returned an unsupported or malformed inventory. Update the Agent and try again.'**
+  String get agentPluginsInvalid;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the inventory timed out. Try refreshing.'**
+  String get agentPluginsTimedOut;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'The inventory exceeds the safe read limit and was not loaded.'**
+  String get agentPluginsTooLarge;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration enabled'**
+  String get agentPluginsEnabled;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration disabled'**
+  String get agentPluginsDisabled;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Enablement unconfirmed'**
+  String get agentPluginsEnablementUnknown;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get agentPluginsSourceLocal;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Git'**
+  String get agentPluginsSourceGit;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote'**
+  String get agentPluginsSourceRemote;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketplace'**
+  String get agentPluginsSourceMarketplace;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown source'**
+  String get agentPluginsSourceUnknown;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get agentPluginsVersion;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreported'**
+  String get agentPluginsVersionUnknown;
+
+  /// Read-only inventory of plugins installed in native Agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get agentPluginsSource;
 }
 
 class _DingDongLocalizationsDelegate

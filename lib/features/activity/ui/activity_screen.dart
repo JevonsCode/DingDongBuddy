@@ -4,6 +4,7 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/core/widgets/enabled_status_icon.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
@@ -169,12 +170,36 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ),
             const SizedBox(height: 8),
             if (widget.activityController.activities.isEmpty)
-              Text(
-                context.l10n.noRecentAgentEvents,
-                style: TextStyle(
-                  color: PopupStyle.of(context).textSecondary,
-                  fontSize: 10,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    context.l10n.noRecentAgentEvents,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    context.l10n.gettingStartedAgentActivityDescription,
+                    style: TextStyle(
+                      color: PopupStyle.of(context).textSecondary,
+                      fontSize: 10,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DesktopActionButton(
+                    key: const Key('today-connect-agent'),
+                    onPressed: widget.onOpenAgentApi,
+                    icon: Icons.hub_outlined,
+                    label: context.l10n.gettingStartedConnectAgent,
+                    tone: DesktopActionTone.soft,
+                    compact: true,
+                  ),
+                ],
               )
             else
               ...widget.activityController.activities.take(6).map((

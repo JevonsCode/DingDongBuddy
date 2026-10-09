@@ -15,11 +15,17 @@ class _ResourceCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Resource> resources = viewModel.visibleResources;
     if (resources.isEmpty) {
-      return Center(
-        child: Text(
-          context.l10n.noMatchingResources,
-          style: TextStyle(color: PopupStyle.of(context).textSecondary),
-        ),
+      return ResourceEmptyState(
+        libraryIsEmpty: viewModel.configurableResources.isEmpty,
+        onCreate: launcher == null
+            ? null
+            : () => unawaited(
+                launcher!.show(
+                  createRequest: const ResourceManagerCreateRequest(
+                    content: '',
+                  ),
+                ),
+              ),
       );
     }
     return ListView.builder(

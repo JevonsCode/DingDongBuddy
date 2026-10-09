@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/features/token_usage/domain/token_usage_csv_export.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_heatmap.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_screen.dart';
+import 'package:dingdong/platform/file_selector_token_usage_export.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -295,6 +297,7 @@ void main() {
           TokenUsageSourceCoverage(
             source: ConversationTokenUsageSource.codex,
             availability: TokenUsageAvailability.available,
+            filesScanned: 1,
           ),
           TokenUsageSourceCoverage(
             source: ConversationTokenUsageSource.claudeCode,
@@ -309,7 +312,7 @@ void main() {
     );
     addTearDown(controller.dispose);
     await pumpUsage(tester, controller);
-    expectSummaryValues('0');
+    expectSummaryValues('Not reported');
     await tester.tap(find.byKey(const Key('token-usage-source-claude-code')));
     await tester.pumpAndSettle();
     expectSummaryValues('Not reported');
@@ -320,6 +323,169 @@ void main() {
     await tester.pumpAndSettle();
     expectSummaryValues('0');
   });
+
+  testWidgets(
+    'an existing empty log directory does not claim logs or zero usage',
+    (tester) async {
+      final controller = TokenUsageController.preview(
+        const TokenUsageSnapshot(
+          coverage: [
+            TokenUsageSourceCoverage(
+              source: ConversationTokenUsageSource.codex,
+              availability: TokenUsageAvailability.available,
+            ),
+          ],
+        ),
+      );
+      addTearDown(controller.dispose);
+      await pumpUsage(tester, controller);
+      expectSummaryValues('Not reported');
+      await tester.ensureVisible(find.byKey(const Key('token-usage-coverage')));
+      await tester.pumpAndSettle();
+      expect(find.text('Codex · No importable logs found'), findsOneWidget);
+    },
+  );
+
+  testWidgets('an empty selected year and Agent explains the filter', (
+    tester,
+  ) async {
+    final controller = TokenUsageController.preview(usageFixture());
+    addTearDown(controller.dispose);
+    await pumpUsage(tester, controller);
+    await tester.tap(find.byKey(const Key('token-usage-source-pi')));
+    await tester.tap(find.byKey(const Key('token-usage-year-filter')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('2025').last);
+    await tester.pumpAndSettle();
+    expect(find.text('No records in this selection.'), findsOneWidget);
+    expect(
+      tester
+          .widget<DesktopIconButton>(
+            find.byKey(const Key('token-usage-export')),
+          )
+          .onPressed,
+      isNull,
+    );
+  });
+
+  testWidgets(
+    'stop cancels only this refresh and leaves a retryable partial snapshot',
+    (tester) async {
+      final initial = Completer<TokenUsageSnapshot>();
+      var cancels = 0;
+      var loads = 0;
+      final controller = TokenUsageController(
+        loadSnapshot: () =>
+            ++loads == 1 ? initial.future : Future.value(usageFixture()),
+        cancelRefresh: () => cancels++,
+      );
+      addTearDown(controller.dispose);
+      await pumpUsage(tester, controller, settle: false);
+      expect(
+        tester
+            .widget<DesktopIconButton>(
+              find.byKey(const Key('token-usage-stop')),
+            )
+            .tooltip,
+        'Stop this refresh',
+      );
+      expect(
+        tester
+            .widget<DesktopIconButton>(
+              find.byKey(const Key('token-usage-export')),
+            )
+            .onPressed,
+        isNull,
+      );
+      await tester.tap(find.byKey(const Key('token-usage-stop')));
+      await tester.pump();
+      expect(cancels, 1);
+      expect(
+        tester
+            .widget<DesktopIconButton>(
+              find.byKey(const Key('token-usage-stop')),
+            )
+            .onPressed,
+        isNull,
+      );
+      initial.complete(
+        TokenUsageSnapshot(
+          days: usageFixture().days,
+          coverage: usageFixture().coverage,
+          warnings: const ['refresh_cancelled'],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('token-usage-cancelled')), findsOneWidget);
+      expect(controller.snapshot.days, hasLength(4));
+      expect(find.byKey(const Key('token-usage-stop')), findsNothing);
+      await tester.tap(find.byKey(const Key('token-usage-refresh')));
+      await tester.pumpAndSettle();
+      expect(loads, 2);
+      expect(find.byKey(const Key('token-usage-cancelled')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'CSV export uses current filters and reports saved, cancelled and failed outcomes',
+    (tester) async {
+      final controller = TokenUsageController.preview(usageFixture());
+      addTearDown(controller.dispose);
+      final pending = Completer<bool>();
+      var calls = 0;
+      String? savedContents;
+      String? savedName;
+      await pumpUsage(
+        tester,
+        controller,
+        saveExport:
+            ({
+              required contents,
+              required suggestedName,
+              required confirmButtonText,
+              required fileTypeLabel,
+            }) async {
+              calls++;
+              savedContents = contents;
+              savedName = suggestedName;
+              if (calls == 1) return pending.future;
+              if (calls == 2) return false;
+              throw StateError('write failed');
+            },
+      );
+      await tester.tap(find.byKey(const Key('token-usage-source-codex')));
+      await tester.tap(find.byKey(const Key('token-usage-year-filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2025').last);
+      await tester.pumpAndSettle();
+      final export = find.byKey(const Key('token-usage-export'));
+      await tester.tap(export);
+      await tester.pump();
+      expect(tester.widget<DesktopIconButton>(export).onPressed, isNull);
+      expect(savedName, 'dingdong-token-usage-2025-codex.csv');
+      expect(
+        savedContents,
+        contains('2025-12-20,codex,40,30,10,0,0,0,40,exact,exact,true,1,0'),
+      );
+      expect(savedContents, isNot(contains('2026')));
+      pending.complete(true);
+      await tester.pumpAndSettle();
+      expect(find.text('Token usage CSV saved.'), findsOneWidget);
+      ScaffoldMessenger.of(tester.element(export)).removeCurrentSnackBar();
+      await tester.pumpAndSettle();
+      await tester.tap(export);
+      await tester.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
+      await tester.tap(export);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('The CSV could not be saved.'),
+        findsOneWidget,
+      );
+      expect(tester.widget<DesktopIconButton>(export).onPressed, isNotNull);
+      expect(calls, 3);
+    },
+  );
 
   testWidgets('unavailable storage does not turn missing records into zero', (
     WidgetTester tester,
@@ -586,6 +752,7 @@ Future<void> pumpUsage(
   bool dark = false,
   bool settle = true,
   DateTime? now,
+  TokenUsageCsvSaver? saveExport,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
@@ -609,6 +776,7 @@ Future<void> pumpUsage(
             child: TokenUsageScreen(
               controller: controller,
               now: () => now ?? DateTime(2026, 1, 10, 12),
+              saveExport: saveExport ?? saveTokenUsageCsv,
             ),
           ),
         ),

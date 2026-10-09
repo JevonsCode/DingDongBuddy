@@ -189,8 +189,8 @@ jobs:
           $previewNotesContent = @(
             "# DingDong $version Windows CI preview"
             ""
-            "Development preview from commit $env:GITHUB_SHA, delivered only as a CI artifact."
-            "This is not an official public release."
+            "Development preview from commit $env:GITHUB_SHA."
+            "This is not a stable release. See the matching GitHub prerelease for acceptance notes."
             "It uses the standard DingDong application identity and local data directory."
             "Back up existing DingDong data before installing this preview."
           ) -join "`n"

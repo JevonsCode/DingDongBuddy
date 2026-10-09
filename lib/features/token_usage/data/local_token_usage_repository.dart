@@ -135,8 +135,7 @@ final class LocalTokenUsageRepository {
       );
     }
     var files = 0;
-    var events = 0;
-    var skipped = 0;
+    final progress = _RefreshProgress();
     final coverage = <TokenUsageSourceCoverage>[];
     final warnings = <String>{};
     try {
@@ -168,11 +167,14 @@ final class LocalTokenUsageRepository {
                 continue;
               }
               try {
-                final result = await _importFile(store, entity, entry.key);
+                final result = await _importFile(
+                  store,
+                  entity,
+                  entry.key,
+                  progress,
+                );
                 files++;
                 sourceFiles++;
-                events += result.imported;
-                skipped += result.newSkipped;
                 malformed += result.malformed;
                 undated += result.undated;
                 if (result.pending) pending++;
@@ -210,11 +212,12 @@ final class LocalTokenUsageRepository {
       // deliberately contain no exception text, transcript paths or content.
       warnings.add('refresh_interrupted');
     }
+    if (_cancelRequested) warnings.add('refresh_cancelled');
     _warnings = List.unmodifiable(warnings);
     return TokenUsageRefreshReport(
       filesScanned: files,
-      importedEvents: events,
-      skippedRows: skipped,
+      importedEvents: progress.imported,
+      skippedRows: progress.skipped,
       cancelled: _cancelRequested,
       warnings: _warnings,
     );
@@ -224,6 +227,7 @@ final class LocalTokenUsageRepository {
     TokenUsageStore store,
     File file,
     ConversationTokenUsageSource source,
+    _RefreshProgress progress,
   ) async {
     final size = await file.length();
     final canonicalPath = path.normalize(file.absolute.path);
@@ -248,7 +252,7 @@ final class LocalTokenUsageRepository {
     final priorUndated = checkpoint?.undatedRows ?? 0;
     var offset = start;
     var batchRows = 0;
-    var imported = 0;
+    var committedSkipped = 0;
     final batch = <TokenUsageImportEvent>[];
     Future<void> flush() async {
       if (batchRows == 0) return;
@@ -263,12 +267,18 @@ final class LocalTokenUsageRepository {
         undatedRows: priorUndated + parser.undatedRows,
         lastCounterHash: parser.lastCounterHash,
       );
-      imported += store.importBatch(
+      final imported = store.importBatch(
         events: batch,
         pathHash: pathHash,
         source: source,
         checkpoint: next,
       );
+      // Account at the commit boundary: a later batch or file read can fail
+      // without undoing these persisted events and diagnostics.
+      final skipped = parser.malformedRows + parser.undatedRows;
+      progress.imported += imported;
+      progress.skipped += skipped - committedSkipped;
+      committedSkipped = skipped;
       batch.clear();
       batchRows = 0;
       // Yield explicitly even when a batch contains only non-usage rows.
@@ -289,8 +299,6 @@ final class LocalTokenUsageRepository {
     }
     await flush();
     return _FileImportResult(
-      imported: imported,
-      newSkipped: parser.malformedRows + parser.undatedRows,
       malformed: priorMalformed + parser.malformedRows,
       undated: priorUndated + parser.undatedRows,
       pending: offset < size,
@@ -454,15 +462,16 @@ final class _TranscriptLine {
 
 final class _FileImportResult {
   const _FileImportResult({
-    required this.imported,
-    required this.newSkipped,
     required this.malformed,
     required this.undated,
     required this.pending,
   });
-  final int imported;
-  final int newSkipped;
   final int malformed;
   final int undated;
   final bool pending;
+}
+
+final class _RefreshProgress {
+  int imported = 0;
+  int skipped = 0;
 }

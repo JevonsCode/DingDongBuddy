@@ -1,10 +1,17 @@
 part of 'token_usage_screen.dart';
 
 class _Header extends StatelessWidget {
-  const _Header({required this.controller, required this.refreshedAt});
+  const _Header({
+    required this.controller,
+    required this.refreshedAt,
+    required this.isExporting,
+    required this.onExport,
+  });
 
   final TokenUsageController controller;
   final DateTime? refreshedAt;
+  final bool isExporting;
+  final VoidCallback? onExport;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +41,33 @@ class _Header extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
+            DesktopIconButton(
+              key: const Key('token-usage-export'),
+              borderColor: colors.outline,
+              tooltip: context.l10n.tokenUsageExportScope,
+              onPressed: onExport,
+              icon: isExporting
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                    )
+                  : const Icon(Icons.file_download_outlined, size: 18),
+            ),
+            const SizedBox(width: 8),
+            if (controller.canCancel) ...<Widget>[
+              DesktopIconButton(
+                key: const Key('token-usage-stop'),
+                borderColor: colors.outline,
+                tooltip: controller.isCancelling
+                    ? context.l10n.tokenUsageStopping
+                    : context.l10n.tokenUsageStopRefresh,
+                onPressed: controller.isCancelling
+                    ? null
+                    : controller.cancelRefresh,
+                icon: const Icon(Icons.stop_rounded, size: 18),
+              ),
+              const SizedBox(width: 8),
+            ],
             DesktopIconButton(
               key: const Key('token-usage-refresh'),
               borderColor: colors.outline,

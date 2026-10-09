@@ -9,6 +9,28 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   DingDongLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get agentSetupAdvancedDetailsDescription =>
+      'Endpoints y comandos del puente';
+
+  @override
+  String get gettingStartedConnectAgent => 'Conectar un Agent';
+
+  @override
+  String get gettingStartedAgentActivityDescription =>
+      'Conecta un Agent local para recibir avisos al completar tareas y volver a sus conversaciones desde aquí.';
+
+  @override
+  String get agentSetupGettingStarted =>
+      'Copia la instrucción de configuración a tu Agent local y completa una tarea para comprobar que su aviso llega aquí.';
+
+  @override
+  String get gettingStartedResourceLibraryEmpty => 'Aún no hay recursos';
+
+  @override
+  String get gettingStartedResourceLibraryDescription =>
+      'Guarda Prompts, Skills y referencias MCP reutilizables en un solo lugar. Empieza con tu primer recurso.';
+
+  @override
   String get languageEnglish => 'Inglés';
 
   @override
@@ -3621,4 +3643,145 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get tokenUsageAmbiguousCumulativeNote =>
       'El orden de algunos registros acumulados es incierto. Los totales registrados y su distribución diaria pueden estar incompletos.';
+
+  @override
+  String get tokenUsageStopRefresh => 'Detener esta actualización';
+
+  @override
+  String get tokenUsageStopping => 'Deteniendo esta actualización…';
+
+  @override
+  String get tokenUsageRefreshStopped =>
+      'Se detuvo esta actualización. Los registros importados están guardados; actualiza para continuar. Las actualizaciones en segundo plano siguen activadas.';
+
+  @override
+  String get tokenUsageNoRecords => 'No hay registros para importar';
+
+  @override
+  String get tokenUsageFilteredEmpty => 'No hay registros en esta selección.';
+
+  @override
+  String get tokenUsageFilteredEmptyBody =>
+      'Elige otro año o Agent, o actualiza para buscar nuevos registros locales.';
+
+  @override
+  String get tokenUsageExport => 'Exportar CSV';
+
+  @override
+  String get tokenUsageExportScope =>
+      'Exportar el año y Agent seleccionados a CSV';
+
+  @override
+  String get tokenUsageExportFileType => 'Archivos CSV';
+
+  @override
+  String get tokenUsageExportSaved => 'CSV de uso de tokens guardado.';
+
+  @override
+  String get tokenUsageExportFailed =>
+      'No se pudo guardar el CSV. Inténtalo de nuevo en una carpeta con permiso de escritura.';
+
+  @override
+  String get releasePreviewNotice =>
+      'Vista previa de desarrollo. La comprobación busca versiones estables. Consulta Versión para ver las notas y Notificar un problema para enviar comentarios. Se usan tus datos locales existentes.';
+
+  @override
+  String get releasePreviewCurrent =>
+      'Vista previa instalada; no hay una versión estable más reciente.';
+
+  @override
+  String get agentPluginsTitle => 'Plugins de Agents';
+
+  @override
+  String get agentPluginsPageDescription =>
+      'Gestiona las extensiones de DingDong y consulta los plugins instalados en tus Agents locales.';
+
+  @override
+  String get agentPluginsDingDongExtensions => 'Extensiones de DingDong';
+
+  @override
+  String get agentPluginsRead => 'Leer inventario local';
+
+  @override
+  String get agentPluginsRefresh => 'Actualizar inventario';
+
+  @override
+  String get agentPluginsLoading => 'Leyendo…';
+
+  @override
+  String get agentPluginsReadOnlyNote =>
+      'Inventario de solo lectura de Codex y Claude Code. Instala, actualiza, activa o elimina estos plugins en su Agent original.';
+
+  @override
+  String get agentPluginsToolsNote =>
+      'Los plugins pueden aportar Skills, servidores MCP y otros componentes. Las herramientas pertenecen a su servidor MCP o anfitrión; esta vista no instala herramientas ni verifica su disponibilidad durante la ejecución.';
+
+  @override
+  String get agentPluginsNotRead =>
+      'El inventario local aún no se ha leído. Se lee bajo demanda, sin consultas periódicas en segundo plano.';
+
+  @override
+  String get agentPluginsEnablementNote =>
+      'Activado significa que la configuración lo indica, no que una llamada haya tenido éxito. Claude Code muestra solo ajustes del usuario; la activación del ámbito del proyecto o local queda sin confirmar.';
+
+  @override
+  String get agentPluginsEmpty =>
+      'El inventario no informó de plugins instalados.';
+
+  @override
+  String get agentPluginsCodexMissing =>
+      'No se encontró una CLI nativa de Codex ejecutable directamente. Haz que esté disponible y actualiza; no se ejecutan scripts envoltorio de shell.';
+
+  @override
+  String get agentPluginsClaudeMissing =>
+      'No se encontró el registro de plugins de Claude Code.';
+
+  @override
+  String get agentPluginsUnavailable =>
+      'No se pudo leer el inventario. Comprueba la instalación del Agent e intenta actualizar.';
+
+  @override
+  String get agentPluginsInvalid =>
+      'El inventario del Agent tiene un formato incompatible o está dañado. Actualiza el Agent e inténtalo de nuevo.';
+
+  @override
+  String get agentPluginsTimedOut =>
+      'Se agotó el tiempo de lectura. Intenta actualizar.';
+
+  @override
+  String get agentPluginsTooLarge =>
+      'El inventario supera el límite de lectura segura y no se cargó.';
+
+  @override
+  String get agentPluginsEnabled => 'Activado en configuración';
+
+  @override
+  String get agentPluginsDisabled => 'Desactivado en configuración';
+
+  @override
+  String get agentPluginsEnablementUnknown => 'Activación sin confirmar';
+
+  @override
+  String get agentPluginsSourceLocal => 'Local';
+
+  @override
+  String get agentPluginsSourceGit => 'Git';
+
+  @override
+  String get agentPluginsSourceRemote => 'Remoto';
+
+  @override
+  String get agentPluginsSourceMarketplace => 'Mercado';
+
+  @override
+  String get agentPluginsSourceUnknown => 'Origen desconocido';
+
+  @override
+  String get agentPluginsVersion => 'Versión';
+
+  @override
+  String get agentPluginsVersionUnknown => 'No informada';
+
+  @override
+  String get agentPluginsSource => 'Origen';
 }

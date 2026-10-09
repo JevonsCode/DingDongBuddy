@@ -43,13 +43,13 @@ void main() {
   });
 
   testWidgets(
-    'DingDong starts with the Dynamic workspace at version 1.7.0-dev.1',
+    'DingDong starts with the Dynamic workspace at version 1.7.0-dev.2',
     (WidgetTester tester) async {
       await tester.pumpWidget(const DingDongApp());
 
       expect(find.text('Dynamic'), findsWidgets);
-      expect(find.byKey(const Key('app-version-1.7.0-dev.1')), findsOneWidget);
-      expect(find.text('v1.7.0-dev.1'), findsOneWidget);
+      expect(find.byKey(const Key('app-version-1.7.0-dev.2')), findsOneWidget);
+      expect(find.text('v1.7.0-dev.2'), findsOneWidget);
       expect(find.byKey(const Key('popup-development-badge')), findsNothing);
       expect(find.text('Resource library'), findsOneWidget);
       expect(find.text('Clipboard history'), findsOneWidget);

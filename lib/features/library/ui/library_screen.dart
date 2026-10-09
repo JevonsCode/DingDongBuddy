@@ -129,6 +129,13 @@ class LibraryScreenState extends State<LibraryScreen> {
                             child: ResourceList(
                               viewModel: widget.viewModel,
                               contextMenuGateway: widget.contextMenuGateway,
+                              onImportJson: widget.transferGateway == null
+                                  ? null
+                                  : () => _importJson(context),
+                              onImportLink:
+                                  widget.viewModel.updateFetcher == null
+                                  ? null
+                                  : () => _importLink(context),
                               onDeleteResource: (Resource resource) =>
                                   _confirmDeleteResource(context, resource),
                             ),

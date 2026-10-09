@@ -1,5 +1,27 @@
 {
   "@@locale": "en",
+  "agentSetupAdvancedDetailsDescription": "Endpoints and bridge commands",
+  "@agentSetupAdvancedDetailsDescription": { "description": "Technical content remaining in the advanced connection disclosure." },
+  "gettingStartedConnectAgent": "Connect an Agent",
+  "@gettingStartedConnectAgent": {
+    "description": "Action opening Agent setup from the empty activity list."
+  },
+  "gettingStartedAgentActivityDescription": "Connect a local Agent to receive task completion reminders and return to its conversations here.",
+  "@gettingStartedAgentActivityDescription": {
+    "description": "First-use guidance when there are no Agent events."
+  },
+  "agentSetupGettingStarted": "Copy the setup instruction to your local Agent, then complete a task to check that its reminder arrives here.",
+  "@agentSetupGettingStarted": {
+    "description": "Persistent Agent setup guidance above advanced connection details."
+  },
+  "gettingStartedResourceLibraryEmpty": "No resources yet",
+  "@gettingStartedResourceLibraryEmpty": {
+    "description": "Title for a resource library with no configurable resources."
+  },
+  "gettingStartedResourceLibraryDescription": "Keep reusable Prompts, Skills and MCP references in one place. Start with your first resource.",
+  "@gettingStartedResourceLibraryDescription": {
+    "description": "First-use guidance in both resource library empty states."
+  },
   "languageEnglish": "English",
   "@languageEnglish": {
     "description": "Display name for the English language option."
@@ -4615,7 +4637,171 @@
     "description": "Local token history interface."
   },
   "tokenUsageAmbiguousCumulativeNote": "The order of some cumulative records is uncertain. These recorded totals and daily allocations may be incomplete.",
+  "tokenUsageStopRefresh": "Stop this refresh",
+  "@tokenUsageStopRefresh": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageStopping": "Stopping this refresh…",
+  "@tokenUsageStopping": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageRefreshStopped": "This refresh was stopped. Imported records are saved; refresh to continue. Background updates remain enabled.",
+  "@tokenUsageRefreshStopped": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageNoRecords": "No importable logs found",
+  "@tokenUsageNoRecords": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageFilteredEmpty": "No records in this selection.",
+  "@tokenUsageFilteredEmpty": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageFilteredEmptyBody": "Choose another year or Agent, or refresh to look for new local records.",
+  "@tokenUsageFilteredEmptyBody": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExport": "Export CSV",
+  "@tokenUsageExport": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportScope": "Export selected year and Agent as CSV",
+  "@tokenUsageExportScope": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportFileType": "CSV files",
+  "@tokenUsageExportFileType": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportSaved": "Token usage CSV saved.",
+  "@tokenUsageExportSaved": {
+    "description": "Local token history controls, export and diagnostics."
+  },
+  "tokenUsageExportFailed": "The CSV could not be saved. Try again and choose a writable folder.",
+  "@tokenUsageExportFailed": {
+    "description": "Local token history controls, export and diagnostics."
+  },
   "@tokenUsageAmbiguousCumulativeNote": {
     "description": "Local token history interface."
+  },
+  "releasePreviewNotice": "Development preview. Update checks follow stable releases. Use Release for this preview's notes and Report a problem to send feedback. Your existing local data is used.",
+  "@releasePreviewNotice": {
+    "description": "Development preview release status and feedback guidance."
+  },
+  "releasePreviewCurrent": "Preview installed; no newer stable release found.",
+  "@releasePreviewCurrent": {
+    "description": "Development preview release status and feedback guidance."
+  },
+  "agentPluginsTitle": "Agent plugins",
+  "agentPluginsPageDescription": "Manage DingDong extensions and inspect plugins installed in your local Agents.",
+  "agentPluginsDingDongExtensions": "DingDong extensions",
+  "agentPluginsRead": "Read local inventory",
+  "agentPluginsRefresh": "Refresh inventory",
+  "agentPluginsLoading": "Reading…",
+  "agentPluginsReadOnlyNote": "Read-only inventory for Codex and Claude Code. Install, update, enable or remove these plugins in their native Agent.",
+  "agentPluginsToolsNote": "Plugins can provide Skills, MCP servers and other components. Tools belong to their MCP server or host; this view does not install tools or verify runtime availability.",
+  "agentPluginsNotRead": "The local inventory has not been read. Read it when needed; no background polling.",
+  "agentPluginsEnablementNote": "Enabled means the native configuration reports enabled, not that a tool call succeeded. Claude Code shows user-scope settings only; project/local enablement remains unconfirmed.",
+  "agentPluginsEmpty": "No installed plugins were reported.",
+  "agentPluginsCodexMissing": "A directly executable native Codex CLI was not found. Make the native CLI available, then refresh; shell wrappers are not executed.",
+  "agentPluginsClaudeMissing": "No Claude Code plugin registry was found.",
+  "agentPluginsUnavailable": "The inventory could not be read. Check the Agent installation and try refreshing.",
+  "agentPluginsInvalid": "The Agent returned an unsupported or malformed inventory. Update the Agent and try again.",
+  "agentPluginsTimedOut": "Reading the inventory timed out. Try refreshing.",
+  "agentPluginsTooLarge": "The inventory exceeds the safe read limit and was not loaded.",
+  "agentPluginsEnabled": "Configuration enabled",
+  "agentPluginsDisabled": "Configuration disabled",
+  "agentPluginsEnablementUnknown": "Enablement unconfirmed",
+  "agentPluginsSourceLocal": "Local",
+  "agentPluginsSourceGit": "Git",
+  "agentPluginsSourceRemote": "Remote",
+  "agentPluginsSourceMarketplace": "Marketplace",
+  "agentPluginsSourceUnknown": "Unknown source",
+  "agentPluginsVersion": "Version",
+  "agentPluginsVersionUnknown": "Unreported",
+  "agentPluginsSource": "Source",
+  "@agentPluginsTitle": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsPageDescription": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsDingDongExtensions": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsRead": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsRefresh": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsLoading": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsReadOnlyNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsToolsNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsNotRead": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnablementNote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEmpty": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsCodexMissing": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsClaudeMissing": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsUnavailable": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsInvalid": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsTimedOut": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsTooLarge": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnabled": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsDisabled": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsEnablementUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceLocal": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceGit": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceRemote": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceMarketplace": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSourceUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsVersion": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsVersionUnknown": {
+    "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "@agentPluginsSource": {
+    "description": "Read-only inventory of plugins installed in native Agents."
   }
 }

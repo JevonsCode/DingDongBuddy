@@ -8,6 +8,7 @@ import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
+import 'package:dingdong/features/library/ui/resource_empty_state.dart';
 import 'package:dingdong/features/library/ui/resource_usage_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,12 +24,16 @@ class ResourceList extends StatelessWidget {
     required this.viewModel,
     required this.onDeleteResource,
     this.contextMenuGateway,
+    this.onImportJson,
+    this.onImportLink,
     super.key,
   });
 
   final LibraryViewModel viewModel;
   final ValueChanged<Resource> onDeleteResource;
   final DesktopContextMenuGateway? contextMenuGateway;
+  final VoidCallback? onImportJson;
+  final VoidCallback? onImportLink;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,12 @@ class ResourceList extends StatelessWidget {
             const Divider(height: 1),
             Expanded(
               child: resources.isEmpty
-                  ? _EmptyResourceList()
+                  ? ResourceEmptyState(
+                      libraryIsEmpty: viewModel.configurableResources.isEmpty,
+                      onCreate: viewModel.startCreating,
+                      onImportJson: onImportJson,
+                      onImportLink: onImportLink,
+                    )
                   : Scrollbar(
                       child: ListView.builder(
                         padding: EdgeInsets.only(
@@ -246,28 +256,6 @@ class _ColumnLabel extends StatelessWidget {
       ],
     ),
   );
-}
-
-class _EmptyResourceList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final Color foreground = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.search_off_rounded, size: 22, color: foreground),
-          const SizedBox(height: 9),
-          Text(
-            context.l10n.noMatchingResources,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: foreground),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _ResourceRow extends StatefulWidget {

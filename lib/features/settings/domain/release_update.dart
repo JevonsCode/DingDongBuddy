@@ -77,7 +77,13 @@ final class ReleaseStatus {
   List<String> notesFor(String languageCode) =>
       metadata?.notesFor(languageCode) ?? const <String>[];
   Uri get website => metadata?.website ?? defaultWebsiteUri;
-  Uri get releasePage => metadata?.releasePage ?? defaultReleasePageUri;
+  bool get isPreview => _releaseParts(currentVersion).$2.isNotEmpty;
+  Uri get releasePage => isPreview && isUpdateAvailable != true
+      ? Uri.https(
+          'github.com',
+          '/JevonsCode/DingDongBuddy/releases/tag/v${currentVersion.split('+').first}',
+        )
+      : metadata?.releasePage ?? defaultReleasePageUri;
 
   bool? get isUpdateAvailable {
     final String? latest = latestVersion;
@@ -108,10 +114,12 @@ final class ReleaseStatus {
   );
 }
 
-/// Compares dotted versions while tolerating `v` prefixes and suffixes.
+/// SemVer precedence, retaining support for v prefixes and short dotted versions.
 int compareVersions(String left, String right) {
-  final List<int> leftParts = _versionParts(left);
-  final List<int> rightParts = _versionParts(right);
+  final (List<int> leftParts, List<String> leftPreview) = _releaseParts(left);
+  final (List<int> rightParts, List<String> rightPreview) = _releaseParts(
+    right,
+  );
   final int length = leftParts.length > rightParts.length
       ? leftParts.length
       : rightParts.length;
@@ -123,23 +131,58 @@ int compareVersions(String left, String right) {
       return comparison;
     }
   }
-  return 0;
+  if (leftPreview.isEmpty || rightPreview.isEmpty) {
+    return leftPreview.isEmpty == rightPreview.isEmpty
+        ? 0
+        : leftPreview.isEmpty
+        ? 1
+        : -1;
+  }
+  for (int i = 0; i < leftPreview.length && i < rightPreview.length; i++) {
+    final String a = leftPreview[i];
+    final String b = rightPreview[i];
+    final BigInt? aNumber = RegExp(r'^\d+$').hasMatch(a)
+        ? BigInt.parse(a)
+        : null;
+    final BigInt? bNumber = RegExp(r'^\d+$').hasMatch(b)
+        ? BigInt.parse(b)
+        : null;
+    final int comparison;
+    if (aNumber != null && bNumber != null) {
+      comparison = aNumber.compareTo(bNumber);
+    } else if (aNumber != null || bNumber != null) {
+      comparison = aNumber != null ? -1 : 1;
+    } else {
+      comparison = a.compareTo(b);
+    }
+    if (comparison != 0) return comparison;
+  }
+  return leftPreview.length.compareTo(rightPreview.length);
 }
 
-List<int> _versionParts(String value) {
-  return value
+(List<int>, List<String>) _releaseParts(String value) {
+  final String version = value
       .trim()
       .replaceFirst(RegExp(r'^[vV]'), '')
+      .split('+')
+      .first;
+  final int separator = version.indexOf('-');
+  final String core = separator < 0 ? version : version.substring(0, separator);
+  final List<String> preview = separator < 0
+      ? const <String>[]
+      : version.substring(separator + 1).split('.');
+  final List<int> parts = core
       .split('.')
       .map((String part) {
         final String digits = RegExp(r'^\d+').stringMatch(part) ?? '0';
         return int.parse(digits);
       })
       .toList(growable: false);
+  return (parts, preview);
 }
 
-const String currentAppVersion = '1.7.0-dev.1';
-const String currentAppBuild = '66';
+const String currentAppVersion = '1.7.0-dev.2';
+const String currentAppBuild = '67';
 const Duration backgroundReleaseUpdateCheckInterval = Duration(hours: 7);
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',

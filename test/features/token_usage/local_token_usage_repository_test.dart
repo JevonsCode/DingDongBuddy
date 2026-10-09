@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -492,6 +493,76 @@ void main() {
   );
 
   test(
+    'busy interruption reports committed batches and resumes exactly once',
+    () async {
+      await repository.close();
+      late Database blocker;
+      var lockScheduled = false;
+      repository = create(
+        toLocal: (value) {
+          if (!lockScheduled) {
+            lockScheduled = true;
+            // Conversion runs synchronously inside the first import transaction.
+            // The microtask acquires the other writer only after that batch commits.
+            scheduleMicrotask(() => blocker.execute('BEGIN IMMEDIATE'));
+          }
+          return value;
+        },
+      );
+      await repository.readSnapshot();
+      blocker = sqlite3.open(databasePath);
+      var locked = true;
+      try {
+        final lines = [
+          'malformed',
+          jsonEncode(_codexMeta('busy-batches')),
+          for (var i = 1; i <= 300; i++)
+            jsonEncode(
+              _codex(
+                DateTime.utc(
+                  2026,
+                  9,
+                  1,
+                ).add(Duration(seconds: i)).toIso8601String(),
+                total: i * 10,
+                input: i * 8,
+                output: i * 2,
+              ),
+            ),
+        ];
+        await File(
+          path.join(codex.path, 'busy.jsonl'),
+        ).writeAsString('${lines.join('\n')}\n');
+        final interrupted = await repository.refresh();
+        expect(interrupted.warnings, contains('refresh_interrupted'));
+        final committed = blocker
+            .select('SELECT COUNT(*) AS n FROM token_usage_events')
+            .single['n'];
+        expect(committed, 126);
+        expect(interrupted.importedEvents, committed);
+        expect(interrupted.skippedRows, 1);
+        expect(
+          blocker
+              .select('SELECT byte_offset FROM token_usage_files')
+              .single['byte_offset'],
+          utf8.encode('${lines.take(128).join('\n')}\n').length,
+        );
+        blocker.execute('ROLLBACK');
+        locked = false;
+        final resumed = await repository.refresh();
+        expect(resumed.warnings, isNot(contains('refresh_interrupted')));
+        expect(interrupted.importedEvents + resumed.importedEvents, 300);
+        expect(resumed.skippedRows, 0);
+        expect((await repository.readSnapshot()).totals.totalTokens, 3000);
+        expect((await repository.refresh()).importedEvents, 0);
+      } finally {
+        if (locked && lockScheduled) blocker.execute('ROLLBACK');
+        blocker.close();
+      }
+    },
+  );
+
+  test(
     'same-timestamp Codex resets keep transcript order across checkpoints and copies',
     () async {
       final file = File(path.join(codex.path, 'same-time.jsonl'));
@@ -879,6 +950,14 @@ void main() {
       final refresh = repository.refresh();
       repository.cancelRefresh();
       expect((await refresh).cancelled, isTrue);
+      expect(
+        (await repository.readSnapshot()).warnings,
+        contains('refresh_cancelled'),
+      );
+      expect(
+        (await repository.refresh()).warnings,
+        isNot(contains('refresh_cancelled')),
+      );
       await repository.close();
       expect((await repository.refresh()).cancelled, isTrue);
       expect(

@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/features/token_usage/domain/token_usage_csv_export.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_heatmap.dart';
+import 'package:dingdong/platform/file_selector_token_usage_export.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -13,10 +15,16 @@ part 'token_usage_widgets.dart';
 
 /// Local daily token history. Explicit source totals remain authoritative.
 class TokenUsageScreen extends StatefulWidget {
-  const TokenUsageScreen({required this.controller, this.now, super.key});
+  const TokenUsageScreen({
+    required this.controller,
+    this.now,
+    this.saveExport = saveTokenUsageCsv,
+    super.key,
+  });
 
   final TokenUsageController controller;
   final DateTime Function()? now;
+  final TokenUsageCsvSaver saveExport;
 
   @override
   State<TokenUsageScreen> createState() => _TokenUsageScreenState();
@@ -26,6 +34,37 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
   late int _year;
   late DateTime _selectedDay;
   ConversationTokenUsageSource? _source;
+  bool _isExporting = false;
+
+  Future<void> _export() async {
+    if (_isExporting || widget.controller.isLoading) return;
+    final export = TokenUsageCsvExport.fromSnapshot(
+      widget.controller.snapshot,
+      year: _year,
+      source: _source,
+    );
+    if (export.days.isEmpty) return;
+    setState(() => _isExporting = true);
+    try {
+      final saved = await widget.saveExport(
+        contents: export.contents,
+        suggestedName: export.suggestedName,
+        confirmButtonText: context.l10n.tokenUsageExport,
+        fileTypeLabel: context.l10n.tokenUsageExportFileType,
+      );
+      if (!mounted || !saved) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.tokenUsageExportSaved)),
+      );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.tokenUsageExportFailed)),
+      );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
 
   DateTime get _today {
     final DateTime now = (widget.now ?? DateTime.now)().toLocal();
@@ -94,19 +133,22 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                   warning == 'pending_transcript_tail' ||
                   warning == 'malformed_usage_rows' ||
                   warning == 'missing_event_dates' ||
-                  warning == 'refresh_interrupted',
+                  warning == 'refresh_interrupted' ||
+                  warning == 'refresh_cancelled',
             ) &&
             !snapshot.coverage.any(
               (TokenUsageSourceCoverage coverage) =>
                   (_source == null || coverage.source == _source) &&
-                  (coverage.pendingFiles > 0 ||
+                  (coverage.availability == TokenUsageAvailability.unreadable ||
+                      coverage.pendingFiles > 0 ||
                       coverage.malformedRows > 0 ||
                       coverage.undatedRows > 0),
             ) &&
             snapshot.coverage.any(
               (TokenUsageSourceCoverage coverage) =>
                   (_source == null || coverage.source == _source) &&
-                  coverage.availability == TokenUsageAvailability.available,
+                  coverage.availability == TokenUsageAvailability.available &&
+                  coverage.filesScanned > 0,
             );
         final Map<DateTime, List<TokenUsageTotals>> byDay =
             <DateTime, List<TokenUsageTotals>>{};
@@ -142,6 +184,11 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
             _Header(
               controller: widget.controller,
               refreshedAt: snapshot.refreshedAt,
+              isExporting: _isExporting,
+              onExport:
+                  period.isEmpty || widget.controller.isLoading || _isExporting
+                  ? null
+                  : () => unawaited(_export()),
             ),
             const SizedBox(height: 20),
             if (widget.controller.error != null ||
@@ -158,6 +205,14 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
               _Notice(
                 icon: Icons.save_outlined,
                 message: context.l10n.tokenUsageStorageUnavailable,
+              ),
+              const SizedBox(height: 14),
+            ],
+            if (snapshot.warnings.contains('refresh_cancelled')) ...<Widget>[
+              _Notice(
+                key: const Key('token-usage-cancelled'),
+                icon: Icons.pause_circle_outline_rounded,
+                message: context.l10n.tokenUsageRefreshStopped,
               ),
               const SizedBox(height: 14),
             ],
@@ -290,13 +345,17 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                   ],
                 ),
               ),
-              if (snapshot.days.isEmpty) ...<Widget>[
+              if (period.isEmpty) ...<Widget>[
                 const SizedBox(height: 16),
                 _Notice(
                   key: const Key('token-usage-empty'),
                   icon: Icons.insights_outlined,
-                  title: context.l10n.tokenUsageEmpty,
-                  message: context.l10n.tokenUsageEmptyBody,
+                  title: snapshot.days.isEmpty
+                      ? context.l10n.tokenUsageEmpty
+                      : context.l10n.tokenUsageFilteredEmpty,
+                  message: snapshot.days.isEmpty
+                      ? context.l10n.tokenUsageEmptyBody
+                      : context.l10n.tokenUsageFilteredEmptyBody,
                 ),
               ],
               const SizedBox(height: 20),

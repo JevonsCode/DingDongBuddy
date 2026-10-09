@@ -6,6 +6,8 @@
 // FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/features/agent_plugins/domain/agent_plugin_inventory.dart';
+import 'package:dingdong/features/agent_plugins/ui/agent_plugins_section.dart';
 import 'package:dingdong/features/jev/ui/jev_plugin_section.dart';
 import 'package:dingdong/features/selection/ui/selection_plugin_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -15,10 +17,16 @@ import 'package:flutter/material.dart';
 enum _Plugin { jev, selection }
 
 class PluginsScreen extends StatefulWidget {
-  const PluginsScreen({this.jevAction, this.selectionViewModel, super.key});
+  const PluginsScreen({
+    this.jevAction,
+    this.selectionViewModel,
+    this.agentPluginInventory,
+    super.key,
+  });
 
   final JevAction? jevAction;
   final SettingsViewModel? selectionViewModel;
+  final AgentPluginInventory? agentPluginInventory;
 
   @override
   State<PluginsScreen> createState() => _PluginsScreenState();
@@ -48,10 +56,14 @@ class _PluginsScreenState extends State<PluginsScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    l.pluginMarketDescription,
+                    l.agentPluginsPageDescription,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 24),
+                  Text(
+                    l.agentPluginsDingDongExtensions,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   _entry(
                     context,
                     plugin: _Plugin.jev,
@@ -67,6 +79,8 @@ class _PluginsScreenState extends State<PluginsScreen> {
                       description: l.systemSelectionToolsDescription,
                       icon: Icons.text_fields_rounded,
                     ),
+                  const SizedBox(height: 28),
+                  AgentPluginsSection(inventory: widget.agentPluginInventory),
                 ] else ...[
                   DesktopActionButton(
                     key: const Key('plugins-back'),

@@ -39,9 +39,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(gateway.checked, Uri.parse('http://127.0.0.1:2333'));
 
-      await tester.tap(find.byKey(const Key('agent-api-toggle-advanced')));
+      final Finder advanced = find.byKey(
+        const Key('agent-api-toggle-advanced'),
+      );
+      await tester.ensureVisible(advanced);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('agent-api-copy-health')));
+      await tester.tap(advanced);
+      await tester.pumpAndSettle();
+      final Finder copyHealth = find.byKey(const Key('agent-api-copy-health'));
+      await tester.ensureVisible(copyHealth);
+      await tester.pumpAndSettle();
+      await tester.tap(copyHealth);
       await tester.pump();
       expect(
         clipboard.text,
@@ -105,7 +113,10 @@ void main() {
       findsNothing,
     );
 
-    await tester.tap(find.byKey(const Key('agent-api-toggle-advanced')));
+    final Finder advanced = find.byKey(const Key('agent-api-toggle-advanced'));
+    await tester.ensureVisible(advanced);
+    await tester.pumpAndSettle();
+    await tester.tap(advanced);
     await tester.pumpAndSettle();
 
     final Finder description = find.byKey(

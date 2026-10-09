@@ -40,6 +40,14 @@ class ReleaseSettingsSection extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 16),
+              if (status.isPreview) ...<Widget>[
+                Text(
+                  context.l10n.releasePreviewNotice,
+                  key: const Key('settings-preview-notice'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+              ],
               const Divider(),
               _VersionRow(
                 label: context.l10n.current,
@@ -269,7 +277,9 @@ String _statusText(
     case ApplicationUpdatePhase.failed:
       return context.l10n.updateFailed;
     case ApplicationUpdatePhase.current:
-      return context.l10n.youReUpToDate;
+      return status.isPreview
+          ? context.l10n.releasePreviewCurrent
+          : context.l10n.youReUpToDate;
     case ApplicationUpdatePhase.idle:
     case ApplicationUpdatePhase.unsupported:
       break;
@@ -282,7 +292,10 @@ String _statusText(
   }
   return switch (status.isUpdateAvailable) {
     true => context.l10n.aNewVersionIsAvailable,
-    false => context.l10n.youReUpToDate,
+    false =>
+      status.isPreview
+          ? context.l10n.releasePreviewCurrent
+          : context.l10n.youReUpToDate,
     null => context.l10n.noUpdateMetadataYet,
   };
 }
