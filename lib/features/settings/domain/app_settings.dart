@@ -1,3 +1,4 @@
+import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
@@ -173,7 +174,7 @@ final class AppSettings {
       selectedSound: _preferenceSoundValues.contains(selectedSound)
           ? selectedSound
           : 'default',
-      customSoundPath: _trimmedOrNull(customSoundPath),
+      customSoundPath: trimmedOrNull(customSoundPath),
       mcpAccessSeen: mcpAccessSeen,
       agentSetupAcknowledgedRevision: agentSetupAcknowledgedRevision < 0
           ? 0
@@ -263,11 +264,6 @@ final class AppSettings {
       selectionPlugin: selectionPlugin ?? this.selectionPlugin,
     ).sanitized();
   }
-}
-
-String? _trimmedOrNull(String? value) {
-  final String? trimmed = value?.trim();
-  return trimmed == null || trimmed.isEmpty ? null : trimmed;
 }
 
 const Set<String> _preferenceSoundValues = <String>{

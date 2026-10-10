@@ -100,11 +100,7 @@ class _ResourceTypePicker extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          for (final ResourceType type in const <ResourceType>[
-            ResourceType.prompt,
-            ResourceType.skill,
-            ResourceType.mcp,
-          ])
+          for (final ResourceType type in ResourceType.configurable)
             Expanded(
               child: _TypeOption(
                 key: Key('resource-type-${type.name}'),

@@ -1,7 +1,10 @@
 part of 'clipboard_workflow_routes.dart';
 
 extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
-  HttpResponseData snippets(Map<String, String> query) {
+  HttpResponseData snippets(
+    Map<String, String> query, {
+    required bool revealText,
+  }) {
     final ({bool includeContent, bool includeSensitive})? privacy =
         _privacyQuery(query);
     if (privacy == null) {
@@ -9,7 +12,7 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
     }
     final String? selectedAlias = _normalizedAlias(query['alias']);
     if (query.containsKey('alias') && selectedAlias == null) {
-      return _badRequest('alias cannot be empty');
+      return HttpResponseData.badRequest('alias cannot be empty');
     }
     final String needle = (query['q'] ?? '').trim().toLowerCase();
     final int limit = (int.tryParse(query['limit'] ?? '') ?? 20).clamp(0, 50);
@@ -20,7 +23,10 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
           (ClipboardRecord record) =>
               selectedAlias == null || _aliases(record).contains(selectedAlias),
         )
-        .where((ClipboardRecord record) => _matches(record, needle))
+        .where(
+          (ClipboardRecord record) =>
+              _matches(record, needle, revealText: revealText),
+        )
         .toList(growable: false);
     final int hiddenSensitive = privacy.includeSensitive
         ? 0
@@ -59,7 +65,10 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
         'items': returned
             .map(
               (ClipboardRecord record) => <String, Object?>{
-                ...record.toHistoryJson(includeContent: privacy.includeContent),
+                ...record.toHistoryJson(
+                  includeContent: privacy.includeContent,
+                  includeTitle: revealText,
+                ),
                 'aliases': _aliases(record),
               },
             )
@@ -68,10 +77,13 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
     );
   }
 
-  HttpResponseData digest(Map<String, String> query) {
+  HttpResponseData digest(
+    Map<String, String> query, {
+    required bool revealText,
+  }) {
     final String task = (query['q'] ?? query['task'] ?? '').trim();
     if (task.isEmpty) {
-      return _badRequest('q or task is required');
+      return HttpResponseData.badRequest('q or task is required');
     }
     final ({bool includeContent, bool includeSensitive})? privacy =
         _privacyQuery(query);
@@ -88,12 +100,7 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
     final List<ClipboardRecord> matched = _store
         .list(limit: 5000)
         .where((ClipboardRecord item) {
-          final String haystack = <String>[
-            item.title,
-            ...item.groupNames,
-            item.content,
-            ...item.tags,
-          ].join(' ').toLowerCase();
+          final String haystack = _searchableText(item, revealText: revealText);
           return tokens.isEmpty || tokens.any(haystack.contains);
         })
         .toList(growable: false);
@@ -132,7 +139,10 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
         'candidates': returned
             .map(
               (ClipboardRecord record) => <String, Object?>{
-                ...record.toHistoryJson(includeContent: privacy.includeContent),
+                ...record.toHistoryJson(
+                  includeContent: privacy.includeContent,
+                  includeTitle: revealText,
+                ),
                 'aliases': _aliases(record),
                 if (privacy.includeContent)
                   'contentExcerpt': record.content.length <= 420
@@ -149,13 +159,18 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
     );
   }
 
-  HttpResponseData insights(Map<String, String> query) {
-    final bool? includeSensitive = _parseBool(
+  HttpResponseData insights(
+    Map<String, String> query, {
+    required bool revealText,
+  }) {
+    final bool? includeSensitive = parseQueryBool(
       query['includeSensitiveClipboard'],
     );
     if (query.containsKey('includeSensitiveClipboard') &&
         includeSensitive == null) {
-      return _badRequest('includeSensitiveClipboard must be true or false');
+      return HttpResponseData.badRequest(
+        'includeSensitiveClipboard must be true or false',
+      );
     }
     final int limit = (int.tryParse(query['limit'] ?? '') ?? 8).clamp(0, 20);
     final List<ClipboardRecord> all = _store.list(limit: 5000);
@@ -199,11 +214,17 @@ extension ClipboardWorkflowQueries on ClipboardWorkflowRoutes {
         'recommendations': _recommendations(visible),
         'snippetCandidates': snippetCandidates
             .take(limit)
-            .map(_candidate)
+            .map(
+              (ClipboardRecord record) =>
+                  _candidate(record, revealText: revealText),
+            )
             .toList(growable: false),
         'promoteCandidates': promoteCandidates
             .take(limit)
-            .map(_candidate)
+            .map(
+              (ClipboardRecord record) =>
+                  _candidate(record, revealText: revealText),
+            )
             .toList(growable: false),
       },
     );

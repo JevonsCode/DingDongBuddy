@@ -139,16 +139,6 @@ abstract final class DesktopDialogStyle {
       ),
     );
   }
-
-  static ButtonStyle destructiveButtonStyle(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    return ButtonStyle(
-      backgroundColor: WidgetStatePropertyAll<Color>(colors.error),
-      foregroundColor: WidgetStatePropertyAll<Color>(colors.onError),
-      splashFactory: NoSplash.splashFactory,
-      overlayColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
-    );
-  }
 }
 
 extension on DesktopDialogDensity {

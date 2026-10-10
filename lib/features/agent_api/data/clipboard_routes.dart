@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 
@@ -31,28 +32,29 @@ final class ClipboardRoutes {
     return null;
   }
 
-  HttpResponseData history(Map<String, String> query) {
-    final bool? includeContent = _parseBool(query['includeContent']);
-    final bool? includeSensitive = _parseBool(
+  /// [revealText] reflects the user's Agent clipboard-content permission. When
+  /// false, titles are omitted and `q` matches only groups and tags so neither
+  /// the response nor search results disclose clipboard text.
+  HttpResponseData history(
+    Map<String, String> query, {
+    required bool revealText,
+  }) {
+    final bool? includeContent = parseQueryBool(query['includeContent']);
+    final bool? includeSensitive = parseQueryBool(
       query['includeSensitiveClipboard'],
     );
     if ((query.containsKey('includeContent') && includeContent == null) ||
         (query.containsKey('includeSensitiveClipboard') &&
             includeSensitive == null)) {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message':
-              'includeContent and includeSensitiveClipboard must be true or false',
-        },
+      return HttpResponseData.badRequest(
+        'includeContent and includeSensitiveClipboard must be true or false',
       );
     }
     final int limit = (int.tryParse(query['limit'] ?? '') ?? 20).clamp(0, 50);
     final String needle = query['q']?.trim().toLowerCase() ?? '';
-    final String? group = _trimmedOrNull(query['group']);
+    final String? group = trimmedOrNull(query['group']);
     final String selectedFilter =
-        _trimmedOrNull(query['filter'])?.toLowerCase() ?? 'all';
+        trimmedOrNull(query['filter'])?.toLowerCase() ?? 'all';
     const Set<String> filters = <String>{
       'all',
       'url',
@@ -66,20 +68,18 @@ final class ClipboardRoutes {
       'sensitive',
     };
     if (!filters.contains(selectedFilter)) {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message':
-              'filter must be one of all, url, command, code, json, path, image, file, email, or sensitive',
-        },
+      return HttpResponseData.badRequest(
+        'filter must be one of all, url, command, code, json, path, image, file, email, or sensitive',
       );
     }
     final List<ClipboardRecord> candidates = group == null
         ? _store.list(limit: 5000)
         : _archiveRecords;
     final List<ClipboardRecord> matched = candidates
-        .where((ClipboardRecord record) => _matches(record, needle))
+        .where(
+          (ClipboardRecord record) =>
+              _matches(record, needle, revealText: revealText),
+        )
         .where(
           (ClipboardRecord record) =>
               group == null ||
@@ -130,8 +130,10 @@ final class ClipboardRoutes {
         },
         'items': returned
             .map(
-              (ClipboardRecord record) =>
-                  record.toHistoryJson(includeContent: includeContent ?? false),
+              (ClipboardRecord record) => record.toHistoryJson(
+                includeContent: includeContent ?? false,
+                includeTitle: revealText,
+              ),
             )
             .toList(growable: false),
       },
@@ -268,13 +270,7 @@ final class ClipboardRoutes {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid clipboard patch JSON body',
-        },
-      );
+      return HttpResponseData.badRequest('Invalid clipboard patch JSON body');
     }
   }
 
@@ -326,7 +322,7 @@ Map<String, Object?> _overviewObject(List<ClipboardRecord> records) {
       'contentIncluded': false,
       'sensitiveContentIncluded': false,
       'note':
-          'Overview returns counts only; use /agent/context with explicit flags for clipboard content.',
+          'Overview returns counts only; use /clipboard/history with explicit flags for clipboard content.',
     },
     'agentHints': const <String>[
       'Use classification counts before deciding whether clipboard context is needed.',
@@ -377,44 +373,26 @@ List<String> _uniqueTags(List<String> values) {
 }
 
 HttpResponseData _invalidPatch(String message) {
-  return HttpResponseData(
-    statusCode: 400,
-    json: <String, Object?>{'status': 'error', 'message': message},
-  );
+  return HttpResponseData.badRequest(message);
 }
 
 HttpResponseData _clipboardNotFound() {
-  return const HttpResponseData(
-    statusCode: 404,
-    json: <String, Object?>{
-      'status': 'error',
-      'message': 'Clipboard record not found',
-    },
-  );
+  return HttpResponseData.notFound('Clipboard record not found');
 }
 
 DateTime _utcNow() => DateTime.now().toUtc();
 
-bool _matches(ClipboardRecord record, String needle) {
+bool _matches(
+  ClipboardRecord record,
+  String needle, {
+  required bool revealText,
+}) {
   return needle.isEmpty ||
-      record.title.toLowerCase().contains(needle) ||
-      record.content.toLowerCase().contains(needle) ||
+      (revealText &&
+          (record.title.toLowerCase().contains(needle) ||
+              record.content.toLowerCase().contains(needle))) ||
       record.groupNames.any(
         (String group) => group.toLowerCase().contains(needle),
       ) ||
       record.tags.any((String tag) => tag.toLowerCase().contains(needle));
-}
-
-bool? _parseBool(String? value) {
-  return switch (value?.toLowerCase()) {
-    null => null,
-    'true' || '1' || 'yes' || 'on' => true,
-    'false' || '0' || 'no' || 'off' => false,
-    _ => null,
-  };
-}
-
-String? _trimmedOrNull(String? value) {
-  final String? trimmed = value?.trim();
-  return trimmed == null || trimmed.isEmpty ? null : trimmed;
 }

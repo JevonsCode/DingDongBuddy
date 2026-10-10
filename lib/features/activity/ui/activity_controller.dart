@@ -398,27 +398,6 @@ final class ActivityController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Enriches the newest matching item when a native completion hook arrives
-  /// after an MCP notification that was already shown and de-duplicated.
-  void attachConversationTarget({
-    required String source,
-    required AgentConversationTarget target,
-  }) {
-    final String normalizedSource = source.trim().toLowerCase();
-    final int index = _activities.indexWhere(
-      (AgentActivity item) =>
-          item.source.trim().toLowerCase() == normalizedSource,
-    );
-    if (index < 0) {
-      return;
-    }
-    final List<AgentActivity> updated = List<AgentActivity>.of(_activities);
-    updated[index] = updated[index].withConversationTarget(target);
-    _activities = updated;
-    _persist();
-    notifyListeners();
-  }
-
   int _conversationIndex(AgentConversationTarget? target) {
     final String? conversationId = target?.conversationId;
     if (conversationId == null) {

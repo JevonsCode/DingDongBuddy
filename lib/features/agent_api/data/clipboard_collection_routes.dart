@@ -26,7 +26,7 @@ final class ClipboardCollectionRoutes {
           jsonDecode(body) as Map<String, Object?>;
       final String title = (payload['title'] as String? ?? '').trim();
       if (title.isEmpty) {
-        return _badRequest('title is required');
+        return HttpResponseData.badRequest('title is required');
       }
       final String task =
           (payload['task'] as String? ?? payload['q'] as String? ?? '').trim();
@@ -35,7 +35,7 @@ final class ClipboardCollectionRoutes {
               .cast<String>()
               .toSet();
       if (task.isEmpty && ids.isEmpty) {
-        return _badRequest('task, q, or ids is required');
+        return HttpResponseData.badRequest('task, q, or ids is required');
       }
       final bool includeSensitive =
           payload['includeSensitiveClipboard'] as bool? ?? false;
@@ -50,13 +50,7 @@ final class ClipboardCollectionRoutes {
           .take(limit)
           .toList(growable: false);
       if (selected.isEmpty) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'No matching clipboard records',
-          },
-        );
+        return HttpResponseData.notFound('No matching clipboard records');
       }
       final DateTime timestamp = now().toUtc();
       final Resource collection = Resource(
@@ -98,7 +92,9 @@ final class ClipboardCollectionRoutes {
         },
       );
     } on Object {
-      return _badRequest('Invalid clipboard collection JSON body');
+      return HttpResponseData.badRequest(
+        'Invalid clipboard collection JSON body',
+      );
     }
   }
 }
@@ -137,8 +133,3 @@ String _collectionContent(
   }
   return output.toString().trim();
 }
-
-HttpResponseData _badRequest(String message) => HttpResponseData(
-  statusCode: 400,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);

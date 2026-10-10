@@ -69,7 +69,7 @@ final class TriggerGroupRoutes {
         json: <String, Object?>{'status': 'created', 'group': group.toJson()},
       );
     } on Object {
-      return _badRequest('Invalid trigger group JSON body');
+      return HttpResponseData.badRequest('Invalid trigger group JSON body');
     }
   }
 
@@ -114,12 +114,9 @@ final class TriggerGroupRoutes {
           if (groups[index].name.toLowerCase() == name.toLowerCase()) index,
       ];
       if (matches.length > 1) {
-        return const HttpResponseData(
-          statusCode: 409,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Multiple trigger groups use this name',
-          },
+        return HttpResponseData.error(
+          409,
+          'Multiple trigger groups use this name',
         );
       }
       final DateTime timestamp = now().toUtc();
@@ -161,9 +158,9 @@ final class TriggerGroupRoutes {
         json: <String, Object?>{'status': 'updated', 'group': updated.toJson()},
       );
     } on FormatException catch (error) {
-      return _badRequest(error.message.toString());
+      return HttpResponseData.badRequest(error.message.toString());
     } on Object {
-      return _badRequest('Invalid trigger group JSON body');
+      return HttpResponseData.badRequest('Invalid trigger group JSON body');
     }
   }
 
@@ -176,7 +173,9 @@ final class TriggerGroupRoutes {
     try {
       final Map<String, Object?> payload = _decode(body);
       if (payload.isEmpty) {
-        return _badRequest('At least one trigger group field is required');
+        return HttpResponseData.badRequest(
+          'At least one trigger group field is required',
+        );
       }
       final TriggerGroup existing = groups[index];
       final String name = payload.containsKey('name')
@@ -213,9 +212,9 @@ final class TriggerGroupRoutes {
         json: <String, Object?>{'status': 'updated', 'group': updated.toJson()},
       );
     } on FormatException catch (error) {
-      return _badRequest(error.message.toString());
+      return HttpResponseData.badRequest(error.message.toString());
     } on Object {
-      return _badRequest('Invalid trigger group JSON body');
+      return HttpResponseData.badRequest('Invalid trigger group JSON body');
     }
   }
 
@@ -538,23 +537,15 @@ List<TriggerRule> _rules(Map<String, Object?> payload) =>
 
 HttpResponseData? _validate(String name, List<TriggerRule> rules) {
   if (name.isEmpty) {
-    return _badRequest('name is required');
+    return HttpResponseData.badRequest('name is required');
   }
   if (rules.isEmpty || rules.any((TriggerRule rule) => rule.value.isEmpty)) {
-    return _badRequest('At least one complete rule is required');
+    return HttpResponseData.badRequest(
+      'At least one complete rule is required',
+    );
   }
   return null;
 }
 
-HttpResponseData _badRequest(String message) => HttpResponseData(
-  statusCode: 400,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);
-
-HttpResponseData _notFound() => const HttpResponseData(
-  statusCode: 404,
-  json: <String, Object?>{
-    'status': 'error',
-    'message': 'Trigger group not found',
-  },
-);
+HttpResponseData _notFound() =>
+    HttpResponseData.notFound('Trigger group not found');

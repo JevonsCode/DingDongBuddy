@@ -8,13 +8,8 @@ const Duration popupMascotThinkingDuration = Duration(seconds: 2);
 
 /// Clickable DingDong mascot with state artwork and a hidden third-click pose.
 class PopupMascot extends StatefulWidget {
-  const PopupMascot({
-    required this.shakeRevision,
-    required this.state,
-    super.key,
-  });
+  const PopupMascot({required this.state, super.key});
 
-  final int shakeRevision;
   final TrayBuddyState state;
 
   @override
@@ -56,14 +51,6 @@ class _PopupMascotState extends State<PopupMascot>
   bool _showThinking = false;
 
   @override
-  void didUpdateWidget(covariant PopupMascot oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.shakeRevision != widget.shakeRevision) {
-      _shake();
-    }
-  }
-
-  @override
   void dispose() {
     _tapWindowTimer?.cancel();
     _thinkingTimer?.cancel();
@@ -72,7 +59,7 @@ class _PopupMascotState extends State<PopupMascot>
   }
 
   void _handleTap() {
-    _shake();
+    _controller.forward(from: 0);
     if (_tapCount == 0) {
       _tapWindowTimer?.cancel();
       _tapWindowTimer = Timer(popupMascotTapWindow, () => _tapCount = 0);
@@ -90,10 +77,6 @@ class _PopupMascotState extends State<PopupMascot>
         setState(() => _showThinking = false);
       }
     });
-  }
-
-  void _shake() {
-    _controller.forward(from: 0);
   }
 
   String _assetPath(Brightness brightness) {
