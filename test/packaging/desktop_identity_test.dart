@@ -81,37 +81,43 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.7.0-dev.2 from pubspec', () {
-    final String pubspec = File('pubspec.yaml').readAsStringSync();
-    final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
-    final String windowsResources = File(
-      'windows/runner/Runner.rc',
-    ).readAsStringSync();
-    final String releaseVersion = File(
-      'lib/features/settings/domain/release_update.dart',
-    ).readAsStringSync();
+  test(
+    'desktop hosts consume application version 1.7.0-dev.2 from pubspec',
+    () {
+      final String pubspec = File('pubspec.yaml').readAsStringSync();
+      final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
+      final String windowsResources = File(
+        'windows/runner/Runner.rc',
+      ).readAsStringSync();
+      final String releaseVersion = File(
+        'lib/features/settings/domain/release_update.dart',
+      ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.7.0-dev.2+67'));
-    expect(
-      releaseVersion,
-      contains("const String currentAppVersion = '1.7.0-dev.2';"),
-    );
-    expect(releaseVersion, contains("const String currentAppBuild = '67';"));
-    expect(
-      File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.7.0-dev.2'"),
-    );
-    expect(
-      File(
-        'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
-      ).readAsStringSync(),
-      contains("'version': '1.7.0-dev.2'"),
-    );
-    expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
-    expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,67'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.7.0-dev.2"'));
-  });
+      expect(pubspec, contains('version: 1.7.0-dev.2+67'));
+      expect(
+        releaseVersion,
+        contains("const String currentAppVersion = '1.7.0-dev.2';"),
+      );
+      expect(releaseVersion, contains("const String currentAppBuild = '67';"));
+      expect(
+        File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
+        contains("'version': '1.7.0-dev.2'"),
+      );
+      expect(
+        File(
+          'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
+        ).readAsStringSync(),
+        contains("'version': '1.7.0-dev.2'"),
+      );
+      expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
+      expect(windowsResources, contains('FLUTTER_VERSION'));
+      expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,67'));
+      expect(
+        windowsResources,
+        contains('#define VERSION_AS_STRING "1.7.0-dev.2"'),
+      );
+    },
+  );
 
   test('macOS About uses the canonical DingDong logo', () {
     final File canonicalLogo = File('Assets/DingDongIP/AgentToolIcon.png');
@@ -460,13 +466,19 @@ void main() {
     expect(website, contains('id="resources"'));
     expect(website, contains('class="resource-map"'));
     expect(website, contains('class="conversation-grid"'));
-    expect(website, contains('"hero.title.clipboard": "复制的内容，找到就能用"'));
-    expect(website, contains('"hero.title.resources": "Agent 资源，放在一起管"'));
-    expect(website, contains('"hero.title.alerts": "几个 Agent 的消息，一起收好"'));
+    expect(website, contains('"hero.title.clipboard": "复制过的，一搜就有。"'));
+    expect(website, contains('"hero.title.resources": "Agent 配置，只写一遍。"'));
+    expect(website, contains('"hero.title.alerts": "Agent 干完活，叮咚叫你。"'));
     expect(
       website,
-      contains('"hero.title.alerts": "Connected Agent events, in one inbox."'),
+      contains('"hero.title.alerts": "When an Agent is done, DingDong rings."'),
     );
+    // The overlapping principle/feature grids were merged into one list,
+    // and the private pet repository no longer has a landing-page section.
+    expect(website, contains('class="feature-list"'));
+    expect(website, isNot(contains('class="principles"')));
+    expect(website, isNot(contains('class="pet-project"')));
+    expect(website, contains('<details class="defaults-details">'));
     expect(
       website.indexOf('class="actions"'),
       lessThan(website.indexOf('class="conversation-receipt"')),
@@ -552,7 +564,6 @@ void main() {
     expect(website, contains('{ id: "files", label: "Files" }'));
     expect(website, contains('clipboardFilter: true'));
     expect(website, contains('./assets/dingdong-alert-icon-2.png'));
-    expect(website, contains('./assets/dingdong-rest-icon-2.png'));
     expect(website, contains('./assets/dingdong-sleeping-icon-2.png'));
     expect(website, contains('./assets/dingdong-thinking-icon.png'));
     expect(websiteStyles, contains('--mascot-frame-cycle: 1.4s'));
@@ -609,14 +620,8 @@ void main() {
     expect(releaseMetadata, contains('"latestVersion": "1.6.4"'));
     expect(releaseMetadata, contains('"latestBuild": "67"'));
     expect(releaseMetadata, contains('"prerelease": false'));
-    expect(
-      releaseMetadata,
-      contains('Fixes internal Codex background tasks'),
-    );
-    expect(
-      releaseMetadata,
-      contains('Fixes repeated sounds and flashes'),
-    );
+    expect(releaseMetadata, contains('Fixes internal Codex background tasks'));
+    expect(releaseMetadata, contains('Fixes repeated sounds and flashes'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));

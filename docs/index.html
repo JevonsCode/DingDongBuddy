@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DingDong — Free clipboard content and local Agent tools</title>
-    <meta name="description" content="Free, open-source tools to organize and reuse clipboard content, share Agent resources, and review connected-Agent events. Stable downloads: 1.6.4. Local daily Token history is in development for 1.7.0.">
+    <title>DingDong — a desktop companion for your clipboard and AI Agents</title>
+    <meta name="description" content="DingDong is a free, open-source desktop companion for macOS and Windows. Search and reuse what you copy, share one set of Prompts, Skills, and MCP servers across Agents, and get a ring when an Agent finishes or needs you.">
     <link rel="icon" href="./assets/dingdong-icon.png">
-    <link rel="stylesheet" href="./styles.css?v=20260921-v15">
+    <link rel="stylesheet" href="./styles.css?v=20261010-v16">
   </head>
   <body>
     <header class="site-header">
@@ -16,12 +16,10 @@
       </a>
 
       <nav aria-label="Primary navigation">
-        <a href="#product" data-i18n="nav.product">Product</a>
+        <a href="#features" data-i18n="nav.product">Features</a>
         <a href="#devices" data-i18n="nav.devices">Devices</a>
         <a href="#resources" data-i18n="nav.resources">Resources</a>
-        <a href="#defaults" data-i18n="nav.defaults">Defaults</a>
-        <a href="#mcp" data-i18n="nav.mcp">MCP</a>
-        <a href="#sounds" data-i18n="nav.sounds">Sounds</a>
+        <a href="#mcp" data-i18n="nav.mcp">Connect</a>
         <a href="#download" data-i18n="nav.download">Download</a>
         <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       </nav>
@@ -35,20 +33,13 @@
     <main>
       <section class="hero" id="product">
         <div class="hero-copy">
-          <p class="eyebrow" data-i18n="hero.eyebrow">Free and open source · local Agent companion</p>
+          <p class="hero-kicker" data-i18n="hero.eyebrow">Free and open source, for macOS and Windows</p>
           <h1 class="hero-title">
-            <span data-i18n="hero.title.clipboard">Copied content, ready to reuse.</span>
-            <span data-i18n="hero.title.resources">Keep your Agent resources together.</span>
-            <span data-i18n="hero.title.alerts">Connected Agent events, in one inbox.</span>
+            <span data-i18n="hero.title.clipboard">Everything you copied, one search away.</span>
+            <span data-i18n="hero.title.resources">Agent setup, written once.</span>
+            <span data-i18n="hero.title.alerts">When an Agent is done, DingDong rings.</span>
           </h1>
-          <p class="lede" data-i18n="hero.lede">A free, open-source desktop companion to classify, search, preview, and reuse copied content. Share Prompts, Skills, and MCP across Agents, collect their events, and send selected content or reminders to trusted devices.</p>
-          <div class="hero-finish-note">
-            <span class="mascot-swap mascot-swap-rest hero-finish-mascot" aria-hidden="true">
-              <img class="mascot-frame mascot-frame-one" src="./assets/dingdong-rest-icon.png" alt="">
-              <img class="mascot-frame mascot-frame-two" src="./assets/dingdong-rest-icon-2.png" alt="">
-            </span>
-            <p data-i18n="hero.finish">Open DingDong with a shortcut when you need it.</p>
-          </div>
+          <p class="lede" data-i18n="hero.lede">DingDong lives in your menu bar or system tray. Search and reuse the text, images, and files you copy. Keep one set of Prompts, Skills, and MCP servers for Codex, Claude Code, and other Agents. When an Agent finishes, gets stuck, or needs a decision, you hear it on your computer and can see it on your phone.</p>
           <div class="actions">
             <a class="primary" href="https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.6.4" data-i18n="hero.download">Download stable 1.6.4</a>
             <a class="secondary" href="#mcp" data-i18n="hero.connect">Connect your Agent</a>
@@ -60,8 +51,8 @@
           <div class="conversation-receipt" role="group" aria-labelledby="hero-receipt-title">
             <div class="conversation-receipt-copy">
               <h4 id="hero-receipt-title" data-i18n="chatFooter.title">See which resources were available.</h4>
-              <p data-i18n="chatFooter.body">Supported Agents can show a DingDong line with active Prompts, matching Skills, and available MCP connections. Claude Code can also use an optional status line alongside your existing HUD. Token totals appear when the session provides them.</p>
-              <p class="conversation-receipt-note" data-i18n="chatFooter.note">A Skill * means the full instructions were loaded. An MCP * means a tool was called, even if the call failed. Prompts have no marker. Token display is on by default; you can turn it off in Settings.</p>
+              <p data-i18n="chatFooter.body">Supported Agents end each reply with a DingDong line: the Prompts in effect, the Skills that matched, the MCP servers available, and the Token total when the session reports one. Claude Code can also show it in the status line, next to your existing HUD.</p>
+              <p class="conversation-receipt-note" data-i18n="chatFooter.note">A * after a Skill means its full instructions were loaded. A * after an MCP means one of its tools was called, even if the call failed. Prompts carry no marker. You can hide the Token total in Settings.</p>
             </div>
             <div class="conversation-receipt-sample">
               <div class="terminal-demo-intro">
@@ -139,49 +130,34 @@
         </div>
       </section>
 
-      <section class="principles">
-        <div>
-          <p class="eyebrow" data-i18n="principles.eyebrow">How it works</p>
-          <h2 data-i18n="principles.title">A few everyday conveniences</h2>
-        </div>
-        <div class="principle-grid">
-          <article>
-            <h3 data-i18n="principles.local.title">Saved on your computer</h3>
-            <p data-i18n="principles.local.body">Clipboard content and resources stay local by default. Agent access to clipboard content starts off; you choose what to share with paired devices.</p>
-          </article>
-          <article>
-            <h3 data-i18n="principles.summary.title">Skills open when needed</h3>
-            <p data-i18n="principles.summary.body">For dynamic Skills, the Agent sees a name and description first, then loads the instructions when needed. Matching Prompts are delivered at task start.</p>
-          </article>
-          <article>
-            <h3 data-i18n="principles.quiet.title">Open it with a shortcut</h3>
-            <p data-i18n="principles.quiet.body">Use a shortcut to search and classify copied content, preview before reuse, and pin saved items you need often.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="feature-grid">
-        <article>
-          <h2 data-i18n="features.library.title">Keep one resource library</h2>
-          <p data-i18n="features.library.body">Add Prompts, Skills, and MCP servers, then choose which projects or Agents can use them.</p>
-        </article>
-        <article>
-          <h2 data-i18n="features.clipboard.title">Send it to your phone</h2>
-          <p data-i18n="features.clipboard.body">Pair a device to transfer files and clipboard items, or receive Agent reminders away from your computer.</p>
-        </article>
-        <article>
-          <h2 data-i18n="features.bridge.title">Ask your Agent to set it up</h2>
-          <p data-i18n="features.bridge.body">Tell your Agent which resource to add or change and which project needs it. DingDong checks and saves the configuration.</p>
-        </article>
-        <article>
-          <h2 data-i18n="features.notify.title">Check Agent alerts in one place</h2>
-          <p data-i18n="features.notify.body">Codex already has completion notifications. DingDong gathers connected-Agent events with unread history and the sound you choose; each client's own alert settings still apply.</p>
-        </article>
+      <section class="feature-section" id="features">
+        <h2 data-i18n="features.title">What it does for you</h2>
+        <dl class="feature-list">
+          <div>
+            <dt data-i18n="features.clipboard.title">Find what you copied</dt>
+            <dd data-i18n="features.clipboard.body">Press ⌘⇧V (Ctrl+Shift+V on Windows), filter by links, images, files, or text, preview, then press Return to use it. Pin the things you reuse.</dd>
+          </div>
+          <div>
+            <dt data-i18n="features.library.title">One library for every Agent</dt>
+            <dd data-i18n="features.library.body">Add Prompts, Skills, and MCP servers once, then choose which projects or Agents get each one. You can also ask your Agent to add or change them for you.</dd>
+          </div>
+          <div>
+            <dt data-i18n="features.notify.title">Hear when an Agent needs you</dt>
+            <dd data-i18n="features.notify.body">Finished, stuck, or waiting on a decision: events from connected Agents land in one list, with unread counts and the sound you pick. Each client’s own notifications keep working.</dd>
+          </div>
+          <div>
+            <dt data-i18n="features.devices.title">Take it to your phone</dt>
+            <dd data-i18n="features.devices.body">Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.</dd>
+          </div>
+          <div>
+            <dt data-i18n="features.local.title">Stays on your computer</dt>
+            <dd data-i18n="features.local.body">Clipboard history and resources are stored locally. Agents can’t read clipboard content until you turn that on in Settings.</dd>
+          </div>
+        </dl>
       </section>
 
       <section class="device-section" id="devices">
         <div class="section-heading device-section-heading">
-          <p class="eyebrow" data-i18n="devices.eyebrow">Connected devices · Multiple computers</p>
           <h2 data-i18n="devices.title">Check several computers from one phone.</h2>
           <p data-i18n="devices.body">Scan each computer's QR code to pair it. You can see which computers are online and switch the active one. Files, clipboard items, and reminders stay grouped by their source computer.</p>
         </div>
@@ -253,7 +229,6 @@
 
       <section class="resource-system" id="resources">
         <div class="section-heading resource-system-heading">
-          <p class="eyebrow" data-i18n="resources.eyebrow">One resource library</p>
           <h2 data-i18n="resources.title">Manage a resource once, then choose where it applies.</h2>
           <p data-i18n="resources.body">Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.</p>
         </div>
@@ -326,62 +301,57 @@
 
       <section class="resource-system" id="token-history">
         <div class="section-heading">
-          <p class="eyebrow" data-i18n="usage.eyebrow">1.7.0 development preview · local Token history</p>
-          <h2 data-i18n="usage.title">See your Agent usage, day by day.</h2>
-          <p data-i18n="usage.body">The development version adds Resource Manager → Token history, with a daily heatmap, year and source filters, and a day's details. The stable 1.6.4 downloads do not include this feature yet.</p>
+          <p class="section-tag" data-i18n="usage.eyebrow">In the 1.7.0 development preview</p>
+          <h2 data-i18n="usage.title">See your Token usage, day by day.</h2>
+          <p data-i18n="usage.body">Resource Manager gets a Token history page: a daily heatmap, filters for year and source, and a breakdown for each day. Stable 1.6.4 doesn’t include it yet.</p>
         </div>
         <div class="conversation-grid">
           <article class="conversation-example">
             <span class="example-kind">Codex · Claude Code · Pi</span>
-            <h3 data-i18n="usage.sourcesTitle">Read supported local evidence.</h3>
-            <p class="example-result" data-i18n="usage.sourcesBody">Usage is available when these clients provide usable local counts. Repeated cumulative records are deduplicated across the daily history.</p>
+            <h3 data-i18n="usage.sourcesTitle">Reads the records your Agents already keep.</h3>
+            <p class="example-result" data-i18n="usage.sourcesBody">Counts come from the local records that Codex, Claude Code, and Pi write. Repeated cumulative records are counted once.</p>
           </article>
           <article class="conversation-example">
             <span class="example-kind" data-i18n="usage.coverageLabel">Known counts</span>
-            <h3 data-i18n="usage.coverageTitle">Keep missing data unknown.</h3>
-            <p class="example-result" data-i18n="usage.coverageBody">Incomplete daily totals are lower bounds marked with ≥. Unavailable evidence is unknown, rather than an invented zero.</p>
+            <h3 data-i18n="usage.coverageTitle">Missing data stays unknown, not zero.</h3>
+            <p class="example-result" data-i18n="usage.coverageBody">When a day is incomplete, its total is shown as a minimum with ≥. Days with no usable data show as unknown instead of a made-up zero.</p>
           </article>
           <article class="conversation-example">
             <span class="example-kind" data-i18n="usage.localLabel">Saved on this computer</span>
             <h3 data-i18n="usage.localTitle">Store counts, not conversations.</h3>
-            <p class="example-result" data-i18n="usage.localBody">History stores numeric aggregates locally, without chat text, and is not uploaded with anonymous install statistics. Token counts are usage, not money or a complete bill.</p>
+            <p class="example-result" data-i18n="usage.localBody">Only numeric totals are saved, on this computer, without any chat text. They are never sent with the anonymous install statistics. Token counts measure usage, not cost.</p>
           </article>
         </div>
       </section>
 
       <section class="resource-system" id="plugins">
         <div class="section-heading">
-          <p class="eyebrow" data-i18n="plugins.eyebrow">Optional plugins</p>
-          <h2 data-i18n="plugins.title">Choose the plugins you need.</h2>
-          <p data-i18n="plugins.body">Open Resource Manager → Plugins to find Jev and the macOS selection tools. More plugins are on the way.</p>
+          <h2 data-i18n="plugins.title">Plugins, when you want them.</h2>
+          <p data-i18n="plugins.body">Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.</p>
         </div>
         <div class="conversation-grid">
           <article class="conversation-example">
             <span class="example-kind">Jev</span>
             <h3 data-i18n="plugins.jevTitle">Ask Jev for a judgment or score.</h3>
             <p class="example-result" data-i18n="plugins.jevBody">Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.</p>
-            <a href="https://typesafe.ai/" target="_blank" rel="noopener noreferrer" data-i18n="plugins.official">Jev website and service terms →</a>
+            <a href="https://typesafe.ai/" target="_blank" rel="noopener noreferrer" data-i18n="plugins.official">Jev website and terms</a>
           </article>
           <article class="conversation-example">
             <span class="example-kind" data-i18n="plugins.selectionLabel">macOS · Selection tools</span>
             <h3 data-i18n="plugins.selectionTitle">Translate the sentence you selected.</h3>
             <p class="example-result" data-i18n="plugins.selectionBody">Copy selected text, or translate and explain it with your configured model. Supports local models and OpenAI- or Anthropic-compatible proxies.</p>
           </article>
-          <article class="conversation-example">
-            <span class="example-kind" data-i18n="plugins.optionalLabel">Your choice</span>
-            <h3 data-i18n="plugins.optionalTitle">Turn on what you need.</h3>
-            <p class="example-result" data-i18n="plugins.optionalBody">Jev starts uninstalled. Selection tools stay off until you enable them. Pick what you need.</p>
-          </article>
         </div>
       </section>
 
       <section class="defaults-section" id="defaults">
         <div class="section-heading">
-          <p class="eyebrow" data-i18n="defaults.eyebrow">Keyboard and settings reference</p>
           <h2 data-i18n="defaults.title">Shortcuts you can change.</h2>
           <p data-i18n="defaults.body">These are the defaults. Record your own global or workspace shortcuts in Settings; they take effect immediately.</p>
         </div>
 
+        <details class="defaults-details">
+        <summary data-i18n="defaults.summary">Show every shortcut and default setting</summary>
         <div class="defaults-grid">
           <article class="defaults-panel">
             <h3 data-i18n="defaults.shortcutsTitle">Default keyboard shortcuts</h3>
@@ -412,7 +382,7 @@
                     <td><kbd>Ctrl+F</kbd></td>
                   </tr>
                   <tr>
-                    <td data-i18n="shortcuts.filters">Show or hide filters</td>
+                    <td data-i18n="shortcuts.filters">Open, reset, or hide filters</td>
                     <td><kbd>⌘R</kbd></td>
                     <td><kbd>Ctrl+R</kbd></td>
                   </tr>
@@ -495,11 +465,11 @@
             </div>
           </article>
         </div>
+        </details>
       </section>
 
       <section class="sound-section" id="sounds">
         <div class="section-heading sound-heading">
-          <p class="eyebrow" data-i18n="sounds.eyebrow">Agent alerts</p>
           <h2 data-i18n="sounds.title">Choose the sound that brings you back.</h2>
           <p data-i18n="sounds.body">Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.</p>
           <p class="sound-life-note" data-i18n="sounds.note">Listen to a few below before choosing.</p>
@@ -548,9 +518,8 @@
 
       <section class="mcp-section" id="mcp">
         <div class="section-heading">
-          <p class="eyebrow" data-i18n="mcp.eyebrow">Built-in MCP bridge</p>
           <h2 data-i18n="mcp.title">Connect DingDong to your Agent.</h2>
-          <p data-i18n="mcp.body">For each supported Agent, choose whether Skills are loaded on demand or saved to its user or project folder. MCP connections use the client’s own configuration.</p>
+          <p data-i18n="mcp.body">The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.</p>
         </div>
 
         <div class="agent-prompt-card">
@@ -558,7 +527,7 @@
             <div>
               <p class="agent-prompt-kicker" data-i18n="mcp.promptEyebrow">Let AI handle the setup</p>
               <h3 id="agent-setup-prompt-title" data-i18n="mcp.promptTitle">Copy this instruction to your Agent</h3>
-              <p data-i18n="mcp.promptBody">Use the MCP path shown in your installed DingDong app. The instruction below asks your Agent to connect it while keeping your existing settings.</p>
+              <p data-i18n="mcp.promptBody">It uses the MCP path shown in your installed DingDong app, so it works wherever DingDong is installed.</p>
             </div>
             <button
               class="agent-prompt-copy"
@@ -586,7 +555,7 @@
 
         <div class="setup-card">
           <div>
-            <h3 data-i18n="mcp.installTitle">Connect an Agent</h3>
+            <h3 data-i18n="mcp.installTitle">Prefer manual setup?</h3>
             <p data-i18n="mcp.installBody">For a client that supports MCP, add the matching snippet to its settings. The examples below use the macOS installation path.</p>
             <ul class="setup-steps">
               <li data-i18n="mcp.step1">Install DingDong in /Applications.</li>
@@ -623,16 +592,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       <section class="api-band">
         <div>
-          <p class="eyebrow" data-i18n="api.eyebrow">Loopback HTTP API</p>
           <h2 class="api-title"><img src="./assets/dingdong-thinking-icon.png" alt=""><span data-i18n="api.title">You can use scripts too.</span></h2>
           <p data-i18n="api.body">The local API can check status, search resources, read a clipboard overview, and open a DingDong page.</p>
         </div>
         <div class="endpoint-list">
           <code>/agent/manifest</code>
           <code>/agent/bridge</code>
-          <code>/agent/prepare</code>
-          <code>/agent/workbench</code>
-          <code>/agent/resource/{id}</code>
+          <code>/agent/capabilities</code>
+          <code>/library/{id}</code>
           <code>/clipboard/insights</code>
           <code>/library</code>
           <code>/library/export?type=skill</code>
@@ -666,14 +633,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           </a>
           <a class="download-card" href="./dingdong-release.json">
             <strong data-i18n="download.metadata">Release metadata JSON</strong>
-            <span data-i18n="download.metadataHint">Used by DingDong Settings</span>
+            <span data-i18n="download.metadataHint">Used to check for new versions</span>
           </a>
           <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml">
-            <strong data-i18n="download.report">Report a problem</strong>
-            <span data-i18n="download.reportHint">Guided form with a privacy checklist</span>
+            <strong data-i18n="download.report">Something went wrong?</strong>
+            <span data-i18n="download.reportHint">The form reminds you to remove private information</span>
           </a>
           <a class="download-card" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml">
-            <strong data-i18n="download.request">Request a feature</strong>
+            <strong data-i18n="download.request">Share an idea</strong>
             <span data-i18n="download.requestHint">What would save you a step? Tell us, or contribute a fix.</span>
           </a>
         </div>
@@ -681,14 +648,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         <div class="download-stats" id="download-stats" aria-live="polite" hidden>
           <strong data-i18n="download.statsTitle">Downloads by version</strong>
           <p data-i18n="download.statsLoading">Loading GitHub release asset counts…</p>
-        </div>
-      </section>
-      <section class="pet-project" aria-labelledby="pet-title">
-        <img src="./assets/dingdong-icon.png" width="64" height="64" alt="DingDong">
-        <div>
-          <h2 id="pet-title" data-i18n="pet.title">DingDong can be a Codex pet too.</h2>
-          <p data-i18n="pet.body">The mascot has a separate Codex pet project. Its repository is private, so you will need access to open it.</p>
-          <a href="https://github.com/JevonsCode/DingDongCodexPet" data-i18n="pet.link">Open the pet project</a>
         </div>
       </section>
     </main>
@@ -711,22 +670,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const copy = {
         en: {
           "footer.pet": "Codex pet project (access required)",
-          "pet.title": "DingDong can be a Codex pet too.",
-          "pet.body": "The mascot has a separate Codex pet project. Its repository is private, so you will need access to open it.",
-          "pet.link": "Open the pet project",
-          "nav.product": "Product",
+          "nav.product": "Features",
           "nav.devices": "Devices",
           "nav.resources": "Resources",
-          "nav.defaults": "Defaults",
-          "nav.mcp": "MCP",
-          "nav.sounds": "Sounds",
+          "nav.mcp": "Connect",
           "nav.download": "Download",
-          "hero.eyebrow": "Free and open source · local Agent companion",
-          "hero.title.clipboard": "Copied content, ready to reuse.",
-          "hero.title.resources": "Keep your Agent resources together.",
-          "hero.title.alerts": "Connected Agent events, in one inbox.",
-          "hero.lede": "A free, open-source desktop companion to classify, search, preview, and reuse copied content. Share Prompts, Skills, and MCP across Agents, collect their events, and send selected content or reminders to trusted devices.",
-          "hero.finish": "Open DingDong with a shortcut when you need it.",
+          "meta.title": "DingDong — a desktop companion for your clipboard and AI Agents",
+          "features.title": "What it does for you",
+          "features.devices.title": "Take it to your phone",
+          "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
+          "features.local.title": "Stays on your computer",
+          "features.local.body": "Clipboard history and resources are stored locally. Agents can’t read clipboard content until you turn that on in Settings.",
+          "defaults.summary": "Show every shortcut and default setting",
+          "hero.eyebrow": "Free and open source, for macOS and Windows",
+          "hero.title.clipboard": "Everything you copied, one search away.",
+          "hero.title.resources": "Agent setup, written once.",
+          "hero.title.alerts": "When an Agent is done, DingDong rings.",
+          "hero.lede": "DingDong lives in your menu bar or system tray. Search and reuse the text, images, and files you copy. Keep one set of Prompts, Skills, and MCP servers for Codex, Claude Code, and other Agents. When an Agent finishes, gets stuck, or needs a decision, you hear it on your computer and can see it on your phone.",
           "hero.download": "Download stable 1.6.4",
           "hero.connect": "Connect your Agent",
           "hero.star": "Star DingDongBuddy",
@@ -741,46 +701,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.feedback": "The copied value will appear at the top of Clipboard.",
           "demo.copySuccess": "Copied. Clipboard now has a new first item.",
           "demo.footer": "API listening on 127.0.0.1:2333 · ⌘⇧V ready",
-          "principles.eyebrow": "How it works",
-          "principles.title": "A few everyday conveniences",
-          "principles.local.title": "Saved on your computer",
-          "principles.local.body": "Clipboard content and resources stay local by default. Agent access to clipboard content starts off; you choose what to share with paired devices.",
-          "principles.summary.title": "Skills open when needed",
-          "principles.summary.body": "For dynamic Skills, the Agent sees a name and description first, then loads the instructions when needed. Matching Prompts are delivered at task start.",
-          "principles.quiet.title": "Open it with a shortcut",
-          "principles.quiet.body": "Use a shortcut to search and classify copied content, preview before reuse, and pin saved items you need often.",
-          "usage.eyebrow": "1.7.0 development preview · local Token history",
-          "usage.title": "See your Agent usage, day by day.",
-          "usage.body": "The development version adds Resource Manager → Token history, with a daily heatmap, year and source filters, and a day's details. The stable 1.6.4 downloads do not include this feature yet.",
-          "usage.sourcesTitle": "Read supported local evidence.",
-          "usage.sourcesBody": "Usage is available when these clients provide usable local counts. Repeated cumulative records are deduplicated across the daily history.",
+          "usage.eyebrow": "In the 1.7.0 development preview",
+          "usage.title": "See your Token usage, day by day.",
+          "usage.body": "Resource Manager gets a Token history page: a daily heatmap, filters for year and source, and a breakdown for each day. Stable 1.6.4 doesn’t include it yet.",
+          "usage.sourcesTitle": "Reads the records your Agents already keep.",
+          "usage.sourcesBody": "Counts come from the local records that Codex, Claude Code, and Pi write. Repeated cumulative records are counted once.",
           "usage.coverageLabel": "Known counts",
-          "usage.coverageTitle": "Keep missing data unknown.",
-          "usage.coverageBody": "Incomplete daily totals are lower bounds marked with ≥. Unavailable evidence is unknown, rather than an invented zero.",
+          "usage.coverageTitle": "Missing data stays unknown, not zero.",
+          "usage.coverageBody": "When a day is incomplete, its total is shown as a minimum with ≥. Days with no usable data show as unknown instead of a made-up zero.",
           "usage.localLabel": "Saved on this computer",
           "usage.localTitle": "Store counts, not conversations.",
-          "usage.localBody": "History stores numeric aggregates locally, without chat text, and is not uploaded with anonymous install statistics. Token counts are usage, not money or a complete bill.",
-          "plugins.eyebrow": "Optional plugins",
-          "plugins.title": "Choose the plugins you need.",
-          "plugins.body": "Open Resource Manager → Plugins to find Jev and the macOS selection tools. More plugins are on the way.",
+          "usage.localBody": "Only numeric totals are saved, on this computer, without any chat text. They are never sent with the anonymous install statistics. Token counts measure usage, not cost.",
+          "plugins.title": "Plugins, when you want them.",
+          "plugins.body": "Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.",
           "plugins.jevTitle": "Ask Jev for a judgment or score.",
           "plugins.jevBody": "Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.",
-          "plugins.official": "Jev website and service terms →",
+          "plugins.official": "Jev website and terms",
           "plugins.selectionLabel": "macOS · Selection tools",
           "plugins.selectionTitle": "Translate the sentence you selected.",
           "plugins.selectionBody": "Copy selected text, or translate and explain it with your configured model. Supports local models and OpenAI- or Anthropic-compatible proxies.",
-          "plugins.optionalLabel": "Your choice",
-          "plugins.optionalTitle": "Turn on what you need.",
-          "plugins.optionalBody": "Jev starts uninstalled. Selection tools stay off until you enable them. Pick what you need.",
-          "features.library.title": "Keep one resource library",
-          "features.library.body": "Add Prompts, Skills, and MCP servers, then choose which projects or Agents can use them.",
-          "features.clipboard.title": "Send it to your phone",
-          "features.clipboard.body": "Pair a device to transfer files and clipboard items, or receive Agent reminders away from your computer.",
-          "features.bridge.title": "Ask your Agent to set it up",
-          "features.bridge.body": "Tell your Agent which resource to add or change and which project needs it. DingDong checks and saves the configuration.",
-          "features.notify.title": "Check Agent alerts in one place",
-          "features.notify.body": "Codex already has completion notifications. DingDong gathers connected-Agent events with unread history and the sound you choose; each client's own alert settings still apply.",
-          "devices.eyebrow": "Connected devices · Multiple computers",
+          "features.library.title": "One library for every Agent",
+          "features.library.body": "Add Prompts, Skills, and MCP servers once, then choose which projects or Agents get each one. You can also ask your Agent to add or change them for you.",
+          "features.clipboard.title": "Find what you copied",
+          "features.clipboard.body": "Press ⌘⇧V (Ctrl+Shift+V on Windows), filter by links, images, files, or text, preview, then press Return to use it. Pin the things you reuse.",
+          "features.notify.title": "Hear when an Agent needs you",
+          "features.notify.body": "Finished, stuck, or waiting on a decision: events from connected Agents land in one list, with unread counts and the sound you pick. Each client’s own notifications keep working.",
           "devices.title": "Check several computers from one phone.",
           "devices.body": "Scan each computer's QR code to pair it. You can see which computers are online and switch the active one. Files, clipboard items, and reminders stay grouped by their source computer.",
           "devices.illustrationAria": "Illustration of DingDong Connected Devices",
@@ -810,7 +755,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "devices.connectionTitle": "Keep the source computer connected",
           "devices.connectionBody": "Verified local connections have no file-size limit. Other routes keep the 25 MB limit. Follow progress on desktop or mobile, and pause or resume while both apps stay open.",
           "devices.platformNote": "On the same local network, DingDong tries a direct WebRTC connection first. Otherwise it uses an end-to-end encrypted relay. Android can use the web app without installing it. On iPhone and iPad, add it to the Home Screen to enable push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders. Your phone controls notification vibration.",
-          "resources.eyebrow": "One resource library",
           "resources.title": "Manage a resource once, then choose where it applies.",
           "resources.body": "Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.",
           "resources.prompt": "Rules and working preferences",
@@ -838,8 +782,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.mcpMessage": "“Use my GitHub tools to find why the latest main workflow failed.”",
           "examples.mcpResult": "The configured MCP is available, and its tools are called only when needed.",
           "chatFooter.title": "See which resources were available.",
-          "chatFooter.body": "Supported Agents can show a DingDong line with active Prompts, matching Skills, and available MCP connections. Claude Code can also use an optional status line alongside your existing HUD. Token totals appear when the session provides them.",
-          "chatFooter.note": "A Skill * means the full instructions were loaded. An MCP * means a tool was called, even if the call failed. Prompts have no marker. Token display is on by default; you can turn it off in Settings.",
+          "chatFooter.body": "Supported Agents end each reply with a DingDong line: the Prompts in effect, the Skills that matched, the MCP servers available, and the Token total when the session reports one. Claude Code can also show it in the status line, next to your existing HUD.",
+          "chatFooter.note": "A * after a Skill means its full instructions were loaded. A * after an MCP means one of its tools was called, even if the call failed. Prompts carry no marker. You can hide the Token total in Settings.",
           "chatFooter.sampleHint": "Try a message below to see a simulated reply and resource line.",
           "chatFooter.sampleInputLabel": "Demo Agent message",
           "chatFooter.sampleInputHint": "Press Enter to run a simulated reply.",
@@ -851,7 +795,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.sampleSkillResource": "♦ Release flow*",
           "chatFooter.sampleMcpResource": "♠ GitHub*",
           "chatFooter.sampleStatus": "Agent · connected",
-          "defaults.eyebrow": "Keyboard and settings reference",
           "defaults.title": "Shortcuts you can change.",
           "defaults.body": "These are the defaults. Record your own global or workspace shortcuts in Settings; they take effect immediately.",
           "defaults.shortcutsTitle": "Default keyboard shortcuts",
@@ -911,7 +854,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.dynamic": "Dynamic",
           "value.classic": "DingDong Classic",
           "value.orange": "Orange",
-          "sounds.eyebrow": "Agent alerts",
           "sounds.title": "Choose the sound that brings you back.",
           "sounds.body": "Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.",
           "sounds.note": "Listen to a few below before choosing.",
@@ -932,12 +874,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.playing": "Playing",
           "sounds.finished": "Ready for another preview",
           "sounds.error": "This sound could not be played",
-          "mcp.eyebrow": "Built-in MCP bridge",
           "mcp.title": "Connect DingDong to your Agent.",
-          "mcp.body": "For each supported Agent, choose whether Skills are loaded on demand or saved to its user or project folder. MCP connections use the client’s own configuration.",
+          "mcp.body": "The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.",
           "mcp.promptEyebrow": "Let AI handle the setup",
           "mcp.promptTitle": "Copy this instruction to your Agent",
-          "mcp.promptBody": "Use the MCP path shown in your installed DingDong app. The instruction below asks your Agent to connect it while keeping your existing settings.",
+          "mcp.promptBody": "It uses the MCP path shown in your installed DingDong app, so it works wherever DingDong is installed.",
           "mcp.copyPrompt": "Copy setup instruction",
           "mcp.promptCopied": "Copied",
           "mcp.promptReady": "Ready to paste into your Agent",
@@ -959,7 +900,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.skill": "Load the Skill the Agent has decided to use.",
           "tools.recommend": "Find an MCP configuration that fits the current task.",
           "tools.notify": "Ring when the task is done, stuck, or waiting for you.",
-          "api.eyebrow": "Loopback HTTP API",
           "api.title": "You can use scripts too.",
           "api.body": "The local API can check status, search resources, read a clipboard overview, and open a DingDong page.",
           "download.macosArm64": "Mac with Apple silicon",
@@ -986,24 +926,25 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         zh: {
           "footer.pet": "Codex 宠物项目（需访问权限）",
-          "pet.title": "叮咚也能当 Codex 宠物",
-          "pet.body": "吉祥物另有一个 Codex 宠物项目。目前仓库是私有的，需要获得访问权限才能打开。",
-          "pet.link": "查看宠物项目",
-          "nav.product": "产品",
-          "nav.devices": "连接设备",
-          "nav.resources": "资源管理",
-          "nav.defaults": "默认值",
-          "nav.mcp": "MCP",
-          "nav.sounds": "声音",
+          "nav.product": "功能",
+          "nav.devices": "多设备",
+          "nav.resources": "资源库",
+          "nav.mcp": "接入 Agent",
           "nav.download": "下载",
-          "hero.eyebrow": "免费开源 · 本地 Agent 小伙伴",
-          "hero.title.clipboard": "复制的内容，找到就能用",
-          "hero.title.resources": "Agent 资源，放在一起管",
-          "hero.title.alerts": "几个 Agent 的消息，一起收好",
-          "hero.lede": "一个免费开源的桌面小伙伴：复制的文字、图片和文件可以分类、搜索、预览和复用；Prompt、Skill、MCP 只维护一份；接入的 Agent 消息一起收好，也能把选中的内容和提醒发到可信设备。",
-          "hero.finish": "需要时按一下快捷键，就能找到。",
+          "meta.title": "DingDong — 剪贴板和 Agent 的桌面小伙伴",
+          "features.title": "能帮你做的事",
+          "features.devices.title": "手机上接着看",
+          "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
+          "features.local.title": "数据留在本机",
+          "features.local.body": "剪贴板记录和资源默认只存在本机。Agent 读取剪贴板内容默认关闭，要在设置里打开才行。",
+          "defaults.summary": "展开全部快捷键和默认设置",
+          "hero.eyebrow": "免费开源，支持 macOS 和 Windows",
+          "hero.title.clipboard": "复制过的，一搜就有。",
+          "hero.title.resources": "Agent 配置，只写一遍。",
+          "hero.title.alerts": "Agent 干完活，叮咚叫你。",
+          "hero.lede": "DingDong 住在菜单栏（Windows 在系统托盘）。复制过的文字、图片和文件，按快捷键就能搜索和复用；Prompt、Skill、MCP 维护一份，Codex、Claude Code 等 Agent 共用；Agent 做完、卡住或等你拍板时，电脑会响，手机也能收到。",
           "hero.download": "下载稳定版 1.6.4",
-          "hero.connect": "查看 MCP 接入",
+          "hero.connect": "接入你的 Agent",
           "hero.star": "Star DingDongBuddy",
           "hero.starAria": "在 GitHub 上 Star DingDongBuddy",
           "demo.shakeMascot": "摇一摇 DingDong",
@@ -1016,47 +957,32 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.feedback": "点一下复制，列表顶部会多一条记录",
           "demo.copySuccess": "已复制，记录已经放到最上面",
           "demo.footer": "API 正在监听 127.0.0.1:2333 · ⌘⇧V 就绪",
-          "principles.eyebrow": "平时怎么用",
-          "principles.title": "平时会用到的几件小事",
-          "principles.local.title": "先存到自己的电脑里",
-          "principles.local.body": "剪贴板内容和资源默认保存在本机，Agent 读取剪贴板正文默认关闭。哪些内容发给可信设备，由你选。",
-          "principles.summary.title": "Skill 要用时再打开",
-          "principles.summary.body": "动态 Skill 先给 Agent 名称和简介，需要时再读完整指令。匹配的提示词会在任务开始时送达。",
-          "principles.quiet.title": "按快捷键就能叫出来",
-          "principles.quiet.body": "按快捷键打开，分类搜索复制过的内容，预览后接着用；常用的已保存条目可以固定。",
-          "usage.eyebrow": "1.7.0 开发预览 · 本地 Token 历史",
-          "usage.title": "每天用了多少，回头有数",
-          "usage.body": "开发版新增“资源管理 → Token 用量”：每日热力图、年份和来源筛选，点某一天看明细。下方稳定版 1.6.4 安装包尚不包含这项功能。",
-          "usage.sourcesTitle": "读取已支持的本地数据",
-          "usage.sourcesBody": "Codex、Claude Code、Pi 提供可用的本地用量数据时才会计入；重复的累计记录会去重。",
+          "usage.eyebrow": "1.7.0 开发预览版",
+          "usage.title": "每天用了多少 Token，一眼看到",
+          "usage.body": "资源管理里新增 Token 用量：每日热力图，可按年份和来源筛选，点开某一天看明细。稳定版 1.6.4 还没有这项功能。",
+          "usage.sourcesTitle": "读取 Agent 本地已有的记录",
+          "usage.sourcesBody": "数据来自 Codex、Claude Code、Pi 在本地留下的记录；重复的累计记录只算一次。",
           "usage.coverageLabel": "已知数量",
           "usage.coverageTitle": "读不到的，留作未知",
-          "usage.coverageBody": "每日数据不完整时，以 ≥ 标出已知下界。缺失的数据保持未知，不补成一个猜测的零。",
+          "usage.coverageBody": "某天数据不完整时，用 ≥ 标出已知的最小值；完全读不到的日子显示为未知，不会填一个猜出来的 0。",
           "usage.localLabel": "只存这台电脑",
           "usage.localTitle": "存数字，不存聊天正文",
-          "usage.localBody": "历史在本机保存数字汇总，不随匿名安装统计上传。Token 是用量，不是金额或完整账单。",
-          "plugins.eyebrow": "可选插件",
-          "plugins.title": "插件可以自己选",
-          "plugins.body": "打开“资源管理 → 插件”，Jev 和 macOS 划词都在这里。更多插件陆续增加中。",
+          "usage.localBody": "只在本机保存数字汇总，不含任何聊天内容，也不会随匿名安装统计上传。Token 衡量的是用量，不是花费。",
+          "plugins.title": "插件按需安装",
+          "plugins.body": "在“资源管理 → 插件”里找到 Jev 和 macOS 划词。你不选，就不会安装或开启。",
           "plugins.jevTitle": "让 Jev 帮 Agent 做判断、打分",
           "plugins.jevBody": "按需安装 Jev，填入自己的 API Key。Agent 可以调用它做判断、选择和评分，Jev 的 Token 用量单独看。",
-          "plugins.official": "Jev 官网与使用规则 →",
+          "plugins.official": "Jev 官网与使用条款",
           "plugins.selectionLabel": "macOS · 系统划词",
           "plugins.selectionTitle": "选中这句话，翻译一下",
           "plugins.selectionBody": "选中文字就能复制，也可以交给你配置的模型翻译或解释。支持本地模型，以及 OpenAI、Anthropic 兼容的反向代理。",
-          "plugins.optionalLabel": "按需开启",
-          "plugins.optionalTitle": "想用哪个，再开哪个",
-          "plugins.optionalBody": "Jev 默认不安装，划词默认不开启。用得上的再打开。",
-          "features.library.title": "资源库只维护一份",
-          "features.library.body": "添加提示词、Skill 和 MCP，再选好哪些项目或 Agent 可以使用。",
-          "features.clipboard.title": "发到手机上接着看",
-          "features.clipboard.body": "配对设备后，可以传文件和剪贴板内容，也能在手机上收到 Agent 提醒。",
-          "features.bridge.title": "配置也可以让 Agent 来",
-          "features.bridge.body": "告诉 Agent 要添加或修改哪个资源、给哪个项目用。DingDong 会检查并保存配置。",
-          "features.notify.title": "几个 Agent 的消息，一起看",
-          "features.notify.body": "Codex 本身已有完成通知。DingDong 收好接入 Agent 的事件、未读和历史，再由你选提示声；客户端原有通知仍按各自设置运行。",
-          "devices.eyebrow": "连接设备 · 多电脑连接",
-          "devices.title": "手机上也能看几台电脑的消息",
+          "features.library.title": "一份资源，几个 Agent 共用",
+          "features.library.body": "Prompt、Skill、MCP 添加一次，再选好给哪些项目或 Agent 用。也可以直接让 Agent 帮你添加和修改。",
+          "features.clipboard.title": "找回复制过的内容",
+          "features.clipboard.body": "按 ⌘⇧V（Windows 是 Ctrl+Shift+V）打开，按链接、图片、文件、文字筛选，预览后回车就能用。常用的可以固定。",
+          "features.notify.title": "Agent 需要你时，叮咚一声",
+          "features.notify.body": "做完了、卡住了、等你决定，接入的 Agent 事件都收进一个列表，带未读数和你选的提示音。客户端自己的通知照常工作。",
+          "devices.title": "一部手机，看几台电脑",
           "devices.body": "依次扫描电脑上的二维码就能配对。看看哪些电脑在线，再切换到需要的那一台。文件、剪贴板和 Agent 提醒都按来源电脑分开。",
           "devices.illustrationAria": "DingDong 连接设备界面示意",
           "devices.illustration": "界面示意",
@@ -1085,7 +1011,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "devices.connectionTitle": "源电脑需要保持连接",
           "devices.connectionBody": "自动确认局域网后，文件大小不设产品上限；其他路径仍限 25 MB。电脑和手机都能查看进度、暂停和继续，续传时请保持应用打开。",
           "devices.platformNote": "同一局域网内优先用 WebRTC 直连，连不上时改用端到端加密中继。Android 不安装也能直接使用网页；iPhone 和 iPad 要先添加到主屏幕，才能开启推送。手机上可以点标签或左右滑动切换页面，点击通知会直接进入 Agent 提醒。通知是否震动，由手机系统决定。",
-          "resources.eyebrow": "统一资源库",
           "resources.title": "配好一份，再选给谁用",
           "resources.body": "给每条资源选好项目或 Agent。匹配的提示词在任务开始时生效；动态 Skill 先展示简介，需要时再读正文；MCP 写入支持它的客户端配置。",
           "resources.prompt": "规则、偏好和工作约束",
@@ -1113,8 +1038,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.mcpMessage": "“用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”",
           "examples.mcpResult": "对应 MCP 已在客户端就绪，Agent 只在真正查询时调用工具。",
           "chatFooter.title": "看看这轮有哪些资源",
-          "chatFooter.body": "支持的 Agent 会显示一行 DingDong，列出本轮生效的提示词、匹配到的 Skill 和可用 MCP。Claude Code 也可以选用状态栏，和原来的 HUD 一起显示。会话提供用量数据时，还能看到 Token 总数。",
-          "chatFooter.note": "Skill 后的 * 表示完整指令已加载；MCP 后的 * 表示工具调用过，即使那次调用失败也会标记。提示词不加标记。Token 默认显示，可在设置里关闭。",
+          "chatFooter.body": "支持的 Agent 会在回复末尾附一行 DingDong：本轮生效的 Prompt、匹配到的 Skill、可用的 MCP，会话提供用量时再加上 Token 总数。Claude Code 还可以把它放进状态栏，和原来的 HUD 并排显示。",
+          "chatFooter.note": "Skill 带 * 表示已读入完整指令；MCP 带 * 表示调用过它的工具，即使那次调用失败也会标记。Prompt 不加标记。Token 总数可以在设置里关掉。",
           "chatFooter.sampleHint": "在下面输入一句话，试试看模拟回复和资源提示。",
           "chatFooter.sampleInputLabel": "演示 Agent 消息",
           "chatFooter.sampleInputHint": "按 Enter 运行一段模拟回复。",
@@ -1126,7 +1051,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.sampleSkillResource": "♦ 发布流程*",
           "chatFooter.sampleMcpResource": "♠ GitHub*",
           "chatFooter.sampleStatus": "Agent · 已接入",
-          "defaults.eyebrow": "快捷键与设置参考",
           "defaults.title": "快捷键，换成自己顺手的",
           "defaults.body": "下面列的是默认值。全局快捷键和工作区快捷键都能在设置里重新录入，改完就生效。",
           "defaults.shortcutsTitle": "默认键盘快捷键",
@@ -1186,7 +1110,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.dynamic": "动态",
           "value.classic": "经典叮咚",
           "value.orange": "橙黄",
-          "sounds.eyebrow": "Agent 提醒",
           "sounds.title": "挑一声你听得出来的叮咚",
           "sounds.body": "接入的 Agent 做完了、卡住了，或者等你决定时，可以发来提醒。提示声用内置的，也可以导入自己的音频。",
           "sounds.note": "下面几个声音，先听听再选。",
@@ -1207,12 +1130,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.playing": "正在播放",
           "sounds.finished": "可以继续试听",
           "sounds.error": "这个声音暂时无法播放",
-          "mcp.eyebrow": "接入 Agent",
           "mcp.title": "把 DingDong 接到你的 Agent",
-          "mcp.body": "按 Agent 选择 Skill 的用法：需要时动态加载，或放进它的用户、项目目录。支持 MCP 的客户端会使用各自的原生配置。",
+          "mcp.body": "最省事的办法：复制下面这段话发给 Agent，它会把 DingDong 接成 MCP，并保留你原有的配置。",
           "mcp.promptEyebrow": "交给 AI 配置",
           "mcp.promptTitle": "复制这段话，发给 Agent",
-          "mcp.promptBody": "用已安装的 DingDong 中显示的 MCP 路径。下面这段指令会让 Agent 接好连接，同时保留已有配置。",
+          "mcp.promptBody": "指令里用的是已安装的 DingDong 显示的 MCP 路径，装在哪里都能用。",
           "mcp.copyPrompt": "复制接入指令",
           "mcp.promptCopied": "已复制",
           "mcp.promptReady": "复制后，粘贴到 Agent 对话里",
@@ -1234,7 +1156,6 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.skill": "确定要用哪个 Skill 后再载入",
           "tools.recommend": "按手头的任务找合适的 MCP",
           "tools.notify": "做完、卡住或等你时，叮咚一声",
-          "api.eyebrow": "本地 API",
           "api.title": "想写脚本，也有本地 API",
           "api.body": "可以查状态、找资源、看剪贴板概览，或打开 DingDong 的某个页面。",
           "download.macosArm64": "Mac（Apple 芯片）",
@@ -2039,6 +1960,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const applyLanguage = (lang) => {
         demoState.language = lang;
         document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        document.title = copy[lang]["meta.title"];
         document.querySelectorAll("[data-i18n]").forEach((node) => {
           const value = copy[lang][node.dataset.i18n];
           if (value) node.textContent = value;
