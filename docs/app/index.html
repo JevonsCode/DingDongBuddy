@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#fffefc" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="DingDong" />
@@ -11,13 +12,13 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=46" />
+    <link rel="stylesheet" href="./styles.css?shell=47" />
   </head>
   <body>
     <div class="app-shell">
       <header id="app-header" class="app-header">
         <div class="brand-lockup">
-          <div id="app-mascot-frame" class="mascot-frame" data-icon-style="soft">
+          <div id="app-mascot-frame" class="mascot-frame">
             <img src="../assets/dingdong-icon.png" alt="" />
           </div>
           <div>
@@ -62,10 +63,13 @@
         <section id="pwa-launcher-view" class="pwa-launcher-view" hidden>
           <img src="../assets/dingdong-pwa-192.png" alt="DingDong" />
           <p class="eyebrow">DingDong App</p>
-          <h2>请使用 DingDong App</h2>
-          <p>检测到你已经安装了 DingDong。浏览器页面不接收通知，请从 App 模式继续使用。</p>
+          <h2>请在 DingDong App 里使用</h2>
+          <p>这台手机已安装 DingDong App。浏览器页面不接收通知，请在 App 里使用。</p>
           <button id="open-pwa-app-button" class="primary-button" type="button">
             打开 DingDong App
+          </button>
+          <button id="continue-in-browser-button" class="quiet-button" type="button">
+            继续在浏览器中使用
           </button>
         </section>
 
@@ -94,7 +98,15 @@
             />
           </span>
           <h2>还没有连接电脑</h2>
-          <p>在电脑 DingDong 的“连接设备”里打开二维码，再用手机相机扫描。</p>
+          <p>在电脑 DingDong 的“连接设备”里打开二维码，用手机扫描即可连接。</p>
+          <div class="pairing-actions">
+            <button class="primary-button" type="button" data-pairing-action="scan" hidden>
+              扫描二维码
+            </button>
+            <button class="quiet-button" type="button" data-pairing-action="paste">
+              粘贴连接链接
+            </button>
+          </div>
         </section>
 
         <section id="content-view" hidden>
@@ -156,10 +168,7 @@
               aria-hidden="false"
             >
               <div class="section-heading">
-                <div>
-                  <p class="eyebrow">来自电脑</p>
-                  <h2>剪贴板列表</h2>
-                </div>
+                <h2>收到的内容</h2>
                 <span id="last-sync-label">尚未同步</span>
               </div>
               <div id="clipboard-list" class="content-list"></div>
@@ -179,10 +188,7 @@
               inert
             >
               <div class="section-heading agent-section-heading">
-                <div>
-                  <p class="eyebrow">实时状态</p>
-                  <h2>正在运行</h2>
-                </div>
+                <h2>正在运行</h2>
                 <span class="agent-section-count"><b id="running-count">0</b> 个</span>
               </div>
               <div id="agent-running-list" class="content-list"></div>
@@ -193,10 +199,7 @@
               </div>
               <div class="agent-section-divider" aria-hidden="true"></div>
               <div class="section-heading agent-section-heading">
-                <div>
-                  <p class="eyebrow">完成记录</p>
-                  <h2>Agent 提醒</h2>
-                </div>
+                <h2>完成记录</h2>
                 <span class="agent-section-count">未读 <b id="agent-unseen-count">0</b></span>
               </div>
               <div id="agent-list" class="content-list"></div>
@@ -234,7 +237,6 @@
         </div>
         <p class="composer-note">
           <strong id="composer-target"></strong>
-          只有点击“发送”后，内容才会进入电脑的剪贴板列表。
         </p>
       </section>
     </div>
@@ -254,10 +256,12 @@
         </p>
         <div id="device-switcher-list" class="device-switcher-list"></div>
         <p class="add-device-note">
-          添加电脑：在另一台电脑的 DingDong“连接设备”中打开二维码，再用手机扫描。新设备会加入列表，不会替换现有设备。
+          添加电脑：在另一台电脑的 DingDong“连接设备”中打开二维码。新设备会加入列表，不会替换现有设备。
         </p>
-        <div class="dialog-actions single-action">
-          <button class="primary-button" value="cancel" type="submit">完成</button>
+        <div class="dialog-actions">
+          <button class="quiet-button" type="button" data-pairing-action="paste">粘贴链接</button>
+          <button class="primary-button" type="button" data-pairing-action="scan" hidden>扫码添加</button>
+          <button class="quiet-button" type="submit" value="cancel">完成</button>
         </div>
       </form>
     </dialog>
@@ -303,51 +307,14 @@
         </div>
         <div class="setting-row">
           <div>
-            <strong>直接测试手机震动</strong>
-            <span id="vibration-test-result" role="status" aria-live="polite">
-              支持：检测中 · 返回值：未调用
-            </span>
-          </div>
-          <button id="vibration-test" class="small-button" type="button">测试</button>
-        </div>
-        <div class="setting-row">
-          <div>
-            <strong>PWA 更新</strong>
+            <strong>版本</strong>
             <span id="pwa-update-status" role="status" aria-live="polite">
               当前版本 1.6.4 · 联网时自动保持最新
             </span>
           </div>
           <button id="pwa-update-button" class="small-button" type="button">
-            手动升级
+            检查更新
           </button>
-        </div>
-        <div class="setting-row icon-style-setting">
-          <div>
-            <strong>手机界面图标</strong>
-            <span id="icon-style-note">主屏幕图标由手机系统在安装时生成</span>
-          </div>
-          <div class="icon-style-choices" role="group" aria-label="图标背景">
-            <button
-              id="icon-style-soft"
-              class="icon-style-choice is-selected"
-              type="button"
-              aria-pressed="true"
-              title="浅蓝背景"
-            >
-              <span class="icon-style-preview soft"><img src="../assets/dingdong-icon.png" alt="" /></span>
-              浅蓝
-            </button>
-            <button
-              id="icon-style-white"
-              class="icon-style-choice"
-              type="button"
-              aria-pressed="false"
-              title="白色背景"
-            >
-              <span class="icon-style-preview white"><img src="../assets/dingdong-icon.png" alt="" /></span>
-              白色
-            </button>
-          </div>
         </div>
         <div class="dialog-actions">
           <button id="disconnect-device" class="quiet-button" type="button">断开连接</button>
@@ -438,6 +405,44 @@
       </form>
     </dialog>
 
+    <dialog id="pairing-scanner-dialog" class="settings-dialog scanner-dialog" aria-labelledby="pairing-scanner-title">
+      <div class="dialog-header">
+        <div><h2 id="pairing-scanner-title">扫描连接二维码</h2></div>
+        <button id="pairing-scanner-close" class="icon-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="scanner-viewport">
+        <video id="pairing-scanner-video" playsinline muted></video>
+      </div>
+      <p id="pairing-scanner-status" class="scanner-status" role="status" aria-live="polite">正在打开相机…</p>
+    </dialog>
+
+    <dialog id="pairing-link-dialog" class="settings-dialog" aria-labelledby="pairing-link-title">
+      <form method="dialog">
+        <div class="dialog-header">
+          <div><h2 id="pairing-link-title">粘贴连接链接</h2></div>
+          <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
+        </div>
+        <p class="supporting-text">在电脑 DingDong 的“连接设备”里点“复制给另一台电脑”，把链接发到手机，再粘贴到这里。</p>
+        <label class="field-label" for="pairing-link-input">连接链接</label>
+        <input
+          id="pairing-link-input"
+          class="text-input"
+          type="url"
+          inputmode="url"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="https://…/app/#pair=…"
+        />
+        <p id="pairing-link-error" class="field-error" role="alert" hidden>
+          这不是有效的 DingDong 连接链接，请重新复制。
+        </p>
+        <div class="dialog-actions">
+          <button class="quiet-button" value="cancel" type="submit">取消</button>
+          <button id="pairing-link-submit" class="primary-button" type="button">连接</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <dialog id="image-preview-dialog" class="settings-dialog image-preview-dialog"
       aria-labelledby="image-preview-title" aria-describedby="image-preview-status">
@@ -454,6 +459,6 @@
       </div>
     </dialog>
 
-    <script type="module" src="./app.js?shell=46"></script>
+    <script type="module" src="./app.js?shell=47"></script>
   </body>
 </html>

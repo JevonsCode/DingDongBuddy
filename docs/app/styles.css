@@ -97,11 +97,6 @@ button {
   background: var(--accent-soft);
 }
 
-.mascot-frame[data-icon-style="white"] {
-  border: 1px solid var(--border);
-  background: white;
-}
-
 .mascot-frame img {
   width: 38px;
   height: 38px;
@@ -213,15 +208,9 @@ h2 {
   border-radius: 10px;
 }
 
-html[data-icon-style="soft"] .install-app-banner > img,
-html[data-icon-style="soft"] .install-dialog-copy img {
+.install-app-banner > img,
+.install-dialog-copy img {
   background: var(--accent-soft);
-}
-
-html[data-icon-style="white"] .install-app-banner > img,
-html[data-icon-style="white"] .install-dialog-copy img {
-  border: 1px solid var(--border);
-  background: white;
 }
 
 .install-app-banner > div {
@@ -1224,61 +1213,6 @@ main {
   outline-offset: 2px;
 }
 
-.icon-style-setting {
-  align-items: flex-start;
-}
-
-.setting-row > .icon-style-choices {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: row;
-  gap: 7px;
-}
-
-.icon-style-choice {
-  display: grid;
-  gap: 4px;
-  min-width: 48px;
-  padding: 5px 6px;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.icon-style-choice.is-selected {
-  border-color: #aec9d8;
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.icon-style-preview {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border-radius: 9px;
-}
-
-.icon-style-preview.soft {
-  background: var(--accent-soft);
-}
-
-.icon-style-preview.white {
-  border: 1px solid var(--border);
-  background: white;
-}
-
-.icon-style-preview img {
-  width: 27px;
-  height: 27px;
-  object-fit: contain;
-}
-
 .switch-control input {
   position: absolute;
   opacity: 0;
@@ -1557,4 +1491,108 @@ main {
 @media (max-width: 360px) {
   .transfer-panel { margin-inline: 12px; }
   .transfer-bottom { gap: 6px; }
+}
+
+/* On phone widths the shell spans the screen; match the page background so
+   the area revealed when the browser toolbar collapses is not a grey band. */
+@media (max-width: 620px) {
+  html,
+  body {
+    background: var(--surface);
+  }
+
+  .app-shell {
+    border-inline: 0;
+  }
+}
+
+.pairing-actions {
+  display: flex;
+  width: min(100%, 360px);
+  flex-direction: column;
+  margin-top: 18px;
+}
+
+.pairing-actions > :first-child:not([hidden]) {
+  margin-top: 0;
+}
+
+.field-error {
+  width: min(100%, 360px);
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+  text-align: left;
+}
+
+#pairing-link-dialog .text-input,
+#pairing-link-dialog .field-label {
+  width: 100%;
+}
+
+.scanner-dialog {
+  width: min(calc(100% - 24px), 420px);
+  padding: 18px;
+}
+
+.device-switcher-dialog .dialog-actions {
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+.scanner-viewport {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  margin-top: 12px;
+  border-radius: 14px;
+  background: #11161a;
+}
+
+.scanner-viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A square guide shows where the desktop QR code should sit. */
+.scanner-viewport::after {
+  position: absolute;
+  inset: 18%;
+  border: 2px solid rgb(255 255 255 / 85%);
+  border-radius: 12px;
+  content: "";
+  pointer-events: none;
+}
+
+.scanner-status {
+  margin: 12px 2px 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.agent-card-running {
+  padding: 11px 13px;
+}
+
+.agent-run-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.agent-run-task::before {
+  flex: 0 0 7px;
+  margin-top: 7px;
+}
+
+.agent-run-meta {
+  margin-top: 4px;
+  padding-left: 13px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
 }
