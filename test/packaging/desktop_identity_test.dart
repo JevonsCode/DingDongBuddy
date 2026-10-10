@@ -81,37 +81,42 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.7.0-dev.2 from pubspec', () {
-    final String pubspec = File('pubspec.yaml').readAsStringSync();
-    final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
-    final String windowsResources = File(
-      'windows/runner/Runner.rc',
-    ).readAsStringSync();
-    final String releaseVersion = File(
-      'lib/features/settings/domain/release_update.dart',
-    ).readAsStringSync();
+  test(
+    'desktop hosts consume application version 1.7.0-dev.2 from pubspec',
+    () {
+      final String pubspec = File('pubspec.yaml').readAsStringSync();
+      final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
+      final String windowsResources = File(
+        'windows/runner/Runner.rc',
+      ).readAsStringSync();
+      final String releaseVersion = File(
+        'lib/features/settings/domain/release_update.dart',
+      ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.7.0-dev.2+67'));
-    expect(
-      releaseVersion,
-      contains("const String currentAppVersion = '1.7.0-dev.2';"),
-    );
-    expect(releaseVersion, contains("const String currentAppBuild = '67';"));
-    expect(
-      File('lib/features/agent_api/data/mcp_server.dart').readAsStringSync(),
-      contains("'version': '1.7.0-dev.2'"),
-    );
-    expect(
-      File(
+      expect(pubspec, contains('version: 1.7.0-dev.2+67'));
+      expect(
+        releaseVersion,
+        contains("const String currentAppVersion = '1.7.0-dev.2';"),
+      );
+      expect(releaseVersion, contains("const String currentAppBuild = '67';"));
+      // Protocol client/server info reuses the one Dart version constant.
+      for (final String path in const <String>[
+        'lib/features/agent_api/data/mcp_server.dart',
         'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
-      ).readAsStringSync(),
-      contains("'version': '1.7.0-dev.2'"),
-    );
-    expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
-    expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,67'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.7.0-dev.2"'));
-  });
+      ]) {
+        final String source = File(path).readAsStringSync();
+        expect(source, contains("'version': currentAppVersion"), reason: path);
+        expect(source, isNot(contains('1.7.0')), reason: path);
+      }
+      expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
+      expect(windowsResources, contains('FLUTTER_VERSION'));
+      expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,67'));
+      expect(
+        windowsResources,
+        contains('#define VERSION_AS_STRING "1.7.0-dev.2"'),
+      );
+    },
+  );
 
   test('macOS About uses the canonical DingDong logo', () {
     final File canonicalLogo = File('Assets/DingDongIP/AgentToolIcon.png');
@@ -609,14 +614,8 @@ void main() {
     expect(releaseMetadata, contains('"latestVersion": "1.6.4"'));
     expect(releaseMetadata, contains('"latestBuild": "67"'));
     expect(releaseMetadata, contains('"prerelease": false'));
-    expect(
-      releaseMetadata,
-      contains('Fixes internal Codex background tasks'),
-    );
-    expect(
-      releaseMetadata,
-      contains('Fixes repeated sounds and flashes'),
-    );
+    expect(releaseMetadata, contains('Fixes internal Codex background tasks'));
+    expect(releaseMetadata, contains('Fixes repeated sounds and flashes'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));

@@ -155,10 +155,17 @@ final class ClipboardRecord {
     );
   }
 
-  Map<String, Object?> toHistoryJson({required bool includeContent}) {
+  /// Metadata for Agent clipboard APIs.
+  ///
+  /// [includeTitle] must be false while Agent clipboard-content access is off:
+  /// a text record's title is the beginning of its content.
+  Map<String, Object?> toHistoryJson({
+    required bool includeContent,
+    bool includeTitle = true,
+  }) {
     return <String, Object?>{
       'id': id,
-      'title': title,
+      if (includeTitle) 'title': title,
       'group': group,
       'groups': groupNames,
       'classification': kind.name,

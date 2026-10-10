@@ -641,7 +641,6 @@ class _ShellScreenState extends State<ShellScreen> {
                         true,
                     showShortcutHints: _showWorkspaceShortcutHints,
                     workspaceShortcuts: workspaceShortcuts,
-                    mascotShakeRevision: widget.controller.mascotShakeRevision,
                     mascotState: widget.controller.mascotState,
                     onSelected: widget.controller.open,
                     onIssues: _openIssueCenter,

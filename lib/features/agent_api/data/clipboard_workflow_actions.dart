@@ -6,13 +6,13 @@ extension ClipboardWorkflowActions on ClipboardWorkflowRoutes {
     Map<String, String> query,
   ) async {
     final String? normalized = _normalizedAlias(alias);
-    final bool? includeSensitive = _parseBool(
+    final bool? includeSensitive = parseQueryBool(
       query['includeSensitiveClipboard'],
     );
     if (normalized == null ||
         (query.containsKey('includeSensitiveClipboard') &&
             includeSensitive == null)) {
-      return _badRequest('Invalid clipboard snippet alias');
+      return HttpResponseData.badRequest('Invalid clipboard snippet alias');
     }
     final List<ClipboardRecord> matches =
         _store
@@ -32,13 +32,7 @@ extension ClipboardWorkflowActions on ClipboardWorkflowRoutes {
             return right.updatedAt.compareTo(left.updatedAt);
           });
     if (matches.isEmpty) {
-      return const HttpResponseData(
-        statusCode: 404,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Clipboard snippet not found',
-        },
-      );
+      return HttpResponseData.notFound('Clipboard snippet not found');
     }
     final ClipboardGateway? gateway = _gateway;
     if (gateway == null) {
@@ -64,13 +58,7 @@ extension ClipboardWorkflowActions on ClipboardWorkflowRoutes {
         .where((ClipboardRecord record) => record.id == id)
         .firstOrNull;
     if (clipboard == null) {
-      return const HttpResponseData(
-        statusCode: 404,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Clipboard record not found',
-        },
-      );
+      return HttpResponseData.notFound('Clipboard record not found');
     }
     final ResourceStore? resourceStore = _resourceStore;
     if (resourceStore == null) {
@@ -84,7 +72,7 @@ extension ClipboardWorkflowActions on ClipboardWorkflowRoutes {
           ? ResourceType.prompt
           : ResourceType.parse(payload['targetType']);
       if (!type.isLibraryResource) {
-        return _badRequest('targetType cannot be clipboard');
+        return HttpResponseData.badRequest('targetType cannot be clipboard');
       }
       final DateTime timestamp = _now().toUtc();
       final Resource promoted = Resource(
@@ -119,7 +107,7 @@ extension ClipboardWorkflowActions on ClipboardWorkflowRoutes {
         },
       );
     } on Object {
-      return _badRequest('Invalid promotion JSON body');
+      return HttpResponseData.badRequest('Invalid promotion JSON body');
     }
   }
 }

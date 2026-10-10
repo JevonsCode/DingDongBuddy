@@ -3383,23 +3383,11 @@ void main() {
         now: () => now,
       );
       const List<String> paths = <String>[
-        '/agent/templates',
         '/agent/capabilities',
         '/agent/manifest',
         '/.well-known/dingdong-agent.json',
         '/system/status',
-        '/agent/toolkit',
-        '/agent/startup?task=review',
         '/agent/bridge?task=review&source=Codex',
-        '/agent/prepare?task=review',
-        '/agent/workbench?task=review',
-        '/agent/instructions?task=review',
-        '/agent/brief',
-        '/agent/recommend?q=review',
-        '/agent/resolve?q=review',
-        '/agent/resource/prompt-1?mode=full',
-        '/agent/context?q=review',
-        '/events',
       ];
 
       for (final String path in paths) {
@@ -3432,6 +3420,123 @@ void main() {
       );
     },
   );
+
+  test(
+    'clipboard metadata hides content-derived text until access is allowed',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 12);
+      final InMemoryClipboardStore clipboard = InMemoryClipboardStore(
+        <ClipboardRecord>[
+          ClipboardRecord(
+            id: 'secret-note',
+            group: 'Notes',
+            title: 'deploy password hunter2',
+            content: 'deploy password hunter2',
+            tags: const <String>['clipboard', 'text', 'alias:deploy'],
+            pinned: false,
+            enabled: true,
+            activation: 'taskMatch',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
+      Future<Map<String, Object?>> get(
+        String uri, {
+        required bool allow,
+      }) async {
+        final AgentRouter router = AgentRouter(
+          resourceStore: InMemoryResourceStore(),
+          clipboardStore: clipboard,
+          allowAgentClipboardContent: () async => allow,
+          now: () => now,
+        );
+        final response = await router.route(
+          HttpRequestData(method: 'GET', uri: uri),
+        );
+        expect(response.statusCode, 200, reason: uri);
+        return response.json;
+      }
+
+      List<Map<String, Object?>> items(Map<String, Object?> json, String key) =>
+          (json[key]! as List<Object?>).cast<Map<String, Object?>>();
+
+      for (final (String uri, String key) in const <(String, String)>[
+        ('/clipboard/history', 'items'),
+        ('/clipboard/snippets', 'items'),
+        ('/clipboard/digest?q=alias', 'candidates'),
+        ('/clipboard/insights', 'snippetCandidates'),
+      ]) {
+        final List<Map<String, Object?>> hidden = items(
+          await get(uri, allow: false),
+          key,
+        );
+        expect(hidden, hasLength(1), reason: uri);
+        expect(hidden.single, isNot(contains('title')), reason: uri);
+        expect(
+          items(await get(uri, allow: true), key).single['title'],
+          'deploy password hunter2',
+          reason: uri,
+        );
+      }
+
+      // Search must not act as an oracle for clipboard text either.
+      expect(
+        items(await get('/clipboard/history?q=hunter2', allow: false), 'items'),
+        isEmpty,
+      );
+      expect(
+        items(await get('/clipboard/history?q=alias', allow: false), 'items'),
+        hasLength(1),
+      );
+      expect(
+        items(await get('/clipboard/history?q=hunter2', allow: true), 'items'),
+        hasLength(1),
+      );
+    },
+  );
+
+  test('retired task-pack routes are gone and never record usage', () async {
+    final DateTime now = DateTime.utc(2026, 7, 12);
+    final InMemoryResourceStore resources = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'prompt-1',
+        type: ResourceType.prompt,
+        title: 'Review changes',
+        content: 'Check risky changes',
+        tags: const <String>['review'],
+        pinned: true,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final AgentRouter router = AgentRouter(
+      resourceStore: resources,
+      clipboardStore: InMemoryClipboardStore(),
+      now: () => now,
+    );
+
+    for (final String path in const <String>[
+      '/agent/templates',
+      '/agent/toolkit',
+      '/agent/startup?task=review',
+      '/agent/prepare?task=review',
+      '/agent/workbench?task=review',
+      '/agent/instructions?task=review',
+      '/agent/brief',
+      '/agent/recommend?q=review',
+      '/agent/resolve?q=review',
+      '/agent/resource/prompt-1?mode=full',
+      '/agent/context?q=review',
+      '/events',
+    ]) {
+      final response = await router.route(
+        HttpRequestData(method: 'GET', uri: path),
+      );
+      expect(response.statusCode, 404, reason: path);
+    }
+    expect((await resources.load()).single.usageCount, 0);
+  });
 
   test(
     'agent presence, sessions, memories, bundles, and handoffs coordinate state',

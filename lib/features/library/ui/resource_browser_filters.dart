@@ -9,9 +9,7 @@ class _TypeFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<ResourceType?> types = <ResourceType?>[
       null,
-      ResourceType.prompt,
-      ResourceType.skill,
-      ResourceType.mcp,
+      ...ResourceType.configurable,
     ];
     return SizedBox(
       height: 35,

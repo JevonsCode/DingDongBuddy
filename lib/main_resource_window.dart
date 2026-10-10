@@ -123,7 +123,6 @@ Future<void> _runResourceManagerWindow(
     clipboardRepository,
     archiveStore: clipboardRepository,
     gateway: DesktopClipboardGateway(),
-    resourceStore: resourceStore,
     revisions: dataRevisions,
     managedImageDirectory: paths.clipboardImagesDirectory,
     categoryRuleStore: FileClipboardCategoryRuleStore(

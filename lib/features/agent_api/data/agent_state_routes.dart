@@ -72,7 +72,7 @@ final class AgentStateRoutes {
       final Map<String, Object?> payload = _decode(body);
       final String source = (payload['source'] as String? ?? '').trim();
       if (source.isEmpty) {
-        return _badRequest('source is required');
+        return HttpResponseData.badRequest('source is required');
       }
       final String status = (payload['status'] as String? ?? 'active').trim();
       final Map<String, Object?> record = <String, Object?>{
@@ -87,7 +87,7 @@ final class AgentStateRoutes {
       _trimMap(_presence, 50);
       return HttpResponseData(statusCode: 200, json: record);
     } on Object {
-      return _badRequest('Invalid agent presence JSON body');
+      return HttpResponseData.badRequest('Invalid agent presence JSON body');
     }
   }
 
@@ -100,7 +100,10 @@ final class AgentStateRoutes {
         )
         .take(limit)
         .toList(growable: false);
-    return _ok(<String, Object?>{'agents': records, 'count': records.length});
+    return HttpResponseData.ok(<String, Object?>{
+      'agents': records,
+      'count': records.length,
+    });
   }
 
   Future<HttpResponseData> _createSession(String body) async {
@@ -108,7 +111,7 @@ final class AgentStateRoutes {
       final Map<String, Object?> payload = _decode(body);
       final String task = (payload['task'] as String? ?? '').trim();
       if (task.isEmpty) {
-        return _badRequest('task is required');
+        return HttpResponseData.badRequest('task is required');
       }
       final String timestamp = now().toUtc().toIso8601String();
       final String id = idGenerator();
@@ -137,7 +140,7 @@ final class AgentStateRoutes {
         json: <String, Object?>{'status': 'created', 'session': session},
       );
     } on Object {
-      return _badRequest('Invalid agent session JSON body');
+      return HttpResponseData.badRequest('Invalid agent session JSON body');
     }
   }
 
@@ -148,7 +151,7 @@ final class AgentStateRoutes {
       id,
     );
     if (existing == null) {
-      return _notFound('Agent session not found');
+      return HttpResponseData.notFound('Agent session not found');
     }
     try {
       final Map<String, Object?> updated = <String, Object?>{
@@ -162,9 +165,11 @@ final class AgentStateRoutes {
         ..[id] = updated;
       _trimMap(_sessions, _maximumCachedRecords);
       await _updateAgentResource(id, updated);
-      return _ok(<String, Object?>{'session': updated});
+      return HttpResponseData.ok(<String, Object?>{'session': updated});
     } on Object {
-      return _badRequest('Invalid agent session patch JSON body');
+      return HttpResponseData.badRequest(
+        'Invalid agent session patch JSON body',
+      );
     }
   }
 
@@ -184,7 +189,7 @@ final class AgentStateRoutes {
         .reversed
         .take(limit)
         .toList(growable: false);
-    return _ok(<String, Object?>{
+    return HttpResponseData.ok(<String, Object?>{
       'sessions': sessions,
       'count': sessions.length,
     });
@@ -196,7 +201,7 @@ final class AgentStateRoutes {
       final String title = (payload['title'] as String? ?? '').trim();
       final String content = (payload['content'] as String? ?? '').trim();
       if (title.isEmpty || content.isEmpty) {
-        return _badRequest('title and content are required');
+        return HttpResponseData.badRequest('title and content are required');
       }
       final String kind = (payload['kind'] as String? ?? 'note').trim();
       final String source = (payload['source'] as String? ?? 'Agent').trim();
@@ -228,7 +233,7 @@ final class AgentStateRoutes {
         },
       );
     } on Object {
-      return _badRequest('Invalid agent memory JSON body');
+      return HttpResponseData.badRequest('Invalid agent memory JSON body');
     }
   }
 
@@ -248,7 +253,7 @@ final class AgentStateRoutes {
         )
         .take(limit)
         .toList(growable: false);
-    return _ok(<String, Object?>{
+    return HttpResponseData.ok(<String, Object?>{
       'memories': memories
           .map((Resource item) => item.toApiJson())
           .toList(growable: false),
@@ -262,7 +267,7 @@ final class AgentStateRoutes {
       final String title = (payload['title'] as String? ?? '').trim();
       final String task = (payload['task'] as String? ?? '').trim();
       if (title.isEmpty || task.isEmpty) {
-        return _badRequest('title and task are required');
+        return HttpResponseData.badRequest('title and task are required');
       }
       final List<Resource> candidates = (await resourceStore.load())
           .where((Resource item) => !item.tags.contains('agent-memory'))
@@ -293,7 +298,7 @@ final class AgentStateRoutes {
         },
       );
     } on Object {
-      return _badRequest('Invalid agent bundle JSON body');
+      return HttpResponseData.badRequest('Invalid agent bundle JSON body');
     }
   }
 
@@ -303,7 +308,7 @@ final class AgentStateRoutes {
       final String title = (payload['title'] as String? ?? '').trim();
       final String summary = (payload['summary'] as String? ?? '').trim();
       if (title.isEmpty || summary.isEmpty) {
-        return _badRequest('title and summary are required');
+        return HttpResponseData.badRequest('title and summary are required');
       }
       final String id = idGenerator();
       final String timestamp = now().toUtc().toIso8601String();
@@ -332,7 +337,7 @@ final class AgentStateRoutes {
         json: <String, Object?>{'status': 'created', 'handoff': handoff},
       );
     } on Object {
-      return _badRequest('Invalid agent handoff JSON body');
+      return HttpResponseData.badRequest('Invalid agent handoff JSON body');
     }
   }
 
@@ -343,7 +348,7 @@ final class AgentStateRoutes {
       id,
     );
     if (existing == null) {
-      return _notFound('Agent handoff not found');
+      return HttpResponseData.notFound('Agent handoff not found');
     }
     try {
       final Map<String, Object?> updated = <String, Object?>{
@@ -357,9 +362,11 @@ final class AgentStateRoutes {
         ..[id] = updated;
       _trimMap(_handoffs, _maximumCachedRecords);
       await _updateAgentResource(id, updated);
-      return _ok(<String, Object?>{'handoff': updated});
+      return HttpResponseData.ok(<String, Object?>{'handoff': updated});
     } on Object {
-      return _badRequest('Invalid agent handoff patch JSON body');
+      return HttpResponseData.badRequest(
+        'Invalid agent handoff patch JSON body',
+      );
     }
   }
 
@@ -375,7 +382,7 @@ final class AgentStateRoutes {
         .reversed
         .take(limit)
         .toList(growable: false);
-    return _ok(<String, Object?>{
+    return HttpResponseData.ok(<String, Object?>{
       'handoffs': handoffs,
       'count': handoffs.length,
     });
@@ -529,18 +536,3 @@ void _trimMap(Map<String, Map<String, Object?>> values, int limit) {
     values.remove(values.keys.first);
   }
 }
-
-HttpResponseData _ok(Map<String, Object?> values) => HttpResponseData(
-  statusCode: 200,
-  json: <String, Object?>{'status': 'ok', 'service': 'DingDong', ...values},
-);
-
-HttpResponseData _badRequest(String message) => HttpResponseData(
-  statusCode: 400,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);
-
-HttpResponseData _notFound(String message) => HttpResponseData(
-  statusCode: 404,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);

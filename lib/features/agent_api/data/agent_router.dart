@@ -237,10 +237,7 @@ final class AgentRouter {
       }
     }
     if (request.method == 'GET' && request.parsedUri.path == '/health') {
-      return const HttpResponseData(
-        statusCode: 200,
-        json: <String, Object?>{'status': 'ok', 'service': 'DingDong'},
-      );
+      return HttpResponseData.ok(const <String, Object?>{});
     }
     if (request.method == 'POST' &&
         request.parsedUri.path == '/agent/conversation/opened') {
@@ -345,13 +342,7 @@ final class AgentRouter {
           },
         );
       } on Object {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Invalid JSON body',
-          },
-        );
+        return HttpResponseData.badRequest('Invalid JSON body');
       }
     }
     if (request.method == 'POST' && request.parsedUri.path == '/library') {
@@ -364,63 +355,38 @@ final class AgentRouter {
           ? _resourceUnavailable()
           : routes.installSkill(request.body);
     }
-    if (request.method == 'POST' && request.parsedUri.path == '/agent/bridge') {
+    final Map<String, String> query = request.parsedUri.queryParameters;
+    final Future<HttpResponseData> Function(AgentBridge bridge)? bridgeRoute =
+        switch ((request.method, request.parsedUri.path)) {
+          ('POST', '/agent/bridge') => (AgentBridge bridge) => bridge.respond(
+            request.body,
+          ),
+          ('GET', '/agent/skills/load' || '/skill') =>
+            (AgentBridge bridge) => bridge.loadSkill(query),
+          ('GET', '/agent/mcps/confirm-use') =>
+            (AgentBridge bridge) => bridge.confirmMcpUse(query),
+          ('GET', '/agent/skills/file') =>
+            (AgentBridge bridge) => bridge.readSkillFile(query),
+          _ => null,
+        };
+    if (bridgeRoute != null) {
       final ResourceStore? store = _resourceStore;
-      if (store == null) {
-        return _resourceUnavailable();
-      }
-      return AgentBridge(
-        store,
-        triggerGroupStore: _triggerGroupStore,
-        querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
-        now: _now,
-        onTaskStarted: _onAgentTaskStarted,
-        loadConversationFooterSymbols: _loadConversationFooterSymbols,
-        loadShowConversationTokenUsage: _loadShowConversationTokenUsage,
-        loadConversationTokenUsage: _loadConversationTokenUsage,
-        loadJevUsage: loadJevUsage,
-      ).respond(request.body);
-    }
-    if (request.method == 'GET' &&
-        (request.parsedUri.path == '/agent/skills/load' ||
-            request.parsedUri.path == '/skill')) {
-      final ResourceStore? store = _resourceStore;
-      if (store == null) {
-        return _resourceUnavailable();
-      }
-      return AgentBridge(
-        store,
-        triggerGroupStore: _triggerGroupStore,
-        querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
-        now: _now,
-        loadConversationFooterSymbols: _loadConversationFooterSymbols,
-      ).loadSkill(request.parsedUri.queryParameters);
-    }
-    if (request.method == 'GET' &&
-        request.parsedUri.path == '/agent/mcps/confirm-use') {
-      final ResourceStore? store = _resourceStore;
-      if (store == null) {
-        return _resourceUnavailable();
-      }
-      return AgentBridge(
-        store,
-        triggerGroupStore: _triggerGroupStore,
-        now: _now,
-        loadConversationFooterSymbols: _loadConversationFooterSymbols,
-      ).confirmMcpUse(request.parsedUri.queryParameters);
-    }
-    if (request.method == 'GET' &&
-        request.parsedUri.path == '/agent/skills/file') {
-      final ResourceStore? store = _resourceStore;
-      if (store == null) {
-        return _resourceUnavailable();
-      }
-      return AgentBridge(
-        store,
-        triggerGroupStore: _triggerGroupStore,
-        querySkillDeploymentPresence: _skillDeploymentStore?.queryPresence,
-        now: _now,
-      ).readSkillFile(request.parsedUri.queryParameters);
+      return store == null
+          ? _resourceUnavailable()
+          : bridgeRoute(
+              AgentBridge(
+                store,
+                triggerGroupStore: _triggerGroupStore,
+                querySkillDeploymentPresence:
+                    _skillDeploymentStore?.queryPresence,
+                now: _now,
+                onTaskStarted: _onAgentTaskStarted,
+                loadConversationFooterSymbols: _loadConversationFooterSymbols,
+                loadShowConversationTokenUsage: _loadShowConversationTokenUsage,
+                loadConversationTokenUsage: _loadConversationTokenUsage,
+                loadJevUsage: loadJevUsage,
+              ),
+            );
     }
     if (request.method == 'GET' && request.parsedUri.path == '/library') {
       return _listResources(request.parsedUri.queryParameters);
@@ -544,7 +510,10 @@ final class AgentRouter {
       if (routes == null) {
         return _resourceUnavailable();
       }
-      return routes.history(request.parsedUri.queryParameters);
+      return routes.history(
+        request.parsedUri.queryParameters,
+        revealText: await _isAgentClipboardContentAllowed(),
+      );
     }
     if (request.method == 'GET' &&
         request.parsedUri.path == '/clipboard/overview') {
@@ -561,21 +530,30 @@ final class AgentRouter {
       final ClipboardWorkflowRoutes? routes = _clipboardWorkflowRoutes;
       return routes == null
           ? _resourceUnavailable()
-          : routes.snippets(request.parsedUri.queryParameters);
+          : routes.snippets(
+              request.parsedUri.queryParameters,
+              revealText: await _isAgentClipboardContentAllowed(),
+            );
     }
     if (request.method == 'GET' &&
         request.parsedUri.path == '/clipboard/digest') {
       final ClipboardWorkflowRoutes? routes = _clipboardWorkflowRoutes;
       return routes == null
           ? _resourceUnavailable()
-          : routes.digest(request.parsedUri.queryParameters);
+          : routes.digest(
+              request.parsedUri.queryParameters,
+              revealText: await _isAgentClipboardContentAllowed(),
+            );
     }
     if (request.method == 'GET' &&
         request.parsedUri.path == '/clipboard/insights') {
       final ClipboardWorkflowRoutes? routes = _clipboardWorkflowRoutes;
       return routes == null
           ? _resourceUnavailable()
-          : routes.insights(request.parsedUri.queryParameters);
+          : routes.insights(
+              request.parsedUri.queryParameters,
+              revealText: await _isAgentClipboardContentAllowed(),
+            );
     }
     if (request.method == 'POST' &&
         request.parsedUri.pathSegments.length == 4 &&
@@ -611,12 +589,9 @@ final class AgentRouter {
         request.parsedUri.path == '/clipboard/capture') {
       final ClipboardCaptureService? service = _clipboardCaptureService;
       if (service == null) {
-        return const HttpResponseData(
-          statusCode: 503,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Clipboard capture is not available',
-          },
+        return HttpResponseData.error(
+          503,
+          'Clipboard capture is not available',
         );
       }
       final ClipboardRecord? captured = await service.capture();
@@ -647,23 +622,11 @@ final class AgentRouter {
         request.parsedUri.pathSegments.last,
       );
       if (record == null) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Clipboard record not found',
-          },
-        );
+        return HttpResponseData.notFound('Clipboard record not found');
       }
       final ClipboardGateway? gateway = _clipboardGateway;
       if (gateway == null) {
-        return const HttpResponseData(
-          statusCode: 500,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Could not restore clipboard',
-          },
-        );
+        return HttpResponseData.error(500, 'Could not restore clipboard');
       }
       if (record.tags.contains('file-url')) {
         final List<String> paths = record.content
@@ -699,10 +662,7 @@ final class AgentRouter {
         },
       );
     }
-    return const HttpResponseData(
-      statusCode: 404,
-      json: <String, Object?>{'status': 'error', 'message': 'Route not found'},
-    );
+    return HttpResponseData.notFound('Route not found');
   }
 
   Future<bool> _isAgentClipboardContentAllowed() async {
@@ -787,7 +747,7 @@ bool _requestsClipboardContent(HttpRequestData request) {
         '/clipboard/snippets',
         '/clipboard/digest',
       }.contains(uri.path)) {
-    return _trueQueryValue(uri.queryParameters['includeContent']);
+    return parseQueryBool(uri.queryParameters['includeContent']) ?? false;
   }
   if (request.method != 'POST') {
     return false;
@@ -800,37 +760,16 @@ bool _requestsClipboardContent(HttpRequestData request) {
       uri.pathSegments[1] == 'promote';
 }
 
-bool _trueQueryValue(String? value) => switch (value?.toLowerCase()) {
-  'true' || '1' || 'yes' || 'on' => true,
-  _ => false,
-};
-
 HttpResponseData _resourceUnavailable() {
-  return const HttpResponseData(
-    statusCode: 503,
-    json: <String, Object?>{
-      'status': 'error',
-      'message': 'Resource library is not available',
-    },
-  );
+  return HttpResponseData.error(503, 'Resource library is not available');
 }
 
 HttpResponseData _invalidConversationOpenedBody() {
-  return const HttpResponseData(
-    statusCode: 400,
-    json: <String, Object?>{
-      'status': 'error',
-      'message': 'A known Agent client and conversation ID are required',
-    },
+  return HttpResponseData.badRequest(
+    'A known Agent client and conversation ID are required',
   );
 }
 
 HttpResponseData _invalidResourceType() {
-  return const HttpResponseData(
-    statusCode: 400,
-    json: <String, Object?>{
-      'status': 'error',
-      'message': 'Invalid resource type',
-    },
-  );
+  return HttpResponseData.badRequest('Invalid resource type');
 }
