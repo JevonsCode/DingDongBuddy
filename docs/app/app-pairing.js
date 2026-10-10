@@ -1,9 +1,10 @@
-import { parseContentTabLaunch } from "./content-navigation.js";
-import { base64UrlDecode } from "./app-codecs.js?shell=46";
+import { parseContentTabLaunch } from "./content-navigation.js?shell=47";
+import { base64UrlDecode } from "./app-codecs.js?shell=47";
 import {
+  extractPairingFragment,
   isScannedPairing,
   pairingsMatch,
-} from "./pairing-state.js?shell=46";
+} from "./pairing-state.js?shell=47";
 
 // QR launch capture, multi-device replacement, and explicit pairing confirmation.
 export function createPairingController({
@@ -86,6 +87,20 @@ export function createPairingController({
     }
     showPairConfirmation(scannedPair);
     return true;
+  }
+
+  // Opens a pairing link from an in-app scan or a paste exactly as if the
+  // link itself had been opened. Returns false when the text is not a valid
+  // DingDong pairing link.
+  function openPairingText(text) {
+    const fragment = extractPairingFragment(text);
+    if (!fragment) return false;
+    history.replaceState(
+      null,
+      "",
+      `${location.pathname}${location.search}${fragment}`,
+    );
+    return handleRuntimePairingLaunch();
   }
 
   function initializeLaunchQueue() {
@@ -209,6 +224,7 @@ export function createPairingController({
       confirmPairing,
       handleRuntimePairingLaunch,
       initializeLaunchQueue,
+      openPairingText,
       showPairConfirmation,
     };
 }

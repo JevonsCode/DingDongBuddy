@@ -1,15 +1,13 @@
-import { wantsAgentNotifications } from "./notification-policy.js?shell=46";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=47";
 
 // Connected-device settings, capability diagnostics, and destructive actions.
 export function createDeviceSettingsController({
   clearDownloadHistory = () => {},
   state,
   elements,
-  directVibrationPattern,
   activeSession,
   sessionForRoom,
   showToast,
-  renderIconStyleChoices,
   renderAgentNotificationStatus,
   renderPwaUpdateStatus,
   persistPairingsForWorker,
@@ -35,34 +33,10 @@ export function createDeviceSettingsController({
       session.pair.vibrationEnabled !== false;
     elements["vibration-toggle"].disabled =
       !wantsAgentNotifications(session.pair);
-    renderIconStyleChoices();
     renderAgentNotificationStatus();
     renderPwaUpdateStatus();
     if (!elements["settings-dialog"].open) {
       elements["settings-dialog"].showModal();
-    }
-  }
-
-
-  function testDeviceVibration() {
-    const result = elements["vibration-test-result"];
-    if (typeof navigator.vibrate !== "function") {
-      result.textContent = "支持：否 · 返回值：未调用";
-      showToast("当前浏览器没有提供震动能力");
-      return;
-    }
-    let accepted = false;
-    try {
-      accepted = navigator.vibrate(directVibrationPattern);
-    } catch {
-      accepted = false;
-    }
-    if (accepted) {
-      result.textContent = "支持：是 · 返回值：true；无触感说明被系统拦截";
-      showToast("已请求三段震动，请确认手机触感");
-    } else {
-      result.textContent = "支持：是 · 返回值：false；浏览器未接受请求";
-      showToast("浏览器拒绝震动，请检查系统触感设置");
     }
   }
 
@@ -124,6 +98,5 @@ export function createDeviceSettingsController({
       openSettingsDialog,
       requestDeleteDevice,
       sendSettings,
-      testDeviceVibration,
     };
 }

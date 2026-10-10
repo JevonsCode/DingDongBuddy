@@ -128,3 +128,11 @@ export function shouldSkipPairingCleanup(cleanupPair, currentPair) {
     currentPair.agentNotificationsEnabled === true
   );
 }
+
+// Finds the `#pair=` fragment in a scanned QR value or a pasted link, so both
+// entry points reuse the same launch handling as opening the link directly.
+export function extractPairingFragment(text) {
+  if (typeof text !== "string") return null;
+  const match = text.trim().match(/#pair=([A-Za-z0-9_-]{16,8192})/);
+  return match ? `#pair=${match[1]}` : null;
+}
