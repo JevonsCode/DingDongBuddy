@@ -5,6 +5,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/domain/file_transfer.dart';
+import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -89,6 +90,15 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
     'pairing': controller.pendingPairing?.toJson(),
     'pairingStatus': controller.pairingStatus.name,
     'canPair': controller.canPair,
+    if (controller is LanComputerManagement) ...{
+      'nearbyComputers': (controller as LanComputerManagement).nearbyComputers
+          .map((c) => c.toJson())
+          .toList(),
+      'computerPairingCode':
+          (controller as LanComputerManagement).computerPairingCode,
+      'computerDiscoveryError':
+          (controller as LanComputerManagement).computerDiscoveryError,
+    },
     if (controller is FileTransferManagement)
       'fileTransfers': (controller as FileTransferManagement).fileTransfers
           .map((view) => view.toJson())
@@ -102,6 +112,22 @@ Future<Object?> handleDeviceLinkManagerHostCall(
   MethodCall call,
 ) async {
   switch (call.method) {
+    case 'device_link_lan_refresh':
+      await (controller as LanComputerManagement).refreshComputers();
+      return null;
+    case 'device_link_lan_begin':
+      await (controller as LanComputerManagement).beginComputerPairing();
+      return null;
+    case 'device_link_lan_cancel':
+      await (controller as LanComputerManagement).cancelComputerPairing();
+      return null;
+    case 'device_link_lan_join':
+      final values = call.arguments! as Map;
+      await (controller as LanComputerManagement).joinNearbyComputer(
+        values['id'] as String,
+        values['code'] as String,
+      );
+      return null;
     case 'device_link_transfer_control':
       if (controller is FileTransferManagement) {
         final values = call.arguments! as Map;
@@ -164,6 +190,10 @@ Future<Object?> handleDeviceLinkManagerHostCall(
 }
 
 bool isDeviceLinkManagerHostMethod(String method) => const <String>{
+  'device_link_lan_refresh',
+  'device_link_lan_begin',
+  'device_link_lan_cancel',
+  'device_link_lan_join',
   'device_link_transfer_control',
   deviceLinkManagerSnapshotMethod,
   deviceLinkManagerBeginPairingMethod,
@@ -179,7 +209,10 @@ bool isDeviceLinkManagerHostMethod(String method) => const <String>{
 
 /// Child-window presentation proxy. It never creates a second RTC session.
 final class RemoteDeviceLinkManagement extends ChangeNotifier
-    implements DeviceLinkManagement, FileTransferManagement {
+    implements
+        DeviceLinkManagement,
+        FileTransferManagement,
+        LanComputerManagement {
   factory RemoteDeviceLinkManagement({
     required WindowController parentController,
   }) => RemoteDeviceLinkManagement._(parentController);
@@ -201,6 +234,24 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
   bool _canPair = false;
   bool _disposed = false;
+  @override
+  List<NearbyComputer> nearbyComputers = const [];
+  @override
+  String? computerPairingCode;
+  @override
+  String? computerDiscoveryError;
+  @override
+  Future<void> refreshComputers() =>
+      _invokeAndReload('device_link_lan_refresh');
+  @override
+  Future<void> beginComputerPairing() =>
+      _invokeAndReload('device_link_lan_begin');
+  @override
+  Future<void> cancelComputerPairing() =>
+      _invokeAndReload('device_link_lan_cancel');
+  @override
+  Future<void> joinNearbyComputer(String deviceId, String code) =>
+      _invokeAndReload('device_link_lan_join', {'id': deviceId, 'code': code});
   @override
   List<FileTransfer> fileTransfers = const [];
   @override
@@ -249,6 +300,12 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
     );
     if (response is! Map) return;
     final Map<String, Object?> json = Map<String, Object?>.from(response);
+    nearbyComputers = (json['nearbyComputers'] as List? ?? [])
+        .whereType<Map>()
+        .map(NearbyComputer.fromJson)
+        .toList();
+    computerPairingCode = json['computerPairingCode'] as String?;
+    computerDiscoveryError = json['computerDiscoveryError'] as String?;
     fileTransfers = (json['fileTransfers'] as List? ?? [])
         .whereType<Map>()
         .map((entry) => FileTransfer.fromJson(Map<String, Object?>.from(entry)))

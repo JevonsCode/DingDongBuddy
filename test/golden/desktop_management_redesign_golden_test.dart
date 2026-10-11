@@ -10,6 +10,7 @@ import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -149,6 +150,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     final _GoldenDeviceManagement controller = _GoldenDeviceManagement();
 
+    final mismatches = <Object>[];
     for (final (ThemeMode mode, String name) in <(ThemeMode, String)>[
       (ThemeMode.light, 'connected_devices_redesign_light'),
       (ThemeMode.dark, 'connected_devices_redesign_dark'),
@@ -163,11 +165,16 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await expectLater(
-        find.byKey(const Key('management-golden')),
-        matchesGoldenFile('goldens/$name.png'),
-      );
+      try {
+        await expectLater(
+          find.byKey(const Key('management-golden')),
+          matchesGoldenFile('goldens/$name.png'),
+        );
+      } catch (error) {
+        mismatches.add(error);
+      }
     }
+    expect(mismatches, isEmpty);
   }, tags: <String>['golden']);
 
   testWidgets(
@@ -181,6 +188,7 @@ void main() {
         includeComputer: true,
       );
 
+      final mismatches = <Object>[];
       for (final (ThemeMode mode, String name) in <(ThemeMode, String)>[
         (ThemeMode.light, 'connected_computer_transport_light'),
         (ThemeMode.dark, 'connected_computer_transport_dark'),
@@ -195,11 +203,16 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await expectLater(
-          find.byKey(const Key('management-golden')),
-          matchesGoldenFile('goldens/$name.png'),
-        );
+        try {
+          await expectLater(
+            find.byKey(const Key('management-golden')),
+            matchesGoldenFile('goldens/$name.png'),
+          );
+        } catch (error) {
+          mismatches.add(error);
+        }
       }
+      expect(mismatches, isEmpty);
     },
     tags: <String>['golden'],
   );
@@ -434,9 +447,23 @@ List<Resource> _resources() {
 }
 
 final class _GoldenDeviceManagement extends ChangeNotifier
-    implements DeviceLinkManagement {
+    implements DeviceLinkManagement, LanComputerManagement {
   _GoldenDeviceManagement({this.includeComputer = false});
 
+  @override
+  List<NearbyComputer> get nearbyComputers => const [];
+  @override
+  String? get computerPairingCode => null;
+  @override
+  String? get computerDiscoveryError => null;
+  @override
+  Future<void> refreshComputers() async {}
+  @override
+  Future<void> beginComputerPairing() async {}
+  @override
+  Future<void> cancelComputerPairing() async {}
+  @override
+  Future<void> joinNearbyComputer(String deviceId, String code) async {}
   final bool includeComputer;
 
   @override

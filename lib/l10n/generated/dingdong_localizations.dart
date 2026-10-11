@@ -4618,7 +4618,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'WebRTC is preferred; the end-to-end encrypted relay fallback stores no clipboard, file, or Agent content.'**
+  /// **'Computers connect only over LAN and reconnect automatically. Phones prefer WebRTC; the encrypted relay stores no clipboard, file or Agent content.'**
   String get webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3;
 
   /// DingDong built-in interface copy.
@@ -6517,6 +6517,96 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'DingDong is installed inside {app}\'s private app storage. The MCP path above already points to its real location, so other Agents can use it; uninstalling or resetting {app} also removes DingDong.'**
   String installedInsidePackageContainer(String app);
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid for 5 minutes · One use · Up to 5 attempts'**
+  String get lanCodeExpiry;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'LAN only · Reconnects automatically after pairing'**
+  String get lanComputerOnly;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter this computer’s pairing code below'**
+  String get lanEnterOtherCode;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate pairing code'**
+  String get lanGenerateCode;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a code on one computer, then select it and enter the code on the other.'**
+  String get lanGenerateHint;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby computers'**
+  String get lanNearbyComputers;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Local discovery is unavailable. Check the network adapter and private-network firewall permissions, then refresh.'**
+  String get lanNetworkHelp;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a new code'**
+  String get lanNewCode;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Connect computer in DingDong on both computers. Use the same LAN and allow DingDong through the private-network firewall. Guest Wi-Fi may block discovery.'**
+  String get lanNoComputers;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not pair. Check the code and LAN connection. If the code expired or reached 5 attempts, generate a new one.'**
+  String get lanPairingFailed;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get lanRefresh;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a nearby computer and enter its 6-digit code.'**
+  String get lanSelectAndEnterCode;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit pairing code'**
+  String get lanSixDigitCode;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a pairing code on this computer first'**
+  String get lanWaitingForCode;
+
+  /// LAN-only computer discovery and six-digit pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get lanWorking;
 }
 
 class _DingDongLocalizationsDelegate
