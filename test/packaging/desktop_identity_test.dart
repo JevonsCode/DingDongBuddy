@@ -465,13 +465,19 @@ void main() {
     expect(website, contains('id="resources"'));
     expect(website, contains('class="resource-map"'));
     expect(website, contains('class="conversation-grid"'));
-    expect(website, contains('"hero.title.clipboard": "复制的内容，找到就能用"'));
-    expect(website, contains('"hero.title.resources": "Agent 资源，放在一起管"'));
-    expect(website, contains('"hero.title.alerts": "几个 Agent 的消息，一起收好"'));
+    expect(website, contains('"hero.title.clipboard": "复制过的，一搜就有。"'));
+    expect(website, contains('"hero.title.resources": "Agent 配置，只写一遍。"'));
+    expect(website, contains('"hero.title.alerts": "Agent 干完活，叮咚叫你。"'));
     expect(
       website,
-      contains('"hero.title.alerts": "Connected Agent events, in one inbox."'),
+      contains('"hero.title.alerts": "When an Agent is done, DingDong rings."'),
     );
+    // The overlapping principle/feature grids were merged into one list,
+    // and the private pet repository no longer has a landing-page section.
+    expect(website, contains('class="feature-list"'));
+    expect(website, isNot(contains('class="principles"')));
+    expect(website, isNot(contains('class="pet-project"')));
+    expect(website, contains('<details class="defaults-details">'));
     expect(
       website.indexOf('class="actions"'),
       lessThan(website.indexOf('class="conversation-receipt"')),
@@ -557,7 +563,6 @@ void main() {
     expect(website, contains('{ id: "files", label: "Files" }'));
     expect(website, contains('clipboardFilter: true'));
     expect(website, contains('./assets/dingdong-alert-icon-2.png'));
-    expect(website, contains('./assets/dingdong-rest-icon-2.png'));
     expect(website, contains('./assets/dingdong-sleeping-icon-2.png'));
     expect(website, contains('./assets/dingdong-thinking-icon.png'));
     expect(websiteStyles, contains('--mascot-frame-cycle: 1.4s'));
