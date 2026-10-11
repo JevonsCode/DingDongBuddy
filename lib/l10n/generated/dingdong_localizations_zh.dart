@@ -3038,7 +3038,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get invalidPairingLink => '这个连接链接无效或不完整。';
 
   @override
-  String get copyLinkForAnotherComputer => '复制给另一台电脑';
+  String get copyLinkForAnotherComputer => '复制连接链接';
 
   @override
   String get pairingLinkCopied => '连接链接已复制，请像一次性密码一样妥善传递。';

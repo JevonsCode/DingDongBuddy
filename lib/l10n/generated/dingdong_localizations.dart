@@ -5517,10 +5517,10 @@ abstract class DingDongLocalizations {
   /// **'This pairing link is invalid or incomplete.'**
   String get invalidPairingLink;
 
-  /// Copies the current encrypted pairing link for desktop import.
+  /// Copies the current encrypted phone pairing link.
   ///
   /// In en, this message translates to:
-  /// **'Copy link for another computer'**
+  /// **'Copy pairing link'**
   String get copyLinkForAnotherComputer;
 
   /// Confirmation after copying a pairing link.

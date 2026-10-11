@@ -4083,9 +4083,9 @@
   "@invalidPairingLink": {
     "description": "Shown when a desktop pairing link cannot be decoded."
   },
-  "copyLinkForAnotherComputer": "Copiar enlace para otro ordenador",
+  "copyLinkForAnotherComputer": "Copiar enlace de vinculación",
   "@copyLinkForAnotherComputer": {
-    "description": "Copies the current encrypted pairing link for desktop import."
+    "description": "Copies the current encrypted phone pairing link."
   },
   "pairingLinkCopied": "Enlace copiado. Trátalo como una contraseña de un solo uso.",
   "@pairingLinkCopied": {

@@ -3119,7 +3119,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'This pairing link is invalid or incomplete.';
 
   @override
-  String get copyLinkForAnotherComputer => 'Copy link for another computer';
+  String get copyLinkForAnotherComputer => 'Copy pairing link';
 
   @override
   String get pairingLinkCopied =>

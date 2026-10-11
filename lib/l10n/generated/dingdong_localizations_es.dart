@@ -3161,7 +3161,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'Este enlace no es válido o está incompleto.';
 
   @override
-  String get copyLinkForAnotherComputer => 'Copiar enlace para otro ordenador';
+  String get copyLinkForAnotherComputer => 'Copiar enlace de vinculación';
 
   @override
   String get pairingLinkCopied =>
