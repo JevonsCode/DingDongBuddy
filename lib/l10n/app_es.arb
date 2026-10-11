@@ -4805,5 +4805,13 @@
   },
   "@agentPluginsSource": {
     "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "installedInsidePackageContainer": "DingDong está instalado dentro del almacenamiento privado de {app}. La ruta MCP de arriba ya apunta a su ubicación real, así que otros Agents pueden usarla; desinstalar o restablecer {app} también elimina DingDong.",
+  "@installedInsidePackageContainer": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
   }
 }

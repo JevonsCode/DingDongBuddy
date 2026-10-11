@@ -9,6 +9,7 @@ import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/dingdong_app.dart';
+import 'package:dingdong/app/mcp_command_path.dart';
 import 'package:dingdong/app/token_usage_background_service.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';

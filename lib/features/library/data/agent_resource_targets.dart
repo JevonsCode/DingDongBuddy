@@ -79,6 +79,7 @@ _AgentResourceTargets _targetsForAdapters(
   final List<AgentPromptTarget> promptTargets = installed
       .map((AgentAdapter adapter) {
         final String? file = adapter.resolvedPromptFilePath(home);
+        final String? mcpFile = adapter.resolvedMcpFilePath(home);
         return file == null
             ? null
             : AgentPromptTarget(
@@ -86,6 +87,8 @@ _AgentResourceTargets _targetsForAdapters(
                 includeBridgeRoutingInstructions:
                     adapter.includeBridgeRoutingInstructions,
                 clientName: adapter.displayName,
+                mcpFile: mcpFile == null ? null : File(mcpFile),
+                mcpKind: adapter.mcpKind,
               );
       })
       .whereType<AgentPromptTarget>()

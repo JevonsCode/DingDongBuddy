@@ -193,7 +193,8 @@ mcp:
       final File oldMcp = File('${temp.path}/.new-agent/old/mcp.json')
         ..createSync(recursive: true)
         ..writeAsStringSync(
-          '{"theme":"dark","mcpServers":{"personal":{"command":"mine"}}}',
+          '{"theme":"dark","mcpServers":{"personal":{"command":"mine"},'
+          '"dingdong":{"command":"dingdong_mcp"}}}',
         );
       final Directory oldSkillRoot = Directory(
         '${temp.path}/.new-agent/old/skills',
@@ -245,8 +246,14 @@ mcp:
         oldPrompt.readAsStringSync(),
         isNot(contains('Keep responses concise.')),
       );
-      expect(_onlyServerCount(oldMcp), 2);
+      expect(_onlyServerCount(oldMcp), 3);
 
+      // The user connects DingDong to the new configuration location too.
+      File('${temp.path}/.new-agent/new/mcp.json')
+        ..createSync(recursive: true)
+        ..writeAsStringSync(
+          '{"mcpServers":{"dingdong":{"command":"dingdong_mcp"}}}',
+        );
       adapters = <AgentAdapter>[AgentAdapter.parse(_movableAdapter('new'))];
       synchronizer = await AgentResourceSynchronizer.currentUser(
         packageRoot,
@@ -265,7 +272,7 @@ mcp:
         isTrue,
       );
       expect(oldPrompt.readAsStringSync(), 'Keep the old user instruction.\n');
-      expect(_onlyServerCount(oldMcp), 1);
+      expect(_onlyServerCount(oldMcp), 2);
       expect(
         File(
           '${temp.path}/.new-agent/new/skills/migrated-skill/SKILL.md',
@@ -280,7 +287,51 @@ mcp:
         File('${temp.path}/.new-agent/new/AGENTS.md').readAsStringSync(),
         isNot(contains('Keep responses concise.')),
       );
-      expect(_onlyServerCount(File('${temp.path}/.new-agent/new/mcp.json')), 1);
+      expect(_onlyServerCount(File('${temp.path}/.new-agent/new/mcp.json')), 2);
+    },
+  );
+
+  test(
+    'the Bridge bootstrap follows whether the client declares DingDong MCP',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-bootstrap-gate-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      Directory('${temp.path}/.new-agent').createSync();
+      final File prompt = File('${temp.path}/.new-agent/old/AGENTS.md')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('Keep the old user instruction.\n');
+      final File mcp = File('${temp.path}/.new-agent/old/mcp.json')
+        ..writeAsStringSync('{"mcpServers":{"personal":{"command":"mine"}}}');
+      final AgentResourceSynchronizer synchronizer =
+          await AgentResourceSynchronizer.currentUser(
+            Directory('${temp.path}/packages'),
+            loadAdapters: () async => <AgentAdapter>[
+              AgentAdapter.parse(_movableAdapter('old')),
+            ],
+            homeDirectory: temp.path,
+          );
+
+      // Detected but not connected: never told to call a missing tool.
+      await synchronizer.sync(const <Resource>[]);
+      expect(prompt.readAsStringSync(), 'Keep the old user instruction.\n');
+
+      mcp.writeAsStringSync(
+        '{"mcpServers":{"personal":{"command":"mine"},'
+        '"dingdong":{"command":"dingdong_mcp"}}}',
+      );
+      await synchronizer.sync(const <Resource>[]);
+      expect(prompt.readAsStringSync(), contains('dingdong_bridge'));
+      expect(
+        prompt.readAsStringSync(),
+        startsWith('Keep the old user instruction.'),
+      );
+
+      // Removing the server removes only DingDong's managed block.
+      mcp.writeAsStringSync('{"mcpServers":{"personal":{"command":"mine"}}}');
+      await synchronizer.sync(const <Resource>[]);
+      expect(prompt.readAsStringSync(), 'Keep the old user instruction.\n');
     },
   );
 

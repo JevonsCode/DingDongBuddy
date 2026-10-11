@@ -6511,6 +6511,12 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Source'**
   String get agentPluginsSource;
+
+  /// Shown when DingDong runs from another app's Windows package container.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong is installed inside {app}\'s private app storage. The MCP path above already points to its real location, so other Agents can use it; uninstalling or resetting {app} also removes DingDong.'**
+  String installedInsidePackageContainer(String app);
 }
 
 class _DingDongLocalizationsDelegate

@@ -3614,4 +3614,9 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get agentPluginsSource => '来源';
+
+  @override
+  String installedInsidePackageContainer(String app) {
+    return 'DingDong 安装在 $app 的私有应用存储里。上方的 MCP 路径已换成实际位置，其他 Agent 也能使用；卸载或重置 $app 时，DingDong 也会一起被删除。';
+  }
 }

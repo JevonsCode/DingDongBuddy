@@ -303,26 +303,7 @@ Future<void> _restartApplication({
   exit(0);
 }
 
-String _mcpCommandPath() {
-  final String executableDirectory = File(
-    Platform.resolvedExecutable,
-  ).parent.path;
-  return path.normalize(
-    Platform.isWindows
-        ? path.join(
-            executableDirectory,
-            'mcp',
-            'bundle',
-            'bin',
-            'dingdong_mcp.exe',
-          )
-        : path.join(
-            executableDirectory,
-            '..',
-            'MCP',
-            'bundle',
-            'bin',
-            'dingdong_mcp',
-          ),
-  );
-}
+String _mcpCommandPath() => resolveMcpCommandPath(
+  executablePath: Platform.resolvedExecutable,
+  isWindows: Platform.isWindows,
+);

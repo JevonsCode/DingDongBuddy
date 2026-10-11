@@ -3738,4 +3738,9 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get agentPluginsSource => 'Source';
+
+  @override
+  String installedInsidePackageContainer(String app) {
+    return 'DingDong is installed inside $app\'s private app storage. The MCP path above already points to its real location, so other Agents can use it; uninstalling or resetting $app also removes DingDong.';
+  }
 }
