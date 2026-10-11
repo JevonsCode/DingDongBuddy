@@ -25,12 +25,12 @@ void main() {
 
     expect(
       requested,
-      path.normalize(
+      path.windows.normalize(
         r'C:\Users\me\AppData\Local\JevonsCode.DingDong\current'
         r'\mcp\bundle\bin\dingdong_mcp.exe',
       ),
     );
-    expect(result, path.normalize(physicalMcp));
+    expect(result, path.windows.normalize(physicalMcp));
     expect(isInsidePackageContainer(result), isTrue);
   });
 
@@ -44,7 +44,7 @@ void main() {
 
     expect(
       result,
-      endsWith(path.normalize(r'mcp\bundle\bin\dingdong_mcp.exe')),
+      endsWith(path.windows.normalize(r'mcp\bundle\bin\dingdong_mcp.exe')),
     );
     expect(isInsidePackageContainer(result), isFalse);
   });
@@ -58,7 +58,7 @@ void main() {
 
     expect(
       result,
-      path.normalize(
+      path.posix.normalize(
         '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp',
       ),
     );

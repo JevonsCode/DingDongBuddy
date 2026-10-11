@@ -14,17 +14,18 @@ String resolveMcpCommandPath({
   required bool isWindows,
   String Function(String path)? resolvePhysicalPath,
 }) {
-  final String executableDirectory = File(executablePath).parent.path;
-  final String bundled = path.normalize(
+  final path.Context paths = isWindows ? path.windows : path.posix;
+  final String executableDirectory = paths.dirname(executablePath);
+  final String bundled = paths.normalize(
     isWindows
-        ? path.join(
+        ? paths.join(
             executableDirectory,
             'mcp',
             'bundle',
             'bin',
             'dingdong_mcp.exe',
           )
-        : path.join(
+        : paths.join(
             executableDirectory,
             '..',
             'MCP',
@@ -38,7 +39,7 @@ String resolveMcpCommandPath({
     final String physical =
         (resolvePhysicalPath ??
         (String value) => File(value).resolveSymbolicLinksSync())(bundled);
-    return path.normalize(physical);
+    return paths.normalize(physical);
   } on FileSystemException {
     return bundled;
   }
