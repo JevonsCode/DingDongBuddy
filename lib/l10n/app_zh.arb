@@ -4805,5 +4805,13 @@
   },
   "@agentPluginsSource": {
     "description": "Read-only inventory of plugins installed in native Agents."
+  },
+  "installedInsidePackageContainer": "DingDong 安装在 {app} 的私有应用存储里。上方的 MCP 路径已换成实际位置，其他 Agent 也能使用；卸载或重置 {app} 时，DingDong 也会一起被删除。",
+  "@installedInsidePackageContainer": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
   }
 }

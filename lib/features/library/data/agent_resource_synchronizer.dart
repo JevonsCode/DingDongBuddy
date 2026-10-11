@@ -38,11 +38,19 @@ final class AgentPromptTarget {
     this.file, {
     this.includeBridgeRoutingInstructions = true,
     this.clientName = 'Agent',
+    this.mcpFile,
+    this.mcpKind,
   });
 
   final File file;
   final bool includeBridgeRoutingInstructions;
   final String clientName;
+
+  /// The same client's MCP configuration. When known, the Bridge bootstrap is
+  /// written only while that configuration declares a `dingdong` server, so
+  /// the client is never told to call a tool it does not have.
+  final File? mcpFile;
+  final AgentMcpConfigKind? mcpKind;
 }
 
 final class AgentMcpTarget {
@@ -214,7 +222,9 @@ final class AgentResourceSynchronizer {
       await _syncPrompts(
         target?.file ?? File(promptPath),
         includeBridgeRoutingInstructions:
-            target?.includeBridgeRoutingInstructions ?? false,
+            target != null &&
+            target.includeBridgeRoutingInstructions &&
+            await _declaresDingDongServer(target),
       );
     }
     if (currentPrompts.isNotEmpty) {
@@ -349,6 +359,47 @@ final class AgentResourceSynchronizer {
       previousNames,
     ),
   };
+
+  // The Bridge bootstrap tells a client to call `dingdong_bridge` on every task,
+  // so it is written only for clients whose MCP configuration declares the
+  // DingDong server. A detected but unconnected client gets no instruction to
+  // call a tool it does not have; connecting it adds the block on next sync.
+  Future<bool> _declaresDingDongServer(AgentPromptTarget target) async {
+    final File? file = target.mcpFile;
+    final AgentMcpConfigKind? kind = target.mcpKind;
+    if (file == null || kind == null) return true;
+    final String contents;
+    try {
+      if (!await file.exists()) return false;
+      contents = await file.readAsString();
+    } on FileSystemException {
+      return false;
+    }
+    if (kind == AgentMcpConfigKind.codexToml) {
+      return RegExp(
+        r'^\s*\[mcp_servers\.(?:dingdong|"dingdong")\]\s*$',
+        multiLine: true,
+      ).hasMatch(contents);
+    }
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(contents);
+    } on FormatException {
+      return false;
+    }
+    if (decoded is! Map) return false;
+    bool declares(Object? servers) =>
+        servers is Map && servers.containsKey('dingdong');
+    if (declares(decoded['mcpServers'])) return true;
+    // Claude Code also keeps local-scope servers under each project.
+    final Object? projects = decoded['projects'];
+    return kind == AgentMcpConfigKind.claudeJson &&
+        projects is Map &&
+        projects.values.any(
+          (Object? project) =>
+              project is Map && declares(project['mcpServers']),
+        );
+  }
 
   Future<void> _syncPrompts(
     File file, {

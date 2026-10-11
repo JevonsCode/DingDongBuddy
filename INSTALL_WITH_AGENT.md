@@ -90,22 +90,31 @@ resolved release version and filename match the manifest before opening it.
    Start menu shortcut. The connection executable is relative to that installed
    app directory at `mcp\bundle\bin\dingdong_mcp.exe`. Verify the exact file;
    do not guess an installation directory.
-4. A packaged Agent host can redirect `%LOCALAPPDATA%` into its own
-   `Packages\<Agent package>\LocalCache` directory. Inspect the running
-   DingDong process's actual executable path as well as its displayed version.
-   A healthy redirected copy does not verify the user's existing installation.
-   If redirection occurs, launch the verified installer through the Windows
-   desktop shell (for example, from File Explorer), then start the installed
-   app through that shell and verify its process path again. Preserve the
-   existing app data and Agent configuration; do not change Windows security
-   settings to work around an installation or desktop-control failure.
+4. Agent desktop apps on Windows (for example the Codex and Claude desktop
+   apps) are packaged hosts: a Setup.exe started from their terminal installs
+   into `%LOCALAPPDATA%\Packages\<Agent package>\LocalCache\Local`, where only
+   that Agent can see DingDong. Other Agents then fail to start the MCP command,
+   and uninstalling or resetting that Agent removes DingDong. To avoid this,
+   start the verified installer through the Windows desktop shell, for
+   example `explorer.exe "<path to Setup.exe>"`, never directly from the
+   Agent's shell. Inspect the running DingDong process's actual executable
+   path as well as its displayed version; a healthy redirected copy does not
+   verify the user's existing installation. Preserve the existing app data and
+   Agent configuration; do not change Windows security settings to work
+   around an installation or desktop-control failure.
+5. When DingDong already runs from a package container, its Agent access page
+   shows the physical MCP path and names the container's app. Use that exact
+   path, and confirm it exists from the current Agent's own shell, before
+   writing it into any configuration.
 
 ## 3. Verify first launch
 
 DingDong installs its built-in always-on Prompt and `dingdong-configure` Skill
-on first launch. It writes only a persistent Prompt-bridge bootstrap into
-managed blocks in detected Codex `~/.codex/AGENTS.md` and Claude Code
-`~/.claude/CLAUDE.md` files; Prompt bodies are delivered dynamically by
+on first launch. Once a client's MCP configuration declares the `dingdong`
+server, DingDong writes only a persistent Prompt-bridge bootstrap into a
+managed block of that client's instruction file (Codex `~/.codex/AGENTS.md`,
+Claude Code `~/.claude/CLAUDE.md`); an unconnected client is never told to
+call a tool it does not have. Prompt bodies are delivered dynamically by
 `dingdong_bridge`. The same Bridge response publishes enabled, scope-matched
 Skills as name/description candidates; a matching Skill is loaded in full
 through DingDong on demand. DingDong does not mirror managed Skills into native
@@ -148,6 +157,12 @@ perform this setup in the current local Agent or IDE:
    | Cursor | `~/.cursor/mcp.json` | `afterAgentResponse` command Hook in `~/.cursor/hooks.json` |
    | Gemini CLI | `~/.gemini/settings.json` | `AfterAgent` command Hook in the same file |
    | Kiro | `~/.kiro/settings/mcp.json` | Kiro CLI v3 global `Stop` Hook under `~/.kiro/hooks/`, older CLI `hooks.stop` in the active editable custom Agent, or IDE Agent Stop shell-command Hook |
+
+   For Claude Code, prefer its CLI so the JSON stays valid:
+   `claude mcp add --scope user dingdong -- "<DINGDONG_MCP_PATH>"`, then require
+   `claude mcp list` to report `dingdong` as connected. Append the `Stop` Hook
+   to any existing `Stop` entries in `~/.claude/settings.json` instead of
+   replacing them. The server becomes available in new Claude Code sessions.
 
    For another client, verify its native local task-completion Hook first. If it
    has none, configure MCP only and report that automatic completion alerts are

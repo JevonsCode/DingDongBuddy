@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/app/mcp_command_path.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
@@ -314,6 +315,21 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                             settingsViewModel: widget.settingsViewModel,
                             clipboardGateway: widget.clipboardGateway,
                           ),
+                          if (packageContainerName(mcpCommand)
+                              case final String hostApp) ...<Widget>[
+                            const SizedBox(height: 10),
+                            Text(
+                              context.l10n.installedInsidePackageContainer(
+                                hostApp,
+                              ),
+                              key: const Key('agent-api-container-install'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 20),

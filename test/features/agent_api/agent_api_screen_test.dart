@@ -162,6 +162,44 @@ void main() {
       find.text('Preferred port 2333 was unavailable; using 58631.'),
       findsOneWidget,
     );
+    expect(find.byKey(const Key('agent-api-container-install')), findsNothing);
+  });
+
+  testWidgets('warns when DingDong lives in another app\'s container', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 900);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      mcpCommandPath:
+          r'C:\Users\me\AppData\Local\Packages\OpenAI.Codex_2p2nqsd0c76g0'
+          r'\LocalCache\Local\JevonsCode.DingDong\current\mcp\bundle\bin'
+          r'\dingdong_mcp.exe',
+    );
+    await model.load();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AgentApiScreen(
+            settingsViewModel: model,
+            baseUri: Uri.parse('http://127.0.0.1:2333'),
+            apiGateway: _AgentApiGateway(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final Finder notice = find.byKey(const Key('agent-api-container-install'));
+    expect(notice, findsOneWidget);
+    expect(
+      tester.widget<Text>(notice).data,
+      allOf(contains('OpenAI.Codex'), contains('real location')),
+    );
   });
 }
 
