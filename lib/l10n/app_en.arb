@@ -3431,7 +3431,7 @@
   "@waitingForTheLoopbackHealthResponse": {
     "description": "DingDong built-in interface copy."
   },
-  "webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": "WebRTC is preferred; the end-to-end encrypted relay fallback stores no clipboard, file, or Agent content.",
+  "webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": "Computers connect only over LAN and reconnect automatically. Phones prefer WebRTC; the encrypted relay stores no clipboard, file or Agent content.",
   "@webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": {
     "description": "DingDong built-in interface copy."
   },
@@ -4803,5 +4803,66 @@
   },
   "@agentPluginsSource": {
     "description": "Read-only inventory of plugins installed in native Agents."
+  },
+
+  "lanCodeExpiry": "Valid for 5 minutes · One use · Up to 5 attempts",
+  "@lanCodeExpiry": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanComputerOnly": "LAN only · Reconnects automatically after pairing",
+  "@lanComputerOnly": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanEnterOtherCode": "Enter this computer’s pairing code below",
+  "@lanEnterOtherCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanGenerateCode": "Generate pairing code",
+  "@lanGenerateCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanGenerateHint": "Generate a code on one computer, then select it and enter the code on the other.",
+  "@lanGenerateHint": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNearbyComputers": "Nearby computers",
+  "@lanNearbyComputers": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNetworkHelp": "Local discovery is unavailable. Check the network adapter and private-network firewall permissions, then refresh.",
+  "@lanNetworkHelp": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNewCode": "Generate a new code",
+  "@lanNewCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNoComputers": "Open Connect computer in DingDong on both computers. Use the same LAN and allow DingDong through the private-network firewall. Guest Wi-Fi may block discovery.",
+  "@lanNoComputers": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanPairingFailed": "Could not pair. Check the code and LAN connection. If the code expired or reached 5 attempts, generate a new one.",
+  "@lanPairingFailed": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanRefresh": "Refresh",
+  "@lanRefresh": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanSelectAndEnterCode": "Select a nearby computer and enter its 6-digit code.",
+  "@lanSelectAndEnterCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanSixDigitCode": "6-digit pairing code",
+  "@lanSixDigitCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanWaitingForCode": "Generate a pairing code on this computer first",
+  "@lanWaitingForCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanWorking": "Connecting…",
+  "@lanWorking": {
+    "description": "LAN-only computer discovery and six-digit pairing."
   }
 }

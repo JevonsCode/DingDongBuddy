@@ -112,9 +112,9 @@ final class LinkedDevice {
           ? Uri.tryParse(json['relayUrl']! as String)
           : null,
       connectionSide: DeviceLinkConnectionSide.parse(json['connectionSide']),
-      transportPreference: DeviceLinkTransportPreference.parse(
-        json['transportPreference'],
-      ),
+      transportPreference: kind == LinkedDeviceKind.computer
+          ? DeviceLinkTransportPreference.localNetwork
+          : DeviceLinkTransportPreference.parse(json['transportPreference']),
       autoSendClipboard: json['autoSendClipboard'] == true,
       receiveAgentNotifications: json['receiveAgentNotifications'] is bool
           ? json['receiveAgentNotifications']! as bool

@@ -16,11 +16,13 @@ import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/device_link_store.dart';
+import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
 import 'package:dingdong/features/device_link/data/resumable_file_transfer.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/domain/file_transfer.dart';
+import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:path/path.dart' as path;
@@ -86,7 +88,10 @@ final class DeviceLinkFileTooLargeException implements Exception {
 }
 
 final class DeviceLinkController extends ChangeNotifier
-    implements DeviceLinkManagement, FileTransferManagement {
+    implements
+        DeviceLinkManagement,
+        FileTransferManagement,
+        LanComputerManagement {
   factory DeviceLinkController({
     required DeviceLinkStore store,
     required ClipboardStore clipboardStore,
@@ -95,6 +100,9 @@ final class DeviceLinkController extends ChangeNotifier
     required Uri? relayBaseUrl,
     DeviceLinkSessionFactory sessionFactory = createDeviceLinkSession,
     DeviceLinkSessionFactory peerSessionFactory = createPeerDeviceLinkSession,
+    LanComputerLink? computerLink,
+    @visibleForTesting
+    DeviceLinkSessionHandle Function(LinkedDevice)? computerSessionFactory,
     ClipboardGateway? systemClipboard,
     VoidCallback? onClipboardReceived,
     AgentStateProvider? agentStateProvider,
@@ -108,6 +116,8 @@ final class DeviceLinkController extends ChangeNotifier
     relayBaseUrl: relayBaseUrl,
     sessionFactory: sessionFactory,
     peerSessionFactory: peerSessionFactory,
+    computerLink: computerLink,
+    computerSessionFactory: computerSessionFactory,
     systemClipboard: systemClipboard,
     onClipboardReceived: onClipboardReceived,
     agentStateProvider: agentStateProvider,
@@ -123,12 +133,15 @@ final class DeviceLinkController extends ChangeNotifier
     required this._relayBaseUrl,
     required this._sessionFactory,
     required this._peerSessionFactory,
+    LanComputerLink? computerLink,
+    this._computerSessionFactory,
     this._systemClipboard,
     this.onClipboardReceived,
     this._agentStateProvider,
     this._onAgentSeen,
     DingDongLocalizations Function()? localizations,
-  }) : _localizations =
+  }) : _computerLink = computerLink ?? LanComputerLink(),
+       _localizations =
            localizations ??
            (() => lookupDingDongLocalizations(const Locale('en')));
 
@@ -139,6 +152,8 @@ final class DeviceLinkController extends ChangeNotifier
   final Uri? _relayBaseUrl;
   final DeviceLinkSessionFactory _sessionFactory;
   final DeviceLinkSessionFactory _peerSessionFactory;
+  final LanComputerLink _computerLink;
+  final DeviceLinkSessionHandle Function(LinkedDevice)? _computerSessionFactory;
   final ClipboardGateway? _systemClipboard;
   final VoidCallback? onClipboardReceived;
   final AgentStateProvider? _agentStateProvider;
@@ -223,8 +238,17 @@ final class DeviceLinkController extends ChangeNotifier
     final DeviceLinkDocument? document = await _store.load();
     _localDevice = document?.localDevice ?? _newLocalIdentity(_localizations());
     _devices = List<LinkedDevice>.unmodifiable(
-      document?.devices ?? const <LinkedDevice>[],
+      (document?.devices ?? const <LinkedDevice>[]).map(
+        (device) => device.kind == LinkedDeviceKind.computer
+            ? device.copyWith(
+                transportPreference: DeviceLinkTransportPreference.localNetwork,
+              )
+            : device,
+      ),
     );
+    _computerLink.identity = _localDevice;
+    _computerLink.onPaired = _saveComputerPair;
+    _computerLink.addListener(_notifyIfActive);
     if (document == null) await _persist();
     _fileMaintenance = Timer.periodic(const Duration(seconds: 2), (_) {
       for (final managed in _sessionsByRoom.values.toList()) {
@@ -240,11 +264,46 @@ final class DeviceLinkController extends ChangeNotifier
       _statuses[device.id] = DeviceConnectionStatus.disconnected;
       _transports[device.id] = DeviceLinkActiveTransport.none;
       if (!device.manuallyDisconnected &&
-          (device.relayUrl ?? _relayBaseUrl) != null) {
+          (device.kind == LinkedDeviceKind.computer ||
+              (device.relayUrl ?? _relayBaseUrl) != null)) {
         _attachDeviceSession(device);
       }
     }
     notifyListeners();
+  }
+
+  @override
+  List<NearbyComputer> get nearbyComputers => _computerLink.nearby;
+  @override
+  String? get computerPairingCode => _computerLink.pairingCode;
+  @override
+  String? get computerDiscoveryError => _computerLink.error;
+  @override
+  Future<void> refreshComputers() => _computerLink.refresh();
+  @override
+  Future<void> beginComputerPairing() => _computerLink.beginPairing();
+  @override
+  Future<void> cancelComputerPairing() async => _computerLink.cancelPairing();
+  @override
+  Future<void> joinNearbyComputer(String deviceId, String code) =>
+      _computerLink.join(deviceId, code);
+
+  Future<void> _saveComputerPair(LinkedDevice device) async {
+    if (_disposed) throw StateError('Controller closed');
+    for (final previous in _devices.where((d) => d.id == device.id)) {
+      await _removeSession(previous.room);
+    }
+    await _upsertDevice(
+      device.id,
+      (current) => device.copyWith(
+        autoSendClipboard: current?.autoSendClipboard ?? false,
+        sharedClipboardItemIds: current?.sharedClipboardItemIds ?? const [],
+      ),
+    );
+    if (_disposed) return;
+    _statuses[device.id] = DeviceConnectionStatus.connecting;
+    _attachDeviceSession(_device(device.id));
+    _notifyIfActive();
   }
 
   @override
@@ -281,48 +340,13 @@ final class DeviceLinkController extends ChangeNotifier
   }
 
   @override
-  Future<void> joinComputer(String pairingLink) async {
-    final DevicePairingPayload payload = DevicePairingPayload.parseInput(
-      pairingLink,
-    );
-    if (payload.hostId == _localDevice.id) {
-      throw const FormatException('A computer cannot connect to itself.');
+  Future<void> joinComputer(String code) async {
+    if (!RegExp(r'^\d{6}$').hasMatch(code)) {
+      throw const FormatException('Enter the six-digit LAN pairing code.');
     }
-    final LinkedDevice? previous = _devices.cast<LinkedDevice?>().firstWhere(
-      (LinkedDevice? device) => device?.id == payload.hostId,
-      orElse: () => null,
-    );
-    if (previous != null && previous.room != payload.room) {
-      await _removeSession(previous.room);
-    }
-    final LinkedDevice device = await _upsertDevice(
-      payload.hostId,
-      (LinkedDevice? current) => LinkedDevice(
-        id: payload.hostId,
-        name: payload.hostName,
-        kind: LinkedDeviceKind.computer,
-        platform: current?.platform ?? '',
-        room: payload.room,
-        secret: payload.secret,
-        relayUrl: payload.relayUrl,
-        connectionSide: DeviceLinkConnectionSide.peer,
-        transportPreference:
-            current?.transportPreference ??
-            DeviceLinkTransportPreference.automatic,
-        autoSendClipboard: current?.autoSendClipboard ?? false,
-        receiveAgentNotifications: current?.receiveAgentNotifications ?? false,
-        vibrationEnabled: false,
-        manuallyDisconnected: false,
-        pairedAt: DateTime.now().toUtc(),
-        sharedClipboardItemIds:
-            current?.sharedClipboardItemIds ?? const <String>[],
-        lastSeenAt: current?.lastSeenAt,
-      ),
-    );
-    _statuses[device.id] = DeviceConnectionStatus.connecting;
-    _transports[device.id] = DeviceLinkActiveTransport.none;
-    _attachDeviceSession(device);
-    _notifyIfActive();
+    final candidates = nearbyComputers.where((c) => c.pairing).toList();
+    if (candidates.length != 1) throw StateError('Select a nearby computer.');
+    await joinNearbyComputer(candidates.single.id, code);
   }
 
   void requestShare(ClipboardRecord record) {
@@ -447,6 +471,9 @@ final class DeviceLinkController extends ChangeNotifier
     DeviceLinkTransportPreference value,
   ) async {
     final LinkedDevice device = _device(deviceId);
+    if (device.kind == LinkedDeviceKind.computer) {
+      value = DeviceLinkTransportPreference.localNetwork;
+    }
     if (device.transportPreference == value) return;
     await _updateDevice(
       deviceId,
@@ -493,7 +520,10 @@ final class DeviceLinkController extends ChangeNotifier
       (LinkedDevice value) => value.copyWith(manuallyDisconnected: false),
     );
     final LinkedDevice current = _device(deviceId);
-    if ((current.relayUrl ?? _relayBaseUrl) == null) return;
+    if (current.kind != LinkedDeviceKind.computer &&
+        (current.relayUrl ?? _relayBaseUrl) == null) {
+      return;
+    }
     final _ManagedDeviceSession? session = _sessionsByRoom[current.room];
     if (session != null) {
       unawaited(session.handle.connect());
@@ -519,6 +549,8 @@ final class DeviceLinkController extends ChangeNotifier
   }
 
   Future<void> shutdown() async {
+    _computerLink.removeListener(_notifyIfActive);
+    await _computerLink.close();
     _fileMaintenance?.cancel();
     _fileProgressNotification?.cancel();
     await _resumableFiles.dispose();

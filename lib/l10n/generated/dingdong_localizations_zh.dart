@@ -2536,7 +2536,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String
   get webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3 =>
-      '优先使用 WebRTC 直连；端到端加密中继不保存剪贴板、文件或 Agent 内容。';
+      '电脑之间仅走局域网，配对后自动重连。手机优先使用 WebRTC 直连；端到端加密中继不保存剪贴板、文件或 Agent 内容。';
 
   @override
   String get website => '官网';
@@ -3614,4 +3614,50 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get agentPluginsSource => '来源';
+
+  @override
+  String get lanCodeExpiry => '5 分钟内有效 · 仅用一次 · 最多尝试 5 次';
+
+  @override
+  String get lanComputerOnly => '仅限局域网 · 配对后自动重连';
+
+  @override
+  String get lanEnterOtherCode => '在下方输入这台电脑的配对码';
+
+  @override
+  String get lanGenerateCode => '生成配对码';
+
+  @override
+  String get lanGenerateHint => '在一台电脑上生成配对码，在另一台选择这台电脑并输入配对码。';
+
+  @override
+  String get lanNearbyComputers => '附近的电脑';
+
+  @override
+  String get lanNetworkHelp => '局域网发现暂不可用，请检查网卡和专用网络防火墙权限后刷新。';
+
+  @override
+  String get lanNewCode => '换一个配对码';
+
+  @override
+  String get lanNoComputers =>
+      '请在两台电脑上打开叮咚的「连接电脑」，连接同一局域网，并允许叮咚通过专用网络防火墙。访客 Wi-Fi 可能阻止设备发现。';
+
+  @override
+  String get lanPairingFailed => '配对未完成，请检查配对码和局域网连接。配对码过期或已尝试 5 次时，请重新生成。';
+
+  @override
+  String get lanRefresh => '刷新';
+
+  @override
+  String get lanSelectAndEnterCode => '请选择附近的电脑，并输入它显示的 6 位数字。';
+
+  @override
+  String get lanSixDigitCode => '6 位数字配对码';
+
+  @override
+  String get lanWaitingForCode => '请先在这台电脑上生成配对码';
+
+  @override
+  String get lanWorking => '连接中…';
 }

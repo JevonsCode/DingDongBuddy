@@ -3,6 +3,14 @@ part of 'device_link_controller.dart';
 // Own relay session attachment, handshake, settings, and message dispatch.
 extension _DeviceLinkSessionProtocol on DeviceLinkController {
   void _attachDeviceSession(LinkedDevice device) {
+    if (device.kind == LinkedDeviceKind.computer) {
+      if (_sessionsByRoom.containsKey(device.room)) return;
+      final handle =
+          _computerSessionFactory?.call(device) ??
+          _computerLink.session(device);
+      _registerSession(handle, device.room, device.id, device.connectionSide);
+      return;
+    }
     _attachSession(
       device.room,
       deviceId: device.id,
@@ -39,6 +47,15 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
         transportPreference,
       );
     }
+    _registerSession(handle, room, deviceId, connectionSide);
+  }
+
+  void _registerSession(
+    DeviceLinkSessionHandle handle,
+    String room,
+    String? deviceId,
+    DeviceLinkConnectionSide connectionSide,
+  ) {
     final _ManagedDeviceSession managed = _ManagedDeviceSession(
       handle: handle,
       room: room,
@@ -203,7 +220,9 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
             agentNotifications is bool ||
             transport is String) {
           final DeviceLinkTransportPreference? transportPreference =
-              transport is String
+              device.kind == LinkedDeviceKind.computer
+              ? DeviceLinkTransportPreference.localNetwork
+              : transport is String
               ? DeviceLinkTransportPreference.parse(transport)
               : null;
           await _updateDevice(
@@ -259,12 +278,8 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     if (deviceId == null || hostId != deviceId) {
       throw const FormatException('The paired computer identity changed.');
     }
-    final Object? rawPermissions = message['permissions'];
-    final Map<String, Object?> permissions = rawPermissions is Map
-        ? Map<String, Object?>.from(rawPermissions)
-        : const <String, Object?>{};
     final DeviceLinkTransportPreference authoritativeTransport =
-        DeviceLinkTransportPreference.parse(permissions['transportPreference']);
+        DeviceLinkTransportPreference.localNetwork;
     await _updateDevice(
       deviceId,
       (LinkedDevice current) => current.copyWith(
@@ -295,6 +310,16 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     final String remoteId = (remote['id'] as String? ?? '').trim();
     if (remoteId.isEmpty) return;
     final LinkedDeviceKind remoteKind = LinkedDeviceKind.parse(remote['kind']);
+    // Phone QR/relay sessions cannot create or impersonate a computer link.
+    // Existing LAN sessions are bound to one persisted identity and room.
+    if (managed.deviceId != null && remoteId != managed.deviceId) return;
+    if (remoteKind == LinkedDeviceKind.computer && managed.deviceId == null) {
+      return;
+    }
+    if (managed.deviceId != null &&
+        _device(managed.deviceId!).kind != remoteKind) {
+      return;
+    }
     LinkedDevice? device = _devices.cast<LinkedDevice?>().firstWhere(
       (LinkedDevice? value) => value?.id == remoteId,
       orElse: () => null,

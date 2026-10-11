@@ -13,12 +13,113 @@ import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/device_link_store.dart';
+import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'two controllers pair and share clipboard over LAN with no relay configured',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'dingdong-lan-controllers-',
+      );
+      final hostLan = LanComputerLink.loopbackTest();
+      final peerLan = LanComputerLink.loopbackTest();
+      final hostClipboard = InMemoryClipboardStore([
+        _record('local', 'LAN clipboard'),
+      ]);
+      final peerClipboard = InMemoryClipboardStore();
+      final host = DeviceLinkController(
+        store: _MemoryDeviceLinkStore(),
+        clipboardStore: hostClipboard,
+        transferDirectory: Directory('${directory.path}/host'),
+        pwaBaseUrl: null,
+        relayBaseUrl: null,
+        computerLink: hostLan,
+        sessionFactory: ({required relayUrl, required room, required secret}) =>
+            throw StateError('Public relay forbidden'),
+      );
+      final peer = DeviceLinkController(
+        store: _MemoryDeviceLinkStore(),
+        clipboardStore: peerClipboard,
+        transferDirectory: Directory('${directory.path}/peer'),
+        pwaBaseUrl: null,
+        relayBaseUrl: null,
+        computerLink: peerLan,
+        peerSessionFactory:
+            ({required relayUrl, required room, required secret}) =>
+                throw StateError('Public relay forbidden'),
+      );
+      addTearDown(() async {
+        await host.shutdown();
+        await peer.shutdown();
+        host.dispose();
+        peer.dispose();
+        await directory.delete(recursive: true);
+      });
+      await host.start();
+      await peer.start();
+      await host.beginComputerPairing();
+      await peer.refreshComputers();
+      hostLan.receiveAdvertisement(
+        utf8.encode(jsonEncode(peerLan.advertisement)),
+        InternetAddress.loopbackIPv4,
+      );
+      peerLan.receiveAdvertisement(
+        utf8.encode(jsonEncode(hostLan.advertisement)),
+        InternetAddress.loopbackIPv4,
+      );
+      await peer.joinNearbyComputer(
+        host.localDevice.id,
+        host.computerPairingCode!,
+      );
+      Future<void> waitFor(bool Function() predicate) async {
+        for (var i = 0; i < 200 && !predicate(); i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+        expect(predicate(), isTrue);
+      }
+
+      await waitFor(
+        () => host.connectedDeviceCount == 1 && peer.connectedDeviceCount == 1,
+      );
+      expect(host.devices.single.relayUrl, isNull);
+      expect(
+        peer.devices.single.transportPreference,
+        DeviceLinkTransportPreference.localNetwork,
+      );
+      await host.shareRecord(
+        hostClipboard.list(limit: 1).single,
+        peer.localDevice.id,
+      );
+      await waitFor(
+        () => peerClipboard
+            .list(limit: 10)
+            .any((r) => r.content == 'LAN clipboard'),
+      );
+      await peer.shareRecord(
+        peerClipboard.list(limit: 1).single,
+        host.localDevice.id,
+      );
+      await host.setTransportPreference(
+        peer.localDevice.id,
+        DeviceLinkTransportPreference.serviceRelay,
+      );
+      expect(
+        host.devices.single.transportPreference,
+        DeviceLinkTransportPreference.localNetwork,
+      );
+      await host.disconnect(peer.localDevice.id);
+      expect(host.devices.single.manuallyDisconnected, isTrue);
+      await host.reconnect(peer.localDevice.id);
+      await waitFor(
+        () => host.connectedDeviceCount == 1 && peer.connectedDeviceCount == 1,
+      );
+    },
+  );
   test('LAN capability is resent after a direct route reconnects', () async {
     final harness = await _connectedHarness(autoSend: false);
     addTearDown(harness.dispose);
@@ -681,80 +782,97 @@ void main() {
     });
   });
 
-  test('a computer imports a pairing link as a safe peer connection', () async {
-    final Directory directory = await Directory.systemTemp.createTemp(
-      'dingdong-computer-peer-test-',
-    );
-    final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore();
-    final _FakeDeviceLinkSession peerSession = _FakeDeviceLinkSession()
-      ..allowControlPlaneSend = true;
-    Uri? connectedRelay;
-    final DeviceLinkController controller = DeviceLinkController(
-      store: store,
-      clipboardStore: InMemoryClipboardStore(),
-      transferDirectory: directory,
-      pwaBaseUrl: Uri.parse('https://relay.example/app/'),
-      relayBaseUrl: null,
-      peerSessionFactory:
-          ({required relayUrl, required room, required secret}) {
-            connectedRelay = relayUrl;
-            return peerSession;
-          },
-    );
-    addTearDown(() async {
-      await controller.shutdown();
-      controller.dispose();
-      await directory.delete(recursive: true);
-    });
+  test(
+    'a LAN computer pair persists credentials without attaching a relay',
+    () async {
+      final Directory directory = await Directory.systemTemp.createTemp(
+        'dingdong-computer-peer-test-',
+      );
+      final _MemoryDeviceLinkStore store = _MemoryDeviceLinkStore();
+      final _FakeDeviceLinkSession peerSession = _FakeDeviceLinkSession()
+        ..allowControlPlaneSend = true;
+      Uri? connectedRelay;
+      final lan = LanComputerLink.loopbackTest();
+      final DeviceLinkController controller = DeviceLinkController(
+        store: store,
+        clipboardStore: InMemoryClipboardStore(),
+        transferDirectory: directory,
+        pwaBaseUrl: Uri.parse('https://relay.example/app/'),
+        relayBaseUrl: null,
+        computerLink: lan,
+        computerSessionFactory: (_) => peerSession,
+        peerSessionFactory:
+            ({required relayUrl, required room, required secret}) {
+              connectedRelay = relayUrl;
+              return peerSession;
+            },
+      );
+      addTearDown(() async {
+        await controller.shutdown();
+        controller.dispose();
+        await directory.delete(recursive: true);
+      });
 
-    await controller.start();
-    final DevicePairingPayload payload = DevicePairingPayload(
-      room: 'computer-room-abcdefghijkl',
-      secret: _secret,
-      hostId: 'desktop-host',
-      hostName: 'Studio Mac',
-      relayUrl: Uri.parse('https://paired-relay.example'),
-    );
-    await controller.joinComputer(
-      'https://paired-relay.example/app/#pair=${payload.encode()}',
-    );
+      await controller.start();
+      final DevicePairingPayload payload = DevicePairingPayload(
+        room: 'computer-room-abcdefghijkl',
+        secret: _secret,
+        hostId: 'desktop-host',
+        hostName: 'Studio Mac',
+        relayUrl: Uri.parse('https://paired-relay.example'),
+      );
+      await expectLater(
+        controller.joinComputer(payload.encode()),
+        throwsFormatException,
+      );
+      await lan.onPaired(
+        LinkedDevice(
+          id: payload.hostId,
+          name: payload.hostName,
+          kind: LinkedDeviceKind.computer,
+          platform: 'macos',
+          room: payload.room,
+          secret: payload.secret,
+          connectionSide: DeviceLinkConnectionSide.peer,
+          transportPreference: DeviceLinkTransportPreference.localNetwork,
+          autoSendClipboard: false,
+          receiveAgentNotifications: false,
+          vibrationEnabled: false,
+          manuallyDisconnected: false,
+          pairedAt: DateTime.now().toUtc(),
+        ),
+      );
 
-    final LinkedDevice computer = controller.devices.single;
-    expect(computer.kind, LinkedDeviceKind.computer);
-    expect(computer.connectionSide, DeviceLinkConnectionSide.peer);
-    expect(computer.autoSendClipboard, isFalse);
-    expect(computer.receiveAgentNotifications, isFalse);
-    expect(connectedRelay, Uri.parse('https://paired-relay.example'));
-    expect(
-      store.document!.devices.single.relayUrl,
-      Uri.parse('https://paired-relay.example'),
-    );
+      final LinkedDevice computer = controller.devices.single;
+      expect(computer.kind, LinkedDeviceKind.computer);
+      expect(computer.connectionSide, DeviceLinkConnectionSide.peer);
+      expect(computer.autoSendClipboard, isFalse);
+      expect(computer.receiveAgentNotifications, isFalse);
+      expect(connectedRelay, isNull);
+      expect(store.document!.devices.single.relayUrl, isNull);
 
-    peerSession.emit(const DeviceLinkPeerPresenceEvent(true));
-    await _flushEvents();
+      peerSession.emit(const DeviceLinkPeerPresenceEvent(true));
+      await _flushEvents();
 
-    expect(peerSession.sent, hasLength(1));
-    expect(peerSession.sent.single['type'], 'hello');
-    expect(peerSession.sent.single['agentNotificationsEnabled'], isFalse);
-    expect(
-      (peerSession.sent.single['device']! as Map<Object?, Object?>)['kind'],
-      'computer',
-    );
+      expect(peerSession.sent, hasLength(1));
+      expect(peerSession.sent.single['type'], 'hello');
+      expect(peerSession.sent.single['agentNotificationsEnabled'], isFalse);
+      expect(
+        (peerSession.sent.single['device']! as Map<Object?, Object?>)['kind'],
+        'computer',
+      );
 
-    await controller.setTransportPreference(
-      computer.id,
-      DeviceLinkTransportPreference.localNetwork,
-    );
-    expect(peerSession.sent, hasLength(2));
-    expect(peerSession.sent.last, <String, Object?>{
-      'type': 'settings.update',
-      'transportPreference': 'localNetwork',
-    });
-    expect(
-      store.document!.devices.single.transportPreference,
-      DeviceLinkTransportPreference.localNetwork,
-    );
-  });
+      await controller.setTransportPreference(
+        computer.id,
+        DeviceLinkTransportPreference.localNetwork,
+      );
+      expect(peerSession.sent, hasLength(1));
+      expect(
+        store.document!.devices.single.transportPreference,
+        DeviceLinkTransportPreference.localNetwork,
+      );
+    },
+  );
 
   test(
     'startup uses each persisted device relay without a global relay',
@@ -766,8 +884,8 @@ void main() {
       final LinkedDevice device = LinkedDevice(
         id: 'saved-computer',
         name: 'Saved computer',
-        kind: LinkedDeviceKind.computer,
-        platform: 'macos',
+        kind: LinkedDeviceKind.phone,
+        platform: 'ios',
         room: 'saved-room-abcdefghijkl',
         secret: _secret,
         relayUrl: persistedRelay,
@@ -844,6 +962,7 @@ void main() {
           devices: <LinkedDevice>[existing],
         ),
       );
+      final lan = LanComputerLink.loopbackTest();
       final List<_FakeDeviceLinkSession> sessions = <_FakeDeviceLinkSession>[];
       final _MemoryClipboardGateway systemClipboard = _MemoryClipboardGateway();
       final InMemoryClipboardStore clipboardStore = InMemoryClipboardStore();
@@ -853,14 +972,14 @@ void main() {
         transferDirectory: directory,
         pwaBaseUrl: null,
         relayBaseUrl: null,
-        peerSessionFactory:
-            ({required relayUrl, required room, required secret}) {
-              final _FakeDeviceLinkSession session = _FakeDeviceLinkSession(
-                keepEventsOpenAfterClose: true,
-              );
-              sessions.add(session);
-              return session;
-            },
+        computerLink: lan,
+        computerSessionFactory: (_) {
+          final _FakeDeviceLinkSession session = _FakeDeviceLinkSession(
+            keepEventsOpenAfterClose: true,
+          );
+          sessions.add(session);
+          return session;
+        },
         systemClipboard: systemClipboard,
       );
       addTearDown(() async {
@@ -881,7 +1000,14 @@ void main() {
         hostName: 'New computer',
         relayUrl: Uri.parse('https://new-relay.example'),
       );
-      await controller.joinComputer(replacement.encode());
+      await lan.onPaired(
+        existing.copyWith(
+          room: replacement.room,
+          name: replacement.hostName,
+          secret: replacement.secret,
+          transportPreference: DeviceLinkTransportPreference.localNetwork,
+        ),
+      );
       final _FakeDeviceLinkSession newSession = sessions.last;
 
       oldSession.emit(
@@ -1905,6 +2031,7 @@ Future<_Harness> _connectedHarness({
         : relayBaseUrl,
     sessionFactory: ({required relayUrl, required room, required secret}) =>
         session,
+    computerSessionFactory: (_) => session,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
     systemClipboard: systemClipboard,

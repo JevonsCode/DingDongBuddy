@@ -3433,7 +3433,7 @@
   "@waitingForTheLoopbackHealthResponse": {
     "description": "DingDong built-in interface copy."
   },
-  "webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": "Se prefiere WebRTC; el respaldo de retransmisión cifrado de extremo a extremo no almacena portapapeles, archivos ni contenido Agent.",
+  "webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": "Los ordenadores solo se conectan por la red local y se reconectan automáticamente. Los móviles prefieren WebRTC; el relé cifrado no guarda contenido.",
   "@webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3": {
     "description": "DingDong built-in interface copy."
   },
@@ -4805,5 +4805,66 @@
   },
   "@agentPluginsSource": {
     "description": "Read-only inventory of plugins installed in native Agents."
+  },
+
+  "lanCodeExpiry": "Válido 5 minutos · Un uso · Máximo 5 intentos",
+  "@lanCodeExpiry": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanComputerOnly": "Solo red local · Reconexión automática",
+  "@lanComputerOnly": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanEnterOtherCode": "Introduce el código de este ordenador",
+  "@lanEnterOtherCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanGenerateCode": "Generar código",
+  "@lanGenerateCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanGenerateHint": "Genera un código en un ordenador y selecciónalo e introduce el código en el otro.",
+  "@lanGenerateHint": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNearbyComputers": "Ordenadores cercanos",
+  "@lanNearbyComputers": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNetworkHelp": "Detección local no disponible. Comprueba el adaptador y el cortafuegos privado y actualiza.",
+  "@lanNetworkHelp": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNewCode": "Generar otro código",
+  "@lanNewCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanNoComputers": "Abre Conectar ordenador en ambos equipos, usa la misma red local y permite DingDong en el cortafuegos privado. El Wi-Fi de invitados puede impedir la detección.",
+  "@lanNoComputers": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanPairingFailed": "No se pudo vincular. Comprueba el código y la red local. Genera otro código si caducó o alcanzó 5 intentos.",
+  "@lanPairingFailed": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanRefresh": "Actualizar",
+  "@lanRefresh": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanSelectAndEnterCode": "Selecciona un ordenador e introduce sus 6 dígitos.",
+  "@lanSelectAndEnterCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanSixDigitCode": "Código de 6 dígitos",
+  "@lanSixDigitCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanWaitingForCode": "Primero genera un código en este ordenador",
+  "@lanWaitingForCode": {
+    "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanWorking": "Conectando…",
+  "@lanWorking": {
+    "description": "LAN-only computer discovery and six-digit pairing."
   }
 }
