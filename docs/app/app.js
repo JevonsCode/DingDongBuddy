@@ -1,19 +1,24 @@
-import { renderTransferProgress } from './transfer-progress.js?shell=46';
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=46";
+import { renderTransferProgress } from './transfer-progress.js?shell=47';
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=47";
 import {
   defaultDeviceName,
   detectDeviceName,
   shouldUpgradeAutomaticDeviceName,
-} from "./device-name.js";
+} from "./device-name.js?shell=47";
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=46";
+} from "./notification-policy.js?shell=47";
 import {
+  extractPairingFragment,
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=46";
+} from "./pairing-state.js?shell=47";
+import {
+  createPairingScanner,
+  pairingScannerSupported,
+} from "./pairing-scanner.js?shell=47";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -21,27 +26,26 @@ import {
   contentTabs,
   isContentTab,
   parseContentTabLaunch,
-} from "./content-navigation.js";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=46";
-import { createInstallationController } from "./app-installation.js?shell=46";
-import { createAgentNotificationController } from "./app-notifications.js?shell=46";
-import { createAppRenderer } from "./app-rendering.js?shell=46";
-import { createConnectionController } from "./app-connection.js?shell=46";
-import { createDeviceSettingsController } from "./app-settings.js?shell=46";
-import { createPairingController } from "./app-pairing.js?shell=46";
-import { createContentTransferController } from "./app-content-transfer.js?shell=46";
+} from "./content-navigation.js?shell=47";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=47";
+import { createInstallationController } from "./app-installation.js?shell=47";
+import { createAgentNotificationController } from "./app-notifications.js?shell=47";
+import { createAppRenderer } from "./app-rendering.js?shell=47";
+import { createConnectionController } from "./app-connection.js?shell=47";
+import { createDeviceSettingsController } from "./app-settings.js?shell=47";
+import { createPairingController } from "./app-pairing.js?shell=47";
+import { createContentTransferController } from "./app-content-transfer.js?shell=47";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=46";
+} from "./app-platform.js?shell=47";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
   pair: "dingdong.pair.v1",
   pairings: "dingdong.pairings.v2",
-  iconStyle: "dingdong.icon-style.v1",
   pendingPair: "dingdong.pending-pair.v1",
   installRequest: "dingdong.install-request.v1",
   pwaInstalled: "dingdong.pwa-installed.v1",
@@ -57,11 +61,13 @@ const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
 const currentPwaVersion = "1.6.4";
-const currentPwaShellVersion = 45;
+// The shell version is the `?shell=` this module was loaded with, so it cannot
+// drift from index.html, the service worker cache, and version.json.
+const currentPwaShellVersion =
+  Number(new URL(import.meta.url).searchParams.get("shell")) || 0;
 const pwaUpdateCheckIntervalMs = 60 * 60 * 1000;
 const notificationPermissionSettleIntervalMs = 160;
 const notificationPermissionSettleAttempts = 10;
-const directVibrationPattern = [300, 100, 300, 100, 600];
 const maximumAgentSeenBatchSize = 40;
 const agentLaunchIntentKey = "agent-launch-intent";
 const agentLaunchIntentTtlMs = 5 * 60 * 1000;
@@ -81,8 +87,6 @@ const state = {
     ]),
   ),
   activeRoom: initialPairingRegistry.activeRoom,
-  iconStyle:
-    localStorage.getItem(storageKeys.iconStyle) === "white" ? "white" : "soft",
   activeTab: initialContentTab,
   toastTimer: null,
   serviceWorkerRegistration: null,
@@ -189,6 +193,7 @@ const elements = Object.fromEntries(
     "boot-view",
     "pwa-launcher-view",
     "open-pwa-app-button",
+    "continue-in-browser-button",
     "install-dialog",
     "install-dialog-eyebrow",
     "install-dialog-title",
@@ -253,13 +258,8 @@ const elements = Object.fromEntries(
     "agent-notification-status",
     "vibration-toggle",
     "vibration-support-label",
-    "vibration-test",
-    "vibration-test-result",
     "pwa-update-button",
     "pwa-update-status",
-    "icon-style-soft",
-    "icon-style-white",
-    "icon-style-note",
     "disconnect-device",
     "delete-device",
     "delete-device-dialog",
@@ -271,6 +271,14 @@ const elements = Object.fromEntries(
     "image-preview-status",
     "image-preview-close",
     "image-preview-save",
+    "pairing-scanner-dialog",
+    "pairing-scanner-video",
+    "pairing-scanner-status",
+    "pairing-scanner-close",
+    "pairing-link-dialog",
+    "pairing-link-input",
+    "pairing-link-error",
+    "pairing-link-submit",
     "toast",
   ].map((id) => [id, document.getElementById(id)]),
 );
@@ -300,6 +308,7 @@ const {
   markInstallVerified,
   notificationsCanRunInCurrentSurface,
   openPwaApp,
+  continueInBrowser,
   refreshInstallState,
   registerServiceWorker,
   renderInstallPromotion,
@@ -320,6 +329,10 @@ const {
     invalidateNotificationOperations(...args),
   persistPairingsForWorker,
   showToast,
+  hasHigherPriorityPrompt: () =>
+    !elements["content-view"].hidden &&
+    (!elements["offline-banner"].hidden ||
+      !elements["notification-onboarding"].hidden),
 });
 
 // Notification state is isolated from connection and feed rendering state.
@@ -375,13 +388,12 @@ const {
   renderConnectionState,
   renderConnectionSummary,
   renderDeviceSwitcher,
-  renderIconStyleChoices,
   renderSelectedFile,
+
   renderTabs,
   resizeComposerInput,
   scheduleAgentSeenAcknowledgement,
   selectDevice,
-  setIconStyle,
   updateAppBadge,
   updateSendButton,
 } = createAppRenderer({
@@ -435,16 +447,13 @@ const {
   openSettingsDialog,
   requestDeleteDevice,
   sendSettings,
-  testDeviceVibration,
 } = createDeviceSettingsController({
   clearDownloadHistory: (room) => fileActions.history.clearRoom(room),
   state,
   elements,
-  directVibrationPattern,
   activeSession,
   sessionForRoom,
   showToast,
-  renderIconStyleChoices,
   renderAgentNotificationStatus,
   renderPwaUpdateStatus,
   persistPairingsForWorker,
@@ -464,6 +473,7 @@ const {
   confirmPairing,
   handleRuntimePairingLaunch,
   initializeLaunchQueue,
+  openPairingText,
   showPairConfirmation,
 } = createPairingController({
   state,
@@ -676,8 +686,10 @@ async function boot(scannedPair) {
 
 function wireInteractions() {
   initializeFeedPager();
+  wirePairingEntry();
   elements["install-app-button"].addEventListener("click", installApp);
   elements["open-pwa-app-button"].addEventListener("click", openPwaApp);
+  elements["continue-in-browser-button"].addEventListener("click", continueInBrowser);
   elements["notification-recheck"].addEventListener(
     "click",
     recheckAgentNotifications,
@@ -735,17 +747,10 @@ function wireInteractions() {
     savePairings();
     await sendSettings(session);
   });
-  elements["vibration-test"].addEventListener("click", testDeviceVibration);
   elements["pwa-update-button"].addEventListener(
     "click",
     upgradePwaManually,
   );
-  elements["icon-style-soft"].addEventListener("click", () => {
-    setIconStyle("soft");
-  });
-  elements["icon-style-white"].addEventListener("click", () => {
-    setIconStyle("white");
-  });
   elements["disconnect-device"].addEventListener("click", () => {
     const session = activeSession();
     if (!session) return;
@@ -795,6 +800,54 @@ function wireInteractions() {
     elements["file-input"].click();
   });
   elements["send-button"].addEventListener("click", sendComposerContent);
+}
+
+// Pairing without leaving the app: scan the desktop QR in place (where the
+// browser can decode it) or paste the link copied from the desktop.
+function wirePairingEntry() {
+  const scanner = createPairingScanner({ elements, onPairingText: openPairingText });
+  const scanSupported = pairingScannerSupported();
+  const closeSwitcher = () => {
+    if (elements["device-switcher-dialog"].open) {
+      elements["device-switcher-dialog"].close();
+    }
+  };
+  document.querySelectorAll('[data-pairing-action="scan"]').forEach((button) => {
+    button.hidden = !scanSupported;
+    button.addEventListener("click", () => {
+      closeSwitcher();
+      scanner.open();
+    });
+  });
+  // The user pastes by hand: DingDong promises never to read the phone
+  // clipboard, so the field is not pre-filled from it.
+  document.querySelectorAll('[data-pairing-action="paste"]').forEach((button) => {
+    button.addEventListener("click", () => {
+      closeSwitcher();
+      elements["pairing-link-input"].value = "";
+      elements["pairing-link-error"].hidden = true;
+      elements["pairing-link-dialog"].showModal();
+    });
+  });
+  const submitPairingLink = () => {
+    const text = elements["pairing-link-input"].value;
+    if (!extractPairingFragment(text)) {
+      elements["pairing-link-error"].hidden = false;
+      elements["pairing-link-input"].focus();
+      return;
+    }
+    elements["pairing-link-dialog"].close();
+    openPairingText(text);
+  };
+  elements["pairing-link-submit"].addEventListener("click", submitPairingLink);
+  elements["pairing-link-input"].addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    submitPairingLink();
+  });
+  elements["pairing-link-input"].addEventListener("input", () => {
+    elements["pairing-link-error"].hidden = true;
+  });
 }
 
 function consumeContentTabLaunch() {
@@ -1012,8 +1065,13 @@ function handleContentTabOpen(message) {
 function render() {
   renderInstallPromotion();
   const browserPwaLauncher = isBrowserPwaLauncher();
-  elements["device-status-button"].disabled = state.booting;
+  elements["device-status-button"].disabled =
+    state.booting || state.sessions.size === 0;
   elements["settings-button"].disabled = state.booting;
+  // Settings belong to a connected computer; there is nothing to configure
+  // before the first pairing.
+  elements["settings-button"].hidden =
+    !state.booting && state.sessions.size === 0;
   elements["app-header"].hidden = browserPwaLauncher;
   elements["pwa-launcher-view"].hidden = !browserPwaLauncher;
   elements["boot-view"].hidden = !state.booting || browserPwaLauncher;
@@ -1052,7 +1110,6 @@ function render() {
     if (elements["message-input"].value !== session.draftText) {
       elements["message-input"].value = session.draftText;
     }
-    elements["composer-target"].textContent = `发送到 ${session.pair.hostName}`;
     renderConnectionState(session);
     renderTabs();
     renderClipboard();
@@ -1062,7 +1119,9 @@ function render() {
     requestAnimationFrame(refreshFeedPagerLayout);
     const notificationsActive = agentNotificationsActive(session);
     const permissionChecking = notificationPermission() === "checking";
+    // Reconnecting comes first; notification setup needs the computer online.
     elements["notification-onboarding"].hidden =
+      !elements["offline-banner"].hidden ||
       (notificationsActive && session.notificationDeliveryHealthy !== false);
     elements["notification-onboarding-title"].textContent = permissionChecking
       ? "正在检查通知权限"
@@ -1078,12 +1137,12 @@ function render() {
     elements["enable-notifications"].disabled = permissionChecking;
     renderAgentNotificationStatus();
   } else {
-    elements["connection-label"].textContent = "等待连接";
+    elements["connection-label"].textContent = "未连接电脑";
     elements["composer-target"].textContent = "";
   }
+  renderInstallPromotion();
   updateAppBadge();
   renderConnectionSummary();
-  renderIconStyleChoices();
   if (elements["device-switcher-dialog"].open) renderDeviceSwitcher();
 }
 

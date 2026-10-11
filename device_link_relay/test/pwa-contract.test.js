@@ -14,6 +14,7 @@ import {
   isScannedPairing,
   normalizePairingRegistry,
   pairingForRoom,
+  extractPairingFragment,
   pairingsMatch,
   removePairing,
   shouldSkipPairingCleanup,
@@ -38,8 +39,9 @@ import {
   wantsAgentNotifications,
 } from "../../docs/app/notification-policy.js";
 
+// Normalize line endings so source assertions behave the same on Windows.
 const readProjectSource = (path) =>
-  readFileSync(new URL(path, import.meta.url), "utf8");
+  readFileSync(new URL(path, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 const appSource = [
   "../../docs/app/app.js",
   "../../docs/app/app-codecs.js",
@@ -54,8 +56,9 @@ const appSource = [
   "../../docs/app/app-rendering.js",
   "../../docs/app/app-settings.js",
   "../../docs/app/app-storage.js",
+  "../../docs/app/pairing-scanner.js",
 ].map(readProjectSource).join("\n");
-const pageSource = readFileSync(new URL("../../docs/app/index.html", import.meta.url), "utf8");
+const pageSource = readProjectSource("../../docs/app/index.html");
 const stylesSource = readFileSync(
   new URL("../../docs/app/styles.css", import.meta.url),
   "utf8",
@@ -66,10 +69,7 @@ const manifest = JSON.parse(
     "utf8",
   ),
 );
-const serviceWorkerSource = readFileSync(
-  new URL("../../docs/app/service-worker.js", import.meta.url),
-  "utf8",
-);
+const serviceWorkerSource = readProjectSource("../../docs/app/service-worker.js");
 const pwaVersion = JSON.parse(
   readFileSync(new URL("../../docs/app/version.json", import.meta.url), "utf8"),
 );
@@ -125,8 +125,10 @@ test("phone text and files are uploaded only from the explicit Send action", () 
     /type: "clipboard\.create",\s*requestId,\s*content: text/,
   );
   assert.match(appSource, /await sendFile\(file, session, context\)/);
-  assert.match(pageSource, /只有点击“发送”后，内容才会进入电脑的剪贴板列表。/);
   assert.match(pageSource, /placeholder="输入或手动粘贴内容…"/);
+  assert.match(appSource, /`发送到 \$\{session\.pair\.hostName\}`/);
+  // The phone clipboard is never read, not even to pre-fill a pairing link.
+  assert.doesNotMatch(appSource, /clipboard\.readText/);
 });
 
 test("clipboard text stays inside the relay frame boundary", async () => {
@@ -221,18 +223,20 @@ test("pairing never promises or displays unsent host history", () => {
     /只有电脑主动发送，或为此设备开启自动发送后，新内容才会出现在这里/,
   );
   assert.doesNotMatch(pageSource, /主机数据库里的最近内容/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v46/);
+  assert.ok(serviceWorkerSource.includes(`dingdong-app-shell-v${pwaVersion.shell}"`));
 });
 
 test("PWA settings can check and apply an update without replacing pairings", () => {
-  assert.match(pageSource, /id="pwa-update-button"[\s\S]*手动升级/);
+  assert.match(pageSource, /id="pwa-update-button"[\s\S]*检查更新/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
   assert.match(appSource, /const currentPwaVersion = "1\.6\.4"/);
-  assert.match(appSource, /const currentPwaShellVersion = 45/);
-  assert.match(pageSource, /styles\.css\?shell=46/);
-  assert.match(pageSource, /app\.js\?shell=46/);
-  assert.match(appSource, /notification-policy\.js\?shell=46/);
-  assert.match(appSource, /pairing-state\.js\?shell=46/);
+  // The running shell version comes from the module URL instead of a second,
+  // hand-maintained constant that can drift from version.json.
+  assert.match(
+    appSource,
+    /const currentPwaShellVersion =\s*Number\(new URL\(import\.meta\.url\)\.searchParams\.get\("shell"\)\)/,
+  );
+  assert.doesNotMatch(appSource, /const currentPwaShellVersion = \d+/);
   assert.match(appSource, /fetch\(url, \{ cache: "no-store" \}\)/);
   assert.match(appSource, /updateViaCache: "none"/);
   assert.match(appSource, /checkPwaUpdate\(\{ force: true, silent: true \}\)/);
@@ -240,12 +244,39 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /registration\?\.update\(\)/);
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
-  assert.match(serviceWorkerSource, /dingdong-app-shell-v46/);
-  assert.match(serviceWorkerSource, /styles\.css\?shell=46/);
-  assert.match(serviceWorkerSource, /app\.js\?shell=46/);
-  assert.match(serviceWorkerSource, /pairing-state\.js\?shell=46/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.deepEqual(pwaVersion, { version: "1.6.4", shell: 46 });
+  assert.equal(pwaVersion.version, "1.6.4");
+});
+
+test("every PWA shell reference and precache entry matches version.json", () => {
+  const shell = String(pwaVersion.shell);
+  for (const [name, source] of Object.entries({
+    app: appSource,
+    page: pageSource,
+    worker: serviceWorkerSource,
+  })) {
+    const versions = new Set(
+      Array.from(source.matchAll(/\?shell=(\d+)/g), (match) => match[1]),
+    );
+    assert.deepEqual([...versions], [shell], `${name} shell references`);
+  }
+  assert.ok(serviceWorkerSource.includes(`dingdong-app-shell-v${shell}"`));
+  // Each local module is imported under one versioned URL and precached
+  // under that same URL, so offline launches never miss a module.
+  const imports = new Set(
+    Array.from(
+      appSource.matchAll(/from ["']\.\/([a-z-]+\.js[^"']*)["']/g),
+      (match) => match[1],
+    ),
+  );
+  assert.ok(imports.has(`pairing-scanner.js?shell=${shell}`));
+  for (const specifier of imports) {
+    assert.ok(specifier.endsWith(`?shell=${shell}`), specifier);
+    assert.ok(
+      serviceWorkerSource.includes("`${base}" + specifier + "`"),
+      `${specifier} is precached`,
+    );
+  }
 });
 
 test("PWA hydration stays neutral until saved device state is restored", () => {
@@ -278,7 +309,7 @@ test("PWA hydration stays neutral until saved device state is restored", () => {
   );
   assert.match(
     appSource,
-    /elements\["device-status-button"\]\.disabled = state\.booting/,
+    /elements\["device-status-button"\]\.disabled =\s*state\.booting \|\| state\.sessions\.size === 0/,
   );
   assert.match(appSource, /elements\["online-dot"\]\.dataset\.online = "loading"/);
   assert.match(stylesSource, /\.clipboard-card,[\s\S]*contain: layout paint style/);
@@ -376,13 +407,16 @@ test("Agent state shows realtime runs, unread history, and honest lifecycle time
     appSource,
     /session\.agentEvents\.filter\([\s\S]*event\.unseen !== false/,
   );
-  assert.match(appSource, /createAgentTimeline\(run, \{ running: true \}\)/);
+  // Running tasks are one compact row: task, Agent, start time, project.
+  assert.match(appSource, /\$\{formatLifecycleTime\(startedAt\)\} 开始/);
+  assert.match(appSource, /workspaceName\(run\.workspacePath\)/);
+  assert.doesNotMatch(appSource, /createAgentTimeline\(run/);
   assert.match(appSource, /createAgentTimeItem\("开始"/);
   assert.match(appSource, /createAgentTimeItem\("结束"/);
   assert.match(appSource, /"总耗时"/);
   assert.match(appSource, /startedAt \? formatLifecycleTime\(startedAt\) : "未记录"/);
-  assert.match(appSource, /running \? "运行中"/);
   assert.match(stylesSource, /\.agent-card-running/);
+  assert.match(stylesSource, /\.agent-run-meta/);
   assert.match(stylesSource, /\.agent-timeline/);
 });
 
@@ -602,7 +636,6 @@ test("mobile controls keep visible focus and practical touch targets", () => {
   assert.match(stylesSource, /\.device-status-button\s*\{[\s\S]*min-height: 44px/);
   assert.match(stylesSource, /\.tab\s*\{[\s\S]*min-height: 44px/);
   assert.match(stylesSource, /\.switch-control\s*\{[\s\S]*min-height: 44px/);
-  assert.match(stylesSource, /\.icon-style-choice\s*\{[\s\S]*font-size: 10px/);
   assert.match(stylesSource, /@media \(pointer: coarse\)/);
 });
 
@@ -820,14 +853,62 @@ test("one phone keeps multiple computers isolated and switchable", () => {
   assert.match(serviceWorkerSource, /hasOtherEnabledPair/);
 });
 
-test("the phone interface icon can switch to a white background", () => {
-  assert.match(pageSource, /id="icon-style-soft"/);
-  assert.match(pageSource, /id="icon-style-white"/);
-  assert.match(appSource, /function setIconStyle\(style\)/);
-  assert.match(appSource, /storageKeys\.iconStyle/);
-  assert.match(stylesSource, /mascot-frame\[data-icon-style="white"\]/);
-  assert.match(pageSource, /主屏幕图标由手机系统在安装时生成/);
-  assert.match(appSource, /主屏幕图标需重新添加后才可能由系统更新/);
+test("settings keep only options that change behavior", () => {
+  // The in-app icon background choice only restyled the header mascot.
+  assert.doesNotMatch(pageSource, /icon-style/);
+  assert.doesNotMatch(appSource, /iconStyle/);
+  assert.doesNotMatch(stylesSource, /data-icon-style/);
+  // Nothing is configurable before the first computer is paired.
+  assert.match(
+    appSource,
+    /elements\["settings-button"\]\.hidden =\s*!state\.booting && state\.sessions\.size === 0/,
+  );
+});
+
+test("pairing links are recognized in scanned QR values and pasted text", () => {
+  const fragment = "#pair=eyJ2IjoxLCJyb29tIjoiYWJjIn0";
+  assert.equal(
+    extractPairingFragment(`https://example.test/app/${fragment}`),
+    fragment,
+  );
+  assert.equal(extractPairingFragment(`  ${fragment}\n`), fragment);
+  assert.equal(
+    extractPairingFragment(`复制给另一台电脑：https://x.test/app/${fragment} 谢谢`),
+    fragment,
+  );
+  assert.equal(extractPairingFragment("https://example.test/app/"), null);
+  assert.equal(extractPairingFragment("#pair=short"), null);
+  assert.equal(extractPairingFragment(undefined), null);
+});
+
+test("the empty state and device list offer in-app pairing", () => {
+  assert.match(pageSource, /data-pairing-action="scan" hidden/);
+  assert.match(pageSource, /data-pairing-action="paste"/);
+  assert.match(pageSource, /id="pairing-scanner-dialog"/);
+  assert.match(pageSource, /id="pairing-scanner-video" playsinline muted/);
+  assert.match(pageSource, /id="pairing-link-dialog"/);
+  assert.match(pageSource, /id="pairing-link-error"[^>]*role="alert"/);
+  // Scanning is only offered where the browser can decode QR codes.
+  assert.match(appSource, /"BarcodeDetector" in window/);
+  assert.match(appSource, /button\.hidden = !scanSupported/);
+  assert.match(appSource, /formats: \["qr_code"\]/);
+  assert.match(appSource, /facingMode: \{ ideal: "environment" \}/);
+  // The camera is released whenever the scanner closes or the page hides.
+  assert.match(appSource, /dialog\.addEventListener\("close", stop\)/);
+  assert.match(appSource, /track\.stop\(\)/);
+  assert.match(appSource, /document\.visibilityState === "hidden" && dialog\.open/);
+  // Both entry points reuse the normal launch path.
+  assert.match(appSource, /function openPairingText\(text\)/);
+  assert.match(appSource, /return handleRuntimePairingLaunch\(\);/);
+});
+
+test("only one prompt competes for attention at a time", () => {
+  assert.match(
+    appSource,
+    /elements\["notification-onboarding"\]\.hidden =\s*!elements\["offline-banner"\]\.hidden/,
+  );
+  assert.match(appSource, /optionalSuggestion && hasHigherPriorityPrompt\(\)/);
+  assert.match(appSource, /\["idle", "available"\]\.includes\(\s*state\.installStatus/);
 });
 
 test("the mobile page exposes a real PWA install experience", () => {
@@ -835,15 +916,31 @@ test("the mobile page exposes a real PWA install experience", () => {
   assert.equal(manifest.id, "./");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.handle_links, "preferred");
-  assert.equal(manifest.launch_handler.client_mode, "navigate-existing");
+  // A running app is focused and receives the launch through launchQueue;
+  // navigate-existing reloaded it on every launch.
+  assert.deepEqual(manifest.launch_handler.client_mode, ["focus-existing", "auto"]);
+  assert.match(appSource, /window\.launchQueue\.setConsumer/);
   assert.equal(manifest.prefer_related_applications, false);
+  // The related-app id must equal the manifest id ("./" against start_url),
+  // or getInstalledRelatedApps() never reports the installed app.
   assert.deepEqual(manifest.related_applications, [
     {
       platform: "webapp",
       url: "./manifest.webmanifest",
-      id: "https://dingdong.xn--m8txu.com/",
+      id: "https://dingdong.xn--m8txu.com/app/",
     },
   ]);
+  assert.match(appSource, /const expectedId = new URL\("\.\/", manifestUrl\)\.href/);
+  // Chrome on Android opens same-site links in another tab; an intent hands
+  // the address to the installed app, with a browser-mode fallback.
+  assert.match(appSource, /`intent:\/\/\$\{target\.host\}/);
+  assert.match(appSource, /category=android\.intent\.category\.BROWSABLE/);
+  assert.match(appSource, /S\.browser_fallback_url=/);
+  assert.doesNotMatch(appSource, /window\.open\(target\.href/);
+  // The "use the app" screen always has a way out.
+  assert.match(pageSource, /id="continue-in-browser-button"/);
+  assert.match(appSource, /function continueInBrowser\(\)/);
+  assert.match(appSource, /localStorage\.removeItem\(storageKeys\.pwaInstalled\)/);
   assert.deepEqual(iconSizes, new Set(["192x192", "512x512"]));
   assert.deepEqual(
     pngDimensions(
@@ -923,13 +1020,9 @@ test("notification diagnostics are platform-aware and never require closing all 
   assert.match(pageSource, /id="notification-provider-status"/);
   assert.match(pageSource, /id="notification-device-status"/);
   assert.match(pageSource, /id="notification-recheck"/);
-  assert.match(pageSource, /id="vibration-test"/);
-  assert.match(pageSource, /id="vibration-test-result"/);
-  assert.match(appSource, /const directVibrationPattern = \[300, 100, 300, 100, 600\]/);
-  assert.match(appSource, /typeof navigator\.vibrate !== "function"/);
-  assert.match(appSource, /navigator\.vibrate\(directVibrationPattern\)/);
-  assert.match(appSource, /返回值：true/);
-  assert.match(appSource, /返回值：false/);
+  // The raw vibration API probe was a developer diagnostic, not a setting.
+  assert.doesNotMatch(pageSource, /id="vibration-test"/);
+  assert.doesNotMatch(appSource, /返回值：/);
   assert.match(appSource, /!\("Notification" in window\)/);
   assert.match(appSource, /地址栏左侧的网站信息图标/);
   assert.match(appSource, /设置 → 通知 → DingDong/);

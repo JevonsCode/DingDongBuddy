@@ -3,7 +3,9 @@ import {
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=46";
+} from "./app-platform.js?shell=47";
+
+const browserModeParameter = "in-browser";
 
 // PWA installation and shell-update lifecycle.
 export function createInstallationController({
@@ -19,6 +21,7 @@ export function createInstallationController({
   invalidateNotificationOperations,
   persistPairingsForWorker,
   showToast,
+  hasHigherPriorityPrompt = () => false,
 }) {
   function isBrowserPwaLauncher() {
     return !isStandalone() && state.installStatus === "installed";
@@ -36,11 +39,19 @@ export function createInstallationController({
         ? "升级中…"
         : state.pwaUpdateCheckInProgress
           ? "检查中…"
-          : "手动升级";
+          : state.pwaUpdateAvailable
+            ? "立即升级"
+            : "检查更新";
   }
 
 
   function initializeInstallState() {
+    const launchUrl = new URL(window.location.href);
+    if (launchUrl.searchParams.get(browserModeParameter) === "1") {
+      localStorage.removeItem(storageKeys.pwaInstalled);
+      launchUrl.searchParams.delete(browserModeParameter);
+      history.replaceState(null, "", launchUrl.href);
+    }
     if (isStandalone()) {
       markInstallVerified();
       return;
@@ -59,8 +70,16 @@ export function createInstallationController({
   }
 
   function renderInstallPromotion() {
+    // The optional install suggestion yields to connection and notification
+    // prompts; an install the user already started stays visible.
+    const optionalSuggestion = ["idle", "available"].includes(
+      state.installStatus,
+    );
     const hidden =
-      !isMobileBrowser() || isStandalone() || isBrowserPwaLauncher();
+      !isMobileBrowser() ||
+      isStandalone() ||
+      isBrowserPwaLauncher() ||
+      (optionalSuggestion && hasHigherPriorityPrompt());
     elements["install-app-banner"].hidden = hidden;
     if (hidden) return;
 
@@ -178,9 +197,33 @@ export function createInstallationController({
   function openPwaApp() {
     const target = new URL("./", window.location.href);
     target.search = window.location.search;
+    if (isAndroid()) {
+      // Chrome keeps same-site links in a browser tab (leaving a new tab each
+      // time). An intent asks Android to open the installed DingDong app for
+      // this address instead; a pending pairing reaches the app through the
+      // storage it shares with Chrome, so the fragment is not needed. If the
+      // app is gone, Android falls back to this page in browser mode.
+      const fallback = new URL(target.href);
+      fallback.searchParams.set(browserModeParameter, "1");
+      window.location.href =
+        `intent://${target.host}${target.pathname}${target.search}` +
+        `#Intent;scheme=${target.protocol.replace(":", "")};` +
+        "action=android.intent.action.VIEW;" +
+        "category=android.intent.category.BROWSABLE;" +
+        `S.browser_fallback_url=${encodeURIComponent(fallback.href)};end`;
+      return;
+    }
     target.hash = window.location.hash;
-    const opened = window.open(target.href, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.assign(target.href);
+    window.location.assign(target.href);
+  }
+
+  // Lets someone whose app was uninstalled (or who prefers the browser) leave
+  // the "use the app" screen; it otherwise persists via the installed flag.
+  function continueInBrowser() {
+    localStorage.removeItem(storageKeys.pwaInstalled);
+    const url = new URL(window.location.href);
+    url.searchParams.delete(browserModeParameter);
+    window.location.replace(url.href);
   }
 
   function markInstallRequested() {
@@ -253,7 +296,8 @@ export function createInstallationController({
       const installedManifestUrl = new URL(application.url, window.location.href).href;
       if (installedManifestUrl !== manifestUrl) return false;
       if (!application.id) return true;
-      const expectedId = new URL("/", window.location.origin).href;
+      // A manifest `id` of "./" resolves against start_url, i.e. the app folder.
+      const expectedId = new URL("./", manifestUrl).href;
       return new URL(application.id, window.location.href).href === expectedId;
     } catch {
       return false;
@@ -385,6 +429,7 @@ export function createInstallationController({
       markInstallVerified,
       notificationsCanRunInCurrentSurface,
       openPwaApp,
+      continueInBrowser,
       refreshInstallState,
       registerServiceWorker,
       renderInstallPromotion,

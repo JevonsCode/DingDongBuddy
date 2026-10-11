@@ -1,8 +1,8 @@
-import { imageMimeType } from "./app-file-actions.js?shell=46";
+import { imageMimeType } from "./app-file-actions.js?shell=47";
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=46";
+} from "./notification-policy.js?shell=47";
 import {
   formatBytes,
   formatDuration,
@@ -11,7 +11,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=46";
+} from "./app-formatters.js?shell=47";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -47,10 +47,17 @@ export function createAppRenderer({
           : `${session.pair.hostName} · 离线`;
     elements["offline-title"].textContent = session.connectionSuperseded
       ? "连接已转移到另一个页面"
-      : "电脑当前离线";
+      : session.pair.manualDisconnect
+        ? `已断开“${session.pair.hostName}”`
+        : `连不上“${session.pair.hostName}”`;
     elements["offline-copy"].textContent = session.connectionSuperseded
-      ? "同一设备只保留最新打开的 DingDong；需要时可在这个页面重新连接。"
-      : "断开后不会缓存电脑里的剪贴板内容。";
+      ? "同一台手机只保留最新打开的 DingDong 页面。"
+      : session.pair.manualDisconnect
+        ? "需要时点“重新连接”。"
+        : "请确认电脑已开机，DingDong 正在运行。";
+    elements["composer-target"].textContent = session.connected
+      ? `发送到 ${session.pair.hostName}`
+      : `${session.pair.hostName} 未连接，连上后才能发送`;
     elements["reconnect-button"].textContent = session.connectionSuperseded
       ? "在此连接"
       : "重新连接";
@@ -63,7 +70,12 @@ export function createAppRenderer({
       (session) => session.connected,
     ).length;
     elements["online-dot"].dataset.online = String(onlineCount > 0);
-    elements["online-count"].textContent = `${onlineCount} 台在线`;
+    // With one computer the label already says online or offline; the count
+    // only adds information when several computers are paired.
+    elements["online-count"].textContent =
+      state.sessions.size > 1
+        ? `${onlineCount}/${state.sessions.size} 台在线`
+        : "";
     elements["device-status-button"].setAttribute(
       "aria-label",
       `${elements["connection-label"].textContent}，${onlineCount} 台在线，点击切换电脑`,
@@ -137,27 +149,6 @@ export function createAppRenderer({
       elements["device-switcher-dialog"].close();
     }
     return true;
-  }
-
-  function setIconStyle(style) {
-    state.iconStyle = style === "white" ? "white" : "soft";
-    localStorage.setItem(storageKeys.iconStyle, state.iconStyle);
-    renderIconStyleChoices();
-  }
-
-  function renderIconStyleChoices() {
-    document.documentElement.dataset.iconStyle = state.iconStyle;
-    elements["app-mascot-frame"].dataset.iconStyle = state.iconStyle;
-    for (const style of ["soft", "white"]) {
-      const button = elements[`icon-style-${style}`];
-      const selected = state.iconStyle === style;
-      button.classList.toggle("is-selected", selected);
-      button.setAttribute("aria-pressed", String(selected));
-    }
-    elements["icon-style-note"].textContent =
-      state.iconStyle === "white"
-        ? "已使用白色背景；主屏幕图标需重新添加后才可能由系统更新。"
-        : "已使用浅蓝背景；主屏幕图标仍由手机系统在安装时生成。";
   }
 
   function renderTabs() {
@@ -396,29 +387,33 @@ export function createAppRenderer({
     else updateAppBadge();
   }
 
+  // Running tasks sit under the "正在运行" heading, so each row shows only what
+  // differs: the task, its Agent, when it started, and the project. Several
+  // runs then fit on one screen above the finished reminders.
   function createAgentRunCard(run) {
     const card = document.createElement("article");
     card.className = "agent-card agent-card-running";
-    const header = document.createElement("div");
-    header.className = "agent-card-header";
-    const mascot = document.createElement("img");
-    mascot.src = "../assets/dingdong-thinking-icon.png";
-    mascot.alt = "DingDong 正在运行";
-    const heading = document.createElement("div");
-    const title = document.createElement("strong");
-    title.className = "agent-status";
-    title.textContent = "正在运行";
-    const meta = document.createElement("span");
-    meta.textContent = run.source || "Agent";
-    heading.append(title, meta);
-    header.append(mascot, heading);
-
     const task = document.createElement("p");
-    task.className = "agent-summary";
+    task.className = "agent-run-task agent-status";
     task.textContent = run.task || "当前任务";
-    card.append(header, task, createAgentTimeline(run, { running: true }));
-    appendAgentWorkspace(card, run.workspacePath);
+    const meta = document.createElement("p");
+    meta.className = "agent-run-meta";
+    const startedAt = validDate(run.startedAt);
+    meta.textContent = [
+      run.source || "Agent",
+      startedAt ? `${formatLifecycleTime(startedAt)} 开始` : null,
+      workspaceName(run.workspacePath),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    card.append(task, meta);
     return card;
+  }
+
+  function workspaceName(workspacePath) {
+    return workspacePath
+      ? workspacePath.split(/[\\/]/).filter(Boolean).at(-1) || null
+      : null;
   }
 
   function createAgentCard(event) {
@@ -452,14 +447,14 @@ export function createAppRenderer({
     return card;
   }
 
-  function createAgentTimeline(event, { running = false } = {}) {
+  function createAgentTimeline(event) {
     const timeline = document.createElement("div");
     timeline.className = "agent-timeline";
     const startedAt = validDate(event.startedAt);
-    const completedAt = running ? null : validDate(event.completedAt);
+    const completedAt = validDate(event.completedAt);
     timeline.append(
       createAgentTimeItem("开始", startedAt ? formatLifecycleTime(startedAt) : "未记录"),
-      createAgentTimeItem("结束", running ? "运行中" : completedAt ? formatLifecycleTime(completedAt) : "未记录"),
+      createAgentTimeItem("结束", completedAt ? formatLifecycleTime(completedAt) : "未记录"),
     );
     if (startedAt && completedAt && completedAt >= startedAt) {
       timeline.append(
@@ -485,10 +480,11 @@ export function createAppRenderer({
   }
 
   function appendAgentWorkspace(card, workspacePath) {
-    if (!workspacePath) return;
+    const name = workspaceName(workspacePath);
+    if (!name) return;
     const workspace = document.createElement("p");
     workspace.className = "agent-workspace";
-    workspace.textContent = `项目 · ${workspacePath.split(/[\\/]/).filter(Boolean).at(-1)}`;
+    workspace.textContent = `项目 · ${name}`;
     card.append(workspace);
   }
 
@@ -531,13 +527,11 @@ export function createAppRenderer({
       renderConnectionState,
       renderConnectionSummary,
       renderDeviceSwitcher,
-      renderIconStyleChoices,
       renderSelectedFile,
       renderTabs,
       resizeComposerInput,
       scheduleAgentSeenAcknowledgement,
       selectDevice,
-      setIconStyle,
       updateAppBadge,
       updateSendButton,
     };
