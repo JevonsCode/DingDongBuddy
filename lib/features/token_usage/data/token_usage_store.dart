@@ -285,8 +285,10 @@ final class TokenUsageStore {
     // Millisecond timestamps can repeat around a reset. Predecessor hashes
     // preserve transcript observation order, including across checkpoints.
     // Repair copied/out-of-order chains in SQLite rather than sorting counters.
+    // Materialize once: a correlated UPDATE otherwise reruns the entire
+    // recursive chain for each observation and stalls dense transcript imports.
     database.execute(
-      '''WITH RECURSIVE ordered(event_hash,ordinal,depth) AS (
+      '''WITH RECURSIVE ordered(event_hash,ordinal,depth) AS MATERIALIZED (
       SELECT e.event_hash,0,0 FROM token_usage_events e
       LEFT JOIN token_usage_events p ON p.source=e.source AND p.event_hash=e.preceding_counter
       WHERE e.source=? AND e.session_hash=? AND e.occurred_at=? AND e.cumulative=1
