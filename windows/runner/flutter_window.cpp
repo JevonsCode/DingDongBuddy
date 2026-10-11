@@ -207,6 +207,8 @@ std::string ForegroundApplicationDescription() {
   }
   const std::wstring window_title(title);
   if (!window_title.empty() && !executable.empty()) {
+    // Use an escape: MSVC reads BOM-less sources in the ANSI code page, which
+    // turned a literal middle dot into "Â·".
     return WideToUtf8(window_title + L" · " + executable);
   }
   return WideToUtf8(

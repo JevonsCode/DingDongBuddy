@@ -132,6 +132,9 @@ Confirm the group ID appears in `context.matchedTriggerGroupIds` and the policy 
   to read clipboard content** in DingDong Settings and the request explicitly
   sets `includeContent=true`. Sensitive records additionally require
   `includeSensitiveClipboard=true`.
+- While that setting is off, clipboard metadata omits `title` (a text record's
+  title is the start of its content) and `q`/`task` search matches only groups,
+  tags, and aliases.
 - Do not retry `403` clipboard-content responses or attempt to bypass the
   setting through capture, collection, or promotion; ask the user to enable the
   setting when the task genuinely requires content.

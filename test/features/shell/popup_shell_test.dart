@@ -62,7 +62,6 @@ void main() {
                 updateAvailable: false,
                 showShortcutHints: false,
                 workspaceShortcuts: WorkspaceShortcuts.defaultValue,
-                mascotShakeRevision: 0,
                 mascotState: TrayBuddyState.normal,
                 onSelected: (_) {},
                 onIssues: () {},
@@ -300,20 +299,6 @@ void main() {
     );
 
     await tester.tap(mascot);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 70));
-    expect(
-      tester.widget<Transform>(transform).transform.storage,
-      isNot(equals(Matrix4.identity().storage)),
-    );
-
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<Transform>(transform).transform.storage,
-      equals(Matrix4.identity().storage),
-    );
-
-    controller.requestMascotShake();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 70));
     expect(

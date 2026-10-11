@@ -30,10 +30,10 @@ final class DesktopControlRoutes {
           ? const <String, Object?>{}
           : jsonDecode(body) as Map<String, Object?>;
       final bool? enabled =
-          _parseBool(query['enabled']) ??
+          parseQueryBool(query['enabled']) ??
           (payload['enabled'] is bool ? payload['enabled']! as bool : null);
       if (enabled == null) {
-        return _badRequest('enabled must be true or false');
+        return HttpResponseData.badRequest('enabled must be true or false');
       }
       onClipboardMonitoring?.call(enabled);
       return HttpResponseData(
@@ -44,7 +44,7 @@ final class DesktopControlRoutes {
         },
       );
     } on Object {
-      return _badRequest('enabled must be true or false');
+      return HttpResponseData.badRequest('enabled must be true or false');
     }
   }
 
@@ -66,7 +66,7 @@ final class DesktopControlRoutes {
         _ => null,
       };
       if (index == null) {
-        return _badRequest('Invalid UI tab');
+        return HttpResponseData.badRequest('Invalid UI tab');
       }
       onShowUi?.call(index);
       return HttpResponseData(
@@ -85,18 +85,7 @@ final class DesktopControlRoutes {
         },
       );
     } on Object {
-      return _badRequest('Invalid UI show JSON body');
+      return HttpResponseData.badRequest('Invalid UI show JSON body');
     }
   }
 }
-
-bool? _parseBool(String? value) => switch (value?.toLowerCase()) {
-  'true' || '1' || 'yes' || 'on' => true,
-  'false' || '0' || 'no' || 'off' => false,
-  _ => null,
-};
-
-HttpResponseData _badRequest(String message) => HttpResponseData(
-  statusCode: 400,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);

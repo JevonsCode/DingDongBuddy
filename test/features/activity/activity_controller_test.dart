@@ -551,30 +551,6 @@ void main() {
     },
   );
 
-  test('suppressed completion hook enriches the latest matching item', () {
-    final ActivityController controller = ActivityController(
-      idGenerator: () => 'activity-1',
-      now: () => DateTime.utc(2026, 7, 12, 10),
-    );
-    controller.record(source: 'Codex', message: 'Build complete');
-
-    controller.attachConversationTarget(
-      source: 'Codex',
-      target: const AgentConversationTarget(
-        client: AgentClient.codex,
-        conversationId: 'thread-1',
-        workspacePath: '/workspace/dingdong',
-      ),
-    );
-
-    expect(controller.activities, hasLength(1));
-    expect(
-      controller.activities.single.conversationTarget?.conversationId,
-      'thread-1',
-    );
-    expect(controller.recentCount, 1);
-  });
-
   test('same conversation is one recent item with a repeat count', () {
     DateTime now = DateTime.utc(2026, 7, 12, 10);
     final ActivityController controller = ActivityController(

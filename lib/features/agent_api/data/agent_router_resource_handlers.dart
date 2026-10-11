@@ -23,33 +23,19 @@ extension _AgentRouterResourceHandlers on AgentRouter {
           jsonDecode(body) as Map<String, Object?>;
       final ResourceType type = ResourceType.parse(json['type']);
       if (!type.isLibraryResource) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message':
-                'Clipboard history must be captured through /clipboard/capture',
-          },
+        return HttpResponseData.badRequest(
+          'Clipboard history must be captured through /clipboard/capture',
         );
       }
       final String title = (json['title'] as String? ?? '').trim();
       final String content = json['content'] as String? ?? '';
       if (title.isEmpty || content.trim().isEmpty) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'title and content are required',
-          },
-        );
+        return HttpResponseData.badRequest('title and content are required');
       }
       if (content.length > 100000) {
-        return const HttpResponseData(
-          statusCode: 413,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'content exceeds the 100000 character limit',
-          },
+        return HttpResponseData.error(
+          413,
+          'content exceeds the 100000 character limit',
         );
       }
       final bool pinned = json['pinned'] as bool? ?? false;
@@ -81,13 +67,8 @@ extension _AgentRouterResourceHandlers on AgentRouter {
       final DateTime timestamp = _now().toUtc();
       if (json.containsKey('skillDeliveryByAgent') ||
           json.containsKey('skillHooksEnabledByAgent')) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message':
-                'Create the Skill first, then use its atomic delivery endpoint',
-          },
+        return HttpResponseData.badRequest(
+          'Create the Skill first, then use its atomic delivery endpoint',
         );
       }
       final Resource resource = Resource(
@@ -125,13 +106,7 @@ extension _AgentRouterResourceHandlers on AgentRouter {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid resource JSON body',
-        },
-      );
+      return HttpResponseData.badRequest('Invalid resource JSON body');
     }
   }
 
@@ -193,23 +168,11 @@ extension _AgentRouterResourceHandlers on AgentRouter {
     );
     Resource? resource = resourceIndex < 0 ? null : resources[resourceIndex];
     if (resource == null || !resource.type.isLibraryResource) {
-      return const HttpResponseData(
-        statusCode: 404,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Resource not found',
-        },
-      );
+      return HttpResponseData.notFound('Resource not found');
     }
     final String? expectedType = query['expectedType'];
     if (expectedType != null && resource.type.name != expectedType) {
-      return const HttpResponseData(
-        statusCode: 404,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Resource type does not match',
-        },
-      );
+      return HttpResponseData.notFound('Resource type does not match');
     }
     final bool full = query['mode'] == 'full';
     if (full) {
@@ -237,12 +200,8 @@ extension _AgentRouterResourceHandlers on AgentRouter {
       );
       if (!resource.enabled ||
           !resourceMatchesScope(resource, context, triggerGroupsById)) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Resource is disabled, out of scope, or not found',
-          },
+        return HttpResponseData.notFound(
+          'Resource is disabled, out of scope, or not found',
         );
       }
     }

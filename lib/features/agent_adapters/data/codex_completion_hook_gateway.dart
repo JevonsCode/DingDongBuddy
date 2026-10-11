@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/agent_adapters/domain/codex_completion_hook.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:path/path.dart' as path;
 
 abstract interface class CodexAppServerConnection {
@@ -140,7 +141,7 @@ final class StdioCodexAppServerConnection implements CodexAppServerConnection {
         'clientInfo': <String, Object?>{
           'name': 'dingdong',
           'title': 'DingDong',
-          'version': '1.7.0-dev.2',
+          'version': currentAppVersion,
         },
         'capabilities': <String, Object?>{
           'experimentalApi': true,

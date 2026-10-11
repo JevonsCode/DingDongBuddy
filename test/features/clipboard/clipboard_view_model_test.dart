@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
-import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -11,7 +9,6 @@ import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
-import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -495,27 +492,6 @@ void main() {
     ]);
   });
 
-  test(
-    'promoting clipboard content creates a selected library resource',
-    () async {
-      final DateTime now = DateTime.utc(2026, 7, 12);
-      final InMemoryResourceStore resources = InMemoryResourceStore();
-      final ClipboardViewModel model = ClipboardViewModel(
-        InMemoryClipboardStore(<ClipboardRecord>[_record(now)]),
-        resourceStore: resources,
-        idGenerator: () => 'promoted-1',
-        now: () => now,
-      )..load();
-      model.select(model.visibleRecords.single);
-
-      final promoted = await model.promoteSelected(ResourceType.prompt);
-
-      expect(promoted?.id, 'promoted-1');
-      expect(promoted?.type, ResourceType.prompt);
-      expect((await resources.load()).single.content, 'flutter test');
-    },
-  );
-
   test('number shortcut restores the matching visible clipboard row', () async {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final _RecordingClipboardGateway gateway = _RecordingClipboardGateway();
@@ -616,11 +592,12 @@ void main() {
       ]),
     )..load();
 
+    final List<String> initialGroups = model.groups;
     model.reorderCategories(3, 0);
-    model.moveGroup('项目乙', before: '项目甲');
+    model.reorderGroups(1, 0);
 
     expect(model.availableCategories.first.id, 'text');
-    expect(model.groups, <String>['项目乙', '项目甲']);
+    expect(model.groups, initialGroups.reversed.toList());
   });
 
   test('user group order survives rebuilding and reopening the view model', () {
@@ -715,25 +692,6 @@ void main() {
     expect(model.visibleRecords.single.id, 'ARCHIVE-page-id');
   });
 
-  test('promoting content publishes a library revision', () async {
-    final DataRevisionBus revisions = DataRevisionBus();
-    final List<DataCollection> changes = <DataCollection>[];
-    final subscription = revisions.changes.listen(changes.add);
-    final DateTime now = DateTime.utc(2026, 7, 12);
-    final ClipboardViewModel model = ClipboardViewModel(
-      InMemoryClipboardStore(<ClipboardRecord>[_record(now)]),
-      resourceStore: InMemoryResourceStore(),
-      revisions: revisions,
-    )..load();
-    model.select(model.visibleRecords.single);
-
-    await model.promoteSelected(ResourceType.prompt);
-
-    expect(changes, contains(DataCollection.library));
-    await subscription.cancel();
-    await revisions.dispose();
-  });
-
   test('bulk group assignment preserves existing memberships', () {
     final DateTime now = DateTime.utc(2026, 7, 12);
     final InMemoryClipboardStore store = InMemoryClipboardStore(
@@ -769,7 +727,8 @@ void main() {
     expect(store.listArchives(), hasLength(2));
     expect(
       store.listArchives().every(
-        (ClipboardArchiveEntry entry) => entry.record.groupNames.contains('项目归档'),
+        (ClipboardArchiveEntry entry) =>
+            entry.record.groupNames.contains('项目归档'),
       ),
       isTrue,
     );

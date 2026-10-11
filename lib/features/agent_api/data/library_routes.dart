@@ -69,13 +69,7 @@ final class LibraryRoutes {
   Future<HttpResponseData> _installSkill(String body) async {
     final SkillPackageInstaller? installer = _skillPackageInstaller;
     if (installer == null) {
-      return const HttpResponseData(
-        statusCode: 503,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Skill installation is not available',
-        },
-      );
+      return HttpResponseData.error(503, 'Skill installation is not available');
     }
     try {
       final Map<String, Object?> payload =
@@ -278,10 +272,7 @@ final class LibraryRoutes {
         },
       );
     } on Object catch (error) {
-      return HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{'status': 'error', 'message': error.toString()},
-      );
+      return HttpResponseData.badRequest(error.toString());
     }
   }
 
@@ -501,10 +492,7 @@ final class LibraryRoutes {
         },
       );
     } on Object catch (error) {
-      return HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{'status': 'error', 'message': error.toString()},
-      );
+      return HttpResponseData.badRequest(error.toString());
     }
   }
 
@@ -737,12 +725,9 @@ final class LibraryRoutes {
   Future<HttpResponseData> skillDeployments(String id) async {
     final SkillDeploymentStore? store = _skillDeploymentStore;
     if (store == null) {
-      return const HttpResponseData(
-        statusCode: 503,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Native Skill deployment state is not available',
-        },
+      return HttpResponseData.error(
+        503,
+        'Native Skill deployment state is not available',
       );
     }
     final Resource? resource = (await _store.load())
@@ -778,12 +763,9 @@ final class LibraryRoutes {
 
   Future<HttpResponseData> _reconcileSkill(String id) async {
     if (_skillDeploymentStore == null) {
-      return const HttpResponseData(
-        statusCode: 503,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Native Skill deployment state is not available',
-        },
+      return HttpResponseData.error(
+        503,
+        'Native Skill deployment state is not available',
       );
     }
     final List<Resource> resources = await _store.load();
@@ -874,10 +856,7 @@ final class LibraryRoutes {
         },
       );
     } on Object catch (error) {
-      return HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{'status': 'error', 'message': error.toString()},
-      );
+      return HttpResponseData.badRequest(error.toString());
     }
   }
 
@@ -1185,12 +1164,9 @@ final class LibraryRoutes {
         return _invalidUpdate('content cannot be empty');
       }
       if (content != null && content.length > 100000) {
-        return const HttpResponseData(
-          statusCode: 413,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'content exceeds the 100000 character limit',
-          },
+        return HttpResponseData.error(
+          413,
+          'content exceeds the 100000 character limit',
         );
       }
 
@@ -1258,13 +1234,7 @@ final class LibraryRoutes {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid resource JSON body',
-        },
-      );
+      return HttpResponseData.badRequest('Invalid resource JSON body');
     }
   }
 
@@ -1370,10 +1340,7 @@ String _onlineSkillName(Resource resource) {
 }
 
 HttpResponseData _invalidUpdate(String message) {
-  return HttpResponseData(
-    statusCode: 400,
-    json: <String, Object?>{'status': 'error', 'message': message},
-  );
+  return HttpResponseData.badRequest(message);
 }
 
 HttpResponseData _skillConflict(String message, {required String code}) {
@@ -1388,20 +1355,11 @@ HttpResponseData _skillConflict(String message, {required String code}) {
 }
 
 HttpResponseData _resourceNotFound() {
-  return const HttpResponseData(
-    statusCode: 404,
-    json: <String, Object?>{'status': 'error', 'message': 'Resource not found'},
-  );
+  return HttpResponseData.notFound('Resource not found');
 }
 
 HttpResponseData _invalidResourceType() {
-  return const HttpResponseData(
-    statusCode: 400,
-    json: <String, Object?>{
-      'status': 'error',
-      'message': 'Invalid resource type',
-    },
-  );
+  return HttpResponseData.badRequest('Invalid resource type');
 }
 
 final class _StrictProjectScopeResolution {

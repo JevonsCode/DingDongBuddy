@@ -236,9 +236,7 @@ class _TypeFilters extends StatelessWidget {
         selected: viewModel.selectedType == null && !viewModel.pinnedOnly,
         onTap: () => viewModel.setTypeFilter(null),
       ),
-      for (final ResourceType type in ResourceType.values.where(
-        (ResourceType value) => value.isConfigurableAgentResource,
-      )) ...<Widget>[
+      for (final ResourceType type in ResourceType.configurable) ...<Widget>[
         const SizedBox(width: 5),
         _TypeTab(
           key: Key('resource-filter-${type.name}'),

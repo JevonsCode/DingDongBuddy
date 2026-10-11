@@ -362,13 +362,7 @@ final class AgentBridge {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid agent bridge request',
-        },
-      );
+      return HttpResponseData.badRequest('Invalid agent bridge request');
     }
   }
 
@@ -451,13 +445,7 @@ final class AgentBridge {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid Skill load request',
-        },
-      );
+      return HttpResponseData.badRequest('Invalid Skill load request');
     }
   }
 
@@ -516,31 +504,17 @@ final class AgentBridge {
       final String toolName = (query['toolName'] ?? '').trim();
       final TriggerContext context = await _resolveContextFromStrings(query);
       if (id.isEmpty || serverName.isEmpty || toolName.isEmpty) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'MCP id, serverName, and toolName are required',
-          },
+        return HttpResponseData.badRequest(
+          'MCP id, serverName, and toolName are required',
         );
       }
       if (toolName.length > _maximumReportedMcpToolNameCharacters) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'MCP toolName is too long',
-          },
-        );
+        return HttpResponseData.badRequest('MCP toolName is too long');
       }
       if (resolveAgentAdapterId(context.source) == 'codex' &&
           !toolName.startsWith(codexMcpToolPrefix(serverName))) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'MCP toolName does not match its Codex server prefix',
-          },
+        return HttpResponseData.badRequest(
+          'MCP toolName does not match its Codex server prefix',
         );
       }
       final Map<String, TriggerGroup> triggerGroupsById = _groupsById(
@@ -559,12 +533,8 @@ final class AgentBridge {
           )
           .toList(growable: false);
       if (matches.isEmpty) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'MCP is disabled, out of scope, or not found',
-          },
+        return HttpResponseData.notFound(
+          'MCP is disabled, out of scope, or not found',
         );
       }
       final Resource resource = matches.single;
@@ -624,12 +594,8 @@ final class AgentBridge {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid MCP use confirmation request',
-        },
+      return HttpResponseData.badRequest(
+        'Invalid MCP use confirmation request',
       );
     }
   }
@@ -640,12 +606,8 @@ final class AgentBridge {
       final String requestedPath = (query['path'] ?? '').trim();
       final List<String>? segments = _safeSkillFileSegments(requestedPath);
       if (segments == null) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'path must be a safe relative Skill package path',
-          },
+        return HttpResponseData.badRequest(
+          'path must be a safe relative Skill package path',
         );
       }
       final _SkillLookup lookup = await _lookupSkill(query);
@@ -656,55 +618,30 @@ final class AgentBridge {
       final DynamicSkillCandidate skill = lookup.skill!;
       final String? packagePath = skill.resource.packagePath;
       if (packagePath == null) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill package file not found',
-          },
-        );
+        return HttpResponseData.notFound('Skill package file not found');
       }
       final Directory root = Directory(packagePath);
       if (await FileSystemEntity.type(root.path, followLinks: false) !=
           FileSystemEntityType.directory) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill package file not found',
-          },
-        );
+        return HttpResponseData.notFound('Skill package file not found');
       }
       final File file = File(path.joinAll(<String>[root.path, ...segments]));
       if (await FileSystemEntity.type(file.path, followLinks: false) !=
           FileSystemEntityType.file) {
-        return const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill package file not found',
-          },
-        );
+        return HttpResponseData.notFound('Skill package file not found');
       }
       final String resolvedRoot = await root.resolveSymbolicLinks();
       final String resolvedFile = await file.resolveSymbolicLinks();
       if (!path.isWithin(resolvedRoot, resolvedFile)) {
-        return const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill package path escapes its root',
-          },
+        return HttpResponseData.badRequest(
+          'Skill package path escapes its root',
         );
       }
       final int byteCount = await file.length();
       if (byteCount > _maximumSkillFileBytes) {
-        return const HttpResponseData(
-          statusCode: 413,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill package file exceeds the 5 MiB limit',
-          },
+        return HttpResponseData.error(
+          413,
+          'Skill package file exceeds the 5 MiB limit',
         );
       }
       final List<int> bytes = await file.readAsBytes();
@@ -732,13 +669,7 @@ final class AgentBridge {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: <String, Object?>{
-          'status': 'error',
-          'message': 'Invalid Skill file request',
-        },
-      );
+      return HttpResponseData.badRequest('Invalid Skill file request');
     }
   }
 
@@ -749,13 +680,7 @@ final class AgentBridge {
     if (id.isEmpty && name.isEmpty) {
       return _SkillLookup.error(
         context,
-        const HttpResponseData(
-          statusCode: 400,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill name or id is required',
-          },
-        ),
+        HttpResponseData.badRequest('Skill name or id is required'),
       );
     }
     final List<Resource> resources = List<Resource>.of(await _store.load());
@@ -808,12 +733,8 @@ final class AgentBridge {
       }
       return _SkillLookup.error(
         context,
-        const HttpResponseData(
-          statusCode: 404,
-          json: <String, Object?>{
-            'status': 'error',
-            'message': 'Skill is disabled, out of scope, or not found',
-          },
+        HttpResponseData.notFound(
+          'Skill is disabled, out of scope, or not found',
         ),
       );
     }
