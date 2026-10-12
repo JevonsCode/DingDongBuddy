@@ -2644,7 +2644,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String
   get webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3 =>
-      'Se prefiere WebRTC; el respaldo de retransmisión cifrado de extremo a extremo no almacena portapapeles, archivos ni contenido Agent.';
+      'Los ordenadores solo se conectan por la red local y se reconectan automáticamente. Los móviles prefieren WebRTC; el relé cifrado no guarda contenido.';
 
   @override
   String get website => 'Sitio web';
@@ -3161,7 +3161,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'Este enlace no es válido o está incompleto.';
 
   @override
-  String get copyLinkForAnotherComputer => 'Copiar enlace para otro ordenador';
+  String get copyLinkForAnotherComputer => 'Copiar enlace de vinculación';
 
   @override
   String get pairingLinkCopied =>
@@ -3784,4 +3784,59 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get agentPluginsSource => 'Origen';
+
+  @override
+  String installedInsidePackageContainer(String app) {
+    return 'DingDong está instalado dentro del almacenamiento privado de $app. La ruta MCP de arriba ya apunta a su ubicación real, así que otros Agents pueden usarla; desinstalar o restablecer $app también elimina DingDong.';
+  }
+
+  @override
+  String get lanCodeExpiry => 'Válido 5 minutos · Un uso · Máximo 5 intentos';
+
+  @override
+  String get lanComputerOnly => 'Solo red local · Reconexión automática';
+
+  @override
+  String get lanEnterOtherCode => 'Introduce el código de este ordenador';
+
+  @override
+  String get lanGenerateCode => 'Generar código';
+
+  @override
+  String get lanGenerateHint =>
+      'Genera un código en un ordenador y selecciónalo e introduce el código en el otro.';
+
+  @override
+  String get lanNearbyComputers => 'Ordenadores cercanos';
+
+  @override
+  String get lanNetworkHelp =>
+      'Detección local no disponible. Comprueba el adaptador y el cortafuegos privado y actualiza.';
+
+  @override
+  String get lanNewCode => 'Generar otro código';
+
+  @override
+  String get lanNoComputers =>
+      'Abre Conectar ordenador en ambos equipos, usa la misma red local y permite DingDong en el cortafuegos privado. El Wi-Fi de invitados puede impedir la detección.';
+
+  @override
+  String get lanPairingFailed =>
+      'No se pudo vincular. Comprueba el código y la red local. Genera otro código si caducó o alcanzó 5 intentos.';
+
+  @override
+  String get lanRefresh => 'Actualizar';
+
+  @override
+  String get lanSelectAndEnterCode =>
+      'Selecciona un ordenador e introduce sus 6 dígitos.';
+
+  @override
+  String get lanSixDigitCode => 'Código de 6 dígitos';
+
+  @override
+  String get lanWaitingForCode => 'Primero genera un código en este ordenador';
+
+  @override
+  String get lanWorking => 'Conectando…';
 }

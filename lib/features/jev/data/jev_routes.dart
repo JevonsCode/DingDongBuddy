@@ -44,12 +44,8 @@ final class JevRoutes {
         },
       );
     } on Object {
-      return const HttpResponseData(
-        statusCode: 400,
-        json: {
-          'status': 'error',
-          'message': 'Jev request unavailable. Check local settings.',
-        },
+      return HttpResponseData.badRequest(
+        'Jev request unavailable. Check local settings.',
       );
     }
   }

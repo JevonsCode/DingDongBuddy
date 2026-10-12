@@ -593,6 +593,31 @@ void main() {
     },
   );
 
+  test(
+    'dense same-timestamp history imports without a startup-length stall',
+    () async {
+      await _write(File(path.join(codex.path, 'dense-counters.jsonl')), [
+        _codexMeta('dense-counters'),
+        for (var i = 1; i <= 242; i++)
+          _codex(
+            '2026-09-01T10:00:00Z',
+            total: i * 10,
+            input: i * 8,
+            output: i * 2,
+          ),
+      ]);
+      final elapsed = Stopwatch()..start();
+      final report = await repository.refresh();
+      expect(report.importedEvents, 242);
+      expect((await repository.readSnapshot()).totals.totalTokens, 2420);
+      // This used to rebuild the recursive ordering separately for every
+      // updated row, blocking the UI for over a minute on a local transcript.
+      expect(elapsed.elapsed, lessThan(const Duration(seconds: 20)));
+      expect((await repository.refresh()).importedEvents, 0);
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
   for (final reversed in [false, true]) {
     test(
       'Claude cross-midnight stream uses final observation date independent of reverse=$reversed',

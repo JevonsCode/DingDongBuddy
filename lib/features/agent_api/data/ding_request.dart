@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
@@ -75,10 +76,10 @@ final class DingRequest {
     }
     final Map<String, Object?> json = jsonDecode(body) as Map<String, Object?>;
     final String message =
-        _trimmedOrNull(json['message'] as String?) ?? fallbackMessage;
-    final String? detail = _trimmedOrNull(json['detail'] as String?);
+        trimmedOrNull(json['message'] as String?) ?? fallbackMessage;
+    final String? detail = trimmedOrNull(json['detail'] as String?);
     final int requestedFlashCount = json['flashCount'] as int? ?? 8;
-    final String? source = _trimmedOrNull(json['source'] as String?);
+    final String? source = trimmedOrNull(json['source'] as String?);
     final Object? notificationKind = json['notificationKind'] ?? json['kind'];
     return DingRequest(
       message: message,
@@ -164,15 +165,10 @@ AgentConversationTarget? _conversationTarget(
 
 String? _firstTrimmed(List<Object?> values) {
   for (final Object? value in values) {
-    final String? trimmed = value is String ? _trimmedOrNull(value) : null;
+    final String? trimmed = value is String ? trimmedOrNull(value) : null;
     if (trimmed != null) {
       return trimmed;
     }
   }
   return null;
-}
-
-String? _trimmedOrNull(String? value) {
-  final String? trimmed = value?.trim();
-  return trimmed == null || trimmed.isEmpty ? null : trimmed;
 }

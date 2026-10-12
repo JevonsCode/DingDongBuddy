@@ -19,11 +19,7 @@ void main() {
                 content: const Text('This cannot be undone.'),
                 actions: <Widget>[
                   TextButton(onPressed: () {}, child: const Text('Cancel')),
-                  FilledButton(
-                    style: DesktopDialogStyle.destructiveButtonStyle(context),
-                    onPressed: () {},
-                    child: const Text('Delete'),
-                  ),
+                  FilledButton(onPressed: () {}, child: const Text('Delete')),
                 ],
               ),
             ),
@@ -61,14 +57,6 @@ void main() {
     expect(cancelSize.width, isNot(closeTo(deleteSize.width, 0.01)));
     expect(cancelSize.height, 34);
     expect(deleteSize.height, 34);
-
-    final FilledButton delete = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Delete'),
-    );
-    expect(
-      delete.style?.backgroundColor?.resolve(<WidgetState>{}),
-      Theme.of(tester.element(find.byType(Dialog))).colorScheme.error,
-    );
 
     final ThemeData dialogTheme = Theme.of(tester.element(find.byType(Dialog)));
     expect(

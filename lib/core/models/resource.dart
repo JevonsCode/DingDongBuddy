@@ -1,3 +1,5 @@
+import 'package:dingdong/core/utils/text.dart';
+
 /// Resource kinds supported by DingDong's public library contract.
 enum ResourceType {
   prompt('Prompts'),
@@ -20,6 +22,12 @@ enum ResourceType {
       this == ResourceType.prompt ||
       this == ResourceType.skill ||
       this == ResourceType.mcp;
+
+  /// [isConfigurableAgentResource] kinds in display order.
+  static final List<ResourceType> configurable =
+      List<ResourceType>.unmodifiable(
+        values.where((ResourceType type) => type.isConfigurableAgentResource),
+      );
 
   bool get supportsAgentActivation => isLibraryResource;
 
@@ -102,17 +110,17 @@ final class Resource {
     this.lastUsedAt,
     this.invocationCount = 0,
     this.lastInvokedAt,
-  }) : group = _trimmedOrNull(group) ?? type.defaultGroup,
+  }) : group = trimmedOrNull(group) ?? type.defaultGroup,
        title = title.trim(),
        tags = List<String>.unmodifiable(
          tags
              .map((String tag) => tag.trim())
              .where((String tag) => tag.isNotEmpty),
        ),
-       source = _trimmedOrNull(source),
-       updateUrl = _trimmedOrNull(updateUrl),
-       packagePath = _trimmedOrNull(packagePath),
-       note = _trimmedOrNull(note),
+       source = trimmedOrNull(source),
+       updateUrl = trimmedOrNull(updateUrl),
+       packagePath = trimmedOrNull(packagePath),
+       note = trimmedOrNull(note),
        agentSessionName = _sanitizeAgentSessionName(agentSessionName),
        triggerGroupIds = List<String>.unmodifiable(
          triggerGroupIds
@@ -134,7 +142,7 @@ final class Resource {
            ? _normalizedAgentMap(skillHooksEnabledByAgent)
            : const <String, bool>{},
        skillPackageDigest = type == ResourceType.skill
-           ? _trimmedOrNull(skillPackageDigest)
+           ? trimmedOrNull(skillPackageDigest)
            : null,
        activation =
            activation ??
@@ -609,13 +617,8 @@ String _requiredString(Map<String, Object?> json, String key) {
   return value;
 }
 
-String? _trimmedOrNull(String? value) {
-  final String? trimmed = value?.trim();
-  return trimmed == null || trimmed.isEmpty ? null : trimmed;
-}
-
 String? _sanitizeAgentSessionName(String? value) {
-  final String? trimmed = _trimmedOrNull(value);
+  final String? trimmed = trimmedOrNull(value);
   if (trimmed == null) {
     return null;
   }

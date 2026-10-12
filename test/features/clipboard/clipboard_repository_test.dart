@@ -120,6 +120,54 @@ void main() {
     },
   );
 
+  test('repairs Windows-1252 mojibake in legacy source labels', () async {
+    final Directory directory = await Directory.systemTemp.createTemp(
+      'dingdong-clipboard-source-test-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final String path = '${directory.path}/clipboard-history.sqlite';
+    final ClipboardRepository first = ClipboardRepository.open(path);
+    first
+      ..save(
+        ClipboardRecord(
+          id: 'A7C1C0D2-4C35-4F86-9E9C-60CB7F1A2C11',
+          group: '',
+          title: 'Copied',
+          content: 'copied text',
+          tags: const <String>['clipboard', 'text'],
+          sources: const <String>[
+            'Claude Â· claude.exe',
+            'Claude · claude.exe',
+          ],
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: DateTime.utc(2026, 10, 10),
+          updatedAt: DateTime.utc(2026, 10, 10),
+        ),
+      )
+      ..close();
+    final Database database = sqlite3.open(path);
+    database.execute(
+      'INSERT INTO ZCLIPBOARDRECORD (ZID, ZTITLE, ZCONTENT, ZSOURCE, '
+      'ZCREATEDAT, ZUPDATEDAT) VALUES (?, ?, ?, ?, 0, 0)',
+      <Object?>['legacy-plain-source', 'Old', 'old', 'Code Â· Code.exe'],
+    );
+    database.close();
+
+    final ClipboardRepository reopened = ClipboardRepository.open(path);
+    addTearDown(reopened.close);
+    final Map<String, List<String>> sources = <String, List<String>>{
+      for (final ClipboardRecord record in reopened.list(limit: 10))
+        record.id: record.sources,
+    };
+
+    expect(sources['A7C1C0D2-4C35-4F86-9E9C-60CB7F1A2C11'], <String>[
+      'Claude · claude.exe',
+    ]);
+    expect(sources['legacy-plain-source'], <String>['Code · Code.exe']);
+  });
+
   test('repository orders pinned and manually sorted clipboard rows', () async {
     final Directory directory = await Directory.systemTemp.createTemp(
       'dingdong-clipboard-order-test-',

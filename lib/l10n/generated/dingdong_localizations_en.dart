@@ -2607,7 +2607,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String
   get webrtcIsPreferredTheEndToEndEncryptedRelayFallbackStores_816753f3 =>
-      'WebRTC is preferred; the end-to-end encrypted relay fallback stores no clipboard, file, or Agent content.';
+      'Computers connect only over LAN and reconnect automatically. Phones prefer WebRTC; the encrypted relay stores no clipboard, file or Agent content.';
 
   @override
   String get website => 'Website';
@@ -3119,7 +3119,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'This pairing link is invalid or incomplete.';
 
   @override
-  String get copyLinkForAnotherComputer => 'Copy link for another computer';
+  String get copyLinkForAnotherComputer => 'Copy pairing link';
 
   @override
   String get pairingLinkCopied =>
@@ -3738,4 +3738,62 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get agentPluginsSource => 'Source';
+
+  @override
+  String installedInsidePackageContainer(String app) {
+    return 'DingDong is installed inside $app\'s private app storage. The MCP path above already points to its real location, so other Agents can use it; uninstalling or resetting $app also removes DingDong.';
+  }
+
+  @override
+  String get lanCodeExpiry =>
+      'Valid for 5 minutes · One use · Up to 5 attempts';
+
+  @override
+  String get lanComputerOnly =>
+      'LAN only · Reconnects automatically after pairing';
+
+  @override
+  String get lanEnterOtherCode => 'Enter this computer’s pairing code below';
+
+  @override
+  String get lanGenerateCode => 'Generate pairing code';
+
+  @override
+  String get lanGenerateHint =>
+      'Generate a code on one computer, then select it and enter the code on the other.';
+
+  @override
+  String get lanNearbyComputers => 'Nearby computers';
+
+  @override
+  String get lanNetworkHelp =>
+      'Local discovery is unavailable. Check the network adapter and private-network firewall permissions, then refresh.';
+
+  @override
+  String get lanNewCode => 'Generate a new code';
+
+  @override
+  String get lanNoComputers =>
+      'Open Connect computer in DingDong on both computers. Use the same LAN and allow DingDong through the private-network firewall. Guest Wi-Fi may block discovery.';
+
+  @override
+  String get lanPairingFailed =>
+      'Could not pair. Check the code and LAN connection. If the code expired or reached 5 attempts, generate a new one.';
+
+  @override
+  String get lanRefresh => 'Refresh';
+
+  @override
+  String get lanSelectAndEnterCode =>
+      'Select a nearby computer and enter its 6-digit code.';
+
+  @override
+  String get lanSixDigitCode => '6-digit pairing code';
+
+  @override
+  String get lanWaitingForCode =>
+      'Generate a pairing code on this computer first';
+
+  @override
+  String get lanWorking => 'Connecting…';
 }

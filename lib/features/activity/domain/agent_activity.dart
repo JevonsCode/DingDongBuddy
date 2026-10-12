@@ -116,23 +116,6 @@ final class AgentActivity {
     );
   }
 
-  AgentActivity withConversationTarget(AgentConversationTarget target) =>
-      AgentActivity(
-        id: id,
-        source: source,
-        message: message,
-        completedAt: completedAt,
-        unseen: unseen,
-        task: task,
-        detail: detail,
-        startedAt: startedAt,
-        repeatCount: repeatCount,
-        unseenReminderCount: unseenReminderCount,
-        notificationKind: notificationKind,
-        conversationTarget: conversationTarget?.merge(target) ?? target,
-        tokenUsage: tokenUsage,
-      );
-
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
     'source': source,

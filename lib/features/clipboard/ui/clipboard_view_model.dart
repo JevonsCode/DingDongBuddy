@@ -5,7 +5,6 @@ import 'dart:io';
 
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
-import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
@@ -16,7 +15,6 @@ import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart'
 import 'package:dingdong/features/clipboard/domain/clipboard_source.dart';
 import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
-import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:flutter/foundation.dart';
 
 enum ClipboardPasteMode { original, plainText }
@@ -31,7 +29,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     ClipboardArchiveStore? archiveStore,
     ClipboardCaptureService? captureService,
     ClipboardGateway? gateway,
-    ResourceStore? resourceStore,
     String Function()? idGenerator,
     DateTime Function()? now,
     QuickPasteGateway? quickPasteGateway,
@@ -47,7 +44,6 @@ final class ClipboardViewModel extends ChangeNotifier {
                : InMemoryClipboardArchiveStore()),
        _captureService = captureService,
        _gateway = gateway,
-       _resourceStore = resourceStore,
        _idGenerator = idGenerator ?? generateUuid,
        _now = now ?? _utcNow,
        _quickPasteGateway = quickPasteGateway,
@@ -61,7 +57,6 @@ final class ClipboardViewModel extends ChangeNotifier {
   final ClipboardArchiveStore _archiveStore;
   final ClipboardCaptureService? _captureService;
   final ClipboardGateway? _gateway;
-  final ResourceStore? _resourceStore;
   final String Function() _idGenerator;
   final DateTime Function() _now;
   final QuickPasteGateway? _quickPasteGateway;
@@ -334,18 +329,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     }
     _categoryRuleStore.save(_categoryRules);
     _ensureSelectionVisible();
-    notifyListeners();
-  }
-
-  void moveGroup(String group, {required String before}) {
-    if (group == before) return;
-    final List<String> current = groups;
-    _groupOrder
-      ..clear()
-      ..addAll(current);
-    _groupOrder.remove(group);
-    _groupOrder.insert(_groupOrder.indexOf(before), group);
-    _groupOrderStore.save(_groupOrder);
     notifyListeners();
   }
 
@@ -732,35 +715,6 @@ final class ClipboardViewModel extends ChangeNotifier {
     _selectedRecord = null;
     _ensureSelectionVisible();
     notifyListeners();
-  }
-
-  Future<Resource?> promoteSelected(ResourceType targetType) async {
-    final ClipboardRecord? selected = _selectedRecord;
-    final ResourceStore? resourceStore = _resourceStore;
-    if (selected == null ||
-        resourceStore == null ||
-        !targetType.isLibraryResource) {
-      return null;
-    }
-    final DateTime timestamp = _now().toUtc();
-    final Resource resource = Resource(
-      id: _idGenerator(),
-      type: targetType,
-      title: selected.title,
-      content: selected.content,
-      tags: _uniqueTags(
-        selected.tags.where((String tag) => tag != 'clipboard').toList(),
-      ),
-      source: 'Clipboard Promotion',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    );
-    await resourceStore.save(<Resource>[
-      ...await resourceStore.load(),
-      resource,
-    ]);
-    _revisions?.changed(DataCollection.library);
-    return resource;
   }
 
   Future<bool> restoreSelected({

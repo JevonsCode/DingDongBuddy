@@ -1,6 +1,7 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -65,46 +66,52 @@ void main() {
     expect(controller.beganPairing, isTrue);
   });
 
-  testWidgets('another computer can be joined from its pairing link', (
-    WidgetTester tester,
-  ) async {
-    final _FakeManagement controller = _FakeManagement(includeDevice: false);
-    await _pumpManager(
-      tester,
-      controller: controller,
-      locale: const Locale('zh'),
-    );
+  testWidgets(
+    'another computer can be joined using six digits and nearby discovery',
+    (WidgetTester tester) async {
+      final _FakeManagement controller = _FakeManagement(includeDevice: false);
+      await _pumpManager(
+        tester,
+        controller: controller,
+        locale: const Locale('zh'),
+      );
 
-    expect(find.textContaining('电脑设备默认关闭提醒'), findsNothing);
-    await tester.tap(find.byKey(const Key('device-join-computer')));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('device-computer-pairing-dialog')),
-      findsOneWidget,
-    );
-    expect(find.textContaining('电脑设备默认关闭提醒'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byKey(const Key('device-computer-pairing-dialog')),
-        matching: find.byType(Wrap),
-      ),
-      findsWidgets,
-    );
+      expect(find.textContaining('电脑设备默认关闭提醒'), findsNothing);
+      await tester.tap(find.byKey(const Key('device-join-computer')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('device-computer-pairing-dialog')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('电脑设备默认关闭提醒'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('device-computer-pairing-dialog')),
+          matching: find.byType(Wrap),
+        ),
+        findsWidgets,
+      );
 
-    const String pairingLink = 'https://relay.example/app/#pair=payload';
-    await tester.enterText(
-      find.byKey(const Key('device-computer-pairing-input')),
-      pairingLink,
-    );
-    await tester.tap(find.byKey(const Key('device-computer-pairing-submit')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('device-computer-generate-code')));
+      await tester.pumpAndSettle();
+      expect(find.text('012 345'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('nearby-computer-nearby')));
+      await tester.pump();
+      const String pairingLink = '012345';
+      await tester.enterText(
+        find.byKey(const Key('device-computer-pairing-input')),
+        pairingLink,
+      );
+      await tester.tap(find.byKey(const Key('device-computer-pairing-submit')));
+      await tester.pumpAndSettle();
 
-    expect(controller.joinedComputerLink, pairingLink);
-    expect(
-      find.byKey(const Key('device-computer-pairing-dialog')),
-      findsNothing,
-    );
-  });
+      expect(controller.joinedComputerLink, pairingLink);
+      expect(
+        find.byKey(const Key('device-computer-pairing-dialog')),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('active pairing QR is visible and has one security explanation', (
     WidgetTester tester,
@@ -157,35 +164,23 @@ void main() {
     expect(controller.autoSendValue, isTrue);
   });
 
-  testWidgets('computer transport selector exposes its label and value', (
-    WidgetTester tester,
+  testWidgets('computer route is fixed to LAN with no relay selector', (
+    tester,
   ) async {
-    final SemanticsHandle semantics = tester.ensureSemantics();
-    final _FakeManagement controller = _FakeManagement(
-      deviceKind: LinkedDeviceKind.computer,
-    );
+    final controller = _FakeManagement(deviceKind: LinkedDeviceKind.computer);
     await _pumpManager(tester, controller: controller);
-
-    final Finder selector = find.byKey(
-      const Key('device-transport-computer-one'),
+    expect(
+      find.byKey(const Key('device-transport-computer-one')),
+      findsOneWidget,
     );
-    final Finder selectorSemantics = find.descendant(
-      of: selector,
-      matching: find.byWidgetPredicate(
-        (Widget widget) =>
-            widget is Semantics &&
-            widget.properties.label == 'Communication method',
-      ),
+    expect(
+      find.text('LAN only · Reconnects automatically after pairing'),
+      findsOneWidget,
     );
-    expect(selectorSemantics, findsOneWidget);
-    final data = tester.getSemantics(selectorSemantics);
-    expect(data.label, 'Communication method');
-    expect(data.value, 'Automatic (recommended)');
-    expect(data.flagsCollection.isButton, isTrue);
+    expect(find.text('Automatic (recommended)'), findsNothing);
+    expect(find.text('Encrypted service'), findsNothing);
     expect(tester.takeException(), isNull);
-    semantics.dispose();
   });
-
   testWidgets('error status uses the active dark theme color scheme', (
     WidgetTester tester,
   ) async {
@@ -251,7 +246,7 @@ PendingDevicePairing _pendingPairing() {
 }
 
 final class _FakeManagement extends ChangeNotifier
-    implements DeviceLinkManagement {
+    implements DeviceLinkManagement, LanComputerManagement {
   _FakeManagement({
     this.includeDevice = true,
     this.pendingPairing,
@@ -274,6 +269,32 @@ final class _FakeManagement extends ChangeNotifier
          manuallyDisconnected: false,
          pairedAt: DateTime.utc(2026, 8, 8),
        );
+
+  @override
+  List<NearbyComputer> get nearbyComputers => const [
+    NearbyComputer(id: 'nearby', name: '另一台电脑', pairing: true),
+  ];
+  @override
+  String? computerPairingCode;
+  @override
+  String? get computerDiscoveryError => null;
+  @override
+  Future<void> refreshComputers() async {}
+  @override
+  Future<void> beginComputerPairing() async {
+    computerPairingCode = '012345';
+    notifyListeners();
+  }
+
+  @override
+  Future<void> cancelComputerPairing() async {
+    computerPairingCode = null;
+  }
+
+  @override
+  Future<void> joinNearbyComputer(String deviceId, String code) async {
+    joinedComputerLink = code;
+  }
 
   final LinkedDevice device;
 

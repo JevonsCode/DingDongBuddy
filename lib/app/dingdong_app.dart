@@ -184,7 +184,6 @@ class _DingDongAppState extends State<DingDongApp> {
       archiveStore: widget.clipboardArchiveStore,
       captureService: widget.clipboardCaptureService,
       gateway: widget.clipboardGateway,
-      resourceStore: widget.resourceStore,
       quickPasteGateway: widget.quickPasteGateway,
       revisions: _dataRevisions,
       categoryRuleStore: widget.clipboardCategoryRuleStore,

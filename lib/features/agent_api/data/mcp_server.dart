@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
 import 'package:dingdong/features/jev/data/jev_mcp_tools.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 
 /// Executes one advertised MCP tool against DingDong's local services.
 abstract interface class McpToolExecutor {
@@ -39,7 +40,7 @@ final class McpServer {
             },
             'serverInfo': <String, Object?>{
               'name': 'dingdong',
-              'version': '1.7.0-dev.2',
+              'version': currentAppVersion,
             },
             'instructions': dingDongAgentBridgeGuidance,
           },
@@ -60,14 +61,22 @@ final class McpServer {
         final String? name = params['name'] as String?;
         final Map<String, Object?> arguments =
             params['arguments'] as Map<String, Object?>? ?? <String, Object?>{};
-        if (name == null || _executor == null) {
+        // Unknown or missing tool names are protocol errors, not tool results.
+        if (name == null) {
+          return _error(id: id, code: -32602, message: 'Tool name is required');
+        }
+        if (!<Map<String, Object?>>[
+          ...tools,
+          ...jevMcpTools,
+        ].any((Map<String, Object?> tool) => tool['name'] == name)) {
+          return _error(id: id, code: -32602, message: 'Unknown tool: $name');
+        }
+        if (_executor == null) {
           return _toolResult(
             id: id,
-            payload: <String, Object?>{
+            payload: const <String, Object?>{
               'status': 'error',
-              'message': name == null
-                  ? 'Tool name is required'
-                  : 'DingDong local service is unavailable',
+              'message': 'DingDong local service is unavailable',
             },
             isError: true,
           );
@@ -83,7 +92,13 @@ final class McpServer {
             id: id,
             payload: <String, Object?>{
               'status': 'error',
-              'message': error.toString(),
+              // Dart prefixes these with "Invalid argument (name):" or
+              // "Bad state:"; Agents only need the explanation.
+              'message': switch (error) {
+                ArgumentError(:final String message) => message,
+                StateError(:final String message) => message,
+                _ => error.toString(),
+              },
             },
             isError: true,
           );

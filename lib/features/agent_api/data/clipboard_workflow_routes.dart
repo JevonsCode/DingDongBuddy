@@ -49,14 +49,23 @@ String? _normalizedAlias(String? value) {
   return normalized.isEmpty ? null : normalized;
 }
 
-bool _matches(ClipboardRecord item, String needle) =>
-    needle.isEmpty ||
+/// Text an Agent may search; clipboard title and content only when the user
+/// allows Agent clipboard-content access.
+String _searchableText(ClipboardRecord item, {required bool revealText}) =>
     <String>[
-      item.title,
+      if (revealText) item.title,
       ...item.groupNames,
-      item.content,
+      if (revealText) item.content,
       ...item.tags,
-    ].join(' ').toLowerCase().contains(needle);
+    ].join(' ').toLowerCase();
+
+bool _matches(
+  ClipboardRecord item,
+  String needle, {
+  required bool revealText,
+}) =>
+    needle.isEmpty ||
+    _searchableText(item, revealText: revealText).contains(needle);
 
 List<Map<String, Object?>> _aliasSummaries(List<ClipboardRecord> records) {
   final Map<String, List<ClipboardRecord>> buckets =
@@ -112,8 +121,11 @@ Map<String, int> _classificationCounts(List<ClipboardRecord> records) {
   return counts;
 }
 
-Map<String, Object?> _candidate(ClipboardRecord record) => <String, Object?>{
-  ...record.toHistoryJson(includeContent: false),
+Map<String, Object?> _candidate(
+  ClipboardRecord record, {
+  required bool revealText,
+}) => <String, Object?>{
+  ...record.toHistoryJson(includeContent: false, includeTitle: revealText),
   'aliases': _aliases(record),
   'suggestedActions': <String>[
     'PATCH /clipboard/{id}',
@@ -139,8 +151,8 @@ List<Map<String, Object?>> _recommendations(List<ClipboardRecord> records) {
 ({bool includeContent, bool includeSensitive})? _privacyQuery(
   Map<String, String> query,
 ) {
-  final bool? content = _parseBool(query['includeContent']);
-  final bool? sensitive = _parseBool(query['includeSensitiveClipboard']);
+  final bool? content = parseQueryBool(query['includeContent']);
+  final bool? sensitive = parseQueryBool(query['includeSensitiveClipboard']);
   if ((query.containsKey('includeContent') && content == null) ||
       (query.containsKey('includeSensitiveClipboard') && sensitive == null)) {
     return null;
@@ -151,27 +163,13 @@ List<Map<String, Object?>> _recommendations(List<ClipboardRecord> records) {
   );
 }
 
-bool? _parseBool(String? value) => switch (value?.toLowerCase()) {
-  null => null,
-  'true' || '1' || 'yes' || 'on' => true,
-  'false' || '0' || 'no' || 'off' => false,
-  _ => null,
-};
-
 List<String> _unique(List<String> values) => values.toSet().toList();
 
-HttpResponseData _badRequest(String message) => HttpResponseData(
-  statusCode: 400,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);
-
-HttpResponseData _invalidPrivacy() => _badRequest(
+HttpResponseData _invalidPrivacy() => HttpResponseData.badRequest(
   'includeContent and includeSensitiveClipboard must be true or false',
 );
 
-HttpResponseData _unavailable(String message) => HttpResponseData(
-  statusCode: 503,
-  json: <String, Object?>{'status': 'error', 'message': message},
-);
+HttpResponseData _unavailable(String message) =>
+    HttpResponseData.error(503, message);
 
 DateTime _utcNow() => DateTime.now().toUtc();

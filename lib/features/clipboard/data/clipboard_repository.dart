@@ -718,7 +718,7 @@ final class ClipboardRepository
       return const <String>[];
     }
     if (!trimmed.startsWith('[')) {
-      return <String>[trimmed];
+      return _uniqueSources(<String>[trimmed]);
     }
     try {
       final Object? decoded = jsonDecode(trimmed);
@@ -728,7 +728,7 @@ final class ClipboardRepository
     } on FormatException {
       // A malformed legacy value still represents one useful source label.
     }
-    return <String>[trimmed];
+    return _uniqueSources(<String>[trimmed]);
   }
 
   static String _encodeSources(List<String> values) {
@@ -869,7 +869,10 @@ List<String> _uniqueGroups(Iterable<String> values) {
 List<String> _uniqueSources(Iterable<String> values) {
   final Set<String> seen = <String>{};
   return values
-      .map((String value) => value.trim())
+      // Windows builds before 1.7.0 decoded the UTF-8 ` · ` separator in the
+      // native runner as Windows-1252, storing `Â·`. Repair it on every read
+      // and write so source grouping and labels work for legacy records.
+      .map((String value) => value.replaceAll(' Â· ', ' · ').trim())
       .where(
         (String value) => value.isNotEmpty && seen.add(value.toLowerCase()),
       )

@@ -59,11 +59,8 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('settings-preview-notice')), findsOneWidget);
-    expect(
-      find.text('Preview installed; no newer stable release found.'),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('settings-preview-notice')), findsNothing);
+    expect(find.text("You're up to date"), findsOneWidget);
     expect(find.textContaining('Withdrawn analytics'), findsNothing);
   });
 
@@ -151,7 +148,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(updater.installCount, 1);
-    expect(find.text('Preview installed; no newer stable release found.'), findsOneWidget);
+    expect(find.text("You're up to date"), findsOneWidget);
     model.dispose();
   });
 

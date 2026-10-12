@@ -110,6 +110,48 @@ void main() {
     },
   );
 
+  test('unknown tools are protocol errors; tool errors read cleanly', () async {
+    final _RejectingExecutor executor = _RejectingExecutor();
+    final McpServer server = McpServer(executor: executor);
+    Future<Map<String, Object?>> call(Map<String, Object?> params) async =>
+        jsonDecode(
+              (await server.handleLine(
+                jsonEncode(<String, Object?>{
+                  'jsonrpc': '2.0',
+                  'id': 7,
+                  'method': 'tools/call',
+                  'params': params,
+                }),
+              ))!,
+            )
+            as Map<String, Object?>;
+
+    final Map<String, Object?> unknown = await call(<String, Object?>{
+      'name': 'no_such_tool',
+    });
+    expect(unknown['error'], <String, Object?>{
+      'code': -32602,
+      'message': 'Unknown tool: no_such_tool',
+    });
+    expect((await call(<String, Object?>{}))['error'], <String, Object?>{
+      'code': -32602,
+      'message': 'Tool name is required',
+    });
+    expect(executor.calls, 0);
+
+    final Map<String, Object?> failed =
+        (await call(<String, Object?>{
+              'name': 'dingdong_update_resource',
+              'arguments': <String, Object?>{},
+            }))['result']!
+            as Map<String, Object?>;
+    expect(failed['isError'], isTrue);
+    expect(
+      (failed['structuredContent']! as Map<String, Object?>)['message'],
+      'A resource ID is required.',
+    );
+  });
+
   test(
     'tools/list exposes the complete DingDong bridge tool contract',
     () async {
@@ -468,5 +510,19 @@ final class _WaitingJevExecutor implements McpToolExecutor {
   ) {
     if (name == 'dingdong_jev_status') return status.future;
     return Future.value(<String, Object?>{'status': 'triggered'});
+  }
+}
+
+final class _RejectingExecutor implements McpToolExecutor {
+  int calls = 0;
+
+  @override
+  Future<Map<String, Object?>> execute(
+    String name,
+    Map<String, Object?> arguments,
+  ) async {
+    calls += 1;
+    if (name == 'dingdong_jev_status') return <String, Object?>{};
+    throw ArgumentError.value('', 'resourceId', 'A resource ID is required.');
   }
 }

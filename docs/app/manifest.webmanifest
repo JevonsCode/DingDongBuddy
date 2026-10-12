@@ -9,7 +9,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "handle_links": "preferred",
-  "launch_handler": { "client_mode": "navigate-existing" },
+  "launch_handler": { "client_mode": ["focus-existing", "auto"] },
   "background_color": "#fffefc",
   "theme_color": "#fffefc",
   "icons": [
@@ -30,7 +30,7 @@
     {
       "platform": "webapp",
       "url": "./manifest.webmanifest",
-      "id": "https://dingdong.xn--m8txu.com/"
+      "id": "https://dingdong.xn--m8txu.com/app/"
     }
   ],
   "prefer_related_applications": false

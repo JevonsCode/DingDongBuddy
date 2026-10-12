@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/skill_deployment_plan.dart';
 import 'package:path/path.dart' as path;
@@ -84,7 +85,7 @@ Future<SkillDeliveryResolution> resolveSkillDelivery({
   required String workspacePath,
   SkillDeploymentPresenceQuery? queryPresence,
 }) async {
-  final String? normalizedAgentId = _trimmedOrNull(agentId);
+  final String? normalizedAgentId = trimmedOrNull(agentId);
   final List<DynamicSkillCandidate> eligible = <DynamicSkillCandidate>[];
   final List<SkillDeliverySuppression> suppressed =
       <SkillDeliverySuppression>[];
@@ -240,9 +241,4 @@ Future<bool> _nativeCopyMightRemain({
   } on Object {
     return true;
   }
-}
-
-String? _trimmedOrNull(String? value) {
-  final String trimmed = value?.trim() ?? '';
-  return trimmed.isEmpty ? null : trimmed;
 }

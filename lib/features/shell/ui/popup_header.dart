@@ -21,7 +21,6 @@ class PopupHeader extends StatelessWidget {
     required this.updateAvailable,
     required this.showShortcutHints,
     required this.workspaceShortcuts,
-    required this.mascotShakeRevision,
     required this.mascotState,
     required this.onSelected,
     required this.onIssues,
@@ -41,7 +40,6 @@ class PopupHeader extends StatelessWidget {
   final bool updateAvailable;
   final bool showShortcutHints;
   final WorkspaceShortcuts workspaceShortcuts;
-  final int mascotShakeRevision;
   final TrayBuddyState mascotState;
   final bool developmentBuild;
   final ValueChanged<int> onSelected;
@@ -75,10 +73,7 @@ class PopupHeader extends StatelessWidget {
                           : (_) => unawaited(onStartDragging!()),
                       child: Row(
                         children: <Widget>[
-                          PopupMascot(
-                            shakeRevision: mascotShakeRevision,
-                            state: mascotState,
-                          ),
+                          PopupMascot(state: mascotState),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Row(
