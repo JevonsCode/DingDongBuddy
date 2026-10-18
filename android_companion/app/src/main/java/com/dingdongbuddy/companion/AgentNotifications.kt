@@ -23,8 +23,8 @@ import android.os.Build
  * the bundled defaults requires a new channel id (bump the `_v` suffix).
  */
 object AgentNotifications {
-    const val CHANNEL_COMPLETION = "agent_completion_v1"
-    const val CHANNEL_ATTENTION = "agent_attention_v1"
+    const val CHANNEL_COMPLETION = "agent_completion_v2"
+    const val CHANNEL_ATTENTION = "agent_attention_v2"
     const val CHANNEL_CONNECTION = "relay_connection_v1"
     private const val GROUP_AGENT = "agent"
 
@@ -48,7 +48,7 @@ object AgentNotifications {
         ).apply {
             description = "Agent 完成一轮任务时提醒。"
             group = GROUP_AGENT
-            setSound(rawUri(context, R.raw.agent_completion), audio)
+            setSound(rawUri(context, "agent_completion"), audio)
             enableVibration(true)
             vibrationPattern = completionVibration
             setShowBadge(true)
@@ -60,7 +60,7 @@ object AgentNotifications {
         ).apply {
             description = "Agent 等待你确认、授权或回答问题时提醒。"
             group = GROUP_AGENT
-            setSound(rawUri(context, R.raw.agent_attention), audio)
+            setSound(rawUri(context, "agent_attention"), audio)
             enableVibration(true)
             vibrationPattern = attentionVibration
             enableLights(true)
@@ -75,7 +75,11 @@ object AgentNotifications {
             setShowBadge(false)
         }
         manager.createNotificationChannels(listOf(completion, attention, connection))
+        retiredChannels.forEach(manager::deleteNotificationChannel)
     }
+
+    /** v1 stored sounds by numeric resource id; see [rawUri]. */
+    private val retiredChannels = listOf("agent_completion_v1", "agent_attention_v1")
 
     fun canPost(context: Context): Boolean =
         (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
@@ -123,6 +127,8 @@ object AgentNotifications {
         return true
     }
 
-    private fun rawUri(context: Context, resource: Int): Uri =
-        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/$resource")
+    // Name-based, not R.raw ids: the channel stores this URI forever, and
+    // numeric resource ids can change between builds.
+    private fun rawUri(context: Context, name: String): Uri =
+        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://${context.packageName}/raw/$name")
 }
