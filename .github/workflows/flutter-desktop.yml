@@ -160,6 +160,17 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test --exclude-tags golden
+      - name: Test the shared device-link protocol
+        working-directory: packages/dingdong_link_protocol
+        run: |
+          dart pub get
+          dart test
+      - name: Analyze and test the Android companion
+        working-directory: mobile
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
       - run: flutter build windows --debug
       - name: Build Windows release preview
         run: flutter build windows --release --no-pub

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -248,6 +249,16 @@ final class CompanionController extends ChangeNotifier {
       _toasts.add('已保存到 ${where ?? '下载'}');
     } on PlatformException catch (error) {
       _toasts.add('保存失败：${error.message ?? error.code}');
+    } finally {
+      // The cached .part copy (up to 25 MB) is no longer needed either way.
+      final Object? path = event['path'];
+      if (path is String) {
+        try {
+          await File(path).delete();
+        } on FileSystemException {
+          // Already gone.
+        }
+      }
     }
   }
 }

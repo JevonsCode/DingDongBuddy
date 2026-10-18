@@ -316,8 +316,9 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _pairName.text = controller.deviceName;
     }
     final String host = _hostNameFromLink(link) ?? 'DingDong 电脑';
+    final String? room = _roomFromLink(link);
     final bool existing = controller.computers.any(
-      (ComputerView c) => link.contains(c.room),
+      (ComputerView c) => c.room == room,
     );
     return CenteredScroll(
       padding: const EdgeInsets.all(24),
@@ -371,6 +372,14 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  static String? _roomFromLink(String link) {
+    try {
+      return DevicePairingPayload.parseInput(link).room;
+    } on Object {
+      return null;
+    }
   }
 
   static String? _hostNameFromLink(String link) {

@@ -53,8 +53,8 @@ code) with the desktop. The Flutter version keeps everything the prototype prove
   the desktop's v1 messages (`file.start/chunk/end`, 32 KB chunks, 25 MB cap). The
   resumable v2 protocol is a follow-up.
 
-Cost: an APK of about 20 MB (debug builds are larger), and a background isolate
-with its own engine.
+Cost: a 10.5 MB arm64 release APK (the all-ABI debug build is 181 MB), and a
+background isolate with its own Flutter engine.
 
 ## Pairing reuses the existing protocol
 

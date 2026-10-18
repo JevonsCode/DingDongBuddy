@@ -9,14 +9,14 @@ import { RelayRoom, broadcast } from "../src/worker.js";
 // but the desktop's `welcome` and every later frame threw on the stale socket
 // first and never reached the live one.
 
-function liveSocket(side) {
+function liveSocket(side, acceptedAt = 1) {
   const sent = [];
   return {
     sent,
     send: (message) => sent.push(message),
     close: () => {},
     serializeAttachment: () => {},
-    deserializeAttachment: () => ({ side }),
+    deserializeAttachment: () => ({ side, acceptedAt }),
   };
 }
 
@@ -60,5 +60,16 @@ test("closing a peer still tells the host even with a stale host listed", () => 
   const host = liveSocket("host");
   const room = roomWith([staleSocket("host"), host]);
   room.webSocketClose(liveSocket("peer"));
+  assert.deepEqual(host.sent, ['{"type":"relay","event":"peer_left"}']);
+});
+
+test("a stale peer closing late does not announce peer_left over a newer peer", () => {
+  const host = liveSocket("host");
+  const stale = liveSocket("peer", 100);
+  const current = liveSocket("peer", 200);
+  const room = roomWith([host, stale, current]);
+  room.webSocketClose(stale);
+  assert.deepEqual(host.sent, []);
+  room.webSocketClose(current);
   assert.deepEqual(host.sent, ['{"type":"relay","event":"peer_left"}']);
 });

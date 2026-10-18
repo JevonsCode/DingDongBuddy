@@ -21,6 +21,7 @@ abstract interface class AgentNotifier {
 const int maximumTextBytes = 128 * 1024;
 const int maximumFileBytes = 25 * 1024 * 1024;
 const int fileChunkBytes = 32 * 1024;
+const Duration fileRequestTimeout = Duration(seconds: 30);
 
 final class _ComputerSession {
   _ComputerSession(this.record);
@@ -34,6 +35,10 @@ final class _ComputerSession {
   bool sending = false;
   final Map<String, _Download> downloads = <String, _Download>{};
   final Set<String> pendingFileRequests = <String>{};
+
+  /// The desktop answers a request it cannot serve with nothing at all, so a
+  /// request that never starts is cleared after [fileRequestTimeout].
+  final Map<String, Timer> fileRequestTimers = <String, Timer>{};
 }
 
 final class _Download {
@@ -152,6 +157,10 @@ final class CompanionEngine {
       session.runs = <AgentRun>[];
       session.lastSyncAt = null;
       session.pendingFileRequests.clear();
+      for (final Timer timer in session.fileRequestTimers.values) {
+        timer.cancel();
+      }
+      session.fileRequestTimers.clear();
       for (final _Download download in session.downloads.values) {
         unawaited(_discard(download));
       }
@@ -514,6 +523,14 @@ final class CompanionEngine {
   Future<void> _requestFile(_ComputerSession session, String itemId) async {
     final RelayPeer peer = _connectedPeer(session);
     session.pendingFileRequests.add(itemId);
+    session.fileRequestTimers.remove(itemId)?.cancel();
+    session.fileRequestTimers[itemId] = Timer(fileRequestTimeout, () {
+      session.fileRequestTimers.remove(itemId);
+      if (session.pendingFileRequests.remove(itemId)) {
+        _toast('电脑没有发送这个文件，请稍后重试');
+        _publish();
+      }
+    });
     _publish(immediate: true);
     try {
       await peer.send(<String, Object?>{
@@ -522,6 +539,7 @@ final class CompanionEngine {
       });
     } on Object {
       session.pendingFileRequests.remove(itemId);
+      session.fileRequestTimers.remove(itemId)?.cancel();
       rethrow;
     }
   }
@@ -538,6 +556,11 @@ final class CompanionEngine {
         size > maximumFileBytes) {
       return;
     }
+    // A repeated start for the same transfer restarts it, like the desktop.
+    final _Download? previous = session.downloads.remove(transferId);
+    if (previous != null) await _discard(previous);
+    final Object? itemId = message['itemId'];
+    if (itemId is String) session.fileRequestTimers.remove(itemId)?.cancel();
     await downloadDirectory.create(recursive: true);
     final String name = _safeName(
       message['name'] is String ? message['name']! as String : '文件',
