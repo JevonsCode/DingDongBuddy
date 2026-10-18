@@ -102,8 +102,16 @@ final class CompanionEngine {
   Future<void> dispose() async {
     _snapshotTimer?.cancel();
     for (final _ComputerSession session in _sessions.values) {
+      _cancelFileRequests(session);
       await session.peer?.close();
     }
+  }
+
+  void _cancelFileRequests(_ComputerSession session) {
+    for (final Timer timer in session.fileRequestTimers.values) {
+      timer.cancel();
+    }
+    session.fileRequestTimers.clear();
   }
 
   bool get hasPairings => store.pairings.isNotEmpty;
@@ -157,10 +165,7 @@ final class CompanionEngine {
       session.runs = <AgentRun>[];
       session.lastSyncAt = null;
       session.pendingFileRequests.clear();
-      for (final Timer timer in session.fileRequestTimers.values) {
-        timer.cancel();
-      }
-      session.fileRequestTimers.clear();
+      _cancelFileRequests(session);
       for (final _Download download in session.downloads.values) {
         unawaited(_discard(download));
       }
@@ -399,6 +404,7 @@ final class CompanionEngine {
 
   Future<void> _remove(_ComputerSession session, {bool save = true}) async {
     _sessions.remove(session.record.room);
+    _cancelFileRequests(session);
     await session.peer?.close();
     store.pairings.removeWhere(
       (PairingRecord p) => p.room == session.record.room,
