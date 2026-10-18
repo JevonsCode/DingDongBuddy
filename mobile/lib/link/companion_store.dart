@@ -138,7 +138,16 @@ final class CompanionStore {
     return true;
   }
 
-  Future<void> save() async {
+  Future<void> _saving = Future<void>.value();
+
+  /// Writes are queued: overlapping saves would share the temporary file.
+  Future<void> save() {
+    final Future<void> next = _saving.then((_) => _write());
+    _saving = next.catchError((Object _) {});
+    return next;
+  }
+
+  Future<void> _write() async {
     await file.parent.create(recursive: true);
     final File temporary = File('${file.path}.tmp');
     await temporary.writeAsString(

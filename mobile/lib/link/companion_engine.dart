@@ -274,9 +274,9 @@ final class CompanionEngine {
       );
     _trimEvents(history);
     store.agentEvents[session.record.room] = history;
-    for (final AgentEvent e in completed) {
-      store.markNotified(e.id);
-    }
+    // Don't mark these as notified: the desktop broadcasts agent.state
+    // (already listing a new activity) just before agent.completed with the
+    // same id, and that reminder must still alert.
     unawaited(store.save());
   }
 

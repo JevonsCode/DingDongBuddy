@@ -66,6 +66,7 @@ final class CompanionController extends ChangeNotifier {
 
   final List<Map<String, Object?>> _queued = <Map<String, Object?>>[];
   bool _serviceReady = false;
+  String? _serviceActiveRoom;
 
   ComputerView? get active {
     for (final ComputerView computer in computers) {
@@ -207,9 +208,13 @@ final class CompanionController extends ChangeNotifier {
             if (value is Map) ComputerView(Map<String, Object?>.from(value)),
         ];
         final String? room = event['activeRoom'] as String?;
-        if (computers.every((ComputerView c) => c.room != activeRoom)) {
+        // Follow the service when it changes the active computer (a new
+        // pairing), and fall back to it when the local choice disappeared.
+        if (room != _serviceActiveRoom ||
+            computers.every((ComputerView c) => c.room != activeRoom)) {
           activeRoom = room;
         }
+        _serviceActiveRoom = room;
         notifyListeners();
       case 'toast':
         _toasts.add(event['text'] as String? ?? '');

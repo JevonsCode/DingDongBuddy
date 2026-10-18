@@ -179,7 +179,7 @@ void main() {
     expect((computer['events']! as List).length, 3);
   });
 
-  test('agent.state history never re-notifies', () async {
+  test('agent.state history never notifies', () async {
     final FakeSocket socket = await pairAndWelcome();
     await socket.host(<String, Object?>{
       'type': 'agent.state',
@@ -197,6 +197,31 @@ void main() {
             as Map<String, Object?>;
     expect((computer['runs']! as List).single, containsPair('task', '迁移'));
     expect((computer['events']! as List).single, containsPair('unseen', false));
+  });
+
+  test('a reminder still alerts when agent.state listed it first', () async {
+    // The real desktop broadcasts agent.state (with the new activity) just
+    // before agent.completed carrying the same id.
+    final FakeSocket socket = await pairAndWelcome();
+    final Map<String, Object?> activity = <String, Object?>{
+      'id': 'activity-1',
+      'activityId': 'activity-1',
+      'notificationKind': 'attention',
+      'summary': '需要确认',
+      'unseen': true,
+    };
+    await socket.host(<String, Object?>{
+      'type': 'agent.state',
+      'running': <Object?>[],
+      'completed': <Object?>[activity],
+    });
+    await socket.host(<String, Object?>{
+      'type': 'agent.completed',
+      ...activity,
+    });
+    await _settle();
+    expect(notifier.shown.single.id, 'activity-1');
+    expect(notifier.shown.single.kind, AgentKind.attention);
   });
 
   test('clipboard items arrive and are dropped while offline', () async {
