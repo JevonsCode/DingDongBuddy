@@ -289,6 +289,16 @@ final class ActivityController extends ChangeNotifier {
     );
   }
 
+  /// When the running task that a completion would close was observed to
+  /// start, without changing any state.
+  DateTime? activeRunStartedAt({
+    required String source,
+    AgentConversationTarget? target,
+  }) {
+    final int index = _matchingRunIndex(source: source, target: target);
+    return index < 0 ? null : _activeRuns[index].startedAt;
+  }
+
   /// Removes a running lifecycle item when its completion is intentionally
   /// filtered, without creating history, unread state, or a completion count.
   bool discardActiveRun({

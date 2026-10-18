@@ -631,6 +631,9 @@ final class AgentResourceSynchronizer {
         if (servers != null && servers is! Map) {
           throw const FormatException('mcpServers must be a JSON object.');
         }
+        if (servers is Map) {
+          issues.addAll(_duplicateMcpIssues(target, servers, mcps));
+        }
       } on Object catch (error) {
         issues.add(
           AppIssue(
@@ -654,6 +657,67 @@ final class AgentResourceSynchronizer {
       for (final AppIssue issue in issues) issue.id: issue,
     };
     return unique.values.toList(growable: false);
+  }
+
+  /// Warns when a user-managed server in an Agent's JSON file points at the
+  /// same endpoint as a DingDong-managed MCP. Both copies load their tools on
+  /// every request, so an unnoticed duplicate silently doubles the cost.
+  Iterable<AppIssue> _duplicateMcpIssues(
+    AgentMcpTarget target,
+    Map<Object?, Object?> servers,
+    List<Resource> mcps,
+  ) sync* {
+    final Map<String, Resource> managedByEndpoint = <String, Resource>{};
+    final Set<String> managedNames = <String>{};
+    for (final Resource resource in mcps) {
+      managedNames.add(
+        managedMcpServerName(title: resource.title, id: resource.id),
+      );
+      try {
+        final String? endpoint = _mcpEndpointKey(
+          McpConfiguration.parse(resource.content),
+        );
+        if (endpoint != null) managedByEndpoint[endpoint] = resource;
+      } on Object {
+        // Invalid managed MCPs are reported separately.
+      }
+    }
+    if (managedByEndpoint.isEmpty) return;
+    for (final MapEntry<Object?, Object?> entry in servers.entries) {
+      final Object? name = entry.key;
+      final Object? value = entry.value;
+      if (name is! String || managedNames.contains(name) || value is! Map) {
+        continue;
+      }
+      final Object? url =
+          value['url'] ?? value['httpUrl'] ?? value['serverUrl'];
+      final Object? command = value['command'];
+      final Object? args = value['args'];
+      final String? endpoint = url is String
+          ? _normalizedMcpUrl(url)
+          : command is String && command.trim().isNotEmpty
+          ? _commandEndpointKey(
+              command,
+              args is List ? args.whereType<String>().toList() : <String>[],
+            )
+          : null;
+      final Resource? managed = endpoint == null
+          ? null
+          : managedByEndpoint[endpoint];
+      if (managed == null) continue;
+      yield _issue(
+        resource: managed,
+        kind: AppIssueKind.duplicateMcp,
+        severity: AppIssueSeverity.warning,
+        title: 'Duplicate MCP server',
+        detail:
+            '"$name" in ${target.clientName} uses the same endpoint as the '
+            'DingDong-managed "${managed.title}". Both load their tools on '
+            'every request; remove the copy you no longer need.',
+        clientName: '${target.clientName} · $name',
+        targetPath: target.file.path,
+      );
+    }
   }
 
   Future<bool> _isOwnedNativeSkillReceipt(
@@ -849,8 +913,14 @@ final class AgentResourceSynchronizer {
         (root['mcpServers'] as Map?) ?? const <String, Object?>{},
       )..removeWhere((String key, Object? _) => previousNames.contains(key));
       for (final Resource resource in resources) {
-        servers[managedMcpServerName(title: resource.title, id: resource.id)] =
-            _jsonMcp(McpConfiguration.parse(resource.content), kind);
+        servers[managedMcpServerName(
+          title: resource.title,
+          id: resource.id,
+        )] = _jsonMcp(
+          McpConfiguration.parse(resource.content),
+          kind,
+          activation: resource.activation,
+        );
       }
       return const JsonEncoder.withIndent(
         '  ',

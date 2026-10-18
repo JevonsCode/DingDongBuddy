@@ -568,7 +568,7 @@ test("agent completion reminders default on without claiming delivery before pus
   assert.match(appSource, /const generation = session\.notificationGeneration \+ 1/);
   assert.match(appSource, /await cleanupPushSubscription\(cleanupPair, session\)/);
   assert.match(appSource, /function queuePushMutation\(operation\)/);
-  assert.match(pageSource, /默认开启，等待系统授权/);
+  assert.match(pageSource, /正在检查通知权限…/);
   assert.match(serviceWorkerSource, /notification-policy\.js/);
 });
 

@@ -65,6 +65,9 @@ typedef CodexVoiceNotificationDetector =
 typedef SubagentConversationDetector =
     Future<bool> Function(AgentConversationTarget target);
 
+/// Returns when DingDong observed the reminder's task start, if it did.
+typedef AgentTaskStartLookup = DateTime? Function(DingRequest request);
+
 /// Applies the user's reminder preferences before any delivery route can play
 /// a sound, flash a window, record activity, or sync to a companion.
 Future<bool> shouldDeliverAgentNotification({
@@ -134,6 +137,10 @@ Future<bool> shouldRecordAgentTaskStart({
 /// subagent preference. Both primary and deduplicated hook deliveries use this
 /// same boundary so no reminder side effect can bypass the setting.
 /// A deduplicated hook may enrich history but must not play or flash again.
+///
+/// Per-kind rules then decide how an allowed reminder is delivered: quiet
+/// hours and the minimum task duration record it silently, and each kind has
+/// its own sound and phone switch.
 Future<void> deliverAgentNotification({
   required DingRequest request,
   required AppSettings settings,
@@ -144,6 +151,8 @@ Future<void> deliverAgentNotification({
   CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
   NotificationDeliveryFailureObserver? onFailure,
+  AgentTaskStartLookup? taskStartedAt,
+  DateTime Function() now = DateTime.now,
 }) async {
   if (!await shouldDeliverAgentNotification(
     request: request,
@@ -154,12 +163,29 @@ Future<void> deliverAgentNotification({
     await onFiltered?.call(request);
     return;
   }
-  final DingRequest resolvedRequest = request.sound == DingSound.defaultSound
-      ? request.copyWith(sound: DingSound.parse(settings.selectedSound))
-      : request;
+  final DateTime currentTime = now();
+  DateTime? startedAt;
+  try {
+    startedAt = taskStartedAt?.call(request);
+  } on Object {
+    // An unknown start time never hides a reminder.
+  }
+  final AgentNotificationPlan plan = planAgentNotification(
+    kind: request.notificationKind,
+    completionSound: settings.selectedSound,
+    completionCustomSoundPath: settings.customSoundPath,
+    rules: settings.notificationRules,
+    now: currentTime,
+    taskDuration: startedAt == null ? null : currentTime.difference(startedAt),
+  );
+  final DingRequest resolvedRequest =
+      (request.sound == DingSound.defaultSound
+              ? request.copyWith(sound: DingSound.parse(plan.sound))
+              : request)
+          .copyWith(alertPhone: plan.alertPhone);
   await deliverNotificationIndependently(
     nativeDelivery: () async {
-      if (!suppressNativeNotification) {
+      if (!suppressNativeNotification && plan.alertDesktop) {
         await nativeDelivery(resolvedRequest);
       }
     },
@@ -267,6 +293,7 @@ final class AppDependencies {
     CodexVoiceNotificationDetector? isCodexVoiceNotification,
     SubagentNotificationDetector? isSubagentNotification,
     SubagentConversationDetector? isSubagentConversation,
+    AgentTaskStartLookup? agentTaskStartedAt,
     PreferencesBackend? preferencesBackend,
   }) async {
     final AppDataPaths paths = AppDataPaths.current();
@@ -388,13 +415,16 @@ final class AppDependencies {
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
                 resolvedRequest,
-                customSoundPath: settings.customSoundPath,
+                customSoundPath: settings.customSoundPathFor(
+                  resolvedRequest.notificationKind,
+                ),
               ),
           companionDelivery: onNotification,
           onFiltered: onFilteredNotification,
           isCodexVoiceNotification: isCodexVoiceNotification,
           isSubagentNotification: isSubagentNotification,
           onFailure: onNotificationDeliveryFailure,
+          taskStartedAt: agentTaskStartedAt,
         );
       }()),
       onSuppressedDing: (request) => unawaited(() async {
@@ -406,7 +436,9 @@ final class AppDependencies {
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
                 resolvedRequest,
-                customSoundPath: settings.customSoundPath,
+                customSoundPath: settings.customSoundPathFor(
+                  resolvedRequest.notificationKind,
+                ),
               ),
           companionDelivery: onSuppressedNotification,
           onFiltered: onFilteredNotification,

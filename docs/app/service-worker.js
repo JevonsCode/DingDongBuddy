@@ -1,4 +1,4 @@
-const cacheName = "dingdong-app-shell-v48";
+const cacheName = "dingdong-app-shell-v49";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const completionVibrationPattern = [180, 80, 280];
@@ -17,29 +17,29 @@ self.addEventListener("install", (event) => {
         cache.addAll([
           base,
           `${base}index.html`,
-          `${base}styles.css?shell=48`,
-          `${base}app.js?shell=48`,
-          `${base}app-codecs.js?shell=48`,
-          `${base}app-connection.js?shell=48`,
-          `${base}app-content-transfer.js?shell=48`,
-          `${base}app-formatters.js?shell=48`,
-          `${base}app-file-actions.js?shell=48`,
-          `${base}resumable-transfer.js?shell=48`,
-          `${base}file-transfer-storage.js?shell=48`,
-          `${base}transfer-progress.js?shell=48`,
-          `${base}app-installation.js?shell=48`,
-          `${base}app-notifications.js?shell=48`,
-          `${base}app-pairing.js?shell=48`,
-          `${base}app-platform.js?shell=48`,
-          `${base}app-rendering.js?shell=48`,
-          `${base}app-settings.js?shell=48`,
-          `${base}app-storage.js?shell=48`,
-          `${base}connection-policy.js?shell=48`,
-          `${base}notification-policy.js?shell=48`,
-          `${base}device-name.js?shell=48`,
-          `${base}pairing-state.js?shell=48`,
-          `${base}pairing-scanner.js?shell=48`,
-          `${base}content-navigation.js?shell=48`,
+          `${base}styles.css?shell=49`,
+          `${base}app.js?shell=49`,
+          `${base}app-codecs.js?shell=49`,
+          `${base}app-connection.js?shell=49`,
+          `${base}app-content-transfer.js?shell=49`,
+          `${base}app-formatters.js?shell=49`,
+          `${base}app-file-actions.js?shell=49`,
+          `${base}resumable-transfer.js?shell=49`,
+          `${base}file-transfer-storage.js?shell=49`,
+          `${base}transfer-progress.js?shell=49`,
+          `${base}app-installation.js?shell=49`,
+          `${base}app-notifications.js?shell=49`,
+          `${base}app-pairing.js?shell=49`,
+          `${base}app-platform.js?shell=49`,
+          `${base}app-rendering.js?shell=49`,
+          `${base}app-settings.js?shell=49`,
+          `${base}app-storage.js?shell=49`,
+          `${base}connection-policy.js?shell=49`,
+          `${base}notification-policy.js?shell=49`,
+          `${base}device-name.js?shell=49`,
+          `${base}pairing-state.js?shell=49`,
+          `${base}pairing-scanner.js?shell=49`,
+          `${base}content-navigation.js?shell=49`,
           `${base}manifest.webmanifest`,
           `${base}version.json`,
           `${assets}dingdong-icon.png`,
@@ -421,6 +421,9 @@ async function handleRealtimeAgentCompletion(context) {
   if (message?.type !== "agent.completed" || typeof message?.id !== "string") {
     return;
   }
+  // The desktop's quiet hours and per-kind phone switch mark these reminders
+  // silent: the in-app list updates, but no system notification is raised.
+  if (message.silent === true) return;
   try {
     const pair = await workerPairForRoom(context.room);
     if (

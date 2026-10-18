@@ -1,10 +1,19 @@
 part of 'agent_resource_synchronizer.dart';
 
 // Encode client MCP formats and maintain DingDong-owned target metadata safely.
+///
+/// Claude Code exempts `alwaysLoad` servers from on-demand tool search, so
+/// every tool schema is resent with each request. Only MCPs the user marked as
+/// always active pay that cost; task-matched and manual MCPs stay searchable
+/// and load when the model actually needs them.
 Map<String, Object?> _jsonMcp(
   McpConfiguration config,
-  AgentMcpConfigKind kind,
-) {
+  AgentMcpConfigKind kind, {
+  ResourceActivation activation = ResourceActivation.taskMatch,
+}) {
+  final bool alwaysLoad =
+      kind == AgentMcpConfigKind.claudeJson &&
+      activation == ResourceActivation.always;
   final Map<String, String> headers = <String, String>{...config.headers};
   if (config.tokenEnvironmentVariable.isNotEmpty &&
       !headers.containsKey('Authorization')) {
@@ -26,7 +35,7 @@ Map<String, Object?> _jsonMcp(
       'command': config.command,
       if (config.arguments.isNotEmpty) 'args': config.arguments,
       if (config.environment.isNotEmpty) 'env': config.environment,
-      if (kind == AgentMcpConfigKind.claudeJson) 'alwaysLoad': true,
+      if (alwaysLoad) 'alwaysLoad': true,
     },
     McpTransport.streamableHttp => <String, Object?>{
       if (kind == AgentMcpConfigKind.claudeJson) 'type': 'http',
@@ -35,7 +44,7 @@ Map<String, Object?> _jsonMcp(
       else
         'url': config.url,
       if (headers.isNotEmpty) 'headers': headers,
-      if (kind == AgentMcpConfigKind.claudeJson) 'alwaysLoad': true,
+      if (alwaysLoad) 'alwaysLoad': true,
     },
     McpTransport.raw => throw const FormatException(
       'Enabled MCP resources must use STDIO or HTTP configuration.',
@@ -260,4 +269,29 @@ void _rejectDuplicateTomlTables(String contents, String targetPath) {
     'Codex configuration contains duplicate TOML tables: '
     '${sorted.join(', ')}. $targetPath was not changed.',
   );
+}
+
+/// Comparable endpoint for duplicate detection: a normalized URL for HTTP
+/// servers, or the command line for STDIO servers.
+String? _mcpEndpointKey(McpConfiguration config) => switch (config.transport) {
+  McpTransport.streamableHttp => _normalizedMcpUrl(config.url),
+  McpTransport.stdio => _commandEndpointKey(config.command, config.arguments),
+  McpTransport.raw => null,
+};
+
+String? _normalizedMcpUrl(String value) {
+  final Uri? uri = Uri.tryParse(value.trim());
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) return null;
+  final String path = uri.path.endsWith('/')
+      ? uri.path.substring(0, uri.path.length - 1)
+      : uri.path;
+  return 'url:${uri.scheme.toLowerCase()}://${uri.host.toLowerCase()}'
+      '${uri.hasPort ? ':${uri.port}' : ''}$path'
+      '${uri.hasQuery ? '?${uri.query}' : ''}';
+}
+
+String? _commandEndpointKey(String command, List<String> arguments) {
+  final String trimmed = command.trim();
+  if (trimmed.isEmpty) return null;
+  return 'cmd:${<String>[trimmed, ...arguments].join('\u0000')}';
 }

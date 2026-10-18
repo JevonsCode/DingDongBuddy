@@ -78,7 +78,7 @@ class _NotificationSettingsSection extends StatelessWidget {
             ),
           ),
         _SettingRow(
-          label: context.l10n.sound,
+          label: context.l10n.completionSound,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -149,8 +149,186 @@ class _NotificationSettingsSection extends StatelessWidget {
               ],
             ),
           ),
+        ..._attentionSoundRows(context),
+        CompactSwitchListTile(
+          key: const Key('settings-push-completion-to-phone'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.pushCompletionToPhone),
+          subtitle: Text(context.l10n.pushToPhoneDescription),
+          value: rules.completionToPhone,
+          onChanged: (bool value) =>
+              _setRules(rules.copyWith(completionToPhone: value)),
+        ),
+        CompactSwitchListTile(
+          key: const Key('settings-push-attention-to-phone'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.pushAttentionToPhone),
+          value: rules.attentionToPhone,
+          onChanged: (bool value) =>
+              _setRules(rules.copyWith(attentionToPhone: value)),
+        ),
+        _SettingRow(
+          label: context.l10n.completionMinimumDuration,
+          child: SizedBox(
+            width: 220,
+            child: DesktopSelectField<int>(
+              key: const Key('settings-completion-minimum-minutes'),
+              value: rules.completionMinimumMinutes,
+              items: NotificationRules.completionMinimumChoices
+                  .map(
+                    (int minutes) => DesktopSelectItem<int>(
+                      value: minutes,
+                      label: minutes == 0
+                          ? context.l10n.completionMinimumAny
+                          : context.l10n.completionMinimumMinutes(minutes),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: (int value) =>
+                  _setRules(rules.copyWith(completionMinimumMinutes: value)),
+            ),
+          ),
+        ),
+        if (rules.completionMinimumMinutes > 0)
+          Text(
+            context.l10n.completionMinimumDescription,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        CompactSwitchListTile(
+          key: const Key('settings-quiet-hours'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.quietHours),
+          subtitle: Text(context.l10n.quietHoursDescription),
+          value: rules.quietHours.enabled,
+          onChanged: (bool value) => _setRules(
+            rules.copyWith(
+              quietHours: rules.quietHours.copyWith(enabled: value),
+            ),
+          ),
+        ),
+        if (rules.quietHours.enabled) ...<Widget>[
+          _SettingRow(
+            label: context.l10n.quietHoursFrom,
+            child: _MinuteOfDayField(
+              key: const Key('settings-quiet-hours-start'),
+              value: rules.quietHours.startMinute,
+              onChanged: (int value) => _setRules(
+                rules.copyWith(
+                  quietHours: rules.quietHours.copyWith(startMinute: value),
+                ),
+              ),
+            ),
+          ),
+          _SettingRow(
+            label: context.l10n.quietHoursTo,
+            child: _MinuteOfDayField(
+              key: const Key('settings-quiet-hours-end'),
+              value: rules.quietHours.endMinute,
+              onChanged: (int value) => _setRules(
+                rules.copyWith(
+                  quietHours: rules.quietHours.copyWith(endMinute: value),
+                ),
+              ),
+            ),
+          ),
+          CompactSwitchListTile(
+            key: const Key('settings-quiet-hours-allow-attention'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.l10n.quietHoursAllowAttention),
+            value: rules.quietHours.allowAttention,
+            onChanged: (bool value) => _setRules(
+              rules.copyWith(
+                quietHours: rules.quietHours.copyWith(allowAttention: value),
+              ),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  NotificationRules get rules => settings.notificationRules;
+
+  Future<void> _setRules(NotificationRules value) =>
+      viewModel.setNotificationRules(value);
+
+  List<Widget> _attentionSoundRows(BuildContext context) {
+    final String sound = rules.attentionSound;
+    final String previewSound = sound == sameAsCompletionSound
+        ? settings.selectedSound
+        : sound;
+    final String? previewPath = sound == sameAsCompletionSound
+        ? settings.customSoundPath
+        : rules.attentionCustomSoundPath;
+    return <Widget>[
+      _SettingRow(
+        label: context.l10n.attentionSound,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            SizedBox(
+              width: 220,
+              child: DesktopSelectField<String>(
+                key: const Key('settings-attention-sound'),
+                value: sound,
+                items: <DesktopSelectItem<String>>[
+                  DesktopSelectItem<String>(
+                    value: sameAsCompletionSound,
+                    label: context.l10n.sameAsCompletionSound,
+                  ),
+                  for (final SoundChoice choice in soundChoices)
+                    DesktopSelectItem<String>(
+                      value: choice.value,
+                      label: _soundChoiceLabel(context, choice),
+                    ),
+                ],
+                onChanged: (String value) =>
+                    _setRules(rules.copyWith(attentionSound: value)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            DesktopIconButton(
+              key: const Key('settings-preview-attention-sound'),
+              tooltip: context.l10n.previewSound,
+              onPressed: soundPreviewGateway == null || previewSound == 'muted'
+                  ? null
+                  : () => soundPreviewGateway!.preview(
+                      sound: previewSound,
+                      customSoundPath: previewPath,
+                    ),
+              icon: const Icon(Icons.volume_up_outlined, size: 18),
+            ),
+          ],
+        ),
+      ),
+      if (sound == 'custom')
+        _SettingRow(
+          label: context.l10n.attentionCustomFile,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              SizedBox(
+                width: 240,
+                child: Text(
+                  rules.attentionCustomSoundPath ??
+                      context.l10n.noSoundSelected,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              DesktopActionButton(
+                key: const Key('settings-choose-attention-sound'),
+                onPressed: soundFileGateway == null
+                    ? null
+                    : _chooseAttentionSound,
+                label: context.l10n.choose,
+                tone: DesktopActionTone.neutral,
+              ),
+            ],
+          ),
+        ),
+    ];
   }
 
   Future<void> _chooseCustomSound() async {
@@ -158,6 +336,50 @@ class _NotificationSettingsSection extends StatelessWidget {
     if (path != null) {
       await viewModel.setCustomSoundPath(path);
     }
+  }
+
+  Future<void> _chooseAttentionSound() async {
+    final String? path = await soundFileGateway?.chooseSoundFile();
+    if (path != null) {
+      await _setRules(rules.copyWith(attentionCustomSoundPath: path));
+    }
+  }
+}
+
+/// Half-hour local time choices for quiet hours.
+class _MinuteOfDayField extends StatelessWidget {
+  const _MinuteOfDayField({
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
+
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<int> minutes = <int>{
+      for (int minute = 0; minute < 24 * 60; minute += 30) minute,
+      value,
+    }.toList()..sort();
+    return SizedBox(
+      width: 120,
+      child: DesktopSelectField<int>(
+        value: value,
+        items: minutes
+            .map(
+              (int minute) => DesktopSelectItem<int>(
+                value: minute,
+                label:
+                    '${(minute ~/ 60).toString().padLeft(2, '0')}:'
+                    '${(minute % 60).toString().padLeft(2, '0')}',
+              ),
+            )
+            .toList(growable: false),
+        onChanged: onChanged,
+      ),
+    );
   }
 }
 

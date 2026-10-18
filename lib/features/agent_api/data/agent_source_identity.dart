@@ -31,7 +31,9 @@ String? inferAgentSourceFromEnvironment(Map<String, String> environment) {
   if (hasValue('CODEX_THREAD_ID')) {
     return 'Codex';
   }
-  if (hasValue('CLAUDE_SESSION_ID') || environment.containsKey('CLAUDECODE')) {
+  if (hasValue('CLAUDE_CODE_SESSION_ID') ||
+      hasValue('CLAUDE_SESSION_ID') ||
+      environment.containsKey('CLAUDECODE')) {
     return 'Claude Code';
   }
   if (hasValue('CURSOR_SESSION_ID')) {

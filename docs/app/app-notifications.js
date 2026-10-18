@@ -1,12 +1,12 @@
 import {
   agentNotificationsAreActive,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=48";
+} from "./notification-policy.js?shell=49";
 import {
   pairingForRoom,
   pairingsMatch,
   shouldSkipPairingCleanup,
-} from "./pairing-state.js?shell=48";
+} from "./pairing-state.js?shell=49";
 import {
   apiUrl,
   base64UrlDecode,
@@ -15,8 +15,8 @@ import {
   pushToken,
   sealEnvelope,
   withTimeout,
-} from "./app-codecs.js?shell=48";
-import { idbDelete } from "./app-storage.js?shell=48";
+} from "./app-codecs.js?shell=49";
+import { idbDelete } from "./app-storage.js?shell=49";
 
 // Notification permission, Web Push registration, delivery checks, and help UI.
 export function createAgentNotificationController({
@@ -172,8 +172,10 @@ export function createAgentNotificationController({
             : "已开启 · 等待送达验证"
         : desired
           ? permission === "granted"
-            ? "默认开启 · 正在连接推送通道"
-            : "默认开启 · 等待系统授权"
+            ? "正在连接推送通道…"
+            : permission === "denied"
+              ? "未生效 · 系统已阻止通知"
+              : "未生效 · 点“开启”并允许通知"
           : "已关闭";
   }
 
@@ -796,6 +798,7 @@ export function createAgentNotificationController({
         steps.push(
           "确认 Chrome 的系统通知和 DingDong 网站通知都已允许。",
           "在系统里允许 Chrome 后台联网，并把 Chrome 的电池策略改为“不限制”后再测试。",
+          "小米 / 红米 / OPPO / vivo 等系统：在“应用管理 → Chrome”里打开“自启动”，并且不要从最近任务里划掉 Chrome，否则后台推送会被系统一起停止。",
           "无需关闭所有悬浮窗；这一步检查的是 Chrome / Google 推送后台链路。",
         );
       } else {
@@ -809,11 +812,23 @@ export function createAgentNotificationController({
       reason = "请在系统或浏览器设置里把 DingDong 的网站通知改成“允许”。";
       if (isIos()) {
         steps.push("打开系统“设置 → 通知 → DingDong”。", "允许通知后回到 DingDong，页面会自动重新检查。");
+      } else if (isAndroid() && isStandalone()) {
+        // An installed WebAPK is its own Android app: its system notification
+        // permission is separate from Chrome's and there is no address bar.
+        title = "系统阻止了 DingDong 的通知";
+        reason = "已安装的 DingDong 是一个独立应用，需要在系统设置里单独允许通知。";
+        steps.push(
+          "打开系统“设置 → 应用 → 应用管理 → DingDong → 通知管理”，打开“允许通知”。",
+          "回到 DingDong，点“重新检查”。",
+          "若仍被阻止：打开 Chrome，进入“设置 → 网站设置 → 通知”，把 dingdong.逍遥.com 改为“允许”。",
+        );
       } else {
         steps.push("点 Chrome 地址栏左侧的网站信息图标。", "进入“权限 → 通知”，选择“允许”，然后回到本页。", "若网站权限已经允许，再确认系统“设置 → 通知 → Chrome”也已开启。");
       }
     } else {
-      if (isAndroid()) {
+      if (isAndroid() && isStandalone()) {
+        steps.push("点“重新检查”，在系统弹窗里选择“允许”。", "如果没有出现弹窗，打开系统“设置 → 应用 → 应用管理 → DingDong → 通知管理”，打开“允许通知”。");
+      } else if (isAndroid()) {
         steps.push("点 Chrome 地址栏左侧的网站信息图标。", "进入“权限 → 通知”，选择“允许”，然后回到本页。", "也可以在 Chrome“设置 → 网站设置 → 通知”中为 DingDong 单独允许。");
         note = "如果系统明确提示有气泡或小窗遮挡，只需先收起当前可见的气泡 / 小窗再重试；无需关闭所有应用的悬浮窗权限。";
       } else {

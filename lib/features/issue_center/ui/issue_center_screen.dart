@@ -373,6 +373,7 @@ String _localizedIssueTitle(BuildContext context, AppIssue issue) =>
       AppIssueKind.invalidMcp => context.l10n.mcpConfigurationIsInvalid,
       AppIssueKind.invalidAgentConfig =>
         context.l10n.agentConfigurationFileIsInvalid,
+      AppIssueKind.duplicateMcp => context.l10n.duplicateMcpServer,
       AppIssueKind.syncFailed => context.l10n.agentResourceSyncFailed,
     };
 
@@ -404,5 +405,6 @@ String _localizedIssueDetail(
     context
         .l10n
         .dingdongPreservedTheExistingAgentFileBecauseItCouldNotBe_6c5484e5,
+  AppIssueKind.duplicateMcp => context.l10n.duplicateMcpServerDetail,
   AppIssueKind.syncFailed => issue.detail,
 };

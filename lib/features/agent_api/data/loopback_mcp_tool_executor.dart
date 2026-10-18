@@ -395,6 +395,7 @@ String _defaultCurrentDirectory() => Directory.current.path;
 
 String? _defaultConversationId() => _firstEnvironmentValue(const <String>[
   'CODEX_THREAD_ID',
+  'CLAUDE_CODE_SESSION_ID',
   'CLAUDE_SESSION_ID',
   'CURSOR_SESSION_ID',
   'GEMINI_SESSION_ID',

@@ -56,51 +56,27 @@ void main() {
       final Map<String, Object?> capabilities =
           result['capabilities']! as Map<String, Object?>;
 
-      expect(result['instructions'], contains('dingdong_bridge'));
-      expect(result['instructions'], contains('expand="prompts"'));
-      expect(result['instructions'], contains('required instruction'));
-      expect(result['instructions'], contains('authoritative Prompt snapshot'));
-      expect(result['instructions'], contains('replaces'));
-      expect(
-        result['instructions'],
-        contains('authoritative dynamic-delivery Skill catalog'),
-      );
-      expect(result['instructions'], contains('active.skillSuppressions'));
-      expect(result['instructions'], contains('duplicate-name conflict'));
-      expect(result['instructions'], contains('dingdong_load_skill'));
-      expect(result['instructions'], contains('dingdong_confirm_mcp_use'));
-      expect(result['instructions'], contains('dingdong_read_skill_file'));
-      expect(
-        result['instructions'],
-        contains('MCP entries are tool references'),
-      );
-      expect(result['instructions'], contains('conversation.visible'));
-      expect(result['instructions'], contains('single Markdown text line'));
-      expect(result['instructions'], contains('keep DingDong as text'));
-      expect(
-        result['instructions'],
-        contains('symbols and lineToken values returned by DingDong'),
-      );
-      expect(
-        result['instructions'],
-        contains('conversation.presentations.ansi.line'),
-      );
-      expect(result['instructions'], contains('merged plain-text tokens'));
-      expect(result['instructions'], contains('confirmedUse'));
-      expect(result['instructions'], contains('MCP marker means called'));
-      expect(result['instructions'], contains('Prompt items remain unmarked'));
-      expect(result['instructions'], contains('same mergeKey'));
-      expect(result['instructions'], contains('must never be displayed'));
-      expect(
-        result['instructions'],
-        contains('does not claim that every instruction was followed'),
-      );
-      expect(result['instructions'], contains('dingdong_install_skill'));
-      expect(result['instructions'], contains('dingdong_create_resource'));
-      expect(result['instructions'], contains('dingdong_update_resource'));
-      expect(result['instructions'], contains('strict project scope'));
-      expect(result['instructions'], contains('completion hook'));
-      expect(result['instructions'], contains('dingdong_notify'));
+      final String instructions = result['instructions']! as String;
+      // Claude Code truncates server instructions at 2,048 characters; the
+      // full protocol lives in the prompt file and tool descriptions.
+      expect(instructions.length, lessThan(2048));
+      for (final String required in <String>[
+        'dingdong_bridge',
+        'expand="prompts"',
+        'required instruction',
+        'authoritative Prompt snapshot',
+        'replaces',
+        'dingdong_load_skill',
+        'dingdong_read_skill_file',
+        'dingdong_confirm_mcp_use',
+        'MCP entries are tool references',
+        'conversation.visible',
+        'mergeKey',
+        'completion hook',
+        'dingdong_notify',
+      ]) {
+        expect(instructions, contains(required));
+      }
       expect(result['instructions'], isNot(contains('iframe')));
       expect(
         result['instructions'],
@@ -282,14 +258,24 @@ void main() {
         toolNamed('dingdong_load_skill')['description'],
         contains('same mergeKey'),
       );
-      expect(loadSchema['anyOf'], <Map<String, Object?>>[
-        <String, Object?>{
-          'required': <String>['name'],
-        },
-        <String, Object?>{
-          'required': <String>['id'],
-        },
-      ]);
+      // Claude Code silently drops tools whose input schema has top-level
+      // combinators, so name-or-id is enforced by the server instead.
+      for (final Object? tool in tools) {
+        final Map<String, Object?> schema =
+            (tool! as Map<String, Object?>)['inputSchema']!
+                as Map<String, Object?>;
+        expect(
+          schema.keys.toSet().intersection(<String>{
+            'anyOf',
+            'allOf',
+            'oneOf',
+            'not',
+            'if',
+          }),
+          isEmpty,
+          reason: '${(tool as Map<String, Object?>)['name']}',
+        );
+      }
       expect(
         (loadSchema['properties'] as Map<String, Object?>).keys,
         containsAll(<String>[
@@ -363,42 +349,6 @@ void main() {
         (deliveryProperties['projectPaths'] as Map<String, Object?>)['type'],
         'array',
       );
-      expect(deliverySchema['allOf'], <Object?>[
-        <String, Object?>{
-          'if': <String, Object?>{
-            'properties': <String, Object?>{
-              'mode': <String, Object?>{'const': 'nativeProject'},
-            },
-            'required': <String>['mode'],
-          },
-          'then': <String, Object?>{
-            'required': <String>['projectPaths'],
-            'properties': <String, Object?>{
-              'projectPaths': <String, Object?>{'minItems': 1},
-            },
-          },
-          'else': <String, Object?>{
-            'properties': <String, Object?>{
-              'projectPaths': <String, Object?>{'maxItems': 0},
-              'hooksEnabled': <String, Object?>{'const': false},
-            },
-          },
-        },
-        <String, Object?>{
-          'if': <String, Object?>{
-            'properties': <String, Object?>{
-              'hooksEnabled': <String, Object?>{'const': true},
-            },
-            'required': <String>['hooksEnabled'],
-          },
-          'then': <String, Object?>{
-            'properties': <String, Object?>{
-              'agentId': <String, Object?>{'const': 'codex'},
-              'mode': <String, Object?>{'const': 'nativeProject'},
-            },
-          },
-        },
-      ]);
       expect(
         toolNamed('dingdong_get_skill_deployments')['description'],
         allOf(

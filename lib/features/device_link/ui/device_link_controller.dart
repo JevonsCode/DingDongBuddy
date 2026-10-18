@@ -411,6 +411,8 @@ final class DeviceLinkController extends ChangeNotifier
           'startedAt': activity.startedAt!.toUtc().toIso8601String(),
         'completedAt': activity.completedAt.toUtc().toIso8601String(),
         'vibrate': device.vibrationEnabled,
+        // The phone keeps its list current but raises no system notification.
+        if (!request.alertPhone) 'silent': true,
         if (activity.conversationTarget?.workspacePath != null)
           'workspacePath': activity.conversationTarget!.workspacePath,
         if (activity.conversationTarget?.conversationId != null)
@@ -423,7 +425,7 @@ final class DeviceLinkController extends ChangeNotifier
           // The encrypted Web Push below is the background fallback.
         }
       }
-      if (!device.receiveAgentNotifications) continue;
+      if (!device.receiveAgentNotifications || !request.alertPhone) continue;
       try {
         await _sendPush(device, message);
       } on Object catch (error, stackTrace) {

@@ -1,8 +1,10 @@
 import 'package:dingdong/core/utils/text.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+import 'package:dingdong/features/settings/domain/notification_rules.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
 
@@ -98,6 +100,7 @@ final class AppSettings {
     this.notifyAgentAttention = true,
     this.notifyCodexVoiceActivity = false,
     this.notifySubagentActivity = false,
+    this.notificationRules = NotificationRules.defaultValue,
     this.groupRepeatedAgentSessions = true,
     this.showConversationTokenUsage = true,
     this.agentActivityMaxItems = 500,
@@ -130,6 +133,7 @@ final class AppSettings {
   final bool notifyAgentAttention;
   final bool notifyCodexVoiceActivity;
   final bool notifySubagentActivity;
+  final NotificationRules notificationRules;
   final bool groupRepeatedAgentSessions;
   final bool showConversationTokenUsage;
   final int agentActivityMaxItems;
@@ -141,6 +145,19 @@ final class AppSettings {
   final int agentSetupAcknowledgedRevision;
   final int apiPort;
   final SelectionPluginConfiguration selectionPlugin;
+
+  /// Saved sound for one reminder kind, before any API-supplied override.
+  String soundFor(AgentNotificationKind kind) =>
+      kind == AgentNotificationKind.attention &&
+          notificationRules.attentionSound != sameAsCompletionSound
+      ? notificationRules.attentionSound
+      : selectedSound;
+
+  String? customSoundPathFor(AgentNotificationKind kind) =>
+      kind == AgentNotificationKind.attention &&
+          notificationRules.attentionSound != sameAsCompletionSound
+      ? notificationRules.attentionCustomSoundPath
+      : customSoundPath;
 
   bool get requiresAgentSetupUpdate =>
       agentSetupAcknowledgedRevision < currentAgentSetupRevision;
@@ -166,12 +183,13 @@ final class AppSettings {
       notifyAgentAttention: notifyAgentAttention,
       notifyCodexVoiceActivity: notifyCodexVoiceActivity,
       notifySubagentActivity: notifySubagentActivity,
+      notificationRules: notificationRules.sanitized(),
       groupRepeatedAgentSessions: groupRepeatedAgentSessions,
       showConversationTokenUsage: showConversationTokenUsage,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
       conversationFooterSymbols: conversationFooterSymbols.sanitized(),
-      selectedSound: _preferenceSoundValues.contains(selectedSound)
+      selectedSound: notificationSoundValues.contains(selectedSound)
           ? selectedSound
           : 'default',
       customSoundPath: trimmedOrNull(customSoundPath),
@@ -204,6 +222,7 @@ final class AppSettings {
     bool? notifyAgentAttention,
     bool? notifyCodexVoiceActivity,
     bool? notifySubagentActivity,
+    NotificationRules? notificationRules,
     bool? groupRepeatedAgentSessions,
     bool? showConversationTokenUsage,
     int? agentActivityMaxItems,
@@ -243,6 +262,7 @@ final class AppSettings {
           notifyCodexVoiceActivity ?? this.notifyCodexVoiceActivity,
       notifySubagentActivity:
           notifySubagentActivity ?? this.notifySubagentActivity,
+      notificationRules: notificationRules ?? this.notificationRules,
       groupRepeatedAgentSessions:
           groupRepeatedAgentSessions ?? this.groupRepeatedAgentSessions,
       showConversationTokenUsage:
@@ -265,16 +285,5 @@ final class AppSettings {
     ).sanitized();
   }
 }
-
-const Set<String> _preferenceSoundValues = <String>{
-  'default',
-  'dingSoft',
-  'dingBright',
-  'dingCrisp',
-  'dingDeep',
-  'custom',
-  'system',
-  'muted',
-};
 
 const Object _notSet = Object();

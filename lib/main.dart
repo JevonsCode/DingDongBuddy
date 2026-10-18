@@ -254,6 +254,11 @@ Future<void> main(List<String> arguments) async {
       }
       return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
     },
+    agentTaskStartedAt: (DingRequest request) =>
+        activityController.activeRunStartedAt(
+          source: request.source ?? 'Agent',
+          target: request.conversationTarget,
+        ),
     onFilteredNotification: (DingRequest request) async {
       activityController.discardActiveRun(
         source: request.source ?? 'Agent',

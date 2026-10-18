@@ -1873,6 +1873,42 @@ void main() {
     },
   );
 
+  test('a silent reminder updates the phone list without Web Push', () async {
+    final HttpServer server = await HttpServer.bind(
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    var pushRequests = 0;
+    server.listen((HttpRequest request) async {
+      pushRequests += 1;
+      request.response.statusCode = HttpStatus.ok;
+      await request.response.close();
+    });
+    final _Harness harness = await _connectedHarness(
+      autoSend: false,
+      relayBaseUrl: Uri.parse('http://127.0.0.1:${server.port}'),
+    );
+    addTearDown(() async {
+      await harness.dispose();
+      await server.close(force: true);
+    });
+
+    await harness.controller.sendAgentCompleted(
+      const DingRequest(message: '完成摘要', source: 'Codex', alertPhone: false),
+      activity: AgentActivity(
+        id: 'activity-1',
+        source: 'Codex',
+        message: '完成摘要',
+        completedAt: DateTime.utc(2026, 8, 8, 8),
+        unseen: true,
+      ),
+      notificationId: 'completion-1',
+    );
+
+    expect(pushRequests, 0);
+    expect(harness.session.sent.single['silent'], isTrue);
+  });
+
   test(
     'agent Web Push uses the device relay before the global relay',
     () async {
