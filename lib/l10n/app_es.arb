@@ -4873,5 +4873,102 @@
   "lanWorking": "Conectando…",
   "@lanWorking": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "completionSound": "Sonido al completar",
+  "@completionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "attentionSound": "Sonido cuando necesita tu respuesta",
+  "@attentionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "sameAsCompletionSound": "Igual que al completar",
+  "@sameAsCompletionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "attentionCustomFile": "Archivo personalizado (necesita respuesta)",
+  "@attentionCustomFile": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushCompletionToPhone": "Enviar finalizaciones a los teléfonos vinculados",
+  "@pushCompletionToPhone": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushAttentionToPhone": "Enviar avisos de respuesta a los teléfonos vinculados",
+  "@pushAttentionToPhone": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushToPhoneDescription": "Si está desactivado, la lista del teléfono se actualiza sin mostrar notificación del sistema.",
+  "@pushToPhoneDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHours": "Horas de silencio",
+  "@quietHours": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursDescription": "Los avisos en este horario se guardan en el historial sin sonido, parpadeo ni envío al teléfono.",
+  "@quietHoursDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursFrom": "Desde",
+  "@quietHoursFrom": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursTo": "Hasta",
+  "@quietHoursTo": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursAllowAttention": "Avisar igualmente cuando un Agent necesite tu respuesta",
+  "@quietHoursAllowAttention": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumDuration": "Avisos de finalización para",
+  "@completionMinimumDuration": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumAny": "Todas las tareas",
+  "@completionMinimumAny": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumMinutes": "Tareas de más de {minutes} min",
+  "@completionMinimumMinutes": {
+    "description": "Notification rules and Token usage range.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "completionMinimumDescription": "Las tareas más cortas se registran igualmente, sin sonido ni envío al teléfono. Solo aplica si DingDong vio empezar la tarea.",
+  "@completionMinimumDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRange": "Rango",
+  "@tokenUsageRange": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeYear": "Año completo",
+  "@tokenUsageRangeYear": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeLast7": "Últimos 7 días",
+  "@tokenUsageRangeLast7": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeLast30": "Últimos 30 días",
+  "@tokenUsageRangeLast30": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeThisMonth": "Este mes",
+  "@tokenUsageRangeThisMonth": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeCustom": "Personalizado…",
+  "@tokenUsageRangeCustom": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeTotal": "Total del rango",
+  "@tokenUsageRangeTotal": {
+    "description": "Notification rules and Token usage range."
   }
 }

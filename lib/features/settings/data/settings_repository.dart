@@ -4,6 +4,7 @@ import 'package:dingdong/features/selection/domain/selection_plugin_configuratio
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+import 'package:dingdong/features/settings/domain/notification_rules.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
 
@@ -11,6 +12,7 @@ export 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.d
 export 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 export 'package:dingdong/features/settings/domain/app_settings.dart';
 export 'package:dingdong/features/settings/domain/global_hot_key.dart';
+export 'package:dingdong/features/settings/domain/notification_rules.dart';
 export 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 
 /// Loads and saves settings using the native DingDong preference key contract.
@@ -61,6 +63,7 @@ final class SettingsRepository {
       _backend.read(_selectionModelKey),
       _backend.read(_selectionTargetLanguageKey),
       _backend.read(_selectionUnloadLocalModelKey),
+      _backend.read(_notificationRulesKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -109,6 +112,7 @@ final class SettingsRepository {
           : false,
       showConversationTokenUsage: showConversationTokenUsage,
       notifySubagentActivity: values[22] is bool ? values[22]! as bool : false,
+      notificationRules: NotificationRules.parse(values[36]),
       conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
       agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
       agentActivityCountHours: values[14] is int ? values[14]! as int : 24,
@@ -181,6 +185,10 @@ final class SettingsRepository {
       _backend.write(
         _notifySubagentActivityKey,
         settings.notifySubagentActivity,
+      ),
+      _backend.write(
+        _notificationRulesKey,
+        settings.notificationRules.encode(),
       ),
       _backend.write(
         _conversationFooterSymbolsKey,
@@ -274,6 +282,7 @@ const String _notifyCodexVoiceActivityKey =
     'dingdong.agentActivity.notifyCodexVoice';
 const String _notifySubagentActivityKey =
     'dingdong.agentActivity.notifySubagents';
+const String _notificationRulesKey = 'dingdong.agentActivity.notificationRules';
 const String _conversationFooterSymbolsKey =
     'dingdong.agentApi.conversationFooterSymbols';
 const String _showConversationTokenUsageKey =

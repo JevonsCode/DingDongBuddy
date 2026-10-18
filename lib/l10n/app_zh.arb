@@ -4873,5 +4873,102 @@
   "lanWorking": "连接中…",
   "@lanWorking": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "completionSound": "完成提示音",
+  "@completionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "attentionSound": "需要处理时的提示音",
+  "@attentionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "sameAsCompletionSound": "与完成提示音相同",
+  "@sameAsCompletionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "attentionCustomFile": "需要处理时的自定义文件",
+  "@attentionCustomFile": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushCompletionToPhone": "完成时推送到已配对手机",
+  "@pushCompletionToPhone": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushAttentionToPhone": "需要你处理时推送到已配对手机",
+  "@pushAttentionToPhone": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushToPhoneDescription": "关闭后手机列表仍会同步，但不会弹出系统通知。",
+  "@pushToPhoneDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHours": "免打扰时段",
+  "@quietHours": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursDescription": "该时段内的提醒只记录到历史，不响铃、不闪烁、不推送手机。",
+  "@quietHoursDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursFrom": "开始",
+  "@quietHoursFrom": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursTo": "结束",
+  "@quietHoursTo": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursAllowAttention": "Agent 需要你处理时仍然提醒",
+  "@quietHoursAllowAttention": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumDuration": "完成提醒范围",
+  "@completionMinimumDuration": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumAny": "所有任务",
+  "@completionMinimumAny": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumMinutes": "运行超过 {minutes} 分钟的任务",
+  "@completionMinimumMinutes": {
+    "description": "Notification rules and Token usage range.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "completionMinimumDescription": "更短的任务仍会记录，只是不响铃、不推送手机。仅对 DingDong 看到开始时间的任务生效。",
+  "@completionMinimumDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRange": "统计范围",
+  "@tokenUsageRange": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeYear": "整年",
+  "@tokenUsageRangeYear": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeLast7": "最近 7 天",
+  "@tokenUsageRangeLast7": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeLast30": "最近 30 天",
+  "@tokenUsageRangeLast30": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeThisMonth": "本月",
+  "@tokenUsageRangeThisMonth": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeCustom": "自定义…",
+  "@tokenUsageRangeCustom": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeTotal": "区间合计",
+  "@tokenUsageRangeTotal": {
+    "description": "Notification rules and Token usage range."
   }
 }

@@ -4874,5 +4874,102 @@
   "lanWorking": "Connecting…",
   "@lanWorking": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "completionSound": "Completion sound",
+  "@completionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "attentionSound": "Needs-input sound",
+  "@attentionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "sameAsCompletionSound": "Same as completion",
+  "@sameAsCompletionSound": {
+    "description": "Notification rules and Token usage range."
+  },
+  "attentionCustomFile": "Needs-input custom file",
+  "@attentionCustomFile": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushCompletionToPhone": "Send completions to paired phones",
+  "@pushCompletionToPhone": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushAttentionToPhone": "Send needs-input reminders to paired phones",
+  "@pushAttentionToPhone": {
+    "description": "Notification rules and Token usage range."
+  },
+  "pushToPhoneDescription": "When off, the phone list still updates but shows no system notification.",
+  "@pushToPhoneDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHours": "Quiet hours",
+  "@quietHours": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursDescription": "Reminders in this window are kept in history without sound, flashing or phone push.",
+  "@quietHoursDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursFrom": "From",
+  "@quietHoursFrom": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursTo": "To",
+  "@quietHoursTo": {
+    "description": "Notification rules and Token usage range."
+  },
+  "quietHoursAllowAttention": "Still alert when an Agent needs your input",
+  "@quietHoursAllowAttention": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumDuration": "Completion alerts for",
+  "@completionMinimumDuration": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumAny": "Every task",
+  "@completionMinimumAny": {
+    "description": "Notification rules and Token usage range."
+  },
+  "completionMinimumMinutes": "Tasks over {minutes} min",
+  "@completionMinimumMinutes": {
+    "description": "Notification rules and Token usage range.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "completionMinimumDescription": "Shorter tasks are still recorded, just without sound or phone push. Applies when DingDong saw the task start.",
+  "@completionMinimumDescription": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRange": "Range",
+  "@tokenUsageRange": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeYear": "Whole year",
+  "@tokenUsageRangeYear": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeLast7": "Last 7 days",
+  "@tokenUsageRangeLast7": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeLast30": "Last 30 days",
+  "@tokenUsageRangeLast30": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeThisMonth": "This month",
+  "@tokenUsageRangeThisMonth": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeCustom": "Custom…",
+  "@tokenUsageRangeCustom": {
+    "description": "Notification rules and Token usage range."
+  },
+  "tokenUsageRangeTotal": "Range total",
+  "@tokenUsageRangeTotal": {
+    "description": "Notification rules and Token usage range."
   }
 }

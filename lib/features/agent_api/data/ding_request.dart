@@ -65,6 +65,7 @@ final class DingRequest {
     this.tokenUsage,
     this.transcriptPath,
     this.receivedAt,
+    this.alertPhone = true,
   });
 
   factory DingRequest.parse(
@@ -110,12 +111,17 @@ final class DingRequest {
   final String? transcriptPath;
   final DateTime? receivedAt;
 
+  /// Set by the desktop's reminder rules, never by API callers. False keeps
+  /// linked phones in sync without raising a system notification there.
+  final bool alertPhone;
+
   DingRequest copyWith({
     String? message,
     DingSound? sound,
     AgentNotificationKind? notificationKind,
     ConversationTokenUsage? tokenUsage,
     DateTime? receivedAt,
+    bool? alertPhone,
   }) {
     return DingRequest(
       message: message ?? this.message,
@@ -129,6 +135,7 @@ final class DingRequest {
       tokenUsage: tokenUsage ?? this.tokenUsage,
       transcriptPath: transcriptPath,
       receivedAt: receivedAt ?? this.receivedAt,
+      alertPhone: alertPhone ?? this.alertPhone,
     );
   }
 }

@@ -3796,4 +3796,80 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanWorking => 'Connecting…';
+
+  @override
+  String get completionSound => 'Completion sound';
+
+  @override
+  String get attentionSound => 'Needs-input sound';
+
+  @override
+  String get sameAsCompletionSound => 'Same as completion';
+
+  @override
+  String get attentionCustomFile => 'Needs-input custom file';
+
+  @override
+  String get pushCompletionToPhone => 'Send completions to paired phones';
+
+  @override
+  String get pushAttentionToPhone =>
+      'Send needs-input reminders to paired phones';
+
+  @override
+  String get pushToPhoneDescription =>
+      'When off, the phone list still updates but shows no system notification.';
+
+  @override
+  String get quietHours => 'Quiet hours';
+
+  @override
+  String get quietHoursDescription =>
+      'Reminders in this window are kept in history without sound, flashing or phone push.';
+
+  @override
+  String get quietHoursFrom => 'From';
+
+  @override
+  String get quietHoursTo => 'To';
+
+  @override
+  String get quietHoursAllowAttention =>
+      'Still alert when an Agent needs your input';
+
+  @override
+  String get completionMinimumDuration => 'Completion alerts for';
+
+  @override
+  String get completionMinimumAny => 'Every task';
+
+  @override
+  String completionMinimumMinutes(int minutes) {
+    return 'Tasks over $minutes min';
+  }
+
+  @override
+  String get completionMinimumDescription =>
+      'Shorter tasks are still recorded, just without sound or phone push. Applies when DingDong saw the task start.';
+
+  @override
+  String get tokenUsageRange => 'Range';
+
+  @override
+  String get tokenUsageRangeYear => 'Whole year';
+
+  @override
+  String get tokenUsageRangeLast7 => 'Last 7 days';
+
+  @override
+  String get tokenUsageRangeLast30 => 'Last 30 days';
+
+  @override
+  String get tokenUsageRangeThisMonth => 'This month';
+
+  @override
+  String get tokenUsageRangeCustom => 'Custom…';
+
+  @override
+  String get tokenUsageRangeTotal => 'Range total';
 }

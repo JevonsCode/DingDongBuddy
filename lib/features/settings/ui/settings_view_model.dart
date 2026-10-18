@@ -621,6 +621,12 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setNotificationRules(NotificationRules value) async {
+    _settings = _settings.copyWith(notificationRules: value);
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setNotifyAgentCompletion(bool value) async {
     _settings = _settings.copyWith(notifyAgentCompletion: value);
     notifyListeners();

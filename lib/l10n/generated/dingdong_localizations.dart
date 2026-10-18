@@ -6607,6 +6607,144 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Connecting…'**
   String get lanWorking;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion sound'**
+  String get completionSound;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs-input sound'**
+  String get attentionSound;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Same as completion'**
+  String get sameAsCompletionSound;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs-input custom file'**
+  String get attentionCustomFile;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Send completions to paired phones'**
+  String get pushCompletionToPhone;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Send needs-input reminders to paired phones'**
+  String get pushAttentionToPhone;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, the phone list still updates but shows no system notification.'**
+  String get pushToPhoneDescription;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get quietHours;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders in this window are kept in history without sound, flashing or phone push.'**
+  String get quietHoursDescription;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get quietHoursFrom;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get quietHoursTo;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Still alert when an Agent needs your input'**
+  String get quietHoursAllowAttention;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion alerts for'**
+  String get completionMinimumDuration;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Every task'**
+  String get completionMinimumAny;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks over {minutes} min'**
+  String completionMinimumMinutes(int minutes);
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter tasks are still recorded, just without sound or phone push. Applies when DingDong saw the task start.'**
+  String get completionMinimumDescription;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get tokenUsageRange;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole year'**
+  String get tokenUsageRangeYear;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get tokenUsageRangeLast7;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get tokenUsageRangeLast30;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get tokenUsageRangeThisMonth;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get tokenUsageRangeCustom;
+
+  /// Notification rules and Token usage range.
+  ///
+  /// In en, this message translates to:
+  /// **'Range total'**
+  String get tokenUsageRangeTotal;
 }
 
 class _DingDongLocalizationsDelegate

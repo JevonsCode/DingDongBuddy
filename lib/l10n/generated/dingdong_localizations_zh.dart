@@ -3665,4 +3665,76 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get lanWorking => '连接中…';
+
+  @override
+  String get completionSound => '完成提示音';
+
+  @override
+  String get attentionSound => '需要处理时的提示音';
+
+  @override
+  String get sameAsCompletionSound => '与完成提示音相同';
+
+  @override
+  String get attentionCustomFile => '需要处理时的自定义文件';
+
+  @override
+  String get pushCompletionToPhone => '完成时推送到已配对手机';
+
+  @override
+  String get pushAttentionToPhone => '需要你处理时推送到已配对手机';
+
+  @override
+  String get pushToPhoneDescription => '关闭后手机列表仍会同步，但不会弹出系统通知。';
+
+  @override
+  String get quietHours => '免打扰时段';
+
+  @override
+  String get quietHoursDescription => '该时段内的提醒只记录到历史，不响铃、不闪烁、不推送手机。';
+
+  @override
+  String get quietHoursFrom => '开始';
+
+  @override
+  String get quietHoursTo => '结束';
+
+  @override
+  String get quietHoursAllowAttention => 'Agent 需要你处理时仍然提醒';
+
+  @override
+  String get completionMinimumDuration => '完成提醒范围';
+
+  @override
+  String get completionMinimumAny => '所有任务';
+
+  @override
+  String completionMinimumMinutes(int minutes) {
+    return '运行超过 $minutes 分钟的任务';
+  }
+
+  @override
+  String get completionMinimumDescription =>
+      '更短的任务仍会记录，只是不响铃、不推送手机。仅对 DingDong 看到开始时间的任务生效。';
+
+  @override
+  String get tokenUsageRange => '统计范围';
+
+  @override
+  String get tokenUsageRangeYear => '整年';
+
+  @override
+  String get tokenUsageRangeLast7 => '最近 7 天';
+
+  @override
+  String get tokenUsageRangeLast30 => '最近 30 天';
+
+  @override
+  String get tokenUsageRangeThisMonth => '本月';
+
+  @override
+  String get tokenUsageRangeCustom => '自定义…';
+
+  @override
+  String get tokenUsageRangeTotal => '区间合计';
 }

@@ -421,6 +421,9 @@ async function handleRealtimeAgentCompletion(context) {
   if (message?.type !== "agent.completed" || typeof message?.id !== "string") {
     return;
   }
+  // The desktop's quiet hours and per-kind phone switch mark these reminders
+  // silent: the in-app list updates, but no system notification is raised.
+  if (message.silent === true) return;
   try {
     const pair = await workerPairForRoom(context.room);
     if (

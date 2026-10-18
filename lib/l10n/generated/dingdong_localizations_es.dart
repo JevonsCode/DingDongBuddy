@@ -3839,4 +3839,82 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get lanWorking => 'Conectando…';
+
+  @override
+  String get completionSound => 'Sonido al completar';
+
+  @override
+  String get attentionSound => 'Sonido cuando necesita tu respuesta';
+
+  @override
+  String get sameAsCompletionSound => 'Igual que al completar';
+
+  @override
+  String get attentionCustomFile =>
+      'Archivo personalizado (necesita respuesta)';
+
+  @override
+  String get pushCompletionToPhone =>
+      'Enviar finalizaciones a los teléfonos vinculados';
+
+  @override
+  String get pushAttentionToPhone =>
+      'Enviar avisos de respuesta a los teléfonos vinculados';
+
+  @override
+  String get pushToPhoneDescription =>
+      'Si está desactivado, la lista del teléfono se actualiza sin mostrar notificación del sistema.';
+
+  @override
+  String get quietHours => 'Horas de silencio';
+
+  @override
+  String get quietHoursDescription =>
+      'Los avisos en este horario se guardan en el historial sin sonido, parpadeo ni envío al teléfono.';
+
+  @override
+  String get quietHoursFrom => 'Desde';
+
+  @override
+  String get quietHoursTo => 'Hasta';
+
+  @override
+  String get quietHoursAllowAttention =>
+      'Avisar igualmente cuando un Agent necesite tu respuesta';
+
+  @override
+  String get completionMinimumDuration => 'Avisos de finalización para';
+
+  @override
+  String get completionMinimumAny => 'Todas las tareas';
+
+  @override
+  String completionMinimumMinutes(int minutes) {
+    return 'Tareas de más de $minutes min';
+  }
+
+  @override
+  String get completionMinimumDescription =>
+      'Las tareas más cortas se registran igualmente, sin sonido ni envío al teléfono. Solo aplica si DingDong vio empezar la tarea.';
+
+  @override
+  String get tokenUsageRange => 'Rango';
+
+  @override
+  String get tokenUsageRangeYear => 'Año completo';
+
+  @override
+  String get tokenUsageRangeLast7 => 'Últimos 7 días';
+
+  @override
+  String get tokenUsageRangeLast30 => 'Últimos 30 días';
+
+  @override
+  String get tokenUsageRangeThisMonth => 'Este mes';
+
+  @override
+  String get tokenUsageRangeCustom => 'Personalizado…';
+
+  @override
+  String get tokenUsageRangeTotal => 'Total del rango';
 }
