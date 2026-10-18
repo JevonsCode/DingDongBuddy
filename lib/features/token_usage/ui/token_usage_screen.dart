@@ -34,14 +34,74 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
   late int _year;
   late DateTime _selectedDay;
   ConversationTokenUsageSource? _source;
+  _TokenUsageRange _range = _TokenUsageRange.year;
+  DateTimeRange? _customRange;
+  int _rangeFieldGeneration = 0;
   bool _isExporting = false;
+
+  /// Inclusive local calendar bounds of the selected range, or null for the
+  /// whole selected year.
+  DateTimeRange? get _rangeBounds {
+    final DateTime today = _today;
+    return switch (_range) {
+      _TokenUsageRange.year => null,
+      _TokenUsageRange.last7 => DateTimeRange(
+        start: DateTime(today.year, today.month, today.day - 6),
+        end: today,
+      ),
+      _TokenUsageRange.last30 => DateTimeRange(
+        start: DateTime(today.year, today.month, today.day - 29),
+        end: today,
+      ),
+      _TokenUsageRange.thisMonth => DateTimeRange(
+        start: DateTime(today.year, today.month),
+        end: today,
+      ),
+      _TokenUsageRange.custom => _customRange,
+    };
+  }
+
+  Future<void> _selectRange(_TokenUsageRange? range) async {
+    if (range == null) return;
+    if (range != _TokenUsageRange.custom) {
+      setState(() => _range = range);
+      return;
+    }
+    final DateTime today = _today;
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: today,
+      initialDateRange:
+          _customRange ??
+          DateTimeRange(
+            start: DateTime(today.year, today.month, today.day - 6),
+            end: today,
+          ),
+    );
+    if (!mounted) return;
+    if (picked == null) {
+      setState(() => _rangeFieldGeneration += 1);
+      return;
+    }
+    setState(() {
+      _rangeFieldGeneration += 1;
+      _range = _TokenUsageRange.custom;
+      _customRange = picked;
+      _year = picked.end.year;
+      _selectedDay = picked.end;
+    });
+  }
 
   Future<void> _export() async {
     if (_isExporting || widget.controller.isLoading) return;
+    final DateTimeRange? bounds = _rangeBounds;
     final export = TokenUsageCsvExport.fromSnapshot(
       widget.controller.snapshot,
       year: _year,
       source: _source,
+      from: bounds?.start,
+      to: bounds?.end,
     );
     if (export.days.isEmpty) return;
     setState(() => _isExporting = true);
@@ -90,6 +150,8 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
           ..sort((TokenUsageDay a, TokenUsageDay b) => a.day.compareTo(b.day));
     setState(() {
       _year = year;
+      _range = _TokenUsageRange.year;
+      _rangeFieldGeneration += 1;
       _selectedDay = year == _today.year
           ? _today
           : recorded.isNotEmpty
@@ -109,9 +171,21 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
               (TokenUsageDay day) => _source == null || day.source == _source,
             )
             .toList(growable: false);
-        final List<TokenUsageDay> period = filtered
+        final DateTimeRange? bounds = _rangeBounds;
+        final List<TokenUsageDay> yearDays = filtered
             .where((TokenUsageDay day) => day.day.year == _year)
             .toList(growable: false);
+        final List<TokenUsageDay> period = bounds == null
+            ? yearDays
+            : filtered
+                  .where(
+                    (TokenUsageDay day) =>
+                        tokenUsageDayInRange(day.day, bounds.start, bounds.end),
+                  )
+                  .toList(growable: false);
+        final String periodLabel = bounds == null
+            ? '$_year'
+            : _formatRange(context, bounds);
         final TokenUsageTotals today = TokenUsageTotals.sum(
           filtered
               .where(
@@ -152,7 +226,7 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
             );
         final Map<DateTime, List<TokenUsageTotals>> byDay =
             <DateTime, List<TokenUsageTotals>>{};
-        for (final TokenUsageDay day in period) {
+        for (final TokenUsageDay day in yearDays) {
           (byDay[DateTime(day.day.year, day.day.month, day.day.day)] ??=
                   <TokenUsageTotals>[])
               .add(day.totals);
@@ -163,9 +237,11 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                   in byDay.entries)
                 day.key: TokenUsageTotals.sum(day.value),
             };
-        final int activeDayCount = dailyTotals.values
-            .where((TokenUsageTotals totals) => totals.totalTokens > 0)
-            .length;
+        final int activeDayCount = <DateTime>{
+          for (final TokenUsageDay day in period)
+            if (day.totals.totalTokens > 0)
+              DateTime(day.day.year, day.day.month, day.day.day),
+        }.length;
         final List<int> years = <int>{
           _today.year,
           _year,
@@ -255,13 +331,16 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                       _SummaryCard(
                         key: const Key('token-usage-period'),
                         width: width,
-                        label: context.l10n.tokenUsagePeriodTotal,
+                        label: bounds == null
+                            ? context.l10n.tokenUsagePeriodTotal
+                            : context.l10n.tokenUsageRangeTotal,
                         value: _formatObservedTotal(
                           context,
                           total,
                           canConfirmEmpty,
                         ),
-                        detail: '$_year · ${context.l10n.tokenUsageTokens}',
+                        detail:
+                            '$periodLabel · ${context.l10n.tokenUsageTokens}',
                         icon: Icons.stacked_line_chart_rounded,
                       ),
                       _SummaryCard(
@@ -271,7 +350,7 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                         value: activeDayCount == 0 && !canConfirmEmpty
                             ? context.l10n.tokenUsageNotReported
                             : _formatNumber(context, activeDayCount),
-                        detail: '$_year',
+                        detail: periodLabel,
                         icon: Icons.calendar_month_outlined,
                       ),
                     ],
@@ -301,6 +380,38 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                           ),
                       ],
                       onChanged: _selectYear,
+                    ),
+                  ),
+                  SizedBox(
+                    key: const Key('token-usage-range-filter'),
+                    width: 190,
+                    child: DropdownButtonFormField<_TokenUsageRange>(
+                      // Form fields keep their own value; rebuild on every
+                      // committed or cancelled range change.
+                      key: ValueKey<int>(_rangeFieldGeneration),
+                      initialValue: _range,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.tokenUsageRange,
+                        isDense: true,
+                      ),
+                      items: <DropdownMenuItem<_TokenUsageRange>>[
+                        for (final _TokenUsageRange range
+                            in _TokenUsageRange.values)
+                          DropdownMenuItem<_TokenUsageRange>(
+                            value: range,
+                            child: Text(
+                              range == _TokenUsageRange.custom &&
+                                      _customRange != null
+                                  ? _formatRange(context, _customRange!)
+                                  : _rangeLabel(context, range),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: (_TokenUsageRange? range) =>
+                          unawaited(_selectRange(range)),
                     ),
                   ),
                   for (final ConversationTokenUsageSource? source
@@ -368,6 +479,24 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
       },
     );
   }
+}
+
+/// Summary scopes for the Token usage cards and CSV export. The heatmap
+/// always shows the selected year.
+enum _TokenUsageRange { year, last7, last30, thisMonth, custom }
+
+String _rangeLabel(BuildContext context, _TokenUsageRange range) =>
+    switch (range) {
+      _TokenUsageRange.year => context.l10n.tokenUsageRangeYear,
+      _TokenUsageRange.last7 => context.l10n.tokenUsageRangeLast7,
+      _TokenUsageRange.last30 => context.l10n.tokenUsageRangeLast30,
+      _TokenUsageRange.thisMonth => context.l10n.tokenUsageRangeThisMonth,
+      _TokenUsageRange.custom => context.l10n.tokenUsageRangeCustom,
+    };
+
+String _formatRange(BuildContext context, DateTimeRange range) {
+  final DateFormat format = DateFormat.yMd(_locale(context));
+  return '${format.format(range.start)} – ${format.format(range.end)}';
 }
 
 String tokenUsageSourceLabel(ConversationTokenUsageSource source) =>

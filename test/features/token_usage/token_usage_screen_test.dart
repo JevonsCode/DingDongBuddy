@@ -56,6 +56,59 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a rolling range can span years and drives the export', (
+    WidgetTester tester,
+  ) async {
+    final TokenUsageController controller = TokenUsageController.preview(
+      usageFixture(),
+    );
+    addTearDown(controller.dispose);
+    String? savedName;
+    String? savedContents;
+    await pumpUsage(
+      tester,
+      controller,
+      saveExport:
+          ({
+            required String contents,
+            required String suggestedName,
+            required String confirmButtonText,
+            required String fileTypeLabel,
+          }) async {
+            savedName = suggestedName;
+            savedContents = contents;
+            return true;
+          },
+    );
+
+    await tester.tap(find.byKey(const Key('token-usage-range-filter')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Last 30 days').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Range total'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('token-usage-period')),
+        matching: find.text('2,440'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('token-usage-active-days')),
+        matching: find.text('3'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('token-usage-export')));
+    await tester.pumpAndSettle();
+    expect(savedName, 'dingdong-token-usage-20251212-20260110-all.csv');
+    expect(savedContents, contains('2025-12-20,codex,40'));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('unknown breakdown stays unknown and lower bound is marked', (
     WidgetTester tester,
   ) async {

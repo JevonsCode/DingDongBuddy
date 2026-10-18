@@ -3,15 +3,23 @@ import 'token_usage_models.dart';
 /// A portable export of the displayed calendar scope. Empty components remain
 /// empty; confidence columns distinguish counts, lower bounds and estimates.
 final class TokenUsageCsvExport {
+  ///
+  /// With [from] and [to] (inclusive local calendar dates) the export covers
+  /// that range instead of the whole [year].
   TokenUsageCsvExport.fromSnapshot(
     TokenUsageSnapshot snapshot, {
     required this.year,
     this.source,
-  }) : _snapshot = snapshot,
+    this.from,
+    this.to,
+  }) : assert((from == null) == (to == null)),
+       _snapshot = snapshot,
        days = snapshot.days
            .where(
              (day) =>
-                 day.day.year == year &&
+                 (from == null
+                     ? day.day.year == year
+                     : tokenUsageDayInRange(day.day, from, to!)) &&
                  (source == null || day.source == source),
            )
            .toList(growable: false) {
@@ -25,6 +33,8 @@ final class TokenUsageCsvExport {
 
   final int year;
   final ConversationTokenUsageSource? source;
+  final DateTime? from;
+  final DateTime? to;
   final List<TokenUsageDay> days;
   final TokenUsageSnapshot _snapshot;
 
@@ -75,7 +85,13 @@ final class TokenUsageCsvExport {
   }
 
   String get suggestedName =>
-      'dingdong-token-usage-$year-${source?.apiValue ?? 'all'}.csv';
+      'dingdong-token-usage-${from == null ? '$year' : '${_compactDate(from!)}-${_compactDate(to!)}'}'
+      '-${source?.apiValue ?? 'all'}.csv';
+
+  static String _compactDate(DateTime value) =>
+      '${value.year.toString().padLeft(4, '0')}'
+      '${value.month.toString().padLeft(2, '0')}'
+      '${value.day.toString().padLeft(2, '0')}';
 
   String get contents {
     final diagnostics = _diagnostics;
@@ -134,6 +150,14 @@ final class TokenUsageCsvExport {
         ? '"${text.replaceAll('"', '""')}"'
         : text;
   }
+}
+
+/// Whether a stored local-midnight [day] falls within inclusive calendar
+/// dates [from] and [to]; times of day on the bounds are ignored.
+bool tokenUsageDayInRange(DateTime day, DateTime from, DateTime to) {
+  final DateTime date = DateTime(day.year, day.month, day.day);
+  return !date.isBefore(DateTime(from.year, from.month, from.day)) &&
+      !date.isAfter(DateTime(to.year, to.month, to.day));
 }
 
 typedef TokenUsageCsvSaver =
