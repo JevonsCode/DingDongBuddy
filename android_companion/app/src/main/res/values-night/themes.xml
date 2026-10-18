@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.DingDong" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#FF58A6FF</item>
+        <item name="android:windowBackground">#FF15171A</item>
+    </style>
+</resources>
