@@ -1098,7 +1098,8 @@ mcp:
     final Map<String, Object?> claudeServer = _onlyServer(claude);
     expect(claudeServer['type'], 'http');
     expect(claudeServer['url'], 'https://example.com/mcp');
-    expect(claudeServer['alwaysLoad'], isTrue);
+    // Task-matched MCPs stay behind Claude Code tool search.
+    expect(claudeServer.containsKey('alwaysLoad'), isFalse);
     expect(
       (claudeServer['headers'] as Map<String, Object?>)['Authorization'],
       r'Bearer ${EXAMPLE_TOKEN}',
@@ -1122,6 +1123,32 @@ mcp:
       (kiroServer['headers'] as Map<String, Object?>)['Authorization'],
       r'Bearer ${EXAMPLE_TOKEN}',
     );
+  });
+
+  test('only always-active MCPs are exempt from Claude tool search', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-sync-always-load-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File claude = File('${temp.path}/claude.json');
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: const <Directory>[],
+      mcpTargets: <AgentMcpTarget>[
+        AgentMcpTarget(claude, AgentMcpConfigKind.claudeJson),
+      ],
+      managedStateFile: File('${temp.path}/state.json'),
+    );
+
+    await synchronizer.sync(<Resource>[
+      _resource(
+        type: ResourceType.mcp,
+        activation: ResourceActivation.always,
+        content: '{"type":"streamable-http","url":"https://example.com/mcp"}',
+      ),
+    ]);
+
+    expect(_onlyServer(claude)['alwaysLoad'], isTrue);
   });
 
   test(

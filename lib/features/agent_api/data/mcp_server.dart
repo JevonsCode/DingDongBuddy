@@ -42,7 +42,7 @@ final class McpServer {
               'name': 'dingdong',
               'version': currentAppVersion,
             },
-            'instructions': dingDongAgentBridgeGuidance,
+            'instructions': dingDongMcpInstructions,
           },
         });
       }
@@ -239,8 +239,11 @@ final class McpServer {
       description:
           'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and all configured context scope rules are checked again on every load; preserve the bridge source for this request. A successful visible Skill load returns conversation.item with the same mergeKey as its candidate, confirmedUse=true, and marker="*" for deterministic replacement in the final capsule.',
       properties: <String, Object?>{
-        'name': _stringProperty(),
-        'id': _stringProperty(),
+        'name': _stringProperty(
+          description:
+              'Skill name. Provide name or id; id wins when both are set.',
+        ),
+        'id': _stringProperty(description: 'Skill resource id.'),
         'workspacePath': _stringProperty(
           description:
               'Current project directory. DingDong fills this automatically when omitted.',
@@ -254,10 +257,6 @@ final class McpServer {
               'Current Agent source, such as Codex, Claude Code, or Cursor.',
         ),
       },
-      anyOfRequired: const <List<String>>[
-        <String>['name'],
-        <String>['id'],
-      ],
     ),
     _tool(
       name: 'dingdong_confirm_mcp_use',
@@ -296,8 +295,11 @@ final class McpServer {
       description:
           'Read one supporting file referenced by a loaded SKILL.md. The Skill enabled state and all configured context scope rules are re-checked, paths cannot escape the package, and files are bounded to 5 MiB. Preserve the bridge source for this request.',
       properties: <String, Object?>{
-        'name': _stringProperty(),
-        'id': _stringProperty(),
+        'name': _stringProperty(
+          description:
+              'Skill name. Provide name or id; id wins when both are set.',
+        ),
+        'id': _stringProperty(description: 'Skill resource id.'),
         'path': _stringProperty(
           description:
               'Forward-slash relative path listed in the loaded Skill package manifest.',
@@ -316,10 +318,6 @@ final class McpServer {
         ),
       },
       required: <String>['path'],
-      anyOfRequired: const <List<String>>[
-        <String>['name'],
-        <String>['id'],
-      ],
     ),
     _tool(
       name: 'dingdong_recommend_mcp',
@@ -393,46 +391,15 @@ final class McpServer {
           'nativeProject',
         ]),
         'enabled': _booleanProperty(),
-        'projectPaths': _stringArrayProperty(),
-        'hooksEnabled': _booleanProperty(),
+        'projectPaths': _stringArrayProperty(
+          description:
+              'Required and non-empty only for nativeProject; omit for other modes.',
+        ),
+        'hooksEnabled': _booleanProperty(
+          description: 'Only valid with agentId codex and mode nativeProject.',
+        ),
       },
       required: <String>['resourceId', 'agentId', 'mode', 'enabled'],
-      allOf: <Map<String, Object?>>[
-        <String, Object?>{
-          'if': <String, Object?>{
-            'properties': <String, Object?>{
-              'mode': <String, Object?>{'const': 'nativeProject'},
-            },
-            'required': <String>['mode'],
-          },
-          'then': <String, Object?>{
-            'required': <String>['projectPaths'],
-            'properties': <String, Object?>{
-              'projectPaths': <String, Object?>{'minItems': 1},
-            },
-          },
-          'else': <String, Object?>{
-            'properties': <String, Object?>{
-              'projectPaths': <String, Object?>{'maxItems': 0},
-              'hooksEnabled': <String, Object?>{'const': false},
-            },
-          },
-        },
-        <String, Object?>{
-          'if': <String, Object?>{
-            'properties': <String, Object?>{
-              'hooksEnabled': <String, Object?>{'const': true},
-            },
-            'required': <String>['hooksEnabled'],
-          },
-          'then': <String, Object?>{
-            'properties': <String, Object?>{
-              'agentId': <String, Object?>{'const': 'codex'},
-              'mode': <String, Object?>{'const': 'nativeProject'},
-            },
-          },
-        },
-      ],
     ),
     _tool(
       name: 'dingdong_get_skill_deployments',
@@ -501,8 +468,6 @@ Map<String, Object?> _tool({
   required String description,
   required Map<String, Object?> properties,
   List<String> required = const <String>[],
-  List<List<String>> anyOfRequired = const <List<String>>[],
-  List<Map<String, Object?>> allOf = const <Map<String, Object?>>[],
   Map<String, Object?>? outputSchema,
   Map<String, Object?>? meta,
 }) {
@@ -515,11 +480,6 @@ Map<String, Object?> _tool({
       'properties': properties,
       'additionalProperties': false,
       if (required.isNotEmpty) 'required': required,
-      if (anyOfRequired.isNotEmpty)
-        'anyOf': anyOfRequired
-            .map((List<String> fields) => <String, Object?>{'required': fields})
-            .toList(growable: false),
-      if (allOf.isNotEmpty) 'allOf': allOf,
     },
     'outputSchema': ?outputSchema,
     '_meta': ?meta,
@@ -529,14 +489,15 @@ Map<String, Object?> _tool({
 Map<String, Object?> _stringProperty({String? description}) =>
     <String, Object?>{'type': 'string', 'description': ?description};
 
-Map<String, Object?> _booleanProperty() => const <String, Object?>{
-  'type': 'boolean',
-};
+Map<String, Object?> _booleanProperty({String? description}) =>
+    <String, Object?>{'type': 'boolean', 'description': ?description};
 
-Map<String, Object?> _stringArrayProperty() => const <String, Object?>{
-  'type': 'array',
-  'items': <String, Object?>{'type': 'string'},
-};
+Map<String, Object?> _stringArrayProperty({String? description}) =>
+    <String, Object?>{
+      'type': 'array',
+      'items': const <String, Object?>{'type': 'string'},
+      'description': ?description,
+    };
 
 Map<String, Object?> _integerProperty({int minimum = 0, required int maximum}) {
   return <String, Object?>{

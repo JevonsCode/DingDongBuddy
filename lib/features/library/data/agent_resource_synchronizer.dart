@@ -849,8 +849,14 @@ final class AgentResourceSynchronizer {
         (root['mcpServers'] as Map?) ?? const <String, Object?>{},
       )..removeWhere((String key, Object? _) => previousNames.contains(key));
       for (final Resource resource in resources) {
-        servers[managedMcpServerName(title: resource.title, id: resource.id)] =
-            _jsonMcp(McpConfiguration.parse(resource.content), kind);
+        servers[managedMcpServerName(
+          title: resource.title,
+          id: resource.id,
+        )] = _jsonMcp(
+          McpConfiguration.parse(resource.content),
+          kind,
+          activation: resource.activation,
+        );
       }
       return const JsonEncoder.withIndent(
         '  ',

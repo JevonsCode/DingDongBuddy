@@ -59,6 +59,14 @@ void main() {
         }),
         'Claude Code',
       );
+      // Claude Code exports CLAUDE_CODE_SESSION_ID to MCP subprocesses.
+      expect(
+        inferAgentSourceFromEnvironment(const <String, String>{
+          'CLAUDE_CODE_SESSION_ID': 'session-1',
+          'AI_AGENT': 'pi',
+        }),
+        'Claude Code',
+      );
       expect(inferAgentSourceFromEnvironment(const <String, String>{}), isNull);
     });
   });

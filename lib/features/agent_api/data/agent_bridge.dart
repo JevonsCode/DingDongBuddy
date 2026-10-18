@@ -296,7 +296,8 @@ final class AgentBridge {
             .where((Resource resource) => resource.type == type)
             .map((Resource resource) {
               final bool contentIncluded =
-                  type == ResourceType.prompt || expand == 'all';
+                  (type == ResourceType.prompt && expand != 'none') ||
+                  expand == 'all';
               final String mcpServerName = type == ResourceType.mcp
                   ? managedMcpServerName(title: resource.title, id: resource.id)
                   : '';
@@ -869,11 +870,13 @@ bool _matches(Resource resource, Set<String> terms) {
   if (terms.isEmpty) {
     return false;
   }
+  // MCP content is raw server configuration; words such as "token", "http"
+  // or "url" in it must not make an unrelated server a task candidate.
   final String haystack = <String>[
     resource.title,
     resource.group,
     ...resource.tags,
-    resource.content,
+    if (resource.type != ResourceType.mcp) resource.content,
   ].join(' ').toLowerCase();
   final Set<String> searchableTerms = _searchTerms(haystack);
   return terms.any(

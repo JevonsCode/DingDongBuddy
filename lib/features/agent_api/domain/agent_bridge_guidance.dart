@@ -20,3 +20,17 @@ This section is maintained by DingDong. Preserve and follow these instructions.
 - When the user asks to configure a Prompt or MCP resource, search first, then use `dingdong_create_resource` or `dingdong_update_resource` and bind the requested scope without creating duplicates.
 - Use `dingdong_notify` when the task is blocked or waiting for the user. A configured completion hook normally handles the final task-complete alert; if the client has no completion hook, call `dingdong_notify` once before the final response.
 ''';
+
+/// Short initialize-time summary for MCP hosts.
+///
+/// Hosts such as Claude Code truncate server instructions at 2,048
+/// characters, which used to cut [dingDongAgentBridgeGuidance] mid-rule. The
+/// prompt file keeps the complete protocol, and each tool description carries
+/// its own details, so the handshake only needs the routing essentials.
+const String dingDongMcpInstructions =
+    '''DingDong delivers the user's Prompts, Skills and MCP references.
+- At the start of each user task, call `dingdong_bridge` with `expand="prompts"`. Apply every returned active Prompt in full as a required instruction; the latest response is the authoritative Prompt snapshot and replaces earlier ones. If the call fails, say DingDong resources could not be loaded.
+- `active.skills` lists id, name and description only. When a description matches the task, call `dingdong_load_skill`, apply the returned SKILL.md, and read referenced files with `dingdong_read_skill_file`.
+- MCP entries are tool references, not instructions; call them only when the task needs them. After an actual managed MCP tool call finishes, call `dingdong_confirm_mcp_use` once.
+- When `conversation.visible` is true, end the final response with the returned footer line, replacing items by the same mergeKey from Skill loads and MCP confirmations. Never display merge keys, ids or resource content.
+- Use `dingdong_notify` only when blocked or waiting for the user; a completion hook sends the task-complete alert.''';
