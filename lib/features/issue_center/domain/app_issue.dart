@@ -9,6 +9,7 @@ enum AppIssueKind {
   invalidProjectPath,
   invalidMcp,
   invalidAgentConfig,
+  duplicateMcp,
   syncFailed,
 }
 

@@ -270,3 +270,28 @@ void _rejectDuplicateTomlTables(String contents, String targetPath) {
     '${sorted.join(', ')}. $targetPath was not changed.',
   );
 }
+
+/// Comparable endpoint for duplicate detection: a normalized URL for HTTP
+/// servers, or the command line for STDIO servers.
+String? _mcpEndpointKey(McpConfiguration config) => switch (config.transport) {
+  McpTransport.streamableHttp => _normalizedMcpUrl(config.url),
+  McpTransport.stdio => _commandEndpointKey(config.command, config.arguments),
+  McpTransport.raw => null,
+};
+
+String? _normalizedMcpUrl(String value) {
+  final Uri? uri = Uri.tryParse(value.trim());
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) return null;
+  final String path = uri.path.endsWith('/')
+      ? uri.path.substring(0, uri.path.length - 1)
+      : uri.path;
+  return 'url:${uri.scheme.toLowerCase()}://${uri.host.toLowerCase()}'
+      '${uri.hasPort ? ':${uri.port}' : ''}$path'
+      '${uri.hasQuery ? '?${uri.query}' : ''}';
+}
+
+String? _commandEndpointKey(String command, List<String> arguments) {
+  final String trimmed = command.trim();
+  if (trimmed.isEmpty) return null;
+  return 'cmd:${<String>[trimmed, ...arguments].join('\u0000')}';
+}

@@ -3737,4 +3737,11 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get tokenUsageRangeTotal => '区间合计';
+
+  @override
+  String get duplicateMcpServer => 'MCP 服务重复';
+
+  @override
+  String get duplicateMcpServerDetail =>
+      '这个 Agent 配置里还有一个同地址、不同名字的 MCP。两份都会在每次请求时加载全部工具，删掉不再需要的那一个即可。';
 }

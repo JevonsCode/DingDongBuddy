@@ -4970,5 +4970,13 @@
   "tokenUsageRangeTotal": "Total del rango",
   "@tokenUsageRangeTotal": {
     "description": "Notification rules and Token usage range."
+  },
+  "duplicateMcpServer": "Servidor MCP duplicado",
+  "@duplicateMcpServer": {
+    "description": "Issue center duplicate MCP warning."
+  },
+  "duplicateMcpServerDetail": "Esta configuración del Agent define el mismo endpoint MCP con otro nombre. Ambas copias cargan sus herramientas en cada solicitud; elimina la que ya no necesites.",
+  "@duplicateMcpServerDetail": {
+    "description": "Issue center duplicate MCP warning."
   }
 }

@@ -4970,5 +4970,13 @@
   "tokenUsageRangeTotal": "区间合计",
   "@tokenUsageRangeTotal": {
     "description": "Notification rules and Token usage range."
+  },
+  "duplicateMcpServer": "MCP 服务重复",
+  "@duplicateMcpServer": {
+    "description": "Issue center duplicate MCP warning."
+  },
+  "duplicateMcpServerDetail": "这个 Agent 配置里还有一个同地址、不同名字的 MCP。两份都会在每次请求时加载全部工具，删掉不再需要的那一个即可。",
+  "@duplicateMcpServerDetail": {
+    "description": "Issue center duplicate MCP warning."
   }
 }

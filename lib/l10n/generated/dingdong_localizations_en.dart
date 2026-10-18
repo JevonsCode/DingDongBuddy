@@ -3872,4 +3872,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get tokenUsageRangeTotal => 'Range total';
+
+  @override
+  String get duplicateMcpServer => 'Duplicate MCP server';
+
+  @override
+  String get duplicateMcpServerDetail =>
+      'This Agent configuration also defines the same MCP endpoint under another name. Both copies load their tools on every request; remove the one you no longer need.';
 }

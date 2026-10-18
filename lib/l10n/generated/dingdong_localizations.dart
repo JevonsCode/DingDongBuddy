@@ -6745,6 +6745,18 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Range total'**
   String get tokenUsageRangeTotal;
+
+  /// Issue center duplicate MCP warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate MCP server'**
+  String get duplicateMcpServer;
+
+  /// Issue center duplicate MCP warning.
+  ///
+  /// In en, this message translates to:
+  /// **'This Agent configuration also defines the same MCP endpoint under another name. Both copies load their tools on every request; remove the one you no longer need.'**
+  String get duplicateMcpServerDetail;
 }
 
 class _DingDongLocalizationsDelegate

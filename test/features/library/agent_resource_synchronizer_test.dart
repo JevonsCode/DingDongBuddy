@@ -1125,6 +1125,51 @@ mcp:
     );
   });
 
+  test('warns when a user MCP duplicates a managed endpoint', () async {
+    final Directory temp = Directory.systemTemp.createTempSync(
+      'dingdong-sync-duplicate-mcp-',
+    );
+    addTearDown(() => temp.deleteSync(recursive: true));
+    final File claude = File('${temp.path}/claude.json')
+      ..writeAsStringSync(
+        jsonEncode(<String, Object?>{
+          'mcpServers': <String, Object?>{
+            'feishu-mcp': <String, Object?>{
+              'type': 'http',
+              'url': 'https://Lark.example.com/mcp/',
+            },
+            'unrelated': <String, Object?>{
+              'type': 'http',
+              'url': 'https://other.example.com/mcp',
+            },
+          },
+        }),
+      );
+    final AgentResourceSynchronizer synchronizer = AgentResourceSynchronizer(
+      packageRoot: Directory('${temp.path}/packages'),
+      skillRoots: const <Directory>[],
+      mcpTargets: <AgentMcpTarget>[
+        AgentMcpTarget(claude, AgentMcpConfigKind.claudeJson),
+      ],
+      managedStateFile: File('${temp.path}/state.json'),
+    );
+    final Resource lark = _resource(
+      type: ResourceType.mcp,
+      content:
+          '{"type":"streamable-http","url":"https://lark.example.com/mcp"}',
+    );
+    await synchronizer.sync(<Resource>[lark]);
+
+    final List<AppIssue> issues = await synchronizer.inspect(<Resource>[lark]);
+
+    final AppIssue duplicate = issues.singleWhere(
+      (AppIssue issue) => issue.kind == AppIssueKind.duplicateMcp,
+    );
+    expect(duplicate.severity, AppIssueSeverity.warning);
+    expect(duplicate.resourceId, lark.id);
+    expect(duplicate.clientName, contains('feishu-mcp'));
+  });
+
   test('only always-active MCPs are exempt from Claude tool search', () async {
     final Directory temp = Directory.systemTemp.createTempSync(
       'dingdong-sync-always-load-',
