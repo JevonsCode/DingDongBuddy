@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/app/app_data_paths.dart';
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/claude_conversation_status_line.dart';
 import 'package:dingdong/features/agent_api/data/completion_hook_notifier.dart';
 import 'package:dingdong/features/agent_api/data/conversation_opened_hook_notifier.dart';
@@ -44,6 +45,9 @@ Future<void> main(List<String> arguments) async {
     }
     final McpServer server = McpServer(
       executor: LoopbackMcpToolExecutor(transport),
+      omittedTools: McpServer.omittedToolsForSource(
+        inferAgentSourceFromEnvironment(Platform.environment),
+      ),
     );
     await for (final String line
         in stdin.transform(utf8.decoder).transform(const LineSplitter())) {

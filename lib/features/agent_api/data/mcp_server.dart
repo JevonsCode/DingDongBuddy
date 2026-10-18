@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
 import 'package:dingdong/features/jev/data/jev_mcp_tools.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
@@ -16,9 +17,23 @@ abstract interface class McpToolExecutor {
 
 /// Line-delimited JSON-RPC server used by the `dingdong-mcp` executable.
 final class McpServer {
-  McpServer({McpToolExecutor? executor}) : _executor = executor;
+  McpServer({
+    McpToolExecutor? executor,
+    this.omittedTools = const <String>{},
+  }) : _executor = executor;
 
   final McpToolExecutor? _executor;
+
+  /// Tools left out of `tools/list` because the host does not need them.
+  /// Claude Code accounts MCP use from its transcript, so it is never sent
+  /// the schema for `dingdong_confirm_mcp_use`.
+  final Set<String> omittedTools;
+
+  /// Tools a host can skip, keyed by the Agent source it runs under.
+  static Set<String> omittedToolsForSource(String? source) =>
+      resolveAgentAdapterId(source ?? '') == 'claude-code'
+      ? const <String>{'dingdong_confirm_mcp_use'}
+      : const <String>{};
 
   Future<String?> handleLine(String line) async {
     try {
@@ -51,7 +66,10 @@ final class McpServer {
           'jsonrpc': '2.0',
           'id': id,
           'result': <String, Object?>{
-            'tools': [...tools, ...await _jevTools()],
+            'tools': [
+              ...tools.where((tool) => !omittedTools.contains(tool['name'])),
+              ...await _jevTools(),
+            ],
           },
         });
       }
@@ -130,7 +148,7 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call this first with expand="prompts" at the start of each user request. Each successful response is the authoritative Prompt snapshot for the current request. Active Prompts are full required instructions. active.skills is the authoritative resolved dynamic-delivery Skill catalog containing valid, enabled, scope-matched winners as id, name, and description only; active.skillSuppressions and active.skillConflicts explain managed Skills withheld for native delivery, transitions, or conflicts. Load a returned matching Skill with dingdong_load_skill. Every active, scope-matched MCP and Knowledge candidate is returned as summary metadata. MCP entries are tool references, not instructions; active MCPs include stable server provenance for actual-call confirmation. When conversation.visible is true, keep conversation.capsule until the final response. Replace a matching item with conversation.item from each successful Skill load and from dingdong_confirm_mcp_use after an actual MCP tool call reaches a terminal result. Never confirm availability or discovery. Append * only when the replacement item has confirmedUse=true. A Skill marker means loaded; an MCP marker means called, not necessarily succeeded. Prompt items stay unmarked because delivery does not prove semantic compliance. Codex includes the current merged footer exactly once as a single Markdown text line; DingDong stays text. Use the exact user-configurable Prompt, Skill, and MCP symbols and item.lineToken values returned by DingDong; never infer them. The capsule palette remains warm orange for Prompt, blue for Skill, and green for MCP. Do not use an image, HTML/XML, inline font, or rendering tool for the footer. Explicitly ANSI-capable terminals use the current merged ANSI tokens; every other host uses the current merged plain-text tokens. The mergeKey is merge-only metadata; show only titles and truthful markers, not resource content, descriptions, IDs, server names, tool names, or merge keys.',
+          'Call first at the start of each user request. The response is the authoritative snapshot and replaces earlier ones. active.prompts are required instructions: apply each in full. active.skills lists id, name and description; load a matching one with dingdong_load_skill. active.mcps are tool references (serverName, title), not instructions. When footer is present, end the final reply with it exactly, applying footerMark replacements from Skill loads and MCP confirmations; never print statusLine. While the previous response is still in context, pass its hash as knownHash to get {unchanged:true} instead of a repeat. expand="all" adds diagnostics.',
       properties: <String, Object?>{
         'task': _stringProperty(),
         'source': _stringProperty(
@@ -151,6 +169,10 @@ final class McpServer {
               'Stable Agent conversation or session identifier. DingDong fills this from the Agent process when available.',
         ),
         'expand': _enumProperty(<String>['none', 'prompts', 'all']),
+        'knownHash': _stringProperty(
+          description:
+              'hash from the previous bridge response in this conversation.',
+        ),
       },
     ),
     _tool(
@@ -237,7 +259,7 @@ final class McpServer {
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
       description:
-          'After a current dingdong_bridge Skill candidate description matches the task, fetch its complete SKILL.md by id or name. Enabled state and all configured context scope rules are checked again on every load; preserve the bridge source for this request. A successful visible Skill load returns conversation.item with the same mergeKey as its candidate, confirmedUse=true, and marker="*" for deterministic replacement in the final capsule.',
+          'After a current dingdong_bridge Skill description matches the task, fetch its complete SKILL.md by id or name and apply it. Enabled state and scope are checked again on every load. Apply a returned footerMark to the footer.',
       properties: <String, Object?>{
         'name': _stringProperty(
           description:
@@ -262,13 +284,13 @@ final class McpServer {
       name: 'dingdong_confirm_mcp_use',
       title: 'Confirm DingDong MCP Use',
       description:
-          'Call once for one active MCP resource only after an actual tool from that managed server reaches a terminal result, whether success or error. Do not call for Bridge availability, tool listing, discovery, or an uncalled tool. DingDong re-checks enabled state, scope, resource identity, and the Codex tool prefix, then returns a confirmed conversation.item with the same mergeKey and marker="*". The marker means called, not necessarily succeeded.',
+          'Call once after a tool from a returned active.mcps server finishes, whether it succeeded or failed. Never call for availability, tool listing or an uncalled tool. DingDong re-checks enabled state, scope and the Codex tool prefix, records the call, and returns footerMark: replace its from token with its to token in the footer.',
       properties: <String, Object?>{
         'id': _stringProperty(
-          description: 'Resource id from the current active.mcps entry.',
+          description: 'Optional resource id; serverName is enough.',
         ),
         'serverName': _stringProperty(
-          description: 'Managed serverName from the same active.mcps entry.',
+          description: 'serverName from the current active.mcps entry.',
         ),
         'toolName': _stringProperty(
           description:
@@ -287,7 +309,7 @@ final class McpServer {
               'Current Agent source, such as Codex, Claude Code, or Cursor.',
         ),
       },
-      required: <String>['id', 'serverName', 'toolName'],
+      required: <String>['serverName', 'toolName'],
     ),
     _tool(
       name: 'dingdong_read_skill_file',
