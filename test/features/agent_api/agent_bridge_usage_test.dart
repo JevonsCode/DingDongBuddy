@@ -208,10 +208,7 @@ void main() {
         loadConversationTokenUsage: loadUsage,
       ).respond('{"task":"work","source":"Codex","conversationId":"thread-1"}');
       expect(loads, 0);
-      expect(
-        (disabled.json['conversation']! as Map<String, Object?>)['line'],
-        isNot(contains('输入')),
-      );
+      expect(disabled.json['footer'], isNot(contains('输入')));
 
       final enabled = await AgentBridge(
         store,
@@ -221,9 +218,24 @@ void main() {
       ).respond('{"task":"work","source":"Codex","conversationId":"thread-1"}');
       expect(loads, 1);
       expect(
-        (enabled.json['conversation']! as Map<String, Object?>)['line'],
+        enabled.json['footer'],
         'DingDong · ♥ Visible ... · 输入 12K · 输出 500 · 命中缓存 8K · 非缓存 4.5K',
       );
+
+      // Claude Code's status line reads live usage itself, so the Bridge
+      // skips the transcript scan and only passes the display setting on.
+      final claude = await AgentBridge(
+        store,
+        now: () => now,
+        loadShowConversationTokenUsage: () async => true,
+        loadConversationTokenUsage: loadUsage,
+      ).respond('{"task":"work","source":"Claude Code"}');
+      expect(loads, 1);
+      expect(claude.json, isNot(contains('footer')));
+      expect(claude.json['statusLine'], <String, Object?>{
+        'prompts': <String>['♥ Visible ...'],
+        'tokens': true,
+      });
     },
   );
 }

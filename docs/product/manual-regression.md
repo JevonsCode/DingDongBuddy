@@ -517,25 +517,28 @@ third-party Agent accounts or remote model availability have been verified.
   host/repository match one repository trigger; a different repository does
   not. Latin task terms match complete tokens (`API` does not match `rapid`),
   while CJK task terms retain natural substring matching.
-- A Bridge response exposes one `conversation` capsule for visible active
-  Prompts, candidate Skills, and available MCPs. Repeating the Bridge call
-  replaces the prior snapshot by stable merge key instead of appending duplicate
-  labels or retaining resources that are no longer active.
-- Codex desktop includes the current merged footer exactly once as a single
-  Markdown text line. `DingDong` remains text; use the exact user-configurable
-  symbols and item `lineToken` values supplied by the Bridge or replacement
-  receipt. No image, MCP Apps renderer, or outer tool card is created.
-- Explicitly ANSI-capable terminals use current merged ANSI tokens. Every other
-  host shows the current merged plain-text tokens exactly once with the
-  `DingDong` text label.
-- A candidate Skill has no `*` marker. After `dingdong_load_skill` succeeds,
-  replace the same merge-key item with the returned loaded item and verify it
-  gains exactly one `*` marker without creating a second footer entry.
-- An available MCP has no `*` marker. After one real tool call returns from that
-  MCP, call `dingdong_confirm_mcp_use` once with the Bridge `id`, `serverName`,
-  and exact `toolName`; replace the same merge-key item and verify it gains one
-  `*`. A successful, error-result call is marked, while availability, tool
-  discovery, a mismatched Codex prefix, and an out-of-scope MCP are not.
+- The default Bridge response contains only `active.prompts`, `active.skills`,
+  `active.mcps`, optional `active.knowledge`, a `hash`, and either one `footer`
+  line (Codex and other footer hosts) or a `statusLine` receipt (Claude Code).
+  Counters, timestamps, palette, ANSI variants, and the full capsule appear only
+  with `expand="all"`. Repeating the call with `knownHash` set to the previous
+  hash returns `{unchanged: true}` while nothing changed.
+- Codex desktop includes the footer exactly once as a single Markdown text line.
+  `DingDong` remains text; the footer uses the exact user-configurable symbols.
+  No image, MCP Apps renderer, or outer tool card is created. Other footer hosts
+  show the plain-text line exactly once.
+- Claude Code never prints a footer. With `dingdong-mcp --claude-statusline`
+  configured, the status line shows the Bridge resources.
+- A candidate Skill has no `*` marker. After `dingdong_load_skill` succeeds on a
+  footer host, replace `footerMark.from` with `footerMark.to` and verify the
+  footer gains exactly one `*`. In Claude Code the status line marks it.
+- An available MCP has no `*` marker. On a footer host, after one real tool call
+  returns from that MCP, call `dingdong_confirm_mcp_use` once with its
+  `serverName` and exact `toolName`, apply `footerMark`, and verify one `*`. A
+  successful or error-result call is marked, while availability, tool
+  discovery, a mismatched Codex prefix, and an out-of-scope MCP are not. Claude
+  Code does not list `dingdong_confirm_mcp_use`; its status line marks the MCP
+  after the call, and the Stop hook increments the MCP's invocation count.
 - Prompt items stay unmarked: Bridge delivery is observable, but semantic
   compliance is not. Verify the footer never infers Prompt use from the final
   prose alone.
@@ -544,8 +547,9 @@ third-party Agent accounts or remote model availability have been verified.
   routes and load one Skill, then verify every line uses the new values without
   a restart. Restore defaults and verify the preview returns to `♥`, `♦`, `♠`.
 - **Show conversation Token usage** is on by default. When enabled, a Bridge
-  response for a supported Codex, Claude Code, or Pi conversation appends one
-  input/output/cache-hit/non-cached token breakdown after the resource footer, for example
+  response for a supported Codex or Pi conversation appends one
+  input/output/cache-hit/non-cached token breakdown after the resource footer
+  (Claude Code gets `statusLine.tokens` and its status line shows it), for example
   `DingDong · ♥ Rules · 输入 12K · 输出 400 · 命中缓存 8K · 非缓存 4.4K`
   (synthetic example). Input includes cache reads/writes; never add cache hits
   again. Non-cached tokens = input − cache hits + output; cache writes remain

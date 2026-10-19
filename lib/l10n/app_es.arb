@@ -4978,5 +4978,13 @@
   "duplicateMcpServerDetail": "Esta configuración del Agent define el mismo endpoint MCP con otro nombre. Ambas copias cargan sus herramientas en cada solicitud; elimina la que ya no necesites.",
   "@duplicateMcpServerDetail": {
     "description": "Issue center duplicate MCP warning."
+  },
+  "allowBetaUpdates": "Permitir actualizaciones beta",
+  "@allowBetaUpdates": {
+    "description": "Beta update channel setting."
+  },
+  "allowBetaUpdatesDescription": "Recibe funciones nuevas antes de la versión estable. Las betas pueden ser menos estables; al desactivarlo te quedas en la beta hasta que salga una versión estable más nueva.",
+  "@allowBetaUpdatesDescription": {
+    "description": "Beta update channel setting."
   }
 }

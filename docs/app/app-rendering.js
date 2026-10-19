@@ -4,6 +4,7 @@ import {
   agentNotificationTitle,
 } from "./notification-policy.js?shell=49";
 import {
+  computerPlatformLabel,
   formatBytes,
   formatDuration,
   formatLifecycleTime,
@@ -107,6 +108,13 @@ export function createAppRenderer({
     copy.className = "device-switcher-copy";
     const name = document.createElement("strong");
     name.textContent = session.pair.hostName || "DingDong 电脑";
+    const platform = computerPlatformLabel(session.pair.hostPlatform);
+    if (platform) {
+      const platformLabel = document.createElement("small");
+      platformLabel.className = "device-platform";
+      platformLabel.textContent = platform;
+      name.append(" ", platformLabel);
+    }
     const status = document.createElement("span");
     status.className = "device-switcher-status";
     const dot = document.createElement("i");

@@ -59,10 +59,7 @@ void main() {
     final String chinese = File('README.zh.md').readAsStringSync();
 
     expect(website, contains('class="conversation-receipt"'));
-    expect(
-      website,
-      contains('See which resources were available.'),
-    );
+    expect(website, contains('See which resources were available.'));
     expect(website, contains('看看这轮有哪些资源'));
     expect(website, contains('even if the call failed'));
     expect(website, contains('即使那次调用失败也会标记'));

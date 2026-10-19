@@ -1,7 +1,7 @@
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 
-const int _maximumConversationFooterItems = 24;
+const int maximumDingDongConversationFooterItems = 24;
 const int _maximumConversationFooterLabelCharacters = 32;
 const int _maximumConversationFooterTitleCharacters = 64;
 const int _maximumConversationFooterMergeKeyCharacters = 160;
@@ -33,7 +33,7 @@ Map<String, Object?> buildDingDongConversationFooter({
     fallback: 'DingDong',
   );
   final List<Map<String, Object?>> normalizedItems = items
-      .take(_maximumConversationFooterItems)
+      .take(maximumDingDongConversationFooterItems)
       .map(
         (Map<String, Object?> item) => normalizeDingDongConversationFooterItem(
           item,
@@ -116,7 +116,8 @@ String _jevUsageText(Map<String, Object?> usage, int unknown) {
 /// Removes presentation-controlled fields and recomputes truthful markers.
 ///
 /// A Skill receives `*` only after a successful full load. An MCP receives it
-/// only after `dingdong_confirm_mcp_use` returns a scoped replacement item.
+/// only after a real tool call: reported through `dingdong_confirm_mcp_use`,
+/// or read from the transcript by the Claude Code status line.
 Map<String, Object?>? normalizeDingDongConversationFooterItem(
   Map<String, Object?> item, {
   ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
@@ -198,6 +199,16 @@ String _ansiFooterToken(
   final String marker = item['marker'] as String? ?? '';
   return '\u001B[38;5;${color}m${symbols.forType(type)} ${item['title']}$marker\u001B[0m';
 }
+
+/// Plain or Markdown token for one normalized footer item, for hosts that
+/// receive a single footer line or per-item status-line badges.
+String dingDongFooterToken(
+  Map<String, Object?> item, {
+  required bool markdown,
+  ConversationFooterSymbols symbols = ConversationFooterSymbols.defaultValue,
+}) => markdown
+    ? item['lineToken']! as String
+    : _plainFooterToken(item, symbols.sanitized());
 
 String _plainFooterToken(
   Map<String, Object?> item,

@@ -294,6 +294,7 @@ final class AppDependencies {
     SubagentNotificationDetector? isSubagentNotification,
     SubagentConversationDetector? isSubagentConversation,
     AgentTaskStartLookup? agentTaskStartedAt,
+    FutureOr<void> Function()? onSettingsChangedByAgent,
     PreferencesBackend? preferencesBackend,
   }) async {
     final AppDataPaths paths = AppDataPaths.current();
@@ -473,6 +474,16 @@ final class AppDependencies {
         );
       }()),
       onShowUi: onShowUi,
+      updateReminderSounds: ({String? completion, String? attention}) async {
+        final AppSettings next = (await settingsRepository.load())
+            .withReminderSounds(completion: completion, attention: attention);
+        await settingsRepository.save(next);
+        await onSettingsChangedByAgent?.call();
+        return <String, Object?>{
+          'completionSound': next.selectedSound,
+          'attentionSound': next.notificationRules.attentionSound,
+        };
+      },
     );
     return AppDependencies._(
       jev: jev,

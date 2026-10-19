@@ -120,6 +120,11 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       'dingdong_get_skill_deployments' => _skillDeployments(arguments),
       'dingdong_reconcile_skill' => _reconcileSkill(arguments),
       'dingdong_notify' => _notify(arguments),
+      'dingdong_set_reminder_sounds' => _transport.request(
+        method: 'POST',
+        path: '/settings/reminder-sounds',
+        body: arguments,
+      ),
       _ => throw ArgumentError.value(name, 'name', 'Unknown DingDong tool'),
     };
   }

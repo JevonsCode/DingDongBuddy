@@ -179,6 +179,11 @@ void main() {
     );
     expect(find.text('Automatic (recommended)'), findsNothing);
     expect(find.text('Encrypted service'), findsNothing);
+    expect(
+      find.text('工作电脑  macOS', findRichText: true),
+      findsOneWidget,
+      reason: 'Paired computers show which operating system they run.',
+    );
     expect(tester.takeException(), isNull);
   });
   testWidgets('error status uses the active dark theme color scheme', (

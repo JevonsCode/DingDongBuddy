@@ -645,6 +645,13 @@ export function createConnectionController({
         session.fileProtocol = message.fileTransferVersion === 2 ? 2 : 1;
         if (message.host?.name) {
           session.pair.hostName = message.host.name;
+          // Computers report Dart's Platform.operatingSystem, e.g. "windows".
+          if (
+            typeof message.host.platform === "string" &&
+            /^[a-z0-9-]{1,32}$/.test(message.host.platform)
+          ) {
+            session.pair.hostPlatform = message.host.platform;
+          }
           savePairings();
         }
         render();

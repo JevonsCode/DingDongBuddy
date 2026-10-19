@@ -6,6 +6,7 @@ import Sparkle
 @MainActor
 final class DingDongUpdater {
   private let userDriver = DingDongUpdateUserDriver()
+  private let feed = DingDongUpdateFeed()
   private let updater: SPUUpdater?
   private(set) var startupError: String?
 
@@ -18,7 +19,7 @@ final class DingDongUpdater {
       hostBundle: .main,
       applicationBundle: .main,
       userDriver: userDriver,
-      delegate: nil
+      delegate: feed
     )
     self.updater = updater
     do {
@@ -34,17 +35,48 @@ final class DingDongUpdater {
     startupError == nil
   }
 
-  func installLatest() throws {
+  /// Installs the latest stable release, or the named beta when the user
+  /// allowed betas in Settings and the beta is newer than stable.
+  func installLatest(betaVersion: String? = nil) throws {
     if let startupError {
       throw DingDongUpdaterError.unavailable(startupError)
     }
     guard !userDriver.status.isBusy else { return }
+    feed.betaFeedURL = betaVersion.flatMap(DingDongUpdateFeed.betaFeedURL)
     userDriver.begin()
     updater?.checkForUpdates()
   }
 
   func state() -> [String: Any] {
     userDriver.status.json
+  }
+}
+
+/// Stable updates use SUFeedURL from Info.plist, which points at the latest
+/// non-prerelease GitHub release. A beta's appcast lives on its own GitHub
+/// pre-release, so the feed is overridden only for an opted-in beta install.
+@MainActor
+private final class DingDongUpdateFeed: NSObject, SPUUpdaterDelegate {
+  var betaFeedURL: String?
+
+  func feedURLString(for updater: SPUUpdater) -> String? {
+    betaFeedURL
+  }
+
+  static func betaFeedURL(for version: String) -> String? {
+    guard
+      version.range(
+        of: #"^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+$"#,
+        options: .regularExpression
+      ) != nil
+    else { return nil }
+    #if arch(arm64)
+    let architecture = "arm64"
+    #else
+    let architecture = "x64"
+    #endif
+    return "https://github.com/JevonsCode/DingDongBuddy/releases/download/"
+      + "v\(version)/appcast-macos-\(architecture).xml"
   }
 }
 

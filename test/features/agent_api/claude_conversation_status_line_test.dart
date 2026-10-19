@@ -12,19 +12,15 @@ Map<String, Object?> row(
   'type': type,
   'message': {'id': 'response', 'content': content, 'usage': ?usage},
 };
-Map<String, Object?> item(String key, String token, String type) => {
-  'mergeKey': key,
-  'lineToken': token,
-  'type': type,
-};
-void receipt(
+void toolCall(
   ClaudeConversationStatusLine renderer,
-  String name,
-  Map<String, Object?> result,
-) {
+  String toolName,
+  Object result, {
+  bool isError = false,
+}) {
   renderer.accept(
     row('assistant', [
-      {'type': 'tool_use', 'id': 'call', 'name': 'mcp__dingdong__$name'},
+      {'type': 'tool_use', 'id': 'call', 'name': toolName},
     ]),
   );
   renderer.accept(
@@ -32,72 +28,134 @@ void receipt(
       {
         'type': 'tool_result',
         'tool_use_id': 'call',
+        'is_error': isError,
         'content': [
-          {'type': 'text', 'text': jsonEncode(result)},
+          {
+            'type': 'text',
+            'text': result is String ? result : jsonEncode(result),
+          },
         ],
       },
     ]),
   );
 }
 
-Map<String, Object?> bridge(List<Map<String, Object?>> items) => {
+void receipt(
+  ClaudeConversationStatusLine renderer,
+  String name,
+  Map<String, Object?> result,
+) => toolCall(renderer, 'mcp__dingdong__$name', result);
+
+Map<String, Object?> bridge({
+  List<String> prompts = const [],
+  Map<String, String> skills = const {},
+  Map<String, String> mcps = const {},
+  String hash = 'h1',
+}) => {
   'status': 'ok',
-  'conversation': {
-    'visible': true,
-    'capsule': {
-      'items': items,
-      'tokenUsage': {'totalTokens': 1},
-    },
+  'active': {'prompts': [], 'skills': [], 'mcps': []},
+  'statusLine': {
+    'prompts': prompts,
+    'skills': skills,
+    'mcps': mcps,
+    'tokens': true,
   },
+  'hash': hash,
 };
+
 void main() {
-  test(
-    'renders actual returned symbols and merges only confirmed matching items',
-    () {
-      final renderer = ClaudeConversationStatusLine();
-      receipt(
-        renderer,
-        'dingdong_bridge',
-        bridge([
-          item('p', '♥ Rules', 'prompt'),
-          item('s', '♦ Review', 'skill'),
-        ]),
-      );
-      receipt(renderer, 'dingdong_load_skill', {
-        'status': 'ok',
-        'conversation': {
-          'item': {...item('s', r'♦ Review\*', 'skill'), 'confirmedUse': true},
-        },
-      });
-      receipt(renderer, 'dingdong_load_skill', {
-        'status': 'ok',
-        'conversation': {
-          'item': {
-            ...item('other', '♦ Hidden*', 'skill'),
-            'confirmedUse': true,
-          },
-        },
-      });
-      expect(renderer.render(ansi: false), 'DingDong · ♥ Rules | ♦ Review*');
-      expect(renderer.render(), contains('\u001b[38;5;69m'));
-    },
-  );
-  test('real user turns and failed bridge calls clear previous resources', () {
+  test('renders returned symbols and marks only loaded catalog Skills', () {
     final renderer = ClaudeConversationStatusLine();
     receipt(
       renderer,
       'dingdong_bridge',
-      bridge([item('p', '♥ Rules', 'prompt')]),
+      bridge(
+        prompts: ['♥ Rules'],
+        skills: {'review-id': '♦ Review', 'other-id': '♦ Other'},
+      ),
     );
+    receipt(renderer, 'dingdong_load_skill', {
+      'status': 'ok',
+      'skill': {'id': 'review-id'},
+    });
+    receipt(renderer, 'dingdong_load_skill', {
+      'status': 'ok',
+      'skill': {'id': 'unknown-id'},
+    });
+    toolCall(renderer, 'mcp__dingdong__dingdong_load_skill', {
+      'status': 'ok',
+      'skill': {'id': 'other-id'},
+    }, isError: true);
+    expect(
+      renderer.render(ansi: false),
+      'DingDong · ♥ Rules | ♦ Review* | ♦ Other',
+    );
+    expect(renderer.render(), contains('\u001b[38;5;69m'));
+  });
+
+  test('a finished managed MCP call marks its server, even on error', () {
+    final renderer = ClaudeConversationStatusLine();
+    receipt(
+      renderer,
+      'dingdong_bridge',
+      bridge(
+        mcps: {
+          'dingdong-gitlab-abcdef': '♠ GitLab',
+          'dingdong-lark-123456': '♠ Lark',
+          'dingdong-figma-654321': '♠ Figma',
+        },
+      ),
+    );
+    renderer.accept(
+      row('assistant', [
+        {
+          'type': 'tool_use',
+          'id': 'pending',
+          'name': 'mcp__dingdong-figma-654321__read',
+        },
+      ]),
+    );
+    toolCall(
+      renderer,
+      'mcp__dingdong-gitlab-abcdef__search',
+      'not json',
+      isError: true,
+    );
+    toolCall(renderer, 'mcp__dingdong_lark_123456__send', {'ok': true});
+    toolCall(renderer, 'mcp__dingdong__dingdong_notify', {'status': 'ok'});
+    expect(
+      renderer.render(ansi: false),
+      'DingDong · ♠ GitLab* | ♠ Lark* | ♠ Figma',
+    );
+  });
+
+  test('unchanged Bridge results reuse the receipt with the same hash', () {
+    final renderer = ClaudeConversationStatusLine();
+    receipt(renderer, 'dingdong_bridge', bridge(prompts: ['♥ Rules']));
+    renderer.accept(row('user', 'next task'));
+    receipt(renderer, 'dingdong_bridge', {
+      'status': 'ok',
+      'unchanged': true,
+      'hash': 'h1',
+    });
+    expect(renderer.render(ansi: false), startsWith('DingDong · ♥ Rules'));
+    renderer.accept(row('user', 'another task'));
+    receipt(renderer, 'dingdong_bridge', {
+      'status': 'ok',
+      'unchanged': true,
+      'hash': 'stale',
+    });
+    expect(renderer.render(ansi: false), 'DingDong · 本轮未加载');
+  });
+
+  test('real user turns and failed bridge calls clear previous resources', () {
+    final renderer = ClaudeConversationStatusLine();
+    receipt(renderer, 'dingdong_bridge', bridge(prompts: ['♥ Rules']));
     renderer.accept({...row('user', 'hook context'), 'isMeta': true});
     expect(renderer.render(ansi: false), contains('Rules'));
     renderer.accept(row('user', 'next task'));
     expect(renderer.render(ansi: false), 'DingDong · 本轮未加载');
-    receipt(
-      renderer,
-      'dingdong_bridge',
-      bridge([item('p', '♥ New', 'prompt')]),
-    );
+    receipt(renderer, 'dingdong_bridge', bridge(prompts: ['♥ New']));
     receipt(renderer, 'dingdong_bridge', {'status': 'error'});
     expect(renderer.render(ansi: false), 'DingDong · 本轮未加载');
   });
@@ -110,7 +168,7 @@ void main() {
           {
             'type': 'tool_result',
             'tool_use_id': 'unknown',
-            'content': jsonEncode(bridge([item('p', '♥ Fake', 'prompt')])),
+            'content': jsonEncode(bridge(prompts: ['♥ Fake'])),
           },
         ]),
       );
@@ -121,11 +179,7 @@ void main() {
     'streaming usage replaces repeated response snapshots instead of adding them',
     () {
       final renderer = ClaudeConversationStatusLine();
-      receipt(
-        renderer,
-        'dingdong_bridge',
-        bridge([item('p', '♥ Rules', 'prompt')]),
-      );
+      receipt(renderer, 'dingdong_bridge', bridge(prompts: ['♥ Rules']));
       renderer.accept(
         row('assistant', [], usage: {'input_tokens': 100, 'output_tokens': 1}),
       );
@@ -166,7 +220,7 @@ void main() {
           {
             'type': 'tool_result',
             'tool_use_id': 'b',
-            'content': jsonEncode(bridge([item('p', '♥ Rules', 'prompt')])),
+            'content': jsonEncode(bridge(prompts: ['♥ Rules'])),
           },
         ]),
         row(
@@ -200,11 +254,7 @@ void main() {
     'missing cache falls back to the old total; an explicit zero enables details',
     () {
       final renderer = ClaudeConversationStatusLine();
-      receipt(
-        renderer,
-        'dingdong_bridge',
-        bridge([item('p', '♥ Rules', 'prompt')]),
-      );
+      receipt(renderer, 'dingdong_bridge', bridge(prompts: ['♥ Rules']));
       renderer.accept(
         row('assistant', [], usage: {'input_tokens': 100, 'output_tokens': 40}),
       );
@@ -232,7 +282,7 @@ void main() {
     receipt(
       renderer,
       'dingdong_bridge',
-      bridge([item('p', '♥ \u001b]52;danger\u0007\nRules', 'prompt')]),
+      bridge(prompts: ['♥ \u001b]52;danger\u0007\nRules']),
     );
     final line = renderer.render(ansi: false);
     expect(line, isNot(contains('\u001b')));

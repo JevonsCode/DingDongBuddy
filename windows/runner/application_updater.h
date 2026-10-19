@@ -30,10 +30,12 @@ class ApplicationUpdater
 
   bool IsSupported() const;
   ApplicationUpdateSnapshot Snapshot() const;
-  bool InstallLatest(std::string* error);
+  /// [allow_prerelease] also considers GitHub pre-releases (DingDong betas),
+  /// which the user opts into in Settings.
+  bool InstallLatest(bool allow_prerelease, std::string* error);
 
  private:
-  void RunUpdate();
+  void RunUpdate(bool allow_prerelease);
   void SetState(std::string phase, std::optional<double> progress = std::nullopt,
                 std::string target_version = {}, std::string message = {});
 

@@ -31,9 +31,10 @@ void main() {
       expect(prompt.type, ResourceType.prompt);
       expect(prompt.content, '每次完整回复的最后加一个「🌟」');
       expect(prompt.agentSessionName, '🌟');
-      expect(prompt.pinned, isTrue);
+      // The verification marker is opt-in, not resent with every request.
+      expect(prompt.pinned, isFalse);
       expect(prompt.enabled, isTrue);
-      expect(prompt.activation, ResourceActivation.always);
+      expect(prompt.activation, ResourceActivation.manual);
 
       final Resource skill = resources.singleWhere(
         (Resource item) => item.id == builtInDingDongConfigureSkillId,
@@ -172,8 +173,45 @@ void main() {
     expect(document, isNot(contains('Bridge `limit`')));
     expect(document, contains('dingdong_read_skill_file'));
     expect(document, contains('dingdong_confirm_mcp_use'));
-    expect(document, contains('Prompt items remain unmarked'));
+    expect(document, contains('footerMark'));
+    expect(document, contains('statusLine'));
+    expect(document, contains('Prompt items stay unmarked'));
   });
+
+  test(
+    'version fourteen turns off only the untouched always-on marker',
+    () async {
+      final DateTime now = DateTime.utc(2026, 9, 1);
+      Resource legacyMarker() => builtInReplyMarkerPrompt(
+        now,
+      ).copyWith(pinned: true, activation: ResourceActivation.always);
+      Future<Resource> migrate(Resource marker) async {
+        final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+          marker,
+        ]);
+        final MemoryPreferencesBackend preferences = MemoryPreferencesBackend()
+          ..values[BuiltInResourceInstaller.preferenceKey] = 13;
+        await BuiltInResourceInstaller(
+          store,
+          preferences,
+          now: () => DateTime.utc(2026, 10, 18),
+          skillDocumentLoader: _loadConfigureSkill,
+        ).install();
+        return (await store.load()).single;
+      }
+
+      final Resource untouched = await migrate(legacyMarker());
+      expect(untouched.pinned, isFalse);
+      expect(untouched.activation, ResourceActivation.manual);
+      expect(untouched.updatedAt, DateTime.utc(2026, 10, 18));
+
+      final Resource edited = await migrate(
+        legacyMarker().copyWith(content: 'End every reply with ✅'),
+      );
+      expect(edited.pinned, isTrue);
+      expect(edited.activation, ResourceActivation.always);
+    },
+  );
 
   test('bundled Skill documents Agent launcher configuration', () async {
     final String document = await _loadConfigureSkill();

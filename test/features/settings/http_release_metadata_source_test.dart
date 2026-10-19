@@ -61,6 +61,47 @@ void main() {
     expect(metadata.notesFor('es'), <String>['Cambio en español']);
   });
 
+  test('reads an optional beta release and ignores a malformed one', () async {
+    final HttpClient client = HttpClient();
+    addTearDown(() => client.close(force: true));
+    final Uri withBeta = await _serveMetadata(<String, Object?>{
+      'app': 'DingDong',
+      'latestVersion': '1.7.0',
+      'website': 'https://example.com',
+      'releasePage': 'https://example.com/releases/1.7.0',
+      'beta': <String, Object?>{
+        'latestVersion': '1.8.0-beta.1',
+        'latestBuild': '69',
+        'releasePage': 'https://example.com/releases/1.8.0-beta.1',
+        'notes': <String>['Beta change'],
+      },
+    });
+    final Uri brokenBeta = await _serveMetadata(<String, Object?>{
+      'app': 'DingDong',
+      'latestVersion': '1.7.0',
+      'website': 'https://example.com',
+      'releasePage': 'https://example.com/releases/1.7.0',
+      'beta': <String, Object?>{'latestBuild': '69'},
+    });
+
+    final ReleaseMetadata metadata = await HttpReleaseMetadataSource(
+      client: client,
+      metadataUris: <Uri>[withBeta],
+    ).fetch();
+    final ReleaseMetadata stableOnly = await HttpReleaseMetadataSource(
+      client: client,
+      metadataUris: <Uri>[brokenBeta],
+    ).fetch();
+
+    expect(metadata.latestVersion, '1.7.0');
+    expect(metadata.beta?.latestVersion, '1.8.0-beta.1');
+    expect(metadata.beta?.latestBuild, '69');
+    expect(metadata.beta?.website, Uri.parse('https://example.com'));
+    expect(metadata.beta?.notes, <String>['Beta change']);
+    expect(stableOnly.latestVersion, '1.7.0');
+    expect(stableOnly.beta, isNull);
+  });
+
   test('keeps legacy release-note arrays compatible', () async {
     final HttpClient client = HttpClient();
     addTearDown(() => client.close(force: true));

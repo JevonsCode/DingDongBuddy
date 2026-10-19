@@ -11,7 +11,9 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_compatibility_routes.dart';
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
+import 'package:dingdong/features/agent_api/data/claude_mcp_use_recorder.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_collection_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_workflow_routes.dart';
@@ -38,6 +40,14 @@ import 'package:dingdong/features/library/domain/trigger_group.dart';
 part 'agent_router_resource_handlers.dart';
 
 /// Routes DingDong's stable loopback API without depending on socket IO.
+/// Saves the per-kind reminder sounds an Agent chose on the user's behalf and
+/// returns the resulting sounds.
+typedef ReminderSoundUpdater =
+    Future<Map<String, Object?>> Function({
+      String? completion,
+      String? attention,
+    });
+
 final class AgentRouter {
   AgentRouter({
     this.jevRoutes,
@@ -64,8 +74,12 @@ final class AgentRouter {
     FutureOr<String> Function(String source)? defaultDingMessage,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
+    ReminderSoundUpdater? updateReminderSounds,
+    ClaudeMcpUseRecorder? claudeMcpUseRecorder,
   }) : _onDing = onDing ?? _ignoreDing,
+       _updateReminderSounds = updateReminderSounds,
        _onSuppressedDing = onSuppressedDing ?? _ignoreDing,
+       _claudeMcpUseRecorder = claudeMcpUseRecorder ?? ClaudeMcpUseRecorder(),
        _onAgentTaskStarted = onAgentTaskStarted,
        _onAgentConversationOpened = onAgentConversationOpened,
        _clipboardCaptureService = clipboardCaptureService,
@@ -153,6 +167,7 @@ final class AgentRouter {
   final JevUsageLoader? loadJevUsage;
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
+  final ClaudeMcpUseRecorder _claudeMcpUseRecorder;
   final FutureOr<void> Function(AgentBridgeTaskStart start)?
   _onAgentTaskStarted;
   final FutureOr<int> Function(AgentConversationTarget target)?
@@ -178,12 +193,58 @@ final class AgentRouter {
   final Future<bool> Function() _loadShowConversationTokenUsage;
   final ConversationTokenUsageLoader? _loadConversationTokenUsage;
   final FutureOr<String> Function(String source) _defaultDingMessage;
+  final ReminderSoundUpdater? _updateReminderSounds;
   final Map<_NotificationDeduplicationKey, DateTime> _recentPrimaryDings =
       <_NotificationDeduplicationKey, DateTime>{};
 
   static const Duration _completionHookDeduplicationWindow = Duration(
     seconds: 5,
   );
+
+  Future<HttpResponseData> _reminderSounds(String body) async {
+    final ReminderSoundUpdater? update = _updateReminderSounds;
+    if (update == null) {
+      return const HttpResponseData(
+        statusCode: 503,
+        json: <String, Object?>{
+          'status': 'unavailable',
+          'message': 'Reminder sound settings are not available.',
+        },
+      );
+    }
+    final Object? decoded;
+    try {
+      decoded = body.trim().isEmpty ? null : jsonDecode(body);
+    } on FormatException {
+      return HttpResponseData.badRequest('The body must be a JSON object.');
+    }
+    final Map<Object?, Object?> json = decoded is Map
+        ? decoded
+        : const <Object?, Object?>{};
+    final Object? completion = json['completionSound'];
+    final Object? attention = json['attentionSound'];
+    if ((completion != null && completion is! String) ||
+        (attention != null && attention is! String) ||
+        (completion == null && attention == null)) {
+      return HttpResponseData.badRequest(
+        'Provide completionSound and/or attentionSound.',
+      );
+    }
+    try {
+      return HttpResponseData(
+        statusCode: 200,
+        json: <String, Object?>{
+          'status': 'ok',
+          ...await update(
+            completion: completion as String?,
+            attention: attention as String?,
+          ),
+        },
+      );
+    } on FormatException catch (error) {
+      return HttpResponseData.badRequest(error.message);
+    }
+  }
 
   void updateBaseUri(Uri value) {
     _agentCompatibilityRoutes?.updateBaseUri(value);
@@ -284,6 +345,10 @@ final class AgentRouter {
         },
       );
     }
+    if (request.method == 'POST' &&
+        request.parsedUri.path == '/settings/reminder-sounds') {
+      return _reminderSounds(request.body);
+    }
     if (request.method == 'POST' && request.parsedUri.path == '/ding') {
       try {
         final DateTime now = _now();
@@ -299,6 +364,7 @@ final class AgentRouter {
         final DingRequest dingRequest = await _withConversationTokenUsage(
           parsed,
         );
+        await _recordClaudeMcpUse(dingRequest, now.toUtc());
         final _NotificationDeduplicationKey notificationKey =
             _notificationDeduplicationKey(dingRequest);
         _recentPrimaryDings.removeWhere((
@@ -670,6 +736,27 @@ final class AgentRouter {
       return await _allowAgentClipboardContent();
     } on Object {
       return false;
+    }
+  }
+
+  /// Claude Code's Stop hook passes its transcript; managed MCP calls in the
+  /// finished turn are counted from there instead of a confirmation call.
+  Future<void> _recordClaudeMcpUse(DingRequest request, DateTime at) async {
+    final ResourceStore? store = _resourceStore;
+    final String? transcriptPath = request.transcriptPath;
+    if (store == null ||
+        transcriptPath == null ||
+        resolveAgentAdapterId(request.source ?? '') != 'claude-code') {
+      return;
+    }
+    try {
+      await _claudeMcpUseRecorder.record(
+        transcriptPath: transcriptPath,
+        store: store,
+        invokedAt: at,
+      );
+    } on Object {
+      // Usage accounting must never block the completion notification.
     }
   }
 

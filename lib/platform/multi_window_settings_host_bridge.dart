@@ -176,8 +176,11 @@ final class MultiWindowSettingsHostBridge
   }
 
   @override
-  Future<void> installLatest() {
-    return _parent.invokeMethod<void>('settings_update_install');
+  Future<void> installLatest({String? betaVersion}) {
+    return _parent.invokeMethod<void>(
+      'settings_update_install',
+      <String, Object?>{'betaVersion': ?betaVersion},
+    );
   }
 
   @override

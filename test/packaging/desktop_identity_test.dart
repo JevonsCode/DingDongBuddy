@@ -82,7 +82,7 @@ void main() {
   });
 
   test(
-    'desktop hosts consume application version 1.7.0 from pubspec',
+    'desktop hosts consume application version 1.8.0-beta.1 from pubspec',
     () {
       final String pubspec = File('pubspec.yaml').readAsStringSync();
       final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
@@ -93,12 +93,12 @@ void main() {
         'lib/features/settings/domain/release_update.dart',
       ).readAsStringSync();
 
-      expect(pubspec, contains('version: 1.7.0+68'));
+      expect(pubspec, contains('version: 1.8.0-beta.1+69'));
       expect(
         releaseVersion,
-        contains("const String currentAppVersion = '1.7.0';"),
+        contains("const String currentAppVersion = '1.8.0-beta.1';"),
       );
-      expect(releaseVersion, contains("const String currentAppBuild = '68';"));
+      expect(releaseVersion, contains("const String currentAppBuild = '69';"));
       // Protocol client/server info reuses the one Dart version constant.
       for (final String path in const <String>[
         'lib/features/agent_api/data/mcp_server.dart',
@@ -111,10 +111,7 @@ void main() {
       expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
       expect(windowsResources, contains('FLUTTER_VERSION'));
       expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,68'));
-      expect(
-        windowsResources,
-        contains('#define VERSION_AS_STRING "1.7.0"'),
-      );
+      expect(windowsResources, contains('#define VERSION_AS_STRING "1.7.0"'));
     },
   );
 
@@ -618,7 +615,9 @@ void main() {
     }
     expect(releaseMetadata, contains('"latestVersion": "1.7.0"'));
     expect(releaseMetadata, contains('"latestBuild": "68"'));
-    expect(releaseMetadata, contains('"prerelease": false'));
+    // This tag is the 1.8.0 beta; stable fields stay on 1.7.0.
+    expect(releaseMetadata, contains('"prerelease": true'));
+    expect(releaseMetadata, contains('"latestVersion": "1.8.0-beta.1"'));
     expect(releaseMetadata, contains('Adds local Token history'));
     expect(releaseMetadata, contains('Pairs computers on the same LAN'));
     expect(releaseMetadata, contains('"arm64"'));

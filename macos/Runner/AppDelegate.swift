@@ -247,7 +247,10 @@ class AppDelegate: FlutterAppDelegate {
           result(applicationUpdater.state())
         case "installLatest":
           do {
-            try applicationUpdater.installLatest()
+            let arguments = call.arguments as? [String: Any]
+            try applicationUpdater.installLatest(
+              betaVersion: arguments?["betaVersion"] as? String
+            )
             result(nil)
           } catch {
             result(

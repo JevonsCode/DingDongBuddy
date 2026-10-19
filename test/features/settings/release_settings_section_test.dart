@@ -59,8 +59,12 @@ void main() {
     await tester.tap(find.byKey(const Key('settings-check-updates')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('settings-preview-notice')), findsNothing);
-    expect(find.text("You're up to date"), findsOneWidget);
+    // A beta or preview build says so instead of claiming the stable state.
+    expect(
+      find.byKey(const Key('settings-preview-notice')),
+      _previewBuild ? findsOneWidget : findsNothing,
+    );
+    expect(find.text(_upToDateText), findsOneWidget);
     expect(find.textContaining('Withdrawn analytics'), findsNothing);
   });
 
@@ -148,7 +152,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(updater.installCount, 1);
-    expect(find.text("You're up to date"), findsOneWidget);
+    expect(find.text(_upToDateText), findsOneWidget);
     model.dispose();
   });
 
@@ -185,11 +189,13 @@ void main() {
 
 final class _ApplicationUpdater implements ApplicationUpdater {
   int installCount = 0;
+  String? lastBetaVersion;
   ApplicationUpdateStatus status = const ApplicationUpdateStatus();
 
   @override
-  Future<void> installLatest() async {
+  Future<void> installLatest({String? betaVersion}) async {
     installCount += 1;
+    lastBetaVersion = betaVersion;
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.current,
     );
@@ -223,3 +229,8 @@ final class _ReleaseSource implements ReleaseMetadataSource {
     notesByLanguage: notesByLanguage,
   );
 }
+
+final bool _previewBuild = currentAppVersion.contains('-');
+final String _upToDateText = _previewBuild
+    ? 'Preview installed; no newer stable release found.'
+    : "You're up to date";

@@ -3879,4 +3879,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get duplicateMcpServerDetail =>
       'This Agent configuration also defines the same MCP endpoint under another name. Both copies load their tools on every request; remove the one you no longer need.';
+
+  @override
+  String get allowBetaUpdates => 'Allow beta updates';
+
+  @override
+  String get allowBetaUpdatesDescription =>
+      'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.';
 }

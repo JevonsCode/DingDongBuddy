@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
@@ -90,6 +91,7 @@ final class AgentBridge {
         'threadId',
       ]);
       final String expand = request['expand'] as String? ?? 'prompts';
+      final String knownHash = (request['knownHash'] as String? ?? '').trim();
       final DateTime startedAt = _now().toUtc();
       final TriggerContext context = await _resolveContext(
         projectPath: _firstString(request, const <String>[
@@ -251,6 +253,11 @@ final class AgentBridge {
           .where((TriggerGroup group) => group.matches(context))
           .map((TriggerGroup group) => group.id)
           .toSet();
+      final String? adapterId = resolveAgentAdapterId(source);
+      // Claude Code renders DingDong in its status line from the transcript,
+      // so the model never needs to echo a footer there.
+      final bool statusLineHost = adapterId == 'claude-code';
+      final bool fullPayload = expand == 'all';
       final List<Resource> conversationResources = <Resource>[
         ...prompts.where(_isVisibleInAgentConversation),
         ...skillCandidates
@@ -269,47 +276,117 @@ final class AgentBridge {
           .toList(growable: false);
       final ConversationFooterSymbols footerSymbols =
           await _loadConversationFooterSymbols();
-      final ConversationTokenUsage? tokenUsage = conversationItems.isEmpty
-          ? null
-          : await _loadTokenUsage(
-              ConversationTokenUsageRequest(
-                source: source,
-                conversationId: conversationId,
-                workspacePath: context.projectPath,
-              ),
-            );
-      final Map<String, Object?> conversation = buildDingDongConversationFooter(
-        items: conversationItems,
-        symbols: footerSymbols,
-        tokenUsage: tokenUsage,
-        jevUsage: await _loadJevUsage(
+      final bool showTokenUsage = await _showsTokenUsage();
+      final ConversationTokenUsageRequest usageRequest =
           ConversationTokenUsageRequest(
             source: source,
             conversationId: conversationId,
             workspacePath: context.projectPath,
-          ),
-        ),
-      );
+          );
+      // The status line reads live usage itself; only footer hosts need the
+      // transcript scan here.
+      final bool needsFooterUsage =
+          showTokenUsage &&
+          conversationItems.isNotEmpty &&
+          (fullPayload || !statusLineHost);
+      final Map<String, Object?>? conversation = fullPayload || !statusLineHost
+          ? buildDingDongConversationFooter(
+              items: conversationItems,
+              symbols: footerSymbols,
+              tokenUsage: needsFooterUsage
+                  ? await _loadTokenUsage(usageRequest)
+                  : null,
+              jevUsage: needsFooterUsage
+                  ? await _loadJevUsage(usageRequest)
+                  : null,
+            )
+          : null;
+      final String? footer = statusLineHost || conversation?['visible'] != true
+          ? null
+          : conversation![adapterId == 'codex' ? 'line' : 'fallbackLine']
+                as String;
+      final Map<String, Object?>? statusLine = statusLineHost
+          ? _statusLineReceipt(
+              conversationItems,
+              symbols: footerSymbols,
+              showTokenUsage: showTokenUsage,
+            )
+          : null;
+      final Map<String, Object?> compactActive = <String, Object?>{
+        'prompts': prompts
+            .map(
+              (Resource resource) => <String, Object?>{
+                'title': resource.title,
+                if (expand != 'none') 'content': resource.content,
+              },
+            )
+            .toList(growable: false),
+        'skills': skillCandidates
+            .map(_skillCandidateJson)
+            .toList(growable: false),
+        'mcps': mcps
+            .map(
+              (Resource resource) => <String, Object?>{
+                'serverName': managedMcpServerName(
+                  title: resource.title,
+                  id: resource.id,
+                ),
+                'title': resource.title,
+              },
+            )
+            .toList(growable: false),
+        if (knowledge.isNotEmpty)
+          'knowledge': knowledge
+              .map(
+                (Resource resource) => <String, Object?>{
+                  'id': resource.id,
+                  'title': resource.title,
+                },
+              )
+              .toList(growable: false),
+      };
+      final String hash = await _snapshotHash(<String, Object?>{
+        'active': compactActive,
+        'statusLine': statusLine,
+      });
+
+      if (!fullPayload) {
+        if (knownHash.isNotEmpty && knownHash == hash) {
+          return HttpResponseData(
+            statusCode: 200,
+            json: <String, Object?>{
+              'status': 'ok',
+              'unchanged': true,
+              'hash': hash,
+              'footer': ?footer,
+            },
+          );
+        }
+        return HttpResponseData(
+          statusCode: 200,
+          json: <String, Object?>{
+            'status': 'ok',
+            'active': compactActive,
+            'footer': ?footer,
+            'statusLine': ?statusLine,
+            'hash': hash,
+          },
+        );
+      }
 
       List<Map<String, Object?>> items(ResourceType type) {
         return used
             .where((Resource resource) => resource.type == type)
             .map((Resource resource) {
-              final bool contentIncluded =
-                  (type == ResourceType.prompt && expand != 'none') ||
-                  expand == 'all';
               final String mcpServerName = type == ResourceType.mcp
                   ? managedMcpServerName(title: resource.title, id: resource.id)
                   : '';
               return <String, Object?>{
-                ...(contentIncluded
-                    ? resource.toApiJson()
-                    : resource.toSummaryApiJson()),
+                ...resource.toApiJson(),
                 if (mcpServerName.isNotEmpty) 'serverName': mcpServerName,
-                if (mcpServerName.isNotEmpty &&
-                    resolveAgentAdapterId(source) == 'codex')
+                if (mcpServerName.isNotEmpty && adapterId == 'codex')
                   'toolNamePrefix': codexMcpToolPrefix(mcpServerName),
-                'contentIncluded': contentIncluded,
+                'contentIncluded': true,
               };
             })
             .toList(growable: false);
@@ -347,6 +424,9 @@ final class AgentBridge {
             'knowledge': items(ResourceType.knowledge),
           },
           'conversation': conversation,
+          'footer': ?footer,
+          'statusLine': ?statusLine,
+          'hash': hash,
           'delivery': <String, Object?>{
             'prompts': 'full-required-instructions',
             'promptSnapshot': 'authoritative-replace',
@@ -412,37 +492,23 @@ final class AgentBridge {
         await store.save(resources);
       }
       final Map<String, Object?> package = await _packageSummary(tracked);
-      final ConversationFooterSymbols footerSymbols =
-          await _loadConversationFooterSymbols();
-      final Map<String, Object?> conversationItem =
-          normalizeDingDongConversationFooterItem(
-            _conversationCapsuleItem(tracked, confirmedSkillUse: true),
-            symbols: footerSymbols,
-          )!;
+      final Map<String, Object?>? footerMark = _footerMark(
+        tracked,
+        source: lookup.context.source,
+        symbols: await _loadConversationFooterSymbols(),
+      );
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{
           'status': 'ok',
-          'context': _contextJson(lookup.context),
           'skill': <String, Object?>{
             'id': tracked.id,
-            'type': ResourceType.skill.name,
             'name': skill.configuration.name,
             'description': skill.configuration.description,
             'content': tracked.content,
-            'contentIncluded': true,
             'package': package,
           },
-          if (_isVisibleInAgentConversation(tracked))
-            'conversation': <String, Object?>{
-              'item': conversationItem,
-              'evidence': 'successful-full-skill-load',
-              'merge': 'replace-same-merge-key-in-final-capsule',
-            },
-          'delivery': const <String, Object?>{
-            'content': 'full-skill-md-required-workflow',
-            'supportingFiles': 'manifest-read-on-demand',
-          },
+          'footerMark': ?footerMark,
         },
       );
     } on Object {
@@ -460,11 +526,18 @@ final class AgentBridge {
     }
   }
 
+  Future<bool> _showsTokenUsage() async {
+    try {
+      return await loadShowConversationTokenUsage?.call() == true;
+    } on Object {
+      return false;
+    }
+  }
+
   Future<Map<String, Object?>?> _loadJevUsage(
     ConversationTokenUsageRequest request,
   ) async {
     try {
-      if (await loadShowConversationTokenUsage?.call() != true) return null;
       return await loadJevUsage?.call(request);
     } on Object {
       return null;
@@ -475,9 +548,6 @@ final class AgentBridge {
     ConversationTokenUsageRequest request,
   ) async {
     try {
-      if (await loadShowConversationTokenUsage?.call() != true) {
-        return null;
-      }
       return await loadConversationTokenUsage?.call(request);
     } on Object {
       return null;
@@ -504,9 +574,9 @@ final class AgentBridge {
           .toLowerCase();
       final String toolName = (query['toolName'] ?? '').trim();
       final TriggerContext context = await _resolveContextFromStrings(query);
-      if (id.isEmpty || serverName.isEmpty || toolName.isEmpty) {
+      if (serverName.isEmpty || toolName.isEmpty) {
         return HttpResponseData.badRequest(
-          'MCP id, serverName, and toolName are required',
+          'MCP serverName and toolName are required',
         );
       }
       if (toolName.length > _maximumReportedMcpToolNameCharacters) {
@@ -525,7 +595,7 @@ final class AgentBridge {
       final List<Resource> matches = resources
           .where(
             (Resource resource) =>
-                resource.id == id &&
+                (id.isEmpty || resource.id == id) &&
                 resource.type == ResourceType.mcp &&
                 resource.enabled &&
                 resourceMatchesScope(resource, context, triggerGroupsById) &&
@@ -565,18 +635,15 @@ final class AgentBridge {
         resources[resourceIndex] = tracked;
         await store.save(resources);
       }
-      final ConversationFooterSymbols footerSymbols =
-          await _loadConversationFooterSymbols();
-      final Map<String, Object?> conversationItem =
-          normalizeDingDongConversationFooterItem(
-            _conversationCapsuleItem(tracked, confirmedMcpUse: true),
-            symbols: footerSymbols,
-          )!;
+      final Map<String, Object?>? footerMark = _footerMark(
+        tracked,
+        source: context.source,
+        symbols: await _loadConversationFooterSymbols(),
+      );
       return HttpResponseData(
         statusCode: 200,
         json: <String, Object?>{
           'status': 'ok',
-          'context': _contextJson(context),
           'mcp': <String, Object?>{
             'id': tracked.id,
             'title': tracked.title,
@@ -585,13 +652,7 @@ final class AgentBridge {
             'invocationCount': tracked.invocationCount,
             'lastInvokedAt': tracked.lastInvokedAt!.toIso8601String(),
           },
-          if (_isVisibleInAgentConversation(resource))
-            'conversation': <String, Object?>{
-              'item': conversationItem,
-              'evidence': 'agent-reported-mcp-tool-call-result',
-              'markerMeaning': 'called-not-necessarily-succeeded',
-              'merge': 'replace-same-merge-key-in-final-capsule',
-            },
+          'footerMark': ?footerMark,
         },
       );
     } on Object {
@@ -920,6 +981,93 @@ Map<String, Object?> _skillCandidateJson(DynamicSkillCandidate skill) =>
       'name': skill.configuration.name,
       'description': skill.configuration.description,
     };
+
+/// Claude Code status-line badges, keyed by what can later mark them: Skill
+/// ids from successful loads and MCP server names from transcript tool calls.
+Map<String, Object?> _statusLineReceipt(
+  List<Map<String, Object?>> items, {
+  required ConversationFooterSymbols symbols,
+  required bool showTokenUsage,
+}) {
+  final List<String> prompts = <String>[];
+  final Map<String, String> skills = <String, String>{};
+  final Map<String, String> mcps = <String, String>{};
+  for (final Map<String, Object?> raw in items.take(
+    maximumDingDongConversationFooterItems,
+  )) {
+    final Map<String, Object?>? item = normalizeDingDongConversationFooterItem(
+      raw,
+      symbols: symbols,
+    );
+    if (item == null) {
+      continue;
+    }
+    final String token = dingDongFooterToken(
+      item,
+      markdown: false,
+      symbols: symbols,
+    );
+    switch (item['type']) {
+      case 'prompt':
+        prompts.add(token);
+      case 'skill':
+        skills[(raw['mergeKey']! as String).substring('skill:'.length)] = token;
+      case 'mcp':
+        final String? serverName = item['serverName'] as String?;
+        if (serverName != null) {
+          mcps[serverName] = token;
+        }
+    }
+  }
+  return <String, Object?>{
+    if (prompts.isNotEmpty) 'prompts': prompts,
+    if (skills.isNotEmpty) 'skills': skills,
+    if (mcps.isNotEmpty) 'mcps': mcps,
+    if (showTokenUsage) 'tokens': true,
+  };
+}
+
+/// Footer token replacement for hosts that print the footer themselves.
+/// Claude Code marks its status line from the transcript instead.
+Map<String, Object?>? _footerMark(
+  Resource resource, {
+  required String source,
+  required ConversationFooterSymbols symbols,
+}) {
+  final String? adapterId = resolveAgentAdapterId(source);
+  if (adapterId == 'claude-code' || !_isVisibleInAgentConversation(resource)) {
+    return null;
+  }
+  final Map<String, Object?>? unmarked =
+      normalizeDingDongConversationFooterItem(
+        _conversationCapsuleItem(resource),
+        symbols: symbols,
+      );
+  final Map<String, Object?>? marked = normalizeDingDongConversationFooterItem(
+    _conversationCapsuleItem(
+      resource,
+      confirmedSkillUse: true,
+      confirmedMcpUse: true,
+    ),
+    symbols: symbols,
+  );
+  if (unmarked == null || marked == null) {
+    return null;
+  }
+  final bool markdown = adapterId == 'codex';
+  return <String, Object?>{
+    'from': dingDongFooterToken(unmarked, markdown: markdown, symbols: symbols),
+    'to': dingDongFooterToken(marked, markdown: markdown, symbols: symbols),
+  };
+}
+
+Future<String> _snapshotHash(Map<String, Object?> snapshot) async {
+  final Hash digest = await Sha256().hash(utf8.encode(jsonEncode(snapshot)));
+  return digest.bytes
+      .take(6)
+      .map((int byte) => byte.toRadixString(16).padLeft(2, '0'))
+      .join();
+}
 
 const int _maximumConversationTitleCharacters = 8;
 

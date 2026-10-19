@@ -39,7 +39,10 @@ final class NativeApplicationUpdater implements ApplicationUpdater {
   }
 
   @override
-  Future<void> installLatest() async {
-    await _channel.invokeMethod<void>('installLatest');
+  Future<void> installLatest({String? betaVersion}) async {
+    await _channel.invokeMethod<void>('installLatest', <String, Object?>{
+      'allowPrerelease': betaVersion != null,
+      'betaVersion': ?betaVersion,
+    });
   }
 }

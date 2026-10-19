@@ -1,6 +1,6 @@
 import webPush from "web-push";
 
-const serviceVersion = "1.7.0";
+const serviceVersion = "1.8.0-beta.1";
 const maximumFrameBytes = 256 * 1024;
 const maximumLifecycleTelemetryBytes = 4 * 1024;
 // Web Push providers only guarantee a 4 KiB encrypted message. Keeping the
@@ -126,27 +126,33 @@ export class RelayRoom {
     }
 
     for (const socket of this.ctx.getWebSockets(side)) {
-      socket.serializeAttachment({ side, replaced: true });
-      socket.close(1008, "Replaced by a newer connection");
+      // A phone that lost its network silently leaves a dead socket here
+      // until Cloudflare notices. Closing it can throw; that must not break
+      // the replacement connection.
+      try {
+        socket.serializeAttachment({ side, replaced: true });
+        socket.close(1008, "Replaced by a newer connection");
+      } catch {
+        // Already closed or closing.
+      }
     }
 
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server, [side]);
-    server.serializeAttachment({ side });
+    server.serializeAttachment({ side, acceptedAt: Date.now() });
     server.send(JSON.stringify({ type: "relay", event: "ready" }));
 
     const otherSide = side === "host" ? "peer" : "host";
     const partners = this.ctx.getWebSockets(otherSide);
     if (partners.length > 0) {
-      for (const partner of partners) {
-        partner.send(
-          JSON.stringify({
-            type: "relay",
-            event: side === "host" ? "host_joined" : "peer_joined",
-          }),
-        );
-      }
+      broadcast(
+        partners,
+        JSON.stringify({
+          type: "relay",
+          event: side === "host" ? "host_joined" : "peer_joined",
+        }),
+      );
       server.send(
         JSON.stringify({
           type: "relay",
@@ -169,25 +175,33 @@ export class RelayRoom {
     const sourceSide = socket.deserializeAttachment()?.side;
     if (sourceSide !== "host" && sourceSide !== "peer") return;
     const targetSide = sourceSide === "host" ? "peer" : "host";
-    for (const partner of this.ctx.getWebSockets(targetSide)) {
-      partner.send(message);
-    }
+    broadcast(this.ctx.getWebSockets(targetSide), message);
   }
 
   webSocketClose(socket) {
-    const attachment = socket.deserializeAttachment();
+    const attachment = readAttachment(socket);
     if (attachment?.replaced === true) return;
     const sourceSide = attachment?.side;
     if (sourceSide !== "host" && sourceSide !== "peer") return;
-    const targetSide = sourceSide === "host" ? "peer" : "host";
-    for (const partner of this.ctx.getWebSockets(targetSide)) {
-      partner.send(
-        JSON.stringify({
-          type: "relay",
-          event: sourceSide === "host" ? "host_left" : "peer_left",
-        }),
+    // A stale socket can close after a newer one replaced it without the
+    // replacement being recorded on it. Only the newest socket's departure
+    // means the side has left.
+    const acceptedAt = attachment?.acceptedAt ?? 0;
+    const newer = this.ctx
+      .getWebSockets(sourceSide)
+      .some(
+        (other) =>
+          other !== socket && (readAttachment(other)?.acceptedAt ?? 0) > acceptedAt,
       );
-    }
+    if (newer) return;
+    const targetSide = sourceSide === "host" ? "peer" : "host";
+    broadcast(
+      this.ctx.getWebSockets(targetSide),
+      JSON.stringify({
+        type: "relay",
+        event: sourceSide === "host" ? "host_left" : "peer_left",
+      }),
+    );
   }
 
   webSocketError() {
@@ -513,6 +527,32 @@ export class RelayRoom {
       receipt: receipt || null,
     });
   }
+}
+
+/**
+ * Sends to every socket on one side. A stale socket (closed or closing but
+ * still listed by the runtime) throws on send; skipping it keeps the frame
+ * reaching the live socket instead of dropping it for everyone after it.
+ */
+function readAttachment(socket) {
+  try {
+    return socket.deserializeAttachment();
+  } catch {
+    return null;
+  }
+}
+
+export function broadcast(sockets, message) {
+  let delivered = 0;
+  for (const socket of sockets) {
+    try {
+      socket.send(message);
+      delivered += 1;
+    } catch {
+      // Stale socket; the runtime removes it once its close completes.
+    }
+  }
+  return delivered;
 }
 
 function pushRoomFromRequest(value) {

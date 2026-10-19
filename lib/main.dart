@@ -254,6 +254,9 @@ Future<void> main(List<String> arguments) async {
       }
       return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
     },
+    // The settings view keeps a copy of all settings and saves it whole, so it
+    // must reload before its next save or it would undo the Agent's change.
+    onSettingsChangedByAgent: () => settingsViewModel.reload(),
     agentTaskStartedAt: (DingRequest request) =>
         activityController.activeRunStartedAt(
           source: request.source ?? 'Agent',
@@ -610,7 +613,13 @@ Future<void> main(List<String> arguments) async {
       case 'settings_update_state':
         return (await applicationUpdater.readStatus()).toJson();
       case 'settings_update_install':
-        await applicationUpdater.installLatest();
+        final Object? arguments = call.arguments;
+        final Object? betaVersion = arguments is Map
+            ? arguments['betaVersion']
+            : null;
+        await applicationUpdater.installLatest(
+          betaVersion: betaVersion is String ? betaVersion : null,
+        );
         return null;
       case developmentTestRunMethod:
         if (!appDataPaths.development) {

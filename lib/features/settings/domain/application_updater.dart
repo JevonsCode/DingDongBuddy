@@ -25,7 +25,11 @@ abstract interface class ApplicationUpdater {
   Future<ApplicationUpdateStatus> readStatus();
 
   /// Starts a user-approved, one-click update and returns immediately.
-  Future<void> installLatest();
+  ///
+  /// [betaVersion] names the beta release to install when the user allowed
+  /// betas and one is newer than the latest stable release; null keeps the
+  /// stable feed.
+  Future<void> installLatest({String? betaVersion});
 }
 
 /// Immutable updater state rendered by the version settings section.

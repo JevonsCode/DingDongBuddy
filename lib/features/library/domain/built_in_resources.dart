@@ -9,6 +9,9 @@ const String builtInDingDongConfigureSkillUpdateUrl =
     'https://github.com/JevonsCode/DingDongBuddy/tree/main/skills/dingdong-configure';
 
 /// Creates the small, visible prompt used to verify Agent prompt activation.
+///
+/// It is opt-in: switching it to always-on proves delivery, but leaving it on
+/// would add Prompt text and an output token to every reply.
 Resource builtInReplyMarkerPrompt(DateTime timestamp) {
   final DateTime utcTimestamp = timestamp.toUtc();
   return Resource(
@@ -20,9 +23,8 @@ Resource builtInReplyMarkerPrompt(DateTime timestamp) {
     agentSessionName: '🌟',
     tags: const <String>['DingDong', '内置', '验证'],
     source: 'DingDong',
-    pinned: true,
     enabled: true,
-    activation: ResourceActivation.always,
+    activation: ResourceActivation.manual,
     createdAt: utcTimestamp,
     updatedAt: utcTimestamp,
   );
