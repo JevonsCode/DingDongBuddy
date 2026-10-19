@@ -93,6 +93,17 @@ final class AgentEvent {
     return '$source · $title';
   }
 
+  /// [notificationTitle] followed by the computer that sent it, as the PWA
+  /// does, so reminders from several computers can be told apart.
+  String notificationTitleFrom(String hostName) {
+    final String name = _normalized(hostName);
+    final String base = notificationTitle;
+    if (name.isEmpty || base.toLowerCase().contains(name.toLowerCase())) {
+      return base;
+    }
+    return '$base · $name';
+  }
+
   /// Notification body with the PWA's task/detail combination rules.
   String get notificationBody {
     final String detailText = _normalized(detail.isEmpty ? summary : detail);

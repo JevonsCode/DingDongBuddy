@@ -181,14 +181,27 @@ final class CompanionEngine {
     switch (message['type']) {
       case 'welcome':
         final Object? host = message['host'];
-        if (host is Map && host['name'] is String) {
-          final String name = (host['name']! as String).trim();
-          if (name.isNotEmpty && name != session.record.hostName) {
-            session.record.hostName = name.length > 80
-                ? name.substring(0, 80)
-                : name;
-            await store.save();
+        if (host is Map) {
+          bool changed = false;
+          final Object? rawName = host['name'];
+          if (rawName is String) {
+            final String name = rawName.trim();
+            if (name.isNotEmpty && name != session.record.hostName) {
+              session.record.hostName = name.length > 80
+                  ? name.substring(0, 80)
+                  : name;
+              changed = true;
+            }
           }
+          // Computers send Dart's Platform.operatingSystem, e.g. "windows".
+          final Object? platform = host['platform'];
+          if (platform is String &&
+              _platformPattern.hasMatch(platform) &&
+              platform != session.record.hostPlatform) {
+            session.record.hostPlatform = platform;
+            changed = true;
+          }
+          if (changed) await store.save();
         }
       case 'clipboard.snapshot':
         session.items.clear();
@@ -245,7 +258,8 @@ final class CompanionEngine {
     await store.save();
     if (firstTime &&
         !event.silent &&
-        session.record.agentNotificationsEnabled) {
+        session.record.agentNotificationsEnabled &&
+        store.alertsFor(event.kind)) {
       await notifier.show(event, hostName: session.record.hostName);
     }
   }
@@ -331,6 +345,8 @@ final class CompanionEngine {
           }
         case 'settings':
           if (session != null) await _updateSettings(session, command);
+        case 'alerts':
+          await _updateAlerts(command);
         case 'sendText':
           if (session != null) {
             await _sendText(session, command['text']! as String);
@@ -435,6 +451,16 @@ final class CompanionEngine {
         'transportPreference': 'serviceRelay',
       });
     }
+  }
+
+  Future<void> _updateAlerts(Map<String, Object?> command) async {
+    final Object? enabled = command['enabled'];
+    final Object? completion = command['completion'];
+    final Object? attention = command['attention'];
+    if (enabled is bool) store.alertsEnabled = enabled;
+    if (completion is bool) store.completionAlertsEnabled = completion;
+    if (attention is bool) store.attentionAlertsEnabled = attention;
+    await store.save();
   }
 
   RelayPeer _connectedPeer(_ComputerSession session) {
@@ -734,12 +760,14 @@ final class CompanionEngine {
     'kind': 'snapshot',
     'deviceName': deviceName,
     'activeRoom': store.activeRoom,
+    'alerts': store.alertsJson(),
     'computers': <Object?>[
       for (final PairingRecord record in store.pairings)
         if (_sessions[record.room] case final _ComputerSession session)
           <String, Object?>{
             'room': record.room,
             'hostName': record.hostName,
+            'hostPlatform': record.hostPlatform,
             'state': session.state.name,
             'manualDisconnect': record.manualDisconnect,
             'agentNotificationsEnabled': record.agentNotificationsEnabled,
@@ -761,6 +789,8 @@ final class CompanionEngine {
           },
     ],
   };
+
+  static final RegExp _platformPattern = RegExp(r'^[a-z0-9-]{1,32}$');
 
   String _token() => List<String>.generate(
     12,

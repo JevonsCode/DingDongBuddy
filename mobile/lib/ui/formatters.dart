@@ -1,5 +1,14 @@
 // Display formatting copied from the PWA (docs/app/app-formatters.js).
 
+/// Product name for a computer's `Platform.operatingSystem` (PWA
+/// `computerPlatformLabel`); empty when unknown.
+String computerPlatformLabel(String platform) => switch (platform) {
+  'windows' => 'Windows',
+  'macos' => 'macOS',
+  'linux' => 'Linux',
+  _ => '',
+};
+
 String symbolForKind(String kind) => switch (kind) {
   'url' => 'assets/symbols/link.png',
   'command' => 'assets/symbols/command.png',

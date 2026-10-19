@@ -300,7 +300,10 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             },
             children: <Widget>[
               ClipboardPanel(controller: controller, computer: computer),
-              AgentPanel(computer: computer),
+              AgentPanel(
+                computer: computer,
+                showComputerName: controller.computers.length > 1,
+              ),
             ],
           ),
         ),

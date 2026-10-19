@@ -137,6 +137,20 @@ Consider **C** only if a wider audience on mainland ROMs needs killed-app delive
 - `silent: true` (set by the desktop's per-kind rules when `alertPhone` is false)
   raises no system notification; the event is only added to the in-app list.
 - History from `agent.state` never notifies; only a first-seen `agent.completed` does.
+- The phone can turn reminders off without the desktop's help. Settings has a
+  phone-wide "手机通知" switch and per-kind "完成时提醒" / "需要你处理时提醒"
+  switches, stored in `companion.json` (`alerts`). Off only stops this phone
+  ringing: the desktop keeps sending, so the Agent list stays live. The existing
+  per-computer "接收这台电脑的提醒" switch is different: it sends
+  `agentNotificationsEnabled:false`, and that computer stops sending reminders
+  to this phone.
+- The notification title names the computer, as in the PWA:
+  `<source> · <title> · <computer>`, unless the title already contains the name.
+  With more than one computer paired, list items say which computer sent them too.
+- Computers send `host.platform` (Dart's `Platform.operatingSystem`) in
+  `welcome`. The app keeps values matching `^[a-z0-9-]{1,32}$` and shows
+  "JARVIS · Windows" in settings and the computer switcher (Windows, macOS, Linux;
+  other values are kept but not shown).
 - The desktop's quiet hours, minimum task duration and per-kind phone push stay on
   the desktop. On the phone, each channel's sound, vibration, lock screen and Do Not
   Disturb override are set in Android settings, reachable from the app.
@@ -263,6 +277,9 @@ On devices (2026-10-19), against the production relay unless noted:
 | Real desktop: `/ding` completion and attention | Pass, each on its own channel | Arrive in the list; the installed build predates f6642c6, which makes them alert when `agent.state` lists them first |
 | Real desktop: send text | Pass, lands in the desktop clipboard history | Not run (touch injection blocked) |
 | Real desktop: send a file (112 KB) | Pass, lands in `Device Transfers`, SHA-256 matches | Not run |
+| Phone-wide alert switches (attention off: list updates, no ring) | Pass (fake host on a local relay) | Not run (needs the new build) |
+| Title "Claude Code · Agent 完成啦 · 测试电脑 B"; list items name the computer | Pass | Not run |
+| "测试电脑 B · Windows" in settings and the switcher | Pass | Not run |
 
 Not run on the phone: midway through, HyperOS stopped accepting injected
 touches (taps and swipes, including on the status bar) while key events still
@@ -294,6 +311,10 @@ returned. Deploying the Worker is the user's call.
   keystore kept outside the repo, a signing config fed from CI secrets, and a
   decision on distribution (GitHub Releases sideload vs. Play). Play would also
   require the `specialUse` FGS justification and a Data safety form.
+- **Offering the app from the PWA.** The PWA shows "推荐下载 Android 版" once
+  `docs/app/version.json` has `androidApp: {url, version}`, with an HTTPS URL on
+  github.com or the DingDong site. That entry is the release switch: add it only
+  after a signed APK is published at that URL, never for a debug build.
 - **Install friction on HyperOS.** Sideloaded APKs need "install unknown apps"
   consent, and USB installs need an on-device tap that `adb input` cannot press.
   First-run must walk the user through autostart and battery "no restrictions";

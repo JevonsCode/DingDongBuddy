@@ -202,7 +202,7 @@ class _SwitcherItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      computer.hostName,
+                      computer.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -263,7 +263,7 @@ Future<void> showSettingsDialog(
   return showDingDialog<void>(
     context,
     eyebrow: '当前设备',
-    title: initial.hostName,
+    title: initial.displayName,
     children: (BuildContext dialogContext) => <Widget>[
       ListenableBuilder(
         listenable: controller,
@@ -272,31 +272,70 @@ Future<void> showSettingsDialog(
             (ComputerView c) => c.room == initial.room,
             orElse: () => initial,
           );
-          final String agentStatus = !computer.agentNotificationsEnabled
-              ? '已关闭，电脑不会再提醒这台手机'
+          final bool alerts = controller.alertsEnabled;
+          final bool ringing = alerts && controller.notificationsGranted;
+          final String alertStatus = !alerts
+              ? '已关闭 · 列表照常同步，手机不响铃'
               : controller.notificationsGranted
               ? '已开启 · 完成与需要处理分别使用独立铃声'
-              : '系统通知未允许，点“开启”授权';
+              : '系统通知未允许，打开开关授权';
+          final String computerStatus = computer.agentNotificationsEnabled
+              ? '这台电脑的 Agent 完成或需要你处理时提醒'
+              : '已关闭，这台电脑不会再提醒这台手机';
+          void setAlerts(String key, bool value) =>
+              controller.send(<String, Object?>{'cmd': 'alerts', key: value});
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              const _SectionLabel('本机 · 所有电脑'),
               SettingRow(
-                title: 'Agent 状态提醒',
-                subtitle: agentStatus,
+                title: '手机通知',
+                subtitle: alertStatus,
                 trailing: DingSwitch(
-                  semanticLabel: 'Agent 状态提醒',
-                  value:
-                      computer.agentNotificationsEnabled &&
-                      controller.notificationsGranted,
+                  semanticLabel: '手机通知',
+                  value: ringing,
                   onChanged: (bool value) {
                     if (value && !controller.notificationsGranted) {
                       controller.enableNotifications();
                     }
-                    controller.send(<String, Object?>{
-                      'cmd': 'settings',
-                      'room': computer.room,
-                      'agentNotificationsEnabled': value,
-                    });
+                    setAlerts('enabled', value);
                   },
+                ),
+              ),
+              SettingRow(
+                title: '完成时提醒',
+                subtitle: 'Agent 完成一轮任务',
+                trailing: DingSwitch(
+                  semanticLabel: '完成时提醒',
+                  value: controller.completionAlertsEnabled,
+                  onChanged: ringing
+                      ? (bool value) => setAlerts('completion', value)
+                      : null,
+                ),
+              ),
+              SettingRow(
+                title: '需要你处理时提醒',
+                subtitle: 'Agent 在等你确认或回答',
+                trailing: DingSwitch(
+                  semanticLabel: '需要你处理时提醒',
+                  value: controller.attentionAlertsEnabled,
+                  onChanged: ringing
+                      ? (bool value) => setAlerts('attention', value)
+                      : null,
+                ),
+              ),
+              const _SectionLabel('这台电脑'),
+              SettingRow(
+                title: '接收这台电脑的提醒',
+                subtitle: computerStatus,
+                trailing: DingSwitch(
+                  semanticLabel: '接收这台电脑的提醒',
+                  value: computer.agentNotificationsEnabled,
+                  onChanged: (bool value) => controller.send(<String, Object?>{
+                    'cmd': 'settings',
+                    'room': computer.room,
+                    'agentNotificationsEnabled': value,
+                  }),
                 ),
               ),
               SettingRow(
@@ -324,7 +363,7 @@ Future<void> showSettingsDialog(
               ),
               SettingRow(
                 title: '测试提醒',
-                subtitle: '在本机各发一条，检查铃声、振动和锁屏显示',
+                subtitle: '在本机各发一条，检查铃声、振动和锁屏显示；不受上面的开关影响',
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -403,6 +442,18 @@ Future<void> showSettingsDialog(
         },
       ),
     ],
+  );
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 14, bottom: 2),
+    child: Eyebrow(text),
   );
 }
 

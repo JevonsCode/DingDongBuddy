@@ -213,33 +213,39 @@ class DingSwitch extends StatelessWidget {
     return Semantics(
       toggled: value,
       label: semanticLabel,
+      enabled: onChanged != null,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onChanged == null ? null : () => onChanged!(!value),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              width: 38,
-              height: 22,
-              decoration: BoxDecoration(
-                color: value ? t.accent : t.field,
-                border: Border.all(color: value ? t.accent : t.border),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: AnimatedAlign(
+        child: Opacity(
+          opacity: onChanged == null ? 0.45 : 1,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: AnimatedContainer(
                 duration: const Duration(milliseconds: 140),
-                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: value ? t.onAccent : t.textSecondary,
+                width: 38,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: value ? t.accent : t.field,
+                  border: Border.all(color: value ? t.accent : t.border),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 140),
+                  alignment: value
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: value ? t.onAccent : t.textSecondary,
+                      ),
                     ),
                   ),
                 ),

@@ -7,6 +7,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../link/companion_store.dart';
 import '../service/companion_service.dart';
+import 'formatters.dart';
 
 /// Read-only view of one paired computer, rebuilt from service snapshots.
 final class ComputerView {
@@ -16,6 +17,14 @@ final class ComputerView {
 
   String get room => json['room']! as String;
   String get hostName => json['hostName'] as String? ?? 'DingDong 电脑';
+  String get hostPlatform => json['hostPlatform'] as String? ?? '';
+
+  /// "JARVIS · Windows", or just the name while the OS is unknown.
+  String get displayName {
+    final String platform = computerPlatformLabel(hostPlatform);
+    return platform.isEmpty ? hostName : '$hostName · $platform';
+  }
+
   String get state => json['state'] as String? ?? 'offline';
   bool get connected => state == 'connected';
   bool get connecting => state == 'connecting';
@@ -53,6 +62,11 @@ final class CompanionController extends ChangeNotifier {
   String deviceName = '';
   String? activeRoom;
   List<ComputerView> computers = <ComputerView>[];
+
+  /// Phone-wide alert switches, from the service's store.
+  bool alertsEnabled = true;
+  bool completionAlertsEnabled = true;
+  bool attentionAlertsEnabled = true;
   String? pendingPairLink;
   ({String name, int sent, int size})? progress;
   bool notificationsGranted = true;
@@ -207,6 +221,12 @@ final class CompanionController extends ChangeNotifier {
               in event['computers'] as List? ?? const <Object?>[])
             if (value is Map) ComputerView(Map<String, Object?>.from(value)),
         ];
+        final Object? alerts = event['alerts'];
+        if (alerts is Map) {
+          alertsEnabled = alerts['enabled'] != false;
+          completionAlertsEnabled = alerts['completion'] != false;
+          attentionAlertsEnabled = alerts['attention'] != false;
+        }
         final String? room = event['activeRoom'] as String?;
         // Follow the service when it changes the active computer (a new
         // pairing), and fall back to it when the local choice disappeared.

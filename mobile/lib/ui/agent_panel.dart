@@ -8,9 +8,16 @@ import 'widgets.dart';
 
 /// "正在运行" and "完成记录" (`#agent-panel`).
 class AgentPanel extends StatelessWidget {
-  const AgentPanel({super.key, required this.computer});
+  const AgentPanel({
+    super.key,
+    required this.computer,
+    this.showComputerName = false,
+  });
 
   final ComputerView computer;
+
+  /// With several computers paired, each reminder names the one it came from.
+  final bool showComputerName;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +60,10 @@ class AgentPanel extends StatelessWidget {
           )
         else
           for (final Map<String, Object?> event in events) ...<Widget>[
-            _EventCard(event: event),
+            _EventCard(
+              event: event,
+              computerName: showComputerName ? computer.hostName : null,
+            ),
             const SizedBox(height: 9),
           ],
       ],
@@ -165,9 +175,10 @@ class _RunCard extends StatelessWidget {
 }
 
 class _EventCard extends StatelessWidget {
-  const _EventCard({required this.event});
+  const _EventCard({required this.event, this.computerName});
 
   final Map<String, Object?> event;
+  final String? computerName;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +236,13 @@ class _EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${(event['source'] as String?)?.isNotEmpty == true ? event['source'] : 'Agent'} · ${attention ? '需要你处理' : '已完成'}',
+                      <String>[
+                        ?computerName,
+                        (event['source'] as String?)?.isNotEmpty == true
+                            ? event['source']! as String
+                            : 'Agent',
+                        attention ? '需要你处理' : '已完成',
+                      ].join(' · '),
                       style: TextStyle(fontSize: 10, color: t.textSecondary),
                     ),
                   ],

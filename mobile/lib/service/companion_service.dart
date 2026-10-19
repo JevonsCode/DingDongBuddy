@@ -155,7 +155,7 @@ final class _LocalAgentNotifier implements AgentNotifier {
     final bool attention = event.needsAttention;
     await _plugin.show(
       id: event.id.hashCode,
-      title: event.notificationTitle,
+      title: event.notificationTitleFrom(hostName),
       body: event.notificationBody,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
@@ -171,7 +171,6 @@ final class _LocalAgentNotifier implements AgentNotifier {
               ? AndroidNotificationCategory.reminder
               : AndroidNotificationCategory.status,
           icon: 'ic_notification',
-          subText: hostName,
           styleInformation: BigTextStyleInformation(event.notificationBody),
           autoCancel: true,
         ),

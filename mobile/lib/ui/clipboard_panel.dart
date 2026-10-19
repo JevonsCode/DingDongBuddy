@@ -50,6 +50,7 @@ class ClipboardPanel extends StatelessWidget {
             _ClipboardCard(
               item: item,
               hostName: computer.hostName,
+              showHostName: controller.computers.length > 1,
               connected: computer.connected,
               pending: pending.contains(item['id']),
               onCopy: () => controller.copyItem(item['id']! as String),
@@ -69,6 +70,7 @@ class _ClipboardCard extends StatelessWidget {
   const _ClipboardCard({
     required this.item,
     required this.hostName,
+    required this.showHostName,
     required this.connected,
     required this.pending,
     required this.onCopy,
@@ -77,6 +79,9 @@ class _ClipboardCard extends StatelessWidget {
 
   final Map<String, Object?> item;
   final String hostName;
+
+  /// With several computers paired, each item names the one it came from.
+  final bool showHostName;
   final bool connected;
   final bool pending;
   final VoidCallback onCopy;
@@ -177,10 +182,12 @@ class _ClipboardCard extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 Expanded(
-                  child: Text(
-                    (item['source'] as String?) ?? hostName,
-                    style: TextStyle(fontSize: 10, color: t.textSecondary),
-                  ),
+                  child: Text(switch (item['source']) {
+                    final String source when showHostName =>
+                      '$hostName · $source',
+                    final String source => source,
+                    _ => hostName,
+                  }, style: TextStyle(fontSize: 10, color: t.textSecondary)),
                 ),
                 Text(
                   formatTime(parseDate(item['updatedAt'])),

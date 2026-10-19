@@ -14,6 +14,7 @@ final class PairingRecord {
     this.agentNotificationsEnabled = true,
     this.vibrationEnabled = true,
     this.manualDisconnect = false,
+    this.hostPlatform = '',
   });
 
   final DevicePairingPayload payload;
@@ -21,6 +22,10 @@ final class PairingRecord {
   bool agentNotificationsEnabled;
   bool vibrationEnabled;
   bool manualDisconnect;
+
+  /// The computer's `Platform.operatingSystem` from `welcome`, e.g.
+  /// "windows"; empty until the computer has said.
+  String hostPlatform;
 
   String get room => payload.room;
 
@@ -38,6 +43,9 @@ final class PairingRecord {
         agentNotificationsEnabled: value['agentNotificationsEnabled'] != false,
         vibrationEnabled: value['vibrationEnabled'] != false,
         manualDisconnect: value['manualDisconnect'] == true,
+        hostPlatform: value['hostPlatform'] is String
+            ? value['hostPlatform']! as String
+            : '',
       );
     } on Object {
       return null;
@@ -50,6 +58,7 @@ final class PairingRecord {
     'agentNotificationsEnabled': agentNotificationsEnabled,
     'vibrationEnabled': vibrationEnabled,
     'manualDisconnect': manualDisconnect,
+    'hostPlatform': hostPlatform,
   };
 }
 
@@ -72,6 +81,20 @@ final class CompanionStore {
   final Map<String, List<AgentEvent>> agentEvents =
       <String, List<AgentEvent>>{};
   final List<String> notifiedIds = <String>[];
+
+  /// Phone-wide alert switches. Off only silences this phone: the computers
+  /// keep sending, so the Agent list stays in sync.
+  bool alertsEnabled = true;
+  bool completionAlertsEnabled = true;
+  bool attentionAlertsEnabled = true;
+
+  /// Whether a reminder of [kind] may ring on this phone.
+  bool alertsFor(AgentKind kind) =>
+      alertsEnabled &&
+      switch (kind) {
+        AgentKind.completion => completionAlertsEnabled,
+        AgentKind.attention => attentionAlertsEnabled,
+      };
 
   static const int maximumEventsPerComputer = 50;
   static const int maximumNotifiedIds = 300;
@@ -107,6 +130,12 @@ final class CompanionStore {
           ];
         }
       }
+      final Object? alerts = json['alerts'];
+      if (alerts is Map) {
+        store.alertsEnabled = alerts['enabled'] != false;
+        store.completionAlertsEnabled = alerts['completion'] != false;
+        store.attentionAlertsEnabled = alerts['attention'] != false;
+      }
       for (final Object? id
           in json['notifiedIds'] as List? ?? const <Object?>[]) {
         if (id is String) store.notifiedIds.add(id);
@@ -137,6 +166,12 @@ final class CompanionStore {
     }
     return true;
   }
+
+  Map<String, Object?> alertsJson() => <String, Object?>{
+    'enabled': alertsEnabled,
+    'completion': completionAlertsEnabled,
+    'attention': attentionAlertsEnabled,
+  };
 
   Future<void> _saving = Future<void>.value();
 
@@ -170,6 +205,7 @@ final class CompanionStore {
             ],
         },
         'notifiedIds': notifiedIds,
+        'alerts': alertsJson(),
       }),
       flush: true,
     );

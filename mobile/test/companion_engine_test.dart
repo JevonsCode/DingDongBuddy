@@ -66,9 +66,12 @@ final class FakeSocket implements LinkSocket {
 
 final class RecordingNotifier implements AgentNotifier {
   final List<AgentEvent> shown = <AgentEvent>[];
+  final List<String> hostNames = <String>[];
   @override
-  Future<void> show(AgentEvent event, {required String hostName}) async =>
-      shown.add(event);
+  Future<void> show(AgentEvent event, {required String hostName}) async {
+    shown.add(event);
+    hostNames.add(hostName);
+  }
 }
 
 String _link() =>
@@ -117,7 +120,7 @@ void main() {
     await _settle();
     await socket.host(<String, Object?>{
       'type': 'welcome',
-      'host': <String, Object?>{'name': '工作电脑'},
+      'host': <String, Object?>{'name': '工作电脑', 'platform': 'windows'},
     });
     await _settle();
     return socket;
@@ -222,6 +225,82 @@ void main() {
     await _settle();
     expect(notifier.shown.single.id, 'activity-1');
     expect(notifier.shown.single.kind, AgentKind.attention);
+  });
+
+  test('phone-wide switches silence alerts but keep the list', () async {
+    final FakeSocket socket = await pairAndWelcome();
+    Future<void> remind(String id, String kind) =>
+        socket.host(<String, Object?>{
+          'type': 'agent.completed',
+          'id': id,
+          'notificationKind': kind,
+          'summary': '测试',
+        });
+    await engine.handleCommand(<String, Object?>{
+      'cmd': 'alerts',
+      'attention': false,
+    });
+    await remind('a', 'attention');
+    await remind('b', 'completion');
+    await _settle();
+    expect(notifier.shown.map((AgentEvent e) => e.id), <String>['b']);
+    expect(notifier.hostNames, <String>['工作电脑']);
+
+    await engine.handleCommand(<String, Object?>{
+      'cmd': 'alerts',
+      'enabled': false,
+    });
+    await remind('c', 'completion');
+    await _settle();
+    expect(notifier.shown, hasLength(1));
+    final Map<String, Object?> snapshot = engine.snapshot();
+    expect(snapshot['alerts'], <String, Object?>{
+      'enabled': false,
+      'completion': true,
+      'attention': false,
+    });
+    final Map<String, Object?> computer =
+        (snapshot['computers']! as List).single as Map<String, Object?>;
+    expect((computer['events']! as List), hasLength(3));
+
+    // The switches belong to the phone and survive a service restart.
+    await engine.dispose();
+    engine = await build();
+    expect(engine.snapshot()['alerts'], snapshot['alerts']);
+  });
+
+  test("keeps the computer's OS from welcome and ignores junk", () async {
+    final FakeSocket socket = await pairAndWelcome();
+    Map<String, Object?> computer() =>
+        (engine.snapshot()['computers']! as List).single
+            as Map<String, Object?>;
+    expect(computer()['hostPlatform'], 'windows');
+    await socket.host(<String, Object?>{
+      'type': 'welcome',
+      'host': <String, Object?>{'name': '工作电脑', 'platform': 'Mac OS <b>'},
+    });
+    await _settle();
+    expect(computer()['hostPlatform'], 'windows');
+    await engine.dispose();
+    engine = await build();
+    expect(computer()['hostPlatform'], 'windows');
+  });
+
+  test('notification titles name the computer once', () {
+    AgentEvent event(String title) => AgentEvent.parse(<String, Object?>{
+      'id': 'x',
+      'title': title,
+      'source': 'Codex',
+    })!;
+    expect(
+      event('Agent 完成啦').notificationTitleFrom('JARVIS'),
+      'Codex · Agent 完成啦 · JARVIS',
+    );
+    expect(
+      event('JARVIS 上的 Agent 完成啦').notificationTitleFrom('jarvis'),
+      'Codex · JARVIS 上的 Agent 完成啦',
+    );
+    expect(event('Agent 完成啦').notificationTitleFrom('  '), 'Codex · Agent 完成啦');
   });
 
   test('clipboard items arrive and are dropped while offline', () async {
