@@ -277,15 +277,22 @@ On devices (2026-10-19), against the production relay unless noted:
 | Real desktop: `/ding` completion and attention | Pass, each on its own channel | Arrive in the list; the installed build predates f6642c6, which makes them alert when `agent.state` lists them first |
 | Real desktop: send text | Pass, lands in the desktop clipboard history | Not run (touch injection blocked) |
 | Real desktop: send a file (112 KB) | Pass, lands in `Device Transfers`, SHA-256 matches | Not run |
-| Phone-wide alert switches (attention off: list updates, no ring) | Pass (fake host on a local relay) | Not run (needs the new build) |
-| Title "Claude Code · Agent 完成啦 · 测试电脑 B"; list items name the computer | Pass | Not run |
-| "测试电脑 B · Windows" in settings and the switcher | Pass | Not run |
+| Phone-wide alert switches (attention off: list updates, no ring) | Pass (fake host on a local relay) | Blocked: relay room wedged (below) |
+| Title "Claude Code · Agent 完成啦 · 测试电脑 B"; list items name the computer | Pass | Blocked |
+| "测试电脑 B · Windows" in settings and the switcher | Pass | Blocked |
 
 Not run on the phone: midway through, HyperOS stopped accepting injected
 touches (taps and swipes, including on the status bar) while key events still
 worked, so text and file sending were not exercised there. The same code paths
 pass on the emulator. The phone also still runs the build before f6642c6:
 installing over USB needs a tap on HyperOS's 继续安装 prompt.
+
+26a3974 is installed on the phone, but the production relay answers the phone's
+JARVIS room with HTTP 500 on every WebSocket upgrade, while a fresh room upgrades
+normally: the stale-socket bug below, still undeployed. The phone keeps retrying
+and stays offline until the fix is deployed (or the Durable Object recovers). On
+HyperOS the service also did not restart by itself after this update, unlike on
+the emulator; opening the app started it. Autostart is probably off for the app.
 
 The real-desktop link was copied from the running desktop app by driving its
 tray menu and 连接设备 window with Windows UI Automation, so no one had to
