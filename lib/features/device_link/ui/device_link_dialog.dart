@@ -441,11 +441,25 @@ class _DeviceCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    device.name,
+                  child: Text.rich(
+                    TextSpan(
+                      text: device.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      children: <InlineSpan>[
+                        if (device.platformLabel.isNotEmpty)
+                          TextSpan(
+                            text: '  ${device.platformLabel}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                    key: Key('device-name-${device.id}'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(width: 8),

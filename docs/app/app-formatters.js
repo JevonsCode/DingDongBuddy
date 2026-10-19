@@ -84,7 +84,25 @@ function formatBytes(value) {
 }
 
 
+function computerPlatformLabel(platform) {
+  return (
+    {
+      windows: "Windows",
+      macos: "macOS",
+      linux: "Linux",
+    }[platform] || ""
+  );
+}
+
+function computerDisplayName(pair) {
+  const name = pair?.hostName || "DingDong 电脑";
+  const platform = computerPlatformLabel(pair?.hostPlatform);
+  return platform ? `${name} · ${platform}` : name;
+}
+
 export {
+  computerDisplayName,
+  computerPlatformLabel,
   formatBytes,
   formatDuration,
   formatLifecycleTime,
