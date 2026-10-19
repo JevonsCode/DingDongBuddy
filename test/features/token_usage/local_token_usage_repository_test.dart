@@ -612,10 +612,12 @@ void main() {
       expect((await repository.readSnapshot()).totals.totalTokens, 2420);
       // This used to rebuild the recursive ordering separately for every
       // updated row, blocking the UI for over a minute on a local transcript.
-      expect(elapsed.elapsed, lessThan(const Duration(seconds: 20)));
+      // Intel macOS CI runners take ~28 s for the fixed code (~5 s on a
+      // desktop), so the bound only has to separate that from the regression.
+      expect(elapsed.elapsed, lessThan(const Duration(seconds: 45)));
       expect((await repository.refresh()).importedEvents, 0);
     },
-    timeout: const Timeout(Duration(seconds: 30)),
+    timeout: const Timeout(Duration(seconds: 60)),
   );
 
   for (final reversed in [false, true]) {
