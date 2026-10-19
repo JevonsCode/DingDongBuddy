@@ -140,7 +140,7 @@ export class RelayRoom {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server, [side]);
-    server.serializeAttachment({ side });
+    server.serializeAttachment({ side, acceptedAt: Date.now() });
     server.send(JSON.stringify({ type: "relay", event: "ready" }));
 
     const otherSide = side === "host" ? "peer" : "host";
@@ -179,10 +179,21 @@ export class RelayRoom {
   }
 
   webSocketClose(socket) {
-    const attachment = socket.deserializeAttachment();
+    const attachment = readAttachment(socket);
     if (attachment?.replaced === true) return;
     const sourceSide = attachment?.side;
     if (sourceSide !== "host" && sourceSide !== "peer") return;
+    // A stale socket can close after a newer one replaced it without the
+    // replacement being recorded on it. Only the newest socket's departure
+    // means the side has left.
+    const acceptedAt = attachment?.acceptedAt ?? 0;
+    const newer = this.ctx
+      .getWebSockets(sourceSide)
+      .some(
+        (other) =>
+          other !== socket && (readAttachment(other)?.acceptedAt ?? 0) > acceptedAt,
+      );
+    if (newer) return;
     const targetSide = sourceSide === "host" ? "peer" : "host";
     broadcast(
       this.ctx.getWebSockets(targetSide),
@@ -523,6 +534,14 @@ export class RelayRoom {
  * still listed by the runtime) throws on send; skipping it keeps the frame
  * reaching the live socket instead of dropping it for everyone after it.
  */
+function readAttachment(socket) {
+  try {
+    return socket.deserializeAttachment();
+  } catch {
+    return null;
+  }
+}
+
 export function broadcast(sockets, message) {
   let delivered = 0;
   for (const socket of sockets) {
