@@ -245,7 +245,7 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.equal(pwaVersion.version, "1.7.0");
+  assert.equal(pwaVersion.version, "1.8.0-beta.1");
 });
 
 test("every PWA shell reference and precache entry matches version.json", () => {

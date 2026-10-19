@@ -217,8 +217,8 @@ int compareVersions(String left, String right) {
   return (parts, preview);
 }
 
-const String currentAppVersion = '1.7.0';
-const String currentAppBuild = '68';
+const String currentAppVersion = '1.8.0-beta.1';
+const String currentAppBuild = '69';
 const Duration backgroundReleaseUpdateCheckInterval = Duration(hours: 7);
 final Uri defaultWebsiteUri = Uri.parse(
   'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/',
