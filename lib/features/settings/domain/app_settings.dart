@@ -159,6 +159,28 @@ final class AppSettings {
       ? notificationRules.attentionCustomSoundPath
       : customSoundPath;
 
+  /// Applies sounds an Agent saved because the user asked it to, for example
+  /// "ring X when you finish and Y when you need me". [attention] also
+  /// accepts [sameAsCompletionSound]. Throws [FormatException] for anything
+  /// outside [agentSelectableSoundValues].
+  AppSettings withReminderSounds({String? completion, String? attention}) {
+    if (completion != null &&
+        !agentSelectableSoundValues.contains(completion)) {
+      throw FormatException('Unsupported completion sound: $completion');
+    }
+    if (attention != null &&
+        attention != sameAsCompletionSound &&
+        !agentSelectableSoundValues.contains(attention)) {
+      throw FormatException('Unsupported attention sound: $attention');
+    }
+    return copyWith(
+      selectedSound: completion,
+      notificationRules: attention == null
+          ? null
+          : notificationRules.copyWith(attentionSound: attention),
+    );
+  }
+
   bool get requiresAgentSetupUpdate =>
       agentSetupAcknowledgedRevision < currentAgentSetupRevision;
 

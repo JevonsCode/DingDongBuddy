@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
 import 'package:dingdong/features/jev/data/jev_mcp_tools.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
+import 'package:dingdong/features/settings/domain/reminder_sounds.dart';
 
 /// Executes one advertised MCP tool against DingDong's local services.
 abstract interface class McpToolExecutor {
@@ -438,8 +439,27 @@ final class McpServer {
           'description':
               'Use attention when the user must respond or take over; use completion only for a confirmed final result.',
         },
+        'sound': <String, Object?>{
+          'type': 'string',
+          'enum': agentSelectableSoundValues,
+          'description':
+              'Only for a one-off sound the user asked for in this conversation. Omit it to use the sound the user saved for this kind.',
+        },
       },
       required: <String>['message'],
+    ),
+    _tool(
+      name: 'dingdong_set_reminder_sounds',
+      title: 'Set DingDong Reminder Sounds',
+      description:
+          'Save which sound DingDong plays when an Agent finishes (completionSound) and when it needs the user (attentionSound), only when the user asks for it, e.g. "ring dingBright when you finish and dingDeep when you need me". Provide one or both. attentionSound may be "sameAsCompletion". Custom sound files are chosen by the user in DingDong Settings.',
+      properties: <String, Object?>{
+        'completionSound': _enumProperty(agentSelectableSoundValues),
+        'attentionSound': _enumProperty(<String>[
+          sameAsCompletionSound,
+          ...agentSelectableSoundValues,
+        ]),
+      },
     ),
   ]);
 }

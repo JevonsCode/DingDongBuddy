@@ -6,6 +6,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
@@ -23,6 +24,7 @@ import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const Map<String, Map<String, String>> _expectedConversationPalette =
@@ -119,6 +121,55 @@ void main() {
 
       expect(response.statusCode, 400);
       expect(called, isFalse);
+    },
+  );
+
+  test(
+    'POST /settings/reminder-sounds saves validated per-kind sounds',
+    () async {
+      AppSettings settings = const AppSettings();
+      final AgentRouter router = AgentRouter(
+        updateReminderSounds: ({String? completion, String? attention}) async {
+          settings = settings.withReminderSounds(
+            completion: completion,
+            attention: attention,
+          );
+          return <String, Object?>{
+            'completionSound': settings.selectedSound,
+            'attentionSound': settings.notificationRules.attentionSound,
+          };
+        },
+      );
+
+      final HttpResponseData saved = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/settings/reminder-sounds',
+          body: '{"completionSound":"dingBright","attentionSound":"dingDeep"}',
+        ),
+      );
+      final HttpResponseData rejected = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/settings/reminder-sounds',
+          body: '{"attentionSound":"custom"}',
+        ),
+      );
+      final HttpResponseData empty = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/settings/reminder-sounds',
+          body: '{}',
+        ),
+      );
+
+      expect(saved.statusCode, 200);
+      expect(saved.json['completionSound'], 'dingBright');
+      expect(saved.json['attentionSound'], 'dingDeep');
+      expect(settings.soundFor(AgentNotificationKind.attention), 'dingDeep');
+      expect(rejected.statusCode, 400);
+      expect(settings.notificationRules.attentionSound, 'dingDeep');
+      expect(empty.statusCode, 400);
     },
   );
 

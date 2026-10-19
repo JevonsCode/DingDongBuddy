@@ -161,6 +161,7 @@ void main() {
           'dingdong_get_skill_deployments',
           'dingdong_reconcile_skill',
           'dingdong_notify',
+          'dingdong_set_reminder_sounds',
         ],
       );
       expect(
