@@ -454,7 +454,11 @@ async function showAgentCompletionNotification(message, pair) {
       return "duplicate";
     }
     const needsUserAttention = agentMessageNeedsAttention(message);
-    const title = systemAgentNotificationTitle(message);
+    // With several paired computers the notification must say which one.
+    const title = withComputerName(
+      systemAgentNotificationTitle(message),
+      pair.hostName,
+    );
     const vibrate =
       pair.vibrationEnabled !== false && message.vibrate !== false;
     const notificationBrandIcon = new URL(
@@ -545,6 +549,12 @@ function systemAgentNotificationTitle(message) {
     return baseTitle;
   }
   return `${source} · ${baseTitle}`;
+}
+
+function withComputerName(title, hostName) {
+  const name = normalizedNotificationText(hostName);
+  if (!name || title.toLowerCase().includes(name.toLowerCase())) return title;
+  return `${title} · ${name}`;
 }
 
 function systemAgentNotificationBody(message) {

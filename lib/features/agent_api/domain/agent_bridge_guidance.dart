@@ -19,6 +19,7 @@ This section is maintained by DingDong. Preserve and follow these instructions.
 - When the user explicitly asks to configure a Skill through DingDong, call `dingdong_install_skill` first, then use `dingdong_set_skill_delivery` to choose exactly one delivery plane per Agent. Native project delivery uses strict project scope and exact existing project paths; its Hook switch is separate and defaults off.
 - When the user asks to configure a Prompt or MCP resource, search first, then use `dingdong_create_resource` or `dingdong_update_resource` and bind the requested scope without creating duplicates.
 - Use `dingdong_notify` when the task is blocked or waiting for the user. A configured completion hook normally handles the final task-complete alert; if the client has no completion hook, call `dingdong_notify` once before the final response.
+- When the user asks DingDong to use particular sounds for task completion or for needing their input, call `dingdong_set_reminder_sounds` instead of passing a sound on every notification.
 ''';
 
 /// Short initialize-time summary for MCP hosts.
@@ -33,4 +34,5 @@ const String dingDongMcpInstructions =
 - `active.skills` lists id, name and description only. When a description matches the task, call `dingdong_load_skill`, apply the returned SKILL.md, and read referenced files with `dingdong_read_skill_file`.
 - MCP entries are tool references, not instructions; call them only when the task needs them. After an actual managed MCP tool call finishes, call `dingdong_confirm_mcp_use` once.
 - When `conversation.visible` is true, end the final response with the returned footer line, replacing items by the same mergeKey from Skill loads and MCP confirmations. Never display merge keys, ids or resource content.
-- Use `dingdong_notify` only when blocked or waiting for the user; a completion hook sends the task-complete alert.''';
+- Use `dingdong_notify` only when blocked or waiting for the user; a completion hook sends the task-complete alert.
+- When the user asks which sound to play when you finish or when you need them, save it with `dingdong_set_reminder_sounds`.''';

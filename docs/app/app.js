@@ -1,3 +1,4 @@
+import { computerDisplayName } from "./app-formatters.js?shell=49";
 import { renderTransferProgress } from './transfer-progress.js?shell=49';
 import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=49";
 import {
@@ -92,6 +93,7 @@ const state = {
   serviceWorkerRegistration: null,
   installPrompt: null,
   installStatus: "idle",
+  androidApp: null,
   installRequestedAt: Number(localStorage.getItem(storageKeys.installRequest)) || 0,
   installVerificationTimer: null,
   pwaUpdateAvailable: null,
@@ -1106,7 +1108,9 @@ function render() {
   elements["content-view"].hidden = confirmingPair || !hasPair;
   elements.composer.hidden = confirmingPair || !hasPair;
   if (hasPair) {
-    elements["settings-device-name"].textContent = session.pair.hostName;
+    elements["settings-device-name"].textContent = computerDisplayName(
+      session.pair,
+    );
     if (elements["message-input"].value !== session.draftText) {
       elements["message-input"].value = session.draftText;
     }

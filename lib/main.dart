@@ -254,6 +254,9 @@ Future<void> main(List<String> arguments) async {
       }
       return (await codexThreadInspector.inspectThreadId(threadId)).isSubagent;
     },
+    // The settings view keeps a copy of all settings and saves it whole, so it
+    // must reload before its next save or it would undo the Agent's change.
+    onSettingsChangedByAgent: () => settingsViewModel.reload(),
     agentTaskStartedAt: (DingRequest request) =>
         activityController.activeRunStartedAt(
           source: request.source ?? 'Agent',

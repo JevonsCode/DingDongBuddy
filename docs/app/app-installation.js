@@ -69,19 +69,33 @@ export function createInstallationController({
     scheduleInstallVerification();
   }
 
+  function androidAppOffer() {
+    // The native app delivers notifications through its own channels, so on
+    // Android it is recommended over the browser install once published.
+    return isAndroid() && state.androidApp ? state.androidApp : null;
+  }
+
   function renderInstallPromotion() {
     // The optional install suggestion yields to connection and notification
     // prompts; an install the user already started stays visible.
     const optionalSuggestion = ["idle", "available"].includes(
       state.installStatus,
     );
+    const nativeOffer = optionalSuggestion ? androidAppOffer() : null;
     const hidden =
       !isMobileBrowser() ||
-      isStandalone() ||
-      isBrowserPwaLauncher() ||
+      (!nativeOffer && (isStandalone() || isBrowserPwaLauncher())) ||
       (optionalSuggestion && hasHigherPriorityPrompt());
     elements["install-app-banner"].hidden = hidden;
     if (hidden) return;
+    if (nativeOffer) {
+      elements["install-app-title"].textContent = "推荐下载 Android 版";
+      elements["install-app-copy"].textContent =
+        "通知更稳定，可以分别设置提示音。";
+      elements["install-app-button"].textContent = "下载";
+      elements["install-app-button"].disabled = false;
+      return;
+    }
 
     const presentations = {
       idle: {
@@ -125,6 +139,13 @@ export function createInstallationController({
   }
 
   async function installApp() {
+    const nativeOffer = ["idle", "available"].includes(state.installStatus)
+      ? androidAppOffer()
+      : null;
+    if (nativeOffer) {
+      window.open(nativeOffer.url, "_blank", "noopener");
+      return;
+    }
     if (state.installStatus === "installed") {
       showInstallDialog({
         eyebrow: "已验证安装状态",
@@ -340,6 +361,24 @@ export function createInstallationController({
     }
   }
 
+  // Accepts only an HTTPS download on GitHub or this site, so a broken
+  // descriptor can never send people to an unexpected host.
+  function androidAppDescriptor(version) {
+    const app = version?.androidApp;
+    if (typeof app?.url !== "string" || typeof app?.version !== "string") {
+      return null;
+    }
+    try {
+      const url = new URL(app.url, location.href);
+      const trusted =
+        url.protocol === "https:" &&
+        (url.origin === location.origin || url.hostname === "github.com");
+      return trusted ? { url: url.href, version: app.version } : null;
+    } catch {
+      return null;
+    }
+  }
+
   async function fetchPwaVersion() {
     const url = new URL("./version.json", location.href);
     const response = await fetch(url, { cache: "no-store" });
@@ -377,6 +416,8 @@ export function createInstallationController({
         registration?.update(),
       ]);
       state.lastPwaUpdateCheckAt = now;
+      state.androidApp = androidAppDescriptor(version);
+      renderInstallPromotion();
       state.pwaUpdateAvailable =
         version.shell > currentPwaShellVersion ? version : null;
       state.pwaUpdateStatusMessage = state.pwaUpdateAvailable

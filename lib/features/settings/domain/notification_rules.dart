@@ -2,22 +2,10 @@ import 'dart:convert';
 
 import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/settings/domain/reminder_sounds.dart';
 import 'package:flutter/foundation.dart';
 
-/// Sound value meaning "use the completion sound" for the attention reminder.
-const String sameAsCompletionSound = 'sameAsCompletion';
-
-/// Sounds a reminder may use. `custom` reads the matching custom file path.
-const Set<String> notificationSoundValues = <String>{
-  'default',
-  'dingSoft',
-  'dingBright',
-  'dingCrisp',
-  'dingDeep',
-  'custom',
-  'system',
-  'muted',
-};
+export 'package:dingdong/features/settings/domain/reminder_sounds.dart';
 
 /// A daily local-time window in which reminders are recorded silently.
 ///

@@ -137,6 +137,9 @@ final class LinkedDevice {
   final LinkedDeviceKind kind;
   final String platform;
 
+  /// Product name of the device's operating system, or empty when unknown.
+  String get platformLabel => linkedDevicePlatformLabel(platform);
+
   /// Opaque relay rendezvous id. It is not derived from user information.
   final String room;
 
@@ -394,3 +397,16 @@ final class PendingDevicePairing {
     'createdAt': createdAt.toUtc().toIso8601String(),
   };
 }
+
+/// Maps the platform a device reports during pairing to a product name.
+/// Computers send Dart's `Platform.operatingSystem`; phones send their client.
+String linkedDevicePlatformLabel(String platform) =>
+    switch (platform.trim().toLowerCase()) {
+      'windows' => 'Windows',
+      'macos' => 'macOS',
+      'linux' => 'Linux',
+      'android' => 'Android',
+      'ios' || 'ios-pwa' => 'iOS',
+      'mobile-pwa' => 'Web',
+      _ => '',
+    };
