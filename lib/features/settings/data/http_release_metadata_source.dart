@@ -53,6 +53,38 @@ ReleaseMetadata _decode(String body) {
   if (app != 'DingDong') {
     throw const FormatException('Release metadata is for another app');
   }
+  final ReleaseMetadata stable = _decodeRelease(decoded, app: app);
+  final Object? rawBeta = decoded['beta'];
+  ReleaseMetadata? beta;
+  if (rawBeta is Map<String, Object?>) {
+    try {
+      // A beta inherits the app identity and website of the stable release.
+      beta = _decodeRelease(<String, Object?>{
+        'website': decoded['website'],
+        ...rawBeta,
+      }, app: app);
+    } on FormatException {
+      // A malformed beta block must never hide the stable update.
+      beta = null;
+    }
+  }
+  return ReleaseMetadata(
+    app: stable.app,
+    latestVersion: stable.latestVersion,
+    latestBuild: stable.latestBuild,
+    publishedAt: stable.publishedAt,
+    website: stable.website,
+    releasePage: stable.releasePage,
+    notes: stable.notes,
+    notesByLanguage: stable.notesByLanguage,
+    beta: beta,
+  );
+}
+
+ReleaseMetadata _decodeRelease(
+  Map<String, Object?> decoded, {
+  required String app,
+}) {
   final Object? rawNotes = decoded['notes'];
   final Object? rawNotesByLanguage = decoded['notesByLanguage'];
   final List<String> notes = rawNotes is List<Object?>

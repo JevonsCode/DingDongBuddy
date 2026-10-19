@@ -3744,4 +3744,11 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String get duplicateMcpServerDetail =>
       '这个 Agent 配置里还有一个同地址、不同名字的 MCP。两份都会在每次请求时加载全部工具，删掉不再需要的那一个即可。';
+
+  @override
+  String get allowBetaUpdates => '允许安装测试版（Beta）';
+
+  @override
+  String get allowBetaUpdatesDescription =>
+      '提前体验尚未正式发布的新功能，测试版可能不够稳定。关闭后会停留在当前测试版，直到更新的正式版发布。';
 }

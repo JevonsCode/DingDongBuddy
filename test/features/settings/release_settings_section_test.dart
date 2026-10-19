@@ -185,11 +185,13 @@ void main() {
 
 final class _ApplicationUpdater implements ApplicationUpdater {
   int installCount = 0;
+  String? lastBetaVersion;
   ApplicationUpdateStatus status = const ApplicationUpdateStatus();
 
   @override
-  Future<void> installLatest() async {
+  Future<void> installLatest({String? betaVersion}) async {
     installCount += 1;
+    lastBetaVersion = betaVersion;
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.current,
     );

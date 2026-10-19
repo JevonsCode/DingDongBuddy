@@ -55,7 +55,11 @@ class ReleaseSettingsSection extends StatelessWidget {
               ),
               _VersionRow(
                 label: context.l10n.latest,
-                value: status.latestVersion ?? context.l10n.unknown,
+                value: status.latestVersion == null
+                    ? context.l10n.unknown
+                    : status.targetIsBeta
+                    ? '${status.latestVersion} · Beta'
+                    : status.latestVersion!,
               ),
               const SizedBox(height: 8),
               const Divider(),
@@ -70,6 +74,14 @@ class ReleaseSettingsSection extends StatelessWidget {
                 ),
                 value: viewModel.settings.lifecycleTelemetryEnabled,
                 onChanged: viewModel.setLifecycleTelemetryEnabled,
+              ),
+              CompactSwitchListTile(
+                key: const Key('settings-allow-beta-updates'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.l10n.allowBetaUpdates),
+                subtitle: Text(context.l10n.allowBetaUpdatesDescription),
+                value: viewModel.settings.allowBetaUpdates,
+                onChanged: viewModel.setAllowBetaUpdates,
               ),
               if (status.isUpdateAvailable == true && releaseNotes.isNotEmpty)
                 Padding(

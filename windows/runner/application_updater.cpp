@@ -32,7 +32,8 @@ ApplicationUpdateSnapshot ApplicationUpdater::Snapshot() const {
   return snapshot_;
 }
 
-bool ApplicationUpdater::InstallLatest(std::string* error) {
+bool ApplicationUpdater::InstallLatest(bool allow_prerelease,
+                                       std::string* error) {
   {
     std::scoped_lock lock(mutex_);
     if (update_running_) {
@@ -44,7 +45,9 @@ bool ApplicationUpdater::InstallLatest(std::string* error) {
   }
 
   try {
-    std::thread([self = shared_from_this()] { self->RunUpdate(); }).detach();
+    std::thread([self = shared_from_this(), allow_prerelease] {
+      self->RunUpdate(allow_prerelease);
+    }).detach();
     return true;
   } catch (const std::exception& exception) {
     SetState("failed", std::nullopt, {}, exception.what());
@@ -55,9 +58,10 @@ bool ApplicationUpdater::InstallLatest(std::string* error) {
   }
 }
 
-void ApplicationUpdater::RunUpdate() {
+void ApplicationUpdater::RunUpdate(bool allow_prerelease) {
   try {
-    auto source = std::make_unique<Velopack::GithubSource>(kRepositoryUrl);
+    auto source = std::make_unique<Velopack::GithubSource>(
+        kRepositoryUrl, "", allow_prerelease);
     Velopack::UpdateManager manager(std::move(source));
     const auto update = manager.CheckForUpdates();
     if (!update.has_value()) {

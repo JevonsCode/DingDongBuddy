@@ -154,6 +154,9 @@ final class SettingsViewModel extends ChangeNotifier
         _loadedApiPort = loadedSettings.apiPort;
       }
       _settings = loadedSettings;
+      _releaseStatus = _releaseStatus.withAllowBeta(
+        loadedSettings.allowBetaUpdates,
+      );
       final LaunchAtStartup? launchAtStartup = _launchAtStartup;
       if (launchAtStartup != null) {
         final bool launchAtStartupEnabled = await launchAtStartup.isEnabled();
@@ -621,6 +624,13 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setAllowBetaUpdates(bool value) async {
+    _settings = _settings.copyWith(allowBetaUpdates: value);
+    _releaseStatus = _releaseStatus.withAllowBeta(value);
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setNotificationRules(NotificationRules value) async {
     _settings = _settings.copyWith(notificationRules: value);
     notifyListeners();
@@ -767,7 +777,11 @@ final class SettingsViewModel extends ChangeNotifier
       return;
     }
     try {
-      await updater.installLatest();
+      await updater.installLatest(
+        betaVersion: _releaseStatus.targetIsBeta
+            ? _releaseStatus.latestVersion
+            : null,
+      );
       if (_disposed) return;
       await _refreshApplicationUpdater();
       if (_disposed) return;

@@ -9,6 +9,7 @@ final class ReleaseMetadata {
     this.publishedAt,
     this.notes = const <String>[],
     this.notesByLanguage = const <String, List<String>>{},
+    this.beta,
   });
 
   final String app;
@@ -21,6 +22,10 @@ final class ReleaseMetadata {
   /// Legacy English-only notes kept for clients that require the array schema.
   final List<String> notes;
   final Map<String, List<String>> notesByLanguage;
+
+  /// Newest published beta, offered only to people who opted into beta
+  /// updates. Stable fields above always describe the latest stable release.
+  final ReleaseMetadata? beta;
 
   List<String> notesFor(String languageCode) {
     final String normalized = languageCode.trim().toLowerCase();
@@ -63,6 +68,7 @@ final class ReleaseStatus {
     this.isChecking = false,
     this.errorMessage,
     this.checkedAt,
+    this.allowBeta = false,
   });
 
   final String currentVersion;
@@ -72,10 +78,27 @@ final class ReleaseStatus {
   final String? errorMessage;
   final DateTime? checkedAt;
 
-  String? get latestVersion => metadata?.latestVersion;
-  List<String> get notes => metadata?.notes ?? const <String>[];
+  /// Whether the user allowed updating to beta releases.
+  final bool allowBeta;
+
+  /// The release this installation should move to: the beta when the user
+  /// allowed betas and it is newer than the latest stable release.
+  ReleaseMetadata? get target {
+    final ReleaseMetadata? stable = metadata;
+    final ReleaseMetadata? beta = stable?.beta;
+    if (!allowBeta || stable == null || beta == null) return stable;
+    return compareVersions(stable.latestVersion, beta.latestVersion) < 0
+        ? beta
+        : stable;
+  }
+
+  bool get targetIsBeta =>
+      metadata != null && target != null && !identical(target, metadata);
+
+  String? get latestVersion => target?.latestVersion;
+  List<String> get notes => target?.notes ?? const <String>[];
   List<String> notesFor(String languageCode) =>
-      metadata?.notesFor(languageCode) ?? const <String>[];
+      target?.notesFor(languageCode) ?? const <String>[];
   Uri get website => metadata?.website ?? defaultWebsiteUri;
   bool get isPreview => _releaseParts(currentVersion).$2.isNotEmpty;
   Uri get releasePage => isPreview && isUpdateAvailable != true
@@ -83,7 +106,7 @@ final class ReleaseStatus {
           'github.com',
           '/JevonsCode/DingDongBuddy/releases/tag/v${currentVersion.split('+').first}',
         )
-      : metadata?.releasePage ?? defaultReleasePageUri;
+      : target?.releasePage ?? defaultReleasePageUri;
 
   bool? get isUpdateAvailable {
     final String? latest = latestVersion;
@@ -96,6 +119,7 @@ final class ReleaseStatus {
     metadata: metadata,
     isChecking: true,
     checkedAt: checkedAt,
+    allowBeta: allowBeta,
   );
 
   ReleaseStatus resolved(ReleaseMetadata value, DateTime now) => ReleaseStatus(
@@ -103,6 +127,7 @@ final class ReleaseStatus {
     currentBuild: currentBuild,
     metadata: value,
     checkedAt: now.toUtc(),
+    allowBeta: allowBeta,
   );
 
   ReleaseStatus failed(String message, DateTime now) => ReleaseStatus(
@@ -111,6 +136,17 @@ final class ReleaseStatus {
     metadata: metadata,
     errorMessage: message,
     checkedAt: now.toUtc(),
+    allowBeta: allowBeta,
+  );
+
+  ReleaseStatus withAllowBeta(bool value) => ReleaseStatus(
+    currentVersion: currentVersion,
+    currentBuild: currentBuild,
+    metadata: metadata,
+    isChecking: isChecking,
+    errorMessage: errorMessage,
+    checkedAt: checkedAt,
+    allowBeta: value,
   );
 }
 

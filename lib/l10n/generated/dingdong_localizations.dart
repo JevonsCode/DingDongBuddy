@@ -6757,6 +6757,18 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'This Agent configuration also defines the same MCP endpoint under another name. Both copies load their tools on every request; remove the one you no longer need.'**
   String get duplicateMcpServerDetail;
+
+  /// Beta update channel setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow beta updates'**
+  String get allowBetaUpdates;
+
+  /// Beta update channel setting.
+  ///
+  /// In en, this message translates to:
+  /// **'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.'**
+  String get allowBetaUpdatesDescription;
 }
 
 class _DingDongLocalizationsDelegate

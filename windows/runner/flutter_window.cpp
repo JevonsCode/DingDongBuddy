@@ -360,8 +360,19 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (call.method_name() == "installLatest") {
+          bool allow_prerelease = false;
+          if (const auto* arguments =
+                  std::get_if<flutter::EncodableMap>(call.arguments())) {
+            const auto found =
+                arguments->find(flutter::EncodableValue("allowPrerelease"));
+            if (found != arguments->end()) {
+              if (const auto* value = std::get_if<bool>(&found->second)) {
+                allow_prerelease = *value;
+              }
+            }
+          }
           std::string error;
-          if (application_updater_->InstallLatest(&error)) {
+          if (application_updater_->InstallLatest(allow_prerelease, &error)) {
             result->Success();
           } else {
             result->Error("update_unavailable", error);

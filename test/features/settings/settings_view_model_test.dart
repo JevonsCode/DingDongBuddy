@@ -612,6 +612,64 @@ void main() {
     model.dispose();
   });
 
+  test('beta updates are offered only after the user opts in', () async {
+    final _FakeApplicationUpdater updater = _FakeApplicationUpdater();
+    final _FakeReleaseMetadataSource source = _FakeReleaseMetadataSource(
+      ReleaseMetadata(
+        app: 'DingDong',
+        latestVersion: '99.0.0',
+        website: Uri.parse('https://example.com/dingdong'),
+        releasePage: Uri.parse('https://example.com/releases/99.0.0'),
+        beta: ReleaseMetadata(
+          app: 'DingDong',
+          latestVersion: '99.1.0-beta.1',
+          website: Uri.parse('https://example.com/dingdong'),
+          releasePage: Uri.parse('https://example.com/releases/99.1.0-beta.1'),
+          notes: const <String>['Beta channel'],
+        ),
+      ),
+    );
+    final SettingsViewModel model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+      releaseMetadataSource: source,
+      applicationUpdater: updater,
+    );
+    await model.load();
+    await model.checkForUpdates();
+
+    expect(model.releaseStatus.latestVersion, '99.0.0');
+    expect(model.releaseStatus.targetIsBeta, isFalse);
+
+    await model.setAllowBetaUpdates(true);
+    expect(model.releaseStatus.latestVersion, '99.1.0-beta.1');
+    expect(model.releaseStatus.targetIsBeta, isTrue);
+    expect(model.releaseStatus.notes, <String>['Beta channel']);
+    await model.installLatestUpdate();
+    expect(updater.lastBetaVersion, '99.1.0-beta.1');
+    model.dispose();
+  });
+
+  test('an older beta never replaces a newer stable release', () {
+    final ReleaseStatus status = ReleaseStatus(
+      allowBeta: true,
+      metadata: ReleaseMetadata(
+        app: 'DingDong',
+        latestVersion: '99.1.0',
+        website: Uri.parse('https://example.com'),
+        releasePage: Uri.parse('https://example.com/stable'),
+        beta: ReleaseMetadata(
+          app: 'DingDong',
+          latestVersion: '99.1.0-beta.3',
+          website: Uri.parse('https://example.com'),
+          releasePage: Uri.parse('https://example.com/beta'),
+        ),
+      ),
+    );
+
+    expect(status.latestVersion, '99.1.0');
+    expect(status.targetIsBeta, isFalse);
+  });
+
   test('quick paste permission can be inspected and opened', () async {
     final _FakeQuickPastePermission permission = _FakeQuickPastePermission();
     final SettingsViewModel model = SettingsViewModel(
@@ -910,11 +968,13 @@ final class _SystemDataCleaner implements SystemDataCleaner {
 
 final class _FakeApplicationUpdater implements ApplicationUpdater {
   int installCount = 0;
+  String? lastBetaVersion;
   ApplicationUpdateStatus status = const ApplicationUpdateStatus();
 
   @override
-  Future<void> installLatest() async {
+  Future<void> installLatest({String? betaVersion}) async {
     installCount += 1;
+    lastBetaVersion = betaVersion;
     status = const ApplicationUpdateStatus(
       phase: ApplicationUpdatePhase.downloading,
       progress: 0.42,
@@ -936,7 +996,7 @@ final class _CompleterApplicationUpdater implements ApplicationUpdater {
       Completer<ApplicationUpdateStatus>();
 
   @override
-  Future<void> installLatest() async {}
+  Future<void> installLatest({String? betaVersion}) async {}
 
   @override
   Future<bool> isSupported() async => true;

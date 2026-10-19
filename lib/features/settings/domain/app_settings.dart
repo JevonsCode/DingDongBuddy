@@ -95,6 +95,7 @@ final class AppSettings {
     this.clipboardMaxAgeDays = 120,
     this.allowAgentClipboardContent = false,
     this.lifecycleTelemetryEnabled = true,
+    this.allowBetaUpdates = false,
     this.rememberAgentActivity = true,
     this.notifyAgentCompletion = true,
     this.notifyAgentAttention = true,
@@ -128,6 +129,9 @@ final class AppSettings {
   final int clipboardMaxAgeDays;
   final bool allowAgentClipboardContent;
   final bool lifecycleTelemetryEnabled;
+
+  /// Lets the updater offer beta releases newer than the latest stable one.
+  final bool allowBetaUpdates;
   final bool rememberAgentActivity;
   final bool notifyAgentCompletion;
   final bool notifyAgentAttention;
@@ -178,6 +182,7 @@ final class AppSettings {
       clipboardMaxAgeDays: clipboardMaxAgeDays.clamp(1, 730),
       allowAgentClipboardContent: allowAgentClipboardContent,
       lifecycleTelemetryEnabled: lifecycleTelemetryEnabled,
+      allowBetaUpdates: allowBetaUpdates,
       rememberAgentActivity: rememberAgentActivity,
       notifyAgentCompletion: notifyAgentCompletion,
       notifyAgentAttention: notifyAgentAttention,
@@ -217,6 +222,7 @@ final class AppSettings {
     int? clipboardMaxAgeDays,
     bool? allowAgentClipboardContent,
     bool? lifecycleTelemetryEnabled,
+    bool? allowBetaUpdates,
     bool? rememberAgentActivity,
     bool? notifyAgentCompletion,
     bool? notifyAgentAttention,
@@ -253,6 +259,7 @@ final class AppSettings {
           allowAgentClipboardContent ?? this.allowAgentClipboardContent,
       lifecycleTelemetryEnabled:
           lifecycleTelemetryEnabled ?? this.lifecycleTelemetryEnabled,
+      allowBetaUpdates: allowBetaUpdates ?? this.allowBetaUpdates,
       rememberAgentActivity:
           rememberAgentActivity ?? this.rememberAgentActivity,
       notifyAgentCompletion:

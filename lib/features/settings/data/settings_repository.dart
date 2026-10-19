@@ -64,6 +64,7 @@ final class SettingsRepository {
       _backend.read(_selectionTargetLanguageKey),
       _backend.read(_selectionUnloadLocalModelKey),
       _backend.read(_notificationRulesKey),
+      _backend.read(_allowBetaUpdatesKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -113,6 +114,7 @@ final class SettingsRepository {
       showConversationTokenUsage: showConversationTokenUsage,
       notifySubagentActivity: values[22] is bool ? values[22]! as bool : false,
       notificationRules: NotificationRules.parse(values[36]),
+      allowBetaUpdates: values[37] == true,
       conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
       agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
       agentActivityCountHours: values[14] is int ? values[14]! as int : 24,
@@ -190,6 +192,7 @@ final class SettingsRepository {
         _notificationRulesKey,
         settings.notificationRules.encode(),
       ),
+      _backend.write(_allowBetaUpdatesKey, settings.allowBetaUpdates),
       _backend.write(
         _conversationFooterSymbolsKey,
         settings.conversationFooterSymbols.encode(),
@@ -282,6 +285,7 @@ const String _notifyCodexVoiceActivityKey =
     'dingdong.agentActivity.notifyCodexVoice';
 const String _notifySubagentActivityKey =
     'dingdong.agentActivity.notifySubagents';
+const String _allowBetaUpdatesKey = 'dingdong.updates.allowBeta';
 const String _notificationRulesKey = 'dingdong.agentActivity.notificationRules';
 const String _conversationFooterSymbolsKey =
     'dingdong.agentApi.conversationFooterSymbols';
