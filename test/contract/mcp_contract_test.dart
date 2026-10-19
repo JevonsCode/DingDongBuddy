@@ -62,16 +62,16 @@ void main() {
       expect(instructions.length, lessThan(2048));
       for (final String required in <String>[
         'dingdong_bridge',
-        'expand="prompts"',
         'required instruction',
-        'authoritative Prompt snapshot',
+        'authoritative snapshot',
         'replaces',
         'dingdong_load_skill',
         'dingdong_read_skill_file',
         'dingdong_confirm_mcp_use',
-        'MCP entries are tool references',
-        'conversation.visible',
-        'mergeKey',
+        'tool references',
+        'footer',
+        'footerMark',
+        'Never print `statusLine`',
         'completion hook',
         'dingdong_notify',
       ]) {
@@ -126,6 +126,33 @@ void main() {
       (failed['structuredContent']! as Map<String, Object?>)['message'],
       'A resource ID is required.',
     );
+  });
+
+  test('Claude Code is not sent the MCP confirmation tool', () async {
+    Future<List<Object?>> listed(String source) async {
+      final McpServer server = McpServer(
+        omittedTools: McpServer.omittedToolsForSource(source),
+      );
+      final Map<String, Object?> response =
+          jsonDecode(
+                (await server.handleLine(
+                  '{"jsonrpc":"2.0","id":1,"method":"tools/list"}',
+                ))!,
+              )
+              as Map<String, Object?>;
+      return ((response['result']! as Map<String, Object?>)['tools']!
+              as List<Object?>)
+          .map((Object? tool) => (tool! as Map<String, Object?>)['name'])
+          .toList();
+    }
+
+    expect(
+      await listed('Claude Code'),
+      isNot(contains('dingdong_confirm_mcp_use')),
+    );
+    expect(await listed('Claude Code'), contains('dingdong_bridge'));
+    expect(await listed('Codex'), contains('dingdong_confirm_mcp_use'));
+    expect(McpServer.omittedToolsForSource(null), isEmpty);
   });
 
   test(
@@ -188,23 +215,23 @@ void main() {
           'conversationId',
         ]),
       );
-      expect(bridge['description'], contains('id, name, and description'));
-      expect(bridge['description'], contains('authoritative Prompt snapshot'));
-      expect(
-        bridge['description'],
-        contains('authoritative resolved dynamic-delivery Skill catalog'),
-      );
-      expect(bridge['description'], contains('active.skillSuppressions'));
-      expect(
-        bridge['description'],
-        contains('Every active, scope-matched MCP'),
-      );
-      expect(bridge['description'], contains('single Markdown text line'));
-      expect(bridge['description'], contains('DingDong stays text'));
-      expect(bridge['description'], contains('ANSI'));
-      expect(bridge['description'], contains('confirmedUse=true'));
-      expect(bridge['description'], contains('dingdong_confirm_mcp_use'));
-      expect(bridge['description'], contains('MCP marker means called'));
+      expect(properties.keys, contains('knownHash'));
+      for (final String required in <String>[
+        'authoritative snapshot',
+        'required instructions',
+        'id, name and description',
+        'dingdong_load_skill',
+        'tool references',
+        'footer',
+        'footerMark',
+        'never print statusLine',
+        'knownHash',
+        'expand="all"',
+      ]) {
+        expect(bridge['description'], contains(required));
+      }
+      // The description is resent with every request; keep it short.
+      expect((bridge['description']! as String).length, lessThan(800));
       expect(bridge['description'], isNot(contains('iframe')));
       expect(bridge['description'], isNot(contains('render tool')));
       expect(properties, isNot(contains('limit')));
@@ -253,11 +280,7 @@ void main() {
       expect(loadSchema['required'], isNull);
       expect(
         toolNamed('dingdong_load_skill')['description'],
-        contains('marker="*"'),
-      );
-      expect(
-        toolNamed('dingdong_load_skill')['description'],
-        contains('same mergeKey'),
+        contains('footerMark'),
       );
       // Claude Code silently drops tools whose input schema has top-level
       // combinators, so name-or-id is enforced by the server instead.
@@ -295,18 +318,17 @@ void main() {
       final Map<String, Object?> confirmMcpSchema =
           toolNamed('dingdong_confirm_mcp_use')['inputSchema']
               as Map<String, Object?>;
-      expect(confirmMcpSchema['required'], <String>[
-        'id',
-        'serverName',
-        'toolName',
-      ]);
+      expect(confirmMcpSchema['required'], <String>['serverName', 'toolName']);
+      expect(
+        (confirmMcpSchema['properties'] as Map<String, Object?>).keys,
+        contains('id'),
+      );
       expect(
         toolNamed('dingdong_confirm_mcp_use')['description'],
         allOf(
-          contains('terminal result'),
-          contains('Do not call for Bridge availability'),
-          contains('marker="*"'),
-          contains('not necessarily succeeded'),
+          contains('succeeded or failed'),
+          contains('Never call for availability'),
+          contains('footerMark'),
         ),
       );
       expect(

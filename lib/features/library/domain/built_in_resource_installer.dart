@@ -17,7 +17,7 @@ final class BuiltInResourceInstaller {
        _skillDocumentLoader = skillDocumentLoader;
 
   static const String preferenceKey = 'dingdong.library.builtInResourceVersion';
-  static const int currentVersion = 13;
+  static const int currentVersion = 14;
 
   final ResourceStore _store;
   final PreferencesBackend _preferences;
@@ -59,7 +59,7 @@ final class BuiltInResourceInstaller {
       next.add(builtInDingDongConfigureSkill(await loadBundledSkill(), _now()));
       changed = true;
     }
-    if (installedVersion < 13) {
+    if (installedVersion < 14) {
       final int index = next.indexWhere(
         (Resource resource) => resource.id == builtInDingDongConfigureSkillId,
       );
@@ -105,6 +105,28 @@ final class BuiltInResourceInstaller {
             title: bundled.title,
             content: bundled.content,
             agentSessionName: bundled.agentSessionName,
+            updatedAt: _now().toUtc(),
+          );
+          changed = true;
+        }
+      }
+    }
+    if (installedVersion < 14) {
+      // The marker used to ship pinned and always-on. Turn off only the
+      // untouched bundled default; any edited copy is the user's choice.
+      final int index = next.indexWhere(
+        (Resource resource) => resource.id == builtInReplyMarkerPromptId,
+      );
+      if (index >= 0) {
+        final Resource current = next[index];
+        final Resource bundled = builtInReplyMarkerPrompt(_now());
+        if (current.title == bundled.title &&
+            current.content == bundled.content &&
+            current.pinned &&
+            current.activation == ResourceActivation.always) {
+          next[index] = current.copyWith(
+            pinned: false,
+            activation: bundled.activation,
             updatedAt: _now().toUtc(),
           );
           changed = true;

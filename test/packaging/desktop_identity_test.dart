@@ -81,42 +81,36 @@ void main() {
     );
   });
 
-  test(
-    'desktop hosts consume application version 1.7.0 from pubspec',
-    () {
-      final String pubspec = File('pubspec.yaml').readAsStringSync();
-      final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
-      final String windowsResources = File(
-        'windows/runner/Runner.rc',
-      ).readAsStringSync();
-      final String releaseVersion = File(
-        'lib/features/settings/domain/release_update.dart',
-      ).readAsStringSync();
+  test('desktop hosts consume application version 1.7.0 from pubspec', () {
+    final String pubspec = File('pubspec.yaml').readAsStringSync();
+    final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
+    final String windowsResources = File(
+      'windows/runner/Runner.rc',
+    ).readAsStringSync();
+    final String releaseVersion = File(
+      'lib/features/settings/domain/release_update.dart',
+    ).readAsStringSync();
 
-      expect(pubspec, contains('version: 1.7.0+68'));
-      expect(
-        releaseVersion,
-        contains("const String currentAppVersion = '1.7.0';"),
-      );
-      expect(releaseVersion, contains("const String currentAppBuild = '68';"));
-      // Protocol client/server info reuses the one Dart version constant.
-      for (final String path in const <String>[
-        'lib/features/agent_api/data/mcp_server.dart',
-        'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
-      ]) {
-        final String source = File(path).readAsStringSync();
-        expect(source, contains("'version': currentAppVersion"), reason: path);
-        expect(source, isNot(contains('1.7.0')), reason: path);
-      }
-      expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
-      expect(windowsResources, contains('FLUTTER_VERSION'));
-      expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,68'));
-      expect(
-        windowsResources,
-        contains('#define VERSION_AS_STRING "1.7.0"'),
-      );
-    },
-  );
+    expect(pubspec, contains('version: 1.7.0+68'));
+    expect(
+      releaseVersion,
+      contains("const String currentAppVersion = '1.7.0';"),
+    );
+    expect(releaseVersion, contains("const String currentAppBuild = '68';"));
+    // Protocol client/server info reuses the one Dart version constant.
+    for (final String path in const <String>[
+      'lib/features/agent_api/data/mcp_server.dart',
+      'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
+    ]) {
+      final String source = File(path).readAsStringSync();
+      expect(source, contains("'version': currentAppVersion"), reason: path);
+      expect(source, isNot(contains('1.7.0')), reason: path);
+    }
+    expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
+    expect(windowsResources, contains('FLUTTER_VERSION'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,7,0,68'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.7.0"'));
+  });
 
   test('macOS About uses the canonical DingDong logo', () {
     final File canonicalLogo = File('Assets/DingDongIP/AgentToolIcon.png');

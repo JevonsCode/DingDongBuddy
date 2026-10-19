@@ -6,11 +6,20 @@ import 'package:path/path.dart' as path;
 
 /// A local-only renderer. Only matched DingDong tool results supply resources;
 /// user text and other tools cannot create badges or confirm resource use.
+///
+/// Claude Code never echoes a DingDong footer. The Bridge returns a compact
+/// `statusLine` receipt instead, and resource use is read passively from the
+/// transcript: a Skill is marked after a successful `dingdong_load_skill`, and
+/// a managed MCP after any of its tools returns a result.
 final class ClaudeConversationStatusLine {
   final Map<String, String> _calls = <String, String>{};
-  final Map<String, Map<String, Object?>> _items =
-      <String, Map<String, Object?>>{};
+  final List<String> _prompts = <String>[];
+  final Map<String, String> _skills = <String, String>{};
+  final Map<String, String> _mcps = <String, String>{};
+  final Set<String> _marked = <String>{};
   final Map<String, Map<String, int?>> _usage = <String, Map<String, int?>>{};
+  Map<String, Object?>? _lastReceipt;
+  String? _lastHash;
   bool _loaded = false;
   bool _showTokens = false;
   int _anonymousResponse = 0;
@@ -23,9 +32,8 @@ final class ClaudeConversationStatusLine {
         (content is String ||
             content is List &&
                 content.any((b) => _object(b)?['type'] == 'text'))) {
-      _items.clear();
+      _clearResources();
       _calls.clear();
-      _loaded = false;
     }
     if (row['type'] == 'assistant') {
       final usage = _object(message?['usage']);
@@ -53,11 +61,9 @@ final class ClaudeConversationStatusLine {
       if (row['type'] == 'assistant' && block['type'] == 'tool_use') {
         final name = block['name'];
         if (name is String &&
-            const <String>{
-              'mcp__dingdong__dingdong_bridge',
-              'mcp__dingdong__dingdong_load_skill',
-              'mcp__dingdong__dingdong_confirm_mcp_use',
-            }.contains(name) &&
+            (name == _bridgeTool ||
+                name == _loadSkillTool ||
+                claudeManagedMcpServer(name) != null) &&
             block['id'] is String) {
           _calls[block['id']! as String] = name;
         }
@@ -65,62 +71,70 @@ final class ClaudeConversationStatusLine {
       if (row['type'] != 'user' || block['type'] != 'tool_result') continue;
       final name = _calls.remove(block['tool_use_id']);
       if (name == null) continue;
-      final isBridge = name.endsWith('__dingdong_bridge');
-      if (isBridge) {
-        _items.clear();
-        _loaded = false;
+      if (name == _bridgeTool) {
+        _clearResources();
+      } else if (name != _loadSkillTool) {
+        // A finished call counts even when the tool reported an error: the
+        // marker means "called", not "succeeded".
+        final server = claudeManagedMcpServer(name)!;
+        if (_mcps.containsKey(server)) _marked.add('mcp:$server');
+        continue;
       }
       if (block['is_error'] == true) continue;
       final result = _result(block['content']);
       if (result?['status'] != 'ok') continue;
-      final conversation = _object(result?['conversation']);
-      if (isBridge) {
+      if (name == _bridgeTool) {
+        final receipt = result?['unchanged'] == true
+            ? (result?['hash'] == _lastHash ? _lastReceipt : null)
+            : _object(result?['statusLine']);
+        if (receipt == null) continue;
         _loaded = true;
-        final capsule = _object(conversation?['capsule']);
-        _showTokens = capsule?['tokenUsage'] != null;
-        if (conversation?['visible'] != true) continue;
-        final items = capsule?['items'];
-        if (items is List) {
-          for (final rawItem in items.take(24)) {
-            final item = _object(rawItem);
-            if (item?['mergeKey'] is String) {
-              _items[item!['mergeKey']! as String] = item;
-            }
-          }
-        }
+        _lastReceipt = receipt;
+        _lastHash = result?['hash'] as String?;
+        _showTokens = receipt['tokens'] == true;
+        final prompts = receipt['prompts'];
+        if (prompts is List) _prompts.addAll(prompts.whereType<String>());
+        _skills.addAll(_tokens(receipt['skills']));
+        _mcps.addAll(_tokens(receipt['mcps']));
       } else {
-        final item = _object(conversation?['item']);
-        final key = item?['mergeKey'];
-        if (key is String &&
-            _items.containsKey(key) &&
-            item?['confirmedUse'] == true) {
-          _items[key] = item!;
-        }
+        final id = _object(result?['skill'])?['id'];
+        if (id is String && _skills.containsKey(id)) _marked.add('skill:$id');
       }
     }
+  }
+
+  void _clearResources() {
+    _prompts.clear();
+    _skills.clear();
+    _mcps.clear();
+    _marked.clear();
+    _loaded = false;
   }
 
   String render({bool ansi = true}) {
     String color(String value, int code) =>
         ansi ? '\u001b[38;5;${code}m$value\u001b[0m' : value;
     final tokens = <String>[];
-    for (final item in _items.values) {
-      final raw = item['lineToken'];
-      if (raw is! String) continue;
+    void add(String raw, int code, {bool marked = false}) {
+      if (tokens.length >= 24) return;
       // Escape sequences from transcript content must never control the terminal.
-      final value = raw
-          .replaceAll(RegExp(r'[\x00-\x1f\x7f-\x9f\u2028\u2029]'), '')
-          .replaceAll(r'\*', '*')
-          .replaceAll(r'\|', '|');
-      if (value.isEmpty) continue;
-      final safe = String.fromCharCodes(value.runes.take(128));
-      tokens.add(
-        color(safe, switch (item['type']) {
-          'prompt' => 178,
-          'skill' => 69,
-          _ => 71,
-        }),
+      final value = raw.replaceAll(
+        RegExp(r'[\x00-\x1f\x7f-\x9f\u2028\u2029]'),
+        '',
       );
+      if (value.isEmpty) return;
+      final safe = String.fromCharCodes(value.runes.take(128));
+      tokens.add(color(marked ? '$safe*' : safe, code));
+    }
+
+    for (final token in _prompts) {
+      add(token, 178);
+    }
+    for (final MapEntry(:key, :value) in _skills.entries) {
+      add(value, 69, marked: _marked.contains('skill:$key'));
+    }
+    for (final MapEntry(:key, :value) in _mcps.entries) {
+      add(value, 71, marked: _marked.contains('mcp:$key'));
     }
     final parts = <String>[
       'DingDong',
@@ -195,6 +209,26 @@ final class ClaudeConversationStatusLine {
     }
   }
 }
+
+const String _bridgeTool = 'mcp__dingdong__dingdong_bridge';
+const String _loadSkillTool = 'mcp__dingdong__dingdong_load_skill';
+
+/// Managed DingDong MCP server named by a Claude Code tool such as
+/// `mcp__dingdong-gitlab-abc123__search`, or null for any other tool.
+String? claudeManagedMcpServer(String toolName) {
+  if (!toolName.startsWith('mcp__')) return null;
+  final rest = toolName.substring(5);
+  final end = rest.indexOf('__');
+  if (end <= 0) return null;
+  final server = rest.substring(0, end).toLowerCase().replaceAll('_', '-');
+  return server.startsWith('dingdong-') ? server : null;
+}
+
+Map<String, String> _tokens(Object? value) => <String, String>{
+  if (value is Map)
+    for (final MapEntry(:key, :value) in value.entries)
+      if (key is String && value is String) key: value,
+};
 
 Map<String, Object?>? _object(Object? value) =>
     value is Map<String, Object?> ? value : null;

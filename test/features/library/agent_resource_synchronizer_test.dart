@@ -830,33 +830,17 @@ mcp:
       String contents = agents.readAsStringSync();
       expect(contents, startsWith('- Keep the existing user instruction.'));
       expect(contents, contains('dingdong_bridge'));
-      expect(contents, contains('every returned active Prompt'));
-      expect(contents, contains('authoritative Prompt snapshot'));
-      expect(contents, contains('replaces every Prompt set'));
-      expect(contents, contains('authoritative Skill catalog'));
-      expect(contents, contains('every valid, enabled, scope-matched Skill'));
+      expect(contents, contains('apply every returned Prompt in full'));
+      expect(contents, contains('replaces earlier ones'));
       expect(contents, contains('dingdong_load_skill'));
-      expect(contents, contains('dingdong_confirm_mcp_use'));
-      expect(contents, contains('dingdong_read_skill_file'));
-      expect(contents, contains('Call configured MCP tools only when'));
-      expect(contents, contains('conversation.visible'));
-      expect(contents, contains('conversation.line'));
-      expect(contents, contains('exactly once'));
-      expect(contents, contains('keep DingDong as text'));
-      expect(contents, contains('Do not use an image'));
-      expect(contents, contains('current merged ANSI tokens'));
-      expect(contents, contains('current merged plain-text tokens'));
-      expect(contents, contains('symbols and lineToken values'));
-      expect(contents, contains('user-configurable'));
-      expect(contents, contains('confirmedUse'));
-      expect(contents, contains('MCP marker means called'));
-      expect(contents, contains('Prompt items remain unmarked'));
-      expect(contents, contains('toolNamePrefix'));
-      expect(contents, contains('mergeKey'));
-      expect(
-        contents,
-        contains('does not claim that every instruction was followed'),
-      );
+      expect(contents, contains('Call returned MCP tools only when'));
+      expect(contents, contains('`footer`'));
+      expect(contents, contains('Never print `statusLine`'));
+      expect(contents, contains('dingdong_notify'));
+      // Response details live in tool descriptions, not in this per-request
+      // prompt-file block.
+      expect(contents, isNot(contains('mergeKey')));
+      expect(contents, isNot(contains('dingdong_confirm_mcp_use')));
       expect(contents, isNot(contains('dingdong_render_conversation_footer')));
       expect(contents, isNot(contains('iframe')));
       expect(

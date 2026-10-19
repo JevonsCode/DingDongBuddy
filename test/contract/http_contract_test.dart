@@ -882,7 +882,49 @@ void main() {
           body: '{"task":"Ship Flutter release","source":"Codex"}',
         ),
       );
-      final active = response.json['active'] as Map<String, Object?>;
+      const String markdownLine =
+          'DingDong · ♥ 代码审查与发布流... | ♦ 部署自动化助手 | ♠ 生产环境监控连接';
+      // The default response carries only what the model acts on.
+      expect(response.json, <String, Object?>{
+        'status': 'ok',
+        'active': <String, Object?>{
+          'prompts': <Object?>[
+            <String, Object?>{
+              'title': '代码审查与发布流程',
+              'content': 'Use the release checklist.',
+            },
+          ],
+          'skills': <Object?>[
+            <String, Object?>{
+              'id': 'skill',
+              'name': 'flutter-skill',
+              'description': 'Build and release Flutter applications',
+            },
+          ],
+          'mcps': <Object?>[
+            <String, Object?>{
+              'serverName': 'dingdong-untitled-skill-mcp',
+              'title': '生产环境监控连接',
+            },
+          ],
+        },
+        'footer': markdownLine,
+        'hash': matches(RegExp(r'^[0-9a-f]{12}$')),
+      });
+      expect(
+        (await store.load()).map((Resource item) => item.usageCount),
+        <int>[1, 0, 0],
+      );
+
+      final HttpResponseData full = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body:
+              '{"task":"Ship Flutter release","source":"Codex","expand":"all"}',
+        ),
+      );
+      final active = full.json['active'] as Map<String, Object?>;
       final prompts = active['prompts'] as List<Object?>;
       final skills = active['skills'] as List<Object?>;
       final mcps = active['mcps'] as List<Object?>;
@@ -891,21 +933,11 @@ void main() {
         (prompts.single as Map<String, Object?>)['content'],
         contains('checklist'),
       );
-      expect(
-        (skills.single as Map<String, Object?>),
-        isNot(contains('content')),
-      );
       expect((skills.single as Map<String, Object?>).keys, <String>[
         'id',
         'name',
         'description',
       ]);
-      expect(skills.single, containsPair('name', 'flutter-skill'));
-      expect(
-        skills.single,
-        containsPair('description', 'Build and release Flutter applications'),
-      );
-      expect((mcps.single as Map<String, Object?>), isNot(contains('content')));
       expect(
         mcps.single,
         containsPair('serverName', 'dingdong-untitled-skill-mcp'),
@@ -914,11 +946,11 @@ void main() {
         mcps.single,
         containsPair('toolNamePrefix', 'mcp__dingdong_untitled_skill_mcp__'),
       );
-      const String markdownLine =
-          'DingDong · ♥ 代码审查与发布流... | ♦ 部署自动化助手 | ♠ 生产环境监控连接';
+      expect(full.json['footer'], markdownLine);
+      expect(full.json['hash'], response.json['hash']);
       const String ansiLine =
           '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m♥ 代码审查与发布流...\u001B[0m | \u001B[38;5;69m♦ 部署自动化助手\u001B[0m | \u001B[38;5;71m♠ 生产环境监控连接\u001B[0m';
-      expect(response.json['conversation'], <String, Object?>{
+      expect(full.json['conversation'], <String, Object?>{
         'visible': true,
         'capsule': <String, Object?>{
           'label': 'DingDong',
@@ -968,7 +1000,7 @@ void main() {
         'fallbackLine': markdownLine,
         'titles': <String>['代码审查与发布流...', '部署自动化助手', '生产环境监控连接'],
       });
-      expect(response.json['delivery'], <String, Object?>{
+      expect(full.json['delivery'], <String, Object?>{
         'prompts': 'full-required-instructions',
         'promptSnapshot': 'authoritative-replace',
         'skills': 'dynamic-id-name-description-catalog-load-on-match',
@@ -977,11 +1009,11 @@ void main() {
       });
       expect(
         (await store.load()).map((Resource item) => item.usageCount),
-        <int>[1, 0, 0],
+        <int>[2, 0, 0],
       );
       expect(
         (await store.load()).map((Resource item) => item.candidateCount),
-        <int>[0, 1, 1],
+        <int>[0, 2, 2],
       );
       expect(
         (await store.load()).map((Resource item) => item.invocationCount),
@@ -1043,7 +1075,7 @@ void main() {
               as List<Object?>;
 
       expect(prompts, hasLength(1));
-      expect((prompts.single as Map<String, Object?>)['id'], 'api-policy');
+      expect((prompts.single as Map<String, Object?>)['title'], 'API policy');
     },
   );
 
@@ -1095,7 +1127,7 @@ void main() {
         ),
       );
       expect(
-        (defaultResponse.json['conversation'] as Map<String, Object?>)['line'],
+        defaultResponse.json['footer'],
         'DingDong · ♥ Prompt | ♦ Footer | ♠ MCP',
       );
 
@@ -1122,7 +1154,7 @@ void main() {
         compatibilityResponse,
       ]) {
         expect(
-          (response.json['conversation'] as Map<String, Object?>)['line'],
+          response.json['footer'],
           'DingDong · ◇ Prompt | ◆ Footer | ● MCP',
         );
       }
@@ -1133,37 +1165,169 @@ void main() {
           uri: '/agent/skills/load?name=footer-skill&source=Codex',
         ),
       );
-      final Map<String, Object?> skillConversation =
-          skillResponse.json['conversation']! as Map<String, Object?>;
-      expect(
-        (skillConversation['item'] as Map<String, Object?>)['lineToken'],
-        r'◆ Footer\*',
-      );
+      expect(skillResponse.json['footerMark'], <String, Object?>{
+        'from': '◆ Footer',
+        'to': r'◆ Footer\*',
+      });
 
       final HttpResponseData mcpResponse = await router.route(
         const HttpRequestData(
           method: 'GET',
           uri:
-              '/agent/mcps/confirm-use?id=footer-mcp&serverName=dingdong-mcp-footer&toolName=mcp__dingdong_mcp_footer__read&source=Codex',
+              '/agent/mcps/confirm-use?serverName=dingdong-mcp-footer&toolName=mcp__dingdong_mcp_footer__read&source=Codex',
         ),
       );
-      final Map<String, Object?> mcpConversation =
-          mcpResponse.json['conversation']! as Map<String, Object?>;
       expect(mcpResponse.statusCode, 200);
-      expect(
-        mcpConversation['evidence'],
-        'agent-reported-mcp-tool-call-result',
+      expect(mcpResponse.json['footerMark'], <String, Object?>{
+        'from': '● MCP',
+        'to': r'● MCP\*',
+      });
+
+      // Non-Codex footer hosts get the same tokens as plain text.
+      final HttpResponseData cursorSkill = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/agent/skills/load?name=footer-skill&source=Cursor',
+        ),
       );
-      expect(
-        (mcpConversation['item'] as Map<String, Object?>),
-        containsPair('lineToken', r'● MCP\*'),
-      );
-      expect(
-        (mcpConversation['item'] as Map<String, Object?>),
-        containsPair('usage', 'called'),
-      );
+      expect(cursorSkill.json['footerMark'], <String, Object?>{
+        'from': '◆ Footer',
+        'to': '◆ Footer*',
+      });
     },
   );
+
+  test(
+    'Claude Code gets a status-line receipt instead of a printed footer',
+    () async {
+      final DateTime now = DateTime.utc(2026, 10, 18);
+      final AgentRouter router = AgentRouter(
+        resourceStore: InMemoryResourceStore(<Resource>[
+          Resource(
+            id: 'rules',
+            type: ResourceType.prompt,
+            title: 'Rules',
+            content: 'Follow the rules.',
+            activation: ResourceActivation.always,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'review-skill',
+            type: ResourceType.skill,
+            title: 'Review',
+            content:
+                '---\nname: review\ndescription: Use for reviews\n---\n\n# Review',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'abcdef-gitlab',
+            type: ResourceType.mcp,
+            title: 'GitLab',
+            content: '{"command":"gitlab-mcp"}',
+            activation: ResourceActivation.always,
+            createdAt: now,
+            updatedAt: now,
+          ),
+          Resource(
+            id: 'hidden-mcp',
+            type: ResourceType.mcp,
+            title: 'Hidden',
+            content: '{"command":"hidden-mcp"}',
+            activation: ResourceActivation.always,
+            hideInAgentConversation: true,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]),
+        loadShowConversationTokenUsage: () async => true,
+        loadConversationTokenUsage: (_) async =>
+            throw StateError('Claude Code usage comes from the status line'),
+      );
+
+      final HttpResponseData response = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body: '{"task":"review","source":"Claude Code"}',
+        ),
+      );
+
+      expect(response.json, isNot(contains('footer')));
+      expect(response.json, isNot(contains('conversation')));
+      expect(response.json['statusLine'], <String, Object?>{
+        'prompts': <String>['♥ Rules'],
+        'skills': <String, String>{'review-skill': '♦ Review'},
+        'mcps': <String, String>{'dingdong-gitlab-abcdef': '♠ GitLab'},
+        'tokens': true,
+      });
+      expect(
+        (response.json['active'] as Map<String, Object?>)['mcps'],
+        hasLength(2),
+      );
+
+      final HttpResponseData skill = await router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/agent/skills/load?name=review&source=Claude%20Code',
+        ),
+      );
+      expect(skill.statusCode, 200);
+      expect(skill.json, isNot(contains('footerMark')));
+    },
+  );
+
+  test('knownHash returns unchanged until the snapshot changes', () async {
+    final DateTime now = DateTime.utc(2026, 10, 18);
+    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
+      Resource(
+        id: 'rules',
+        type: ResourceType.prompt,
+        title: 'Rules',
+        content: 'Follow the rules.',
+        activation: ResourceActivation.always,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ]);
+    final AgentRouter router = AgentRouter(resourceStore: store);
+    Future<HttpResponseData> bridge(String knownHash) => router.route(
+      HttpRequestData(
+        method: 'POST',
+        uri: '/agent/bridge',
+        body: jsonEncode(<String, Object?>{
+          'task': 'anything',
+          'source': 'Codex',
+          'knownHash': knownHash,
+        }),
+      ),
+    );
+
+    final HttpResponseData first = await bridge('');
+    final String hash = first.json['hash']! as String;
+    final HttpResponseData repeat = await bridge(hash);
+    expect(repeat.json, <String, Object?>{
+      'status': 'ok',
+      'unchanged': true,
+      'hash': hash,
+      'footer': 'DingDong · ♥ Rules',
+    });
+    expect((await store.load()).single.usageCount, 2);
+
+    await store.save(<Resource>[
+      (await store.load()).single.copyWith(content: 'Follow new rules.'),
+    ]);
+    final HttpResponseData changed = await bridge(hash);
+    expect(changed.json, isNot(contains('unchanged')));
+    expect(changed.json['hash'], isNot(hash));
+    expect(
+      ((changed.json['active'] as Map<String, Object?>)['prompts']
+              as List<Object?>)
+          .single,
+      containsPair('content', 'Follow new rules.'),
+    );
+  });
 
   test('MCP use confirmation validates tool provenance and current scope', () async {
     final DateTime now = DateTime.utc(2026, 8, 13);
@@ -1221,16 +1385,22 @@ void main() {
       ),
     );
 
+    final HttpResponseData wrongId = await router.route(
+      const HttpRequestData(
+        method: 'GET',
+        uri:
+            '/agent/mcps/confirm-use?id=other&serverName=dingdong-figma-scoped&source=Codex&workspacePath=%2Fwork%2Fcheckout&toolName=mcp__dingdong_figma_scoped__read',
+      ),
+    );
+
     expect(wrongPrefix.statusCode, 400);
     expect(outsideScope.statusCode, 404);
+    expect(wrongId.statusCode, 404);
     expect(confirmed.statusCode, 200);
-    final Map<String, Object?> item =
-        ((confirmed.json['conversation'] as Map<String, Object?>)['item']
-            as Map<String, Object?>);
-    expect(item['usage'], 'called');
-    expect(item['confirmedUse'], isTrue);
-    expect(item['marker'], '*');
-    expect(item['lineToken'], r'♠ Figma\*');
+    expect(confirmed.json['footerMark'], <String, Object?>{
+      'from': '♠ Figma',
+      'to': r'♠ Figma\*',
+    });
     expect((await resources.load()).single.invocationCount, 1);
     expect(
       confirmed.json['mcp'] as Map<String, Object?>,
@@ -1298,11 +1468,13 @@ void main() {
       containsPair('name', 'alpha-skill'),
     );
     expect(response.json, isNot(contains('catalog')));
-    expect(
-      (response.json['delivery']
-          as Map<String, Object?>)['skillCatalogSnapshot'],
-      'authoritative-replace',
-    );
+    expect((active['knowledge'] as List<Object?>).first, <String, Object?>{
+      'id': 'knowledge-a',
+      'title': 'knowledge-a',
+    });
+    // Constant delivery and privacy blocks moved behind expand="all".
+    expect(response.json, isNot(contains('delivery')));
+    expect(response.json, isNot(contains('privacy')));
   });
 
   test('Agent Bridge prefers a configured session name over the title', () async {
@@ -1346,11 +1518,12 @@ void main() {
       const HttpRequestData(
         method: 'POST',
         uri: '/agent/bridge',
-        body: '{"task":"load","source":"Codex"}',
+        body: '{"task":"load","source":"Codex","expand":"all"}',
       ),
     );
 
     const String markdownLine = 'DingDong · ♥ 提示词 | ♦ 技能加载名 | ♠ MCP titl...';
+    expect(response.json['footer'], markdownLine);
     const String ansiLine =
         '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m♥ 提示词\u001B[0m | \u001B[38;5;69m♦ 技能加载名\u001B[0m | \u001B[38;5;71m♠ MCP titl...\u001B[0m';
     expect(response.json['conversation'], <String, Object?>{
@@ -1453,18 +1626,15 @@ void main() {
       );
       final Map<String, Object?> active =
           response.json['active']! as Map<String, Object?>;
-      final Map<String, Object?> conversation =
-          response.json['conversation']! as Map<String, Object?>;
 
       expect(active['prompts'], hasLength(1));
       expect(active['skills'], hasLength(1));
       expect(active['mcps'], hasLength(1));
       expect(
         (active['prompts'] as List<Object?>).single,
-        containsPair('id', 'hidden-prompt'),
+        containsPair('title', 'Hidden prompt'),
       );
-      expect(conversation['titles'], <String>['Visible ...']);
-      expect(conversation['line'], 'DingDong · ♠ Visible ...');
+      expect(response.json['footer'], 'DingDong · ♠ Visible ...');
       final HttpResponseData hiddenLoad = await router.route(
         const HttpRequestData(
           method: 'GET',
@@ -1508,7 +1678,7 @@ void main() {
         const HttpRequestData(
           method: 'POST',
           uri: '/agent/bridge',
-          body: '{"task":"review"}',
+          body: '{"task":"review","expand":"all"}',
         ),
       );
       final Map<String, Object?> bridgeConversation =
@@ -1566,7 +1736,8 @@ void main() {
       const HttpRequestData(
         method: 'POST',
         uri: '/agent/bridge',
-        body: '{"task":"review","source":"Codex","workspacePath":"/work/app"}',
+        body:
+            '{"task":"review","source":"Codex","workspacePath":"/work/app","expand":"all"}',
       ),
     );
 
@@ -1622,10 +1793,7 @@ void main() {
       ((disabled.json['active'] as Map<String, Object?>)['prompts'] as List),
       isEmpty,
     );
-    expect(
-      (disabled.json['delivery'] as Map<String, Object?>)['promptSnapshot'],
-      'authoritative-replace',
-    );
+    expect(disabled.json['hash'], isNot(enabled.json['hash']));
   });
 
   test('POST /agent/bridge never auto-activates manual resources', () async {
@@ -1711,7 +1879,8 @@ void main() {
       const HttpRequestData(
         method: 'POST',
         uri: '/agent/bridge',
-        body: '{"task":"work","workspacePath":"/workspace/dingdong"}',
+        body:
+            '{"task":"work","workspacePath":"/workspace/dingdong","expand":"all"}',
       ),
     );
 
@@ -1798,7 +1967,7 @@ void main() {
         const HttpRequestData(
           method: 'POST',
           uri: '/agent/bridge',
-          body: '{"task":"work","source":"Codex"}',
+          body: '{"task":"work","source":"Codex","expand":"all"}',
         ),
       );
 
@@ -2315,6 +2484,7 @@ void main() {
             'task': 'review checkout',
             'workspacePath': project.path,
             'source': 'Pi',
+            'expand': 'all',
           }),
         ),
       );
@@ -2882,13 +3052,6 @@ void main() {
             'bridge=${matchingBridge.json} resources=${(await resources.load()).map((Resource item) => item.toApiJson()).toList()} groups=${(await groups.load()).map((TriggerGroup group) => group.toJson()).toList()}',
       );
       expect(candidates(unrelatedBridge), isEmpty);
-      final Map<String, Object?> bridgeConversation =
-          matchingBridge.json['conversation']! as Map<String, Object?>;
-      final Map<String, Object?> bridgeCapsule =
-          bridgeConversation['capsule']! as Map<String, Object?>;
-      final Map<String, Object?> candidateSkillItem =
-          (bridgeCapsule['items']! as List<Object?>).single
-              as Map<String, Object?>;
 
       final matchingLoad = await router.route(
         HttpRequestData(
@@ -2913,23 +3076,18 @@ void main() {
         (matchingLoad.json['skill'] as Map<String, Object?>)['content'],
         document,
       );
-      final Map<String, Object?> usageConversation =
-          matchingLoad.json['conversation']! as Map<String, Object?>;
-      final Map<String, Object?> usedSkillItem =
-          usageConversation['item']! as Map<String, Object?>;
-      expect(usageConversation['evidence'], 'successful-full-skill-load');
+      final Map<String, Object?> footerMark =
+          matchingLoad.json['footerMark']! as Map<String, Object?>;
       expect(
-        usageConversation['merge'],
-        'replace-same-merge-key-in-final-capsule',
+        matchingBridge.json['footer'],
+        endsWith(' · ${footerMark['from']}'),
       );
-      expect(usedSkillItem['type'], 'skill');
-      expect(usedSkillItem['tone'], 'skill');
-      expect(usedSkillItem['usage'], 'loaded');
-      expect(usedSkillItem['confirmedUse'], isTrue);
-      expect(usedSkillItem['marker'], '*');
-      expect(usedSkillItem['mergeKey'], candidateSkillItem['mergeKey']);
-      expect(usedSkillItem['mergeKey'], 'skill:$resourceId');
-      expect(usedSkillItem['lineToken'], endsWith(r'\*'));
+      expect(footerMark['from'], startsWith('♦ '));
+      expect(footerMark['to'], '${footerMark['from']}*');
+      expect(
+        (matchingLoad.json['skill'] as Map<String, Object?>)['id'],
+        resourceId,
+      );
       expect(unrelatedLoad.statusCode, 404);
     },
   );

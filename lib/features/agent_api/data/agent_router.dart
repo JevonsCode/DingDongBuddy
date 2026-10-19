@@ -11,7 +11,9 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_compatibility_routes.dart';
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
+import 'package:dingdong/features/agent_api/data/claude_mcp_use_recorder.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_collection_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_workflow_routes.dart';
@@ -73,9 +75,11 @@ final class AgentRouter {
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
     ReminderSoundUpdater? updateReminderSounds,
+    ClaudeMcpUseRecorder? claudeMcpUseRecorder,
   }) : _onDing = onDing ?? _ignoreDing,
        _updateReminderSounds = updateReminderSounds,
        _onSuppressedDing = onSuppressedDing ?? _ignoreDing,
+       _claudeMcpUseRecorder = claudeMcpUseRecorder ?? ClaudeMcpUseRecorder(),
        _onAgentTaskStarted = onAgentTaskStarted,
        _onAgentConversationOpened = onAgentConversationOpened,
        _clipboardCaptureService = clipboardCaptureService,
@@ -163,6 +167,7 @@ final class AgentRouter {
   final JevUsageLoader? loadJevUsage;
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
+  final ClaudeMcpUseRecorder _claudeMcpUseRecorder;
   final FutureOr<void> Function(AgentBridgeTaskStart start)?
   _onAgentTaskStarted;
   final FutureOr<int> Function(AgentConversationTarget target)?
@@ -359,6 +364,7 @@ final class AgentRouter {
         final DingRequest dingRequest = await _withConversationTokenUsage(
           parsed,
         );
+        await _recordClaudeMcpUse(dingRequest, now.toUtc());
         final _NotificationDeduplicationKey notificationKey =
             _notificationDeduplicationKey(dingRequest);
         _recentPrimaryDings.removeWhere((
@@ -730,6 +736,27 @@ final class AgentRouter {
       return await _allowAgentClipboardContent();
     } on Object {
       return false;
+    }
+  }
+
+  /// Claude Code's Stop hook passes its transcript; managed MCP calls in the
+  /// finished turn are counted from there instead of a confirmation call.
+  Future<void> _recordClaudeMcpUse(DingRequest request, DateTime at) async {
+    final ResourceStore? store = _resourceStore;
+    final String? transcriptPath = request.transcriptPath;
+    if (store == null ||
+        transcriptPath == null ||
+        resolveAgentAdapterId(request.source ?? '') != 'claude-code') {
+      return;
+    }
+    try {
+      await _claudeMcpUseRecorder.record(
+        transcriptPath: transcriptPath,
+        store: store,
+        invokedAt: at,
+      );
+    } on Object {
+      // Usage accounting must never block the completion notification.
     }
   }
 
