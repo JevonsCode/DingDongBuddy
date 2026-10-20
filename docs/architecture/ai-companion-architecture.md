@@ -12,6 +12,8 @@ adapters. The main application process owns:
 - clipboard monitoring, capture, history, and quick paste;
 - the Prompt, Skill, MCP, and Knowledge resource library;
 - recent Agent activity and completion notifications;
+- the opt-in AI companion, local recommendations, and explicitly requested
+  model calls described in [AI companion](../product/ai-companion.md);
 - a loopback HTTP server used by the bundled MCP executable and local clients.
 
 The bundled MCP executable is a separate short-lived process. It discovers the

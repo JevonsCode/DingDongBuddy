@@ -1,61 +1,57 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.7.0",
-  "latestBuild": "68",
-  "publishedAt": "2026-10-11T16:56:09Z",
-  "prerelease": true,
+  "latestVersion": "1.8.0",
+  "latestBuild": "70",
+  "publishedAt": "2026-10-20T17:34:09Z",
+  "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.7.0",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.8.0",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.7.0/DingDong-1.7.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.7.0/DingDong-1.7.0-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.7.0/DingDong-1.7.0-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds local Token history with a daily heatmap, source filters, daily details and CSV export.",
-    "Pairs computers on the same LAN with a six-digit code and reconnects trusted devices automatically.",
-    "Improves phone pairing, QR scanning, browser installation guidance and task notifications.",
-    "Makes first-time Agent setup clearer and adds a read-only list of local Agent plugins.",
-    "Fixes Agent installation paths and clipboard source labels on Windows.",
-    "Refreshes the website with clearer feature descriptions and interactive examples."
+    "Adds an opt-in AI companion with separate clipboard, resource, disclosure, Token, check-in and chat switches. Cloud analysis receives only anonymous usage metadata; API keys stay in secure storage.",
+    "Adds duplicate MCP and Skill cleanup with an optional local backup, preserving unrelated Agent configuration and external plugins.",
+    "Fixes the stretched issue-count badge in the resource manager sidebar.",
+    "Adds reminder rules, separate attention sounds, quiet hours and date-range Token summaries.",
+    "Reduces Agent bridge payloads and improves phone notifications, source labels and reconnect delivery."
   ],
   "notesByLanguage": {
-    "en": [
-      "Adds local Token history with a daily heatmap, source filters, daily details and CSV export.",
-      "Pairs computers on the same LAN with a six-digit code and reconnects trusted devices automatically.",
-      "Improves phone pairing, QR scanning, browser installation guidance and task notifications.",
-      "Makes first-time Agent setup clearer and adds a read-only list of local Agent plugins.",
-      "Fixes Agent installation paths and clipboard source labels on Windows.",
-      "Refreshes the website with clearer feature descriptions and interactive examples."
+    "es": [
+      "Añade un asistente de IA opcional con controles independientes para portapapeles, recursos, divulgación progresiva, Tokens, consultas y chat. El análisis en la nube recibe solo metadatos anónimos; las claves se guardan en el almacén seguro del sistema.",
+      "Permite resolver MCPs y Skills duplicados con copia local opcional, conservando la configuración ajena y los complementos externos.",
+      "Corrige el contador de problemas estirado en la barra lateral.",
+      "Añade reglas de avisos, sonidos de atención, horas de silencio y resúmenes de Tokens por fechas.",
+      "Reduce el contexto del puente de Agents y mejora avisos móviles, etiquetas de origen y reconexión."
     ],
     "zh": [
-      "新增本地 Token 历史，支持每日热力图、来源筛选、每日明细和 CSV 导出。",
-      "同一局域网内的电脑可用六位配对码连接，已信任设备断线后自动重连。",
-      "优化手机配对、二维码扫描、浏览器安装引导与任务通知体验。",
-      "完善首次接入 Agent 的引导，并支持查看本机 Agent 插件清单。",
-      "修复 Windows 的 Agent 安装路径和剪贴板来源标签问题。",
-      "更新官网功能说明与交互演示。"
+      "新增可选 AI 助手，剪贴板、资源、渐进式披露建议、Token 分析、主动询问和聊天均可独立开关。云端分析仅接收匿名用量数据，API Key 保存在系统安全存储中。",
+      "重复 MCP 和 Skill 可直接处理，支持选择本地备份，保留无关 Agent 配置和外部插件。",
+      "修复资源管理器侧栏问题数量徽标被拉高的显示问题。",
+      "新增提醒规则、单独的待处理提示音、免打扰时段和按时间范围统计 Token。",
+      "精简 Agent 桥接内容，改进手机通知、来源标签及重连后的消息接收。"
     ],
-    "es": [
-      "Añade un historial local de Tokens con mapa de calor diario, filtros por origen, detalles diarios y exportación CSV.",
-      "Conecta equipos de la misma red local con un código de seis dígitos y reconecta automáticamente los dispositivos de confianza.",
-      "Mejora la vinculación del teléfono, el escaneo QR, la guía de instalación del navegador y las notificaciones de tareas.",
-      "Aclara la configuración inicial de los Agents y añade una lista de solo lectura de sus complementos locales.",
-      "Corrige las rutas de instalación de Agents y las etiquetas de origen del portapapeles en Windows.",
-      "Actualiza el sitio web con descripciones más claras y ejemplos interactivos."
+    "en": [
+      "Adds an opt-in AI companion with separate clipboard, resource, disclosure, Token, check-in and chat switches. Cloud analysis receives only anonymous usage metadata; API keys stay in secure storage.",
+      "Adds duplicate MCP and Skill cleanup with an optional local backup, preserving unrelated Agent configuration and external plugins.",
+      "Fixes the stretched issue-count badge in the resource manager sidebar.",
+      "Adds reminder rules, separate attention sounds, quiet hours and date-range Token summaries.",
+      "Reduces Agent bridge payloads and improves phone notifications, source labels and reconnect delivery."
     ]
   },
   "beta": {

@@ -3,6 +3,7 @@ import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
+import 'package:dingdong/features/issue_center/domain/issue_cleanup.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -56,6 +57,10 @@ void main() {
       final ActivityController activity = ActivityController();
       addTearDown(activity.dispose);
       final IssueCenterController issues = IssueCenterController();
+      issues.setResolver(
+        (_, {required backup, required choice}) async =>
+            const IssueCleanupResult(),
+      );
       addTearDown(issues.dispose);
       issues.replaceSource(agentResourceSyncIssueSource, const <AppIssue>[
         AppIssue(
@@ -81,6 +86,19 @@ void main() {
           resourceTitle: 'verification-before',
           clientName: 'Codex',
           targetPath: '/Users/demo/.agents/skills/verification-before',
+        ),
+        AppIssue(
+          id: 'duplicate-mcp',
+          source: agentResourceSyncIssueSource,
+          kind: AppIssueKind.duplicateMcp,
+          severity: AppIssueSeverity.warning,
+          title: 'Duplicate MCP server',
+          detail: 'Cursor also loads Figma.',
+          resourceId: 'figma',
+          resourceTitle: 'Figma',
+          clientName: 'Cursor · Figma',
+          targetPath: '/Users/demo/.cursor/mcp.json',
+          duplicateEntryName: 'Figma',
         ),
         AppIssue(
           id: 'mcp-invalid',

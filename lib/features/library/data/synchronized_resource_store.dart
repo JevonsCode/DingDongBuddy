@@ -235,7 +235,8 @@ final class SynchronizedResourceStore
       final Directory generated = Directory(
         path.join(_synchronizer.packageRoot.path, resource.id),
       );
-      if (await generated.exists()) {
+      if (!active.contains(path.canonicalize(generated.path)) &&
+          await generated.exists()) {
         await generated.delete(recursive: true);
       }
       if (resource.type == ResourceType.skill &&
@@ -245,7 +246,8 @@ final class SynchronizedResourceStore
         final Directory downloaded = Directory(
           path.join(_synchronizer.packageRoot.path, _skillName(resource)),
         );
-        if (await downloaded.exists()) {
+        if (!active.contains(path.canonicalize(downloaded.path)) &&
+            await downloaded.exists()) {
           await downloaded.delete(recursive: true);
         }
       }

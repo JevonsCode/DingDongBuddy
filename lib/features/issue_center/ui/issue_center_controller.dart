@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
+import 'package:dingdong/features/issue_center/domain/issue_cleanup.dart';
 import 'package:flutter/foundation.dart';
 
 typedef IssueInspector = Future<List<AppIssue>> Function();
@@ -10,11 +11,47 @@ final class IssueCenterController extends ChangeNotifier {
   IssueCenterController({this.inspector});
 
   IssueInspector? inspector;
+  IssueResolver? resolver;
   final Map<String, List<AppIssue>> _issuesBySource =
       <String, List<AppIssue>>{};
   bool _isChecking = false;
+  String? _resolvingIssueId;
 
   bool get isChecking => _isChecking;
+  String? get resolvingIssueId => _resolvingIssueId;
+
+  bool canResolve(AppIssue issue) =>
+      resolver != null && issue.isDuplicateResource;
+
+  void setResolver(IssueResolver value) => resolver = value;
+
+  Future<IssueCleanupResult> resolve(
+    AppIssue issue, {
+    required bool backup,
+    required IssueCleanupChoice choice,
+  }) async {
+    final IssueResolver? apply = resolver;
+    if (apply == null || !canResolve(issue)) {
+      throw StateError('Duplicate cleanup is unavailable.');
+    }
+    if (_resolvingIssueId != null || _isChecking) {
+      throw StateError('Another resource check or cleanup is still running.');
+    }
+    _resolvingIssueId = issue.id;
+    notifyListeners();
+    try {
+      final IssueCleanupResult result = await apply(
+        issue,
+        backup: backup,
+        choice: choice,
+      );
+      await refresh();
+      return result;
+    } finally {
+      _resolvingIssueId = null;
+      notifyListeners();
+    }
+  }
 
   List<AppIssue> get issues {
     final List<AppIssue> values = _issuesBySource.values

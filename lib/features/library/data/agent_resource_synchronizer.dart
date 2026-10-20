@@ -29,6 +29,7 @@ import 'package:path/path.dart' as path;
 // The synchronizer owns orchestration; target discovery, persistence codecs,
 // and conflict merging live in focused private parts of the same library.
 part 'agent_resource_concurrent_merge.dart';
+part 'agent_resource_duplicate_cleanup.dart';
 part 'agent_resource_serialization.dart';
 part 'agent_resource_targets.dart';
 part 'synchronized_resource_store.dart';
@@ -445,6 +446,8 @@ final class AgentResourceSynchronizer {
         .where((Resource item) => item.enabled && item.type == ResourceType.mcp)
         .toList(growable: false);
     final List<AppIssue> issues = <AppIssue>[];
+    final Map<String, TriggerGroup> triggerGroupsById =
+        await _loadTriggerGroups();
     final Map<String, List<Resource>> resourcesBySkillName =
         <String, List<Resource>>{};
 
@@ -632,7 +635,13 @@ final class AgentResourceSynchronizer {
           throw const FormatException('mcpServers must be a JSON object.');
         }
         if (servers is Map) {
-          issues.addAll(_duplicateMcpIssues(target, servers, mcps));
+          issues.addAll(
+            _duplicateMcpIssues(
+              target,
+              servers,
+              _mcpResourcesForTarget(mcps, target, triggerGroupsById),
+            ),
+          );
         }
       } on Object catch (error) {
         issues.add(
@@ -705,8 +714,11 @@ final class AgentResourceSynchronizer {
           ? null
           : managedByEndpoint[endpoint];
       if (managed == null) continue;
-      yield _issue(
-        resource: managed,
+      yield AppIssue(
+        id: '${_issueId(AppIssueKind.duplicateMcp, managed.id, target.file.path)}:${jsonEncode(name)}',
+        source: agentResourceSyncIssueSource,
+        resourceId: managed.id,
+        resourceTitle: managed.title,
         kind: AppIssueKind.duplicateMcp,
         severity: AppIssueSeverity.warning,
         title: 'Duplicate MCP server',
@@ -716,6 +728,7 @@ final class AgentResourceSynchronizer {
             'every request; remove the copy you no longer need.',
         clientName: '${target.clientName} · $name',
         targetPath: target.file.path,
+        duplicateEntryName: name,
       );
     }
   }

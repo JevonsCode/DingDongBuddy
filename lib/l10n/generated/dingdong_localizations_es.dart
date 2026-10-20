@@ -9,6 +9,326 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   DingDongLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get aiProgressiveDisclosure => 'Consejos de divulgación progresiva';
+
+  @override
+  String get aiProgressiveDisclosureDescription =>
+      'Revisa la carga de Prompts por tarea o manual y los servidores MCP necesarios para cada tarea. Los consejos no cambian la configuración ni controlan la carga nativa de esquemas de herramientas de agentes externos.';
+
+  @override
+  String aiProgressivePrompt(int count) {
+    return 'Este Prompt permanente contiene $count caracteres. Resume las reglas comunes esenciales y revisa la carga por tarea o manual de los detalles específicos.';
+  }
+
+  @override
+  String get aiProgressiveMcp =>
+      'Revisa si la tarea actual necesita este servidor MCP permanente. Limita su alcance o actívalo manualmente cuando haga falta. Los agentes externos pueden seguir cargando todos los esquemas de herramientas configurados.';
+
+  @override
+  String get aiDailyScope =>
+      'Elementos del portapapeles actualizados hoy y tokens registrados hoy. Los recuentos de copias y uso son acumulativos; los recursos se revisan en toda la biblioteca. Se analizan hasta 500 elementos locales.';
+
+  @override
+  String get aiProviderCredentialNote =>
+      'Cambiar la URL elimina la clave anterior. Introduce una clave para el nuevo proveedor si la necesita.';
+
+  @override
+  String get aiReviewSuggestion => 'Revisar elemento';
+
+  @override
+  String get aiNoSuggestions =>
+      'No hay sugerencias para los datos disponibles. No se ha cambiado nada.';
+
+  @override
+  String aiFrequentClipboard(int count) {
+    return 'Copiado $count veces. Considera fijarlo o guardarlo como Prompt reutilizable.';
+  }
+
+  @override
+  String aiRepeatedClipboard(int count) {
+    return 'Se encontraron $count entradas idénticas en el portapapeles. Revísalas antes de eliminar alguna.';
+  }
+
+  @override
+  String aiUngroupedClipboard(int count) {
+    return 'Hay $count elementos sin grupo. Agrupa los útiles para encontrarlos con más facilidad.';
+  }
+
+  @override
+  String aiCandidateWithoutUse(int count) {
+    return 'Se consideró $count veces sin invocaciones ni cargas registradas. Revisa si necesitas este MCP o Skill, o cárgalo solo para tareas pertinentes.';
+  }
+
+  @override
+  String get aiAlwaysOnUnused =>
+      'Este recurso permanente lleva al menos una semana sin uso registrado. Revisa su alcance y considera cargarlo por tarea o bajo demanda.';
+
+  @override
+  String aiLargeAlwaysOnPrompt(int count) {
+    return 'Este Prompt permanente contiene $count caracteres. Resume las reglas comunes y carga los detalles por tarea o bajo demanda.';
+  }
+
+  @override
+  String aiHighInputTokens(int count) {
+    return 'Se registraron $count tokens de entrada, que dominan el uso. Revisa el contexto largo repetido y adjunta recursos solo cuando la tarea los necesite.';
+  }
+
+  @override
+  String aiLowCacheReuse(int count) {
+    return 'Solo se registraron $count tokens de entrada en caché. Un prefijo común estable puede ayudar; el ahorro depende del proveedor.';
+  }
+
+  @override
+  String get aiIncompleteTokenData =>
+      'Los registros de tokens están incompletos. Se necesitan datos más fiables para evaluar la eficiencia.';
+
+  @override
+  String get aiTakeABreakSuggestion =>
+      'Llevas aquí un rato. Respira, estírate o aléjate de la pantalla un momento.';
+
+  @override
+  String get aiCompanionTitle => 'Compañero IA';
+
+  @override
+  String get aiCompanionSubtitle =>
+      'Información local, sugerencias útiles y un espacio para conversar.';
+
+  @override
+  String get aiPrivacySummary =>
+      'Todo empieza desactivado. El análisis local permanece en este dispositivo. El análisis en la nube solo envía recuentos y uso; nunca adjunta texto del portapapeles, contenido de recursos, rutas, archivos o imágenes. El chat solo envía los mensajes que escribes tras comprobar localmente su contenido sensible.';
+
+  @override
+  String get aiFeaturesTitle => 'Elige lo que te ayuda';
+
+  @override
+  String get aiClipboardAnalysis => 'Información del portapapeles';
+
+  @override
+  String get aiClipboardAnalysisDescription =>
+      'Detecta elementos repetidos y frecuentes de forma local.';
+
+  @override
+  String get aiUsageOptimization => 'Sugerencias de recursos';
+
+  @override
+  String get aiUsageOptimizationDescription =>
+      'Revisa el uso de recursos y su configuración permanente sin modificarlos.';
+
+  @override
+  String get aiTokenOptimization => 'Sugerencias de tokens';
+
+  @override
+  String get aiTokenOptimizationDescription =>
+      'Usa los totales locales registrados para encontrar oportunidades de ahorro.';
+
+  @override
+  String get aiProactiveCheckIns => 'Recordatorios amables';
+
+  @override
+  String get aiProactiveCheckInsDescription =>
+      'Un recordatorio local tras una hora con esta página abierta, como máximo cada dos horas. Sin solicitudes de red automáticas.';
+
+  @override
+  String get aiEmotionalSupport => 'Chat de apoyo';
+
+  @override
+  String get aiEmotionalSupportDescription =>
+      'Conversa con tu modelo. Los mensajes permanecen en memoria hasta borrarlos o cerrar la ventana.';
+
+  @override
+  String get aiCloudAnalysis => 'Análisis de metadatos con el modelo';
+
+  @override
+  String get aiCloudAnalysisDescription =>
+      'Solo al analizar: envía los recuentos habilitados y los totales de tokens a tu modelo.';
+
+  @override
+  String get aiProviderTitle => 'Conexión del modelo';
+
+  @override
+  String get aiConfigureProvider => 'Configurar modelo';
+
+  @override
+  String get aiProviderEndpoint => 'URL base compatible con OpenAI';
+
+  @override
+  String get aiProviderEndpointHint =>
+      'https://api.example.com/v1 o http://127.0.0.1:11434/v1';
+
+  @override
+  String get aiProviderModel => 'Nombre del modelo';
+
+  @override
+  String get aiProviderApiKey => 'Clave API';
+
+  @override
+  String get aiProviderKeyStored =>
+      'Hay una clave guardada de forma segura. Déjalo vacío para conservarla.';
+
+  @override
+  String get aiProviderKeyHint =>
+      'Se guarda en el almacenamiento seguro del dispositivo; opcional para modelos locales.';
+
+  @override
+  String get aiRemoveApiKey => 'Eliminar clave guardada';
+
+  @override
+  String get aiProviderHelp =>
+      'Usa HTTPS para un proveedor en la nube o HTTP con una dirección de bucle local. Guardar no verifica la conexión.';
+
+  @override
+  String get aiProviderNotConfigured =>
+      'No hay modelo configurado. Activa una función de análisis para ver información local.';
+
+  @override
+  String get aiProviderNotVerified =>
+      'Modelo configurado · conexión sin verificar';
+
+  @override
+  String get aiProviderVerified => 'El modelo respondió correctamente';
+
+  @override
+  String get aiTestConnection => 'Probar conexión';
+
+  @override
+  String get aiAnalyze => 'Analizar funciones activadas';
+
+  @override
+  String get aiInsightsTitle => 'Sugerencias';
+
+  @override
+  String get aiInsightsEmpty =>
+      'Activa una función y ejecuta el análisis para ver sugerencias de tus datos locales.';
+
+  @override
+  String get aiLocalAnalysis => 'Análisis local · sin solicitud al modelo';
+
+  @override
+  String get aiCloudResult => 'Sugerencias del modelo · solo metadatos';
+
+  @override
+  String get aiReadOnly =>
+      'Las sugerencias son de solo lectura. Revisa los cambios en el espacio correspondiente.';
+
+  @override
+  String get aiChatTitle => 'Un espacio para hablar';
+
+  @override
+  String get aiChatDescription =>
+      'Comparte lo que piensas. Las comprobaciones locales bloquean secretos y patrones sensibles habituales; revisa el mensaje antes de enviarlo.';
+
+  @override
+  String get aiChatPlaceholder => 'Escribe un mensaje…';
+
+  @override
+  String get aiChatSend => 'Enviar mensaje';
+
+  @override
+  String get aiChatClear => 'Borrar conversación';
+
+  @override
+  String get aiChatYou => 'Tú';
+
+  @override
+  String get aiChatAssistant => 'Compañero';
+
+  @override
+  String get aiChatDisabled =>
+      'Activa el chat de apoyo para iniciar una conversación.';
+
+  @override
+  String get aiChatNeedsProvider =>
+      'Configura un modelo antes de enviar un mensaje.';
+
+  @override
+  String get aiCheckInNow => 'Tómate un momento';
+
+  @override
+  String get aiUnavailable =>
+      'El compañero IA no está disponible en esta ventana. Vuelve a abrir el gestor de recursos.';
+
+  @override
+  String get aiErrorDisabled => 'Activa primero la función correspondiente.';
+
+  @override
+  String get aiErrorInvalidProvider =>
+      'Introduce una URL base HTTPS válida, o una dirección HTTP de bucle local, y un nombre de modelo.';
+
+  @override
+  String get aiErrorMissingApiKey =>
+      'Este modelo en la nube necesita una clave API. Añádela en su configuración.';
+
+  @override
+  String get aiErrorSensitiveInput =>
+      'Este mensaje puede contener información sensible. Elimínala antes de enviarlo.';
+
+  @override
+  String get aiErrorSensitiveOutput =>
+      'Se ha ocultado la respuesta del modelo porque puede contener información sensible.';
+
+  @override
+  String get aiErrorProviderUnavailable =>
+      'El modelo no pudo responder. Comprueba la URL, el modelo, la clave y la red e inténtalo de nuevo.';
+
+  @override
+  String get aiErrorInvalidResponse =>
+      'El modelo devolvió una respuesta ilegible.';
+
+  @override
+  String get aiErrorTimeout =>
+      'La solicitud al modelo agotó el tiempo de espera. Inténtalo más tarde.';
+
+  @override
+  String get aiErrorStorageUnavailable =>
+      'No se pudo acceder a la configuración o al almacenamiento seguro. Inténtalo de nuevo.';
+
+  @override
+  String get aiErrorEmptyMessage => 'Escribe un mensaje antes de enviarlo.';
+
+  @override
+  String get aiErrorMessageTooLong =>
+      'El mensaje es demasiado largo. Acórtalo antes de enviarlo.';
+
+  @override
+  String get resolveDuplicate => 'Resolver duplicado';
+
+  @override
+  String get deleteAgentCopy => 'Eliminar copia del agente';
+
+  @override
+  String get deleteDingDongCopy => 'Eliminar copia de DingDong';
+
+  @override
+  String get duplicateCleanupDescription =>
+      'Elige qué copia eliminar. Se conservan los demás recursos y ajustes del agente.';
+
+  @override
+  String get duplicateSkillCleanupDescription =>
+      'Elimina este recurso de DingDong y sus instalaciones gestionadas. La Skill existente del agente o complemento sigue disponible.';
+
+  @override
+  String get createLocalBackup => 'Crear copia local antes de eliminar';
+
+  @override
+  String get localBackupMayContainSecrets =>
+      'Las copias se guardan en este equipo y pueden contener credenciales.';
+
+  @override
+  String get duplicateCleanupComplete => 'Duplicado eliminado';
+
+  @override
+  String get duplicateCleanupBackupLocation => 'Copia guardada en:';
+
+  @override
+  String get duplicateCleanupFailed => 'No se pudo eliminar el duplicado';
+
+  @override
+  String get duplicateCleanupAction => 'Eliminar copia seleccionada';
+
+  @override
+  String get duplicateCleanupInProgress => 'Eliminando…';
+
+  @override
   String get agentSetupAdvancedDetailsDescription =>
       'Endpoints y comandos del puente';
 

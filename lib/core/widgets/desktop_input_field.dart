@@ -254,6 +254,8 @@ class DesktopTextField extends StatelessWidget {
     this.cursorHeight,
     this.cursorWidth = 2,
     this.obscureText = false,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     Key? key,
   }) : _fieldKey = key,
        super(key: null);
@@ -286,6 +288,8 @@ class DesktopTextField extends StatelessWidget {
   final double? cursorHeight;
   final double cursorWidth;
   final bool obscureText;
+  final bool autocorrect;
+  final bool enableSuggestions;
 
   @override
   Widget build(BuildContext context) {
@@ -324,6 +328,8 @@ class DesktopTextField extends StatelessWidget {
       cursorHeight: cursorHeight,
       cursorWidth: cursorWidth,
       obscureText: obscureText,
+      autocorrect: autocorrect,
+      enableSuggestions: enableSuggestions,
     );
   }
 }
