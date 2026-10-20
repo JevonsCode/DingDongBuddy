@@ -1,7 +1,7 @@
 # Optional AI companion
 
 Open **Resource Manager → AI companion**. Clipboard insights, resource usage
-optimization, Token suggestions, proactive check-ins, and supportive chat each
+optimization, progressive disclosure advice, Token suggestions, proactive check-ins, and supportive chat each
 have their own switch. All start off. Opening the workspace does not contact a
 model. Suggestions are read-only; review links open the existing clipboard or
 resource editor so changes remain explicit.

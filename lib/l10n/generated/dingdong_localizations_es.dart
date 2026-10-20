@@ -9,6 +9,22 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   DingDongLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get aiProgressiveDisclosure => 'Consejos de divulgación progresiva';
+
+  @override
+  String get aiProgressiveDisclosureDescription =>
+      'Revisa la carga de Prompts por tarea o manual y los servidores MCP necesarios para cada tarea. Los consejos no cambian la configuración ni controlan la carga nativa de esquemas de herramientas de agentes externos.';
+
+  @override
+  String aiProgressivePrompt(int count) {
+    return 'Este Prompt permanente contiene $count caracteres. Resume las reglas comunes esenciales y revisa la carga por tarea o manual de los detalles específicos.';
+  }
+
+  @override
+  String get aiProgressiveMcp =>
+      'Revisa si la tarea actual necesita este servidor MCP permanente. Limita su alcance o actívalo manualmente cuando haga falta. Los agentes externos pueden seguir cargando todos los esquemas de herramientas configurados.';
+
+  @override
   String get aiDailyScope =>
       'Elementos del portapapeles actualizados hoy y tokens registrados hoy. Los recuentos de copias y uso son acumulativos; los recursos se revisan en toda la biblioteca. Se analizan hasta 500 elementos locales.';
 

@@ -103,6 +103,30 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Independent progressive disclosure advice.
+  ///
+  /// In en, this message translates to:
+  /// **'Progressive disclosure advice'**
+  String get aiProgressiveDisclosure;
+
+  /// Independent progressive disclosure advice.
+  ///
+  /// In en, this message translates to:
+  /// **'Review task-matched or manual Prompt loading and the MCP servers needed for each task. Advice never changes configuration and cannot control third-party Agents\' native tool-schema loading.'**
+  String get aiProgressiveDisclosureDescription;
+
+  /// Independent progressive disclosure advice.
+  ///
+  /// In en, this message translates to:
+  /// **'This always-on Prompt contains {count} characters. Keep essential shared rules brief; review task matching or manual loading for task-specific details.'**
+  String aiProgressivePrompt(int count);
+
+  /// Independent progressive disclosure advice.
+  ///
+  /// In en, this message translates to:
+  /// **'Review whether this always-on MCP server is needed for the current task. Limit its scope or enable it manually when needed. Third-party Agents may still load all configured tool schemas.'**
+  String get aiProgressiveMcp;
+
   /// Scope and limits of companion analysis.
   ///
   /// In en, this message translates to:

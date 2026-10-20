@@ -16,6 +16,82 @@ import 'package:flutter_test/flutter_test.dart';
 final DateTime _now = DateTime.utc(2026, 10, 21, 12);
 
 void main() {
+  test(
+    'analysis category or provider changes clear visible and persisted cloud text',
+    () async {
+      final changes =
+          <String, AiCompanionSettings Function(AiCompanionSettings)>{
+            'clipboard': (settings) =>
+                settings.copyWith(clipboardAnalysis: false),
+            'usage': (settings) => settings.copyWith(usageOptimization: false),
+            'progressive': (settings) =>
+                settings.copyWith(progressiveDisclosure: false),
+            'tokens': (settings) => settings.copyWith(tokenOptimization: false),
+            'endpoint': (settings) =>
+                settings.copyWith(providerEndpoint: 'https://other.example/v1'),
+            'model': (settings) => settings.copyWith(model: 'other-model'),
+          };
+      for (final change in changes.entries) {
+        final backend = MemoryPreferencesBackend();
+        final secrets = _Secrets();
+        final transport = _Transport()
+          ..reply = 'Review progressive disclosure and resource usage.';
+        final controller = _controller(
+          backend: backend,
+          secrets: secrets,
+          transport: transport,
+          loader: () async => AiCompanionMetadata(
+            resources: <Resource>[
+              _resource('prompt', ResourceType.prompt),
+              _resource('mcp', ResourceType.mcp, candidates: 8),
+            ],
+          ),
+        );
+        addTearDown(controller.dispose);
+        await controller.saveSettings(
+          _configured.copyWith(
+            clipboardAnalysis: true,
+            usageOptimization: true,
+            progressiveDisclosure: true,
+            tokenOptimization: true,
+            cloudAnalysis: true,
+          ),
+          apiKey: 'dummy',
+        );
+        await controller.analyze();
+        expect(controller.report!.cloudSummary, isNotNull, reason: change.key);
+        expect(controller.report!.localOnly, false, reason: change.key);
+        await controller.saveSettings(change.value(controller.settings));
+        expect(controller.error, isNull, reason: change.key);
+        expect(controller.report!.cloudSummary, isNull, reason: change.key);
+        expect(controller.report!.localOnly, true, reason: change.key);
+        if (change.key == 'progressive') {
+          expect(controller.settings.usageOptimization, true);
+          expect(controller.settings.cloudAnalysis, true);
+          expect(
+            controller.report!.suggestions.map((item) => item.code),
+            contains(AiSuggestionCode.candidateWithoutUse),
+          );
+          expect(
+            controller.report!.suggestions.any(
+              (item) =>
+                  item.code == AiSuggestionCode.progressivePrompt ||
+                  item.code == AiSuggestionCode.progressiveMcp,
+            ),
+            false,
+          );
+        }
+        final stored = await AiCompanionPreferencesStore(
+          backend,
+          secretStore: secrets,
+        ).loadReport();
+        expect(stored!.cloudSummary, isNull, reason: change.key);
+        expect(stored.localOnly, true, reason: change.key);
+        expect(transport.requests, hasLength(1), reason: change.key);
+      }
+    },
+  );
+
   test('empty token metadata omits counts and reports incomplete coverage', () {
     final safe = const AiCompanionAnalyzer().cloudMetadata(
       const AiCompanionSettings(tokenOptimization: true),
@@ -52,6 +128,14 @@ void main() {
         controller.settings.toJson().values.whereType<bool>(),
         everyElement(false),
       );
+      expect(
+        controller.settings.toJson().values.whereType<bool>(),
+        hasLength(7),
+      );
+      expect(
+        AiCompanionSettings.fromJson(<String, Object?>{}).progressiveDisclosure,
+        false,
+      );
       await controller.analyze();
       expect(controller.error, AiCompanionError.disabled);
       await controller.sendMessage('Hello');
@@ -60,6 +144,167 @@ void main() {
       expect(reads, 0);
       expect(transport.requests, isEmpty);
       expect(controller.report, isNull);
+    },
+  );
+
+  test(
+    'progressive disclosure is independently persisted and locally targeted',
+    () async {
+      final metadata = AiCompanionMetadata(
+        clipboard: <ClipboardRecord>[_clip('clipboard', copyCount: 5)],
+        resources: <Resource>[
+          _resource(
+            'prompt',
+            ResourceType.prompt,
+            content: 'Short prompt',
+            uses: 8,
+          ),
+          _resource('mcp', ResourceType.mcp, candidates: 12, uses: 8),
+          _resource('skill', ResourceType.skill, candidates: 12),
+          _resource('disabled', ResourceType.prompt).copyWith(enabled: false),
+          _resource(
+            'manual',
+            ResourceType.mcp,
+          ).copyWith(activation: ResourceActivation.manual),
+          _resource(
+            'matched',
+            ResourceType.prompt,
+          ).copyWith(activation: ResourceActivation.taskMatch),
+        ],
+        tokenUsage: _tokenSnapshot(),
+      );
+      const active = AiCompanionSettings(progressiveDisclosure: true);
+      expect(active.analysisEnabled, true);
+      final defaults = await const AiCompanionAnalyzer().analyze(
+        const AiCompanionSettings(),
+        metadata,
+        _now,
+      );
+      expect(defaults.suggestions, isEmpty);
+      final report = await const AiCompanionAnalyzer().analyze(
+        active,
+        metadata,
+        _now,
+      );
+      expect(report.suggestions.map((item) => item.code), <AiSuggestionCode>[
+        AiSuggestionCode.progressivePrompt,
+        AiSuggestionCode.progressiveMcp,
+      ]);
+      expect(report.suggestions.map((item) => item.targetId), <String>[
+        'prompt',
+        'mcp',
+      ]);
+      expect(report.suggestions.first.count, 'Short prompt'.length);
+      expect(report.suggestions.last.count, 1);
+      final backend = MemoryPreferencesBackend();
+      final secrets = _Secrets();
+      final transport = _Transport();
+      final controller = _controller(
+        transport: transport,
+        backend: backend,
+        secrets: secrets,
+        loader: () async => metadata,
+      );
+      addTearDown(controller.dispose);
+      await controller.saveSettings(active);
+      await controller.analyze();
+      expect(controller.error, isNull);
+      expect(controller.report!.suggestions, hasLength(2));
+      final restored = _controller(backend: backend, secrets: secrets);
+      addTearDown(restored.dispose);
+      await restored.load();
+      expect(restored.settings.progressiveDisclosure, true);
+      expect(restored.report!.suggestions, hasLength(2));
+      await restored.saveSettings(
+        active.copyWith(progressiveDisclosure: false, usageOptimization: true),
+      );
+      expect(restored.report!.suggestions, isEmpty);
+      expect(transport.requests, isEmpty);
+    },
+  );
+
+  test(
+    'progressive-only cloud payload has no usage, clipboard or token metadata',
+    () async {
+      final transport = _Transport();
+      final client = AiCompanionClient(transport: transport);
+      addTearDown(client.dispose);
+      final metadata = AiCompanionMetadata(
+        resources: <Resource>[
+          _resource(
+            'private-prompt-id',
+            ResourceType.prompt,
+            title: 'private title',
+            content: 'password=private prompt',
+            candidates: 99,
+          ),
+          _resource(
+            'private-mcp-id',
+            ResourceType.mcp,
+            content:
+                '{"url":"https://private.example/path","apiKey":"private"}',
+            uses: 77,
+          ),
+          _resource('disabled', ResourceType.prompt).copyWith(enabled: false),
+          _resource('skill', ResourceType.skill),
+        ],
+        clipboard: <ClipboardRecord>[
+          _clip('private-clip', text: 'private clipboard'),
+        ],
+        tokenUsage: _tokenSnapshot(),
+      );
+      await client.analyze(
+        _configured.copyWith(progressiveDisclosure: true, cloudAnalysis: true),
+        'dummy',
+        metadata,
+      );
+      final payload = jsonDecode(transport.requests.single.body) as Map;
+      final encoded =
+          ((payload['messages'] as List).last as Map)['content'] as String;
+      final safe = jsonDecode(encoded) as Map;
+      expect(safe.keys.toSet(), <String>{'schema', 'progressiveDisclosure'});
+      final entries = safe['progressiveDisclosure'] as List;
+      expect(entries, hasLength(2));
+      expect((entries.first as Map).keys.toSet(), <String>{
+        'id',
+        'kind',
+        'activation',
+        'promptCharacterCount',
+      });
+      expect((entries.last as Map).keys.toSet(), <String>{
+        'id',
+        'kind',
+        'activation',
+      });
+      expect(
+        (entries.first as Map)['promptCharacterCount'],
+        'password=private prompt'.length,
+      );
+      expect((entries.first as Map)['id'], 'r1');
+      expect((entries.last as Map)['id'], 'r2');
+      for (final forbidden in <String>[
+        'private',
+        'password',
+        'candidateCount',
+        'invocationCount',
+        'activationOrLoadCount',
+        'tokens',
+        'clipboard',
+        'resources',
+      ]) {
+        expect(encoded.contains(forbidden), false, reason: forbidden);
+      }
+      final disabled = const AiCompanionAnalyzer().cloudMetadata(
+        const AiCompanionSettings(usageOptimization: true),
+        metadata,
+      );
+      expect(disabled.containsKey('progressiveDisclosure'), false);
+      final system =
+          ((payload['messages'] as List).first as Map)['content'] as String;
+      expect(
+        system,
+        contains('native client tool-list protocols are unchanged'),
+      );
     },
   );
 

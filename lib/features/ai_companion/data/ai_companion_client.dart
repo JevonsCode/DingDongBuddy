@@ -129,7 +129,11 @@ final class AiCompanionClient {
             'Suggest concise read-only improvements from these anonymous '
             'counts only. Candidates are not actual usage: Skills are loaded; '
             'Prompts activated; MCPs invoked. Never infer private content or '
-            'claim measurements not provided. Do not request files or secrets.',
+            'claim measurements not provided. For progressiveDisclosure, advise '
+            'supported DingDong task-match/manual Prompt activation and MCP '
+            'scope/task-match settings, attaching only needed servers. This is '
+            'read-only configuration advice; native client tool-list protocols '
+            'are unchanged. Do not request files or secrets.',
       },
       <String, String>{
         'role': 'user',

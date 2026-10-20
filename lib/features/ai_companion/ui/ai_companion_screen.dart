@@ -144,6 +144,14 @@ class _AiCompanionScreenState extends State<AiCompanionScreen> {
                       settings.copyWith(usageOptimization: value),
                 ),
                 _feature(
+                  key: 'progressive-disclosure',
+                  title: context.l10n.aiProgressiveDisclosure,
+                  description: context.l10n.aiProgressiveDisclosureDescription,
+                  value: settings.progressiveDisclosure,
+                  change: (bool value) =>
+                      settings.copyWith(progressiveDisclosure: value),
+                ),
+                _feature(
                   key: 'tokens',
                   title: context.l10n.aiTokenOptimization,
                   description: context.l10n.aiTokenOptimizationDescription,
@@ -245,11 +253,7 @@ class _AiCompanionScreenState extends State<AiCompanionScreen> {
                   child: DesktopActionButton(
                     tone: DesktopActionTone.primary,
                     key: const Key('ai-analyze'),
-                    onPressed:
-                        controller.isLoading ||
-                            !(settings.clipboardAnalysis ||
-                                settings.usageOptimization ||
-                                settings.tokenOptimization)
+                    onPressed: controller.isLoading || !settings.analysisEnabled
                         ? null
                         : controller.analyze,
                     icon: const Icon(Icons.insights_outlined, size: 18),
@@ -277,6 +281,9 @@ class _AiCompanionScreenState extends State<AiCompanionScreen> {
                           if (suggestion.targetId != null &&
                               widget.onReviewSuggestion != null)
                             DesktopActionButton(
+                              key: Key(
+                                'ai-review-${suggestion.code.name}-${suggestion.targetId}',
+                              ),
                               tone: DesktopActionTone.soft,
                               onPressed: () =>
                                   widget.onReviewSuggestion!(suggestion),
@@ -591,6 +598,10 @@ String aiSuggestionText(BuildContext context, AiSuggestion suggestion) =>
       AiSuggestionCode.candidateWithoutUse =>
         context.l10n.aiCandidateWithoutUse(suggestion.count),
       AiSuggestionCode.alwaysOnUnused => context.l10n.aiAlwaysOnUnused,
+      AiSuggestionCode.progressivePrompt => context.l10n.aiProgressivePrompt(
+        suggestion.count,
+      ),
+      AiSuggestionCode.progressiveMcp => context.l10n.aiProgressiveMcp,
       AiSuggestionCode.largeAlwaysOnPrompt =>
         context.l10n.aiLargeAlwaysOnPrompt(suggestion.count),
       AiSuggestionCode.highInputTokens => context.l10n.aiHighInputTokens(

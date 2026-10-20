@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_client.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
@@ -27,6 +28,7 @@ void main() {
       for (final (String key, String jsonKey) in <(String, String)>[
         ('clipboard', 'clipboardAnalysis'),
         ('resources', 'usageOptimization'),
+        ('progressive-disclosure', 'progressiveDisclosure'),
         ('tokens', 'tokenOptimization'),
         ('check-ins', 'proactiveCheckIns'),
         ('chat', 'emotionalSupport'),
@@ -69,6 +71,96 @@ void main() {
     },
   );
 
+  testWidgets(
+    'progressive disclosure alone analyzes Prompt and MCP scope with local review links',
+    (WidgetTester tester) async {
+      final _Fixture fixture = _Fixture(
+        resources: <Resource>[
+          Resource(
+            id: 'prompt-scope',
+            type: ResourceType.prompt,
+            title: 'Task details',
+            content: 'Task-specific instructions',
+            activation: ResourceActivation.always,
+            createdAt: DateTime(2026, 10, 21),
+            updatedAt: DateTime(2026, 10, 21),
+          ),
+          Resource(
+            id: 'mcp-scope',
+            type: ResourceType.mcp,
+            title: 'Task service',
+            content: '{"command":"local-service"}',
+            activation: ResourceActivation.always,
+            createdAt: DateTime(2026, 10, 21),
+            updatedAt: DateTime(2026, 10, 21),
+          ),
+        ],
+      );
+      addTearDown(fixture.controller.dispose);
+      await fixture.controller.load();
+      final reviewed = <String>[];
+      await _pump(
+        tester,
+        fixture.controller,
+        onReview: (suggestion) => reviewed.add(suggestion.targetId!),
+      );
+      await _show(
+        tester,
+        find.byKey(const Key('ai-feature-progressive-disclosure')),
+      );
+      await tester.tap(
+        find.byKey(const Key('ai-feature-progressive-disclosure')),
+      );
+      await tester.pumpAndSettle();
+      final saved = (await fixture.store.loadSettings()).toJson();
+      expect(saved['progressiveDisclosure'], isTrue);
+      expect(saved.entries.where((entry) => entry.value == true), hasLength(1));
+      await _show(tester, find.byKey(const Key('ai-analyze')));
+      expect(
+        tester
+            .widget<FilledButton>(find.byKey(const Key('ai-analyze')))
+            .onPressed,
+        isNotNull,
+      );
+      await tester.tap(find.byKey(const Key('ai-analyze')));
+      await tester.pumpAndSettle();
+      expect(
+        fixture.controller.report!.suggestions.map((item) => item.code),
+        <AiSuggestionCode>[
+          AiSuggestionCode.progressivePrompt,
+          AiSuggestionCode.progressiveMcp,
+        ],
+      );
+      expect(
+        find.textContaining('This always-on Prompt contains 26 characters.'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(
+          'Third-party Agents may still load all configured tool schemas.',
+        ),
+        findsOneWidget,
+      );
+      await _show(
+        tester,
+        find.byKey(const Key('ai-review-progressivePrompt-prompt-scope')),
+      );
+      await tester.tap(
+        find.byKey(const Key('ai-review-progressivePrompt-prompt-scope')),
+      );
+      await _show(
+        tester,
+        find.byKey(const Key('ai-review-progressiveMcp-mcp-scope')),
+      );
+      await tester.tap(
+        find.byKey(const Key('ai-review-progressiveMcp-mcp-scope')),
+      );
+      expect(reviewed, <String>['prompt-scope', 'mcp-scope']);
+      expect(fixture.transport.requests, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('default switches are independent, persisted and network-free', (
     WidgetTester tester,
   ) async {
@@ -102,6 +194,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(fixture.controller.settings.clipboardAnalysis, isTrue);
     expect(fixture.controller.settings.usageOptimization, isFalse);
+    expect(fixture.controller.settings.progressiveDisclosure, isFalse);
     expect(fixture.controller.settings.tokenOptimization, isFalse);
     expect(fixture.controller.settings.emotionalSupport, isFalse);
     expect(fixture.controller.settings.cloudAnalysis, isFalse);
@@ -422,7 +515,10 @@ Future<void> _pump(
 }
 
 class _Fixture {
-  _Fixture({DateTime Function()? now}) {
+  _Fixture({
+    DateTime Function()? now,
+    List<Resource> resources = const <Resource>[],
+  }) {
     store = AiCompanionPreferencesStore(
       MemoryPreferencesBackend(),
       secretStore: _Secrets(),
@@ -432,6 +528,7 @@ class _Fixture {
       client: AiCompanionClient(transport: transport),
       now: now,
       loadMetadata: () async => AiCompanionMetadata(
+        resources: resources,
         clipboard: <ClipboardRecord>[
           ClipboardRecord(
             id: 'clipboard-local',

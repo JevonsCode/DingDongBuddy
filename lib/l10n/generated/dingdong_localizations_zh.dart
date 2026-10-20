@@ -9,6 +9,22 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get aiProgressiveDisclosure => '渐进式披露建议';
+
+  @override
+  String get aiProgressiveDisclosureDescription =>
+      '检查 Prompt 的任务匹配或手动加载方式，以及任务所需的 MCP 范围。仅提供建议，不修改配置，也无法改变第三方 Agent 原生加载工具 Schema 的方式。';
+
+  @override
+  String aiProgressivePrompt(int count) {
+    return '此常驻 Prompt 含 $count 个字符。可保留简短的通用规则，将任务专属内容改为任务匹配或手动加载，请先审阅再调整。';
+  }
+
+  @override
+  String get aiProgressiveMcp =>
+      '检查当前任务是否需要此常驻 MCP 服务，可缩小适用范围或需要时手动启用。第三方 Agent 仍可能原生加载所有已配置工具的 Schema。';
+
+  @override
   String get aiDailyScope =>
       '分析今日更新的剪贴板与今日已记录 Token 用量。复制次数与资源使用次数为累计值；资源建议检查整个资源库。每类最多分析 500 项本地数据。';
 

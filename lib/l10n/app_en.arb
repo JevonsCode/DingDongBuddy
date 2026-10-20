@@ -1,4 +1,12 @@
 {
+  "aiProgressiveDisclosure": "Progressive disclosure advice",
+  "@aiProgressiveDisclosure": {"description":"Independent progressive disclosure advice."},
+  "aiProgressiveDisclosureDescription": "Review task-matched or manual Prompt loading and the MCP servers needed for each task. Advice never changes configuration and cannot control third-party Agents' native tool-schema loading.",
+  "@aiProgressiveDisclosureDescription": {"description":"Independent progressive disclosure advice."},
+  "aiProgressivePrompt": "This always-on Prompt contains {count} characters. Keep essential shared rules brief; review task matching or manual loading for task-specific details.",
+  "@aiProgressivePrompt": {"description":"Independent progressive disclosure advice.","placeholders":{"count":{"type":"int"}}},
+  "aiProgressiveMcp": "Review whether this always-on MCP server is needed for the current task. Limit its scope or enable it manually when needed. Third-party Agents may still load all configured tool schemas.",
+  "@aiProgressiveMcp": {"description":"Independent progressive disclosure advice."},
   "aiDailyScope": "Clipboard items updated today and today's recorded Token totals. Copy counts and resource usage are cumulative; resource suggestions review the full library. At most 500 local items are analyzed.",
   "@aiDailyScope": { "description": "Scope and limits of companion analysis." },
   "aiProviderCredentialNote": "Changing the endpoint removes its previous key. Enter a key for the new provider if it needs one.",

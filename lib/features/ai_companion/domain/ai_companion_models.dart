@@ -7,6 +7,7 @@ final class AiCompanionSettings {
   const AiCompanionSettings({
     this.clipboardAnalysis = false,
     this.usageOptimization = false,
+    this.progressiveDisclosure = false,
     this.tokenOptimization = false,
     this.proactiveCheckIns = false,
     this.emotionalSupport = false,
@@ -19,6 +20,7 @@ final class AiCompanionSettings {
       AiCompanionSettings(
         clipboardAnalysis: json['clipboardAnalysis'] == true,
         usageOptimization: json['usageOptimization'] == true,
+        progressiveDisclosure: json['progressiveDisclosure'] == true,
         tokenOptimization: json['tokenOptimization'] == true,
         proactiveCheckIns: json['proactiveCheckIns'] == true,
         emotionalSupport: json['emotionalSupport'] == true,
@@ -31,6 +33,7 @@ final class AiCompanionSettings {
 
   final bool clipboardAnalysis;
   final bool usageOptimization;
+  final bool progressiveDisclosure;
   final bool tokenOptimization;
   final bool proactiveCheckIns;
   final bool emotionalSupport;
@@ -39,11 +42,15 @@ final class AiCompanionSettings {
   final String model;
 
   bool get analysisEnabled =>
-      clipboardAnalysis || usageOptimization || tokenOptimization;
+      clipboardAnalysis ||
+      usageOptimization ||
+      progressiveDisclosure ||
+      tokenOptimization;
 
   AiCompanionSettings copyWith({
     bool? clipboardAnalysis,
     bool? usageOptimization,
+    bool? progressiveDisclosure,
     bool? tokenOptimization,
     bool? proactiveCheckIns,
     bool? emotionalSupport,
@@ -53,6 +60,7 @@ final class AiCompanionSettings {
   }) => AiCompanionSettings(
     clipboardAnalysis: clipboardAnalysis ?? this.clipboardAnalysis,
     usageOptimization: usageOptimization ?? this.usageOptimization,
+    progressiveDisclosure: progressiveDisclosure ?? this.progressiveDisclosure,
     tokenOptimization: tokenOptimization ?? this.tokenOptimization,
     proactiveCheckIns: proactiveCheckIns ?? this.proactiveCheckIns,
     emotionalSupport: emotionalSupport ?? this.emotionalSupport,
@@ -64,6 +72,7 @@ final class AiCompanionSettings {
   Map<String, Object> toJson() => <String, Object>{
     'clipboardAnalysis': clipboardAnalysis,
     'usageOptimization': usageOptimization,
+    'progressiveDisclosure': progressiveDisclosure,
     'tokenOptimization': tokenOptimization,
     'proactiveCheckIns': proactiveCheckIns,
     'emotionalSupport': emotionalSupport,
@@ -96,6 +105,8 @@ enum AiSuggestionCode {
   ungroupedClipboard,
   candidateWithoutUse,
   alwaysOnUnused,
+  progressivePrompt,
+  progressiveMcp,
   largeAlwaysOnPrompt,
   highInputTokens,
   lowCacheReuse,

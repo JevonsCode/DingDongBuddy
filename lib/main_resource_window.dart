@@ -263,7 +263,10 @@ Future<void> _runResourceManagerWindow(
                         updated.isBefore(tomorrow);
                   })
                   .toList(growable: false),
-        resources: enabled.usageOptimization || enabled.tokenOptimization
+        resources:
+            enabled.usageOptimization ||
+                enabled.tokenOptimization ||
+                enabled.progressiveDisclosure
             ? await resourceStore.load()
             : const [],
         tokenUsage: !enabled.tokenOptimization

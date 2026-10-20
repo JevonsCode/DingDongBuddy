@@ -65,6 +65,26 @@ final class AiCompanionAnalyzer {
       if (!resource.enabled || !resource.type.isConfigurableAgentResource) {
         continue;
       }
+      if (settings.progressiveDisclosure &&
+          resource.activation == ResourceActivation.always) {
+        if (resource.type == ResourceType.prompt) {
+          suggestions.add(
+            AiSuggestion(
+              code: AiSuggestionCode.progressivePrompt,
+              count: resource.content.length,
+              targetId: resource.id,
+            ),
+          );
+        } else if (resource.type == ResourceType.mcp) {
+          suggestions.add(
+            AiSuggestion(
+              code: AiSuggestionCode.progressiveMcp,
+              count: 1,
+              targetId: resource.id,
+            ),
+          );
+        }
+      }
       // MCP usage means an actual invocation, while Skill usage means loading
       // and Prompt usage means activation. Candidates are never called usage.
       final int actualUse = resource.type == ResourceType.mcp
@@ -176,6 +196,21 @@ final class AiCompanionAnalyzer {
               'candidateCount': boundedAiCount(resource.candidateCount),
               'activationOrLoadCount': boundedAiCount(resource.usageCount),
               'invocationCount': boundedAiCount(resource.invocationCount),
+            },
+      ],
+    if (settings.progressiveDisclosure)
+      'progressiveDisclosure': <Map<String, Object>>[
+        for (final (index, resource) in metadata.resources.take(100).indexed)
+          if (resource.enabled &&
+              resource.activation == ResourceActivation.always &&
+              (resource.type == ResourceType.prompt ||
+                  resource.type == ResourceType.mcp))
+            <String, Object>{
+              'id': 'r${index + 1}',
+              'kind': resource.type.name,
+              'activation': resource.activation.name,
+              if (resource.type == ResourceType.prompt)
+                'promptCharacterCount': boundedAiCount(resource.content.length),
             },
       ],
     if (settings.tokenOptimization)

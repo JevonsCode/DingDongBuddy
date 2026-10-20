@@ -91,6 +91,13 @@ final class AiCompanionController extends ChangeNotifier {
       }
       final bool endpointChanged =
           sanitized.providerEndpoint != _settings.providerEndpoint;
+      final bool cloudContextChanged =
+          endpointChanged ||
+          sanitized.model != _settings.model ||
+          sanitized.clipboardAnalysis != _settings.clipboardAnalysis ||
+          sanitized.usageOptimization != _settings.usageOptimization ||
+          sanitized.progressiveDisclosure != _settings.progressiveDisclosure ||
+          sanitized.tokenOptimization != _settings.tokenOptimization;
       // Never send the old provider's credential to a newly entered endpoint.
       if (clearApiKey || endpointChanged || replacement != null) {
         await _store.writeApiKey(clearApiKey ? null : replacement);
@@ -103,6 +110,14 @@ final class AiCompanionController extends ChangeNotifier {
       _connectionVerified = false;
       if (!sanitized.emotionalSupport || endpointChanged) _messages.clear();
       _report = _visibleReport(_report, sanitized);
+      // Free-form text cannot be reliably separated back into capability
+      // categories. Keep only filtered local suggestions after a context change.
+      if (cloudContextChanged && _report != null) {
+        _report = AiCompanionReport(
+          createdAt: _report!.createdAt,
+          suggestions: _report!.suggestions,
+        );
+      }
       await _store.saveReport(_report);
     });
   }
@@ -263,6 +278,8 @@ AiCompanionReport? _visibleReport(
             AiSuggestionCode.ungroupedClipboard => settings.clipboardAnalysis,
             AiSuggestionCode.candidateWithoutUse ||
             AiSuggestionCode.alwaysOnUnused => settings.usageOptimization,
+            AiSuggestionCode.progressivePrompt ||
+            AiSuggestionCode.progressiveMcp => settings.progressiveDisclosure,
             AiSuggestionCode.largeAlwaysOnPrompt ||
             AiSuggestionCode.highInputTokens ||
             AiSuggestionCode.lowCacheReuse ||
