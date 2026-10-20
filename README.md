@@ -24,10 +24,12 @@ maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
 
-> **Development version: DingDong 1.7.0 (build 67).** Adds local daily Token history
-> and a heatmap for supported Codex, Claude Code, and Pi sources. This feature is
-> in development; the published downloads below remain **1.6.4**, with the Plugins
-> page, optional Jev integration, and macOS selection tools.
+> **DingDong 1.8.0 (build 70).** Adds an optional AI companion with independent
+> analysis and chat switches, duplicate-resource cleanup with optional backups,
+> and the reminder, Token-history and phone improvements from the 1.8 beta.
+> Cloud analysis uses anonymous usage metadata; clipboard content and files stay local.
+
+See the [AI companion setup and privacy boundaries](docs/product/ai-companion.md).
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -43,7 +45,8 @@ stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
 | Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
-| Local Token history · 1.7.0 development | Daily history and heatmap for supported Codex, Claude Code, and Pi sources; filter by year and source and inspect a day's counts |
+| Local Token history | Daily history and heatmap for supported Codex, Claude Code, and Pi sources; filter by date and source, inspect counts and export CSV |
+| AI companion | Optional clipboard, resource and Token insights, local check-ins and supportive chat with a configured model; separate switches and local privacy filtering |
 | Connected devices | Pair phones or computers, share Clipboard items and files explicitly, opt into automatic computer sync, and choose direct LAN or encrypted service transport |
 
 Clipboard and resource data stay on this computer by default. The lightweight
@@ -70,9 +73,9 @@ events should notify you and which sound they use. Completion, blockers, and
 requests for a decision stay distinguishable. The client's own notifications
 are not automatically replaced; choose your preferred setup in each client.
 
-## Local daily Token history · 1.7.0 development preview
+## Local daily Token history
 
-Open **Resource Manager → Token history** in the development version to see a
+Open **Resource Manager → Token history** to see a
 daily heatmap, filter by year or source, and inspect a day's usage. Supported
 sources are **Codex, Claude Code, and Pi** when usable local usage evidence exists.
 Repeated cumulative records are deduplicated; incomplete daily totals are shown
@@ -81,8 +84,7 @@ invented zero.
 
 This history stores numeric usage aggregates locally, not conversation text,
 and is separate from anonymous installation statistics. Token counts show
-usage, not money or a complete bill. The 1.6.4 downloads do not include this
-development feature.
+usage, not money or a complete bill.
 
 ## Optional system selection tools on macOS
 
@@ -235,11 +237,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.6.4:
+Published stable downloads · 1.8.0:
 
-- [macOS · Apple silicon · 1.6.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-macos-arm64.dmg)
-- [macOS · Intel · 1.6.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-macos-x64.dmg)
-- [Windows x64 · 1.6.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-arm64.dmg)
+- [macOS · Intel · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-x64.dmg)
+- [Windows x64 · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

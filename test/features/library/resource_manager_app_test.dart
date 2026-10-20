@@ -588,6 +588,11 @@ void main() {
       find.byKey(const Key('resource-manager-issue-count')),
       findsOneWidget,
     );
+    final Size badgeSize = tester.getSize(
+      find.byKey(const Key('resource-manager-issue-count')),
+    );
+    expect(badgeSize.height, lessThanOrEqualTo(20));
+    expect(badgeSize.width, greaterThanOrEqualTo(badgeSize.height));
     expect(find.text('Claude Code'), findsOneWidget);
     expect(find.text('/Users/test/.claude/skills/code-review'), findsOneWidget);
     expect(find.text('Agent 插件提供了同名 Skill'), findsOneWidget);

@@ -9,6 +9,279 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get aiDailyScope =>
+      '分析今日更新的剪贴板与今日已记录 Token 用量。复制次数与资源使用次数为累计值；资源建议检查整个资源库。每类最多分析 500 项本地数据。';
+
+  @override
+  String get aiProviderCredentialNote => '更换地址会移除原密钥；新服务需要密钥时请重新输入。';
+
+  @override
+  String get aiReviewSuggestion => '查看相关项目';
+
+  @override
+  String get aiNoSuggestions => '根据现有数据暂无建议，未修改任何内容。';
+
+  @override
+  String aiFrequentClipboard(int count) {
+    return '已复制 $count 次，可考虑固定此项或保存为可复用的 Prompt。';
+  }
+
+  @override
+  String aiRepeatedClipboard(int count) {
+    return '发现 $count 条相同的剪贴板内容，请确认后再整理。';
+  }
+
+  @override
+  String aiUngroupedClipboard(int count) {
+    return '有 $count 项尚未分组，可将常用内容整理到合适分组。';
+  }
+
+  @override
+  String aiCandidateWithoutUse(int count) {
+    return '已被考虑 $count 次，但未记录调用或加载。可检查此 MCP 或 Skill 是否仍需要，或仅在任务匹配时加载。';
+  }
+
+  @override
+  String get aiAlwaysOnUnused => '此常驻资源已存在至少一周，尚无使用记录。可检查适用范围，改为任务匹配或按需加载。';
+
+  @override
+  String aiLargeAlwaysOnPrompt(int count) {
+    return '此常驻 Prompt 含 $count 个字符。可精简通用规则，将具体任务内容改为任务匹配或按需加载。';
+  }
+
+  @override
+  String aiHighInputTokens(int count) {
+    return '已记录输入 $count Token，占用量较高。可检查重复上下文，仅在任务需要时加载资源。';
+  }
+
+  @override
+  String aiLowCacheReuse(int count) {
+    return '已记录缓存输入仅 $count Token。可尝试保持通用前缀稳定，实际节省取决于模型服务商。';
+  }
+
+  @override
+  String get aiIncompleteTokenData => 'Token 记录尚不完整，需取得更可靠的数据后再判断效率。';
+
+  @override
+  String get aiTakeABreakSuggestion => '已经忙了一阵，可以缓口气、伸展一下，或暂时离开屏幕。';
+
+  @override
+  String get aiCompanionTitle => 'AI 伙伴';
+
+  @override
+  String get aiCompanionSubtitle => '本地洞察、实用建议，也可以聊聊近况。';
+
+  @override
+  String get aiPrivacySummary =>
+      '所有功能默认关闭。本地分析留在此设备；云端分析仅发送数量与用量统计，不附带剪贴板文本、资源正文、路径、文件或图片。聊天仅发送你主动输入并通过本地敏感内容检查的消息。';
+
+  @override
+  String get aiFeaturesTitle => '选择你需要的功能';
+
+  @override
+  String get aiClipboardAnalysis => '剪贴板洞察';
+
+  @override
+  String get aiClipboardAnalysisDescription => '在本地发现重复和经常复制的内容。';
+
+  @override
+  String get aiUsageOptimization => '资源优化建议';
+
+  @override
+  String get aiUsageOptimizationDescription => '查看资源使用记录与常驻配置，仅提供建议。';
+
+  @override
+  String get aiTokenOptimization => 'Token 用量建议';
+
+  @override
+  String get aiTokenOptimizationDescription => '根据本地已记录用量寻找节省机会。';
+
+  @override
+  String get aiProactiveCheckIns => '主动关怀';
+
+  @override
+  String get aiProactiveCheckInsDescription =>
+      '此页面持续打开一小时后显示本地关怀提醒，最多每两小时一次，不自动发起网络请求。';
+
+  @override
+  String get aiEmotionalSupport => '情绪陪伴';
+
+  @override
+  String get aiEmotionalSupportDescription => '与你配置的模型聊天。消息仅暂存内存，清空或关闭窗口后移除。';
+
+  @override
+  String get aiCloudAnalysis => '使用模型分析统计数据';
+
+  @override
+  String get aiCloudAnalysisDescription =>
+      '仅在点击分析时，将已开启功能的数量与 Token 统计发送给配置的模型。';
+
+  @override
+  String get aiProviderTitle => '模型连接';
+
+  @override
+  String get aiConfigureProvider => '配置模型';
+
+  @override
+  String get aiProviderEndpoint => '兼容 OpenAI 的基础 URL';
+
+  @override
+  String get aiProviderEndpointHint =>
+      'https://api.example.com/v1 或 http://127.0.0.1:11434/v1';
+
+  @override
+  String get aiProviderModel => '模型名称';
+
+  @override
+  String get aiProviderApiKey => 'API 密钥';
+
+  @override
+  String get aiProviderKeyStored => '已有密钥安全保存，留空则保留。';
+
+  @override
+  String get aiProviderKeyHint => '保存在此设备的安全存储中；本地模型可留空。';
+
+  @override
+  String get aiRemoveApiKey => '移除已保存的密钥';
+
+  @override
+  String get aiProviderHelp => '云端模型使用 HTTPS，本地模型可使用回环地址的 HTTP。保存配置不代表已成功连接。';
+
+  @override
+  String get aiProviderNotConfigured => '尚未配置模型。开启分析功能后即可查看本地洞察。';
+
+  @override
+  String get aiProviderNotVerified => '已配置模型 · 尚未验证连接';
+
+  @override
+  String get aiProviderVerified => '模型已成功响应';
+
+  @override
+  String get aiTestConnection => '测试连接';
+
+  @override
+  String get aiAnalyze => '分析已开启的功能';
+
+  @override
+  String get aiInsightsTitle => '建议';
+
+  @override
+  String get aiInsightsEmpty => '开启功能并点击分析，即可根据本地数据查看建议。';
+
+  @override
+  String get aiLocalAnalysis => '本地分析 · 未请求模型';
+
+  @override
+  String get aiCloudResult => '模型建议 · 仅统计数据';
+
+  @override
+  String get aiReadOnly => '建议不会修改数据，请在对应页面审阅后操作。';
+
+  @override
+  String get aiChatTitle => '聊聊近况';
+
+  @override
+  String get aiChatDescription => '可以聊聊你的想法。本地检查会拦截常见密钥与敏感格式，发送前仍请确认消息内容。';
+
+  @override
+  String get aiChatPlaceholder => '写下想聊的话…';
+
+  @override
+  String get aiChatSend => '发送消息';
+
+  @override
+  String get aiChatClear => '清空对话';
+
+  @override
+  String get aiChatYou => '你';
+
+  @override
+  String get aiChatAssistant => '伙伴';
+
+  @override
+  String get aiChatDisabled => '开启情绪陪伴后即可开始对话。';
+
+  @override
+  String get aiChatNeedsProvider => '请先配置模型，再发送消息。';
+
+  @override
+  String get aiCheckInNow => '休息一下';
+
+  @override
+  String get aiUnavailable => '此窗口暂时无法使用 AI 伙伴，请重新打开资源管理器。';
+
+  @override
+  String get aiErrorDisabled => '请先开启对应功能。';
+
+  @override
+  String get aiErrorInvalidProvider =>
+      '请输入有效的 HTTPS 基础 URL 或本机回环 HTTP 地址，以及模型名称。';
+
+  @override
+  String get aiErrorMissingApiKey => '此云端模型需要 API 密钥，请在模型配置中添加。';
+
+  @override
+  String get aiErrorSensitiveInput => '消息可能包含敏感信息，请移除后再发送。';
+
+  @override
+  String get aiErrorSensitiveOutput => '模型回复可能包含敏感信息，已隐藏。';
+
+  @override
+  String get aiErrorProviderUnavailable => '模型暂时无法响应，请检查地址、模型名称、API 密钥和网络后重试。';
+
+  @override
+  String get aiErrorInvalidResponse => '模型返回了无法读取的响应。';
+
+  @override
+  String get aiErrorTimeout => '模型请求超时，请稍后重试。';
+
+  @override
+  String get aiErrorStorageUnavailable => '无法读取配置或安全存储，请稍后重试。';
+
+  @override
+  String get aiErrorEmptyMessage => '请先输入消息。';
+
+  @override
+  String get aiErrorMessageTooLong => '消息过长，请缩短后再发送。';
+
+  @override
+  String get resolveDuplicate => '处理重复项';
+
+  @override
+  String get deleteAgentCopy => '删除 Agent 中的副本';
+
+  @override
+  String get deleteDingDongCopy => '删除 DingDong 中的副本';
+
+  @override
+  String get duplicateCleanupDescription => '选择要删除的副本，其他资源和 Agent 配置将予以保留。';
+
+  @override
+  String get duplicateSkillCleanupDescription =>
+      '删除此 DingDong 资源及其托管安装，现有 Agent 或插件中的 Skill 仍可使用。';
+
+  @override
+  String get createLocalBackup => '删除前创建本地备份';
+
+  @override
+  String get localBackupMayContainSecrets => '备份仅保存在此电脑，可能包含凭据。';
+
+  @override
+  String get duplicateCleanupComplete => '已删除重复项';
+
+  @override
+  String get duplicateCleanupBackupLocation => '备份已保存至：';
+
+  @override
+  String get duplicateCleanupFailed => '无法删除重复项';
+
+  @override
+  String get duplicateCleanupAction => '删除所选副本';
+
+  @override
+  String get duplicateCleanupInProgress => '正在删除…';
+
+  @override
   String get agentSetupAdvancedDetailsDescription => '端点与桥接命令';
 
   @override

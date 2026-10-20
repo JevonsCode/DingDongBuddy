@@ -103,6 +103,510 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Scope and limits of companion analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard items updated today and today\'s recorded Token totals. Copy counts and resource usage are cumulative; resource suggestions review the full library. At most 500 local items are analyzed.'**
+  String get aiDailyScope;
+
+  /// AI provider credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing the endpoint removes its previous key. Enter a key for the new provider if it needs one.'**
+  String get aiProviderCredentialNote;
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Review item'**
+  String get aiReviewSuggestion;
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions from the available data. Nothing was changed.'**
+  String get aiNoSuggestions;
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count} times. Consider pinning this item or saving it as a reusable Prompt.'**
+  String aiFrequentClipboard(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} identical clipboard entries. Review them before removing any.'**
+  String aiRepeatedClipboard(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items have no group. Group useful items so they are easier to find.'**
+  String aiUngroupedClipboard(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Considered {count} times with no recorded invocation or load. Review whether this MCP or Skill should remain available, or load it only for matching tasks.'**
+  String aiCandidateWithoutUse(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'This always-on resource has no recorded use for at least a week. Review its scope and consider task-matched or on-demand loading.'**
+  String get aiAlwaysOnUnused;
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'This always-on Prompt contains {count} characters. Keep shared rules brief and move task-specific details to task-matched or on-demand resources.'**
+  String aiLargeAlwaysOnPrompt(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded input is {count} tokens and dominates usage. Review long repeated context and attach resources only when the task needs them.'**
+  String aiHighInputTokens(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {count} cached input tokens were recorded. Stable shared prefixes may help; actual savings depend on the model provider.'**
+  String aiLowCacheReuse(int count);
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Token records are incomplete. More reliable data is needed before judging efficiency.'**
+  String get aiIncompleteTokenData;
+
+  /// AI companion suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been here a while. Take a breath, stretch, or step away for a moment.'**
+  String get aiTakeABreakSuggestion;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'AI companion'**
+  String get aiCompanionTitle;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Local insights, useful suggestions, and a space to talk.'**
+  String get aiCompanionSubtitle;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything starts off. Local analysis stays on this device. Cloud analysis sends only counts and usage totals; clipboard text, resource contents, paths, files and images are never attached. Chat sends only the messages you choose to write after local sensitive-content checks.'**
+  String get aiPrivacySummary;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what helps you'**
+  String get aiFeaturesTitle;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard insights'**
+  String get aiClipboardAnalysis;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Find repeated and frequently copied items locally.'**
+  String get aiClipboardAnalysisDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource suggestions'**
+  String get aiUsageOptimization;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Review resource usage and always-on configuration without changing them.'**
+  String get aiUsageOptimizationDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Token suggestions'**
+  String get aiTokenOptimization;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use recorded local totals to spot opportunities to reduce usage.'**
+  String get aiTokenOptimizationDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle check-ins'**
+  String get aiProactiveCheckIns;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'A local reminder after an hour with this page open, at most once every two hours. No automatic network requests.'**
+  String get aiProactiveCheckInsDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Supportive chat'**
+  String get aiEmotionalSupport;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to your configured model. Messages stay in memory until cleared or the window closes.'**
+  String get aiEmotionalSupportDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model analysis of metadata'**
+  String get aiCloudAnalysis;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'On explicit analysis only: send enabled counts and Token totals to your configured model.'**
+  String get aiCloudAnalysisDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model connection'**
+  String get aiProviderTitle;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure model'**
+  String get aiConfigureProvider;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI-compatible base URL'**
+  String get aiProviderEndpoint;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'https://api.example.com/v1 or http://127.0.0.1:11434/v1'**
+  String get aiProviderEndpointHint;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model name'**
+  String get aiProviderModel;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get aiProviderApiKey;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'A key is saved securely. Leave blank to keep it.'**
+  String get aiProviderKeyStored;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored in this device\'s secure storage; optional for local models.'**
+  String get aiProviderKeyHint;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved key'**
+  String get aiRemoveApiKey;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Use HTTPS for a cloud provider or HTTP on a loopback address for a local model. Saving settings does not verify connectivity.'**
+  String get aiProviderHelp;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'No model configured. Local insights are available after enabling an analysis feature.'**
+  String get aiProviderNotConfigured;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model configured · connection not verified'**
+  String get aiProviderNotVerified;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model responded successfully'**
+  String get aiProviderVerified;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get aiTestConnection;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze enabled features'**
+  String get aiAnalyze;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get aiInsightsTitle;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable a feature and run an analysis to see suggestions from your local data.'**
+  String get aiInsightsEmpty;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Local analysis · no model request'**
+  String get aiLocalAnalysis;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model suggestions · metadata only'**
+  String get aiCloudResult;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions are read-only. Review changes in the relevant workspace.'**
+  String get aiReadOnly;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'A space to talk'**
+  String get aiChatTitle;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Write what is on your mind. Local checks block common secrets and sensitive patterns; review your message before sending.'**
+  String get aiChatDescription;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message…'**
+  String get aiChatPlaceholder;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get aiChatSend;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear conversation'**
+  String get aiChatClear;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get aiChatYou;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get aiChatAssistant;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable supportive chat to start a conversation.'**
+  String get aiChatDisabled;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure a model before sending a message.'**
+  String get aiChatNeedsProvider;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a moment'**
+  String get aiCheckInNow;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI companion is unavailable in this window. Reopen Resource Manager to try again.'**
+  String get aiUnavailable;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable the relevant feature first.'**
+  String get aiErrorDisabled;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid HTTPS base URL, or a loopback HTTP address, and a model name.'**
+  String get aiErrorInvalidProvider;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'This cloud model needs an API key. Add it in model settings.'**
+  String get aiErrorMissingApiKey;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'This message may contain sensitive information. Remove it before sending.'**
+  String get aiErrorSensitiveInput;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'The model response was hidden because it may contain sensitive information.'**
+  String get aiErrorSensitiveOutput;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'The model could not respond. Check the endpoint, model, API key and network, then try again.'**
+  String get aiErrorProviderUnavailable;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'The model returned an unreadable response.'**
+  String get aiErrorInvalidResponse;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'The model request timed out. Try again later.'**
+  String get aiErrorTimeout;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings or secure storage could not be accessed. Try again before enabling features.'**
+  String get aiErrorStorageUnavailable;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message before sending.'**
+  String get aiErrorEmptyMessage;
+
+  /// AI companion.
+  ///
+  /// In en, this message translates to:
+  /// **'This message is too long. Shorten it before sending.'**
+  String get aiErrorMessageTooLong;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve duplicate'**
+  String get resolveDuplicate;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Agent copy'**
+  String get deleteAgentCopy;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete DingDong copy'**
+  String get deleteDingDongCopy;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which copy to delete. Other resources and Agent settings are preserved.'**
+  String get duplicateCleanupDescription;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this DingDong resource and its managed installations. The existing Agent or plugin Skill stays available.'**
+  String get duplicateSkillCleanupDescription;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a local backup before deleting'**
+  String get createLocalBackup;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups stay on this computer and may contain credentials.'**
+  String get localBackupMayContainSecrets;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate removed'**
+  String get duplicateCleanupComplete;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved to:'**
+  String get duplicateCleanupBackupLocation;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove duplicate'**
+  String get duplicateCleanupFailed;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected copy'**
+  String get duplicateCleanupAction;
+
+  /// Duplicate resource cleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get duplicateCleanupInProgress;
+
   /// Technical content remaining in the advanced connection disclosure.
   ///
   /// In en, this message translates to:

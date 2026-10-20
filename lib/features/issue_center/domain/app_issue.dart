@@ -26,6 +26,7 @@ final class AppIssue {
     this.resourceTitle,
     this.clientName,
     this.targetPath,
+    this.duplicateEntryName,
   });
 
   factory AppIssue.fromJson(Map<Object?, Object?> values) => AppIssue(
@@ -39,6 +40,7 @@ final class AppIssue {
     resourceTitle: values['resourceTitle'] as String?,
     clientName: values['clientName'] as String?,
     targetPath: values['targetPath'] as String?,
+    duplicateEntryName: values['duplicateEntryName'] as String?,
   );
 
   final String id;
@@ -52,6 +54,19 @@ final class AppIssue {
   final String? clientName;
   final String? targetPath;
 
+  /// Exact Agent JSON key; never infer a deletion target from display text.
+  final String? duplicateEntryName;
+
+  bool get isDuplicateResource =>
+      resourceId != null &&
+      switch (kind) {
+        AppIssueKind.duplicateMcp ||
+        AppIssueKind.skillNameConflict ||
+        AppIssueKind.managedSkillNameConflict ||
+        AppIssueKind.pluginSkillNameConflict => true,
+        _ => false,
+      };
+
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
     'source': source,
@@ -63,6 +78,7 @@ final class AppIssue {
     'resourceTitle': resourceTitle,
     'clientName': clientName,
     'targetPath': targetPath,
+    if (duplicateEntryName != null) 'duplicateEntryName': duplicateEntryName,
   };
 }
 

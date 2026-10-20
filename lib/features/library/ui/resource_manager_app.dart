@@ -14,6 +14,8 @@ import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_screen.dart';
+import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
+import 'package:dingdong/features/ai_companion/ui/ai_companion_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
@@ -56,6 +58,7 @@ class ResourceManagerApp extends StatefulWidget {
     this.pluginSettings,
     this.tokenUsageController,
     this.onCloseTokenUsage,
+    this.aiCompanionController,
     super.key,
   });
 
@@ -63,6 +66,7 @@ class ResourceManagerApp extends StatefulWidget {
   final SettingsViewModel? pluginSettings;
   final TokenUsageController? tokenUsageController;
   final Future<void> Function()? onCloseTokenUsage;
+  final AiCompanionController? aiCompanionController;
   final LibraryViewModel viewModel;
   final ClipboardViewModel clipboardViewModel;
   final ActivityController activityController;
@@ -182,6 +186,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
     widget.agentAdapterController?.dispose();
     widget.pluginSettings?.dispose();
     widget.tokenUsageController?.dispose();
+    widget.aiCompanionController?.dispose();
     final closeTokenUsage = widget.onCloseTokenUsage;
     if (closeTokenUsage != null) unawaited(closeTokenUsage());
     super.dispose();
@@ -237,6 +242,27 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
       setState(
         () => _selectedIndex = ResourceManagerDestination.resources.index,
       );
+    }
+  }
+
+  Future<void> _reviewAiSuggestion(AiSuggestion suggestion) async {
+    final String? id = suggestion.targetId;
+    if (id == null) return;
+    switch (suggestion.code) {
+      case AiSuggestionCode.frequentClipboard:
+      case AiSuggestionCode.repeatedClipboard:
+      case AiSuggestionCode.ungroupedClipboard:
+        widget.clipboardViewModel.load();
+        for (final record in widget.clipboardViewModel.allRecords) {
+          if (record.id == id) {
+            widget.clipboardViewModel.select(record);
+            break;
+          }
+        }
+        await _selectDestination(ResourceManagerDestination.clipboard);
+      default:
+        await widget.viewModel.load();
+        if (mounted) _openIssueResource(id);
     }
   }
 
@@ -343,6 +369,14 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                               )
                             : TokenUsageScreen(
                                 controller: widget.tokenUsageController!,
+                              ),
+                      ResourceManagerDestination.aiCompanion =>
+                        widget.aiCompanionController == null
+                            ? Center(child: Text(context.l10n.aiUnavailable))
+                            : AiCompanionScreen(
+                                controller: widget.aiCompanionController!,
+                                onReviewSuggestion: (AiSuggestion suggestion) =>
+                                    unawaited(_reviewAiSuggestion(suggestion)),
                               ),
                     },
                   ),
@@ -479,6 +513,17 @@ class _WorkspaceSidebar extends StatelessWidget {
                     ResourceManagerDestination.tokenUsage.index,
                 onTap: () =>
                     onSelected(ResourceManagerDestination.tokenUsage.index),
+              ),
+              const SizedBox(height: 3),
+              _SidebarItem(
+                key: const Key('resource-manager-nav-ai-companion'),
+                icon: Icons.auto_awesome_outlined,
+                label: context.l10n.aiCompanionTitle,
+                selected:
+                    selectedIndex ==
+                    ResourceManagerDestination.aiCompanion.index,
+                onTap: () =>
+                    onSelected(ResourceManagerDestination.aiCompanion.index),
               ),
               const SizedBox(height: 3),
               _SidebarItem(
@@ -639,13 +684,13 @@ class _SidebarItemState extends State<_SidebarItem> {
                         horizontal: 5,
                         vertical: 2,
                       ),
-                      alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: colors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Text(
                         widget.badgeCount > 99 ? '99+' : '${widget.badgeCount}',
+                        textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: colors.error,
                           fontSize: 9,

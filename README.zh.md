@@ -23,9 +23,11 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 只维护一份；接入的 Agent 消息统一收好，桌面提示声由你选。重要提醒和选中的
 剪贴板内容，也能送到你配对的可信手机。
 
-> **当前开发版本：DingDong 1.7.0（构建 67）。** 新增 Codex、Claude Code、Pi
-> 的本地每日 Token 历史与热力图，目前处于开发预览。下方已发布的安装包仍为
-> **1.6.4**，包含插件页、可选 Jev 接入和 macOS 划词。
+> **DingDong 1.8.0（构建 70）。** 新增可选 AI 助手，各项分析和聊天可独立开关；
+> 重复资源可直接处理并选择备份，同时包含 1.8 测试版的提醒、Token 历史和手机端改进。
+> 云端分析只使用匿名用量数据，剪贴板原文、图片和文件保留在本机。
+
+配置方式和数据边界见 [AI 助手说明](docs/product/ai-companion.md)。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -40,7 +42,8 @@ Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或�
 | MCP | 只维护一份 Server 配置，同步到匹配的 Agent 客户端，并保留无关配置 |
 | Agent 动态 | 在本机记录完成、阻塞和决策提醒，保留未读状态、重复次数和历史，并播放可配置提示声 |
 | Agent 回复尾部 | 用一行资源小票展示本轮生效的 Prompt、匹配 Skill 和可用 MCP；`*` 表示 Skill 已加载或 MCP 已调用 |
-| 本地 Token 历史 · 1.7.0 开发版 | Codex、Claude Code、Pi 的每日历史和热力图，可按年份、来源筛选，并查看某一天的明细 |
+| 本地 Token 历史 | Codex、Claude Code、Pi 的每日历史和热力图，可按日期、来源筛选，查看明细并导出 CSV |
+| AI 助手 | 剪贴板、资源和 Token 建议、本地主动询问及配置模型后的聊天，各自有独立开关，输入输出经过本地隐私过滤 |
 | 连接设备 | 手机和电脑都可互相配对；内容默认手动分享，电脑可按设备开启自动同步，并选择局域网直连或加密服务 |
 
 剪贴板和资源数据默认只保存在这台电脑上；轻量连接中继不会保存剪贴板或文件正文。
@@ -62,15 +65,15 @@ Codex 本身已经有完成通知。DingDong 把接入 Agent 的事件收进同�
 决定的消息各自分清。客户端原有通知不会自动被替换，可以在各客户端按自己的
 习惯设置。
 
-## 本地每日 Token 历史 · 1.7.0 开发预览
+## 本地每日 Token 历史
 
-在开发版的“**资源管理 → Token 用量**”中查看每日热力图，按年份或来源筛选，
+在“**资源管理 → Token 用量**”中查看每日热力图，按年份或来源筛选，
 点击某一天看明细。目前支持 **Codex、Claude Code、Pi** 中可读取的本地用量
 数据；重复的累计记录会去重，数据不完整时以 `≥` 标出已知下界。读不到的数据
 保留为未知，不补成一个猜测的零。
 
 历史只在本机保存用量数字汇总，不保存聊天正文，也不随匿名安装统计上传。
-Token 是数量，不是金额或完整账单。下方 1.6.4 安装包尚不包含这项开发功能。
+Token 是数量，不是金额或完整账单。
 
 ## 插件，按需启用
 
@@ -200,11 +203,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.6.4：
+已发布的稳定安装包 · 1.8.0：
 
-- [macOS · Apple 芯片 · 1.6.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-macos-arm64.dmg)
-- [macOS · Intel · 1.6.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-macos-x64.dmg)
-- [Windows x64 · 1.6.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.6.4/DingDong-1.6.4-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-arm64.dmg)
+- [macOS · Intel · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-x64.dmg)
+- [Windows x64 · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

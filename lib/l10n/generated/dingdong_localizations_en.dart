@@ -9,6 +9,309 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get aiDailyScope =>
+      'Clipboard items updated today and today\'s recorded Token totals. Copy counts and resource usage are cumulative; resource suggestions review the full library. At most 500 local items are analyzed.';
+
+  @override
+  String get aiProviderCredentialNote =>
+      'Changing the endpoint removes its previous key. Enter a key for the new provider if it needs one.';
+
+  @override
+  String get aiReviewSuggestion => 'Review item';
+
+  @override
+  String get aiNoSuggestions =>
+      'No suggestions from the available data. Nothing was changed.';
+
+  @override
+  String aiFrequentClipboard(int count) {
+    return 'Copied $count times. Consider pinning this item or saving it as a reusable Prompt.';
+  }
+
+  @override
+  String aiRepeatedClipboard(int count) {
+    return 'Found $count identical clipboard entries. Review them before removing any.';
+  }
+
+  @override
+  String aiUngroupedClipboard(int count) {
+    return '$count items have no group. Group useful items so they are easier to find.';
+  }
+
+  @override
+  String aiCandidateWithoutUse(int count) {
+    return 'Considered $count times with no recorded invocation or load. Review whether this MCP or Skill should remain available, or load it only for matching tasks.';
+  }
+
+  @override
+  String get aiAlwaysOnUnused =>
+      'This always-on resource has no recorded use for at least a week. Review its scope and consider task-matched or on-demand loading.';
+
+  @override
+  String aiLargeAlwaysOnPrompt(int count) {
+    return 'This always-on Prompt contains $count characters. Keep shared rules brief and move task-specific details to task-matched or on-demand resources.';
+  }
+
+  @override
+  String aiHighInputTokens(int count) {
+    return 'Recorded input is $count tokens and dominates usage. Review long repeated context and attach resources only when the task needs them.';
+  }
+
+  @override
+  String aiLowCacheReuse(int count) {
+    return 'Only $count cached input tokens were recorded. Stable shared prefixes may help; actual savings depend on the model provider.';
+  }
+
+  @override
+  String get aiIncompleteTokenData =>
+      'Token records are incomplete. More reliable data is needed before judging efficiency.';
+
+  @override
+  String get aiTakeABreakSuggestion =>
+      'You have been here a while. Take a breath, stretch, or step away for a moment.';
+
+  @override
+  String get aiCompanionTitle => 'AI companion';
+
+  @override
+  String get aiCompanionSubtitle =>
+      'Local insights, useful suggestions, and a space to talk.';
+
+  @override
+  String get aiPrivacySummary =>
+      'Everything starts off. Local analysis stays on this device. Cloud analysis sends only counts and usage totals; clipboard text, resource contents, paths, files and images are never attached. Chat sends only the messages you choose to write after local sensitive-content checks.';
+
+  @override
+  String get aiFeaturesTitle => 'Choose what helps you';
+
+  @override
+  String get aiClipboardAnalysis => 'Clipboard insights';
+
+  @override
+  String get aiClipboardAnalysisDescription =>
+      'Find repeated and frequently copied items locally.';
+
+  @override
+  String get aiUsageOptimization => 'Resource suggestions';
+
+  @override
+  String get aiUsageOptimizationDescription =>
+      'Review resource usage and always-on configuration without changing them.';
+
+  @override
+  String get aiTokenOptimization => 'Token suggestions';
+
+  @override
+  String get aiTokenOptimizationDescription =>
+      'Use recorded local totals to spot opportunities to reduce usage.';
+
+  @override
+  String get aiProactiveCheckIns => 'Gentle check-ins';
+
+  @override
+  String get aiProactiveCheckInsDescription =>
+      'A local reminder after an hour with this page open, at most once every two hours. No automatic network requests.';
+
+  @override
+  String get aiEmotionalSupport => 'Supportive chat';
+
+  @override
+  String get aiEmotionalSupportDescription =>
+      'Talk to your configured model. Messages stay in memory until cleared or the window closes.';
+
+  @override
+  String get aiCloudAnalysis => 'Model analysis of metadata';
+
+  @override
+  String get aiCloudAnalysisDescription =>
+      'On explicit analysis only: send enabled counts and Token totals to your configured model.';
+
+  @override
+  String get aiProviderTitle => 'Model connection';
+
+  @override
+  String get aiConfigureProvider => 'Configure model';
+
+  @override
+  String get aiProviderEndpoint => 'OpenAI-compatible base URL';
+
+  @override
+  String get aiProviderEndpointHint =>
+      'https://api.example.com/v1 or http://127.0.0.1:11434/v1';
+
+  @override
+  String get aiProviderModel => 'Model name';
+
+  @override
+  String get aiProviderApiKey => 'API key';
+
+  @override
+  String get aiProviderKeyStored =>
+      'A key is saved securely. Leave blank to keep it.';
+
+  @override
+  String get aiProviderKeyHint =>
+      'Stored in this device\'s secure storage; optional for local models.';
+
+  @override
+  String get aiRemoveApiKey => 'Remove saved key';
+
+  @override
+  String get aiProviderHelp =>
+      'Use HTTPS for a cloud provider or HTTP on a loopback address for a local model. Saving settings does not verify connectivity.';
+
+  @override
+  String get aiProviderNotConfigured =>
+      'No model configured. Local insights are available after enabling an analysis feature.';
+
+  @override
+  String get aiProviderNotVerified =>
+      'Model configured · connection not verified';
+
+  @override
+  String get aiProviderVerified => 'Model responded successfully';
+
+  @override
+  String get aiTestConnection => 'Test connection';
+
+  @override
+  String get aiAnalyze => 'Analyze enabled features';
+
+  @override
+  String get aiInsightsTitle => 'Suggestions';
+
+  @override
+  String get aiInsightsEmpty =>
+      'Enable a feature and run an analysis to see suggestions from your local data.';
+
+  @override
+  String get aiLocalAnalysis => 'Local analysis · no model request';
+
+  @override
+  String get aiCloudResult => 'Model suggestions · metadata only';
+
+  @override
+  String get aiReadOnly =>
+      'Suggestions are read-only. Review changes in the relevant workspace.';
+
+  @override
+  String get aiChatTitle => 'A space to talk';
+
+  @override
+  String get aiChatDescription =>
+      'Write what is on your mind. Local checks block common secrets and sensitive patterns; review your message before sending.';
+
+  @override
+  String get aiChatPlaceholder => 'Write a message…';
+
+  @override
+  String get aiChatSend => 'Send message';
+
+  @override
+  String get aiChatClear => 'Clear conversation';
+
+  @override
+  String get aiChatYou => 'You';
+
+  @override
+  String get aiChatAssistant => 'Companion';
+
+  @override
+  String get aiChatDisabled =>
+      'Enable supportive chat to start a conversation.';
+
+  @override
+  String get aiChatNeedsProvider =>
+      'Configure a model before sending a message.';
+
+  @override
+  String get aiCheckInNow => 'Take a moment';
+
+  @override
+  String get aiUnavailable =>
+      'The AI companion is unavailable in this window. Reopen Resource Manager to try again.';
+
+  @override
+  String get aiErrorDisabled => 'Enable the relevant feature first.';
+
+  @override
+  String get aiErrorInvalidProvider =>
+      'Enter a valid HTTPS base URL, or a loopback HTTP address, and a model name.';
+
+  @override
+  String get aiErrorMissingApiKey =>
+      'This cloud model needs an API key. Add it in model settings.';
+
+  @override
+  String get aiErrorSensitiveInput =>
+      'This message may contain sensitive information. Remove it before sending.';
+
+  @override
+  String get aiErrorSensitiveOutput =>
+      'The model response was hidden because it may contain sensitive information.';
+
+  @override
+  String get aiErrorProviderUnavailable =>
+      'The model could not respond. Check the endpoint, model, API key and network, then try again.';
+
+  @override
+  String get aiErrorInvalidResponse =>
+      'The model returned an unreadable response.';
+
+  @override
+  String get aiErrorTimeout => 'The model request timed out. Try again later.';
+
+  @override
+  String get aiErrorStorageUnavailable =>
+      'Settings or secure storage could not be accessed. Try again before enabling features.';
+
+  @override
+  String get aiErrorEmptyMessage => 'Write a message before sending.';
+
+  @override
+  String get aiErrorMessageTooLong =>
+      'This message is too long. Shorten it before sending.';
+
+  @override
+  String get resolveDuplicate => 'Resolve duplicate';
+
+  @override
+  String get deleteAgentCopy => 'Delete Agent copy';
+
+  @override
+  String get deleteDingDongCopy => 'Delete DingDong copy';
+
+  @override
+  String get duplicateCleanupDescription =>
+      'Choose which copy to delete. Other resources and Agent settings are preserved.';
+
+  @override
+  String get duplicateSkillCleanupDescription =>
+      'Delete this DingDong resource and its managed installations. The existing Agent or plugin Skill stays available.';
+
+  @override
+  String get createLocalBackup => 'Create a local backup before deleting';
+
+  @override
+  String get localBackupMayContainSecrets =>
+      'Backups stay on this computer and may contain credentials.';
+
+  @override
+  String get duplicateCleanupComplete => 'Duplicate removed';
+
+  @override
+  String get duplicateCleanupBackupLocation => 'Backup saved to:';
+
+  @override
+  String get duplicateCleanupFailed => 'Could not remove duplicate';
+
+  @override
+  String get duplicateCleanupAction => 'Delete selected copy';
+
+  @override
+  String get duplicateCleanupInProgress => 'Deleting…';
+
+  @override
   String get agentSetupAdvancedDetailsDescription =>
       'Endpoints and bridge commands';
 

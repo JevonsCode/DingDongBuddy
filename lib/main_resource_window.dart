@@ -116,6 +116,26 @@ Future<void> _runResourceManagerWindow(
     revisions: dataRevisions,
   );
   await viewModel.load();
+  final DuplicateResourceCleanup duplicateCleanup = DuplicateResourceCleanup(
+    resourceStore: resourceStore,
+    synchronizer: resourceSynchronizer,
+    backupDirectory: Directory(
+      path.join(paths.skillPackagesDirectory.parent.path, 'Issue Backups'),
+    ),
+  );
+  issueCenterController.setResolver((
+    issue, {
+    required backup,
+    required choice,
+  }) async {
+    final result = await duplicateCleanup.resolve(
+      issue,
+      backup: backup,
+      choice: choice,
+    );
+    await viewModel.load();
+    return result;
+  });
   final ClipboardRepository clipboardRepository = ClipboardRepository.open(
     paths.clipboardDatabaseFile.path,
   );
@@ -218,8 +238,47 @@ Future<void> _runResourceManagerWindow(
   final tokenUsageController = TokenUsageController.fromRepository(
     tokenUsageRepository,
   );
+  late final AiCompanionController aiCompanionController;
+  aiCompanionController = AiCompanionController(
+    store: AiCompanionPreferencesStore(
+      SharedPreferencesBackend(),
+      development: paths.development,
+    ),
+    loadMetadata: () async {
+      final AiCompanionSettings enabled = aiCompanionController.settings;
+      final DateTime now = DateTime.now();
+      final DateTime today = DateTime(now.year, now.month, now.day);
+      final DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
+      return AiCompanionMetadata(
+        clipboard: !enabled.clipboardAnalysis
+            ? const <ClipboardRecord>[]
+            : clipboardRepository
+                  .list(
+                    limit: settings.clipboardMaxItems,
+                    includeProtectedBeyondLimit: true,
+                  )
+                  .where((record) {
+                    final DateTime updated = record.updatedAt.toLocal();
+                    return !updated.isBefore(today) &&
+                        updated.isBefore(tomorrow);
+                  })
+                  .toList(growable: false),
+        resources: enabled.usageOptimization || enabled.tokenOptimization
+            ? await resourceStore.load()
+            : const [],
+        tokenUsage: !enabled.tokenOptimization
+            ? const TokenUsageSnapshot()
+            : await tokenUsageRepository.readSnapshot(
+                from: today,
+                through: today,
+              ),
+      );
+    },
+  );
+  await aiCompanionController.load();
   runApp(
     ResourceManagerApp(
+      aiCompanionController: aiCompanionController,
       tokenUsageController: tokenUsageController,
       onCloseTokenUsage: tokenUsageRepository.close,
       viewModel: viewModel,

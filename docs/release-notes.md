@@ -1,36 +1,29 @@
-# DingDong 1.8.0 Beta 1
+# DingDong 1.8.0
 
-- Beta channel: turn on "Allow beta updates" in Settings → Version to get new features before the stable release.
-- Reminder rules: a separate sound for "needs your input", per-kind phone push, quiet hours, and alerting only for tasks longer than a chosen time.
-- Tell your AI which sound to play when it finishes and when it needs you; DingDong saves it for every later reminder.
-- Token history can summarize and export any date range, including the last 7 or 30 days.
-- Much smaller Agent bridge: about 80% less text per request, and Claude Code no longer needs the reply footer or an extra confirm call.
-- Phones and computers show which computer and operating system sent each item; notifications name the computer.
-- The phone app now tells you when notifications are actually off, with fixes for HyperOS/MIUI and installed Android apps.
-- Fixes phones that stayed connected but stopped receiving from the computer after a reconnect.
+- Adds an opt-in AI companion with separate clipboard, resource, Token, check-in and chat switches. Cloud analysis receives only anonymous usage metadata; API keys stay in secure storage.
+- Adds duplicate MCP and Skill cleanup with an optional local backup, preserving unrelated Agent configuration and external plugins.
+- Fixes the stretched issue-count badge in the resource manager sidebar.
+- Adds reminder rules, separate attention sounds, quiet hours and date-range Token summaries.
+- Reduces Agent bridge payloads and improves phone notifications, source labels and reconnect delivery.
 
 ---
 
-# DingDong 1.8.0 测试版 1
+# DingDong 1.8.0 正式版
 
-- 测试版通道：在 设置 → 版本 打开“允许安装测试版（Beta）”，即可提前体验新功能。
-- 提醒规则：“需要你处理”可用单独的提示音；完成和需要处理可分别决定是否推送到手机；支持免打扰时段，以及只在任务运行超过设定时间时提醒。
-- 可以直接告诉 AI“完成时用这个声音、需要我时用那个声音”，DingDong 会保存下来，以后每次提醒都按此设置。
-- Token 用量可按任意时间范围统计和导出，包括最近 7 天、最近 30 天。
-- Agent 桥接大幅瘦身：每次请求的文本减少约 80%，Claude Code 不再需要回复页脚和额外的确认调用。
-- 手机和电脑会显示每条内容来自哪台电脑、是什么系统；通知里也会写明电脑名。
-- 手机端会如实提示通知是否真的开启，并修复 HyperOS / MIUI 和已安装 Android 应用的通知引导。
-- 修复手机重连后显示已连接、却再也收不到电脑消息的问题。
+- 新增可选 AI 助手，剪贴板、资源、Token 分析、主动询问和聊天均可独立开关。云端分析仅接收匿名用量数据，API Key 保存在系统安全存储中。
+- 重复 MCP 和 Skill 可直接处理，支持选择本地备份，保留无关 Agent 配置和外部插件。
+- 修复资源管理器侧栏问题数量徽标被拉高的显示问题。
+- 新增提醒规则、单独的待处理提示音、免打扰时段和按时间范围统计 Token。
+- 精简 Agent 桥接内容，改进手机通知、来源标签及重连后的消息接收。
 
 ---
 
-# DingDong 1.8.0 Beta 1
+# DingDong 1.8.0
 
-- Canal beta: activa "Permitir actualizaciones beta" en Ajustes → Versión para recibir funciones nuevas antes de la versión estable.
-- Reglas de avisos: sonido propio para "necesita tu respuesta", envío al teléfono por tipo, horas de silencio y avisos solo para tareas más largas que el tiempo elegido.
-- Dile a tu IA qué sonido usar al terminar y cuándo te necesita; DingDong lo guarda para los avisos siguientes.
-- El historial de Tokens resume y exporta cualquier rango de fechas, incluidos los últimos 7 o 30 días.
-- Puente de Agents mucho más ligero: un 80 % menos de texto por solicitud, y Claude Code ya no necesita el pie de respuesta ni una confirmación extra.
-- Teléfonos y equipos muestran qué equipo y sistema operativo envió cada elemento; las notificaciones nombran el equipo.
-- La app del teléfono indica cuándo las notificaciones están realmente desactivadas, con correcciones para HyperOS/MIUI y apps Android instaladas.
-- Corrige teléfonos que seguían conectados pero dejaban de recibir del equipo tras reconectar.
+- Añade un asistente de IA opcional con controles independientes para portapapeles, recursos, Tokens, consultas y chat. El análisis en la nube recibe solo metadatos anónimos; las claves se guardan en el almacén seguro del sistema.
+- Permite resolver MCPs y Skills duplicados con copia local opcional, conservando la configuración ajena y los complementos externos.
+- Corrige el contador de problemas estirado en la barra lateral.
+- Añade reglas de avisos, sonidos de atención, horas de silencio y resúmenes de Tokens por fechas.
+- Reduce el contexto del puente de Agents y mejora avisos móviles, etiquetas de origen y reconexión.
+
+macOS installation remains unsigned/unnotarized when Apple distribution credentials are unavailable; see issue #16.

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
+import 'package:dingdong/features/issue_center/domain/issue_cleanup.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:flutter/material.dart';
 
@@ -35,6 +37,7 @@ final class IssueCenterScreen extends StatelessWidget {
                 child: issues.isEmpty
                     ? _EmptyIssueState(controller: controller)
                     : _IssueList(
+                        controller: controller,
                         issues: issues,
                         onOpenResource: onOpenResource,
                       ),
@@ -95,7 +98,8 @@ final class _IssueHeader extends StatelessWidget {
             ),
             DesktopActionButton(
               key: const Key('issue-center-check'),
-              onPressed: controller.isChecking
+              onPressed:
+                  controller.isChecking || controller.resolvingIssueId != null
                   ? null
                   : () => unawaited(controller.refresh()),
               icon: controller.isChecking
@@ -144,8 +148,13 @@ final class _IssueCount extends StatelessWidget {
 }
 
 final class _IssueList extends StatelessWidget {
-  const _IssueList({required this.issues, required this.onOpenResource});
+  const _IssueList({
+    required this.controller,
+    required this.issues,
+    required this.onOpenResource,
+  });
 
+  final IssueCenterController controller;
   final List<AppIssue> issues;
   final ValueChanged<String> onOpenResource;
 
@@ -167,8 +176,11 @@ final class _IssueList extends StatelessWidget {
             itemCount: issues.length,
             separatorBuilder: (_, _) =>
                 Divider(height: 1, indent: 66, color: colors.outlineVariant),
-            itemBuilder: (BuildContext context, int index) =>
-                _IssueRow(issue: issues[index], onOpenResource: onOpenResource),
+            itemBuilder: (BuildContext context, int index) => _IssueRow(
+              controller: controller,
+              issue: issues[index],
+              onOpenResource: onOpenResource,
+            ),
           ),
         ),
       ),
@@ -177,8 +189,13 @@ final class _IssueList extends StatelessWidget {
 }
 
 final class _IssueRow extends StatelessWidget {
-  const _IssueRow({required this.issue, required this.onOpenResource});
+  const _IssueRow({
+    required this.controller,
+    required this.issue,
+    required this.onOpenResource,
+  });
 
+  final IssueCenterController controller;
   final AppIssue issue;
   final ValueChanged<String> onOpenResource;
 
@@ -271,15 +288,225 @@ final class _IssueRow extends StatelessWidget {
           ),
           if (issue.resourceId != null) ...<Widget>[
             const SizedBox(width: 18),
-            DesktopActionButton(
-              key: Key('issue-open-resource-${issue.resourceId}'),
-              onPressed: () => onOpenResource(issue.resourceId!),
-              icon: const Icon(Icons.arrow_forward_rounded, size: 15),
-              label: context.l10n.viewResource,
-              tone: DesktopActionTone.soft,
-              compact: true,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                if (controller.canResolve(issue)) ...<Widget>[
+                  DesktopActionButton(
+                    key: Key('issue-resolve-${issue.id}'),
+                    onPressed:
+                        controller.isChecking ||
+                            controller.resolvingIssueId != null
+                        ? null
+                        : () => unawaited(
+                            showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => _DuplicateCleanupDialog(
+                                controller: controller,
+                                issue: issue,
+                              ),
+                            ),
+                          ),
+                    icon: const Icon(
+                      Icons.cleaning_services_outlined,
+                      size: 15,
+                    ),
+                    label: context.l10n.resolveDuplicate,
+                    tone: DesktopActionTone.soft,
+                    compact: true,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                DesktopActionButton(
+                  key: Key('issue-open-resource-${issue.resourceId}'),
+                  onPressed: () => onOpenResource(issue.resourceId!),
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 15),
+                  label: context.l10n.viewResource,
+                  tone: DesktopActionTone.soft,
+                  compact: true,
+                ),
+              ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+final class _DuplicateCleanupDialog extends StatefulWidget {
+  const _DuplicateCleanupDialog({
+    required this.controller,
+    required this.issue,
+  });
+
+  final IssueCenterController controller;
+  final AppIssue issue;
+
+  @override
+  State<_DuplicateCleanupDialog> createState() =>
+      _DuplicateCleanupDialogState();
+}
+
+final class _DuplicateCleanupDialogState
+    extends State<_DuplicateCleanupDialog> {
+  bool _backup = true;
+  bool _busy = false;
+  String? _error;
+  IssueCleanupResult? _result;
+  late IssueCleanupChoice _choice = _canRemoveExternal
+      ? IssueCleanupChoice.externalMcp
+      : IssueCleanupChoice.dingDongResource;
+
+  bool get _canRemoveExternal =>
+      widget.issue.kind == AppIssueKind.duplicateMcp &&
+      widget.issue.duplicateEntryName != null;
+
+  Future<void> _resolve() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final IssueCleanupResult result = await widget.controller.resolve(
+        widget.issue,
+        backup: _backup,
+        choice: _choice,
+      );
+      if (mounted) setState(() => _result = result);
+    } on Object catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final IssueCleanupResult? result = _result;
+    return PopScope(
+      canPop: !_busy,
+      child: DesktopAlertDialog(
+        key: const Key('duplicate-cleanup-dialog'),
+        maxWidth: 520,
+        title: Text(
+          result == null
+              ? context.l10n.resolveDuplicate
+              : context.l10n.duplicateCleanupComplete,
+        ),
+        content: SizedBox(
+          width: 480,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                if (result == null) ...<Widget>[
+                  Text(
+                    _canRemoveExternal
+                        ? context.l10n.duplicateCleanupDescription
+                        : context.l10n.duplicateSkillCleanupDescription,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<IssueCleanupChoice>(
+                    key: const Key('duplicate-cleanup-choice'),
+                    initialValue: _choice,
+                    isExpanded: true,
+                    items: <DropdownMenuItem<IssueCleanupChoice>>[
+                      if (_canRemoveExternal)
+                        DropdownMenuItem(
+                          value: IssueCleanupChoice.externalMcp,
+                          child: Text(
+                            '${context.l10n.deleteAgentCopy}: ${widget.issue.duplicateEntryName}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      DropdownMenuItem(
+                        value: IssueCleanupChoice.dingDongResource,
+                        child: Text(
+                          '${context.l10n.deleteDingDongCopy}: ${widget.issue.resourceTitle ?? ''}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    onChanged: _busy
+                        ? null
+                        : (IssueCleanupChoice? value) =>
+                              setState(() => _choice = value!),
+                  ),
+                  if (_choice == IssueCleanupChoice.externalMcp &&
+                      widget.issue.targetPath != null) ...<Widget>[
+                    const SizedBox(height: 12),
+                    SelectableText(
+                      widget.issue.targetPath!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    key: const Key('duplicate-cleanup-backup'),
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(context.l10n.createLocalBackup),
+                    subtitle: Text(context.l10n.localBackupMayContainSecrets),
+                    value: _backup,
+                    onChanged: _busy
+                        ? null
+                        : (bool? value) => setState(() => _backup = value!),
+                  ),
+                  if (_error != null) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Text(
+                      context.l10n.duplicateCleanupFailed,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    SelectableText(_error!),
+                  ],
+                ] else if (result.backupPath != null) ...<Widget>[
+                  Text(context.l10n.duplicateCleanupBackupLocation),
+                  const SizedBox(height: 8),
+                  SelectableText(
+                    result.backupPath!,
+                    key: const Key('duplicate-cleanup-backup-path'),
+                  ),
+                ] else
+                  Text(context.l10n.duplicateCleanupComplete),
+              ],
+            ),
+          ),
+        ),
+        actions: <Widget>[
+          if (result == null) ...<Widget>[
+            DesktopActionButton(
+              onPressed: _busy ? null : () => Navigator.of(context).pop(),
+              label: context.l10n.cancel,
+            ),
+            DesktopActionButton(
+              key: const Key('duplicate-cleanup-confirm'),
+              onPressed: _busy ? null : _resolve,
+              tone: DesktopActionTone.danger,
+              child: _busy
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const SizedBox.square(
+                          dimension: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(context.l10n.duplicateCleanupInProgress),
+                      ],
+                    )
+                  : Text(context.l10n.duplicateCleanupAction),
+            ),
+          ] else
+            DesktopActionButton(
+              onPressed: () => Navigator.of(context).pop(),
+              label: context.l10n.close,
+            ),
         ],
       ),
     );
