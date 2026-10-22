@@ -6,6 +6,65 @@ import 'package:path/path.dart' as p;
 
 void main() {
   test(
+    'named reminder tools preserve structured IDs and imported paths',
+    () async {
+      final transport = _RecordingMcpHttpTransport();
+      final executor = LoopbackMcpToolExecutor(transport);
+      await executor.execute('dingdong_list_reminders', {});
+      expect(transport.method, 'GET');
+      expect(transport.path, '/settings/reminders');
+      await executor.execute('dingdong_upsert_reminder', {
+        'id': 'error',
+        'name': 'Build failed',
+      });
+      expect(transport.body, {
+        'id': 'error',
+        'name': 'Build failed',
+        'action': 'upsert',
+      });
+      await executor.execute('dingdong_import_reminder_sound', {
+        'name': 'Chime',
+        'path': '/tmp/chime.wav',
+      });
+      expect(transport.body?['action'], 'importSound');
+      expect(transport.body?['path'], '/tmp/chime.wav');
+      await executor.execute('dingdong_notify', {
+        'message': 'Failed',
+        'reminderId': 'error',
+      });
+      expect(transport.body?['reminderId'], 'error');
+      await executor.execute('dingdong_delete_reminder', {'id': 'error'});
+      expect(transport.body, {'id': 'error', 'action': 'delete'});
+    },
+  );
+
+  test(
+    'version acknowledgements pass through without implicit session reuse',
+    () async {
+      final transport = _RecordingMcpHttpTransport();
+      final executor = LoopbackMcpToolExecutor(
+        transport,
+        currentDirectory: () => '/workspace/test',
+        repositoryUrlResolver: (_) async => null,
+      );
+      await executor.execute('dingdong_bridge', {
+        'acceptDelta': true,
+        'knownHash': 'retained',
+      });
+      expect(transport.body?['acceptDelta'], true);
+      expect(transport.body?['knownHash'], 'retained');
+      await executor.execute('dingdong_bridge', {});
+      expect(transport.body?.containsKey('knownHash'), false);
+      await executor.execute('dingdong_load_skill', {
+        'id': 'review',
+        'knownVersion': 'loaded',
+      });
+      expect(transport.query?['knownVersion'], 'loaded');
+      await executor.execute('dingdong_load_skill', {'id': 'review'});
+      expect(transport.query?.containsKey('knownVersion'), false);
+    },
+  );
+  test(
     'Jev inherits only the current successful bridge conversation',
     () async {
       final transport = _RecordingMcpHttpTransport();

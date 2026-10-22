@@ -127,6 +127,13 @@ void main() {
     const Map<String, DevelopmentTestAction>
     remainingActions = <String, DevelopmentTestAction>{
       'dev-test-panel-nudge': DevelopmentTestAction.trayNudge,
+      'dev-test-panel-color-orange': DevelopmentTestAction.trayOrange,
+      'dev-test-panel-color-pink': DevelopmentTestAction.trayPink,
+      'dev-test-panel-color-blue': DevelopmentTestAction.trayBlue,
+      'dev-test-panel-color-green': DevelopmentTestAction.trayGreen,
+      'dev-test-panel-color-purple': DevelopmentTestAction.trayPurple,
+      'dev-test-panel-color-amber': DevelopmentTestAction.trayAmber,
+      'dev-test-panel-clear-colors': DevelopmentTestAction.trayClearColors,
       'dev-test-panel-agent-basic': DevelopmentTestAction.agentCompletion,
       'dev-test-panel-agent-burst': DevelopmentTestAction.agentBurst,
       'dev-test-panel-phone-file': DevelopmentTestAction.phoneClipboardFile,

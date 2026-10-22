@@ -103,6 +103,72 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get amber;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft pulse'**
+  String get trayStylePulse;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Static marker'**
+  String get trayStyleStatic;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs-input reminder color'**
+  String get attentionTrayColor;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion reminder color'**
+  String get completionTrayColor;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs-input reminder style'**
+  String get attentionTrayStyle;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion reminder style'**
+  String get completionTrayStyle;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions in this category in the current report. Analyze again after changing the scope.'**
+  String get aiCategoryNoSuggestions;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure a model first. Local rules apply until one is available.'**
+  String get aiRoutingNeedsProvider;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'When an Agent requests resources, let your configured model select from the task, supplied context and candidate summaries. Off by default; failures fall back to local rules.'**
+  String get aiAutoResourceSelectionDescription;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'AI resource selection'**
+  String get aiAutoResourceSelection;
+
   /// Independent progressive disclosure advice.
   ///
   /// In en, this message translates to:
@@ -112,7 +178,7 @@ abstract class DingDongLocalizations {
   /// Independent progressive disclosure advice.
   ///
   /// In en, this message translates to:
-  /// **'Review task-matched or manual Prompt loading and the MCP servers needed for each task. Advice never changes configuration and cannot control third-party Agents\' native tool-schema loading.'**
+  /// **'Review always-on Prompts and MCP scope for on-demand loading. This does not change native client tool loading.'**
   String get aiProgressiveDisclosureDescription;
 
   /// Independent progressive disclosure advice.
@@ -214,25 +280,25 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'AI companion'**
+  /// **'AI+'**
   String get aiCompanionTitle;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Local insights, useful suggestions, and a space to talk.'**
+  /// **'Select resources on demand and review insights.'**
   String get aiCompanionSubtitle;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Everything starts off. Local analysis stays on this device. Cloud analysis sends only counts and usage totals; clipboard text, resource contents, paths, files and images are never attached. Chat sends only the messages you choose to write after local sensitive-content checks.'**
+  /// **'Each feature is opt-in. Statistics analysis sends only counts and usage; resource selection sends the task, supplied context and candidate summaries. Clipboard text is not sent.'**
   String get aiPrivacySummary;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Choose what helps you'**
+  /// **'Analysis scope'**
   String get aiFeaturesTitle;
 
   /// AI companion.
@@ -286,26 +352,44 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Supportive chat'**
-  String get aiEmotionalSupport;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Talk to your configured model. Messages stay in memory until cleared or the window closes.'**
-  String get aiEmotionalSupportDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
   /// **'Model analysis of metadata'**
   String get aiCloudAnalysis;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'On explicit analysis only: send enabled counts and Token totals to your configured model.'**
+  /// **'When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.'**
   String get aiCloudAnalysisDescription;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'API protocol'**
+  String get aiProviderProtocol;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (OpenAI / Anthropic)'**
+  String get aiProviderProtocolAuto;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed (401/403). Check the API key and service permissions.'**
+  String get aiErrorAuthenticationFailed;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint or model not found (404/405). Check the service URL, protocol and model name.'**
+  String get aiErrorEndpointNotFound;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'The service is rate limiting requests (429). Check your quota or try again later.'**
+  String get aiErrorRateLimited;
 
   /// AI companion.
   ///
@@ -322,7 +406,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'OpenAI-compatible base URL'**
+  /// **'Service URL'**
   String get aiProviderEndpoint;
 
   /// AI companion.
@@ -364,7 +448,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Use HTTPS for a cloud provider or HTTP on a loopback address for a local model. Saving settings does not verify connectivity.'**
+  /// **'Supports OpenAI and Anthropic, over HTTP or HTTPS. Auto tries the other protocol when an endpoint is not found. Saving does not test the connection.'**
   String get aiProviderHelp;
 
   /// AI companion.
@@ -394,19 +478,19 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Analyze enabled features'**
+  /// **'Analyze now'**
   String get aiAnalyze;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Suggestions'**
+  /// **'Insights and suggestions'**
   String get aiInsightsTitle;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Enable a feature and run an analysis to see suggestions from your local data.'**
+  /// **'Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.'**
   String get aiInsightsEmpty;
 
   /// AI companion.
@@ -430,67 +514,13 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'A space to talk'**
-  String get aiChatTitle;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Write what is on your mind. Local checks block common secrets and sensitive patterns; review your message before sending.'**
-  String get aiChatDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Write a message…'**
-  String get aiChatPlaceholder;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Send message'**
-  String get aiChatSend;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear conversation'**
-  String get aiChatClear;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get aiChatYou;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Companion'**
-  String get aiChatAssistant;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable supportive chat to start a conversation.'**
-  String get aiChatDisabled;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure a model before sending a message.'**
-  String get aiChatNeedsProvider;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
   /// **'Take a moment'**
   String get aiCheckInNow;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'The AI companion is unavailable in this window. Reopen Resource Manager to try again.'**
+  /// **'AI+ is unavailable in this window. Reopen Resource Manager.'**
   String get aiUnavailable;
 
   /// AI companion.
@@ -502,7 +532,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid HTTPS base URL, or a loopback HTTP address, and a model name.'**
+  /// **'Enter a valid HTTP or HTTPS service URL and model name, without credentials, query parameters or fragments in the URL.'**
   String get aiErrorInvalidProvider;
 
   /// AI companion.
@@ -510,12 +540,6 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'This cloud model needs an API key. Add it in model settings.'**
   String get aiErrorMissingApiKey;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'This message may contain sensitive information. Remove it before sending.'**
-  String get aiErrorSensitiveInput;
 
   /// AI companion.
   ///
@@ -550,14 +574,8 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Write a message before sending.'**
-  String get aiErrorEmptyMessage;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'This message is too long. Shorten it before sending.'**
-  String get aiErrorMessageTooLong;
+  /// **'The model request is too large. Reduce the analysis scope and try again.'**
+  String get aiErrorRequestTooLarge;
 
   /// Duplicate resource cleanup.
   ///
@@ -6515,7 +6533,7 @@ abstract class DingDongLocalizations {
   /// No description provided for @fileTransferStatus.
   ///
   /// In en, this message translates to:
-  /// **'{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} other{Preparing}}'**
+  /// **'{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} sent{Sent} other{Preparing}}'**
   String fileTransferStatus(String state);
 
   /// No description provided for @fileTransferIssue.
@@ -6533,7 +6551,7 @@ abstract class DingDongLocalizations {
   /// Local token history interface.
   ///
   /// In en, this message translates to:
-  /// **'Daily usage across your local Agents.'**
+  /// **'Daily usage across Agents and DingDong.'**
   String get tokenUsageSubtitle;
 
   /// Local token history interface.
@@ -6689,7 +6707,7 @@ abstract class DingDongLocalizations {
   /// Local token history interface.
   ///
   /// In en, this message translates to:
-  /// **'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.'**
+  /// **'Counts come from supported local Agent logs and DingDong API usage receipts. Missing or unsupported records do not mean zero usage. Nothing is uploaded.'**
   String get tokenUsageCoverageNote;
 
   /// Local token history interface.
@@ -7297,6 +7315,540 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.'**
   String get allowBetaUpdatesDescription;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal token usage'**
+  String get aiInternalUsageTitle;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in global statistics'**
+  String get aiIncludeInternal;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. When enabled, global statistics include all recorded internal usage. Turning it off keeps the separate history here.'**
+  String get aiIncludeInternalDescription;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Records API usage for resource selection, model analysis and connection tests without saving request content.'**
+  String get aiInternalUsageDescription;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get aiInternalCumulative;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Last request in this window'**
+  String get aiInternalLast;
+
+  /// No description provided for @aiInternalRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requests'**
+  String aiInternalRequests(int count);
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported'**
+  String get aiInternalUnknown;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Only reported usage is counted; missing fields are not zero. Cache tokens are included in input.'**
+  String get aiInternalPartial;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.'**
+  String get aiInternalStorageError;
+
+  /// tokenUsageIncludeInternal
+  ///
+  /// In en, this message translates to:
+  /// **'Include DingDong usage'**
+  String get tokenUsageIncludeInternal;
+
+  /// tokenUsageOnlyInternal
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong only'**
+  String get tokenUsageOnlyInternal;
+
+  /// tokenUsageFilterSaveFailed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this preference. Try again.'**
+  String get tokenUsageFilterSaveFailed;
+
+  /// tokenUsageAgents
+  ///
+  /// In en, this message translates to:
+  /// **'Agents'**
+  String get tokenUsageAgents;
+
+  /// tokenUsageNoAgents
+  ///
+  /// In en, this message translates to:
+  /// **'No Agents selected'**
+  String get tokenUsageNoAgents;
+
+  /// tokenUsageAgentSourcesHelp
+  ///
+  /// In en, this message translates to:
+  /// **'Supported local log readers, not a list of connected Agents. Multiple selections are allowed.'**
+  String get tokenUsageAgentSourcesHelp;
+
+  /// tokenUsageFunctions
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong usage by feature'**
+  String get tokenUsageFunctions;
+
+  /// tokenUsageFunctionSelection
+  ///
+  /// In en, this message translates to:
+  /// **'Resource selection'**
+  String get tokenUsageFunctionSelection;
+
+  /// tokenUsageFunctionAnalysis
+  ///
+  /// In en, this message translates to:
+  /// **'Model analysis'**
+  String get tokenUsageFunctionAnalysis;
+
+  /// tokenUsageFunctionConnection
+  ///
+  /// In en, this message translates to:
+  /// **'Connection tests'**
+  String get tokenUsageFunctionConnection;
+
+  /// tokenUsageFunctionOther
+  ///
+  /// In en, this message translates to:
+  /// **'Other / unclassified'**
+  String get tokenUsageFunctionOther;
+
+  /// tokenUsageFunction
+  ///
+  /// In en, this message translates to:
+  /// **'Feature'**
+  String get tokenUsageFunction;
+
+  /// tokenUsageRequests
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get tokenUsageRequests;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get reminderProfiles;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Add reminder'**
+  String get addReminder;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds'**
+  String get reminderSounds;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Import sound'**
+  String get importReminderSound;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'PCM WAV · Up to 15 seconds / 5 MiB'**
+  String get reminderAudioFormat;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import. Choose a readable PCM WAV file, up to 15 seconds and 5 MiB.'**
+  String get reminderAudioImportFailed;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a reminder name.'**
+  String get reminderNameRequired;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'When to use (for the Agent)'**
+  String get reminderCondition;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get reminderKind;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Tray style'**
+  String get reminderStyle;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get reminderColor;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Send to phone'**
+  String get reminderToPhone;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder colors and counts'**
+  String get devReminderColors;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a color repeatedly to increase its DEV preview count. Previews do not send sounds or notifications, change saved reminders, or create history.'**
+  String get devReminderColorsDescription;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear previews'**
+  String get devClearReminderColors;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tray preview updated'**
+  String get devReminderColorsUpdated;
+
+  /// aiSettingsTab
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get aiSettingsTab;
+
+  /// aiAutomaticAnalysis
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic analysis'**
+  String get aiAutomaticAnalysis;
+
+  /// aiAutomaticAnalysisDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.'**
+  String get aiAutomaticAnalysisDescription;
+
+  /// aiHistoryTitle
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get aiHistoryTitle;
+
+  /// aiHistoryEmpty
+  ///
+  /// In en, this message translates to:
+  /// **'No saved analyses yet.'**
+  String get aiHistoryEmpty;
+
+  /// aiAutomaticRun
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get aiAutomaticRun;
+
+  /// aiManualRun
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get aiManualRun;
+
+  /// aiErrorCredentialUnavailable
+  ///
+  /// In en, this message translates to:
+  /// **'The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.'**
+  String get aiErrorCredentialUnavailable;
+
+  /// aiHistoryPrevious
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get aiHistoryPrevious;
+
+  /// aiHistoryNext
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get aiHistoryNext;
+
+  /// Settings search and reminder ordering.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get reorderReminder;
+
+  /// Settings search and reminder ordering.
+  ///
+  /// In en, this message translates to:
+  /// **'Search settings'**
+  String get searchSettings;
+
+  /// Settings search and reminder ordering.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching settings. Try another keyword.'**
+  String get noMatchingSettings;
+
+  /// Skill version history: skillVersionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Version history'**
+  String get skillVersionHistory;
+
+  /// Skill version history: skillVersionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get skillVersionCurrent;
+
+  /// Skill version history: skillVersionInitial.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial snapshot'**
+  String get skillVersionInitial;
+
+  /// Skill version history: skillVersionManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual save'**
+  String get skillVersionManual;
+
+  /// Skill version history: skillVersionOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online refresh'**
+  String get skillVersionOnline;
+
+  /// Skill version history: skillVersionRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored from v{number}'**
+  String skillVersionRestored(int number);
+
+  /// Skill version history: skillVersionFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare from'**
+  String get skillVersionFrom;
+
+  /// Skill version history: skillVersionTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare to'**
+  String get skillVersionTo;
+
+  /// Skill version history: skillVersionRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this version'**
+  String get skillVersionRestore;
+
+  /// Skill version history: skillVersionConfirmRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore v{number}?'**
+  String skillVersionConfirmRestore(int number);
+
+  /// Skill version history: skillVersionRestoreExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This creates a new version. Current Agent settings and existing history are kept.'**
+  String get skillVersionRestoreExplanation;
+
+  /// Skill version history: skillVersionNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved versions yet.'**
+  String get skillVersionNoHistory;
+
+  /// Skill version history: skillVersionOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Only one saved version. Its content is shown below.'**
+  String get skillVersionOne;
+
+  /// Skill version history: skillVersionNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'No differences between these versions.'**
+  String get skillVersionNoChanges;
+
+  /// Skill version history: skillVersionLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load version history: {error}'**
+  String skillVersionLoadError(String error);
+
+  /// Skill version history: skillVersionCompareError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not compare these versions: {error}'**
+  String skillVersionCompareError(String error);
+
+  /// Skill version history: skillVersionRestoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore this version: {error}'**
+  String skillVersionRestoreError(String error);
+
+  /// Skill version history: skillVersionRestoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring…'**
+  String get skillVersionRestoring;
+
+  /// Skill version history: skillVersionBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Binary file changed'**
+  String get skillVersionBinary;
+
+  /// Skill version history: skillVersionEmptyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty file'**
+  String get skillVersionEmptyFile;
+
+  /// Skill version history: skillVersionDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory'**
+  String get skillVersionDirectory;
+
+  /// Skill version history: skillVersionPermissionsChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Executable permission changed'**
+  String get skillVersionPermissionsChanged;
+
+  /// Skill version history: skillVersionLargeFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Large file: showing removed and added content.'**
+  String get skillVersionLargeFile;
+
+  /// Skill version history: skillVersionNoNewline.
+  ///
+  /// In en, this message translates to:
+  /// **'No newline at end of file'**
+  String get skillVersionNoNewline;
+
+  /// Skill version history: skillVersionAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get skillVersionAdded;
+
+  /// Skill version history: skillVersionRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get skillVersionRemoved;
+
+  /// Skill version history: skillVersionModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get skillVersionModified;
+
+  /// Skill version history: skillVersionSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get skillVersionSource;
+
+  /// Skill version history: skillVersionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill name'**
+  String get skillVersionName;
+
+  /// Skill version history: skillVersionPackageChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Package structure changed'**
+  String get skillVersionPackageChanged;
+
+  /// Skill version history: skillVersionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get skillVersionRetry;
+
+  /// Skill version history: skillVersionFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed files ({count})'**
+  String skillVersionFiles(int count);
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'Online devices'**
+  String get onlineDevices;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection history'**
+  String get connectionHistory;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices online'**
+  String get noDevicesOnline;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer history'**
+  String get fileTransferHistory;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'No file transfers yet'**
+  String get noFileTransferHistory;
 }
 
 class _DingDongLocalizationsDelegate

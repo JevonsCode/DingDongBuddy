@@ -1,5 +1,6 @@
 import 'package:sqlite3/sqlite3.dart';
 
+import '../../ai_companion/domain/ai_companion_usage.dart';
 import '../domain/token_usage_models.dart';
 
 /// The import ledger contains hashes, timestamps and token integers only.
@@ -56,6 +57,14 @@ final class TokenUsageStore {
     database.execute('PRAGMA busy_timeout=100');
     database.execute('PRAGMA journal_mode=WAL');
     database.execute('PRAGMA synchronous=NORMAL');
+    database.execute('''CREATE TABLE IF NOT EXISTS ai_companion_usage (
+      id TEXT PRIMARY KEY, occurred_at INTEGER NOT NULL, day TEXT NOT NULL,
+      purpose TEXT NOT NULL, total INTEGER NOT NULL, input INTEGER, output INTEGER,
+      cached INTEGER, cache_write INTEGER, reasoning INTEGER, exact INTEGER NOT NULL,
+      complete INTEGER NOT NULL)''');
+    database.execute(
+      'CREATE INDEX IF NOT EXISTS ai_companion_usage_day ON ai_companion_usage(day)',
+    );
     database.execute('''CREATE TABLE IF NOT EXISTS token_usage_events (
       source TEXT NOT NULL, session_hash TEXT NOT NULL, event_hash TEXT NOT NULL,
       occurred_at INTEGER NOT NULL, cumulative INTEGER NOT NULL,
@@ -122,6 +131,77 @@ final class TokenUsageStore {
 
   final Database database;
   final DateTime Function(DateTime) _toLocal;
+
+  void recordInternalUsage(AiCompanionUsageRecord record) {
+    final t = record.totals;
+    database.execute(
+      '''INSERT OR IGNORE INTO ai_companion_usage
+      (id,occurred_at,day,purpose,total,input,output,cached,cache_write,reasoning,exact,complete)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+      [
+        record.id,
+        record.occurredAt.millisecondsSinceEpoch,
+        dayKey(_toLocal(record.occurredAt)),
+        record.purpose.name,
+        t.totalTokens,
+        t.inputTokens,
+        t.outputTokens,
+        t.cachedInputTokens,
+        t.cacheWriteInputTokens,
+        t.reasoningOutputTokens,
+        t.totalIsExact ? 1 : 0,
+        t.breakdownComplete ? 1 : 0,
+      ],
+    );
+  }
+
+  TokenUsageSnapshot internalSnapshot({DateTime? from, DateTime? through}) {
+    final rows = database.select(
+      '''SELECT day, purpose, COUNT(*) AS events, SUM(total) AS total,
+      CASE WHEN COUNT(input)=COUNT(*) THEN SUM(input) END AS input,
+      CASE WHEN COUNT(output)=COUNT(*) THEN SUM(output) END AS output,
+      CASE WHEN COUNT(cached)=COUNT(*) THEN SUM(cached) END AS cached,
+      CASE WHEN COUNT(cache_write)=COUNT(*) THEN SUM(cache_write) END AS cache_write,
+      CASE WHEN COUNT(reasoning)=COUNT(*) THEN SUM(reasoning) END AS reasoning,
+      MIN(exact) AS exact, MIN(complete) AS complete, SUM(1-complete) AS partial
+      FROM ai_companion_usage WHERE (? IS NULL OR day>=?) AND (? IS NULL OR day<=?)
+      GROUP BY day, purpose ORDER BY day, purpose''',
+      [
+        from == null ? null : dayKey(from),
+        from == null ? null : dayKey(from),
+        through == null ? null : dayKey(through),
+        through == null ? null : dayKey(through),
+      ],
+    );
+    return TokenUsageSnapshot(
+      days: [
+        for (final row in rows)
+          TokenUsageDay(
+            day: DateTime.parse(row['day'] as String),
+            source: ConversationTokenUsageSource.dingdong,
+            internalPurpose: row['purpose'] as String,
+            eventCount: row['events'] as int,
+            partialEventCount: row['partial'] as int,
+            totals: TokenUsageTotals(
+              totalTokens: row['total'] as int,
+              inputTokens: row['input'] as int?,
+              outputTokens: row['output'] as int?,
+              cachedInputTokens: row['cached'] as int?,
+              cacheWriteInputTokens: row['cache_write'] as int?,
+              reasoningOutputTokens: row['reasoning'] as int?,
+              totalIsExact: row['exact'] == 1,
+              breakdownComplete: row['complete'] == 1,
+            ),
+          ),
+      ],
+      coverage: const [
+        TokenUsageSourceCoverage(
+          source: ConversationTokenUsageSource.dingdong,
+          availability: TokenUsageAvailability.available,
+        ),
+      ],
+    );
+  }
 
   void _ensureColumn(String table, String column, String definition) {
     if (!database

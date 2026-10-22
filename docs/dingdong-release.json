@@ -1,84 +1,61 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.8.0",
-  "latestBuild": "70",
-  "publishedAt": "2026-10-20T17:34:09Z",
-  "prerelease": true,
+  "latestVersion": "1.9.0",
+  "latestBuild": "72",
+  "publishedAt": "2026-10-22T21:27:16Z",
+  "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.8.0",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.9.0",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Adds an opt-in AI companion with separate clipboard, resource, disclosure, Token, check-in and chat switches. Cloud analysis receives only anonymous usage metadata; API keys stay in secure storage.",
-    "Adds duplicate MCP and Skill cleanup with an optional local backup, preserving unrelated Agent configuration and external plugins.",
-    "Fixes the stretched issue-count badge in the resource manager sidebar.",
-    "Adds reminder rules, separate attention sounds, quiet hours and date-range Token summaries.",
-    "Reduces Agent bridge payloads and improves phone notifications, source labels and reconnect delivery."
+    "Adds Skill version history, complete-package restoration, and comparisons between any two saved versions.",
+    "Adds configurable Agent reminders, custom sounds, reminder ordering, and searchable settings.",
+    "Improves model connections with OpenAI, Anthropic and HTTP services, adds AI resource routing and separate internal Token statistics, and removes companion chat.",
+    "Prioritizes online devices and adds persistent file-transfer history.",
+    "Improves paired-computer discovery and automatic reconnection, and reduces repeated Bridge and Skill context.",
+    "Adds a fade-out as the menu-bar reminder panel retracts."
   ],
   "notesByLanguage": {
-    "es": [
-      "Añade un asistente de IA opcional con controles independientes para portapapeles, recursos, divulgación progresiva, Tokens, consultas y chat. El análisis en la nube recibe solo metadatos anónimos; las claves se guardan en el almacén seguro del sistema.",
-      "Permite resolver MCPs y Skills duplicados con copia local opcional, conservando la configuración ajena y los complementos externos.",
-      "Corrige el contador de problemas estirado en la barra lateral.",
-      "Añade reglas de avisos, sonidos de atención, horas de silencio y resúmenes de Tokens por fechas.",
-      "Reduce el contexto del puente de Agents y mejora avisos móviles, etiquetas de origen y reconexión."
+    "en": [
+      "Adds Skill version history, complete-package restoration, and comparisons between any two saved versions.",
+      "Adds configurable Agent reminders, custom sounds, reminder ordering, and searchable settings.",
+      "Improves model connections with OpenAI, Anthropic and HTTP services, adds AI resource routing and separate internal Token statistics, and removes companion chat.",
+      "Prioritizes online devices and adds persistent file-transfer history.",
+      "Improves paired-computer discovery and automatic reconnection, and reduces repeated Bridge and Skill context.",
+      "Adds a fade-out as the menu-bar reminder panel retracts."
     ],
     "zh": [
-      "新增可选 AI 助手，剪贴板、资源、渐进式披露建议、Token 分析、主动询问和聊天均可独立开关。云端分析仅接收匿名用量数据，API Key 保存在系统安全存储中。",
-      "重复 MCP 和 Skill 可直接处理，支持选择本地备份，保留无关 Agent 配置和外部插件。",
-      "修复资源管理器侧栏问题数量徽标被拉高的显示问题。",
-      "新增提醒规则、单独的待处理提示音、免打扰时段和按时间范围统计 Token。",
-      "精简 Agent 桥接内容，改进手机通知、来源标签及重连后的消息接收。"
+      "新增 Skill 版本历史、完整包还原及任意两个历史版本对比。",
+      "新增可配置 Agent 提醒、自定义提示音、提醒排序与设置搜索。",
+      "改进 OpenAI、Anthropic 和 HTTP 模型连接，新增 AI 资源路由与独立内部 Token 统计，移除陪伴聊天。",
+      "在线设备优先展示，新增可跨重启保留的文件传输历史。",
+      "改进已配对电脑的设备发现与自动重连，减少 Bridge 与 Skill 重复上下文。",
+      "菜单栏提醒下拉面板收回时同步淡出。"
     ],
-    "en": [
-      "Adds an opt-in AI companion with separate clipboard, resource, disclosure, Token, check-in and chat switches. Cloud analysis receives only anonymous usage metadata; API keys stay in secure storage.",
-      "Adds duplicate MCP and Skill cleanup with an optional local backup, preserving unrelated Agent configuration and external plugins.",
-      "Fixes the stretched issue-count badge in the resource manager sidebar.",
-      "Adds reminder rules, separate attention sounds, quiet hours and date-range Token summaries.",
-      "Reduces Agent bridge payloads and improves phone notifications, source labels and reconnect delivery."
+    "es": [
+      "Añade historial de versiones de Skills, restauración del paquete completo y comparación entre dos versiones guardadas.",
+      "Añade avisos de Agents configurables, sonidos personalizados, orden de avisos y búsqueda en ajustes.",
+      "Mejora las conexiones OpenAI, Anthropic y HTTP, añade selección de recursos con IA y estadísticas internas de Tokens independientes, y elimina el chat de compañía.",
+      "Prioriza los equipos conectados y conserva el historial de transferencias entre reinicios.",
+      "Mejora la detección y reconexión de equipos vinculados y reduce el contexto repetido de Bridge y Skills.",
+      "El panel de avisos de la barra de menús se desvanece al recogerse."
     ]
-  },
-  "beta": {
-    "latestVersion": "1.8.1-beta.1",
-    "latestBuild": "71",
-    "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.8.1-beta.1",
-    "notes": [
-      "Improves discovery and automatic reconnection between paired computers when local-network multicast is unreliable.",
-      "Stops the device status from flickering between connecting and offline during background reconnection attempts.",
-      "Clears outdated discovery errors after the local network recovers."
-    ],
-    "notesByLanguage": {
-      "en": [
-        "Improves discovery and automatic reconnection between paired computers when local-network multicast is unreliable.",
-        "Stops the device status from flickering between connecting and offline during background reconnection attempts.",
-        "Clears outdated discovery errors after the local network recovers."
-      ],
-      "zh": [
-        "改进局域网发现不稳定时，已配对电脑之间的设备发现和自动重连。",
-        "修复后台重连时，设备状态在“连接中”和“离线”之间反复闪动的问题。",
-        "修复局域网恢复后，仍显示旧的设备发现错误提示的问题。"
-      ],
-      "es": [
-        "Mejora la detección y la reconexión automática entre equipos vinculados cuando la multidifusión de la red local es inestable.",
-        "Evita que el estado del equipo parpadee entre conectando y desconectado durante los reintentos en segundo plano.",
-        "Elimina los errores de detección obsoletos cuando se recupera la red local."
-      ]
-    }
   }
 }

@@ -113,10 +113,10 @@ void main() {
         '/agent/skills/load?name=acceptance-skill&source=Codex',
       );
       expect(jsonEncode(loaded), contains('Read only the test fixture.'));
-      expect(
-        ((loaded['conversation'] as Map)['item'] as Map)['confirmedUse'],
-        isTrue,
-      );
+      final Map footerMark = loaded['footerMark'] as Map;
+      expect(footerMark['to'], '${footerMark['from']}\\*');
+      expect((loaded['skill'] as Map)['name'], 'acceptance-skill');
+      expect((loaded['skill'] as Map)['version'], isNotEmpty);
 
       await _tap(tester, 'library-editor-back');
       await _tap(tester, 'resource-status-acceptance-prompt');

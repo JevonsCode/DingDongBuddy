@@ -1,8 +1,9 @@
 import 'dart:convert';
-
 import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:dingdong/features/settings/domain/reminder_sounds.dart';
+import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:flutter/foundation.dart';
 
 export 'package:dingdong/features/settings/domain/reminder_sounds.dart';
@@ -75,18 +76,39 @@ final class QuietHours {
 @immutable
 final class NotificationRules {
   const NotificationRules({
+    this.profiles = const [],
+    this.profileOrder = const [],
+    this.audioLibrary = const [],
     this.attentionSound = sameAsCompletionSound,
     this.attentionCustomSoundPath,
     this.completionToPhone = true,
     this.attentionToPhone = true,
     this.quietHours = const QuietHours(),
     this.completionMinimumMinutes = 0,
+    this.completionTrayStyle = TrayReminderStyle.staticMarker,
+    this.attentionTrayStyle = TrayReminderStyle.softPulse,
+    this.completionTrayColor,
+    this.attentionTrayColor = TrayNotificationColor.amber,
   });
 
   static const NotificationRules defaultValue = NotificationRules();
 
   /// Allowed "only alert for tasks at least this long" choices, in minutes.
   static const List<int> completionMinimumChoices = <int>[0, 1, 3, 5, 10, 30];
+
+  final List<ReminderProfile> profiles;
+  final List<String> profileOrder;
+
+  List<ReminderProfile> orderProfiles(List<ReminderProfile> values) {
+    final byId = {for (final p in values) p.id: p};
+    return [
+      for (final id in profileOrder)
+        if (byId.containsKey(id)) byId.remove(id)!,
+      ...byId.values,
+    ];
+  }
+
+  final List<ReminderAudio> audioLibrary;
 
   final String attentionSound;
   final String? attentionCustomSoundPath;
@@ -97,6 +119,24 @@ final class NotificationRules {
   /// Completions of tasks observed to run for less than this are recorded
   /// without sound, flashing or phone push. Zero alerts for every task.
   final int completionMinimumMinutes;
+  final TrayReminderStyle completionTrayStyle;
+  final TrayReminderStyle attentionTrayStyle;
+
+  /// Null preserves the existing user-selected menu bar color.
+  final TrayNotificationColor? completionTrayColor;
+  final TrayNotificationColor attentionTrayColor;
+
+  TrayReminderStyle trayStyleFor(AgentNotificationKind kind) =>
+      kind == AgentNotificationKind.attention
+      ? attentionTrayStyle
+      : completionTrayStyle;
+
+  TrayNotificationColor trayColorFor(
+    AgentNotificationKind kind, {
+    required TrayNotificationColor legacyCompletionColor,
+  }) => kind == AgentNotificationKind.attention
+      ? attentionTrayColor
+      : completionTrayColor ?? legacyCompletionColor;
 
   static NotificationRules parse(Object? value) {
     if (value is! String || value.trim().isEmpty) return defaultValue;
@@ -109,6 +149,29 @@ final class NotificationRules {
           ? quiet
           : const <Object?, Object?>{};
       return NotificationRules(
+        profiles: _readProfiles(json['profiles']),
+        profileOrder: json['profileOrder'] is List
+            ? (json['profileOrder'] as List)
+                  .whereType<String>()
+                  .take(34)
+                  .toList()
+            : const [],
+        audioLibrary: _readAudio(json['audioLibrary']),
+        completionTrayStyle: TrayReminderStyle.parse(
+          json['completionTrayStyle'],
+          fallback: TrayReminderStyle.staticMarker,
+        ),
+        attentionTrayStyle: TrayReminderStyle.parse(
+          json['attentionTrayStyle'],
+          fallback: TrayReminderStyle.softPulse,
+        ),
+        completionTrayColor: json['completionTrayColor'] is String
+            ? TrayNotificationColor.parse(json['completionTrayColor'])
+            : null,
+        attentionTrayColor: TrayNotificationColor.parse(
+          json['attentionTrayColor'],
+          fallback: TrayNotificationColor.amber,
+        ),
         attentionSound: json['attentionSound'] is String
             ? json['attentionSound']! as String
             : sameAsCompletionSound,
@@ -137,6 +200,13 @@ final class NotificationRules {
   }
 
   String encode() => jsonEncode(<String, Object?>{
+    'profiles': profiles.map((x) => x.toJson()).toList(),
+    'profileOrder': profileOrder,
+    'audioLibrary': audioLibrary.map((x) => x.toJson()).toList(),
+    'completionTrayStyle': completionTrayStyle.name,
+    'attentionTrayStyle': attentionTrayStyle.name,
+    'completionTrayColor': ?completionTrayColor?.name,
+    'attentionTrayColor': attentionTrayColor.name,
     'attentionSound': attentionSound,
     'attentionCustomSoundPath': ?attentionCustomSoundPath,
     'completionToPhone': completionToPhone,
@@ -151,6 +221,22 @@ final class NotificationRules {
   });
 
   NotificationRules sanitized() => NotificationRules(
+    profiles: List.unmodifiable(profiles),
+    profileOrder: List.unmodifiable(
+      profileOrder
+          .where(
+            (id) =>
+                id == 'completion' ||
+                id == 'attention' ||
+                profiles.any((p) => p.id == id),
+          )
+          .toSet(),
+    ),
+    audioLibrary: List.unmodifiable(audioLibrary),
+    completionTrayStyle: completionTrayStyle,
+    attentionTrayStyle: attentionTrayStyle,
+    completionTrayColor: completionTrayColor,
+    attentionTrayColor: attentionTrayColor,
     attentionSound:
         attentionSound == sameAsCompletionSound ||
             notificationSoundValues.contains(attentionSound)
@@ -167,13 +253,27 @@ final class NotificationRules {
   );
 
   NotificationRules copyWith({
+    List<ReminderProfile>? profiles,
+    List<String>? profileOrder,
+    List<ReminderAudio>? audioLibrary,
     String? attentionSound,
+    TrayReminderStyle? completionTrayStyle,
+    TrayReminderStyle? attentionTrayStyle,
+    TrayNotificationColor? completionTrayColor,
+    TrayNotificationColor? attentionTrayColor,
     Object? attentionCustomSoundPath = _notSet,
     bool? completionToPhone,
     bool? attentionToPhone,
     QuietHours? quietHours,
     int? completionMinimumMinutes,
   }) => NotificationRules(
+    profiles: profiles ?? this.profiles,
+    profileOrder: profileOrder ?? this.profileOrder,
+    audioLibrary: audioLibrary ?? this.audioLibrary,
+    completionTrayStyle: completionTrayStyle ?? this.completionTrayStyle,
+    attentionTrayStyle: attentionTrayStyle ?? this.attentionTrayStyle,
+    completionTrayColor: completionTrayColor ?? this.completionTrayColor,
+    attentionTrayColor: attentionTrayColor ?? this.attentionTrayColor,
     attentionSound: attentionSound ?? this.attentionSound,
     attentionCustomSoundPath: identical(attentionCustomSoundPath, _notSet)
         ? this.attentionCustomSoundPath
@@ -188,6 +288,13 @@ final class NotificationRules {
   @override
   bool operator ==(Object other) =>
       other is NotificationRules &&
+      listEquals(other.profiles, profiles) &&
+      listEquals(other.profileOrder, profileOrder) &&
+      listEquals(other.audioLibrary, audioLibrary) &&
+      other.completionTrayStyle == completionTrayStyle &&
+      other.attentionTrayStyle == attentionTrayStyle &&
+      other.completionTrayColor == completionTrayColor &&
+      other.attentionTrayColor == attentionTrayColor &&
       other.attentionSound == attentionSound &&
       other.attentionCustomSoundPath == attentionCustomSoundPath &&
       other.completionToPhone == completionToPhone &&
@@ -197,6 +304,13 @@ final class NotificationRules {
 
   @override
   int get hashCode => Object.hash(
+    Object.hashAll(profiles),
+    Object.hashAll(profileOrder),
+    Object.hashAll(audioLibrary),
+    completionTrayStyle,
+    attentionTrayStyle,
+    completionTrayColor,
+    attentionTrayColor,
     attentionSound,
     attentionCustomSoundPath,
     completionToPhone,
@@ -265,3 +379,32 @@ int _minuteOfDay(int value, int fallback) =>
     value >= 0 && value < 24 * 60 ? value : fallback;
 
 const Object _notSet = Object();
+
+List<ReminderProfile> _readProfiles(Object? value) {
+  final result = <ReminderProfile>[];
+  if (value is! List) return result;
+  for (final item in value.take(32)) {
+    if (item is! Map) continue;
+    try {
+      final profile = ReminderProfile.fromJson(Map<String, Object?>.from(item));
+      if (!profile.builtIn && !result.any((x) => x.id == profile.id)) {
+        result.add(profile);
+      }
+    } on FormatException {
+      /* Keep valid entries when one stored entry is damaged. */
+    }
+  }
+  return result;
+}
+
+List<ReminderAudio> _readAudio(Object? value) {
+  if (value is! List) return [];
+  return [
+    for (final item in value.take(64))
+      if (item is Map && item['name'] is String && item['path'] is String)
+        ReminderAudio(
+          name: item['name'] as String,
+          path: item['path'] as String,
+        ),
+  ];
+}

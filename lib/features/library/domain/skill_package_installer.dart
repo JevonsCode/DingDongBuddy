@@ -112,12 +112,16 @@ final class GitHubSkillPackageInstaller
     HttpClient? client,
     this.loader,
     this.preferGit = true,
+    this.preserveAllFiles = false,
   }) : _client = client ?? HttpClient();
 
   final Directory root;
   final HttpClient _client;
   final Future<Uint8List> Function(Uri uri)? loader;
   final bool preferGit;
+
+  /// Local history restoration must retain even installer/SCM metadata files.
+  final bool preserveAllFiles;
 
   @override
   Future<SkillPackageInstallResult> install(Uri source) =>
@@ -191,8 +195,9 @@ final class GitHubSkillPackageInstaller
       await _copyPackageDirectory(
         sourceDirectory,
         staging,
-        excludeGitMetadata: true,
-        budget: _DownloadBudget(),
+        excludeGitMetadata: !preserveAllFiles,
+        preserveManagedMarker: preserveAllFiles,
+        budget: preserveAllFiles ? null : _DownloadBudget(),
       );
       final File skillFile = File(path.join(staging.path, 'SKILL.md'));
       if (!await skillFile.exists()) {
@@ -741,17 +746,24 @@ Future<void> _copyPackageDirectory(
   Directory source,
   Directory destination, {
   bool excludeGitMetadata = false,
+  bool preserveManagedMarker = false,
   _DownloadBudget? budget,
 }) async {
   await destination.create(recursive: true);
   await for (final FileSystemEntity entity in source.list(followLinks: false)) {
     final String name = path.basename(entity.path);
-    if ((excludeGitMetadata && name == '.git') || name == '.dingdong-managed') {
+    if ((excludeGitMetadata && name == '.git') ||
+        (!preserveManagedMarker && name == '.dingdong-managed')) {
       continue;
     }
     final String target = path.join(destination.path, name);
     if (entity is Directory) {
-      await _copyPackageDirectory(entity, Directory(target), budget: budget);
+      await _copyPackageDirectory(
+        entity,
+        Directory(target),
+        budget: budget,
+        preserveManagedMarker: preserveManagedMarker,
+      );
     } else if (entity is File) {
       final int length = await entity.length();
       budget

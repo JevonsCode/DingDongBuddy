@@ -9,6 +9,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_client.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
+import 'package:dingdong/features/ai_companion/data/ai_insight_history.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_screen.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
@@ -18,58 +19,154 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets(
-    'every capability persists independently and chat needs a model',
-    (WidgetTester tester) async {
-      final _Fixture fixture = _Fixture();
-      addTearDown(fixture.controller.dispose);
-      await fixture.controller.load();
-      await _pump(tester, fixture.controller);
-      for (final (String key, String jsonKey) in <(String, String)>[
-        ('clipboard', 'clipboardAnalysis'),
-        ('resources', 'usageOptimization'),
-        ('progressive-disclosure', 'progressiveDisclosure'),
-        ('tokens', 'tokenOptimization'),
-        ('check-ins', 'proactiveCheckIns'),
-        ('chat', 'emotionalSupport'),
-        ('cloud', 'cloudAnalysis'),
-      ]) {
-        await _show(tester, find.byKey(Key('ai-feature-$key')));
-        await tester.tap(find.byKey(Key('ai-feature-$key')));
-        await tester.pumpAndSettle();
-        final saved = (await fixture.store.loadSettings()).toJson();
-        expect(saved[jsonKey], isTrue);
-        expect(
-          saved.entries.where((entry) => entry.value == true),
-          hasLength(1),
-        );
-        if (key == 'chat') {
-          await _show(tester, find.byKey(const Key('ai-send-message')));
-          expect(
-            tester
-                .widget<FilledButton>(find.byKey(const Key('ai-send-message')))
-                .onPressed,
-            isNull,
-          );
-          expect(
-            find.text('Configure a model before sending a message.'),
-            findsOneWidget,
-          );
-        }
-        await _show(tester, find.byKey(Key('ai-feature-$key')));
-        await tester.tap(find.byKey(Key('ai-feature-$key')));
-        await tester.pumpAndSettle();
-        expect(
-          (await fixture.store.loadSettings()).toJson().entries.where(
-            (entry) => entry.value == true,
-          ),
-          isEmpty,
-        );
-      }
-      expect(fixture.transport.requests, isEmpty);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('insights tab pages saved reports independently of settings', (
+    tester,
+  ) async {
+    final directory = Directory.systemTemp.createTempSync('jvs-insight-ui-');
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final history = AiInsightHistory('${directory.path}/history.sqlite3');
+    for (var i = 0; i < 23; i++) {
+      history.save(
+        AiCompanionReport(createdAt: DateTime.utc(2026, 10, 23, 0, i)),
+        automatic: i.isEven,
+      );
+    }
+    final controller = AiCompanionController(
+      store: AiCompanionPreferencesStore(
+        MemoryPreferencesBackend(),
+        secretStore: _Secrets(),
+      ),
+      history: history,
+      loadMetadata: () async => const AiCompanionMetadata(),
+    );
+    addTearDown(controller.dispose);
+    await controller.load();
+    await _pump(tester, controller);
+    expect(find.text('Insights and suggestions'), findsWidgets);
+    expect(find.byKey(const Key('ai-configure-provider')), findsNothing);
+    await _show(tester, find.byKey(const Key('ai-history-next')));
+    await tester.tap(find.byKey(const Key('ai-history-next')));
+    await tester.pumpAndSettle();
+    expect(controller.historyPage, 1);
+    expect(controller.historyEntries.length, 3);
+    await _show(tester, find.byKey(const Key('ai-history-previous')));
+    await tester.tap(find.byKey(const Key('ai-history-previous')));
+    await tester.pumpAndSettle();
+    expect(controller.historyPage, 0);
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await _show(tester, find.byKey(const Key('ai-configure-provider')));
+    expect(find.byKey(const Key('ai-configure-provider')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('AI+ keeps analysis reachable while settings scroll', (
+    tester,
+  ) async {
+    final fixture = _Fixture();
+    addTearDown(fixture.controller.dispose);
+    await fixture.controller.load();
+    await _pump(tester, fixture.controller);
+    expect(find.text('AI+'), findsOneWidget);
+    expect(find.byKey(const Key('ai-analyze')).hitTestable(), findsOneWidget);
+    expect(find.byKey(const Key('ai-feature-include-internal')), findsNothing);
+    await _show(tester, find.byKey(const Key('ai-configure-provider')));
+    expect(find.byKey(const Key('ai-analyze')).hitTestable(), findsOneWidget);
+    expect(fixture.transport.requests, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('retired chat stays absent even with legacy enabled settings', (
+    tester,
+  ) async {
+    final fixture = _Fixture();
+    addTearDown(fixture.controller.dispose);
+    await fixture.controller.saveSettings(
+      AiCompanionSettings.fromJson({'emotionalSupport': true}),
+    );
+    await _pump(tester, fixture.controller);
+    expect(find.byKey(const Key('ai-feature-chat')), findsNothing);
+    expect(find.byKey(const Key('ai-message-input')), findsNothing);
+    expect(find.text('A space to talk'), findsNothing);
+    expect(
+      fixture.controller.settings.toJson().containsKey('emotionalSupport'),
+      isFalse,
+    );
+    expect(fixture.transport.requests, isEmpty);
+  });
+
+  testWidgets('protocol choice and HTTP endpoint persist in the model dialog', (
+    tester,
+  ) async {
+    final fixture = _Fixture();
+    addTearDown(fixture.controller.dispose);
+    await fixture.controller.load();
+    await _pump(tester, fixture.controller);
+    await _show(tester, find.byKey(const Key('ai-configure-provider')));
+    await tester.tap(find.byKey(const Key('ai-configure-provider')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ai-provider-protocol')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Anthropic Messages').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('ai-provider-endpoint')),
+      'http://gateway.example/coding-plan',
+    );
+    await tester.enterText(
+      find.byKey(const Key('ai-provider-model')),
+      'deepseek-v4.1-flash',
+    );
+    await tester.tap(find.byKey(const Key('ai-save-provider')));
+    await tester.pumpAndSettle();
+    final saved = await fixture.store.loadSettings();
+    expect(saved.toJson()['protocol'], 'anthropic');
+    expect(saved.providerEndpoint, 'http://gateway.example/coding-plan');
+    expect(fixture.controller.error, isNull);
+    expect(fixture.transport.requests, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('every remaining capability persists independently', (
+    WidgetTester tester,
+  ) async {
+    final _Fixture fixture = _Fixture();
+    addTearDown(fixture.controller.dispose);
+    await fixture.controller.load();
+    await _pump(tester, fixture.controller);
+    for (final (String key, String jsonKey) in <(String, String)>[
+      ('auto-resources', 'autoResourceSelection'),
+      ('clipboard', 'clipboardAnalysis'),
+      ('resources', 'usageOptimization'),
+      ('progressive-disclosure', 'progressiveDisclosure'),
+      ('tokens', 'tokenOptimization'),
+      ('check-ins', 'proactiveCheckIns'),
+      ('cloud', 'cloudAnalysis'),
+    ]) {
+      await _show(tester, find.byKey(Key('ai-feature-$key')));
+      await tester.tap(find.byKey(Key('ai-feature-$key')));
+      await tester.pumpAndSettle();
+      final saved = (await fixture.store.loadSettings()).toJson();
+      expect(saved[jsonKey], isTrue);
+      expect(
+        saved.entries.where(
+          (entry) => entry.value == true && entry.key != 'automaticAnalysis',
+        ),
+        hasLength(1),
+      );
+      await _show(tester, find.byKey(Key('ai-feature-$key')));
+      await tester.tap(find.byKey(Key('ai-feature-$key')));
+      await tester.pumpAndSettle();
+      expect(
+        (await fixture.store.loadSettings()).toJson().entries.where(
+          (entry) => entry.value == true && entry.key != 'automaticAnalysis',
+        ),
+        isEmpty,
+      );
+    }
+    expect(fixture.transport.requests, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'progressive disclosure alone analyzes Prompt and MCP scope with local review links',
@@ -114,7 +211,12 @@ void main() {
       await tester.pumpAndSettle();
       final saved = (await fixture.store.loadSettings()).toJson();
       expect(saved['progressiveDisclosure'], isTrue);
-      expect(saved.entries.where((entry) => entry.value == true), hasLength(1));
+      expect(
+        saved.entries.where(
+          (entry) => entry.value == true && entry.key != 'automaticAnalysis',
+        ),
+        hasLength(1),
+      );
       await _show(tester, find.byKey(const Key('ai-analyze')));
       expect(
         tester
@@ -176,8 +278,10 @@ void main() {
 
     expect(
       tester
-          .widgetList<CompactSwitchListTile>(find.byType(CompactSwitchListTile))
-          .every((CompactSwitchListTile tile) => !tile.value),
+          .widget<CompactSwitchListTile>(
+            find.byKey(const Key('ai-feature-automatic-analysis')),
+          )
+          .value,
       isTrue,
     );
     await _show(tester, find.byKey(const Key('ai-analyze')));
@@ -196,7 +300,6 @@ void main() {
     expect(fixture.controller.settings.usageOptimization, isFalse);
     expect(fixture.controller.settings.progressiveDisclosure, isFalse);
     expect(fixture.controller.settings.tokenOptimization, isFalse);
-    expect(fixture.controller.settings.emotionalSupport, isFalse);
     expect(fixture.controller.settings.cloudAnalysis, isFalse);
     expect(fixture.controller.settings.proactiveCheckIns, isFalse);
     final saved = await fixture.store.loadSettings();
@@ -264,63 +367,6 @@ void main() {
   );
 
   testWidgets(
-    'chat preserves blocked input, shows safe response and clears conversation',
-    (WidgetTester tester) async {
-      final _Fixture fixture = _Fixture();
-      addTearDown(fixture.controller.dispose);
-      await fixture.controller.load();
-      await fixture.controller.saveSettings(
-        const AiCompanionSettings(
-          emotionalSupport: true,
-          providerEndpoint: 'http://127.0.0.1:11434/v1',
-          model: 'local-model',
-        ),
-      );
-      await _pump(tester, fixture.controller);
-      await _show(tester, find.byKey(const Key('ai-message-input')));
-      await tester.enterText(
-        find.byKey(const Key('ai-message-input')),
-        'Authorization: Bearer private-token-123456789',
-      );
-      await _show(tester, find.byKey(const Key('ai-send-message')));
-      await tester.tap(find.byKey(const Key('ai-send-message')));
-      await tester.pumpAndSettle();
-      expect(fixture.transport.requests, isEmpty);
-      expect(find.byKey(const Key('ai-chat-error')), findsOneWidget);
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const Key('ai-message-input')))
-            .controller!
-            .text,
-        contains('private-token'),
-      );
-
-      await tester.enterText(
-        find.byKey(const Key('ai-message-input')),
-        'I am tired after a busy day.',
-      );
-      await _show(tester, find.byKey(const Key('ai-send-message')));
-      await tester.tap(find.byKey(const Key('ai-send-message')));
-      await tester.pumpAndSettle();
-      expect(fixture.transport.requests, hasLength(1));
-      expect(find.text('Take a slow breath.'), findsOneWidget);
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const Key('ai-message-input')))
-            .controller!
-            .text,
-        isEmpty,
-      );
-      await _show(tester, find.byKey(const Key('ai-clear-conversation')));
-      await tester.tap(find.byKey(const Key('ai-clear-conversation')));
-      await tester.pumpAndSettle();
-      expect(fixture.controller.messages, isEmpty);
-      expect(find.text('Take a slow breath.'), findsNothing);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
     'opt-in check-ins are local, rate limited and cancelled on page disposal',
     (WidgetTester tester) async {
       DateTime now = DateTime(2026, 10, 21, 9);
@@ -367,7 +413,9 @@ void main() {
           final font = FontLoader(family)
             ..addFont(
               File(
-                r'C:\Windows\Fonts\msyh.ttc',
+                Platform.isMacOS
+                    ? '/System/Library/Fonts/STHeiti Medium.ttc'
+                    : r'C:\Windows\Fonts\msyh.ttc',
               ).readAsBytes().then(ByteData.sublistView),
             );
           await font.load();
@@ -396,13 +444,12 @@ void main() {
           clipboardAnalysis: true,
           usageOptimization: true,
           tokenOptimization: true,
-          emotionalSupport: true,
           providerEndpoint: 'http://127.0.0.1:11434/v1',
           model: 'local-model',
         ),
       );
       await fixture.controller.analyze();
-      for (final double width in <double>[1100, 800]) {
+      for (final double width in <double>[1100, 800, 520]) {
         await tester.binding.setSurfaceSize(Size(width, 760));
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final key = GlobalKey();
@@ -438,7 +485,15 @@ void main() {
           key,
           '$previewDirectory/ai-companion-${width.toInt()}-zh-top.png',
         );
-        await _show(tester, find.byKey(const Key('ai-message-input')));
+        await tester.tap(find.text('设置'));
+        await tester.pumpAndSettle();
+        await _capture(
+          tester,
+          key,
+          '$previewDirectory/ai-companion-${width.toInt()}-zh-usage.png',
+        );
+        await tester.tap(find.text('洞察与建议').first);
+        await tester.pumpAndSettle();
         await _capture(
           tester,
           key,
@@ -476,6 +531,14 @@ Future<void> _capture(WidgetTester tester, GlobalKey key, String path) async {
 }
 
 Future<void> _show(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.tap(
+      find.text('Settings').evaluate().isNotEmpty
+          ? find.text('Settings')
+          : find.text('设置'),
+    );
+    await tester.pumpAndSettle();
+  }
   final ScrollableState scrollable = tester.state<ScrollableState>(
     find.byType(Scrollable).first,
   );

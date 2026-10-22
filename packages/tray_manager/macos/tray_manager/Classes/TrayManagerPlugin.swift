@@ -174,7 +174,9 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
         let style: String = args["style"] as? String ?? "plain";
         let badgeColorRgb = (args["badgeColorRgb"] as? NSNumber)?.uint32Value
         
-        trayIcon?.setTitle(title, style, badgeColorRgb)
+        trayIcon?.setTitle(title, style, badgeColorRgb,
+            args["reminderBubbles"] as? [[String: Any]] ?? [],
+            args["badgeDimmed"] as? Bool ?? false, args["badgeId"] as? String, args["badgePulse"] as? Bool ?? false)
         
         result(true)
     }

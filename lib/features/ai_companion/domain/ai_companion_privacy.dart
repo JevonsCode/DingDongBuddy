@@ -1,4 +1,4 @@
-/// A conservative, local deny filter for the explicit text-only chat surface.
+/// A conservative local filter for model-generated analysis text.
 /// Resource and clipboard privacy does not depend on recognizing secrets: their
 /// content is never serialized into model requests at all.
 final class AiCompanionPrivacy {
@@ -13,6 +13,21 @@ final class AiCompanionPrivacy {
     if (text.contains('\u0000') || text.contains('\u001b')) return false;
     return !_blocked.any((pattern) => pattern.hasMatch(text));
   }
+
+  /// Routing accepts explicit task references, but fails closed on credentials.
+  bool isSafeRoutingInput(String text, {String? providerKey}) =>
+      !text.contains('\u0000') &&
+      !text.contains('\u001b') &&
+      !(providerKey != null &&
+          providerKey.isNotEmpty &&
+          text.contains(providerKey)) &&
+      !_routingCredential.hasMatch(text) &&
+      !_blocked.take(8).any((pattern) => pattern.hasMatch(text));
+
+  static final RegExp _routingCredential = RegExp(
+    r'''(?:api[ _-]?key|access[ _-]?key|client[ _-]?secret|password|passwd|secret|token|authorization|cookie|密码|密钥|令牌)\s*["']?\s*[:=：]\s*["']?\s*\S+''',
+    caseSensitive: false,
+  );
 
   static final List<RegExp> _blocked = <RegExp>[
     RegExp(
@@ -34,7 +49,7 @@ final class AiCompanionPrivacy {
     RegExp(
       r'\b(?=[A-Za-z0-9!@#$%^&*_-]{12,}\b)(?=[A-Za-z0-9!@#$%^&*_-]*[a-z])(?=[A-Za-z0-9!@#$%^&*_-]*[A-Z])(?=[A-Za-z0-9!@#$%^&*_-]*[0-9])[A-Za-z0-9!@#$%^&*_-]+',
     ),
-    // No file/image upload or pasted filesystem references in companion chat.
+    // Analysis output must not introduce file uploads or private references.
     RegExp(
       r'(?:[A-Za-z]:[\\/]|\\\\[^\s]+\\|(?:^|\s)/(?:[^\s/]+/)+[^\s]*|(?:file|data):|https?://)',
       caseSensitive: false,

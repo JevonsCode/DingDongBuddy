@@ -23,7 +23,7 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 只维护一份；接入的 Agent 消息统一收好，桌面提示声由你选。重要提醒和选中的
 剪贴板内容，也能送到你配对的可信手机。
 
-> **DingDong 1.8.0（构建 70）。** 新增可选 AI 助手，各项分析和聊天可独立开关；
+> **DingDong 1.9.0（构建 72）。** 新增 Skill 版本历史、还原与对比；支持可配置 Agent 提醒和模型协议；
 > 重复资源可直接处理并选择备份，同时包含 1.8 测试版的提醒、Token 历史和手机端改进。
 > 云端分析只使用匿名用量数据，剪贴板原文、图片和文件保留在本机。
 
@@ -43,7 +43,7 @@ Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或�
 | Agent 动态 | 在本机记录完成、阻塞和决策提醒，保留未读状态、重复次数和历史，并播放可配置提示声 |
 | Agent 回复尾部 | 用一行资源小票展示本轮生效的 Prompt、匹配 Skill 和可用 MCP；`*` 表示 Skill 已加载或 MCP 已调用 |
 | 本地 Token 历史 | Codex、Claude Code、Pi 的每日历史和热力图，可按日期、来源筛选，查看明细并导出 CSV |
-| AI 助手 | 剪贴板、资源和 Token 建议、本地主动询问及配置模型后的聊天，各自有独立开关，输入输出经过本地隐私过滤 |
+| AI 助手 | 剪贴板、资源和 Token 建议、本地主动询问与模型分析，支持独立开关及内部 Token 统计 |
 | 连接设备 | 手机和电脑都可互相配对；内容默认手动分享，电脑可按设备开启自动同步，并选择局域网直连或加密服务 |
 
 剪贴板和资源数据默认只保存在这台电脑上；轻量连接中继不会保存剪贴板或文件正文。
@@ -203,11 +203,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.8.0：
+已发布的稳定安装包 · 1.9.0：
 
-- [macOS · Apple 芯片 · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-arm64.dmg)
-- [macOS · Intel · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-x64.dmg)
-- [Windows x64 · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-arm64.dmg)
+- [macOS · Intel · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-x64.dmg)
+- [Windows x64 · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

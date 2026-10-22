@@ -36,6 +36,64 @@ void main() {
       );
     });
   }
+  testWidgets('internal usage keeps scope and feature breakdown together', (
+    tester,
+  ) async {
+    // Synthetic numeric fixture for rendering only, not measured user usage.
+    final controller = TokenUsageController.preview(
+      TokenUsageSnapshot(
+        days: [
+          for (final purpose in [
+            'resourceSelection',
+            'analysis',
+            'connectionTest',
+          ])
+            TokenUsageDay(
+              day: DateTime(2026, 10, 9),
+              source: ConversationTokenUsageSource.dingdong,
+              internalPurpose: purpose,
+              eventCount: 2,
+              totals: const TokenUsageTotals(
+                totalTokens: 1200,
+                inputTokens: 1000,
+                outputTokens: 200,
+                cachedInputTokens: 400,
+                cacheWriteInputTokens: 0,
+              ),
+            ),
+        ],
+        coverage: const [
+          TokenUsageSourceCoverage(
+            source: ConversationTokenUsageSource.dingdong,
+            availability: TokenUsageAvailability.available,
+          ),
+        ],
+      ),
+    );
+    addTearDown(controller.dispose);
+    await pumpUsage(
+      tester,
+      controller,
+      size: const Size(1140, 1100),
+      now: DateTime(2026, 10, 9),
+    );
+    await tester.tap(find.byKey(const Key('token-usage-only-internal')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byKey(const Key('token-usage-golden')),
+      matchesGoldenFile('goldens/token_usage_internal.png'),
+    );
+    await tester.tap(find.byKey(const Key('token-usage-only-internal')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('token-usage-agent-filter')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('goldens/token_usage_agent_menu.png'),
+    );
+  });
 }
 
 /// The Flutter SDK ships these fonts on every desktop test host. Loading the

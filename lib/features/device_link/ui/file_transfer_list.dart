@@ -1,11 +1,18 @@
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class FileTransferList extends StatelessWidget {
-  const FileTransferList({super.key, required this.controller});
+  const FileTransferList({
+    super.key,
+    required this.controller,
+    this.showHistory = false,
+  });
+  final bool showHistory;
   final DeviceLinkManagement controller;
 
   @override
@@ -16,21 +23,27 @@ class FileTransferList extends StatelessWidget {
     if (transfers.isEmpty) return const SizedBox.shrink();
     final colors = Theme.of(context).colorScheme;
     final active = transfers.where((view) => !view.terminal);
-    final visible = [
-      ...active,
-      ...transfers.where((view) => view.terminal).take(3),
-    ];
+    final completed = transfers.where((view) => view.terminal).toList()
+      ..sort(
+        (a, b) => (b.finishedAt ?? b.createdAt).compareTo(
+          a.finishedAt ?? a.createdAt,
+        ),
+      );
+    final visible = [...active, if (showHistory) ...completed];
+    if (visible.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.l10n.fileTransfers,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 6),
+        if (!showHistory) ...[
+          Text(
+            context.l10n.fileTransfers,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 6),
+        ],
         for (final view in visible)
           Container(
-            key: ValueKey('file-transfer-${view.id}'),
+            key: ValueKey((view.deviceId, view.sending, view.id)),
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: colors.outlineVariant)),
@@ -45,6 +58,42 @@ class FileTransferList extends StatelessWidget {
       ],
     );
   }
+}
+
+class FileTransferHistoryDialog extends StatelessWidget {
+  const FileTransferHistoryDialog({required this.controller, super.key});
+  final DeviceLinkManagement controller;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: controller,
+    builder: (context, _) {
+      final manager = controller;
+      final empty =
+          manager is! FileTransferManagement ||
+          (manager as FileTransferManagement).fileTransfers.isEmpty;
+      return DesktopDialogFrame(
+        dialogKey: const Key('device-transfer-history-dialog'),
+        width: 620,
+        maxHeight: 660,
+        header: DesktopDialogHeader(
+          title: Text(context.l10n.fileTransferHistory),
+          leading: const Icon(Icons.history_rounded, size: 21),
+          onClose: () => Navigator.pop(context),
+        ),
+        body: SingleChildScrollView(
+          child: empty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(context.l10n.noFileTransferHistory),
+                  ),
+                )
+              : FileTransferList(controller: controller, showHistory: true),
+        ),
+      );
+    },
+  );
 }
 
 class _TransferRow extends StatelessWidget {
@@ -62,6 +111,7 @@ class _TransferRow extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final strings = context.l10n;
     final device =
+        view.deviceName ??
         controller.devices
             .where((device) => device.id == view.deviceId)
             .firstOrNull
@@ -102,77 +152,90 @@ class _TransferRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              '${(view.progress * 100).floor()}%',
+              view.terminal ? status : '${(view.progress * 100).floor()}%',
               style: Theme.of(context).textTheme.labelMedium,
             ),
           ],
         ),
         const SizedBox(height: 5),
         Text(
-          '$direction · ${_bytes(view.bytes)} / ${_bytes(view.size)}$speed',
+          view.terminal
+              ? '$direction · ${_bytes(view.size)}'
+              : '$direction · ${_bytes(view.bytes)} / ${_bytes(view.size)}$speed',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
-        const SizedBox(height: 10),
-        LinearProgressIndicator(
-          value: view.progress,
-          minHeight: 4,
-          borderRadius: BorderRadius.circular(4),
-          color: paused ? colors.onSurfaceVariant : colors.primary,
-          semanticsLabel: view.name,
-          semanticsValue: '${(view.progress * 100).floor()}%',
-        ),
         const SizedBox(height: 4),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 9),
-                child: Text(
-                  status,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
+        Text(
+          DateFormat.yMd(
+            Localizations.localeOf(context).toLanguageTag(),
+          ).add_Hm().format((view.finishedAt ?? view.createdAt).toLocal()),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+        ),
+        if (!view.terminal) ...[
+          const SizedBox(height: 10),
+          LinearProgressIndicator(
+            value: view.progress,
+            minHeight: 4,
+            borderRadius: BorderRadius.circular(4),
+            color: paused ? colors.onSurfaceVariant : colors.primary,
+            semanticsLabel: view.name,
+            semanticsValue: '${(view.progress * 100).floor()}%',
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 9),
+                  child: Text(
+                    status,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (!view.terminal) ...[
-              DesktopActionButton(
-                compact: true,
-                style: DesktopActionButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  side: BorderSide.none,
-                  foregroundColor: colors.primary,
+              if (!view.terminal) ...[
+                DesktopActionButton(
+                  compact: true,
+                  style: DesktopActionButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide.none,
+                    foregroundColor: colors.primary,
+                  ),
+                  onPressed: () => manager.controlFileTransfer(
+                    view.id,
+                    view.deviceId,
+                    paused ? 'resume' : 'pause',
+                  ),
+                  child: Text(
+                    paused ? strings.resumeTransfer : strings.pauseTransfer,
+                  ),
                 ),
-                onPressed: () => manager.controlFileTransfer(
-                  view.id,
-                  view.deviceId,
-                  paused ? 'resume' : 'pause',
+                const SizedBox(width: 4),
+                DesktopActionButton(
+                  compact: true,
+                  style: DesktopActionButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    side: BorderSide.none,
+                    foregroundColor: colors.primary,
+                  ),
+                  onPressed: () => manager.controlFileTransfer(
+                    view.id,
+                    view.deviceId,
+                    'cancel',
+                  ),
+                  child: Text(strings.cancelTransfer),
                 ),
-                child: Text(
-                  paused ? strings.resumeTransfer : strings.pauseTransfer,
-                ),
-              ),
-              const SizedBox(width: 4),
-              DesktopActionButton(
-                compact: true,
-                style: DesktopActionButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  side: BorderSide.none,
-                  foregroundColor: colors.primary,
-                ),
-                onPressed: () => manager.controlFileTransfer(
-                  view.id,
-                  view.deviceId,
-                  'cancel',
-                ),
-                child: Text(strings.cancelTransfer),
-              ),
+              ],
             ],
-          ],
-        ),
+          ),
+        ],
       ],
     );
   }

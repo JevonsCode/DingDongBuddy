@@ -90,11 +90,7 @@ class QuickPastePermissionSection extends StatelessWidget {
                 Container(
                   key: const Key('settings-accessibility-helper-explanation'),
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerHigh.withValues(alpha: 0.46),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[

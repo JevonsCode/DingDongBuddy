@@ -9,11 +9,47 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get amber => 'Amber';
+
+  @override
+  String get trayStylePulse => 'Soft pulse';
+
+  @override
+  String get trayStyleStatic => 'Static marker';
+
+  @override
+  String get attentionTrayColor => 'Needs-input reminder color';
+
+  @override
+  String get completionTrayColor => 'Completion reminder color';
+
+  @override
+  String get attentionTrayStyle => 'Needs-input reminder style';
+
+  @override
+  String get completionTrayStyle => 'Completion reminder style';
+
+  @override
+  String get aiCategoryNoSuggestions =>
+      'No suggestions in this category in the current report. Analyze again after changing the scope.';
+
+  @override
+  String get aiRoutingNeedsProvider =>
+      'Configure a model first. Local rules apply until one is available.';
+
+  @override
+  String get aiAutoResourceSelectionDescription =>
+      'When an Agent requests resources, let your configured model select from the task, supplied context and candidate summaries. Off by default; failures fall back to local rules.';
+
+  @override
+  String get aiAutoResourceSelection => 'AI resource selection';
+
+  @override
   String get aiProgressiveDisclosure => 'Progressive disclosure advice';
 
   @override
   String get aiProgressiveDisclosureDescription =>
-      'Review task-matched or manual Prompt loading and the MCP servers needed for each task. Advice never changes configuration and cannot control third-party Agents\' native tool-schema loading.';
+      'Review always-on Prompts and MCP scope for on-demand loading. This does not change native client tool loading.';
 
   @override
   String aiProgressivePrompt(int count) {
@@ -87,18 +123,18 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'You have been here a while. Take a breath, stretch, or step away for a moment.';
 
   @override
-  String get aiCompanionTitle => 'AI companion';
+  String get aiCompanionTitle => 'AI+';
 
   @override
   String get aiCompanionSubtitle =>
-      'Local insights, useful suggestions, and a space to talk.';
+      'Select resources on demand and review insights.';
 
   @override
   String get aiPrivacySummary =>
-      'Everything starts off. Local analysis stays on this device. Cloud analysis sends only counts and usage totals; clipboard text, resource contents, paths, files and images are never attached. Chat sends only the messages you choose to write after local sensitive-content checks.';
+      'Each feature is opt-in. Statistics analysis sends only counts and usage; resource selection sends the task, supplied context and candidate summaries. Clipboard text is not sent.';
 
   @override
-  String get aiFeaturesTitle => 'Choose what helps you';
+  String get aiFeaturesTitle => 'Analysis scope';
 
   @override
   String get aiClipboardAnalysis => 'Clipboard insights';
@@ -129,18 +165,29 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'A local reminder after an hour with this page open, at most once every two hours. No automatic network requests.';
 
   @override
-  String get aiEmotionalSupport => 'Supportive chat';
-
-  @override
-  String get aiEmotionalSupportDescription =>
-      'Talk to your configured model. Messages stay in memory until cleared or the window closes.';
-
-  @override
   String get aiCloudAnalysis => 'Model analysis of metadata';
 
   @override
   String get aiCloudAnalysisDescription =>
-      'On explicit analysis only: send enabled counts and Token totals to your configured model.';
+      'When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.';
+
+  @override
+  String get aiProviderProtocol => 'API protocol';
+
+  @override
+  String get aiProviderProtocolAuto => 'Auto (OpenAI / Anthropic)';
+
+  @override
+  String get aiErrorAuthenticationFailed =>
+      'Authentication failed (401/403). Check the API key and service permissions.';
+
+  @override
+  String get aiErrorEndpointNotFound =>
+      'Endpoint or model not found (404/405). Check the service URL, protocol and model name.';
+
+  @override
+  String get aiErrorRateLimited =>
+      'The service is rate limiting requests (429). Check your quota or try again later.';
 
   @override
   String get aiProviderTitle => 'Model connection';
@@ -149,7 +196,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiConfigureProvider => 'Configure model';
 
   @override
-  String get aiProviderEndpoint => 'OpenAI-compatible base URL';
+  String get aiProviderEndpoint => 'Service URL';
 
   @override
   String get aiProviderEndpointHint =>
@@ -174,7 +221,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiProviderHelp =>
-      'Use HTTPS for a cloud provider or HTTP on a loopback address for a local model. Saving settings does not verify connectivity.';
+      'Supports OpenAI and Anthropic, over HTTP or HTTPS. Auto tries the other protocol when an endpoint is not found. Saving does not test the connection.';
 
   @override
   String get aiProviderNotConfigured =>
@@ -191,14 +238,14 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiTestConnection => 'Test connection';
 
   @override
-  String get aiAnalyze => 'Analyze enabled features';
+  String get aiAnalyze => 'Analyze now';
 
   @override
-  String get aiInsightsTitle => 'Suggestions';
+  String get aiInsightsTitle => 'Insights and suggestions';
 
   @override
   String get aiInsightsEmpty =>
-      'Enable a feature and run an analysis to see suggestions from your local data.';
+      'Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.';
 
   @override
   String get aiLocalAnalysis => 'Local analysis · no model request';
@@ -211,56 +258,22 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Suggestions are read-only. Review changes in the relevant workspace.';
 
   @override
-  String get aiChatTitle => 'A space to talk';
-
-  @override
-  String get aiChatDescription =>
-      'Write what is on your mind. Local checks block common secrets and sensitive patterns; review your message before sending.';
-
-  @override
-  String get aiChatPlaceholder => 'Write a message…';
-
-  @override
-  String get aiChatSend => 'Send message';
-
-  @override
-  String get aiChatClear => 'Clear conversation';
-
-  @override
-  String get aiChatYou => 'You';
-
-  @override
-  String get aiChatAssistant => 'Companion';
-
-  @override
-  String get aiChatDisabled =>
-      'Enable supportive chat to start a conversation.';
-
-  @override
-  String get aiChatNeedsProvider =>
-      'Configure a model before sending a message.';
-
-  @override
   String get aiCheckInNow => 'Take a moment';
 
   @override
   String get aiUnavailable =>
-      'The AI companion is unavailable in this window. Reopen Resource Manager to try again.';
+      'AI+ is unavailable in this window. Reopen Resource Manager.';
 
   @override
   String get aiErrorDisabled => 'Enable the relevant feature first.';
 
   @override
   String get aiErrorInvalidProvider =>
-      'Enter a valid HTTPS base URL, or a loopback HTTP address, and a model name.';
+      'Enter a valid HTTP or HTTPS service URL and model name, without credentials, query parameters or fragments in the URL.';
 
   @override
   String get aiErrorMissingApiKey =>
       'This cloud model needs an API key. Add it in model settings.';
-
-  @override
-  String get aiErrorSensitiveInput =>
-      'This message may contain sensitive information. Remove it before sending.';
 
   @override
   String get aiErrorSensitiveOutput =>
@@ -282,11 +295,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Settings or secure storage could not be accessed. Try again before enabling features.';
 
   @override
-  String get aiErrorEmptyMessage => 'Write a message before sending.';
-
-  @override
-  String get aiErrorMessageTooLong =>
-      'This message is too long. Shorten it before sending.';
+  String get aiErrorRequestTooLarge =>
+      'The model request is too large. Reduce the analysis scope and try again.';
 
   @override
   String get resolveDuplicate => 'Resolve duplicate';
@@ -3740,6 +3750,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'failed': 'Transfer incomplete',
       'completed': 'Transfer complete',
       'cancelled': 'Cancelled',
+      'sent': 'Sent',
       'other': 'Preparing',
     });
     return '$_temp0';
@@ -3767,7 +3778,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get tokenUsageTitle => 'Token history';
 
   @override
-  String get tokenUsageSubtitle => 'Daily usage across your local Agents.';
+  String get tokenUsageSubtitle => 'Daily usage across Agents and DingDong.';
 
   @override
   String get tokenUsageLocalOnly => 'Stored on this device';
@@ -3850,7 +3861,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get tokenUsageCoverageNote =>
-      'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.';
+      'Counts come from supported local Agent logs and DingDong API usage receipts. Missing or unsupported records do not mean zero usage. Nothing is uploaded.';
 
   @override
   String get tokenUsageAvailable => 'Logs found';
@@ -4205,4 +4216,298 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get allowBetaUpdatesDescription =>
       'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.';
+
+  @override
+  String get aiInternalUsageTitle => 'Internal token usage';
+
+  @override
+  String get aiIncludeInternal => 'Include in global statistics';
+
+  @override
+  String get aiIncludeInternalDescription =>
+      'Off by default. When enabled, global statistics include all recorded internal usage. Turning it off keeps the separate history here.';
+
+  @override
+  String get aiInternalUsageDescription =>
+      'Records API usage for resource selection, model analysis and connection tests without saving request content.';
+
+  @override
+  String get aiInternalCumulative => 'All time';
+
+  @override
+  String get aiInternalLast => 'Last request in this window';
+
+  @override
+  String aiInternalRequests(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get aiInternalUnknown => 'Not reported';
+
+  @override
+  String get aiInternalPartial =>
+      'Only reported usage is counted; missing fields are not zero. Cache tokens are included in input.';
+
+  @override
+  String get aiInternalStorageError =>
+      'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.';
+
+  @override
+  String get tokenUsageIncludeInternal => 'Include DingDong usage';
+
+  @override
+  String get tokenUsageOnlyInternal => 'DingDong only';
+
+  @override
+  String get tokenUsageFilterSaveFailed =>
+      'Could not save this preference. Try again.';
+
+  @override
+  String get tokenUsageAgents => 'Agents';
+
+  @override
+  String get tokenUsageNoAgents => 'No Agents selected';
+
+  @override
+  String get tokenUsageAgentSourcesHelp =>
+      'Supported local log readers, not a list of connected Agents. Multiple selections are allowed.';
+
+  @override
+  String get tokenUsageFunctions => 'DingDong usage by feature';
+
+  @override
+  String get tokenUsageFunctionSelection => 'Resource selection';
+
+  @override
+  String get tokenUsageFunctionAnalysis => 'Model analysis';
+
+  @override
+  String get tokenUsageFunctionConnection => 'Connection tests';
+
+  @override
+  String get tokenUsageFunctionOther => 'Other / unclassified';
+
+  @override
+  String get tokenUsageFunction => 'Feature';
+
+  @override
+  String get tokenUsageRequests => 'Requests';
+
+  @override
+  String get reminderProfiles => 'Reminders';
+
+  @override
+  String get addReminder => 'Add reminder';
+
+  @override
+  String get reminderSounds => 'Sounds';
+
+  @override
+  String get importReminderSound => 'Import sound';
+
+  @override
+  String get reminderAudioFormat => 'PCM WAV · Up to 15 seconds / 5 MiB';
+
+  @override
+  String get reminderAudioImportFailed =>
+      'Could not import. Choose a readable PCM WAV file, up to 15 seconds and 5 MiB.';
+
+  @override
+  String get reminderNameRequired => 'Enter a reminder name.';
+
+  @override
+  String get reminderCondition => 'When to use (for the Agent)';
+
+  @override
+  String get reminderKind => 'Priority';
+
+  @override
+  String get reminderStyle => 'Tray style';
+
+  @override
+  String get reminderColor => 'Color';
+
+  @override
+  String get reminderToPhone => 'Send to phone';
+
+  @override
+  String get devReminderColors => 'Reminder colors and counts';
+
+  @override
+  String get devReminderColorsDescription =>
+      'Click a color repeatedly to increase its DEV preview count. Previews do not send sounds or notifications, change saved reminders, or create history.';
+
+  @override
+  String get devClearReminderColors => 'Clear previews';
+
+  @override
+  String get devReminderColorsUpdated => 'Tray preview updated';
+
+  @override
+  String get aiSettingsTab => 'Settings';
+
+  @override
+  String get aiAutomaticAnalysis => 'Automatic analysis';
+
+  @override
+  String get aiAutomaticAnalysisDescription =>
+      'Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.';
+
+  @override
+  String get aiHistoryTitle => 'History';
+
+  @override
+  String get aiHistoryEmpty => 'No saved analyses yet.';
+
+  @override
+  String get aiAutomaticRun => 'Automatic';
+
+  @override
+  String get aiManualRun => 'Manual';
+
+  @override
+  String get aiErrorCredentialUnavailable =>
+      'The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.';
+
+  @override
+  String get aiHistoryPrevious => 'Previous page';
+
+  @override
+  String get aiHistoryNext => 'Next page';
+
+  @override
+  String get reorderReminder => 'Drag to reorder';
+
+  @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String get noMatchingSettings => 'No matching settings. Try another keyword.';
+
+  @override
+  String get skillVersionHistory => 'Version history';
+
+  @override
+  String get skillVersionCurrent => 'Current';
+
+  @override
+  String get skillVersionInitial => 'Initial snapshot';
+
+  @override
+  String get skillVersionManual => 'Manual save';
+
+  @override
+  String get skillVersionOnline => 'Online refresh';
+
+  @override
+  String skillVersionRestored(int number) {
+    return 'Restored from v$number';
+  }
+
+  @override
+  String get skillVersionFrom => 'Compare from';
+
+  @override
+  String get skillVersionTo => 'Compare to';
+
+  @override
+  String get skillVersionRestore => 'Restore this version';
+
+  @override
+  String skillVersionConfirmRestore(int number) {
+    return 'Restore v$number?';
+  }
+
+  @override
+  String get skillVersionRestoreExplanation =>
+      'This creates a new version. Current Agent settings and existing history are kept.';
+
+  @override
+  String get skillVersionNoHistory => 'No saved versions yet.';
+
+  @override
+  String get skillVersionOne =>
+      'Only one saved version. Its content is shown below.';
+
+  @override
+  String get skillVersionNoChanges => 'No differences between these versions.';
+
+  @override
+  String skillVersionLoadError(String error) {
+    return 'Could not load version history: $error';
+  }
+
+  @override
+  String skillVersionCompareError(String error) {
+    return 'Could not compare these versions: $error';
+  }
+
+  @override
+  String skillVersionRestoreError(String error) {
+    return 'Could not restore this version: $error';
+  }
+
+  @override
+  String get skillVersionRestoring => 'Restoring…';
+
+  @override
+  String get skillVersionBinary => 'Binary file changed';
+
+  @override
+  String get skillVersionEmptyFile => 'Empty file';
+
+  @override
+  String get skillVersionDirectory => 'Directory';
+
+  @override
+  String get skillVersionPermissionsChanged => 'Executable permission changed';
+
+  @override
+  String get skillVersionLargeFile =>
+      'Large file: showing removed and added content.';
+
+  @override
+  String get skillVersionNoNewline => 'No newline at end of file';
+
+  @override
+  String get skillVersionAdded => 'Added';
+
+  @override
+  String get skillVersionRemoved => 'Deleted';
+
+  @override
+  String get skillVersionModified => 'Modified';
+
+  @override
+  String get skillVersionSource => 'Source';
+
+  @override
+  String get skillVersionName => 'Skill name';
+
+  @override
+  String get skillVersionPackageChanged => 'Package structure changed';
+
+  @override
+  String get skillVersionRetry => 'Retry';
+
+  @override
+  String skillVersionFiles(int count) {
+    return 'Changed files ($count)';
+  }
+
+  @override
+  String get onlineDevices => 'Online devices';
+
+  @override
+  String get connectionHistory => 'Connection history';
+
+  @override
+  String get noDevicesOnline => 'No devices online';
+
+  @override
+  String get fileTransferHistory => 'Transfer history';
+
+  @override
+  String get noFileTransferHistory => 'No file transfers yet';
 }

@@ -100,6 +100,7 @@ final class TokenUsageDay {
     required this.totals,
     this.eventCount = 0,
     this.partialEventCount = 0,
+    this.internalPurpose,
   });
 
   /// Local calendar midnight. Queries use inclusive local calendar dates.
@@ -108,6 +109,9 @@ final class TokenUsageDay {
   final TokenUsageTotals totals;
   final int eventCount;
   final int partialEventCount;
+
+  /// Internal receipt purpose; null for Agent transcripts and legacy records.
+  final String? internalPurpose;
 }
 
 enum TokenUsageAvailability { available, missing, unreadable }
@@ -146,6 +150,30 @@ final class TokenUsageSnapshot {
 
   /// Stable diagnostic codes only; no transcript content, credentials or paths.
   final List<String> warnings;
+
+  TokenUsageSnapshot forSources(Set<ConversationTokenUsageSource> sources) =>
+      TokenUsageSnapshot(
+        days: days
+            .where((day) => sources.contains(day.source))
+            .toList(growable: false),
+        coverage: coverage
+            .where((item) => sources.contains(item.source))
+            .toList(growable: false),
+        refreshedAt: refreshedAt,
+        storageAvailable: storageAvailable,
+        // Transcript diagnostics do not describe the separate internal ledger.
+        warnings:
+            sources.length == 1 &&
+                sources.contains(ConversationTokenUsageSource.dingdong)
+            ? warnings
+                  .where(
+                    (code) =>
+                        code == 'storage_unavailable' ||
+                        code == 'repository_closed',
+                  )
+                  .toList()
+            : warnings,
+      );
 
   TokenUsageTotals get totals =>
       TokenUsageTotals.sum(days.map((day) => day.totals));

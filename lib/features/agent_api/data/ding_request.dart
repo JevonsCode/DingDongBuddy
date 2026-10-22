@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
@@ -56,6 +55,7 @@ final class DingRequest {
   const DingRequest({
     this.message = 'Task complete',
     this.detail,
+    this.reminderId,
     this.source,
     this.sound = DingSound.defaultSound,
     this.flashCount = 8,
@@ -85,6 +85,7 @@ final class DingRequest {
     return DingRequest(
       message: message,
       detail: detail,
+      reminderId: _reminderId(json['reminderId']),
       source: source,
       sound: DingSound.parse(json['sound']),
       flashCount: requestedFlashCount.clamp(2, 30),
@@ -101,6 +102,7 @@ final class DingRequest {
 
   final String message;
   final String? detail;
+  final String? reminderId;
   final String? source;
   final DingSound sound;
   final int flashCount;
@@ -126,6 +128,7 @@ final class DingRequest {
     return DingRequest(
       message: message ?? this.message,
       detail: detail,
+      reminderId: reminderId,
       source: source,
       sound: sound ?? this.sound,
       flashCount: flashCount,
@@ -178,4 +181,14 @@ String? _firstTrimmed(List<Object?> values) {
     }
   }
   return null;
+}
+
+String? _reminderId(Object? value) {
+  if (value == null) return null;
+  if (value is! String || value.trim().isEmpty || value.length > 64) {
+    throw const FormatException(
+      'reminderId must be a non-empty ID of at most 64 characters.',
+    );
+  }
+  return value.trim();
 }

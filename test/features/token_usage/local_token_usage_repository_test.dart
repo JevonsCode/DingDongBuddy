@@ -909,10 +909,11 @@ void main() {
       repositories.add(repository);
       await repository.refresh();
       final snapshot = await repository.readSnapshot();
-      expect(
-        snapshot.days.map((day) => day.source).toSet(),
-        ConversationTokenUsageSource.values.toSet(),
-      );
+      expect(snapshot.days.map((day) => day.source).toSet(), {
+        ConversationTokenUsageSource.codex,
+        ConversationTokenUsageSource.claudeCode,
+        ConversationTokenUsageSource.pi,
+      });
       expect(snapshot.totals.totalTokens, 100);
     },
   );

@@ -16,6 +16,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/device_link_store.dart';
+import 'package:dingdong/features/device_link/data/file_transfer_history.dart';
 import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
 import 'package:dingdong/features/device_link/data/resumable_file_transfer.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
@@ -185,15 +186,42 @@ final class DeviceLinkController extends ChangeNotifier
     onChange: _notifyFileProgress,
     onReceived: _receiveResumableFile,
   );
+  late final FileTransferHistory _fileHistory = FileTransferHistory(
+    File(path.join(_transferDirectory.path, '.history', 'transfers.json')),
+  );
+
+  void _rememberFileTransfer(FileTransfer transfer) {
+    final name =
+        _devices
+            .where((device) => device.id == transfer.deviceId)
+            .firstOrNull
+            ?.name ??
+        transfer.deviceId;
+    _fileHistory.remember(transfer, name);
+  }
 
   @override
-  List<FileTransfer> get fileTransfers => _resumableFiles.transfers;
+  List<FileTransfer> get fileTransfers {
+    final current = _resumableFiles.transfers
+        .where((view) => !view.terminal)
+        .toList();
+    final keys = current.map(FileTransferHistory.key).toSet();
+    return List.unmodifiable([
+      ...current,
+      ..._fileHistory.records.where(
+        (record) => !keys.contains(FileTransferHistory.key(record)),
+      ),
+    ]);
+  }
 
   @override
   Future<void> controlFileTransfer(String id, String deviceId, String action) =>
       _resumableFiles.control(deviceId, id, action);
 
   void _notifyFileProgress() {
+    for (final transfer in _resumableFiles.transfers) {
+      _rememberFileTransfer(transfer);
+    }
     if (_disposed || _fileProgressNotification != null) return;
     _fileProgressNotification = Timer(const Duration(milliseconds: 120), () {
       _fileProgressNotification = null;
@@ -246,6 +274,7 @@ final class DeviceLinkController extends ChangeNotifier
             : device,
       ),
     );
+    await _fileHistory.load();
     _computerLink.identity = _localDevice;
     _computerLink.onPaired = _saveComputerPair;
     _computerLink.addListener(_notifyIfActive);
@@ -537,6 +566,7 @@ final class DeviceLinkController extends ChangeNotifier
   @override
   Future<void> deleteDevice(String deviceId) async {
     await _resumableFiles.forgetPeer(deviceId);
+    _fileHistory.forgetDevice(deviceId);
     final LinkedDevice device = _device(deviceId);
     await _removeSession(device.room);
     _statuses.remove(deviceId);
@@ -556,6 +586,7 @@ final class DeviceLinkController extends ChangeNotifier
     _fileMaintenance?.cancel();
     _fileProgressNotification?.cancel();
     await _resumableFiles.dispose();
+    await _fileHistory.flush();
     final List<String> rooms = _sessionsByRoom.keys.toList(growable: false);
     for (final String room in rooms) {
       await _removeSession(room);

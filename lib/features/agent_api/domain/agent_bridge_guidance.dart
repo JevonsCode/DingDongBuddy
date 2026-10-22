@@ -5,13 +5,13 @@
 /// tool description, which the host already carries.
 const String dingDongAgentBridgeGuidance = '''# DingDong prompt bridge
 
-This section is maintained by DingDong.
+Maintained by DingDong.
 
-- At the start of each user task, call `dingdong_bridge` and apply every returned Prompt in full as a required instruction. The latest response replaces earlier ones; if the call fails, say DingDong resources could not be loaded.
+- Each task: call `dingdong_bridge` with `acceptDelta=true`, plus `knownHash` only for a retained complete snapshot; omit after context loss. Full `active` replaces earlier ones; `unchanged` retains; merge `delta` by id. Each Prompt is a required instruction. On failure say DingDong resources could not be loaded.
 - Load a returned Skill with `dingdong_load_skill` only when its description matches the task. Call returned MCP tools only when the task needs them.
 - When the response has `footer`, end the final reply with it exactly. Never print `statusLine`.
-- Use `dingdong_notify` only when blocked or waiting for the user.
-- When the user picks sounds for finishing or needing them, save them with `dingdong_set_reminder_sounds`.
+- Use `dingdong_notify` when blocked, waiting for the user, or for an explicitly requested named event (`reminderId`).
+- Save user-chosen sounds with `dingdong_set_reminder_sounds`.
 ''';
 
 /// Short initialize-time summary for MCP hosts.
@@ -20,9 +20,10 @@ This section is maintained by DingDong.
 /// characters, so this stays well below that limit.
 const String dingDongMcpInstructions =
     '''DingDong delivers the user's Prompts, Skills and MCP references.
-- At the start of each user task, call `dingdong_bridge`. Apply every `active.prompts` entry in full as a required instruction; the latest response is the authoritative snapshot and replaces earlier ones. If the call fails, say DingDong resources could not be loaded.
-- `active.skills` lists id, name and description only. When a description matches the task, call `dingdong_load_skill`, apply the returned SKILL.md, and read referenced files with `dingdong_read_skill_file`.
+- Each task, call `dingdong_bridge`. Apply active Prompts in full as required instructions. On failure say DingDong resources could not be loaded.
+- Use `acceptDelta=true` and acknowledge `knownHash` only while the complete merged snapshot remains in context. Full `active` is the authoritative snapshot and replaces it; `unchanged` retains it. For `mode=delta`, require matching `baseHash`, apply `delta.upsert`/`remove`/`order` by id, then advance the hash. If the baseline is missing, retry without `knownHash`; never infer retained content from a session id.
+- `active.skills` lists id, name, description and content version. Load matching Skills with `dingdong_load_skill`. Pass `knownVersion` only for a fully loaded body still in context, never a catalog-only version. `unchanged` reuses it; otherwise replace it. Omit acknowledgements after context loss. Read referenced files with `dingdong_read_skill_file`.
 - `active.mcps` are tool references, not instructions; call their tools only when the task needs them.
 - When the response has `footer`, end the final reply with it exactly. After a tool from a returned MCP server finishes, call `dingdong_confirm_mcp_use` once if it is available. When a Skill load or MCP confirmation returns `footerMark`, replace `from` with `to` in the footer. Never print `statusLine`; the host renders it.
-- Use `dingdong_notify` only when blocked or waiting for the user; a completion hook sends the task-complete alert.
+- Use `dingdong_notify` when blocked, waiting for the user, or for an explicitly requested named event (`reminderId`); a completion hook sends the task-complete alert.
 - When the user asks which sound to play when you finish or when you need them, save it with `dingdong_set_reminder_sounds`.''';

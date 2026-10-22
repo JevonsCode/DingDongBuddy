@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
@@ -13,6 +14,7 @@ import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_compatibility_routes.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
+import 'package:dingdong/features/agent_api/data/bridge_snapshot_cache.dart';
 import 'package:dingdong/features/agent_api/data/claude_mcp_use_recorder.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_collection_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_routes.dart';
@@ -25,6 +27,7 @@ import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/library_routes.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/agent_api/data/trigger_group_routes.dart';
+import 'package:dingdong/features/agent_api/domain/bridge_resource_selection.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
@@ -51,6 +54,7 @@ typedef ReminderSoundUpdater =
 final class AgentRouter {
   AgentRouter({
     this.jevRoutes,
+    this.reminderSettings,
     void Function(DingRequest request)? onDing,
     void Function(DingRequest request)? onSuppressedDing,
     FutureOr<void> Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
@@ -71,6 +75,7 @@ final class AgentRouter {
     Future<bool> Function()? loadShowConversationTokenUsage,
     ConversationTokenUsageLoader? loadConversationTokenUsage,
     this.loadJevUsage,
+    this.selectBridgeResources,
     FutureOr<String> Function(String source)? defaultDingMessage,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
@@ -127,6 +132,7 @@ final class AgentRouter {
                loadShowConversationTokenUsage: loadShowConversationTokenUsage,
                loadConversationTokenUsage: loadConversationTokenUsage,
                loadJevUsage: loadJevUsage,
+               selectBridgeResources: selectBridgeResources,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -164,7 +170,10 @@ final class AgentRouter {
        _defaultDingMessage = defaultDingMessage ?? _englishDefaultDingMessage;
 
   final JevRoutes? jevRoutes;
+  final Future<Map<String, Object?>> Function(Map<String, Object?> command)?
+  reminderSettings;
   final JevUsageLoader? loadJevUsage;
+  final BridgeResourceSelector? selectBridgeResources;
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
   final ClaudeMcpUseRecorder _claudeMcpUseRecorder;
@@ -183,6 +192,7 @@ final class AgentRouter {
   final ClipboardCollectionRoutes? _clipboardCollectionRoutes;
   final DesktopControlRoutes _desktopControlRoutes;
   final ResourceStore? _resourceStore;
+  final BridgeSnapshotCache _bridgeSnapshots = BridgeSnapshotCache();
   final TriggerGroupStore? _triggerGroupStore;
   final SkillDeploymentStore? _skillDeploymentStore;
   final String Function() _idGenerator;
@@ -345,6 +355,33 @@ final class AgentRouter {
         },
       );
     }
+    if (request.parsedUri.path == '/settings/reminders' &&
+        (request.method == 'GET' || request.method == 'POST')) {
+      if (reminderSettings == null) {
+        return const HttpResponseData(
+          statusCode: 503,
+          json: {'status': 'unavailable'},
+        );
+      }
+      try {
+        final decoded = request.method == 'GET'
+            ? <String, Object?>{'action': 'list'}
+            : jsonDecode(request.body);
+        if (decoded is! Map<String, Object?>) {
+          throw const FormatException('Provide a JSON object.');
+        }
+        return HttpResponseData(
+          statusCode: 200,
+          json: await reminderSettings!(decoded),
+        );
+      } on FormatException catch (error) {
+        return HttpResponseData.badRequest(error.message);
+      } on FileSystemException {
+        return HttpResponseData.badRequest(
+          'Cannot read or save this local audio file.',
+        );
+      }
+    }
     if (request.method == 'POST' &&
         request.parsedUri.path == '/settings/reminder-sounds') {
       return _reminderSounds(request.body);
@@ -356,6 +393,25 @@ final class AgentRouter {
           request.body,
           fallbackMessage: '',
         ).copyWith(receivedAt: now.toUtc());
+        if (parsed.reminderId != null) {
+          if (reminderSettings == null) {
+            throw const FormatException('Reminder profiles are unavailable.');
+          }
+          final state = await reminderSettings!({'action': 'list'});
+          final profiles = (state['reminders'] as List)
+              .cast<Map<String, Object?>>();
+          final matches = profiles.where((x) => x['id'] == parsed.reminderId);
+          if (matches.isEmpty) {
+            throw const FormatException(
+              'Unknown reminderId. List reminders first.',
+            );
+          }
+          parsed = parsed.copyWith(
+            notificationKind: AgentNotificationKind.parse(
+              matches.first['kind'],
+            ),
+          );
+        }
         if (parsed.message.isEmpty) {
           parsed = parsed.copyWith(
             message: await _defaultDingMessage(parsed.source ?? 'Agent'),
@@ -442,6 +498,7 @@ final class AgentRouter {
           : bridgeRoute(
               AgentBridge(
                 store,
+                snapshots: _bridgeSnapshots,
                 triggerGroupStore: _triggerGroupStore,
                 querySkillDeploymentPresence:
                     _skillDeploymentStore?.queryPresence,
@@ -451,6 +508,7 @@ final class AgentRouter {
                 loadShowConversationTokenUsage: _loadShowConversationTokenUsage,
                 loadConversationTokenUsage: _loadConversationTokenUsage,
                 loadJevUsage: loadJevUsage,
+                selectBridgeResources: selectBridgeResources,
               ),
             );
     }

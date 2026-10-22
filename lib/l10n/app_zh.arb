@@ -1,180 +1,408 @@
 {
+  "amber": "琥珀",
+  "@amber": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "trayStylePulse": "柔和闪动",
+  "@trayStylePulse": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "trayStyleStatic": "静态标记",
+  "@trayStyleStatic": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "attentionTrayColor": "需要我时的提醒颜色",
+  "@attentionTrayColor": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "completionTrayColor": "完成提醒颜色",
+  "@completionTrayColor": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "attentionTrayStyle": "需要我时的提醒样式",
+  "@attentionTrayStyle": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "completionTrayStyle": "完成提醒样式",
+  "@completionTrayStyle": {
+    "description": "Reminder presentation and AI+ results."
+  },
+  "aiCategoryNoSuggestions": "当前报告没有此类建议。更改范围后请重新分析。",
+  "@aiCategoryNoSuggestions": {
+    "description": "AI+ resource selection and analysis."
+  },
+  "aiRoutingNeedsProvider": "请先配置模型。未配置时继续使用本地规则。",
+  "@aiRoutingNeedsProvider": {
+    "description": "AI+ resource selection and analysis."
+  },
+  "aiAutoResourceSelectionDescription": "Agent 请求资源时，将当前任务、传入的上下文与候选摘要交给已配置模型筛选。默认关闭；失败时回退本地规则。",
+  "@aiAutoResourceSelectionDescription": {
+    "description": "AI+ resource selection and analysis."
+  },
+  "aiAutoResourceSelection": "AI 自动筛选资源",
+  "@aiAutoResourceSelection": {
+    "description": "AI+ resource selection and analysis."
+  },
   "aiProgressiveDisclosure": "渐进式披露建议",
-  "@aiProgressiveDisclosure": {"description":"Independent progressive disclosure advice."},
-  "aiProgressiveDisclosureDescription": "检查 Prompt 的任务匹配或手动加载方式，以及任务所需的 MCP 范围。仅提供建议，不修改配置，也无法改变第三方 Agent 原生加载工具 Schema 的方式。",
-  "@aiProgressiveDisclosureDescription": {"description":"Independent progressive disclosure advice."},
+  "@aiProgressiveDisclosure": {
+    "description": "Independent progressive disclosure advice."
+  },
+  "aiProgressiveDisclosureDescription": "检查常驻 Prompt 与 MCP 范围，给出按需加载建议。不会改变客户端原生工具加载方式。",
+  "@aiProgressiveDisclosureDescription": {
+    "description": "Independent progressive disclosure advice."
+  },
   "aiProgressivePrompt": "此常驻 Prompt 含 {count} 个字符。可保留简短的通用规则，将任务专属内容改为任务匹配或手动加载，请先审阅再调整。",
-  "@aiProgressivePrompt": {"description":"Independent progressive disclosure advice.","placeholders":{"count":{"type":"int"}}},
+  "@aiProgressivePrompt": {
+    "description": "Independent progressive disclosure advice.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiProgressiveMcp": "检查当前任务是否需要此常驻 MCP 服务，可缩小适用范围或需要时手动启用。第三方 Agent 仍可能原生加载所有已配置工具的 Schema。",
-  "@aiProgressiveMcp": {"description":"Independent progressive disclosure advice."},
+  "@aiProgressiveMcp": {
+    "description": "Independent progressive disclosure advice."
+  },
   "aiDailyScope": "分析今日更新的剪贴板与今日已记录 Token 用量。复制次数与资源使用次数为累计值；资源建议检查整个资源库。每类最多分析 500 项本地数据。",
-  "@aiDailyScope": { "description": "Scope and limits of companion analysis." },
+  "@aiDailyScope": {
+    "description": "Scope and limits of companion analysis."
+  },
   "aiProviderCredentialNote": "更换地址会移除原密钥；新服务需要密钥时请重新输入。",
-  "@aiProviderCredentialNote": { "description": "AI provider credentials." },
+  "@aiProviderCredentialNote": {
+    "description": "AI provider credentials."
+  },
   "aiReviewSuggestion": "查看相关项目",
-  "@aiReviewSuggestion": {"description":"AI companion suggestion."},
+  "@aiReviewSuggestion": {
+    "description": "AI companion suggestion."
+  },
   "aiNoSuggestions": "根据现有数据暂无建议，未修改任何内容。",
-  "@aiNoSuggestions": {"description":"AI companion suggestion."},
+  "@aiNoSuggestions": {
+    "description": "AI companion suggestion."
+  },
   "aiFrequentClipboard": "已复制 {count} 次，可考虑固定此项或保存为可复用的 Prompt。",
-  "@aiFrequentClipboard": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiFrequentClipboard": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiRepeatedClipboard": "发现 {count} 条相同的剪贴板内容，请确认后再整理。",
-  "@aiRepeatedClipboard": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiRepeatedClipboard": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiUngroupedClipboard": "有 {count} 项尚未分组，可将常用内容整理到合适分组。",
-  "@aiUngroupedClipboard": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiUngroupedClipboard": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidateWithoutUse": "已被考虑 {count} 次，但未记录调用或加载。可检查此 MCP 或 Skill 是否仍需要，或仅在任务匹配时加载。",
-  "@aiCandidateWithoutUse": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiCandidateWithoutUse": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiAlwaysOnUnused": "此常驻资源已存在至少一周，尚无使用记录。可检查适用范围，改为任务匹配或按需加载。",
-  "@aiAlwaysOnUnused": {"description":"AI companion suggestion."},
+  "@aiAlwaysOnUnused": {
+    "description": "AI companion suggestion."
+  },
   "aiLargeAlwaysOnPrompt": "此常驻 Prompt 含 {count} 个字符。可精简通用规则，将具体任务内容改为任务匹配或按需加载。",
-  "@aiLargeAlwaysOnPrompt": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiLargeAlwaysOnPrompt": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiHighInputTokens": "已记录输入 {count} Token，占用量较高。可检查重复上下文，仅在任务需要时加载资源。",
-  "@aiHighInputTokens": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiHighInputTokens": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiLowCacheReuse": "已记录缓存输入仅 {count} Token。可尝试保持通用前缀稳定，实际节省取决于模型服务商。",
-  "@aiLowCacheReuse": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiLowCacheReuse": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiIncompleteTokenData": "Token 记录尚不完整，需取得更可靠的数据后再判断效率。",
-  "@aiIncompleteTokenData": {"description":"AI companion suggestion."},
+  "@aiIncompleteTokenData": {
+    "description": "AI companion suggestion."
+  },
   "aiTakeABreakSuggestion": "已经忙了一阵，可以缓口气、伸展一下，或暂时离开屏幕。",
-  "@aiTakeABreakSuggestion": {"description":"AI companion suggestion."},
-  "aiCompanionTitle": "AI 伙伴",
-  "@aiCompanionTitle": { "description": "AI companion." },
-  "aiCompanionSubtitle": "本地洞察、实用建议，也可以聊聊近况。",
-  "@aiCompanionSubtitle": { "description": "AI companion." },
-  "aiPrivacySummary": "所有功能默认关闭。本地分析留在此设备；云端分析仅发送数量与用量统计，不附带剪贴板文本、资源正文、路径、文件或图片。聊天仅发送你主动输入并通过本地敏感内容检查的消息。",
-  "@aiPrivacySummary": { "description": "AI companion." },
-  "aiFeaturesTitle": "选择你需要的功能",
-  "@aiFeaturesTitle": { "description": "AI companion." },
+  "@aiTakeABreakSuggestion": {
+    "description": "AI companion suggestion."
+  },
+  "aiCompanionTitle": "AI+",
+  "@aiCompanionTitle": {
+    "description": "AI companion."
+  },
+  "aiCompanionSubtitle": "按需筛选资源，查看洞察与建议。",
+  "@aiCompanionSubtitle": {
+    "description": "AI companion."
+  },
+  "aiPrivacySummary": "各项功能独立开启。统计分析只发送数量与用量；自动资源筛选会发送任务、传入上下文和候选摘要。剪贴板正文不会发送。",
+  "@aiPrivacySummary": {
+    "description": "AI companion."
+  },
+  "aiFeaturesTitle": "分析范围",
+  "@aiFeaturesTitle": {
+    "description": "AI companion."
+  },
   "aiClipboardAnalysis": "剪贴板洞察",
-  "@aiClipboardAnalysis": { "description": "AI companion." },
+  "@aiClipboardAnalysis": {
+    "description": "AI companion."
+  },
   "aiClipboardAnalysisDescription": "在本地发现重复和经常复制的内容。",
-  "@aiClipboardAnalysisDescription": { "description": "AI companion." },
+  "@aiClipboardAnalysisDescription": {
+    "description": "AI companion."
+  },
   "aiUsageOptimization": "资源优化建议",
-  "@aiUsageOptimization": { "description": "AI companion." },
+  "@aiUsageOptimization": {
+    "description": "AI companion."
+  },
   "aiUsageOptimizationDescription": "查看资源使用记录与常驻配置，仅提供建议。",
-  "@aiUsageOptimizationDescription": { "description": "AI companion." },
+  "@aiUsageOptimizationDescription": {
+    "description": "AI companion."
+  },
   "aiTokenOptimization": "Token 用量建议",
-  "@aiTokenOptimization": { "description": "AI companion." },
+  "@aiTokenOptimization": {
+    "description": "AI companion."
+  },
   "aiTokenOptimizationDescription": "根据本地已记录用量寻找节省机会。",
-  "@aiTokenOptimizationDescription": { "description": "AI companion." },
+  "@aiTokenOptimizationDescription": {
+    "description": "AI companion."
+  },
   "aiProactiveCheckIns": "主动关怀",
-  "@aiProactiveCheckIns": { "description": "AI companion." },
+  "@aiProactiveCheckIns": {
+    "description": "AI companion."
+  },
   "aiProactiveCheckInsDescription": "此页面持续打开一小时后显示本地关怀提醒，最多每两小时一次，不自动发起网络请求。",
-  "@aiProactiveCheckInsDescription": { "description": "AI companion." },
-  "aiEmotionalSupport": "情绪陪伴",
-  "@aiEmotionalSupport": { "description": "AI companion." },
-  "aiEmotionalSupportDescription": "与你配置的模型聊天。消息仅暂存内存，清空或关闭窗口后移除。",
-  "@aiEmotionalSupportDescription": { "description": "AI companion." },
+  "@aiProactiveCheckInsDescription": {
+    "description": "AI companion."
+  },
   "aiCloudAnalysis": "使用模型分析统计数据",
-  "@aiCloudAnalysis": { "description": "AI companion." },
-  "aiCloudAnalysisDescription": "仅在点击分析时，将已开启功能的数量与 Token 统计发送给配置的模型。",
-  "@aiCloudAnalysisDescription": { "description": "AI companion." },
+  "@aiCloudAnalysis": {
+    "description": "AI companion."
+  },
+  "aiCloudAnalysisDescription": "开启后，自动分析或点击「立即分析」时，会将已开启范围的数量与 Token 统计发送给配置的模型。",
+  "@aiCloudAnalysisDescription": {
+    "description": "AI companion."
+  },
+  "aiProviderProtocol": "接口协议",
+  "@aiProviderProtocol": {
+    "description": "AI companion model connection."
+  },
+  "aiProviderProtocolAuto": "自动识别（OpenAI / Anthropic）",
+  "@aiProviderProtocolAuto": {
+    "description": "AI companion model connection."
+  },
+  "aiErrorAuthenticationFailed": "认证失败（401/403），请检查 API 密钥和服务权限。",
+  "@aiErrorAuthenticationFailed": {
+    "description": "AI companion model connection."
+  },
+  "aiErrorEndpointNotFound": "接口或模型不存在（404/405），请检查服务地址、接口协议和模型名称。",
+  "@aiErrorEndpointNotFound": {
+    "description": "AI companion model connection."
+  },
+  "aiErrorRateLimited": "服务请求受限（429），请检查额度或稍后重试。",
+  "@aiErrorRateLimited": {
+    "description": "AI companion model connection."
+  },
   "aiProviderTitle": "模型连接",
-  "@aiProviderTitle": { "description": "AI companion." },
+  "@aiProviderTitle": {
+    "description": "AI companion."
+  },
   "aiConfigureProvider": "配置模型",
-  "@aiConfigureProvider": { "description": "AI companion." },
-  "aiProviderEndpoint": "兼容 OpenAI 的基础 URL",
-  "@aiProviderEndpoint": { "description": "AI companion." },
+  "@aiConfigureProvider": {
+    "description": "AI companion."
+  },
+  "aiProviderEndpoint": "服务地址",
+  "@aiProviderEndpoint": {
+    "description": "AI companion."
+  },
   "aiProviderEndpointHint": "https://api.example.com/v1 或 http://127.0.0.1:11434/v1",
-  "@aiProviderEndpointHint": { "description": "AI companion." },
+  "@aiProviderEndpointHint": {
+    "description": "AI companion."
+  },
   "aiProviderModel": "模型名称",
-  "@aiProviderModel": { "description": "AI companion." },
+  "@aiProviderModel": {
+    "description": "AI companion."
+  },
   "aiProviderApiKey": "API 密钥",
-  "@aiProviderApiKey": { "description": "AI companion." },
+  "@aiProviderApiKey": {
+    "description": "AI companion."
+  },
   "aiProviderKeyStored": "已有密钥安全保存，留空则保留。",
-  "@aiProviderKeyStored": { "description": "AI companion." },
+  "@aiProviderKeyStored": {
+    "description": "AI companion."
+  },
   "aiProviderKeyHint": "保存在此设备的安全存储中；本地模型可留空。",
-  "@aiProviderKeyHint": { "description": "AI companion." },
+  "@aiProviderKeyHint": {
+    "description": "AI companion."
+  },
   "aiRemoveApiKey": "移除已保存的密钥",
-  "@aiRemoveApiKey": { "description": "AI companion." },
-  "aiProviderHelp": "云端模型使用 HTTPS，本地模型可使用回环地址的 HTTP。保存配置不代表已成功连接。",
-  "@aiProviderHelp": { "description": "AI companion." },
+  "@aiRemoveApiKey": {
+    "description": "AI companion."
+  },
+  "aiProviderHelp": "支持 OpenAI 和 Anthropic，可使用 HTTP 或 HTTPS。自动模式会在接口不存在时尝试另一种协议。保存后请测试连接。",
+  "@aiProviderHelp": {
+    "description": "AI companion."
+  },
   "aiProviderNotConfigured": "尚未配置模型。开启分析功能后即可查看本地洞察。",
-  "@aiProviderNotConfigured": { "description": "AI companion." },
+  "@aiProviderNotConfigured": {
+    "description": "AI companion."
+  },
   "aiProviderNotVerified": "已配置模型 · 尚未验证连接",
-  "@aiProviderNotVerified": { "description": "AI companion." },
+  "@aiProviderNotVerified": {
+    "description": "AI companion."
+  },
   "aiProviderVerified": "模型已成功响应",
-  "@aiProviderVerified": { "description": "AI companion." },
+  "@aiProviderVerified": {
+    "description": "AI companion."
+  },
   "aiTestConnection": "测试连接",
-  "@aiTestConnection": { "description": "AI companion." },
-  "aiAnalyze": "分析已开启的功能",
-  "@aiAnalyze": { "description": "AI companion." },
-  "aiInsightsTitle": "建议",
-  "@aiInsightsTitle": { "description": "AI companion." },
-  "aiInsightsEmpty": "开启功能并点击分析，即可根据本地数据查看建议。",
-  "@aiInsightsEmpty": { "description": "AI companion." },
+  "@aiTestConnection": {
+    "description": "AI companion."
+  },
+  "aiAnalyze": "立即分析",
+  "@aiAnalyze": {
+    "description": "AI companion."
+  },
+  "aiInsightsTitle": "洞察与建议",
+  "@aiInsightsTitle": {
+    "description": "AI companion."
+  },
+  "aiInsightsEmpty": "在「设置」中选择分析范围，自动生成的结果与历史记录会显示在这里，也可以点击「立即分析」。",
+  "@aiInsightsEmpty": {
+    "description": "AI companion."
+  },
   "aiLocalAnalysis": "本地分析 · 未请求模型",
-  "@aiLocalAnalysis": { "description": "AI companion." },
+  "@aiLocalAnalysis": {
+    "description": "AI companion."
+  },
   "aiCloudResult": "模型建议 · 仅统计数据",
-  "@aiCloudResult": { "description": "AI companion." },
+  "@aiCloudResult": {
+    "description": "AI companion."
+  },
   "aiReadOnly": "建议不会修改数据，请在对应页面审阅后操作。",
-  "@aiReadOnly": { "description": "AI companion." },
-  "aiChatTitle": "聊聊近况",
-  "@aiChatTitle": { "description": "AI companion." },
-  "aiChatDescription": "可以聊聊你的想法。本地检查会拦截常见密钥与敏感格式，发送前仍请确认消息内容。",
-  "@aiChatDescription": { "description": "AI companion." },
-  "aiChatPlaceholder": "写下想聊的话…",
-  "@aiChatPlaceholder": { "description": "AI companion." },
-  "aiChatSend": "发送消息",
-  "@aiChatSend": { "description": "AI companion." },
-  "aiChatClear": "清空对话",
-  "@aiChatClear": { "description": "AI companion." },
-  "aiChatYou": "你",
-  "@aiChatYou": { "description": "AI companion." },
-  "aiChatAssistant": "伙伴",
-  "@aiChatAssistant": { "description": "AI companion." },
-  "aiChatDisabled": "开启情绪陪伴后即可开始对话。",
-  "@aiChatDisabled": { "description": "AI companion." },
-  "aiChatNeedsProvider": "请先配置模型，再发送消息。",
-  "@aiChatNeedsProvider": { "description": "AI companion." },
+  "@aiReadOnly": {
+    "description": "AI companion."
+  },
   "aiCheckInNow": "休息一下",
-  "@aiCheckInNow": { "description": "AI companion." },
-  "aiUnavailable": "此窗口暂时无法使用 AI 伙伴，请重新打开资源管理器。",
-  "@aiUnavailable": { "description": "AI companion." },
+  "@aiCheckInNow": {
+    "description": "AI companion."
+  },
+  "aiUnavailable": "此窗口暂时无法使用 AI+，请重新打开资源管理器。",
+  "@aiUnavailable": {
+    "description": "AI companion."
+  },
   "aiErrorDisabled": "请先开启对应功能。",
-  "@aiErrorDisabled": { "description": "AI companion." },
-  "aiErrorInvalidProvider": "请输入有效的 HTTPS 基础 URL 或本机回环 HTTP 地址，以及模型名称。",
-  "@aiErrorInvalidProvider": { "description": "AI companion." },
+  "@aiErrorDisabled": {
+    "description": "AI companion."
+  },
+  "aiErrorInvalidProvider": "请输入有效的 HTTP 或 HTTPS 服务地址及模型名称；地址不能包含账号、查询参数或片段。",
+  "@aiErrorInvalidProvider": {
+    "description": "AI companion."
+  },
   "aiErrorMissingApiKey": "此云端模型需要 API 密钥，请在模型配置中添加。",
-  "@aiErrorMissingApiKey": { "description": "AI companion." },
-  "aiErrorSensitiveInput": "消息可能包含敏感信息，请移除后再发送。",
-  "@aiErrorSensitiveInput": { "description": "AI companion." },
+  "@aiErrorMissingApiKey": {
+    "description": "AI companion."
+  },
   "aiErrorSensitiveOutput": "模型回复可能包含敏感信息，已隐藏。",
-  "@aiErrorSensitiveOutput": { "description": "AI companion." },
+  "@aiErrorSensitiveOutput": {
+    "description": "AI companion."
+  },
   "aiErrorProviderUnavailable": "模型暂时无法响应，请检查地址、模型名称、API 密钥和网络后重试。",
-  "@aiErrorProviderUnavailable": { "description": "AI companion." },
+  "@aiErrorProviderUnavailable": {
+    "description": "AI companion."
+  },
   "aiErrorInvalidResponse": "模型返回了无法读取的响应。",
-  "@aiErrorInvalidResponse": { "description": "AI companion." },
+  "@aiErrorInvalidResponse": {
+    "description": "AI companion."
+  },
   "aiErrorTimeout": "模型请求超时，请稍后重试。",
-  "@aiErrorTimeout": { "description": "AI companion." },
+  "@aiErrorTimeout": {
+    "description": "AI companion."
+  },
   "aiErrorStorageUnavailable": "无法读取配置或安全存储，请稍后重试。",
-  "@aiErrorStorageUnavailable": { "description": "AI companion." },
-  "aiErrorEmptyMessage": "请先输入消息。",
-  "@aiErrorEmptyMessage": { "description": "AI companion." },
-  "aiErrorMessageTooLong": "消息过长，请缩短后再发送。",
-  "@aiErrorMessageTooLong": { "description": "AI companion." },
+  "@aiErrorStorageUnavailable": {
+    "description": "AI companion."
+  },
+  "aiErrorRequestTooLarge": "模型请求内容过多，请缩小分析范围后重试。",
+  "@aiErrorRequestTooLarge": {
+    "description": "AI companion."
+  },
   "resolveDuplicate": "处理重复项",
-  "@resolveDuplicate": { "description": "Duplicate resource cleanup." },
+  "@resolveDuplicate": {
+    "description": "Duplicate resource cleanup."
+  },
   "deleteAgentCopy": "删除 Agent 中的副本",
-  "@deleteAgentCopy": { "description": "Duplicate resource cleanup." },
+  "@deleteAgentCopy": {
+    "description": "Duplicate resource cleanup."
+  },
   "deleteDingDongCopy": "删除 DingDong 中的副本",
-  "@deleteDingDongCopy": { "description": "Duplicate resource cleanup." },
+  "@deleteDingDongCopy": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupDescription": "选择要删除的副本，其他资源和 Agent 配置将予以保留。",
-  "@duplicateCleanupDescription": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupDescription": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateSkillCleanupDescription": "删除此 DingDong 资源及其托管安装，现有 Agent 或插件中的 Skill 仍可使用。",
-  "@duplicateSkillCleanupDescription": { "description": "Duplicate resource cleanup." },
+  "@duplicateSkillCleanupDescription": {
+    "description": "Duplicate resource cleanup."
+  },
   "createLocalBackup": "删除前创建本地备份",
-  "@createLocalBackup": { "description": "Duplicate resource cleanup." },
+  "@createLocalBackup": {
+    "description": "Duplicate resource cleanup."
+  },
   "localBackupMayContainSecrets": "备份仅保存在此电脑，可能包含凭据。",
-  "@localBackupMayContainSecrets": { "description": "Duplicate resource cleanup." },
+  "@localBackupMayContainSecrets": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupComplete": "已删除重复项",
-  "@duplicateCleanupComplete": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupComplete": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupBackupLocation": "备份已保存至：",
-  "@duplicateCleanupBackupLocation": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupBackupLocation": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupFailed": "无法删除重复项",
-  "@duplicateCleanupFailed": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupFailed": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupAction": "删除所选副本",
-  "@duplicateCleanupAction": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupAction": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupInProgress": "正在删除…",
-  "@duplicateCleanupInProgress": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupInProgress": {
+    "description": "Duplicate resource cleanup."
+  },
   "@@locale": "zh",
   "agentSetupAdvancedDetailsDescription": "端点与桥接命令",
   "@agentSetupAdvancedDetailsDescription": {
@@ -4568,7 +4796,7 @@
   "pauseTransfer": "暂停",
   "resumeTransfer": "继续",
   "cancelTransfer": "取消",
-  "fileTransferStatus": "{state, select, preparing{准备传输} transferring{传输中} verifying{确认文件} waiting{等待连接恢复} paused{已暂停} failed{传输未完成} completed{传输完成} cancelled{已取消} other{准备传输}}",
+  "fileTransferStatus": "{state, select, preparing{准备传输} transferring{传输中} verifying{确认文件} waiting{等待连接恢复} paused{已暂停} failed{传输未完成} completed{传输完成} cancelled{已取消} sent{已发送} other{准备传输}}",
   "fileTransferIssue": "{code, select, waiting_lan{等待局域网直连，进度已保留} connection_lost{连接中断，恢复后自动继续} source_changed{源文件已改变，请重新选择} storage_error{无法写入文件，请检查剩余存储空间} storage_unsupported{此浏览器不支持大文件本地暂存} checksum_failed{文件校验失败，请重试} too_many_transfers{请等待其他文件完成} restart_required{接收端进度已清除，请重新发送} invalid_offset{传输进度不一致，请重新发送} other{传输未完成，请重试}}",
   "@transferSendingTo": {
     "placeholders": {
@@ -4614,7 +4842,7 @@
   "@tokenUsageTitle": {
     "description": "Local token history interface."
   },
-  "tokenUsageSubtitle": "每天用了多少 Token，一眼看清。",
+  "tokenUsageSubtitle": "查看 Agent 和 DingDong 自身的每日 Token 用量。",
   "@tokenUsageSubtitle": {
     "description": "Local token history interface."
   },
@@ -4726,7 +4954,7 @@
   "@tokenUsageCoverageTitle": {
     "description": "Local token history interface."
   },
-  "tokenUsageCoverageNote": "只统计支持的 Agent 本地日志中已提供的用量。未支持或未找到日志不代表用量为零，数据不会上传。",
+  "tokenUsageCoverageNote": "统计来自支持的 Agent 本地日志和 DingDong 接口返回的用量。未支持或未找到记录不代表用量为零，数据不会上传。",
   "@tokenUsageCoverageNote": {
     "description": "Local token history interface."
   },
@@ -5162,5 +5390,395 @@
   "allowBetaUpdatesDescription": "提前体验尚未正式发布的新功能，测试版可能不够稳定。关闭后会停留在当前测试版，直到更新的正式版发布。",
   "@allowBetaUpdatesDescription": {
     "description": "Beta update channel setting."
+  },
+  "aiInternalUsageTitle": "内部 Token 消耗",
+  "aiIncludeInternal": "计入全局统计",
+  "aiIncludeInternalDescription": "默认关闭。开启后，全局 Token 统计包含已记录的内部用量；关闭后仍可在这里查看。",
+  "aiInternalUsageDescription": "记录资源筛选、模型分析和连接测试的接口用量，不保存请求内容。",
+  "aiInternalCumulative": "累计",
+  "aiInternalLast": "本窗口最近一次",
+  "aiInternalRequests": "{count} 次请求",
+  "aiInternalUnknown": "未返回",
+  "aiInternalPartial": "仅累计已返回用量；缺失字段不按零计算。缓存已包含在输入中。",
+  "aiInternalStorageError": "内部用量暂时无法保存或读取，累计值可能不完整。模型回复不受影响。",
+  "@aiInternalRequests": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@aiInternalUsageTitle": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiIncludeInternal": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiIncludeInternalDescription": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiInternalUsageDescription": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiInternalCumulative": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiInternalLast": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiInternalUnknown": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiInternalPartial": {
+    "description": "Internal AI token accounting."
+  },
+  "@aiInternalStorageError": {
+    "description": "Internal AI token accounting."
+  },
+  "tokenUsageIncludeInternal": "包含 DingDong 自身用量",
+  "tokenUsageOnlyInternal": "仅 DingDong",
+  "tokenUsageFilterSaveFailed": "未能保存此设置，请重试。",
+  "tokenUsageAgents": "Agent",
+  "tokenUsageNoAgents": "未选择 Agent",
+  "tokenUsageAgentSourcesHelp": "支持读取本机用量日志的平台，并非已接入 DingDong 的 Agent 列表。可多选。",
+  "tokenUsageFunctions": "DingDong 功能用量",
+  "tokenUsageFunctionSelection": "资源筛选",
+  "tokenUsageFunctionAnalysis": "模型分析",
+  "tokenUsageFunctionConnection": "连接测试",
+  "tokenUsageFunctionOther": "其他／未分类",
+  "@tokenUsageIncludeInternal": {
+    "description": "tokenUsageIncludeInternal"
+  },
+  "@tokenUsageOnlyInternal": {
+    "description": "tokenUsageOnlyInternal"
+  },
+  "@tokenUsageFilterSaveFailed": {
+    "description": "tokenUsageFilterSaveFailed"
+  },
+  "@tokenUsageAgents": {
+    "description": "tokenUsageAgents"
+  },
+  "@tokenUsageNoAgents": {
+    "description": "tokenUsageNoAgents"
+  },
+  "@tokenUsageAgentSourcesHelp": {
+    "description": "tokenUsageAgentSourcesHelp"
+  },
+  "@tokenUsageFunctions": {
+    "description": "tokenUsageFunctions"
+  },
+  "@tokenUsageFunctionSelection": {
+    "description": "tokenUsageFunctionSelection"
+  },
+  "@tokenUsageFunctionAnalysis": {
+    "description": "tokenUsageFunctionAnalysis"
+  },
+  "@tokenUsageFunctionConnection": {
+    "description": "tokenUsageFunctionConnection"
+  },
+  "@tokenUsageFunctionOther": {
+    "description": "tokenUsageFunctionOther"
+  },
+  "tokenUsageFunction": "功能",
+  "tokenUsageRequests": "请求次数",
+  "@tokenUsageFunction": {
+    "description": "tokenUsageFunction"
+  },
+  "@tokenUsageRequests": {
+    "description": "tokenUsageRequests"
+  },
+  "reminderProfiles": "提醒",
+  "@reminderProfiles": {
+    "description": "Named reminder settings label"
+  },
+  "addReminder": "新增提醒",
+  "@addReminder": {
+    "description": "Named reminder settings label"
+  },
+  "reminderSounds": "声音",
+  "@reminderSounds": {
+    "description": "Named reminder settings label"
+  },
+  "importReminderSound": "导入声音",
+  "@importReminderSound": {
+    "description": "Named reminder settings label"
+  },
+  "reminderAudioFormat": "PCM WAV · 最长 15 秒 / 5 MiB",
+  "@reminderAudioFormat": {
+    "description": "Named reminder settings label"
+  },
+  "reminderAudioImportFailed": "导入失败。请选择可读取的 PCM WAV 文件，最长 15 秒、最大 5 MiB。",
+  "@reminderAudioImportFailed": {
+    "description": "Named reminder settings label"
+  },
+  "reminderNameRequired": "请输入提醒名称。",
+  "@reminderNameRequired": {
+    "description": "Named reminder settings label"
+  },
+  "reminderCondition": "使用场景（供 Agent 判断）",
+  "@reminderCondition": {
+    "description": "Named reminder settings label"
+  },
+  "reminderKind": "优先级",
+  "@reminderKind": {
+    "description": "Named reminder settings label"
+  },
+  "reminderStyle": "任务栏样式",
+  "@reminderStyle": {
+    "description": "Named reminder settings label"
+  },
+  "reminderColor": "颜色",
+  "@reminderColor": {
+    "description": "Named reminder settings label"
+  },
+  "reminderToPhone": "发送到手机",
+  "@reminderToPhone": {
+    "description": "Named reminder settings label"
+  },
+  "devReminderColors": "提醒颜色与计数",
+  "@devReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsDescription": "重复点击颜色可增加对应的 DEV 预览数字。仅预览任务栏，不播放声音、不发送通知，不修改提醒配置或创建历史记录。",
+  "@devReminderColorsDescription": {
+    "description": "Development panel reminder color preview."
+  },
+  "devClearReminderColors": "清除预览",
+  "@devClearReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsUpdated": "任务栏预览已更新",
+  "@devReminderColorsUpdated": {
+    "description": "Development panel reminder color preview."
+  },
+  "aiSettingsTab": "设置",
+  "aiAutomaticAnalysis": "自动分析",
+  "aiAutomaticAnalysisDescription": "资源窗口启动时分析已开启的范围，此后每 30 分钟检查一次，数据未变化时跳过。关闭后可手动分析；仅在另行开启模型分析时调用模型。",
+  "aiHistoryTitle": "历史记录",
+  "aiHistoryEmpty": "暂无分析记录。",
+  "aiAutomaticRun": "自动",
+  "aiManualRun": "手动",
+  "aiErrorCredentialUnavailable": "系统无法访问已保存的 API 密钥。请重启 DingDong，并在系统提示时允许访问钥匙串，或重新输入密钥。本地设置与洞察仍可使用。",
+  "aiHistoryPrevious": "上一页",
+  "aiHistoryNext": "下一页",
+  "@aiSettingsTab": {
+    "description": "aiSettingsTab"
+  },
+  "@aiAutomaticAnalysis": {
+    "description": "aiAutomaticAnalysis"
+  },
+  "@aiAutomaticAnalysisDescription": {
+    "description": "aiAutomaticAnalysisDescription"
+  },
+  "@aiHistoryTitle": {
+    "description": "aiHistoryTitle"
+  },
+  "@aiHistoryEmpty": {
+    "description": "aiHistoryEmpty"
+  },
+  "@aiAutomaticRun": {
+    "description": "aiAutomaticRun"
+  },
+  "@aiManualRun": {
+    "description": "aiManualRun"
+  },
+  "@aiErrorCredentialUnavailable": {
+    "description": "aiErrorCredentialUnavailable"
+  },
+  "@aiHistoryPrevious": {
+    "description": "aiHistoryPrevious"
+  },
+  "@aiHistoryNext": {
+    "description": "aiHistoryNext"
+  },
+  "reorderReminder": "拖动排序",
+  "searchSettings": "搜索设置",
+  "noMatchingSettings": "没有匹配的设置，试试其他关键词。",
+  "@reorderReminder": {
+    "description": "Settings search and reminder ordering."
+  },
+  "@searchSettings": {
+    "description": "Settings search and reminder ordering."
+  },
+  "@noMatchingSettings": {
+    "description": "Settings search and reminder ordering."
+  },
+  "skillVersionHistory": "版本历史",
+  "@skillVersionHistory": {
+    "description": "Skill version history: skillVersionHistory."
+  },
+  "skillVersionCurrent": "当前",
+  "@skillVersionCurrent": {
+    "description": "Skill version history: skillVersionCurrent."
+  },
+  "skillVersionInitial": "初始快照",
+  "@skillVersionInitial": {
+    "description": "Skill version history: skillVersionInitial."
+  },
+  "skillVersionManual": "手动保存",
+  "@skillVersionManual": {
+    "description": "Skill version history: skillVersionManual."
+  },
+  "skillVersionOnline": "在线更新",
+  "@skillVersionOnline": {
+    "description": "Skill version history: skillVersionOnline."
+  },
+  "skillVersionRestored": "从 v{number} 恢复",
+  "@skillVersionRestored": {
+    "description": "Skill version history: skillVersionRestored.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "skillVersionFrom": "对比起点",
+  "@skillVersionFrom": {
+    "description": "Skill version history: skillVersionFrom."
+  },
+  "skillVersionTo": "对比终点",
+  "@skillVersionTo": {
+    "description": "Skill version history: skillVersionTo."
+  },
+  "skillVersionRestore": "恢复此版本",
+  "@skillVersionRestore": {
+    "description": "Skill version history: skillVersionRestore."
+  },
+  "skillVersionConfirmRestore": "恢复到 v{number}？",
+  "@skillVersionConfirmRestore": {
+    "description": "Skill version history: skillVersionConfirmRestore.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "skillVersionRestoreExplanation": "恢复会生成一个新版本，保留当前 Agent 配置和已有历史。",
+  "@skillVersionRestoreExplanation": {
+    "description": "Skill version history: skillVersionRestoreExplanation."
+  },
+  "skillVersionNoHistory": "暂无已保存的版本。",
+  "@skillVersionNoHistory": {
+    "description": "Skill version history: skillVersionNoHistory."
+  },
+  "skillVersionOne": "目前只有一个版本，下方显示已保存的内容。",
+  "@skillVersionOne": {
+    "description": "Skill version history: skillVersionOne."
+  },
+  "skillVersionNoChanges": "这两个版本没有差异。",
+  "@skillVersionNoChanges": {
+    "description": "Skill version history: skillVersionNoChanges."
+  },
+  "skillVersionLoadError": "无法加载版本历史：{error}",
+  "@skillVersionLoadError": {
+    "description": "Skill version history: skillVersionLoadError.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "skillVersionCompareError": "无法对比这两个版本：{error}",
+  "@skillVersionCompareError": {
+    "description": "Skill version history: skillVersionCompareError.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "skillVersionRestoreError": "无法恢复此版本：{error}",
+  "@skillVersionRestoreError": {
+    "description": "Skill version history: skillVersionRestoreError.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "skillVersionRestoring": "正在恢复…",
+  "@skillVersionRestoring": {
+    "description": "Skill version history: skillVersionRestoring."
+  },
+  "skillVersionBinary": "二进制文件已变更",
+  "@skillVersionBinary": {
+    "description": "Skill version history: skillVersionBinary."
+  },
+  "skillVersionEmptyFile": "空文件",
+  "@skillVersionEmptyFile": {
+    "description": "Skill version history: skillVersionEmptyFile."
+  },
+  "skillVersionDirectory": "目录",
+  "@skillVersionDirectory": {
+    "description": "Skill version history: skillVersionDirectory."
+  },
+  "skillVersionPermissionsChanged": "执行权限已变更",
+  "@skillVersionPermissionsChanged": {
+    "description": "Skill version history: skillVersionPermissionsChanged."
+  },
+  "skillVersionLargeFile": "文件较大，显示删除和新增的完整内容。",
+  "@skillVersionLargeFile": {
+    "description": "Skill version history: skillVersionLargeFile."
+  },
+  "skillVersionNoNewline": "文件末尾无换行",
+  "@skillVersionNoNewline": {
+    "description": "Skill version history: skillVersionNoNewline."
+  },
+  "skillVersionAdded": "新增",
+  "@skillVersionAdded": {
+    "description": "Skill version history: skillVersionAdded."
+  },
+  "skillVersionRemoved": "删除",
+  "@skillVersionRemoved": {
+    "description": "Skill version history: skillVersionRemoved."
+  },
+  "skillVersionModified": "修改",
+  "@skillVersionModified": {
+    "description": "Skill version history: skillVersionModified."
+  },
+  "skillVersionSource": "来源",
+  "@skillVersionSource": {
+    "description": "Skill version history: skillVersionSource."
+  },
+  "skillVersionName": "技能名称",
+  "@skillVersionName": {
+    "description": "Skill version history: skillVersionName."
+  },
+  "skillVersionPackageChanged": "技能包结构已变更",
+  "@skillVersionPackageChanged": {
+    "description": "Skill version history: skillVersionPackageChanged."
+  },
+  "skillVersionRetry": "重试",
+  "@skillVersionRetry": {
+    "description": "Skill version history: skillVersionRetry."
+  },
+  "skillVersionFiles": "变更文件（{count}）",
+  "@skillVersionFiles": {
+    "description": "Skill version history: skillVersionFiles.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onlineDevices": "当前在线",
+  "@onlineDevices": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "connectionHistory": "历史连接",
+  "@connectionHistory": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "noDevicesOnline": "暂无在线设备",
+  "@noDevicesOnline": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "fileTransferHistory": "传输记录",
+  "@fileTransferHistory": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "noFileTransferHistory": "暂无文件传输记录",
+  "@noFileTransferHistory": {
+    "description": "Device manager groups and on-demand transfer history."
   }
 }

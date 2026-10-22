@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/compact_switch.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_choice_chip.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_csv_export.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
@@ -11,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 part 'token_usage_details.dart';
+part 'token_usage_filters.dart';
 part 'token_usage_widgets.dart';
 
 /// Local daily token history. Explicit source totals remain authoritative.
@@ -30,10 +34,39 @@ class TokenUsageScreen extends StatefulWidget {
   State<TokenUsageScreen> createState() => _TokenUsageScreenState();
 }
 
-class _TokenUsageScreenState extends State<TokenUsageScreen> {
+class _TokenUsageScreenState extends State<TokenUsageScreen>
+    with WidgetsBindingObserver {
   late int _year;
   late DateTime _selectedDay;
-  ConversationTokenUsageSource? _source;
+  Set<ConversationTokenUsageSource>? _agents;
+  bool _onlyInternal = false;
+  Set<ConversationTokenUsageSource> get _sources => _onlyInternal
+      ? {ConversationTokenUsageSource.dingdong}
+      : {
+          ...?_agents,
+          if (_agents == null)
+            ...ConversationTokenUsageSource.values.where(
+              (s) => s != ConversationTokenUsageSource.dingdong,
+            ),
+          if (widget.controller.includeInternal)
+            ConversationTokenUsageSource.dingdong,
+        };
+  TokenUsageSnapshot get _visibleSnapshot =>
+      widget.controller.allSnapshot.forSources(_sources);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(widget.controller.refresh());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   _TokenUsageRange _range = _TokenUsageRange.year;
   DateTimeRange? _customRange;
   int _rangeFieldGeneration = 0;
@@ -97,9 +130,9 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
     if (_isExporting || widget.controller.isLoading) return;
     final DateTimeRange? bounds = _rangeBounds;
     final export = TokenUsageCsvExport.fromSnapshot(
-      widget.controller.snapshot,
+      _visibleSnapshot,
       year: _year,
-      source: _source,
+      sources: _sources,
       from: bounds?.start,
       to: bounds?.end,
     );
@@ -134,9 +167,11 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _selectedDay = _today;
     _year = _selectedDay.year;
-    if (!widget.controller.hasLoaded) {
+    if (!widget.controller.hasLoaded ||
+        widget.controller.readInternalInclusion != null) {
       unawaited(widget.controller.refresh());
     }
   }
@@ -144,7 +179,7 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
   void _selectYear(int? year) {
     if (year == null) return;
     final List<TokenUsageDay> recorded =
-        widget.controller.snapshot.days
+        widget.controller.allSnapshot.days
             .where((TokenUsageDay day) => day.day.year == year)
             .toList()
           ..sort((TokenUsageDay a, TokenUsageDay b) => a.day.compareTo(b.day));
@@ -165,12 +200,8 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (BuildContext context, Widget? child) {
-        final TokenUsageSnapshot snapshot = widget.controller.snapshot;
-        final List<TokenUsageDay> filtered = snapshot.days
-            .where(
-              (TokenUsageDay day) => _source == null || day.source == _source,
-            )
-            .toList(growable: false);
+        final TokenUsageSnapshot snapshot = _visibleSnapshot;
+        final List<TokenUsageDay> filtered = snapshot.days;
         final DateTimeRange? bounds = _rangeBounds;
         final List<TokenUsageDay> yearDays = filtered
             .where((TokenUsageDay day) => day.day.year == _year)
@@ -212,21 +243,22 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
             ) &&
             !snapshot.coverage.any(
               (TokenUsageSourceCoverage coverage) =>
-                  (_source == null || coverage.source == _source) &&
                   (coverage.availability == TokenUsageAvailability.unreadable ||
-                      coverage.pendingFiles > 0 ||
-                      coverage.malformedRows > 0 ||
-                      coverage.undatedRows > 0),
+                  coverage.pendingFiles > 0 ||
+                  coverage.malformedRows > 0 ||
+                  coverage.undatedRows > 0),
             ) &&
             snapshot.coverage.any(
               (TokenUsageSourceCoverage coverage) =>
-                  (_source == null || coverage.source == _source) &&
                   coverage.availability == TokenUsageAvailability.available &&
-                  coverage.filesScanned > 0,
+                  (coverage.filesScanned > 0 ||
+                      coverage.source == ConversationTokenUsageSource.dingdong),
             );
         final Map<DateTime, List<TokenUsageTotals>> byDay =
             <DateTime, List<TokenUsageTotals>>{};
-        for (final TokenUsageDay day in yearDays) {
+        for (final TokenUsageDay day in period.where(
+          (day) => day.day.year == _year,
+        )) {
           (byDay[DateTime(day.day.year, day.day.month, day.day.day)] ??=
                   <TokenUsageTotals>[])
               .add(day.totals);
@@ -245,9 +277,11 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
         final List<int> years = <int>{
           _today.year,
           _year,
-          ...snapshot.days.map((TokenUsageDay day) => day.day.year),
+          ...widget.controller.allSnapshot.days.map(
+            (TokenUsageDay day) => day.day.year,
+          ),
         }.toList()..sort((int a, int b) => b.compareTo(a));
-        final List<TokenUsageDay> selected = filtered
+        final List<TokenUsageDay> selected = period
             .where(
               (TokenUsageDay day) => DateUtils.isSameDay(day.day, _selectedDay),
             )
@@ -307,57 +341,56 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                 ),
               )
             else ...<Widget>[
-              LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final double width = constraints.maxWidth < 550
-                      ? constraints.maxWidth
-                      : (constraints.maxWidth - 24) / 3;
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: <Widget>[
-                      _SummaryCard(
-                        key: const Key('token-usage-today'),
-                        width: width,
-                        label: context.l10n.tokenUsageToday,
-                        value: _formatObservedTotal(
-                          context,
-                          today,
-                          canConfirmEmpty,
+              Wrap(
+                spacing: 20,
+                runSpacing: 10,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Semantics(
+                        label: context.l10n.tokenUsageIncludeInternal,
+                        child: CompactSwitch(
+                          key: const Key('token-usage-include-internal'),
+                          value:
+                              _onlyInternal ||
+                              widget.controller.includeInternal,
+                          onChanged:
+                              _onlyInternal || widget.controller.savingInclusion
+                              ? null
+                              : (value) => unawaited(
+                                  widget.controller.setIncludeInternal(value),
+                                ),
                         ),
-                        detail: context.l10n.tokenUsageTokens,
-                        icon: Icons.today_outlined,
                       ),
-                      _SummaryCard(
-                        key: const Key('token-usage-period'),
-                        width: width,
-                        label: bounds == null
-                            ? context.l10n.tokenUsagePeriodTotal
-                            : context.l10n.tokenUsageRangeTotal,
-                        value: _formatObservedTotal(
-                          context,
-                          total,
-                          canConfirmEmpty,
-                        ),
-                        detail:
-                            '$periodLabel · ${context.l10n.tokenUsageTokens}',
-                        icon: Icons.stacked_line_chart_rounded,
-                      ),
-                      _SummaryCard(
-                        key: const Key('token-usage-active-days'),
-                        width: width,
-                        label: context.l10n.tokenUsageActiveDays,
-                        value: activeDayCount == 0 && !canConfirmEmpty
-                            ? context.l10n.tokenUsageNotReported
-                            : _formatNumber(context, activeDayCount),
-                        detail: periodLabel,
-                        icon: Icons.calendar_month_outlined,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(context.l10n.tokenUsageIncludeInternal),
                       ),
                     ],
-                  );
-                },
+                  ),
+                  IntrinsicWidth(
+                    child: DesktopChoiceChip(
+                      key: const Key('token-usage-only-internal'),
+                      height: 34,
+                      leading: _onlyInternal
+                          ? const Icon(Icons.check, size: 14)
+                          : null,
+                      label: Text(context.l10n.tokenUsageOnlyInternal),
+                      selected: _onlyInternal,
+                      onSelected: (value) =>
+                          setState(() => _onlyInternal = value),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+              if (widget.controller.inclusionError != null)
+                Text(
+                  context.l10n.tokenUsageFilterSaveFailed,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 14,
                 runSpacing: 12,
@@ -414,27 +447,84 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                           unawaited(_selectRange(range)),
                     ),
                   ),
-                  for (final ConversationTokenUsageSource? source
-                      in <ConversationTokenUsageSource?>[
-                        null,
-                        ...ConversationTokenUsageSource.values,
-                      ])
-                    ChoiceChip(
-                      key: Key(
-                        'token-usage-source-${source?.apiValue ?? 'all'}',
-                      ),
-                      label: Text(
-                        source == null
-                            ? context.l10n.tokenUsageAllAgents
-                            : tokenUsageSourceLabel(source),
-                      ),
-                      selected: _source == source,
-                      onSelected: (_) => setState(() => _source = source),
-                      showCheckmark: false,
-                      visualDensity: VisualDensity.compact,
-                    ),
+                  _AgentFilter(
+                    selected: _agents,
+                    enabled: !_onlyInternal,
+                    snapshot: widget.controller.allSnapshot,
+                    onChanged: (value) => setState(() => _agents = value),
+                  ),
                 ],
               ),
+              const SizedBox(height: 20),
+              LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final double width = constraints.maxWidth < 550
+                      ? constraints.maxWidth
+                      : (constraints.maxWidth - 24) / 3;
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: <Widget>[
+                      _SummaryCard(
+                        key: const Key('token-usage-today'),
+                        width: width,
+                        label: context.l10n.tokenUsageToday,
+                        value: _formatObservedTotal(
+                          context,
+                          today,
+                          canConfirmEmpty,
+                        ),
+                        detail: context.l10n.tokenUsageTokens,
+                        icon: Icons.today_outlined,
+                      ),
+                      _SummaryCard(
+                        key: const Key('token-usage-period'),
+                        width: width,
+                        label: bounds == null
+                            ? context.l10n.tokenUsagePeriodTotal
+                            : context.l10n.tokenUsageRangeTotal,
+                        value: _formatObservedTotal(
+                          context,
+                          total,
+                          canConfirmEmpty,
+                        ),
+                        detail:
+                            '$periodLabel · ${context.l10n.tokenUsageTokens}',
+                        icon: Icons.stacked_line_chart_rounded,
+                      ),
+                      _SummaryCard(
+                        key: const Key('token-usage-active-days'),
+                        width: width,
+                        label: context.l10n.tokenUsageActiveDays,
+                        value: activeDayCount == 0 && !canConfirmEmpty
+                            ? context.l10n.tokenUsageNotReported
+                            : _formatNumber(context, activeDayCount),
+                        detail: periodLabel,
+                        icon: Icons.calendar_month_outlined,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              if (_sources.contains(ConversationTokenUsageSource.dingdong) &&
+                  snapshot.storageAvailable &&
+                  snapshot.coverage.any(
+                    (c) =>
+                        c.source == ConversationTokenUsageSource.dingdong &&
+                        c.availability == TokenUsageAvailability.available,
+                  )) ...[
+                const SizedBox(height: 20),
+                _InternalFunctions(
+                  records: period
+                      .where(
+                        (day) =>
+                            day.source == ConversationTokenUsageSource.dingdong,
+                      )
+                      .toList(),
+                  periodLabel: periodLabel,
+                ),
+              ],
               const SizedBox(height: 16),
               _Panel(
                 child: Column(
@@ -482,7 +572,7 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
 }
 
 /// Summary scopes for the Token usage cards and CSV export. The heatmap
-/// always shows the selected year.
+/// shows the selected year within the selected period.
 enum _TokenUsageRange { year, last7, last30, thisMonth, custom }
 
 String _rangeLabel(BuildContext context, _TokenUsageRange range) =>
@@ -504,6 +594,7 @@ String tokenUsageSourceLabel(ConversationTokenUsageSource source) =>
       ConversationTokenUsageSource.codex => 'Codex',
       ConversationTokenUsageSource.claudeCode => 'Claude Code',
       ConversationTokenUsageSource.pi => 'Pi',
+      ConversationTokenUsageSource.dingdong => 'DingDong',
     };
 
 String _locale(BuildContext context) =>

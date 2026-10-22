@@ -38,10 +38,13 @@ void main() {
 
   test('Spanish is complete instead of silently falling back to English', () {
     const intentionallyShared = <String>{
+      'aiCompanionTitle', // AI+ is the product name in every locale.
+      'aiManualRun', // Manual is also the Spanish term for a manual run.
       'agentPluginsSourceLocal',
       'agentPluginsSourceGit',
       'actionCountTimes',
       'categoryRuleKeywordsExample',
+      'reminderColor', // Color is the same word in English and Spanish.
       'general',
       'hoursHCount',
       'httpsExampleComDingdongResourcesJson',

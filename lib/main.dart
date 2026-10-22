@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'dart:ffi' as ffi;
 import 'dart:io';
 
@@ -28,6 +29,7 @@ import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dar
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
+import 'package:dingdong/features/ai_companion/data/ai_insight_history.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -290,7 +292,10 @@ Future<void> main(List<String> arguments) async {
           ]),
         );
       }
-      await shellGateway.markUnread();
+      await shellGateway.markUnread(
+        kind: request.notificationKind,
+        reminderId: request.reminderId,
+      );
       await deviceLinkController.sendAgentCompleted(
         request,
         activity: completion.activity,
@@ -431,6 +436,7 @@ Future<void> main(List<String> arguments) async {
     onDockIconHiddenChanged: shellGateway.setDockIconHidden,
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
+    onNotificationRulesChanged: shellGateway.setNotificationRules,
     onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
     onLifecycleTelemetryChanged: lifecycleTelemetryController.setEnabled,
     releaseMetadataSource: HttpReleaseMetadataSource(),
