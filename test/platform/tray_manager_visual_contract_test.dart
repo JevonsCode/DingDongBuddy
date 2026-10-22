@@ -56,7 +56,7 @@ void main() {
       badgeColorRgb: TrayNotificationColor.purple.rgbValue,
       badgeId: 'completion',
       reminderBubbles: [
-        {'colorRgb': 0x397ddd, 'pulse': true},
+        {'id': 'review', 'name': 'Review', 'colorRgb': 0x397ddd, 'pulse': true},
       ],
       badgeDimmed: true,
     );
@@ -68,7 +68,7 @@ void main() {
       'badgeColorRgb': TrayNotificationColor.purple.rgbValue,
       'badgeId': 'completion',
       'reminderBubbles': [
-        {'colorRgb': 0x397ddd, 'pulse': true},
+        {'id': 'review', 'name': 'Review', 'colorRgb': 0x397ddd, 'pulse': true},
       ],
       'badgeDimmed': true,
     });

@@ -439,15 +439,12 @@ final class PluginDesktopShellGateway
       unreadCount: unreadCount,
       strings: strings,
     );
-    final reminderNames = unreadProfiles
-        .map(
-          (p) => switch (p.id) {
-            'completion' => strings.agentCompletionNotifications,
-            'attention' => strings.needsYourInput,
-            _ => p.name,
-          },
-        )
-        .join(' · ');
+    String reminderName(ReminderProfile p) => switch (p.id) {
+      'completion' => strings.agentCompletionNotifications,
+      'attention' => strings.needsYourInput,
+      _ => p.name,
+    };
+    final reminderNames = unreadProfiles.map(reminderName).join(' · ');
     await trayManager.setToolTip(
       hot && !windows && reminderNames.isNotEmpty
           ? '$reminderNames · $unreadTooltip'
@@ -476,6 +473,7 @@ final class PluginDesktopShellGateway
                 for (final p in unreadProfiles.skip(1))
                   {
                     'id': p.id,
+                    'name': reminderName(p),
                     'colorRgb': p.color.rgbValue,
                     if (counts[p.id] != null) 'count': counts[p.id]!,
                     'pulse': p.style == TrayReminderStyle.softPulse,

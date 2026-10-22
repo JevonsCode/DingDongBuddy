@@ -10,7 +10,9 @@ enum TrayIconLayoutTest {
         let asset = NSImage(contentsOfFile: CommandLine.arguments[1])!
         asset.size = NSSize(width: 22, height: 22)
         icon.setImage(asset, "left")
-        let bubbles: [[String: Any]] = [0xDB7333, 0xE95795, 0x397DDD, 0x29A071, 0x9575CD, 0x9B6B00].map { ["colorRgb": NSNumber(value: $0), "count": NSNumber(value: 1)] }
+        let bubbles: [[String: Any]] = [0xDB7333, 0xE95795, 0x397DDD, 0x29A071, 0x9575CD, 0x9B6B00].enumerated().map {
+            ["id": "test-\($0.offset)", "name": "Reminder \($0.offset + 1)", "colorRgb": NSNumber(value: $0.element), "count": NSNumber(value: 1)]
+        }
         func capture(_ name: String) throws {
          let image = NSImage(size: icon.bounds.size)
          image.lockFocus(); icon.draw(icon.bounds); image.unlockFocus()
@@ -86,6 +88,42 @@ enum TrayIconLayoutTest {
         try capture("five-types")
         icon.setHoverExpanded(false, animated: false)
         try capture("five-types-stacked")
+        let overflow = icon.makeOverflowContent()
+        precondition(overflow != nil, "Five types must expose hidden reminder rows")
+        precondition(icon.overflowItems.count == 2, "Show hidden fourth and fifth types")
+        precondition(icon.overflowItems.first?["name"] as? String == "Reminder 3")
+        func captureOverflow(_ controller: NSViewController, _ name: String, _ appearance: NSAppearance.Name) throws {
+            let view = controller.view
+            view.appearance = NSAppearance(named: appearance)
+            view.layoutSubtreeIfNeeded()
+            let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds)!
+            view.cacheDisplay(in: view.bounds, to: bitmap)
+            let image = NSImage(size: view.bounds.size)
+            image.lockFocus()
+            NSAppearance(named: appearance)!.performAsCurrentDrawingAppearance {
+                NSColor.windowBackgroundColor.setFill()
+                view.bounds.fill()
+            }
+            NSImage(cgImage: bitmap.cgImage!, size: view.bounds.size).draw(in: view.bounds)
+            image.unlockFocus()
+            let composed = NSBitmapImageRep(data: image.tiffRepresentation!)!
+            try composed.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: "\(CommandLine.arguments[2])/\(name).png"))
+        }
+        try captureOverflow(overflow!, "overflow-list-light", .aqua)
+        try captureOverflow(overflow!, "overflow-list-dark", .darkAqua)
+        let many = (0..<40).map { index -> [String: Any] in
+            ["id": "many-\(index)", "name": "Reminder \(index + 1)", "colorRgb": 0xDB7333, "count": index + 1]
+        }
+        icon.setTitle(" 1", "unreadBadge", 0x9575CD, many, false, "completion")
+        let scrolled = icon.makeOverflowContent()!
+        precondition(scrolled.preferredContentSize.height <= 272)
+        precondition(icon.overflowItems.count == 38)
+        precondition((scrolled.view.subviews.first as! NSScrollView).documentView!.subviews.count == 38)
+        try captureOverflow(scrolled, "overflow-list-scroll", .aqua)
+
+        icon.setTitle(" 1", "unreadBadge", 0x9575CD, Array(bubbles.prefix(3)), false, "completion")
+        precondition(icon.makeOverflowContent() == nil, "Four types have no overflow popover")
+        print("PASS: overflow rows keep array order; bounded scrolling; four-type threshold")
         NSStatusBar.system.removeStatusItem(icon.statusItem!)
 
     }

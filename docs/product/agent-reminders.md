@@ -15,7 +15,12 @@ the next slot and takes the primary capsule when it precedes A in the array.
 There are at most four visible slots including the main capsule. Exactly four
 active types show their own colors and counts; above four, show the first three
 types and a gray circle with three centered white dots in slot four. The dots
-indicate other types, not a count. Hover text lists all active reminder names.
+indicate other types, not a count. Hovering the ellipsis for 160ms opens a native
+macOS popover below it with the hidden fourth and later types in array order,
+showing color, localized name and own count. Up to eight rows fit before scrolling;
+the panel remains open while the pointer is inside and closes shortly after exit,
+on outside click, when reminders clear, or when overflow no longer exists. Native
+popover animation honors Reduce Motion. It does not acknowledge reminders or call `NSApp.activate`. Hover text still lists all active reminder names.
 Each circle has a one-point vertical optical inset. Counts stay centered in the
 complete circle even when overlapped. `99+` caps large counts; `?` preserves
 unknown legacy history until acknowledged. Snapshot acknowledgement preserves
