@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
+import 'package:dingdong/features/agent_api/data/bridge_snapshot_cache.dart';
 import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
+import 'package:dingdong/features/agent_api/domain/bridge_resource_selection.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -22,12 +24,14 @@ final class AgentCompatibilityRoutes {
     this.loadShowConversationTokenUsage,
     this.loadConversationTokenUsage,
     this.loadJevUsage,
+    this.selectBridgeResources,
     DateTime Function()? now,
     Uri? baseUri,
   }) : _now = now ?? _utcNow,
        _baseUri = baseUri ?? Uri.parse('http://127.0.0.1:2333');
 
   final ResourceStore resourceStore;
+  final BridgeSnapshotCache _bridgeSnapshots = BridgeSnapshotCache();
   final ClipboardStore? clipboardStore;
   final TriggerGroupStore? triggerGroupStore;
   final SkillDeploymentPresenceQuery? querySkillDeploymentPresence;
@@ -36,6 +40,7 @@ final class AgentCompatibilityRoutes {
   final Future<bool> Function()? loadShowConversationTokenUsage;
   final ConversationTokenUsageLoader? loadConversationTokenUsage;
   final JevUsageLoader? loadJevUsage;
+  final BridgeResourceSelector? selectBridgeResources;
   final DateTime Function() _now;
   Uri _baseUri;
 
@@ -51,18 +56,23 @@ final class AgentCompatibilityRoutes {
       '/agent/bridge' =>
         AgentBridge(
           resourceStore,
+          snapshots: _bridgeSnapshots,
           triggerGroupStore: triggerGroupStore,
           querySkillDeploymentPresence: querySkillDeploymentPresence,
           loadConversationFooterSymbols: loadConversationFooterSymbols,
           loadShowConversationTokenUsage: loadShowConversationTokenUsage,
           loadConversationTokenUsage: loadConversationTokenUsage,
           loadJevUsage: loadJevUsage,
+          selectBridgeResources: selectBridgeResources,
           now: _now,
         ).respond(
           jsonEncode(<String, Object?>{
             'task': query['task'] ?? query['q'] ?? '',
+            'taskContext': query['taskContext'] ?? '',
             'source': query['source'] ?? 'Agent',
             'expand': query['expand'] ?? 'none',
+            'knownHash': query['knownHash'] ?? '',
+            'acceptDelta': query['acceptDelta'] == 'true',
             'workspacePath':
                 query['workspacePath'] ??
                 query['projectPath'] ??

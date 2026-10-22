@@ -247,19 +247,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
               )
             else
               ...enabled.map(
-                (Resource resource) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _EnabledResourceCard(
-                    resource: resource,
-                    contextMenuGateway: widget.contextMenuGateway,
-                    onEdit: widget.resourceManagerLauncher == null
-                        ? null
-                        : () => widget.resourceManagerLauncher!.show(
-                            editingResourceId: resource.id,
-                          ),
-                    onDisable: () => widget.libraryViewModel.save(
-                      resource.copyWith(enabled: false),
-                    ),
+                (Resource resource) => _EnabledResourceCard(
+                  resource: resource,
+                  contextMenuGateway: widget.contextMenuGateway,
+                  onEdit: widget.resourceManagerLauncher == null
+                      ? null
+                      : () => widget.resourceManagerLauncher!.show(
+                          editingResourceId: resource.id,
+                        ),
+                  onDisable: () => widget.libraryViewModel.save(
+                    resource.copyWith(enabled: false),
                   ),
                 ),
               ),

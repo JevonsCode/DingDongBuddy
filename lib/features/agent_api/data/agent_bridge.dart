@@ -6,11 +6,13 @@ import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
+import 'package:dingdong/features/agent_api/data/bridge_snapshot_cache.dart';
 import 'package:dingdong/features/agent_api/data/conversation_footer_protocol.dart';
 import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/agent_api/data/skill_delivery_resolver.dart';
+import 'package:dingdong/features/agent_api/domain/bridge_resource_selection.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -50,17 +52,22 @@ final class AgentBridge {
     DateTime Function()? now,
     this.querySkillDeploymentPresence,
     this.onTaskStarted,
+    this.selectBridgeResources,
     this.loadConversationFooterSymbols,
     this.loadShowConversationTokenUsage,
     this.loadConversationTokenUsage,
     this.loadJevUsage,
     AgentRepositoryUrlResolver? repositoryUrlResolver,
+    BridgeSnapshotCache? snapshots,
   }) : _triggerGroupStore = triggerGroupStore ?? InMemoryTriggerGroupStore(),
+       _snapshots = snapshots ?? BridgeSnapshotCache(),
        _now = now ?? DateTime.now,
        _repositoryUrlResolver =
            repositoryUrlResolver ?? resolveGitRepositoryUrl;
 
+  final BridgeResourceSelector? selectBridgeResources;
   final ResourceStore _store;
+  final BridgeSnapshotCache _snapshots;
   final TriggerGroupStore _triggerGroupStore;
   final DateTime Function() _now;
   final AgentRepositoryUrlResolver _repositoryUrlResolver;
@@ -92,6 +99,7 @@ final class AgentBridge {
       ]);
       final String expand = request['expand'] as String? ?? 'prompts';
       final String knownHash = (request['knownHash'] as String? ?? '').trim();
+      final bool acceptDelta = request['acceptDelta'] == true;
       final DateTime startedAt = _now().toUtc();
       final TriggerContext context = await _resolveContext(
         projectPath: _firstString(request, const <String>[
@@ -149,13 +157,8 @@ final class AgentBridge {
               .where((Resource resource) => _isActive(resource, terms))
               .toList(growable: false)
             ..sort(compareResources);
-      final List<Resource> mcps = candidates(ResourceType.mcp);
+      List<Resource> mcps = candidates(ResourceType.mcp);
       final List<Resource> knowledge = candidates(ResourceType.knowledge);
-      final List<Resource> selected = <Resource>[
-        ...prompts,
-        ...mcps,
-        ...knowledge,
-      ];
       final SkillDeliveryResolution skillResolution =
           await resolveSkillDelivery(
             resources: available.where(
@@ -165,7 +168,7 @@ final class AgentBridge {
             workspacePath: context.projectPath,
             queryPresence: querySkillDeploymentPresence,
           );
-      final List<DynamicSkillCandidate> skillCandidates =
+      List<DynamicSkillCandidate> skillCandidates =
           List<DynamicSkillCandidate>.of(skillResolution.candidates)
             ..sort((DynamicSkillCandidate left, DynamicSkillCandidate right) {
               final int name = left.configuration.name.compareTo(
@@ -175,6 +178,90 @@ final class AgentBridge {
                   ? name
                   : left.resource.id.compareTo(right.resource.id);
             });
+      // AI may select only enabled, scoped optional references. Prompts and
+      // always-active MCPs never enter the selectable set. Skill activation is
+      // catalog metadata, not a requirement to load that Skill. MCP manual
+      // activation remains a local permission boundary.
+      if (selectBridgeResources != null && expand != 'all') {
+        final optionalMcps =
+            available
+                .where(
+                  (resource) =>
+                      resource.type == ResourceType.mcp &&
+                      resource.activation == ResourceActivation.taskMatch,
+                )
+                .toList()
+              ..sort(compareResources);
+        final optionalSkills = skillCandidates;
+        final routingCandidates = <BridgeResourceCandidate>[
+          for (final skill in optionalSkills)
+            BridgeResourceCandidate(
+              id: skill.resource.id,
+              type: 'skill',
+              title: skill.configuration.name,
+              description: skill.configuration.description,
+              version: await _skillVersion(skill),
+            ),
+          for (final resource in optionalMcps)
+            BridgeResourceCandidate(
+              id: resource.id,
+              type: 'mcp',
+              title: resource.title,
+              description: resource.note ?? resource.tags.join(', '),
+              version: await bridgeContentVersion({
+                'content': resource.content,
+                'note': resource.note,
+                'tags': resource.tags,
+                'activation': resource.activation.name,
+                'groups': resource.triggerGroupIds,
+              }),
+            ),
+        ];
+        Set<String>? chosen;
+        try {
+          chosen = await selectBridgeResources!(
+            BridgeResourceSelectionRequest(
+              task: task,
+              taskContext: request['taskContext'] as String? ?? '',
+              source: source,
+              workspacePath: context.projectPath,
+              repositoryUrl: context.repositoryUrl,
+              conversationId: conversationId,
+              candidates: routingCandidates,
+            ),
+          ).timeout(const Duration(seconds: 6));
+        } on Object {
+          // A disabled, unavailable or uncertain router retains prior behavior.
+        }
+        if (chosen != null) {
+          mcps = [
+            ...mcps.where(
+              (resource) => resource.activation == ResourceActivation.always,
+            ),
+            ...optionalMcps.where(
+              (resource) =>
+                  _explicitlyNamesResource(task, resource.title) ||
+                  _explicitlyNamesResource(
+                    task,
+                    managedMcpServerName(
+                      title: resource.title,
+                      id: resource.id,
+                    ),
+                  ) ||
+                  chosen!.contains(resource.id),
+            ),
+          ]..sort(compareResources);
+          skillCandidates = skillCandidates
+              .where(
+                (skill) =>
+                    _explicitlyNamesResource(task, skill.configuration.name) ||
+                    _explicitlyNamesResource(task, skill.resource.title) ||
+                    chosen!.contains(skill.resource.id),
+              )
+              .toList();
+        }
+      }
+      final List<Resource> selected = [...prompts, ...mcps, ...knowledge];
       final Set<String> selectedIds = <Resource>[
         ...prompts,
         ...knowledge,
@@ -312,21 +399,24 @@ final class AgentBridge {
               showTokenUsage: showTokenUsage,
             )
           : null;
+      final skillCatalog = await Future.wait(
+        skillCandidates.map(_skillCandidateJson),
+      );
       final Map<String, Object?> compactActive = <String, Object?>{
         'prompts': prompts
             .map(
               (Resource resource) => <String, Object?>{
+                'id': resource.id,
                 'title': resource.title,
                 if (expand != 'none') 'content': resource.content,
               },
             )
             .toList(growable: false),
-        'skills': skillCandidates
-            .map(_skillCandidateJson)
-            .toList(growable: false),
+        'skills': skillCatalog,
         'mcps': mcps
             .map(
               (Resource resource) => <String, Object?>{
+                'id': resource.id,
                 'serverName': managedMcpServerName(
                   title: resource.title,
                   id: resource.id,
@@ -345,12 +435,28 @@ final class AgentBridge {
               )
               .toList(growable: false),
       };
+      final String scope = await bridgeContentVersion({
+        'source': context.source,
+        'workspace': context.projectPath,
+        'repository': context.repositoryUrl,
+        'conversation': conversationId,
+        'expand': expand,
+      });
       final String hash = await _snapshotHash(<String, Object?>{
+        'scope': scope,
         'active': compactActive,
         'statusLine': statusLine,
       });
 
       if (!fullPayload) {
+        final delta = acceptDelta
+            ? await _snapshots.rememberAndDiff(
+                scope: scope,
+                hash: hash,
+                knownHash: knownHash,
+                active: compactActive,
+              )
+            : null;
         if (knownHash.isNotEmpty && knownHash == hash) {
           return HttpResponseData(
             statusCode: 200,
@@ -359,6 +465,20 @@ final class AgentBridge {
               'unchanged': true,
               'hash': hash,
               'footer': ?footer,
+            },
+          );
+        }
+        if (delta != null) {
+          return HttpResponseData(
+            statusCode: 200,
+            json: {
+              'status': 'ok',
+              'mode': 'delta',
+              'baseHash': knownHash,
+              'hash': hash,
+              'delta': delta,
+              'footer': ?footer,
+              'statusLine': ?statusLine,
             },
           );
         }
@@ -406,9 +526,7 @@ final class AgentBridge {
           },
           'active': <String, Object?>{
             'prompts': items(ResourceType.prompt),
-            'skills': skillCandidates
-                .map(_skillCandidateJson)
-                .toList(growable: false),
+            'skills': skillCatalog,
             if (skillResolution.conflicts.isNotEmpty)
               'skillConflicts': skillResolution.conflicts
                   .map((SkillDeliveryConflict conflict) => conflict.toJson())
@@ -466,6 +584,26 @@ final class AgentBridge {
         return error;
       }
       final DynamicSkillCandidate skill = lookup.skill!;
+      final String version = await _skillVersion(skill);
+      if ((query['knownVersion'] ?? '').trim() == version) {
+        return HttpResponseData(
+          statusCode: 200,
+          json: {
+            'status': 'ok',
+            'unchanged': true,
+            'skill': {
+              'id': skill.resource.id,
+              'name': skill.configuration.name,
+              'version': version,
+            },
+            'footerMark': ?_footerMark(
+              skill.resource,
+              source: lookup.context.source,
+              symbols: await _loadConversationFooterSymbols(),
+            ),
+          },
+        );
+      }
       final List<Resource> resources = lookup.resources;
       final DateTime usedAt = _now().toUtc();
       final ResourceStore store = _store;
@@ -505,6 +643,7 @@ final class AgentBridge {
             'id': tracked.id,
             'name': skill.configuration.name,
             'description': skill.configuration.description,
+            'version': version,
             'content': tracked.content,
             'package': package,
           },
@@ -962,6 +1101,15 @@ Set<String> _searchTerms(String value) {
 bool _usesNaturalSubstringMatching(String term) =>
     term.runes.any((int rune) => rune > 0x7F);
 
+bool _explicitlyNamesResource(String task, String name) {
+  if (name.trim().length < 2) return false;
+  return RegExp(
+    '(?:^|[^A-Za-z0-9_-])${RegExp.escape(name.trim())}(?:'
+    r'$|[^A-Za-z0-9_-])',
+    caseSensitive: false,
+  ).hasMatch(task);
+}
+
 bool _isActive(Resource resource, Set<String> terms) {
   return switch (resource.activation) {
     ResourceActivation.always => true,
@@ -975,12 +1123,21 @@ Map<String, TriggerGroup> _groupsById(List<TriggerGroup> groups) =>
       for (final TriggerGroup group in groups) group.id: group,
     };
 
-Map<String, Object?> _skillCandidateJson(DynamicSkillCandidate skill) =>
-    <String, Object?>{
+Future<Map<String, Object?>> _skillCandidateJson(
+  DynamicSkillCandidate skill,
+) async => <String, Object?>{
+  'id': skill.resource.id,
+  'name': skill.configuration.name,
+  'description': skill.configuration.description,
+  'version': await _skillVersion(skill),
+};
+
+Future<String> _skillVersion(DynamicSkillCandidate skill) =>
+    bridgeContentVersion({
       'id': skill.resource.id,
-      'name': skill.configuration.name,
-      'description': skill.configuration.description,
-    };
+      'content': skill.resource.content,
+      'artifact': skill.artifactFingerprint,
+    });
 
 /// Claude Code status-line badges, keyed by what can later mark them: Skill
 /// ids from successful loads and MCP server names from transcript tool calls.

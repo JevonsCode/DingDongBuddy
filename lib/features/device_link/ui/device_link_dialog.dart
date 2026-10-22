@@ -349,11 +349,9 @@ class _LocalDeviceCard extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
       key: const Key('device-local-device'),
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
       child: Row(
         children: <Widget>[
@@ -414,11 +412,9 @@ class _DeviceCard extends StatelessWidget {
       explicitChildNodes: true,
       child: Container(
         key: Key('linked-device-${device.id}'),
-        padding: const EdgeInsets.fromLTRB(13, 12, 13, 11),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: colors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.outlineVariant),
+          border: Border(bottom: BorderSide(color: colors.outlineVariant)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -587,7 +583,6 @@ class _PairingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PendingDevicePairing? pairing = controller.pendingPairing;
-    final ColorScheme colors = Theme.of(context).colorScheme;
     final Widget content = pairing == null
         ? _PairingStart(controller: controller)
         : _PairingQr(controller: controller, pairing: pairing);
@@ -596,19 +591,7 @@ class _PairingCard extends StatelessWidget {
       explicitChildNodes: true,
       child: Container(
         key: const Key('device-pairing-panel'),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Color.alphaBlend(
-            colors.primary.withValues(alpha: 0.045),
-            colors.surface,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colors.primary.withValues(
-              alpha: pairing == null ? 0.2 : 0.34,
-            ),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[

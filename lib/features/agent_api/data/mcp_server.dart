@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:convert';
-
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
 import 'package:dingdong/features/jev/data/jev_mcp_tools.dart';
@@ -147,9 +146,13 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call first at the start of each user request. The response is the authoritative snapshot and replaces earlier ones. active.prompts are required instructions: apply each in full. active.skills lists id, name and description; load a matching one with dingdong_load_skill. active.mcps are tool references (serverName, title), not instructions. When footer is present, end the final reply with it exactly, applying footerMark replacements from Skill loads and MCP confirmations; never print statusLine. While the previous response is still in context, pass its hash as knownHash to get {unchanged:true} instead of a repeat. expand="all" adds diagnostics.',
+          'Call first each user request with acceptDelta=true. Full active is the authoritative snapshot; prompts are required instructions. Skills include id, name and description plus version; use dingdong_load_skill on match. MCPs are tool references. Always pass knownHash ONLY while its complete merged snapshot remains in context; omit after context loss. unchanged retains it. mode=delta: require matching baseHash, apply delta upsert/remove/order by id; advance hash only after merging. Otherwise retry without knownHash. End with footer exactly, applying footerMark; never print statusLine. expand="all" adds diagnostics.',
       properties: <String, Object?>{
         'task': _stringProperty(),
+        'taskContext': _stringProperty(
+          description:
+              'Optional task context explicitly supplied for AI resource selection (maximum 4000 characters). Never send secrets, clipboard content, raw MCP configuration or full history.',
+        ),
         'source': _stringProperty(
           description:
               'Current Agent source, such as Codex, Claude Code, or Cursor. '
@@ -172,6 +175,7 @@ final class McpServer {
           description:
               'hash from the previous bridge response in this conversation.',
         ),
+        'acceptDelta': _booleanProperty(),
       },
     ),
     _tool(
@@ -258,11 +262,15 @@ final class McpServer {
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
       description:
-          'After a current dingdong_bridge Skill description matches the task, fetch its complete SKILL.md by id or name and apply it. Enabled state and scope are checked again on every load. Apply a returned footerMark to the footer.',
+          'Load a matching current Skill by id or name and apply its complete SKILL.md. If the full loaded body is still in context, pass its knownVersion to avoid repetition; NEVER acknowledge a catalog-only version. unchanged retains the loaded body; otherwise replace it. Omit knownVersion after context loss. Enabled state and scope are checked on every load. Apply footerMark.',
       properties: <String, Object?>{
         'name': _stringProperty(
           description:
               'Skill name. Provide name or id; id wins when both are set.',
+        ),
+        'knownVersion': _stringProperty(
+          description:
+              'Version of a fully loaded Skill body still retained in context, not a catalog-only version.',
         ),
         'id': _stringProperty(description: 'Skill resource id.'),
         'workspacePath': _stringProperty(
@@ -443,6 +451,7 @@ final class McpServer {
       title: 'Notify DingDong',
       description:
           'Notify DingDong when the task is blocked or waiting for attention. '
+          'For a user-authorized named event, pass reminderId; the Agent decides when its condition applies. '
           'A configured completion hook sends the final task-complete alert. '
           'Do not call this tool before the final response when that hook is '
           'available; use it for completion only if the client has no '
@@ -450,6 +459,10 @@ final class McpServer {
       properties: <String, Object?>{
         'message': _stringProperty(),
         'source': _stringProperty(),
+        'reminderId': _stringProperty(
+          description:
+              'Optional named reminder ID from dingdong_list_reminders. Selects its enabled state, kind, color, style and sound. Unknown IDs are rejected. Omit sound to use the saved profile sound.',
+        ),
         'flashCount': _integerProperty(maximum: 20),
         'conversationId': _stringProperty(),
         'workspacePath': _stringProperty(),
@@ -469,10 +482,62 @@ final class McpServer {
       required: <String>['message'],
     ),
     _tool(
+      name: 'dingdong_list_reminders',
+      title: 'List DingDong Reminders',
+      description:
+          'List named reminder profiles and imported sounds. The Agent evaluates the user\'s conditions (for example error → A, success → B) and calls dingdong_notify with reminderId. DingDong does not monitor those conditions itself. Built-in IDs completion and attention preserve existing hooks.',
+      properties: <String, Object?>{},
+    ),
+    _tool(
+      name: 'dingdong_upsert_reminder',
+      title: 'Save DingDong Reminder',
+      description:
+          'Create or edit a named reminder when authorized by the user. Existing IDs are patched; a new ID needs name. Colors and sounds may be reused. At most 32 custom profiles. Built-in kind is fixed. Description is a short condition hint for the Agent, not executable rules. Custom sound paths must first be imported. Disabled reminders never alert.',
+      properties: <String, Object?>{
+        'id': _stringProperty(),
+        'name': _stringProperty(),
+        'description': _stringProperty(),
+        'enabled': _booleanProperty(),
+        'toPhone': _booleanProperty(),
+        'kind': _enumProperty(['completion', 'attention']),
+        'style': _enumProperty(['staticMarker', 'softPulse']),
+        'color': _enumProperty([
+          'orange',
+          'pink',
+          'blue',
+          'green',
+          'purple',
+          'amber',
+        ]),
+        'sound': _enumProperty([...agentSelectableSoundValues, 'custom']),
+        'customSoundPath': _stringProperty(),
+      },
+      required: ['id'],
+    ),
+    _tool(
+      name: 'dingdong_delete_reminder',
+      title: 'Delete DingDong Reminder',
+      description:
+          'Delete a custom reminder the user wants removed. Built-in completion and attention can only be disabled. Shared sounds remain available.',
+      properties: <String, Object?>{'id': _stringProperty()},
+      required: ['id'],
+    ),
+    _tool(
+      name: 'dingdong_import_reminder_sound',
+      title: 'Import DingDong Reminder Sound',
+      description:
+          'Import a user-authorized local audio file, including an AI-generated file, into durable DingDong storage. Absolute path; mono/stereo PCM WAV, at most 15 seconds and 5 MiB. No URL download or audio generation is performed. Use the returned sounds[].path as customSoundPath with sound=custom. Name maximum 64 characters.',
+      properties: <String, Object?>{
+        'path': _stringProperty(),
+        'name': _stringProperty(),
+      },
+      required: ['path', 'name'],
+    ),
+    _tool(
       name: 'dingdong_set_reminder_sounds',
       title: 'Set DingDong Reminder Sounds',
       description:
-          'Save which sound DingDong plays when an Agent finishes (completionSound) and when it needs the user (attentionSound), only when the user asks for it, e.g. "ring dingBright when you finish and dingDeep when you need me". Provide one or both. attentionSound may be "sameAsCompletion". Custom sound files are chosen by the user in DingDong Settings.',
+          'Save which sound DingDong plays when an Agent finishes (completionSound) and when it needs the user (attentionSound), only when the user asks for it, e.g. "ring dingBright when you finish and dingDeep when you need me". Provide one or both. attentionSound may be "sameAsCompletion". For named reminders and custom audio use dingdong_upsert_reminder and dingdong_import_reminder_sound.',
       properties: <String, Object?>{
         'completionSound': _enumProperty(agentSelectableSoundValues),
         'attentionSound': _enumProperty(<String>[

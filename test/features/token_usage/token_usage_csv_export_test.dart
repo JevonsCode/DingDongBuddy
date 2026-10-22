@@ -48,7 +48,7 @@ void main() {
       expect(export.suggestedName, 'dingdong-token-usage-2026-codex.csv');
       final lines = export.contents.trimRight().split('\r\n');
       expect(lines, hasLength(2));
-      expect(lines.first.split(','), hasLength(16));
+      expect(lines.first.split(','), hasLength(17));
       // A displayed 12,345 must stay in one numeric CSV cell; unknown reasoning
       // stays empty while an explicitly reported zero remains zero.
       expect(lines.last.split(','), [
@@ -67,6 +67,7 @@ void main() {
         '3',
         '0',
         'complete_scan',
+        '',
         '',
       ]);
       expect(export.contents, isNot(contains('12,345')));
@@ -178,7 +179,7 @@ void main() {
       expect(
         export.contents,
         contains(
-          ',partial_or_unavailable,"malformed_usage_rows,refresh_interrupted"\r\n',
+          ',partial_or_unavailable,"malformed_usage_rows,refresh_interrupted",\r\n',
         ),
       );
       expect(export.contents, isNot(contains('private')));

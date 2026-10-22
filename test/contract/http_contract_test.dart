@@ -890,6 +890,7 @@ void main() {
         'active': <String, Object?>{
           'prompts': <Object?>[
             <String, Object?>{
+              'id': 'prompt',
               'title': '代码审查与发布流程',
               'content': 'Use the release checklist.',
             },
@@ -899,11 +900,13 @@ void main() {
               'id': 'skill',
               'name': 'flutter-skill',
               'description': 'Build and release Flutter applications',
+              'version': matches(RegExp(r'^[0-9a-f]{64}$')),
             },
           ],
           'mcps': <Object?>[
             <String, Object?>{
               'serverName': 'dingdong-untitled-skill-mcp',
+              'id': 'mcp',
               'title': '生产环境监控连接',
             },
           ],
@@ -937,6 +940,7 @@ void main() {
         'id',
         'name',
         'description',
+        'version',
       ]);
       expect(
         mcps.single,
@@ -947,7 +951,8 @@ void main() {
         containsPair('toolNamePrefix', 'mcp__dingdong_untitled_skill_mcp__'),
       );
       expect(full.json['footer'], markdownLine);
-      expect(full.json['hash'], response.json['hash']);
+      // Diagnostic and compact responses have separate acknowledgement scopes.
+      expect(full.json['hash'], isNot(response.json['hash']));
       const String ansiLine =
           '\u001B[2mDingDong\u001B[0m · \u001B[38;5;178m♥ 代码审查与发布流...\u001B[0m | \u001B[38;5;69m♦ 部署自动化助手\u001B[0m | \u001B[38;5;71m♠ 生产环境监控连接\u001B[0m';
       expect(full.json['conversation'], <String, Object?>{
@@ -2073,6 +2078,7 @@ void main() {
           'id': 'reviewer-id',
           'name': 'reviewer',
           'description': 'Review DingDong changes',
+          'version': matches(RegExp(r'^[0-9a-f]{64}$')),
         },
       ]);
 

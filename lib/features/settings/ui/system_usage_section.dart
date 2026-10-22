@@ -213,10 +213,9 @@ class _UsageSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
       child: Row(
         children: <Widget>[
@@ -313,25 +312,18 @@ class _StorageCategoryRow extends StatelessWidget {
     final int? count = usage?.itemsFor(category);
     return Container(
       key: Key('settings-usage-${category.id}'),
-      margin: const EdgeInsets.only(bottom: 7),
-      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: _categoryBackground(colors, category),
-        borderRadius: BorderRadius.circular(13),
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
       child: Row(
         children: <Widget>[
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(10),
-            ),
+          SizedBox(
+            width: 28,
             child: Icon(
               _categoryIcon(category),
               size: 18,
-              color: _categoryForeground(colors, category),
+              color: colors.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 11),
@@ -507,23 +499,3 @@ IconData _categoryIcon(SystemDataCategory category) => switch (category) {
   SystemDataCategory.configuration => Icons.tune_rounded,
   SystemDataCategory.other => Icons.more_horiz_rounded,
 };
-
-Color _categoryBackground(ColorScheme colors, SystemDataCategory category) {
-  return switch (category) {
-    SystemDataCategory.clipboardImages => colors.tertiaryContainer.withValues(
-      alpha: 0.36,
-    ),
-    SystemDataCategory.clipboardArchive => colors.primaryContainer.withValues(
-      alpha: 0.34,
-    ),
-    _ => colors.surfaceContainerLow,
-  };
-}
-
-Color _categoryForeground(ColorScheme colors, SystemDataCategory category) {
-  return switch (category) {
-    SystemDataCategory.clipboardImages => colors.onTertiaryContainer,
-    SystemDataCategory.clipboardArchive => colors.onPrimaryContainer,
-    _ => colors.onSurfaceVariant,
-  };
-}

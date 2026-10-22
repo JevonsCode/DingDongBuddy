@@ -889,11 +889,8 @@ description: Use when product decisions should follow saved preferences.
       find.byKey(const Key('resource-card-mcp-resource')),
     );
     final BoxDecoration cardDecoration = card.decoration! as BoxDecoration;
-    expect(cardDecoration.color, PopupStyle.mcpSurface(Brightness.light));
-    expect(
-      cardDecoration.border!.top.color,
-      PopupStyle.mcpBorder(Brightness.light),
-    );
+    expect(cardDecoration.color, PopupStyle.light.surface);
+    expect(cardDecoration.border!.bottom.color, PopupStyle.light.border);
     expect(find.text('STDIO · npx local-mcp'), findsOneWidget);
     final Finder tags = find.byKey(
       const Key('resource-card-tags-mcp-resource'),
@@ -908,7 +905,7 @@ description: Use when product decisions should follow saved preferences.
     );
   });
 
-  testWidgets('enabled MCP cards reuse the global MCP color token', (
+  testWidgets('enabled MCP rows keep neutral surfaces and MCP icon color', (
     WidgetTester tester,
   ) async {
     final DateTime now = DateTime.utc(2026, 8, 5);
@@ -933,7 +930,7 @@ description: Use when product decisions should follow saved preferences.
       find.byKey(const Key('today-enabled-enabled-mcp')),
     );
     final BoxDecoration decoration = card.decoration! as BoxDecoration;
-    expect(decoration.color, PopupStyle.mcpSurface(Brightness.light));
+    expect(decoration.color, PopupStyle.light.surface);
     final PopupSymbolIcon icon = tester.widget<PopupSymbolIcon>(
       find
           .descendant(

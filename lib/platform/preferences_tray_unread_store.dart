@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 
@@ -28,8 +27,40 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
         latest,
       );
       return TrayUnreadState(
+        reminderEventHistory: {
+          if (json['reminderEventHistory'] is Map)
+            for (final entry
+                in (json['reminderEventHistory'] as Map).entries.take(64))
+              if (entry.key is String && entry.value is List)
+                entry.key as String: (entry.value as List)
+                    .whereType<int>()
+                    .where(
+                      (id) => id.abs() > acknowledged && id.abs() <= latest,
+                    )
+                    .take(1001)
+                    .toList(),
+        },
+        reminderEvents: {
+          if (json['reminderEvents'] is Map)
+            for (final entry in (json['reminderEvents'] as Map).entries.take(
+              64,
+            ))
+              if (entry.key is String &&
+                  (entry.key as String).length <= 64 &&
+                  entry.value is int &&
+                  (entry.value as int) > acknowledged &&
+                  (entry.value as int) <= latest)
+                entry.key as String: entry.value as int,
+        },
+        latestReminderId: json['latestReminderId'] as String?,
+        latestAttentionReminderId: json['latestAttentionReminderId'] as String?,
         latestEventId: latest,
         acknowledgedEventId: acknowledged,
+        latestAttentionEventId:
+            (json['latestAttentionEventId'] is int
+                    ? json['latestAttentionEventId']! as int
+                    : 0)
+                .clamp(0, latest),
       );
     } on Object {
       return const TrayUnreadState.empty();
@@ -41,8 +72,13 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
     return _preferences.write(
       _key,
       jsonEncode(<String, Object?>{
+        'reminderEvents': state.reminderEvents,
+        'reminderEventHistory': state.reminderEventHistory,
+        'latestReminderId': state.latestReminderId,
+        'latestAttentionReminderId': state.latestAttentionReminderId,
         'latestEventId': state.latestEventId,
         'acknowledgedEventId': state.acknowledgedEventId,
+        'latestAttentionEventId': state.latestAttentionEventId,
       }),
     );
   }

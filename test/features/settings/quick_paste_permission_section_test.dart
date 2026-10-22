@@ -41,9 +41,7 @@ void main() {
     final Container helperSurface = tester.widget<Container>(
       find.byKey(const Key('settings-accessibility-helper-explanation')),
     );
-    final BoxDecoration helperDecoration =
-        helperSurface.decoration! as BoxDecoration;
-    expect(helperDecoration.border, isNull);
+    expect(helperSurface.decoration, isNull);
     expect(find.byType(Divider), findsNothing);
 
     await tester.tap(find.byKey(const Key('settings-open-accessibility')));
@@ -51,7 +49,7 @@ void main() {
     expect(gateway.openCount, 1);
   });
 
-  testWidgets('quick paste permission uses quiet tonal grouping', (
+  testWidgets('quick paste permission uses plain helper text', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;

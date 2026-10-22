@@ -2,7 +2,8 @@
 enum ConversationTokenUsageSource {
   codex('codex'),
   claudeCode('claude-code'),
-  pi('pi');
+  pi('pi'),
+  dingdong('dingdong');
 
   const ConversationTokenUsageSource(this.apiValue);
 
@@ -90,7 +91,8 @@ final class ConversationTokenUsage {
   /// Preserve source fields for old snapshots; normalize only for display.
   /// Claude Code and Pi report cache reads/writes separately from fresh input.
   int get totalInputTokens => switch (source) {
-    ConversationTokenUsageSource.codex => inputTokens,
+    ConversationTokenUsageSource.codex ||
+    ConversationTokenUsageSource.dingdong => inputTokens,
     _ => inputTokens + cachedInputTokens + cacheWriteInputTokens,
   };
 

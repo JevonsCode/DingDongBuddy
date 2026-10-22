@@ -2,44 +2,59 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
 
+enum AiCompanionProtocol { auto, openAI, anthropic }
+
 /// Every capability is independently opt-in. Provider credentials live elsewhere.
 final class AiCompanionSettings {
   const AiCompanionSettings({
+    this.automaticAnalysis = true,
     this.clipboardAnalysis = false,
     this.usageOptimization = false,
     this.progressiveDisclosure = false,
     this.tokenOptimization = false,
     this.proactiveCheckIns = false,
-    this.emotionalSupport = false,
     this.cloudAnalysis = false,
+    this.autoResourceSelection = false,
+    this.includeInternalInGlobal = false,
     this.providerEndpoint = '',
     this.model = '',
+    this.protocol = AiCompanionProtocol.auto,
   });
 
   factory AiCompanionSettings.fromJson(Map<String, Object?> json) =>
       AiCompanionSettings(
+        automaticAnalysis: json['automaticAnalysis'] != false,
         clipboardAnalysis: json['clipboardAnalysis'] == true,
         usageOptimization: json['usageOptimization'] == true,
         progressiveDisclosure: json['progressiveDisclosure'] == true,
         tokenOptimization: json['tokenOptimization'] == true,
         proactiveCheckIns: json['proactiveCheckIns'] == true,
-        emotionalSupport: json['emotionalSupport'] == true,
         cloudAnalysis: json['cloudAnalysis'] == true,
+        autoResourceSelection: json['autoResourceSelection'] == true,
+        includeInternalInGlobal: json['includeInternalInGlobal'] == true,
         providerEndpoint: json['providerEndpoint'] is String
             ? (json['providerEndpoint']! as String).trim()
             : '',
+        protocol:
+            AiCompanionProtocol.values
+                .where((value) => value.name == json['protocol'])
+                .firstOrNull ??
+            AiCompanionProtocol.auto,
         model: json['model'] is String ? (json['model']! as String).trim() : '',
       );
 
+  final bool automaticAnalysis;
   final bool clipboardAnalysis;
   final bool usageOptimization;
   final bool progressiveDisclosure;
   final bool tokenOptimization;
   final bool proactiveCheckIns;
-  final bool emotionalSupport;
   final bool cloudAnalysis;
+  final bool autoResourceSelection;
+  final bool includeInternalInGlobal;
   final String providerEndpoint;
   final String model;
+  final AiCompanionProtocol protocol;
 
   bool get analysisEnabled =>
       clipboardAnalysis ||
@@ -48,37 +63,47 @@ final class AiCompanionSettings {
       tokenOptimization;
 
   AiCompanionSettings copyWith({
+    bool? automaticAnalysis,
     bool? clipboardAnalysis,
     bool? usageOptimization,
     bool? progressiveDisclosure,
     bool? tokenOptimization,
     bool? proactiveCheckIns,
-    bool? emotionalSupport,
     bool? cloudAnalysis,
+    bool? autoResourceSelection,
+    bool? includeInternalInGlobal,
     String? providerEndpoint,
     String? model,
+    AiCompanionProtocol? protocol,
   }) => AiCompanionSettings(
+    automaticAnalysis: automaticAnalysis ?? this.automaticAnalysis,
     clipboardAnalysis: clipboardAnalysis ?? this.clipboardAnalysis,
     usageOptimization: usageOptimization ?? this.usageOptimization,
     progressiveDisclosure: progressiveDisclosure ?? this.progressiveDisclosure,
     tokenOptimization: tokenOptimization ?? this.tokenOptimization,
     proactiveCheckIns: proactiveCheckIns ?? this.proactiveCheckIns,
-    emotionalSupport: emotionalSupport ?? this.emotionalSupport,
     cloudAnalysis: cloudAnalysis ?? this.cloudAnalysis,
+    autoResourceSelection: autoResourceSelection ?? this.autoResourceSelection,
+    includeInternalInGlobal:
+        includeInternalInGlobal ?? this.includeInternalInGlobal,
     providerEndpoint: providerEndpoint ?? this.providerEndpoint,
     model: model ?? this.model,
+    protocol: protocol ?? this.protocol,
   );
 
   Map<String, Object> toJson() => <String, Object>{
+    'automaticAnalysis': automaticAnalysis,
     'clipboardAnalysis': clipboardAnalysis,
     'usageOptimization': usageOptimization,
     'progressiveDisclosure': progressiveDisclosure,
     'tokenOptimization': tokenOptimization,
     'proactiveCheckIns': proactiveCheckIns,
-    'emotionalSupport': emotionalSupport,
     'cloudAnalysis': cloudAnalysis,
+    'autoResourceSelection': autoResourceSelection,
+    'includeInternalInGlobal': includeInternalInGlobal,
     'providerEndpoint': providerEndpoint,
     'model': model,
+    'protocol': protocol.name,
   };
 }
 
@@ -181,24 +206,20 @@ final class AiCompanionReport {
   }
 }
 
-final class AiChatMessage {
-  const AiChatMessage({required this.role, required this.text});
-  final String role;
-  final String text;
-}
-
 enum AiCompanionError {
   disabled,
   invalidProvider,
   missingApiKey,
-  sensitiveInput,
   sensitiveOutput,
   providerUnavailable,
+  authenticationFailed,
+  endpointNotFound,
+  rateLimited,
   invalidResponse,
   timeout,
   storageUnavailable,
-  emptyMessage,
-  messageTooLong,
+  credentialUnavailable,
+  requestTooLarge,
 }
 
 /// Stable diagnostics only: never contains response bodies, input or credentials.

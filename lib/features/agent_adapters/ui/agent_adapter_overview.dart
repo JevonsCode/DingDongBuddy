@@ -378,25 +378,14 @@ class _VerificationBoundaryNotice extends StatelessWidget {
       label: message,
       child: Container(
         key: const Key('agent-adapter-verification-boundary'),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(
-            context,
-          ).colorScheme.tertiaryContainer.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: Theme.of(
-              context,
-            ).colorScheme.tertiary.withValues(alpha: 0.22),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Icon(
               Icons.rule_folder_outlined,
               size: 20,
-              color: Theme.of(context).colorScheme.onTertiaryContainer,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 10),
             Expanded(

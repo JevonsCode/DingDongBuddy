@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:async';
-
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
@@ -29,6 +28,7 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
     Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
+    Future<void> Function(NotificationRules value)? onNotificationRulesChanged,
     Future<void> Function(bool enabled)? onLifecycleTelemetryChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
@@ -49,6 +49,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onShowMenuBarRecovery = onShowMenuBarRecovery,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
        _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
+       _onNotificationRulesChanged = onNotificationRulesChanged,
        _onLifecycleTelemetryChanged = onLifecycleTelemetryChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
@@ -69,6 +70,8 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
   final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
+  final Future<void> Function(NotificationRules value)?
+  _onNotificationRulesChanged;
   final Future<void> Function(bool enabled)? _onLifecycleTelemetryChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
@@ -170,6 +173,8 @@ final class SettingsViewModel extends ChangeNotifier
       await _onTrayNotificationColorChanged?.call(
         _settings.trayNotificationColor,
       );
+      if (_disposed) return;
+      await _onNotificationRulesChanged?.call(_settings.notificationRules);
       if (_disposed) return;
       String? loadWarning;
       final Future<bool> Function(GlobalHotKey value)? updateGlobalHotKey =
@@ -631,10 +636,34 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> saveReminderProfile(ReminderProfile profile) async {
+    _settings = _settings.withReminderProfile(profile);
+    notifyListeners();
+    await _save();
+    await _onNotificationRulesChanged?.call(_settings.notificationRules);
+  }
+
+  Future<void> reorderReminderProfile(String id, int newIndex) async {
+    final ids = _settings.reminderProfiles.map((p) => p.id).toList();
+    if (!ids.remove(id)) return;
+    ids.insert(newIndex.clamp(0, ids.length), id);
+    await setNotificationRules(
+      _settings.notificationRules.copyWith(profileOrder: ids),
+    );
+  }
+
+  Future<void> deleteReminderProfile(String id) async {
+    _settings = _settings.withoutReminderProfile(id);
+    notifyListeners();
+    await _save();
+    await _onNotificationRulesChanged?.call(_settings.notificationRules);
+  }
+
   Future<void> setNotificationRules(NotificationRules value) async {
     _settings = _settings.copyWith(notificationRules: value);
     notifyListeners();
     await _save();
+    await _onNotificationRulesChanged?.call(_settings.notificationRules);
   }
 
   Future<void> setNotifyAgentCompletion(bool value) async {

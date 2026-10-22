@@ -242,14 +242,18 @@ class _Coverage extends StatelessWidget {
                     Icon(
                       coverage.availability ==
                                   TokenUsageAvailability.available &&
-                              coverage.filesScanned > 0
+                              (coverage.filesScanned > 0 ||
+                                  coverage.source ==
+                                      ConversationTokenUsageSource.dingdong)
                           ? Icons.check_circle_outline_rounded
                           : Icons.info_outline_rounded,
                       size: 14,
                       color:
                           coverage.availability ==
                                   TokenUsageAvailability.available &&
-                              coverage.filesScanned > 0
+                              (coverage.filesScanned > 0 ||
+                                  coverage.source ==
+                                      ConversationTokenUsageSource.dingdong)
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -257,7 +261,7 @@ class _Coverage extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '${tokenUsageSourceLabel(coverage.source)} · ${switch (coverage.availability) {
-                          TokenUsageAvailability.available => coverage.filesScanned > 0 ? context.l10n.tokenUsageAvailable : context.l10n.tokenUsageNoRecords,
+                          TokenUsageAvailability.available => (coverage.filesScanned > 0 || coverage.source == ConversationTokenUsageSource.dingdong) ? context.l10n.tokenUsageAvailable : context.l10n.tokenUsageNoRecords,
                           TokenUsageAvailability.missing => context.l10n.tokenUsageMissing,
                           TokenUsageAvailability.unreadable => context.l10n.tokenUsageUnreadable,
                         }}',

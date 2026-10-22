@@ -215,18 +215,19 @@ void main() {
   });
 
   test(
-    'Claude and Pi input includes cache once while Codex already includes it',
+    'Claude and Pi add cache once; Codex and DingDong input already include it',
     () {
       for (final source in ConversationTokenUsageSource.values) {
+        final inclusive =
+            source == ConversationTokenUsageSource.codex ||
+            source == ConversationTokenUsageSource.dingdong;
         final result = buildDingDongConversationFooter(
           items: [
             {'title': 'Rules', 'type': 'prompt'},
           ],
           tokenUsage: ConversationTokenUsage(
             source: source,
-            totalTokens: source == ConversationTokenUsageSource.codex
-                ? 120
-                : 190,
+            totalTokens: inclusive ? 120 : 190,
             inputTokens: 100,
             outputTokens: 20,
             cachedInputTokens: 60,
@@ -236,17 +237,10 @@ void main() {
         expect(
           result['line'],
           contains(
-            source == ConversationTokenUsageSource.codex
-                ? '输入 100 · 输出 20 · 命中缓存 60'
-                : '输入 170 · 输出 20 · 命中缓存 60',
+            inclusive ? '输入 100 · 输出 20 · 命中缓存 60' : '输入 170 · 输出 20 · 命中缓存 60',
           ),
         );
-        expect(
-          result['line'],
-          contains(
-            source == ConversationTokenUsageSource.codex ? '非缓存 60' : '非缓存 130',
-          ),
-        );
+        expect(result['line'], contains(inclusive ? '非缓存 60' : '非缓存 130'));
       }
     },
   );

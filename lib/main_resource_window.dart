@@ -235,15 +235,25 @@ Future<void> _runResourceManagerWindow(
   final tokenUsageRepository = LocalTokenUsageRepository(
     databasePath: paths.tokenUsageDatabaseFile.path,
   );
-  final tokenUsageController = TokenUsageController.fromRepository(
-    tokenUsageRepository,
+  final aiStore = AiCompanionPreferencesStore(
+    SharedPreferencesBackend(),
+    development: paths.development,
   );
   late final AiCompanionController aiCompanionController;
+  final tokenUsageController = TokenUsageController.fromRepository(
+    tokenUsageRepository,
+    includeInternal: () async =>
+        (await aiStore.loadSettings()).includeInternalInGlobal,
+    saveInternalInclusion: (value) =>
+        aiCompanionController.setInternalInclusion(value),
+  );
   aiCompanionController = AiCompanionController(
-    store: AiCompanionPreferencesStore(
-      SharedPreferencesBackend(),
-      development: paths.development,
+    store: aiStore,
+    history: AiInsightHistory(
+      '${paths.tokenUsageDatabaseFile.parent.path}/ai-insights.sqlite3',
     ),
+    usageRepository: tokenUsageRepository,
+    onUsageChanged: tokenUsageController.invalidate,
     loadMetadata: () async {
       final AiCompanionSettings enabled = aiCompanionController.settings;
       final DateTime now = DateTime.now();
@@ -274,11 +284,13 @@ Future<void> _runResourceManagerWindow(
             : await tokenUsageRepository.readSnapshot(
                 from: today,
                 through: today,
+                includeInternal: enabled.includeInternalInGlobal,
               ),
       );
     },
   );
   await aiCompanionController.load();
+  aiCompanionController.startAutomaticAnalysis();
   runApp(
     ResourceManagerApp(
       aiCompanionController: aiCompanionController,

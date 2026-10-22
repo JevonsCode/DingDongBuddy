@@ -15,8 +15,8 @@ const Set<String> notificationSoundValues = <String>{
   'muted',
 };
 
-/// Sounds an Agent may save on the user's behalf. Custom files stay a desktop
-/// choice because an Agent cannot pick a sound file for the user.
+/// Built-in sounds accepted by the legacy sound-setting tool. The named
+/// reminder API also supports validated, imported custom audio.
 const List<String> agentSelectableSoundValues = <String>[
   'default',
   'dingSoft',

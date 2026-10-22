@@ -54,6 +54,11 @@ void main() {
       ' 1',
       style: TrayTitleStyle.unreadBadge,
       badgeColorRgb: TrayNotificationColor.purple.rgbValue,
+      badgeId: 'completion',
+      reminderBubbles: [
+        {'id': 'review', 'name': 'Review', 'colorRgb': 0x397ddd, 'pulse': true},
+      ],
+      badgeDimmed: true,
     );
 
     expect(receivedCall?.method, 'setTitle');
@@ -61,6 +66,11 @@ void main() {
       'title': ' 1',
       'style': 'unreadBadge',
       'badgeColorRgb': TrayNotificationColor.purple.rgbValue,
+      'badgeId': 'completion',
+      'reminderBubbles': [
+        {'id': 'review', 'name': 'Review', 'colorRgb': 0x397ddd, 'pulse': true},
+      ],
+      'badgeDimmed': true,
     });
   });
 
@@ -236,12 +246,18 @@ void main() {
         attentionIconPath:
             'windows/runner/resources/tray_icon_on_dark_unread.ico',
         unreadCount: 3,
+        reminderKind: 'attention',
+        badgeColorRgb: TrayNotificationColor.amber.rgbValue,
+        animateUnread: false,
       );
 
       expect(receivedCall?.method, 'setIcon');
       final Map<Object?, Object?> arguments =
           receivedCall?.arguments as Map<Object?, Object?>;
       expect(arguments['unreadCount'], 3);
+      expect(arguments['reminderKind'], 'attention');
+      expect(arguments['badgeColorRgb'], TrayNotificationColor.amber.rgbValue);
+      expect(arguments['animateUnread'], isFalse);
       expect(
         arguments['attentionIconPath'],
         endsWith('tray_icon_on_dark_unread.ico'),
@@ -267,7 +283,12 @@ void main() {
     expect(source, contains('kTrayArtOccupancy'));
     expect(source, contains('GetPixel'));
     expect(source, contains('DrawImage'));
-    expect(source, isNot(contains('FillEllipse')));
+    expect(
+      source.split('HICON CreateReminderTrayIcon').first,
+      isNot(contains('FillEllipse')),
+    );
+    expect(source, contains('HICON CreateReminderTrayIcon'));
+    expect(source, contains('if (attention)'));
     expect(source, isNot(contains('DrawString')));
     expect(source, isNot(contains('GraphicsPath')));
     expect(source, contains('GetHICON'));
@@ -555,9 +576,15 @@ void main() {
       'packages/tray_manager/macos/tray_manager/Classes/TrayIcon.swift',
     ).readAsStringSync();
 
-    expect(gateway, contains('badgeColorRgb: _trayNotificationColor.rgbValue'));
+    expect(gateway, contains('legacyCompletionColor: _trayNotificationColor'));
+    expect(gateway, contains('_unreadController.primaryKind'));
+    expect(gateway, contains('staticReminder: hot && !pulseReminder'));
+    expect(source, isNot(contains('NSImage(systemSymbolName:')));
+    expect(source, contains('artwork?.draw(in:'));
+    expect(source, contains('reminderBubbles.count > 3 ? 2 : 3'));
+    expect(source, contains('accessibilityDisplayShouldReduceMotion'));
     expect(gateway, isNot(contains('hot || macDevelopment')));
-    expect(gateway, contains('await trayManager.setTitle(\n        title,'));
+    expect(gateway, contains('orderedUnreadReminderProfiles('));
     expect(plugin, contains('args["badgeColorRgb"] as? NSNumber'));
     expect(source, contains('style == "unreadBadge" && !countText.isEmpty'));
     expect(source, contains('let value = rgb ?? 0xDB7333'));
@@ -587,6 +614,9 @@ void main() {
     expect(source, contains('HICON replacement_icon'));
     expect(source, contains('if (replacement_icon == nullptr)'));
     expect(source, contains('ValueOrNull(args, "unreadCount")'));
+    expect(source, contains('ValueOrNull(args, "animateUnread")'));
+    expect(source, contains('CreateReminderTrayIcon'));
+    expect(source, contains('SPI_GETCLIENTAREAANIMATION'));
     expect(source, contains('ValueOrNull(args, "attentionIconPath")'));
     expect(source, contains('kAttentionFlashIntervalMs = 700'));
     expect(source, contains('StartAttentionFlash'));

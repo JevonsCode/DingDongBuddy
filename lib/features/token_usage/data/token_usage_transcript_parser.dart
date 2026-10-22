@@ -71,6 +71,8 @@ final class TokenUsageTranscriptParser {
     }
     Map<String, Object?>? usage;
     switch (source) {
+      case ConversationTokenUsageSource.dingdong:
+        return null;
       case ConversationTokenUsageSource.codex:
         if (type == 'event_msg' && payload?['type'] == 'token_count') {
           usage = _object(_object(payload?['info'])?['total_token_usage']);

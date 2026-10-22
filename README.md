@@ -24,12 +24,12 @@ maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
 
-> **DingDong 1.8.0 (build 70).** Adds an optional AI companion with independent
-> analysis and chat switches, duplicate-resource cleanup with optional backups,
-> and the reminder, Token-history and phone improvements from the 1.8 beta.
-> Cloud analysis uses anonymous usage metadata; clipboard content and files stay local.
+> **AI+** provides optional insights, resource selection and separate internal
+> Token accounting. Model-assisted analysis sends anonymous usage metadata;
+> optional resource selection sends bounded task context and candidate descriptions.
+> Clipboard contents and files stay local.
 
-See the [AI companion setup and privacy boundaries](docs/product/ai-companion.md).
+See the [AI+ setup and privacy boundaries](docs/product/ai-companion.md).
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -46,7 +46,7 @@ stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
 | Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
 | Local Token history | Daily history and heatmap for supported Codex, Claude Code, and Pi sources; filter by date and source, inspect counts and export CSV |
-| AI companion | Optional clipboard, resource and Token insights, local check-ins and supportive chat with a configured model; separate switches and local privacy filtering |
+| AI+ | Optional clipboard, resource and Token insights, local check-ins and model-assisted analysis; separate switches and internal Token accounting |
 | Connected devices | Pair phones or computers, share Clipboard items and files explicitly, opt into automatic computer sync, and choose direct LAN or encrypted service transport |
 
 Clipboard and resource data stay on this computer by default. The lightweight
@@ -352,7 +352,7 @@ Important paths:
 - `docs/` — website, update metadata, release notes, and product documentation
 
 Architecture details live in
-[AI companion architecture](docs/architecture/ai-companion-architecture.md).
+[AI+ architecture](docs/architecture/ai-companion-architecture.md).
 See [localization](docs/product/localization.md) before adding or changing
 user-facing copy.
 

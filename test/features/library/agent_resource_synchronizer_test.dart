@@ -830,7 +830,9 @@ mcp:
       String contents = agents.readAsStringSync();
       expect(contents, startsWith('- Keep the existing user instruction.'));
       expect(contents, contains('dingdong_bridge'));
-      expect(contents, contains('apply every returned Prompt in full'));
+      expect(contents, contains('Each Prompt is a required instruction'));
+      expect(contents, contains('`acceptDelta=true`'));
+      expect(contents, contains('omit after context loss'));
       expect(contents, contains('replaces earlier ones'));
       expect(contents, contains('dingdong_load_skill'));
       expect(contents, contains('Call returned MCP tools only when'));

@@ -12,6 +12,7 @@ private final class DesktopContextMenuTarget: NSObject {
 
 class MainFlutterWindow: NSWindow {
   private var systemActionChannels: [FlutterMethodChannel] = []
+  private var settingsSearchControllers: [AnyObject] = []
 
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { true }
@@ -52,6 +53,9 @@ class MainFlutterWindow: NSWindow {
   }
 
   private func registerSystemActions(for controller: FlutterViewController) {
+    if #available(macOS 11.0, *) {
+      settingsSearchControllers.append(SettingsSearchToolbar(controller: controller))
+    }
     let channel = FlutterMethodChannel(
       name: "dingdong/system_actions",
       binaryMessenger: controller.engine.binaryMessenger
@@ -126,5 +130,64 @@ class MainFlutterWindow: NSWindow {
     let viewPoint = view.convert(windowPoint, from: nil)
     menu.popUp(positioning: nil, at: viewPoint, in: view)
     return target.selectedAction
+  }
+}
+
+
+/// Per-engine toolbar: only the dedicated settings engine requests configure.
+@available(macOS 11.0, *)
+private final class SettingsSearchToolbar: NSObject, NSToolbarDelegate, NSSearchFieldDelegate {
+  private let channel: FlutterMethodChannel
+  private weak var controller: FlutterViewController?
+  private let toolbar = NSToolbar(identifier: "dingdong.settings")
+  private let searchItem = NSSearchToolbarItem(itemIdentifier: NSToolbarItem.Identifier("settingsSearch"))
+
+  init(controller: FlutterViewController) {
+    self.controller = controller
+    channel = FlutterMethodChannel(name: "dingdong/settings_search", binaryMessenger: controller.engine.binaryMessenger)
+    super.init()
+    toolbar.delegate = self
+    toolbar.allowsUserCustomization = false
+    toolbar.displayMode = .iconOnly
+    searchItem.searchField.delegate = self
+    searchItem.searchField.sendsSearchStringImmediately = true
+    searchItem.searchField.sendsWholeSearchString = false
+    searchItem.preferredWidthForSearchField = 240
+    searchItem.searchField.widthAnchor.constraint(equalToConstant: 240).isActive = true
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self else { result(false); return }
+      switch call.method {
+      case "configure":
+        guard let window = self.controller?.view.window else { result(false); return }
+        let placeholder = (call.arguments as? [String: Any])?["placeholder"] as? String ?? ""
+        self.searchItem.searchField.placeholderString = placeholder
+        self.searchItem.searchField.setAccessibilityLabel(placeholder)
+        self.searchItem.label = placeholder
+        window.toolbarStyle = .unified
+        window.toolbar = self.toolbar
+        result(true)
+      case "setQuery":
+        self.searchItem.searchField.stringValue = call.arguments as? String ?? ""
+        result(nil)
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+    [.flexibleSpace, searchItem.itemIdentifier]
+  }
+
+  func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+    toolbarDefaultItemIdentifiers(toolbar)
+  }
+
+  func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
+               willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+    itemIdentifier == searchItem.itemIdentifier ? searchItem : nil
+  }
+
+  func controlTextDidChange(_ notification: Notification) {
+    channel.invokeMethod("queryChanged", arguments: searchItem.searchField.stringValue)
   }
 }

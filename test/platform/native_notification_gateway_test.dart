@@ -24,12 +24,14 @@ void main() {
 
       await gateway.trigger(const DingRequest(sound: DingSound.dingSoft));
       await gateway.preview(sound: 'dingCrisp');
+      await gateway.trigger(const DingRequest(), flashCount: 0);
 
       expect(calls[0].method, 'notify');
       expect(
         (calls[0].arguments! as Map<Object?, Object?>)['sound'],
         'dingSoft',
       );
+      expect((calls[2].arguments! as Map)['flashCount'], 0);
       expect(calls[1].method, 'preview');
       expect(
         (calls[1].arguments! as Map<Object?, Object?>)['sound'],
