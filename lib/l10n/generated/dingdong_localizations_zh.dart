@@ -3602,6 +3602,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       'failed': '传输未完成',
       'completed': '传输完成',
       'cancelled': '已取消',
+      'sent': '已发送',
       'other': '准备传输',
     });
     return '$_temp0';
@@ -4040,4 +4041,19 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String get allowBetaUpdatesDescription =>
       '提前体验尚未正式发布的新功能，测试版可能不够稳定。关闭后会停留在当前测试版，直到更新的正式版发布。';
+
+  @override
+  String get onlineDevices => '当前在线';
+
+  @override
+  String get connectionHistory => '历史连接';
+
+  @override
+  String get noDevicesOnline => '暂无在线设备';
+
+  @override
+  String get fileTransferHistory => '传输记录';
+
+  @override
+  String get noFileTransferHistory => '暂无文件传输记录';
 }

@@ -141,7 +141,7 @@ void main() {
     tags: <String>['golden'],
   );
 
-  testWidgets('connected devices pair-first light and dark', (
+  testWidgets('empty device manager pairing and history light and dark', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;

@@ -78,7 +78,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.text('42%'), findsOneWidget);
-        expect(find.byType(LinearProgressIndicator), findsNWidgets(3));
+        expect(find.byType(LinearProgressIndicator), findsNWidgets(2));
         if (locale.languageCode == 'zh') {
           await tester.tap(find.text('暂停'));
           expect(model.lastControl, 'sending:pause');

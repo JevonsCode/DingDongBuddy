@@ -3740,6 +3740,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'failed': 'Transfer incomplete',
       'completed': 'Transfer complete',
       'cancelled': 'Cancelled',
+      'sent': 'Sent',
       'other': 'Preparing',
     });
     return '$_temp0';
@@ -4205,4 +4206,19 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get allowBetaUpdatesDescription =>
       'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.';
+
+  @override
+  String get onlineDevices => 'Online devices';
+
+  @override
+  String get connectionHistory => 'Connection history';
+
+  @override
+  String get noDevicesOnline => 'No devices online';
+
+  @override
+  String get fileTransferHistory => 'Transfer history';
+
+  @override
+  String get noFileTransferHistory => 'No file transfers yet';
 }

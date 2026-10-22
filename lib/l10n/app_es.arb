@@ -4568,7 +4568,7 @@
   "pauseTransfer": "Pausar",
   "resumeTransfer": "Continuar",
   "cancelTransfer": "Cancelar",
-  "fileTransferStatus": "{state, select, preparing{Preparando} transferring{Transfiriendo} verifying{Confirmando archivo} waiting{Esperando conexión} paused{En pausa} failed{Transferencia incompleta} completed{Transferencia completa} cancelled{Cancelada} other{Preparando}}",
+  "fileTransferStatus": "{state, select, preparing{Preparando} transferring{Transfiriendo} verifying{Confirmando archivo} waiting{Esperando conexión} paused{En pausa} failed{Transferencia incompleta} completed{Transferencia completa} cancelled{Cancelada} sent{Enviado} other{Preparando}}",
   "fileTransferIssue": "{code, select, waiting_lan{Esperando una conexión local. Progreso guardado.} connection_lost{Sin conexión. Se reanudará al reconectar.} source_changed{El archivo cambió. Selecciónalo de nuevo.} storage_error{No se puede escribir. Comprueba el espacio disponible.} storage_unsupported{Este navegador no admite archivos grandes locales.} checksum_failed{Falló la verificación. Inténtalo de nuevo.} too_many_transfers{Espera a que termine otra transferencia.} restart_required{Se perdió el progreso del receptor. Envía de nuevo.} invalid_offset{El progreso no coincide. Envía de nuevo.} other{Transferencia incompleta. Inténtalo de nuevo.}}",
   "@transferSendingTo": {
     "placeholders": {
@@ -5162,5 +5162,25 @@
   "allowBetaUpdatesDescription": "Recibe funciones nuevas antes de la versión estable. Las betas pueden ser menos estables; al desactivarlo te quedas en la beta hasta que salga una versión estable más nueva.",
   "@allowBetaUpdatesDescription": {
     "description": "Beta update channel setting."
+  },
+  "onlineDevices": "Dispositivos conectados",
+  "@onlineDevices": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "connectionHistory": "Conexiones anteriores",
+  "@connectionHistory": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "noDevicesOnline": "No hay dispositivos conectados",
+  "@noDevicesOnline": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "fileTransferHistory": "Historial de transferencias",
+  "@fileTransferHistory": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "noFileTransferHistory": "Todavía no hay transferencias de archivos",
+  "@noFileTransferHistory": {
+    "description": "Device manager groups and on-demand transfer history."
   }
 }
