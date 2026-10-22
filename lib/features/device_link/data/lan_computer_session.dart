@@ -48,7 +48,9 @@ final class LanComputerSession
   Future<bool> verifyLocalNetwork() async => connected && _hasLocalPeer;
 
   @override
-  Future<void> connect() async {
+  Future<void> connect() => _connect();
+
+  Future<void> _connect({bool background = false}) async {
     if (_closed || _connecting || connected) return;
     _connecting = true;
     LanWire? wire;
@@ -59,7 +61,9 @@ final class LanComputerSession
           !_hasLocalPeer) {
         return;
       }
-      _emit(const DeviceLinkStatusEvent(DeviceConnectionStatus.connecting));
+      if (!background) {
+        _emit(const DeviceLinkStatusEvent(DeviceConnectionStatus.connecting));
+      }
       wire = await owner._dialPeer(device.id);
       final clientNonce = LanPairingCrypto.token();
       await wire.write({
@@ -226,7 +230,7 @@ final class LanComputerSession
     if (_closed || connected || _retry != null) return;
     _retry = Timer(const Duration(seconds: 2), () {
       _retry = null;
-      unawaited(connect());
+      unawaited(_connect(background: true));
     });
   }
 
