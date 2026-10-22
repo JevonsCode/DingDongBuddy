@@ -57,6 +57,7 @@ class ResourceEditor extends StatefulWidget {
     this.onDeleteTriggerGroup,
     this.onSyncUpdate,
     this.onResolveSkillSource,
+    this.onSaveOnlineSkill,
     this.onOpenExternalLink,
     this.onDirtyChanged,
     this.skillAgents = defaultSkillDeliveryAgents,
@@ -101,6 +102,7 @@ class ResourceEditor extends StatefulWidget {
   onCreateWithAgentSessionName;
   final Future<void> Function()? onDelete;
   final Future<void> Function(Resource resource) onSave;
+  final Future<void> Function(Resource resource)? onSaveOnlineSkill;
   final ResourceType initialType;
   final String initialTitle;
   final String initialContent;
@@ -926,7 +928,7 @@ class _ResourceEditorState extends State<ResourceEditor> {
         updatedAt: DateTime.now().toUtc(),
       );
       _locallySubmittedResource = updated;
-      await widget.onSave(updated);
+      await (widget.onSaveOnlineSkill ?? widget.onSave)(updated);
       _loading = true;
       _skillDocumentController.text = content;
       _titleController.text = skill.name;

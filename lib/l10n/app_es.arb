@@ -1,186 +1,408 @@
 {
   "amber": "Ámbar",
-  "@amber": {"description":"Reminder presentation and AI+ results."},
+  "@amber": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "trayStylePulse": "Pulso suave",
-  "@trayStylePulse": {"description":"Reminder presentation and AI+ results."},
+  "@trayStylePulse": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "trayStyleStatic": "Indicador estático",
-  "@trayStyleStatic": {"description":"Reminder presentation and AI+ results."},
+  "@trayStyleStatic": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "attentionTrayColor": "Color de atención",
-  "@attentionTrayColor": {"description":"Reminder presentation and AI+ results."},
+  "@attentionTrayColor": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "completionTrayColor": "Color de finalización",
-  "@completionTrayColor": {"description":"Reminder presentation and AI+ results."},
+  "@completionTrayColor": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "attentionTrayStyle": "Estilo de atención",
-  "@attentionTrayStyle": {"description":"Reminder presentation and AI+ results."},
+  "@attentionTrayStyle": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "completionTrayStyle": "Estilo de finalización",
-  "@completionTrayStyle": {"description":"Reminder presentation and AI+ results."},
+  "@completionTrayStyle": {
+    "description": "Reminder presentation and AI+ results."
+  },
   "aiCategoryNoSuggestions": "El informe actual no contiene sugerencias de esta categoría. Vuelve a analizar tras cambiar el alcance.",
-  "@aiCategoryNoSuggestions": {"description":"AI+ resource selection and analysis."},
+  "@aiCategoryNoSuggestions": {
+    "description": "AI+ resource selection and analysis."
+  },
   "aiRoutingNeedsProvider": "Configura un modelo primero. Hasta entonces se usan las reglas locales.",
-  "@aiRoutingNeedsProvider": {"description":"AI+ resource selection and analysis."},
+  "@aiRoutingNeedsProvider": {
+    "description": "AI+ resource selection and analysis."
+  },
   "aiAutoResourceSelectionDescription": "Cuando un Agent solicita recursos, el modelo configurado los selecciona según la tarea, el contexto enviado y los resúmenes. Desactivado por defecto; ante errores se usan reglas locales.",
-  "@aiAutoResourceSelectionDescription": {"description":"AI+ resource selection and analysis."},
+  "@aiAutoResourceSelectionDescription": {
+    "description": "AI+ resource selection and analysis."
+  },
   "aiAutoResourceSelection": "Selección de recursos con IA",
-  "@aiAutoResourceSelection": {"description":"AI+ resource selection and analysis."},
+  "@aiAutoResourceSelection": {
+    "description": "AI+ resource selection and analysis."
+  },
   "aiProgressiveDisclosure": "Consejos de divulgación progresiva",
-  "@aiProgressiveDisclosure": {"description":"Independent progressive disclosure advice."},
+  "@aiProgressiveDisclosure": {
+    "description": "Independent progressive disclosure advice."
+  },
   "aiProgressiveDisclosureDescription": "Revisa los Prompts permanentes y el alcance de MCP para la carga bajo demanda. No cambia la carga nativa de herramientas del cliente.",
-  "@aiProgressiveDisclosureDescription": {"description":"Independent progressive disclosure advice."},
+  "@aiProgressiveDisclosureDescription": {
+    "description": "Independent progressive disclosure advice."
+  },
   "aiProgressivePrompt": "Este Prompt permanente contiene {count} caracteres. Resume las reglas comunes esenciales y revisa la carga por tarea o manual de los detalles específicos.",
-  "@aiProgressivePrompt": {"description":"Independent progressive disclosure advice.","placeholders":{"count":{"type":"int"}}},
+  "@aiProgressivePrompt": {
+    "description": "Independent progressive disclosure advice.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiProgressiveMcp": "Revisa si la tarea actual necesita este servidor MCP permanente. Limita su alcance o actívalo manualmente cuando haga falta. Los agentes externos pueden seguir cargando todos los esquemas de herramientas configurados.",
-  "@aiProgressiveMcp": {"description":"Independent progressive disclosure advice."},
+  "@aiProgressiveMcp": {
+    "description": "Independent progressive disclosure advice."
+  },
   "aiDailyScope": "Elementos del portapapeles actualizados hoy y tokens registrados hoy. Los recuentos de copias y uso son acumulativos; los recursos se revisan en toda la biblioteca. Se analizan hasta 500 elementos locales.",
-  "@aiDailyScope": { "description": "Scope and limits of companion analysis." },
+  "@aiDailyScope": {
+    "description": "Scope and limits of companion analysis."
+  },
   "aiProviderCredentialNote": "Cambiar la URL elimina la clave anterior. Introduce una clave para el nuevo proveedor si la necesita.",
-  "@aiProviderCredentialNote": { "description": "AI provider credentials." },
+  "@aiProviderCredentialNote": {
+    "description": "AI provider credentials."
+  },
   "aiReviewSuggestion": "Revisar elemento",
-  "@aiReviewSuggestion": {"description":"AI companion suggestion."},
+  "@aiReviewSuggestion": {
+    "description": "AI companion suggestion."
+  },
   "aiNoSuggestions": "No hay sugerencias para los datos disponibles. No se ha cambiado nada.",
-  "@aiNoSuggestions": {"description":"AI companion suggestion."},
+  "@aiNoSuggestions": {
+    "description": "AI companion suggestion."
+  },
   "aiFrequentClipboard": "Copiado {count} veces. Considera fijarlo o guardarlo como Prompt reutilizable.",
-  "@aiFrequentClipboard": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiFrequentClipboard": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiRepeatedClipboard": "Se encontraron {count} entradas idénticas en el portapapeles. Revísalas antes de eliminar alguna.",
-  "@aiRepeatedClipboard": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiRepeatedClipboard": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiUngroupedClipboard": "Hay {count} elementos sin grupo. Agrupa los útiles para encontrarlos con más facilidad.",
-  "@aiUngroupedClipboard": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiUngroupedClipboard": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiCandidateWithoutUse": "Se consideró {count} veces sin invocaciones ni cargas registradas. Revisa si necesitas este MCP o Skill, o cárgalo solo para tareas pertinentes.",
-  "@aiCandidateWithoutUse": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiCandidateWithoutUse": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiAlwaysOnUnused": "Este recurso permanente lleva al menos una semana sin uso registrado. Revisa su alcance y considera cargarlo por tarea o bajo demanda.",
-  "@aiAlwaysOnUnused": {"description":"AI companion suggestion."},
+  "@aiAlwaysOnUnused": {
+    "description": "AI companion suggestion."
+  },
   "aiLargeAlwaysOnPrompt": "Este Prompt permanente contiene {count} caracteres. Resume las reglas comunes y carga los detalles por tarea o bajo demanda.",
-  "@aiLargeAlwaysOnPrompt": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiLargeAlwaysOnPrompt": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiHighInputTokens": "Se registraron {count} tokens de entrada, que dominan el uso. Revisa el contexto largo repetido y adjunta recursos solo cuando la tarea los necesite.",
-  "@aiHighInputTokens": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiHighInputTokens": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiLowCacheReuse": "Solo se registraron {count} tokens de entrada en caché. Un prefijo común estable puede ayudar; el ahorro depende del proveedor.",
-  "@aiLowCacheReuse": {"description":"AI companion suggestion.","placeholders":{"count":{"type":"int"}}},
+  "@aiLowCacheReuse": {
+    "description": "AI companion suggestion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiIncompleteTokenData": "Los registros de tokens están incompletos. Se necesitan datos más fiables para evaluar la eficiencia.",
-  "@aiIncompleteTokenData": {"description":"AI companion suggestion."},
+  "@aiIncompleteTokenData": {
+    "description": "AI companion suggestion."
+  },
   "aiTakeABreakSuggestion": "Llevas aquí un rato. Respira, estírate o aléjate de la pantalla un momento.",
-  "@aiTakeABreakSuggestion": {"description":"AI companion suggestion."},
+  "@aiTakeABreakSuggestion": {
+    "description": "AI companion suggestion."
+  },
   "aiCompanionTitle": "AI+",
-  "@aiCompanionTitle": { "description": "AI companion." },
+  "@aiCompanionTitle": {
+    "description": "AI companion."
+  },
   "aiCompanionSubtitle": "Selecciona recursos bajo demanda y revisa sugerencias.",
-  "@aiCompanionSubtitle": { "description": "AI companion." },
+  "@aiCompanionSubtitle": {
+    "description": "AI companion."
+  },
   "aiPrivacySummary": "Cada función se activa por separado. El análisis estadístico envía recuentos y uso; la selección de recursos envía la tarea, el contexto y los resúmenes. No se envía el texto del portapapeles.",
-  "@aiPrivacySummary": { "description": "AI companion." },
+  "@aiPrivacySummary": {
+    "description": "AI companion."
+  },
   "aiFeaturesTitle": "Alcance del análisis",
-  "@aiFeaturesTitle": { "description": "AI companion." },
+  "@aiFeaturesTitle": {
+    "description": "AI companion."
+  },
   "aiClipboardAnalysis": "Información del portapapeles",
-  "@aiClipboardAnalysis": { "description": "AI companion." },
+  "@aiClipboardAnalysis": {
+    "description": "AI companion."
+  },
   "aiClipboardAnalysisDescription": "Detecta elementos repetidos y frecuentes de forma local.",
-  "@aiClipboardAnalysisDescription": { "description": "AI companion." },
+  "@aiClipboardAnalysisDescription": {
+    "description": "AI companion."
+  },
   "aiUsageOptimization": "Sugerencias de recursos",
-  "@aiUsageOptimization": { "description": "AI companion." },
+  "@aiUsageOptimization": {
+    "description": "AI companion."
+  },
   "aiUsageOptimizationDescription": "Revisa el uso de recursos y su configuración permanente sin modificarlos.",
-  "@aiUsageOptimizationDescription": { "description": "AI companion." },
+  "@aiUsageOptimizationDescription": {
+    "description": "AI companion."
+  },
   "aiTokenOptimization": "Sugerencias de tokens",
-  "@aiTokenOptimization": { "description": "AI companion." },
+  "@aiTokenOptimization": {
+    "description": "AI companion."
+  },
   "aiTokenOptimizationDescription": "Usa los totales locales registrados para encontrar oportunidades de ahorro.",
-  "@aiTokenOptimizationDescription": { "description": "AI companion." },
+  "@aiTokenOptimizationDescription": {
+    "description": "AI companion."
+  },
   "aiProactiveCheckIns": "Recordatorios amables",
-  "@aiProactiveCheckIns": { "description": "AI companion." },
+  "@aiProactiveCheckIns": {
+    "description": "AI companion."
+  },
   "aiProactiveCheckInsDescription": "Un recordatorio local tras una hora con esta página abierta, como máximo cada dos horas. Sin solicitudes de red automáticas.",
-  "@aiProactiveCheckInsDescription": { "description": "AI companion." },
+  "@aiProactiveCheckInsDescription": {
+    "description": "AI companion."
+  },
   "aiCloudAnalysis": "Análisis de metadatos con el modelo",
-  "@aiCloudAnalysis": { "description": "AI companion." },
+  "@aiCloudAnalysis": {
+    "description": "AI companion."
+  },
   "aiCloudAnalysisDescription": "Al activarlo, el análisis automático o manual envía los recuentos y estadísticas de tokens de las categorías activadas al modelo configurado.",
-  "@aiCloudAnalysisDescription": { "description": "AI companion." },
+  "@aiCloudAnalysisDescription": {
+    "description": "AI companion."
+  },
   "aiProviderProtocol": "Protocolo de API",
-  "@aiProviderProtocol": { "description": "AI companion model connection." },
+  "@aiProviderProtocol": {
+    "description": "AI companion model connection."
+  },
   "aiProviderProtocolAuto": "Automático (OpenAI / Anthropic)",
-  "@aiProviderProtocolAuto": { "description": "AI companion model connection." },
+  "@aiProviderProtocolAuto": {
+    "description": "AI companion model connection."
+  },
   "aiErrorAuthenticationFailed": "Error de autenticación (401/403). Comprueba la clave API y los permisos.",
-  "@aiErrorAuthenticationFailed": { "description": "AI companion model connection." },
+  "@aiErrorAuthenticationFailed": {
+    "description": "AI companion model connection."
+  },
   "aiErrorEndpointNotFound": "No se encuentra el endpoint o modelo (404/405). Comprueba la URL, el protocolo y el modelo.",
-  "@aiErrorEndpointNotFound": { "description": "AI companion model connection." },
+  "@aiErrorEndpointNotFound": {
+    "description": "AI companion model connection."
+  },
   "aiErrorRateLimited": "El servicio limita las solicitudes (429). Comprueba la cuota o inténtalo más tarde.",
-  "@aiErrorRateLimited": { "description": "AI companion model connection." },
+  "@aiErrorRateLimited": {
+    "description": "AI companion model connection."
+  },
   "aiProviderTitle": "Conexión del modelo",
-  "@aiProviderTitle": { "description": "AI companion." },
+  "@aiProviderTitle": {
+    "description": "AI companion."
+  },
   "aiConfigureProvider": "Configurar modelo",
-  "@aiConfigureProvider": { "description": "AI companion." },
+  "@aiConfigureProvider": {
+    "description": "AI companion."
+  },
   "aiProviderEndpoint": "URL del servicio",
-  "@aiProviderEndpoint": { "description": "AI companion." },
+  "@aiProviderEndpoint": {
+    "description": "AI companion."
+  },
   "aiProviderEndpointHint": "https://api.example.com/v1 o http://127.0.0.1:11434/v1",
-  "@aiProviderEndpointHint": { "description": "AI companion." },
+  "@aiProviderEndpointHint": {
+    "description": "AI companion."
+  },
   "aiProviderModel": "Nombre del modelo",
-  "@aiProviderModel": { "description": "AI companion." },
+  "@aiProviderModel": {
+    "description": "AI companion."
+  },
   "aiProviderApiKey": "Clave API",
-  "@aiProviderApiKey": { "description": "AI companion." },
+  "@aiProviderApiKey": {
+    "description": "AI companion."
+  },
   "aiProviderKeyStored": "Hay una clave guardada de forma segura. Déjalo vacío para conservarla.",
-  "@aiProviderKeyStored": { "description": "AI companion." },
+  "@aiProviderKeyStored": {
+    "description": "AI companion."
+  },
   "aiProviderKeyHint": "Se guarda en el almacenamiento seguro del dispositivo; opcional para modelos locales.",
-  "@aiProviderKeyHint": { "description": "AI companion." },
+  "@aiProviderKeyHint": {
+    "description": "AI companion."
+  },
   "aiRemoveApiKey": "Eliminar clave guardada",
-  "@aiRemoveApiKey": { "description": "AI companion." },
+  "@aiRemoveApiKey": {
+    "description": "AI companion."
+  },
   "aiProviderHelp": "Admite OpenAI y Anthropic con HTTP o HTTPS. El modo automático prueba el otro protocolo si no encuentra el endpoint. Guardar no prueba la conexión.",
-  "@aiProviderHelp": { "description": "AI companion." },
+  "@aiProviderHelp": {
+    "description": "AI companion."
+  },
   "aiProviderNotConfigured": "No hay modelo configurado. Activa una función de análisis para ver información local.",
-  "@aiProviderNotConfigured": { "description": "AI companion." },
+  "@aiProviderNotConfigured": {
+    "description": "AI companion."
+  },
   "aiProviderNotVerified": "Modelo configurado · conexión sin verificar",
-  "@aiProviderNotVerified": { "description": "AI companion." },
+  "@aiProviderNotVerified": {
+    "description": "AI companion."
+  },
   "aiProviderVerified": "El modelo respondió correctamente",
-  "@aiProviderVerified": { "description": "AI companion." },
+  "@aiProviderVerified": {
+    "description": "AI companion."
+  },
   "aiTestConnection": "Probar conexión",
-  "@aiTestConnection": { "description": "AI companion." },
+  "@aiTestConnection": {
+    "description": "AI companion."
+  },
   "aiAnalyze": "Analizar ahora",
-  "@aiAnalyze": { "description": "AI companion." },
+  "@aiAnalyze": {
+    "description": "AI companion."
+  },
   "aiInsightsTitle": "Información y sugerencias",
-  "@aiInsightsTitle": { "description": "AI companion." },
+  "@aiInsightsTitle": {
+    "description": "AI companion."
+  },
   "aiInsightsEmpty": "Elige las categorías en Configuración. Aquí aparecen los resultados automáticos y el historial; también puedes analizar ahora.",
-  "@aiInsightsEmpty": { "description": "AI companion." },
+  "@aiInsightsEmpty": {
+    "description": "AI companion."
+  },
   "aiLocalAnalysis": "Análisis local · sin solicitud al modelo",
-  "@aiLocalAnalysis": { "description": "AI companion." },
+  "@aiLocalAnalysis": {
+    "description": "AI companion."
+  },
   "aiCloudResult": "Sugerencias del modelo · solo metadatos",
-  "@aiCloudResult": { "description": "AI companion." },
+  "@aiCloudResult": {
+    "description": "AI companion."
+  },
   "aiReadOnly": "Las sugerencias son de solo lectura. Revisa los cambios en el espacio correspondiente.",
-  "@aiReadOnly": { "description": "AI companion." },
+  "@aiReadOnly": {
+    "description": "AI companion."
+  },
   "aiCheckInNow": "Tómate un momento",
-  "@aiCheckInNow": { "description": "AI companion." },
+  "@aiCheckInNow": {
+    "description": "AI companion."
+  },
   "aiUnavailable": "AI+ no está disponible en esta ventana. Vuelve a abrir el gestor de recursos.",
-  "@aiUnavailable": { "description": "AI companion." },
+  "@aiUnavailable": {
+    "description": "AI companion."
+  },
   "aiErrorDisabled": "Activa primero la función correspondiente.",
-  "@aiErrorDisabled": { "description": "AI companion." },
+  "@aiErrorDisabled": {
+    "description": "AI companion."
+  },
   "aiErrorInvalidProvider": "Introduce una URL HTTP o HTTPS válida y un modelo, sin credenciales, parámetros ni fragmentos en la URL.",
-  "@aiErrorInvalidProvider": { "description": "AI companion." },
+  "@aiErrorInvalidProvider": {
+    "description": "AI companion."
+  },
   "aiErrorMissingApiKey": "Este modelo en la nube necesita una clave API. Añádela en su configuración.",
-  "@aiErrorMissingApiKey": { "description": "AI companion." },
+  "@aiErrorMissingApiKey": {
+    "description": "AI companion."
+  },
   "aiErrorSensitiveOutput": "Se ha ocultado la respuesta del modelo porque puede contener información sensible.",
-  "@aiErrorSensitiveOutput": { "description": "AI companion." },
+  "@aiErrorSensitiveOutput": {
+    "description": "AI companion."
+  },
   "aiErrorProviderUnavailable": "El modelo no pudo responder. Comprueba la URL, el modelo, la clave y la red e inténtalo de nuevo.",
-  "@aiErrorProviderUnavailable": { "description": "AI companion." },
+  "@aiErrorProviderUnavailable": {
+    "description": "AI companion."
+  },
   "aiErrorInvalidResponse": "El modelo devolvió una respuesta ilegible.",
-  "@aiErrorInvalidResponse": { "description": "AI companion." },
+  "@aiErrorInvalidResponse": {
+    "description": "AI companion."
+  },
   "aiErrorTimeout": "La solicitud al modelo agotó el tiempo de espera. Inténtalo más tarde.",
-  "@aiErrorTimeout": { "description": "AI companion." },
+  "@aiErrorTimeout": {
+    "description": "AI companion."
+  },
   "aiErrorStorageUnavailable": "No se pudo acceder a la configuración o al almacenamiento seguro. Inténtalo de nuevo.",
-  "@aiErrorStorageUnavailable": { "description": "AI companion." },
+  "@aiErrorStorageUnavailable": {
+    "description": "AI companion."
+  },
   "aiErrorRequestTooLarge": "La solicitud al modelo es demasiado grande. Reduce el alcance del análisis e inténtalo de nuevo.",
-  "@aiErrorRequestTooLarge": { "description": "AI companion." },
+  "@aiErrorRequestTooLarge": {
+    "description": "AI companion."
+  },
   "resolveDuplicate": "Resolver duplicado",
-  "@resolveDuplicate": { "description": "Duplicate resource cleanup." },
+  "@resolveDuplicate": {
+    "description": "Duplicate resource cleanup."
+  },
   "deleteAgentCopy": "Eliminar copia del agente",
-  "@deleteAgentCopy": { "description": "Duplicate resource cleanup." },
+  "@deleteAgentCopy": {
+    "description": "Duplicate resource cleanup."
+  },
   "deleteDingDongCopy": "Eliminar copia de DingDong",
-  "@deleteDingDongCopy": { "description": "Duplicate resource cleanup." },
+  "@deleteDingDongCopy": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupDescription": "Elige qué copia eliminar. Se conservan los demás recursos y ajustes del agente.",
-  "@duplicateCleanupDescription": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupDescription": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateSkillCleanupDescription": "Elimina este recurso de DingDong y sus instalaciones gestionadas. La Skill existente del agente o complemento sigue disponible.",
-  "@duplicateSkillCleanupDescription": { "description": "Duplicate resource cleanup." },
+  "@duplicateSkillCleanupDescription": {
+    "description": "Duplicate resource cleanup."
+  },
   "createLocalBackup": "Crear copia local antes de eliminar",
-  "@createLocalBackup": { "description": "Duplicate resource cleanup." },
+  "@createLocalBackup": {
+    "description": "Duplicate resource cleanup."
+  },
   "localBackupMayContainSecrets": "Las copias se guardan en este equipo y pueden contener credenciales.",
-  "@localBackupMayContainSecrets": { "description": "Duplicate resource cleanup." },
+  "@localBackupMayContainSecrets": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupComplete": "Duplicado eliminado",
-  "@duplicateCleanupComplete": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupComplete": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupBackupLocation": "Copia guardada en:",
-  "@duplicateCleanupBackupLocation": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupBackupLocation": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupFailed": "No se pudo eliminar el duplicado",
-  "@duplicateCleanupFailed": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupFailed": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupAction": "Eliminar copia seleccionada",
-  "@duplicateCleanupAction": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupAction": {
+    "description": "Duplicate resource cleanup."
+  },
   "duplicateCleanupInProgress": "Eliminando…",
-  "@duplicateCleanupInProgress": { "description": "Duplicate resource cleanup." },
+  "@duplicateCleanupInProgress": {
+    "description": "Duplicate resource cleanup."
+  },
   "@@locale": "es",
   "agentSetupAdvancedDetailsDescription": "Endpoints y comandos del puente",
   "@agentSetupAdvancedDetailsDescription": {
@@ -5266,29 +5488,53 @@
     "description": "tokenUsageRequests"
   },
   "reminderProfiles": "Recordatorios",
-  "@reminderProfiles": {"description": "Named reminder settings label"},
+  "@reminderProfiles": {
+    "description": "Named reminder settings label"
+  },
   "addReminder": "Añadir recordatorio",
-  "@addReminder": {"description": "Named reminder settings label"},
+  "@addReminder": {
+    "description": "Named reminder settings label"
+  },
   "reminderSounds": "Sonidos",
-  "@reminderSounds": {"description": "Named reminder settings label"},
+  "@reminderSounds": {
+    "description": "Named reminder settings label"
+  },
   "importReminderSound": "Importar sonido",
-  "@importReminderSound": {"description": "Named reminder settings label"},
+  "@importReminderSound": {
+    "description": "Named reminder settings label"
+  },
   "reminderAudioFormat": "PCM WAV · Hasta 15 segundos / 5 MiB",
-  "@reminderAudioFormat": {"description": "Named reminder settings label"},
+  "@reminderAudioFormat": {
+    "description": "Named reminder settings label"
+  },
   "reminderAudioImportFailed": "No se pudo importar. Elige un archivo PCM WAV legible, de hasta 15 segundos y 5 MiB.",
-  "@reminderAudioImportFailed": {"description": "Named reminder settings label"},
+  "@reminderAudioImportFailed": {
+    "description": "Named reminder settings label"
+  },
   "reminderNameRequired": "Introduce un nombre.",
-  "@reminderNameRequired": {"description": "Named reminder settings label"},
+  "@reminderNameRequired": {
+    "description": "Named reminder settings label"
+  },
   "reminderCondition": "Cuándo usarlo (para el Agent)",
-  "@reminderCondition": {"description": "Named reminder settings label"},
+  "@reminderCondition": {
+    "description": "Named reminder settings label"
+  },
   "reminderKind": "Prioridad",
-  "@reminderKind": {"description": "Named reminder settings label"},
+  "@reminderKind": {
+    "description": "Named reminder settings label"
+  },
   "reminderStyle": "Estilo de bandeja",
-  "@reminderStyle": {"description": "Named reminder settings label"},
+  "@reminderStyle": {
+    "description": "Named reminder settings label"
+  },
   "reminderColor": "Color",
-  "@reminderColor": {"description": "Named reminder settings label"},
+  "@reminderColor": {
+    "description": "Named reminder settings label"
+  },
   "reminderToPhone": "Enviar al teléfono",
-  "@reminderToPhone": {"description": "Named reminder settings label"},
+  "@reminderToPhone": {
+    "description": "Named reminder settings label"
+  },
   "devReminderColors": "Colores y contadores de avisos",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."
@@ -5348,7 +5594,171 @@
   "reorderReminder": "Arrastra para reordenar",
   "searchSettings": "Buscar ajustes",
   "noMatchingSettings": "No hay ajustes coincidentes. Prueba otra palabra.",
-  "@reorderReminder": {"description":"Settings search and reminder ordering."},
-  "@searchSettings": {"description":"Settings search and reminder ordering."},
-  "@noMatchingSettings": {"description":"Settings search and reminder ordering."}
+  "@reorderReminder": {
+    "description": "Settings search and reminder ordering."
+  },
+  "@searchSettings": {
+    "description": "Settings search and reminder ordering."
+  },
+  "@noMatchingSettings": {
+    "description": "Settings search and reminder ordering."
+  },
+  "skillVersionHistory": "Historial de versiones",
+  "@skillVersionHistory": {
+    "description": "Skill version history: skillVersionHistory."
+  },
+  "skillVersionCurrent": "Actual",
+  "@skillVersionCurrent": {
+    "description": "Skill version history: skillVersionCurrent."
+  },
+  "skillVersionInitial": "Versión inicial",
+  "@skillVersionInitial": {
+    "description": "Skill version history: skillVersionInitial."
+  },
+  "skillVersionManual": "Guardado manual",
+  "@skillVersionManual": {
+    "description": "Skill version history: skillVersionManual."
+  },
+  "skillVersionOnline": "Actualización en línea",
+  "@skillVersionOnline": {
+    "description": "Skill version history: skillVersionOnline."
+  },
+  "skillVersionRestored": "Restaurada desde v{number}",
+  "@skillVersionRestored": {
+    "description": "Skill version history: skillVersionRestored.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "skillVersionFrom": "Comparar desde",
+  "@skillVersionFrom": {
+    "description": "Skill version history: skillVersionFrom."
+  },
+  "skillVersionTo": "Comparar con",
+  "@skillVersionTo": {
+    "description": "Skill version history: skillVersionTo."
+  },
+  "skillVersionRestore": "Restaurar esta versión",
+  "@skillVersionRestore": {
+    "description": "Skill version history: skillVersionRestore."
+  },
+  "skillVersionConfirmRestore": "¿Restaurar v{number}?",
+  "@skillVersionConfirmRestore": {
+    "description": "Skill version history: skillVersionConfirmRestore.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "skillVersionRestoreExplanation": "Se creará una nueva versión. Se conservarán la configuración actual de los agentes y el historial.",
+  "@skillVersionRestoreExplanation": {
+    "description": "Skill version history: skillVersionRestoreExplanation."
+  },
+  "skillVersionNoHistory": "Todavía no hay versiones guardadas.",
+  "@skillVersionNoHistory": {
+    "description": "Skill version history: skillVersionNoHistory."
+  },
+  "skillVersionOne": "Solo hay una versión guardada. Su contenido se muestra abajo.",
+  "@skillVersionOne": {
+    "description": "Skill version history: skillVersionOne."
+  },
+  "skillVersionNoChanges": "No hay diferencias entre estas versiones.",
+  "@skillVersionNoChanges": {
+    "description": "Skill version history: skillVersionNoChanges."
+  },
+  "skillVersionLoadError": "No se pudo cargar el historial: {error}",
+  "@skillVersionLoadError": {
+    "description": "Skill version history: skillVersionLoadError.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "skillVersionCompareError": "No se pudieron comparar las versiones: {error}",
+  "@skillVersionCompareError": {
+    "description": "Skill version history: skillVersionCompareError.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "skillVersionRestoreError": "No se pudo restaurar esta versión: {error}",
+  "@skillVersionRestoreError": {
+    "description": "Skill version history: skillVersionRestoreError.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "skillVersionRestoring": "Restaurando…",
+  "@skillVersionRestoring": {
+    "description": "Skill version history: skillVersionRestoring."
+  },
+  "skillVersionBinary": "Archivo binario modificado",
+  "@skillVersionBinary": {
+    "description": "Skill version history: skillVersionBinary."
+  },
+  "skillVersionEmptyFile": "Archivo vacío",
+  "@skillVersionEmptyFile": {
+    "description": "Skill version history: skillVersionEmptyFile."
+  },
+  "skillVersionDirectory": "Carpeta",
+  "@skillVersionDirectory": {
+    "description": "Skill version history: skillVersionDirectory."
+  },
+  "skillVersionPermissionsChanged": "Permiso de ejecución modificado",
+  "@skillVersionPermissionsChanged": {
+    "description": "Skill version history: skillVersionPermissionsChanged."
+  },
+  "skillVersionLargeFile": "Archivo grande: se muestra el contenido eliminado y añadido.",
+  "@skillVersionLargeFile": {
+    "description": "Skill version history: skillVersionLargeFile."
+  },
+  "skillVersionNoNewline": "Sin salto de línea al final",
+  "@skillVersionNoNewline": {
+    "description": "Skill version history: skillVersionNoNewline."
+  },
+  "skillVersionAdded": "Añadido",
+  "@skillVersionAdded": {
+    "description": "Skill version history: skillVersionAdded."
+  },
+  "skillVersionRemoved": "Eliminado",
+  "@skillVersionRemoved": {
+    "description": "Skill version history: skillVersionRemoved."
+  },
+  "skillVersionModified": "Modificado",
+  "@skillVersionModified": {
+    "description": "Skill version history: skillVersionModified."
+  },
+  "skillVersionSource": "Origen",
+  "@skillVersionSource": {
+    "description": "Skill version history: skillVersionSource."
+  },
+  "skillVersionName": "Nombre de la habilidad",
+  "@skillVersionName": {
+    "description": "Skill version history: skillVersionName."
+  },
+  "skillVersionPackageChanged": "Estructura del paquete modificada",
+  "@skillVersionPackageChanged": {
+    "description": "Skill version history: skillVersionPackageChanged."
+  },
+  "skillVersionRetry": "Reintentar",
+  "@skillVersionRetry": {
+    "description": "Skill version history: skillVersionRetry."
+  },
+  "skillVersionFiles": "Archivos modificados ({count})",
+  "@skillVersionFiles": {
+    "description": "Skill version history: skillVersionFiles.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

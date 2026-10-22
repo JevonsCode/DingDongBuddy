@@ -4430,4 +4430,117 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get noMatchingSettings =>
       'No hay ajustes coincidentes. Prueba otra palabra.';
+
+  @override
+  String get skillVersionHistory => 'Historial de versiones';
+
+  @override
+  String get skillVersionCurrent => 'Actual';
+
+  @override
+  String get skillVersionInitial => 'Versión inicial';
+
+  @override
+  String get skillVersionManual => 'Guardado manual';
+
+  @override
+  String get skillVersionOnline => 'Actualización en línea';
+
+  @override
+  String skillVersionRestored(int number) {
+    return 'Restaurada desde v$number';
+  }
+
+  @override
+  String get skillVersionFrom => 'Comparar desde';
+
+  @override
+  String get skillVersionTo => 'Comparar con';
+
+  @override
+  String get skillVersionRestore => 'Restaurar esta versión';
+
+  @override
+  String skillVersionConfirmRestore(int number) {
+    return '¿Restaurar v$number?';
+  }
+
+  @override
+  String get skillVersionRestoreExplanation =>
+      'Se creará una nueva versión. Se conservarán la configuración actual de los agentes y el historial.';
+
+  @override
+  String get skillVersionNoHistory => 'Todavía no hay versiones guardadas.';
+
+  @override
+  String get skillVersionOne =>
+      'Solo hay una versión guardada. Su contenido se muestra abajo.';
+
+  @override
+  String get skillVersionNoChanges =>
+      'No hay diferencias entre estas versiones.';
+
+  @override
+  String skillVersionLoadError(String error) {
+    return 'No se pudo cargar el historial: $error';
+  }
+
+  @override
+  String skillVersionCompareError(String error) {
+    return 'No se pudieron comparar las versiones: $error';
+  }
+
+  @override
+  String skillVersionRestoreError(String error) {
+    return 'No se pudo restaurar esta versión: $error';
+  }
+
+  @override
+  String get skillVersionRestoring => 'Restaurando…';
+
+  @override
+  String get skillVersionBinary => 'Archivo binario modificado';
+
+  @override
+  String get skillVersionEmptyFile => 'Archivo vacío';
+
+  @override
+  String get skillVersionDirectory => 'Carpeta';
+
+  @override
+  String get skillVersionPermissionsChanged =>
+      'Permiso de ejecución modificado';
+
+  @override
+  String get skillVersionLargeFile =>
+      'Archivo grande: se muestra el contenido eliminado y añadido.';
+
+  @override
+  String get skillVersionNoNewline => 'Sin salto de línea al final';
+
+  @override
+  String get skillVersionAdded => 'Añadido';
+
+  @override
+  String get skillVersionRemoved => 'Eliminado';
+
+  @override
+  String get skillVersionModified => 'Modificado';
+
+  @override
+  String get skillVersionSource => 'Origen';
+
+  @override
+  String get skillVersionName => 'Nombre de la habilidad';
+
+  @override
+  String get skillVersionPackageChanged => 'Estructura del paquete modificada';
+
+  @override
+  String get skillVersionRetry => 'Reintentar';
+
+  @override
+  String skillVersionFiles(int count) {
+    return 'Archivos modificados ($count)';
+  }
 }

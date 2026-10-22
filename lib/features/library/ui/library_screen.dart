@@ -7,6 +7,7 @@ import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_import_history.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
+import 'package:dingdong/features/library/domain/skill_version.dart';
 import 'package:dingdong/features/library/ui/library_import_history_dialog.dart';
 import 'package:dingdong/features/library/ui/library_import_review_dialog.dart';
 import 'package:dingdong/features/library/ui/library_link_import_dialog.dart';
@@ -14,6 +15,7 @@ import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
 import 'package:dingdong/features/library/ui/resource_filter_bar.dart';
 import 'package:dingdong/features/library/ui/resource_list.dart';
+import 'package:dingdong/features/library/ui/skill_version_history_dialog.dart';
 import 'package:flutter/material.dart';
 
 /// Adaptive list/details resource management workspace.
@@ -39,6 +41,7 @@ class LibraryScreen extends StatefulWidget {
 
 class LibraryScreenState extends State<LibraryScreen> {
   bool _editorDirty = false;
+  int _editorEpoch = 0;
 
   Future<bool> confirmDiscardChanges() async {
     if (!_editorDirty) {
@@ -101,6 +104,12 @@ class LibraryScreenState extends State<LibraryScreen> {
                     _LibraryDetailHeader(
                       resource: widget.viewModel.selectedResource,
                       onBack: _closeEditor,
+                      onHistory:
+                          widget.viewModel.supportsSkillVersions &&
+                              widget.viewModel.selectedResource?.type ==
+                                  ResourceType.skill
+                          ? _showSkillHistory
+                          : null,
                     ),
                     const Divider(height: 1),
                     Expanded(child: _buildEditor(context)),
@@ -227,6 +236,7 @@ class LibraryScreenState extends State<LibraryScreen> {
 
   Widget _buildEditor(BuildContext context) {
     return ResourceEditor(
+      key: ValueKey<int>(_editorEpoch),
       resource: widget.viewModel.selectedResource,
       isCreating: widget.viewModel.isCreating,
       initialType: widget.viewModel.creatingType,
@@ -240,6 +250,8 @@ class LibraryScreenState extends State<LibraryScreen> {
       onDeleteTriggerGroup: widget.viewModel.deleteTriggerGroup,
       onDelete: () => _confirmDelete(context),
       onSave: widget.viewModel.save,
+      onSaveOnlineSkill: (Resource resource) =>
+          widget.viewModel.save(resource, source: SkillVersionSource.online),
       onSyncUpdate: (String updateUrl) => _syncUpdate(context, updateUrl),
       onResolveSkillSource: widget.viewModel.installSkillPackage,
       onOpenExternalLink: widget.onOpenExternalLink,
@@ -250,6 +262,26 @@ class LibraryScreenState extends State<LibraryScreen> {
         }
       },
     );
+  }
+
+  Future<void> _showSkillHistory() async {
+    final Resource? resource = widget.viewModel.selectedResource;
+    if (resource == null) return;
+    final bool hadEdits = _editorDirty;
+    if (!await confirmDiscardChanges() || !mounted) return;
+    if (hadEdits) setState(() => _editorEpoch++);
+    final bool? restored = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => SkillVersionHistoryDialog(
+        title: resource.title,
+        loadVersions: () => widget.viewModel.loadSkillVersions(resource.id),
+        loadSnapshot: widget.viewModel.loadSkillSnapshot,
+        onRestore: (int version) =>
+            widget.viewModel.restoreSkillVersion(resource.id, version),
+      ),
+    );
+    if (restored == true && mounted) setState(() => _editorEpoch++);
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
@@ -450,10 +482,15 @@ class LibraryScreenState extends State<LibraryScreen> {
 }
 
 class _LibraryDetailHeader extends StatelessWidget {
-  const _LibraryDetailHeader({required this.resource, required this.onBack});
+  const _LibraryDetailHeader({
+    required this.resource,
+    required this.onBack,
+    this.onHistory,
+  });
 
   final Resource? resource;
   final VoidCallback onBack;
+  final VoidCallback? onHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -505,6 +542,17 @@ class _LibraryDetailHeader extends StatelessWidget {
                 ],
               ),
             ),
+            if (onHistory != null) ...<Widget>[
+              const SizedBox(width: 8),
+              DesktopIconButton(
+                key: const Key('skill-version-history'),
+                tooltip: context.l10n.skillVersionHistory,
+                semanticLabel: context.l10n.skillVersionHistory,
+                onPressed: onHistory,
+                size: 32,
+                icon: const Icon(Icons.history_rounded, size: 18),
+              ),
+            ],
           ],
         ),
       ),
