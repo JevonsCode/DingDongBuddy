@@ -24,6 +24,53 @@ public class TrayIcon: NSView {
     private var badgeRgb: UInt32?
     private var reminderBubbles: [[String: Any]] = []
     private var bubbleDimmed = false
+    private var hoverExpanded = false
+    private var hoverTrackingArea: NSTrackingArea?
+    private var collapseWork: DispatchWorkItem?
+
+    public override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let area = hoverTrackingArea { removeTrackingArea(area) }
+        let area = NSTrackingArea(rect: .zero,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
+    public override func mouseEntered(with event: NSEvent) {
+        collapseWork?.cancel()
+        guard !reminderBubbles.isEmpty else { return }
+        hoverExpanded = true
+        layoutBadge()
+    }
+
+    public override func mouseExited(with event: NSEvent) {
+        collapseWork?.cancel()
+        // Resizing a status item changes its screen position. Check the new
+        // bounds before collapsing, avoiding enter/exit loops under the pointer.
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, let button = self.statusItem?.button,
+                  let window = button.window else { return }
+            let screenRect = window.convertToScreen(button.convert(button.bounds, to: nil))
+            guard !screenRect.contains(NSEvent.mouseLocation) else { return }
+            self.hoverExpanded = false
+            self.layoutBadge()
+        }
+        collapseWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
+    }
+
+    private func layoutBadge() {
+        guard unreadBadgeTitle != nil, let button = statusItem?.button else { return }
+        var width = badgeWidth
+        for bubble in displayedBubbles {
+            width += bubbleWidth(bubble) + (hoverExpanded ? 6 : -5)
+        }
+        statusItem?.length = width
+        frame = button.bounds
+        needsDisplay = true
+    }
     
     public init() {
         super.init(frame: NSRect.zero)
@@ -119,15 +166,17 @@ public class TrayIcon: NSView {
                 .foregroundColor: NSColor.white,
                 .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
             ])
-            badgeWidth = countText.count > 2 ? 65 : 55
+            badgeWidth = 5 + 22 + 4 + ceil(unreadBadgeTitle!.size().width) + 8
             badgeRgb = badgeColorRgb
             reminderBubbles = Array(bubbles.prefix(64))
             bubbleDimmed = badgeDimmed
             button.image = nil
             button.attributedTitle = NSAttributedString(string: "")
-            statusItem?.length = badgeWidth + displayedBubbles.reduce(CGFloat(0)) { $0 + bubbleWidth($1) + 6 }
+            layoutBadge()
 
         } else {
+            collapseWork?.cancel()
+            hoverExpanded = false
             unreadBadgeTitle = nil
             stillBadgeImage = nil
             reminderBubbles = []
@@ -144,25 +193,32 @@ public class TrayIcon: NSView {
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         guard let title = unreadBadgeTitle else { return }
-        let pill = NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height)
-        NSColor(cgColor: badgeBackgroundColor(badgeRgb))?.setFill()
-        NSBezierPath(roundedRect: pill, xRadius: 12, yRadius: 12).fill()
-        let artwork = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? stillBadgeImage : sourceImage
-        artwork?.draw(in: NSRect(x: 5, y: bounds.midY - 11, width: 22, height: 22))
-        drawCentered(title, x: 30)
-        var x = badgeWidth + 6
+        // All surfaces share the same vertical centre. Round badges need a
+        // one-point optical inset to avoid appearing taller than the long pill.
+        var positioned: [(bubble: [String: Any], x: CGFloat)] = []
+        var x = badgeWidth + (hoverExpanded ? 6 : -5)
         for bubble in displayedBubbles {
+            positioned.append((bubble, x))
+            x += bubbleWidth(bubble) + (hoverExpanded ? 6 : -5)
+        }
+        // Back-to-front drawing makes the preceding badge cover each overlap.
+        for (bubble, x) in positioned.reversed() {
             let rgb = (bubble["colorRgb"] as? NSNumber)?.uint32Value
             let pulse = bubble["pulse"] as? Bool ?? false
             let color = badgeDisplayRgb(rgb, dimmed: bubbleDimmed && pulse)
             NSColor(cgColor: badgeBackgroundColor(color))?.setFill()
             let width = bubbleWidth(bubble)
-            NSBezierPath(roundedRect: NSRect(x: x, y: 0, width: width, height: bounds.height),
-                         xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
+            let rect = NSRect(x: x, y: 1, width: width, height: bounds.height - 2)
+            NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2).fill()
             let text = bubbleText(bubble)
-            drawCentered(text, x: x + (width - text.size().width) / 2)
-            x += width + 6
+            drawCentered(text, centerX: x + width / 2)
         }
+        let pill = NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height)
+        NSColor(cgColor: badgeBackgroundColor(badgeRgb))?.setFill()
+        NSBezierPath(roundedRect: pill, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
+        let artwork = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? stillBadgeImage : sourceImage
+        artwork?.draw(in: NSRect(x: 5, y: bounds.midY - 11, width: 22, height: 22))
+        drawCentered(title, centerX: 31 + title.size().width / 2)
     }
 
     private var displayedBubbles: [[String: Any]] {
@@ -186,13 +242,13 @@ public class TrayIcon: NSView {
         max(statusItem?.button?.bounds.height ?? 22, ceil(bubbleText(bubble).size().width) + 10)
     }
 
-    private func drawCentered(_ text: NSAttributedString, x: CGFloat) {
+    private func drawCentered(_ text: NSAttributedString, centerX: CGFloat) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         let line = CTLineCreateWithAttributedString(text)
         let glyphBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
         context.saveGState()
         context.textMatrix = .identity
-        context.textPosition = CGPoint(x: x, y: bounds.midY - glyphBounds.midY)
+        context.textPosition = CGPoint(x: centerX - glyphBounds.midX, y: bounds.midY - glyphBounds.midY)
         CTLineDraw(line, context)
         context.restoreGState()
     }

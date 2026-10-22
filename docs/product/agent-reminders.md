@@ -7,11 +7,15 @@ color. Existing completion color preferences are preserved.
 
 On macOS the menu-bar badge preserves the original DingDong artwork and unread
 count. Separate colored bubbles follow it for each unread reminder type, ordered
-by its latest event. Each bubble matches the main pill height and shows its own
+by its latest event. Trailing bubbles have a one-point vertical optical inset so their perceived height
+matches the main pill, and each shows its own
 unread count in white (`99+` above 99). Legacy unread groups without per-event
 history display `?` until acknowledged, rather than inventing counts. Up to three bubbles are visible; additional types show a
 `+N` count. Types can share a color. Acknowledging an earlier snapshot leaves
-newer bubbles intact, including after restart. Hover text lists reminder names.
+newer bubbles intact, including after restart. Bubbles overlap by five points at
+rest; hovering opens six-point gaps. Leaving collapses after a short delay, with
+a screen-bounds check to prevent flicker during status-item resizing. The main
+pill fits its artwork and number instead of reserving a fixed width. Hover text lists reminder names.
 On Windows the fixed-size notification-area marker uses a check or exclamation
 mark; the trailing-bubble layout is macOS-specific. An unread needs-input event
 still takes priority over subsequent completion events until acknowledged.
