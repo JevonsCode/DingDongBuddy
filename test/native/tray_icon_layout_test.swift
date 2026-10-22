@@ -24,15 +24,34 @@ enum TrayIconLayoutTest {
         try capture("collapsed")
         let event = NSEvent.mouseEvent(with: .mouseMoved, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0, context: nil, eventNumber: 0, clickCount: 0, pressure: 0)!
         icon.mouseEntered(with: event)
+        let reducedMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if !reducedMotion {
+            precondition(icon.frame.width == collapsed, "Hover starts at the current position")
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.06))
+            let midway = icon.frame.width
+            precondition(midway > collapsed, "Animation must produce intermediate widths")
+            try capture("midway")
+            icon.setHoverExpanded(false)
+            precondition(icon.frame.width == midway, "Reversing must not jump")
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.28))
+            precondition(abs(icon.frame.width - collapsed) < 1)
+            icon.setHoverExpanded(true)
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.28))
+        }
         let expanded = icon.frame.width
         precondition(expanded > collapsed)
         try capture("expanded")
         icon.setTitle(" 99+", "unreadBadge", 0x9575CD, bubbles, true)
         precondition(icon.frame.width > expanded)
         try capture("expanded-99")
+        let largeExpanded = icon.frame.width
+        icon.setHoverExpanded(false, animated: false)
+        precondition(icon.frame.width < largeExpanded, "Reduced-motion path switches immediately")
+        icon.setHoverExpanded(true)
         icon.setTitle("", "", nil)
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
         precondition(icon.statusItem!.length == NSStatusItem.squareLength)
-        print("PASS: hover expands \(collapsed) -> \(expanded); title updates preserve hover; clear restores square status item")
+        print("PASS: hover expands \(collapsed) -> \(expanded); continuous reversal and immediate switching pass; clearing cancels animation")
         NSStatusBar.system.removeStatusItem(icon.statusItem!)
 
     }

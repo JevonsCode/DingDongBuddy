@@ -25,6 +25,45 @@ public class TrayIcon: NSView {
     private var reminderBubbles: [[String: Any]] = []
     private var bubbleDimmed = false
     private var hoverExpanded = false
+    private var expansion: CGFloat = 0
+    private var expansionTimer: Timer?
+    private var bubbleSpacing: CGFloat { -8 + 11 * expansion }
+
+    deinit { expansionTimer?.invalidate() }
+
+    // A single progress value drives drawing and status-item width together.
+    // Retargeting starts at the rendered position, including rapid reversals.
+    func setHoverExpanded(_ expanded: Bool, animated: Bool = true) {
+        let target: CGFloat = expanded ? 1 : 0
+        if expanded == hoverExpanded && animated &&
+            (expansionTimer != nil || abs(target - expansion) < 0.001) { return }
+        hoverExpanded = expanded
+        expansionTimer?.invalidate()
+        expansionTimer = nil
+        guard animated, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+              !reminderBubbles.isEmpty, abs(target - expansion) > 0.001 else {
+            expansion = target
+            layoutBadge()
+            return
+        }
+        let start = expansion
+        let startedAt = CACurrentMediaTime()
+        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] timer in
+            guard let self else { timer.invalidate(); return }
+            let elapsed = (CACurrentMediaTime() - startedAt) / 0.2
+            let progress = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                ? 1 : min(1, elapsed)
+            let eased = 1 - pow(1 - progress, 3)
+            self.expansion = start + (target - start) * CGFloat(eased)
+            self.layoutBadge()
+            if progress >= 1 {
+                timer.invalidate()
+                self.expansionTimer = nil
+            }
+        }
+        expansionTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
     private var hoverTrackingArea: NSTrackingArea?
     private var collapseWork: DispatchWorkItem?
 
@@ -41,8 +80,7 @@ public class TrayIcon: NSView {
     public override func mouseEntered(with event: NSEvent) {
         collapseWork?.cancel()
         guard !reminderBubbles.isEmpty else { return }
-        hoverExpanded = true
-        layoutBadge()
+        setHoverExpanded(true)
     }
 
     public override func mouseExited(with event: NSEvent) {
@@ -54,8 +92,7 @@ public class TrayIcon: NSView {
                   let window = button.window else { return }
             let screenRect = window.convertToScreen(button.convert(button.bounds, to: nil))
             guard !screenRect.contains(NSEvent.mouseLocation) else { return }
-            self.hoverExpanded = false
-            self.layoutBadge()
+            self.setHoverExpanded(false)
         }
         collapseWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
@@ -65,7 +102,7 @@ public class TrayIcon: NSView {
         guard unreadBadgeTitle != nil, let button = statusItem?.button else { return }
         var width = badgeWidth
         for bubble in displayedBubbles {
-            width += bubbleWidth(bubble) + (hoverExpanded ? 6 : -5)
+            width += bubbleWidth(bubble) + bubbleSpacing
         }
         statusItem?.length = width
         frame = button.bounds
@@ -177,6 +214,9 @@ public class TrayIcon: NSView {
         } else {
             collapseWork?.cancel()
             hoverExpanded = false
+            expansionTimer?.invalidate()
+            expansionTimer = nil
+            expansion = 0
             unreadBadgeTitle = nil
             stillBadgeImage = nil
             reminderBubbles = []
@@ -196,10 +236,10 @@ public class TrayIcon: NSView {
         // All surfaces share the same vertical centre. Round badges need a
         // one-point optical inset to avoid appearing taller than the long pill.
         var positioned: [(bubble: [String: Any], x: CGFloat)] = []
-        var x = badgeWidth + (hoverExpanded ? 6 : -5)
+        var x = badgeWidth + bubbleSpacing
         for bubble in displayedBubbles {
             positioned.append((bubble, x))
-            x += bubbleWidth(bubble) + (hoverExpanded ? 6 : -5)
+            x += bubbleWidth(bubble) + bubbleSpacing
         }
         // Back-to-front drawing makes the preceding badge cover each overlap.
         for (bubble, x) in positioned.reversed() {
@@ -211,7 +251,7 @@ public class TrayIcon: NSView {
             let rect = NSRect(x: x, y: 1, width: width, height: bounds.height - 2)
             NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2).fill()
             let text = bubbleText(bubble)
-            drawCentered(text, centerX: x + width / 2)
+            drawCentered(text, centerX: x + width / 2 + max(0, -bubbleSpacing) / 2)
         }
         let pill = NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height)
         NSColor(cgColor: badgeBackgroundColor(badgeRgb))?.setFill()
