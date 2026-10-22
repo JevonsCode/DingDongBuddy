@@ -106,6 +106,9 @@ public class TrayIcon: NSView {
     }
 
     private var overflowPanel: NSPanel?
+    private var overflowTargetFrame = NSRect.zero
+    private var overflowAnimationTimer: Timer?
+    private var overflowExpanded = false
     private var overflowOpenWork: DispatchWorkItem?
     private var overflowCloseWork: DispatchWorkItem?
     private var overflowMonitor: Timer?
@@ -117,39 +120,36 @@ public class TrayIcon: NSView {
     }
 
     /// Shared by the real capsule and the native rendering test.
-    func makeOverflowContent() -> NSViewController? {
+    func makeOverflowContent() -> NSView? {
         let items = overflowItems
         guard !items.isEmpty else { return nil }
-        let width: CGFloat = 36
-        let height = min(CGFloat(items.count) * 32 + 4, 260)
-        let controller = NSViewController()
+        let diameter = bounds.height - 2
+        let rowHeight = diameter + 8
+        let width = (items.map { bubbleWidth($0) }.max() ?? diameter) + 12
+        let height = CGFloat(min(items.count, 8)) * rowHeight + 4
         let root = TrayOverflowHoverView(frame: NSRect(x: 0, y: 0, width: width, height: height))
+        root.wantsLayer = true
+        root.layer?.masksToBounds = true
+        root.layer?.cornerRadius = width / 2
         root.onHover = { [weak self] inside in
-            if inside { self?.overflowCloseWork?.cancel(); self?.overflowCloseWork = nil; self?.collapseWork?.cancel() }
+            if inside { self?.setOverflowExpanded(true) }
             else { self?.scheduleOverflowClose(); self?.scheduleCollapse() }
         }
         let scroll = NSScrollView(frame: root.bounds.insetBy(dx: 2, dy: 2))
-        scroll.autoresizingMask = [.width, .height]
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
         scroll.scrollerStyle = .overlay
         let document = TrayOverflowDocument(frame: NSRect(x: 0, y: 0,
-            width: width - 4, height: CGFloat(items.count) * 32))
+            width: width - 4, height: CGFloat(items.count) * rowHeight))
         for (index, item) in items.enumerated() {
-            let row = NSView(frame: NSRect(x: 0, y: CGFloat(index) * 32, width: width - 4, height: 32))
-            let text = bubbleText(item).string
-            let badgeWidth: CGFloat = text.count > 2 ? 32 : 24
-            let badge = NSView(frame: NSRect(x: (width - 4 - badgeWidth) / 2, y: 4, width: badgeWidth, height: 24))
-            badge.wantsLayer = true
-            badge.layer?.cornerRadius = 12
-            badge.layer?.backgroundColor = badgeBackgroundColor((item["colorRgb"] as? NSNumber)?.uint32Value)
-            let count = NSTextField(labelWithString: text)
-            count.font = .monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
-            count.textColor = .white
-            count.alignment = .center
-            count.frame = NSRect(x: 0, y: 4, width: badgeWidth, height: 16)
-            badge.addSubview(count)
+            let row = NSView(frame: NSRect(x: 0, y: CGFloat(index) * rowHeight, width: width - 4, height: rowHeight))
+            let title = bubbleText(item)
+            let text = title.string
+            let badgeWidth = bubbleWidth(item)
+            let badge = TrayOverflowBadge(frame: NSRect(x: (width - 4 - badgeWidth) / 2,
+                y: 4, width: badgeWidth, height: diameter), title: title,
+                color: badgeBackgroundColor((item["colorRgb"] as? NSNumber)?.uint32Value))
             row.addSubview(badge)
             let name = item["name"] as? String ?? item["id"] as? String ?? ""
             row.setAccessibilityElement(true)
@@ -160,9 +160,7 @@ public class TrayIcon: NSView {
         }
         scroll.documentView = document
         root.addSubview(scroll)
-        controller.view = root
-        controller.preferredContentSize = root.frame.size
-        return controller
+        return root
     }
 
     private var overflowRect: NSRect? {
@@ -184,6 +182,10 @@ public class TrayIcon: NSView {
         if mouseInsideOverflow {
             overflowCloseWork?.cancel()
             overflowCloseWork = nil
+            if overflowPanel?.isVisible == true && !overflowExpanded {
+                setOverflowExpanded(true)
+                return
+            }
             guard overflowPanel?.isVisible != true, overflowOpenWork == nil else { return }
             let work = DispatchWorkItem { [weak self] in
                 self?.overflowOpenWork = nil
@@ -201,34 +203,33 @@ public class TrayIcon: NSView {
 
     func showOverflow(animated: Bool = true) {
         guard let rect = overflowRect, let content = makeOverflowContent(), let window else { return }
+        let size = content.frame.size
         let panel = overflowPanel ?? TrayOverflowPanel(contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.identifier = NSUserInterfaceItemIdentifier("dingdong.reminder-overflow")
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
+        panel.animationBehavior = .none
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.level = .popUpMenu
         panel.collectionBehavior = [.transient, .moveToActiveSpace, .fullScreenAuxiliary, .ignoresCycle]
-        panel.contentViewController = content
+        let currentHeight = panel.isVisible ? panel.frame.height : 1
+        panel.contentView = content
+        content.autoresizingMask = [.width, .height]
         let anchor = window.convertToScreen(convert(rect, to: nil))
         let screen = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
-        let size = content.preferredContentSize
         let x = min(max(anchor.midX - size.width / 2, screen.minX + 4), screen.maxX - size.width - 4)
         let y = max(screen.minY + 4, min(anchor.minY, screen.maxY) - 6 - size.height)
-        panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height), display: true)
-        let fade = animated && !panel.isVisible && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        panel.alphaValue = fade ? 0 : 1
+        overflowTargetFrame = NSRect(x: x, y: y, width: size.width, height: size.height)
         overflowPanel = panel
+        overflowAnimationTimer?.invalidate()
+        overflowAnimationTimer = nil
+        layoutOverflow(height: currentHeight)
+        panel.alphaValue = 1
         panel.orderFrontRegardless()
-        if fade {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.12
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                panel.animator().alphaValue = 1
-            }
-        }
+        setOverflowExpanded(true, animated: animated)
         removeOverflowMonitors()
         let monitor = Timer(timeInterval: 0.1, repeats: true) { [weak self] timer in
             guard let self, self.overflowPanel?.isVisible == true else { timer.invalidate(); return }
@@ -240,13 +241,13 @@ public class TrayIcon: NSView {
         overflowMonitor = monitor
         RunLoop.main.add(monitor, forMode: .common)
         overflowGlobalEvents = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
-            self?.closeOverflow()
+            self?.closeOverflow(animated: true)
             self?.scheduleCollapse()
         }
         overflowLocalEvents = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown, .keyDown]) { [weak self] event in
             if let self, event.type == .keyDown && event.keyCode == 53 ||
                 event.type != .keyDown && !self.mouseInsideOverflowPanel && !self.mouseInsideOverflow {
-                self.closeOverflow()
+                self.closeOverflow(animated: true)
                 self.scheduleCollapse()
             }
             return event
@@ -267,19 +268,68 @@ public class TrayIcon: NSView {
         let work = DispatchWorkItem { [weak self] in
             self?.overflowCloseWork = nil
             guard let self, !self.mouseInsideOverflow, !self.mouseInsideOverflowPanel else { return }
-            self.closeOverflow()
+            self.closeOverflow(animated: true)
         }
         overflowCloseWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: work)
     }
 
-    private func closeOverflow() {
+    private func closeOverflow(animated: Bool = false) {
         overflowOpenWork?.cancel()
         overflowOpenWork = nil
         overflowCloseWork?.cancel()
         overflowCloseWork = nil
-        removeOverflowMonitors()
-        overflowPanel?.orderOut(nil)
+        setOverflowExpanded(false, animated: animated)
+    }
+
+    private func layoutOverflow(height: CGFloat) {
+        guard let panel = overflowPanel else { return }
+        var frame = overflowTargetFrame
+        frame.origin.y = frame.maxY - height
+        frame.size.height = height
+        panel.setFrame(frame, display: true)
+        panel.contentView?.layoutSubtreeIfNeeded()
+        panel.invalidateShadow()
+    }
+
+    // One geometry value reveals rows downward without stretching their glyphs.
+    // Retargeting uses the visible height, so rapid re-entry cannot snap.
+    func setOverflowExpanded(_ expanded: Bool, animated: Bool = true) {
+        guard let panel = overflowPanel else { return }
+        if expanded {
+            overflowCloseWork?.cancel()
+            overflowCloseWork = nil
+            collapseWork?.cancel()
+        }
+        let target = expanded ? overflowTargetFrame.height : 1
+        if expanded == overflowExpanded && animated &&
+            (overflowAnimationTimer != nil || (panel.isVisible == expanded && abs(panel.frame.height - target) < 0.1)) { return }
+        overflowAnimationTimer?.invalidate()
+        overflowAnimationTimer = nil
+        overflowExpanded = expanded
+        let start = panel.frame.height
+        guard animated, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+              panel.isVisible, abs(target - start) > 0.1 else {
+            layoutOverflow(height: target)
+            if !expanded { panel.orderOut(nil); removeOverflowMonitors() }
+            return
+        }
+        let startedAt = CACurrentMediaTime()
+        let duration = max(0.04, (expanded ? 0.22 : 0.16) * Double(abs(target - start) / overflowTargetFrame.height))
+        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] timer in
+            guard let self else { timer.invalidate(); return }
+            let progress = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                ? 1 : min(1, (CACurrentMediaTime() - startedAt) / duration)
+            let h = start + (target - start) * CGFloat(1 - pow(1 - progress, 3))
+            self.layoutOverflow(height: h)
+            if progress >= 1 {
+                timer.invalidate()
+                self.overflowAnimationTimer = nil
+                if !expanded { self.overflowPanel?.orderOut(nil); self.removeOverflowMonitors() }
+            }
+        }
+        overflowAnimationTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     private var unreadBadgeTitle: NSAttributedString?
@@ -298,6 +348,7 @@ public class TrayIcon: NSView {
     deinit {
         expansionTimer?.invalidate()
         transitionTimer?.invalidate()
+        overflowAnimationTimer?.invalidate()
         overflowOpenWork?.cancel()
         overflowCloseWork?.cancel()
         removeOverflowMonitors()
@@ -377,7 +428,7 @@ public class TrayIcon: NSView {
                   let window = button.window else { return }
             let screenRect = window.convertToScreen(button.convert(button.bounds, to: nil))
             guard !screenRect.contains(NSEvent.mouseLocation), !self.mouseInsideOverflowPanel else { return }
-            self.closeOverflow()
+            self.closeOverflow(animated: true)
             self.setHoverExpanded(false)
         }
         collapseWork = work
@@ -522,8 +573,8 @@ public class TrayIcon: NSView {
             if changed { animateScene(from: oldScene, width: oldWidth) }
             else { layoutBadge() }
             if overflowItems.isEmpty { closeOverflow() }
-            else if changed && overflowPanel?.isVisible == true {
-                showOverflow(animated: false)
+            else if changed && overflowPanel?.isVisible == true && overflowExpanded {
+                showOverflow(animated: overflowAnimationTimer != nil)
             }
 
         } else {
@@ -679,8 +730,24 @@ private final class TrayOverflowDocument: NSView {
 private final class TrayOverflowHoverView: NSView {
     var onHover: ((Bool) -> Void)?
     private var hoverArea: NSTrackingArea?
+    override func setFrameSize(_ newSize: NSSize) {
+        let scroll = subviews.first as? NSScrollView
+        let origin = scroll?.contentView.bounds.origin ?? .zero
+        super.setFrameSize(newSize)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer?.cornerRadius = min(newSize.width, newSize.height) / 2
+        CATransaction.commit()
+        scroll?.frame = NSRect(x: 2, y: 2, width: max(0, newSize.width - 4), height: max(0, newSize.height - 4))
+        scroll?.contentView.scroll(to: origin)
+        needsDisplay = true
+    }
     override func draw(_ dirtyRect: NSRect) {
         NSColor.windowBackgroundColor.setFill()
+        if bounds.height < bounds.width {
+            NSBezierPath(roundedRect: bounds, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
+            return
+        }
         let radius = bounds.width / 2
         let capsule = NSBezierPath()
         capsule.move(to: NSPoint(x: bounds.maxX, y: bounds.minY + radius))
@@ -707,4 +774,28 @@ private final class TrayOverflowHoverView: NSView {
     }
     override func mouseEntered(with event: NSEvent) { onHover?(true) }
     override func mouseExited(with event: NSEvent) { onHover?(false) }
+}
+
+
+private final class TrayOverflowBadge: NSView {
+    private let title: NSAttributedString
+    private let color: CGColor
+    init(frame: NSRect, title: NSAttributedString, color: CGColor) {
+        self.title = title
+        self.color = color
+        super.init(frame: frame)
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor(cgColor: color)?.setFill()
+        NSBezierPath(roundedRect: bounds, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        let line = CTLineCreateWithAttributedString(title)
+        let glyphBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
+        context.saveGState()
+        context.textMatrix = .identity
+        context.textPosition = CGPoint(x: bounds.midX - glyphBounds.midX, y: bounds.midY - glyphBounds.midY)
+        CTLineDraw(line, context)
+        context.restoreGState()
+    }
 }

@@ -98,14 +98,16 @@ enum TrayIconLayoutTest {
         try capture("five-types-stacked")
         let overflow = icon.makeOverflowContent()
         precondition(overflow != nil, "Five types must expose hidden reminder rows")
-        precondition(overflow!.preferredContentSize.width == 36, "Only a narrow vertical strip")
-        let firstRow = (overflow!.view.subviews.first as! NSScrollView).documentView!.subviews.first!
+
+        let firstRow = (overflow!.subviews.first as! NSScrollView).documentView!.subviews.first!
         precondition(firstRow.subviews.count == 1, "No visible reminder name")
+        let lowerBadge = firstRow.subviews.first!
+        precondition(lowerBadge.frame.height == icon.bounds.height - 2, "Dropdown and tray badges share height")
+        precondition(overflow!.frame.size.width == lowerBadge.frame.width + 12, "Keep uniform side padding")
         precondition(firstRow.accessibilityLabel() == "Reminder 3, 1", "Names remain accessible")
         precondition(icon.overflowItems.count == 2, "Show hidden fourth and fifth types")
         precondition(icon.overflowItems.first?["name"] as? String == "Reminder 3")
-        func captureOverflow(_ controller: NSViewController, _ name: String, _ appearance: NSAppearance.Name) throws {
-            let view = controller.view
+        func captureOverflow(_ view: NSView, _ name: String, _ appearance: NSAppearance.Name) throws {
             view.appearance = NSAppearance(named: appearance)
             view.layoutSubtreeIfNeeded()
             let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds)!
@@ -127,11 +129,53 @@ enum TrayIconLayoutTest {
         let panel = NSApp.windows.first { $0.identifier?.rawValue == "dingdong.reminder-overflow" }!
         precondition(panel is NSPanel && !panel.styleMask.contains(.titled))
         precondition(panel.styleMask.contains(.nonactivatingPanel) && !panel.isKeyWindow)
-        precondition(panel.frame.size == overflow!.preferredContentSize, "Capsule has no arrow/chrome")
+        precondition(panel.frame.size == overflow!.frame.size, "Capsule has no arrow/chrome")
         precondition(panel.frame.maxY <= icon.window!.screen!.visibleFrame.maxY - 6,
             "Leave a visible gap below the menu bar")
+        let fullHeight = panel.frame.height
+        let fixedTop = panel.frame.maxY
+        func firstBadgeScreenY() -> CGFloat {
+            let view = panel.contentView!
+            let scroll = view.subviews.first as! NSScrollView
+            let badge = scroll.documentView!.subviews.first!.subviews.first!
+            return panel.convertPoint(toScreen: badge.convert(NSPoint(x: badge.bounds.midX, y: badge.bounds.midY), to: nil)).y
+        }
+        let firstY = firstBadgeScreenY()
+        icon.setOverflowExpanded(false)
+        if !reducedMotion {
+            precondition(panel.frame.height == fullHeight, "Closing starts from the current height")
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.04))
+            let closingHeight = panel.frame.height
+            precondition(closingHeight < fullHeight && panel.isVisible)
+            precondition(abs(panel.frame.maxY - fixedTop) < 0.1, "Top stays anchored")
+            precondition(abs(firstBadgeScreenY() - firstY) < 0.5, "Numbers reveal without shifting or scaling")
+            try captureOverflow(panel.contentView!, "overflow-retracting", .aqua)
+            icon.setOverflowExpanded(true)
+            precondition(panel.frame.height == closingHeight, "Reversing must not jump")
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.03))
+            precondition(panel.frame.height > closingHeight)
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.24))
+            precondition(abs(panel.frame.height - fullHeight) < 0.1)
+        }
+        icon.setOverflowExpanded(false, animated: false)
+        precondition(!panel.isVisible, "Immediate/Reduce Motion path dismisses without waiting")
+        icon.showOverflow(animated: true)
+        if !reducedMotion {
+            precondition(panel.frame.height < fullHeight, "Open grows down from the anchor")
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.06))
+            precondition(panel.frame.height > 1 && panel.frame.height < fullHeight)
+            try captureOverflow(panel.contentView!, "overflow-expanding", .aqua)
+        }
+        icon.setOverflowExpanded(false)
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.2))
+        precondition(!panel.isVisible, "Retraction completes and hides the panel")
+        print("PASS: dropdown badge parity, anchored reveal/retract, uninterrupted reversal and reduced motion")
+        icon.showOverflow(animated: true)
+
         icon.setTitle(" 1", "unreadBadge", 0x9575CD, Array(bubbles.prefix(3)), false, "completion")
         precondition(!panel.isVisible, "Four types dismiss the capsule and its monitors")
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        precondition(!panel.isVisible, "Clearing during reveal cancels its timer")
         var clicked = false
         icon.onTrayIconMouseDown = { clicked = true }
         icon.mouseDown(with: event)
@@ -142,9 +186,9 @@ enum TrayIconLayoutTest {
         }
         icon.setTitle(" 1", "unreadBadge", 0x9575CD, many, false, "completion")
         let scrolled = icon.makeOverflowContent()!
-        precondition(scrolled.preferredContentSize.height <= 272)
+        precondition(scrolled.frame.size.height <= 272)
         precondition(icon.overflowItems.count == 38)
-        precondition((scrolled.view.subviews.first as! NSScrollView).documentView!.subviews.count == 38)
+        precondition((scrolled.subviews.first as! NSScrollView).documentView!.subviews.count == 38)
         try captureOverflow(scrolled, "overflow-list-scroll", .aqua)
 
         icon.setTitle(" 1", "unreadBadge", 0x9575CD, Array(bubbles.prefix(3)), false, "completion")
