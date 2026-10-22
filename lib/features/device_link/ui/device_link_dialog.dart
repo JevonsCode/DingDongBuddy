@@ -5,6 +5,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
@@ -44,35 +45,15 @@ final class DeviceLinkManagerScreen extends StatelessWidget {
                     children: <Widget>[
                       _WorkspaceHeader(controller: controller),
                       const SizedBox(height: 18),
-                      FileTransferList(controller: controller),
-                      LayoutBuilder(
-                        builder: (BuildContext context, BoxConstraints bounds) {
-                          final Widget pairing = _PairingCard(
-                            controller: controller,
-                          );
-                          final Widget devices = _DevicesColumn(
-                            controller: controller,
-                          );
-                          if (bounds.maxWidth < 720) {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: <Widget>[
-                                pairing,
-                                const SizedBox(height: 20),
-                                devices,
-                              ],
-                            );
-                          }
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Expanded(flex: 5, child: pairing),
-                              const SizedBox(width: 20),
-                              Expanded(flex: 6, child: devices),
-                            ],
-                          );
-                        },
-                      ),
+                      if (controller.devices.isEmpty) ...[
+                        _PairingCard(controller: controller),
+                        const SizedBox(height: 20),
+                        _LocalDeviceCard(controller: controller),
+                      ] else ...[
+                        _DevicesColumn(controller: controller),
+                        const SizedBox(height: 20),
+                        _PairingCard(controller: controller),
+                      ],
                     ],
                   ),
                 ),
@@ -127,7 +108,9 @@ class _WorkspaceHeader extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                context.l10n.pairATrustedDeviceAndChooseWhatThisComputerSends,
+                controller.localDevice.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
@@ -136,69 +119,75 @@ class _WorkspaceHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        _CountBadge(count: controller.devices.length),
-      ],
-    );
-  }
-}
-
-class _CountBadge extends StatelessWidget {
-  const _CountBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    return Semantics(
-      label: context.l10n.countPairedDevices(count),
-      child: ExcludeSemantics(
-        child: Container(
-          key: const Key('device-link-device-count'),
-          constraints: const BoxConstraints(minWidth: 30, minHeight: 24),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: colors.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            '$count',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: colors.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
+        DesktopActionButton(
+          key: const Key('device-transfer-history-open'),
+          label: context.l10n.fileTransferHistory,
+          icon: Icons.history_rounded,
+          compact: true,
+          onPressed: () => unawaited(
+            showDialog<void>(
+              context: context,
+              builder: (_) => FileTransferHistoryDialog(controller: controller),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
 
 class _DevicesColumn extends StatelessWidget {
   const _DevicesColumn({required this.controller});
-
   final DeviceLinkManagement controller;
 
   @override
   Widget build(BuildContext context) {
+    final connected = controller.devices
+        .where((d) => controller.isConnected(d.id))
+        .toList();
+    final history = controller.devices
+        .where((d) => !controller.isConnected(d.id))
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        _LocalDeviceCard(controller: controller),
-        const SizedBox(height: 18),
+      children: [
         _SectionTitle(
-          title: context.l10n.yourDevices,
-          trailing: '${controller.devices.length}',
+          title: context.l10n.onlineDevices,
+          trailing: '${connected.length}',
         ),
         const SizedBox(height: 9),
-        if (controller.devices.isEmpty && controller.pendingPairing == null)
-          const _EmptyDevicesCard()
-        else
-          for (final LinkedDevice device in controller.devices) ...<Widget>[
-            _DeviceCard(controller: controller, device: device),
+        if (connected.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              context.l10n.noDevicesOnline,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        for (final device in connected) ...[
+          _DeviceCard(
+            key: ValueKey(device.id),
+            controller: controller,
+            device: device,
+          ),
+          const SizedBox(height: 9),
+        ],
+        if (history.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _SectionTitle(
+            title: context.l10n.connectionHistory,
+            trailing: '${history.length}',
+          ),
+          const SizedBox(height: 9),
+          for (final device in history) ...[
+            _DeviceCard(
+              key: ValueKey(device.id),
+              controller: controller,
+              device: device,
+            ),
             const SizedBox(height: 9),
           ],
+        ],
       ],
     );
   }
@@ -393,11 +382,24 @@ class _LocalDeviceCard extends StatelessWidget {
   }
 }
 
-class _DeviceCard extends StatelessWidget {
-  const _DeviceCard({required this.controller, required this.device});
+class _DeviceCard extends StatefulWidget {
+  const _DeviceCard({
+    required this.controller,
+    required this.device,
+    super.key,
+  });
 
   final DeviceLinkManagement controller;
   final LinkedDevice device;
+
+  @override
+  State<_DeviceCard> createState() => _DeviceCardState();
+}
+
+class _DeviceCardState extends State<_DeviceCard> {
+  bool? _expanded;
+  DeviceLinkManagement get controller => widget.controller;
+  LinkedDevice get device => widget.device;
 
   @override
   Widget build(BuildContext context) {
@@ -406,6 +408,7 @@ class _DeviceCard extends StatelessWidget {
     final bool connected = status == DeviceConnectionStatus.connected;
     final bool connecting = status == DeviceConnectionStatus.connecting;
     final bool active = connected || connecting;
+    final bool expanded = _expanded ?? connected;
     final _StatusPalette statusPalette = _statusPalette(colors, status);
     return Semantics(
       container: true,
@@ -464,84 +467,93 @@ class _DeviceCard extends StatelessWidget {
                   statusKey: Key('device-status-${device.id}'),
                   palette: statusPalette,
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 10),
-            _SectionLabel(label: context.l10n.settings),
-            const SizedBox(height: 4),
-            _DeviceSettingRow(
-              key: Key('device-auto-send-${device.id}'),
-              title: context.l10n.autoSendClipboard,
-              subtitle: context.l10n.thisComputerName(device.name),
-              semanticLabel: context.l10n
-                  .autoSendClipboardFromThisComputerToName(device.name),
-              value: device.autoSendClipboard,
-              onChanged: (bool value) =>
-                  unawaited(controller.setAutoSendClipboard(device.id, value)),
-            ),
-            if (device.kind == LinkedDeviceKind.phone)
-              _DeviceSettingRow(
-                key: Key('device-agent-notifications-${device.id}'),
-                title: context.l10n.agentCompletion,
-                subtitle: device.receiveAgentNotifications
-                    ? device.vibrationEnabled
-                          ? context.l10n.enabledPhoneVibrationIsOn
-                          : context.l10n.enabledPhoneVibrationIsOff
-                    : context.l10n.completionNotificationsAreOffForThisDevice,
-                semanticLabel: context.l10n.agentCompletionNotificationsForName(
-                  device.name,
-                ),
-                value: device.receiveAgentNotifications,
-                onChanged: (bool value) => unawaited(
-                  controller.setAgentNotifications(device.id, value),
-                ),
-              ),
-            if (device.kind == LinkedDeviceKind.computer) ...<Widget>[
-              const SizedBox(height: 8),
-              _SectionLabel(label: context.l10n.communicationMethod),
-              const SizedBox(height: 7),
-              Text(
-                context.l10n.lanComputerOnly,
-                key: Key('device-transport-${device.id}'),
-              ),
-            ],
-            const SizedBox(height: 10),
-            _SectionLabel(label: context.l10n.connection),
-            const SizedBox(height: 7),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: DesktopActionButton(
-                    key: Key('device-connection-${device.id}'),
-                    label: connecting
-                        ? context.l10n.stopConnecting
-                        : connected
-                        ? context.l10n.disconnect
-                        : context.l10n.reconnect,
-                    icon: active
-                        ? Icons.link_off_rounded
-                        : Icons.refresh_rounded,
-                    compact: true,
-                    onPressed: () => unawaited(
-                      active
-                          ? controller.disconnect(device.id)
-                          : controller.reconnect(device.id),
-                    ),
+                const SizedBox(width: 6),
+                DesktopIconButton(
+                  key: Key('device-connection-${device.id}'),
+                  tooltip: connecting
+                      ? context.l10n.stopConnecting
+                      : connected
+                      ? context.l10n.disconnect
+                      : context.l10n.reconnect,
+                  icon: Icon(
+                    active ? Icons.link_off_rounded : Icons.refresh_rounded,
+                  ),
+                  onPressed: () => unawaited(
+                    active
+                        ? controller.disconnect(device.id)
+                        : controller.reconnect(device.id),
                   ),
                 ),
-                const SizedBox(width: 7),
-                DesktopActionButton(
-                  key: Key('device-delete-${device.id}'),
-                  label: context.l10n.delete,
-                  icon: Icons.delete_outline_rounded,
-                  compact: true,
-                  tone: DesktopActionTone.danger,
-                  onPressed: () => unawaited(_confirmDelete(context)),
+                Semantics(
+                  expanded: expanded,
+                  child: DesktopIconButton(
+                    key: Key('device-settings-toggle-${device.id}'),
+                    tooltip: context.l10n.settings,
+                    selected: expanded,
+                    icon: Icon(
+                      expanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                    ),
+                    onPressed: () => setState(() => _expanded = !expanded),
+                  ),
                 ),
               ],
             ),
+            if (expanded) ...[
+              const SizedBox(height: 10),
+              const Divider(height: 1),
+              const SizedBox(height: 10),
+
+              _DeviceSettingRow(
+                key: Key('device-auto-send-${device.id}'),
+                title: context.l10n.autoSendClipboard,
+                subtitle: context.l10n.thisComputerName(device.name),
+                semanticLabel: context.l10n
+                    .autoSendClipboardFromThisComputerToName(device.name),
+                value: device.autoSendClipboard,
+                onChanged: (bool value) => unawaited(
+                  controller.setAutoSendClipboard(device.id, value),
+                ),
+              ),
+              if (device.kind == LinkedDeviceKind.phone)
+                _DeviceSettingRow(
+                  key: Key('device-agent-notifications-${device.id}'),
+                  title: context.l10n.agentCompletion,
+                  subtitle: device.receiveAgentNotifications
+                      ? device.vibrationEnabled
+                            ? context.l10n.enabledPhoneVibrationIsOn
+                            : context.l10n.enabledPhoneVibrationIsOff
+                      : context.l10n.completionNotificationsAreOffForThisDevice,
+                  semanticLabel: context.l10n
+                      .agentCompletionNotificationsForName(device.name),
+                  value: device.receiveAgentNotifications,
+                  onChanged: (bool value) => unawaited(
+                    controller.setAgentNotifications(device.id, value),
+                  ),
+                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: device.kind == LinkedDeviceKind.computer
+                        ? Text(
+                            context.l10n.lanComputerOnly,
+                            key: Key('device-transport-${device.id}'),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colors.onSurfaceVariant),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  DesktopIconButton(
+                    key: Key('device-delete-${device.id}'),
+                    tooltip: context.l10n.delete,
+                    foregroundColor: colors.error,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    onPressed: () => unawaited(_confirmDelete(context)),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -850,39 +862,6 @@ class _SecurityNote extends StatelessWidget {
   }
 }
 
-class _EmptyDevicesCard extends StatelessWidget {
-  const _EmptyDevicesCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: const Key('device-empty-state'),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Column(
-        children: <Widget>[
-          const Icon(Icons.devices_other_rounded, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.noConnectedDevicesYet,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            context.l10n.pairingDoesNotCopyContentByItself,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DeviceSettingRow extends StatefulWidget {
   const _DeviceSettingRow({
     required this.title,
@@ -1010,23 +989,6 @@ class _DeviceSettingRowState extends State<_DeviceSettingRow> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        fontWeight: FontWeight.w700,
       ),
     );
   }

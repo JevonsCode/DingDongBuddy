@@ -6533,7 +6533,7 @@ abstract class DingDongLocalizations {
   /// No description provided for @fileTransferStatus.
   ///
   /// In en, this message translates to:
-  /// **'{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} other{Preparing}}'**
+  /// **'{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} sent{Sent} other{Preparing}}'**
   String fileTransferStatus(String state);
 
   /// No description provided for @fileTransferIssue.
@@ -7819,6 +7819,36 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Changed files ({count})'**
   String skillVersionFiles(int count);
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'Online devices'**
+  String get onlineDevices;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection history'**
+  String get connectionHistory;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices online'**
+  String get noDevicesOnline;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer history'**
+  String get fileTransferHistory;
+
+  /// Device manager groups and on-demand transfer history.
+  ///
+  /// In en, this message translates to:
+  /// **'No file transfers yet'**
+  String get noFileTransferHistory;
 }
 
 class _DingDongLocalizationsDelegate

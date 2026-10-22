@@ -3613,6 +3613,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       'failed': '传输未完成',
       'completed': '传输完成',
       'cancelled': '已取消',
+      'sent': '已发送',
       'other': '准备传输',
     });
     return '$_temp0';
@@ -4323,4 +4324,19 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String skillVersionFiles(int count) {
     return '变更文件（$count）';
   }
+
+  @override
+  String get onlineDevices => '当前在线';
+
+  @override
+  String get connectionHistory => '历史连接';
+
+  @override
+  String get noDevicesOnline => '暂无在线设备';
+
+  @override
+  String get fileTransferHistory => '传输记录';
+
+  @override
+  String get noFileTransferHistory => '暂无文件传输记录';
 }

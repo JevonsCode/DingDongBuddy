@@ -4796,7 +4796,7 @@
   "pauseTransfer": "Pause",
   "resumeTransfer": "Resume",
   "cancelTransfer": "Cancel",
-  "fileTransferStatus": "{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} other{Preparing}}",
+  "fileTransferStatus": "{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} sent{Sent} other{Preparing}}",
   "fileTransferIssue": "{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}",
   "@transferSendingTo": {
     "placeholders": {
@@ -5761,5 +5761,25 @@
         "type": "int"
       }
     }
+  },
+  "onlineDevices": "Online devices",
+  "@onlineDevices": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "connectionHistory": "Connection history",
+  "@connectionHistory": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "noDevicesOnline": "No devices online",
+  "@noDevicesOnline": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "fileTransferHistory": "Transfer history",
+  "@fileTransferHistory": {
+    "description": "Device manager groups and on-demand transfer history."
+  },
+  "noFileTransferHistory": "No file transfers yet",
+  "@noFileTransferHistory": {
+    "description": "Device manager groups and on-demand transfer history."
   }
 }

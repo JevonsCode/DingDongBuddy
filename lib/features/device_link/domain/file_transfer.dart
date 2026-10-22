@@ -15,6 +15,10 @@ class FileTransfer {
     bytes: json['bytes']! as int,
     detail: json['detail'] as String? ?? '',
     lan: json['lan'] == true,
+    deviceName: json['deviceName'] as String?,
+    createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+    finishedAt: DateTime.tryParse(json['finishedAt'] as String? ?? ''),
+    archived: json['archived'] == true,
   )..bytesPerSecond = (json['bytesPerSecond'] as num?)?.toDouble() ?? 0;
   FileTransfer({
     required this.id,
@@ -27,18 +31,27 @@ class FileTransfer {
     this.bytes = 0,
     this.detail = '',
     this.lan = false,
-  });
+    this.deviceName,
+    DateTime? createdAt,
+    this.finishedAt,
+    this.archived = false,
+  }) : createdAt = createdAt ?? DateTime.now().toUtc();
   final String id, deviceId, name;
   final int size;
   final bool sending;
   final String? itemId;
+  final String? deviceName;
+  final DateTime createdAt;
+  DateTime? finishedAt;
+  bool archived;
   String status, detail;
   int bytes;
   bool lan;
   double bytesPerSecond = 0;
   int _sampleBytes = 0;
   DateTime _sampleAt = DateTime.now();
-  bool get terminal => const ['completed', 'cancelled'].contains(status);
+  bool get terminal =>
+      archived || const ['completed', 'cancelled', 'sent'].contains(status);
   double get progress =>
       size == 0 ? (status == 'completed' ? 1 : 0) : (bytes / size).clamp(0, 1);
   void advance(int value) {
@@ -68,6 +81,10 @@ class FileTransfer {
     'detail': detail,
     'lan': lan,
     'bytesPerSecond': bytesPerSecond,
+    'deviceName': deviceName,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'finishedAt': finishedAt?.toUtc().toIso8601String(),
+    'archived': archived,
   };
 }
 

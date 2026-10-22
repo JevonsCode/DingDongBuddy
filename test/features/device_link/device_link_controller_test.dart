@@ -21,6 +21,56 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'file transfer history survives a controller restart with names and timestamps',
+    () async {
+      final harness = await _connectedHarness(autoSend: false);
+      addTearDown(harness.dispose);
+      harness.session.emit(
+        const DeviceLinkMessageEvent({
+          'type': 'file.start',
+          'transferId': 'history-test',
+          'name': 'saved.txt',
+          'size': 0,
+        }),
+      );
+      await _waitUntil(
+        () => harness.directory.listSync().whereType<File>().any(
+          (f) => f.path.endsWith('.part'),
+        ),
+      );
+      harness.session.emit(
+        const DeviceLinkMessageEvent({
+          'type': 'file.end',
+          'transferId': 'history-test',
+        }),
+      );
+      await _waitUntil(() => harness.clipboardStore.list(limit: 5).isNotEmpty);
+      expect(harness.controller.fileTransfers, hasLength(1));
+      expect(harness.controller.fileTransfers.single.name, 'saved.txt');
+      await harness.controller.shutdown();
+      final restored = DeviceLinkController(
+        store: harness.store,
+        clipboardStore: harness.clipboardStore,
+        transferDirectory: harness.directory,
+        pwaBaseUrl: Uri.parse('https://relay.example/app/'),
+        relayBaseUrl: Uri.parse('https://relay.example'),
+        sessionFactory: ({required relayUrl, required room, required secret}) =>
+            _FakeDeviceLinkSession(),
+      );
+      addTearDown(() async {
+        await restored.shutdown();
+        restored.dispose();
+      });
+      await restored.start();
+      final record = restored.fileTransfers.single;
+      expect(record.name, 'saved.txt');
+      expect(record.toJson()['deviceName'], 'iPhone');
+      expect(record.toJson()['finishedAt'], isNotNull);
+      expect(record.toJson()['archived'], isTrue);
+    },
+  );
+
+  test(
     'two controllers pair and share clipboard over LAN with no relay configured',
     () async {
       final directory = await Directory.systemTemp.createTemp(

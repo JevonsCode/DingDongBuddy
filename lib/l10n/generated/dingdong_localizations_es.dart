@@ -3794,6 +3794,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'failed': 'Transferencia incompleta',
       'completed': 'Transferencia completa',
       'cancelled': 'Cancelada',
+      'sent': 'Enviado',
       'other': 'Preparando',
     });
     return '$_temp0';
@@ -4543,4 +4544,20 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String skillVersionFiles(int count) {
     return 'Archivos modificados ($count)';
   }
+
+  @override
+  String get onlineDevices => 'Dispositivos conectados';
+
+  @override
+  String get connectionHistory => 'Conexiones anteriores';
+
+  @override
+  String get noDevicesOnline => 'No hay dispositivos conectados';
+
+  @override
+  String get fileTransferHistory => 'Historial de transferencias';
+
+  @override
+  String get noFileTransferHistory =>
+      'Todavía no hay transferencias de archivos';
 }

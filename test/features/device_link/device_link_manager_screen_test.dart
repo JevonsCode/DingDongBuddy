@@ -1,13 +1,230 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/features/device_link/domain/device_link_management.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
+import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'manager and history remain readable in light and dark compact windows',
+    (tester) async {
+      final preview = Platform.environment['DEVICE_MANAGER_PREVIEW'] == '1';
+      if (preview) {
+        await tester.runAsync(() async {
+          for (final name in ['.AppleSystemUIFont', 'Roboto', 'Ahem']) {
+            await (FontLoader(name)..addFont(
+                  Future.value(
+                    ByteData.sublistView(
+                      File(
+                        '/System/Library/Fonts/STHeiti Light.ttc',
+                      ).readAsBytesSync(),
+                    ),
+                  ),
+                ))
+                .load();
+          }
+          await (FontLoader('MaterialIcons')
+                ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf')))
+              .load();
+        });
+      }
+      final controller = _FakeManagement(
+        deviceKind: LinkedDeviceKind.computer,
+        connectionStatus: DeviceConnectionStatus.connected,
+        additionalDevices: [
+          LinkedDevice(
+            id: 'offline-phone',
+            name: 'Xiaomi17u',
+            kind: LinkedDeviceKind.phone,
+            platform: 'web',
+            room: 'offline-room',
+            secret: 'test',
+            autoSendClipboard: false,
+            receiveAgentNotifications: true,
+            vibrationEnabled: true,
+            manuallyDisconnected: true,
+            pairedAt: DateTime.utc(2026, 10, 22),
+          ),
+        ],
+        statuses: {'offline-phone': DeviceConnectionStatus.disconnected},
+        fileTransfers: [
+          FileTransfer(
+            id: 'active',
+            deviceId: 'computer-one',
+            name: '项目素材（演示）.zip',
+            size: 10000000,
+            bytes: 4200000,
+            sending: true,
+            status: 'transferring',
+          ),
+          FileTransfer(
+            id: 'done',
+            deviceId: 'offline-phone',
+            name: '会议资料（演示）.pdf',
+            size: 1000000,
+            bytes: 1000000,
+            sending: false,
+            status: 'completed',
+          ),
+        ],
+      );
+      for (final dark in [false, true]) {
+        await _pumpManager(
+          tester,
+          controller: controller,
+          size: const Size(620, 580),
+          locale: const Locale('zh'),
+          theme: dark
+              ? AppTheme.desktopPanelDark()
+              : AppTheme.desktopPanelLight(),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byKey(const Key('device-auto-send-offline-phone')),
+          findsNothing,
+        );
+        if (preview) {
+          await _capture(tester, 'manager-${dark ? 'dark' : 'light'}');
+        }
+        await tester.tap(find.byKey(const Key('device-transfer-history-open')));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.text('42%'), findsOneWidget);
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+        if (preview) {
+          await _capture(tester, 'history-${dark ? 'dark' : 'light'}');
+        }
+        Navigator.of(
+          tester.element(
+            find.byKey(const Key('device-transfer-history-dialog')),
+          ),
+        ).pop();
+        await tester.pumpAndSettle();
+      }
+    },
+  );
+
+  testWidgets(
+    'online devices appear before history and pairing on a compact window',
+    (tester) async {
+      final jarvis = LinkedDevice(
+        id: 'jarvis',
+        name: 'JARVIS',
+        kind: LinkedDeviceKind.computer,
+        platform: 'windows',
+        room: 'jarvis-room',
+        secret: 'test',
+        autoSendClipboard: true,
+        receiveAgentNotifications: false,
+        vibrationEnabled: false,
+        manuallyDisconnected: false,
+        pairedAt: DateTime.utc(2026, 10, 22),
+      );
+      final controller = _FakeManagement(
+        additionalDevices: [jarvis],
+        statuses: {'jarvis': DeviceConnectionStatus.connected},
+      );
+      await _pumpManager(
+        tester,
+        controller: controller,
+        size: const Size(620, 580),
+        locale: const Locale('zh'),
+      );
+      final online = find.byKey(const Key('linked-device-jarvis'));
+      final history = find.byKey(const Key('linked-device-phone-one'));
+      expect(
+        tester.getTopLeft(online).dy,
+        lessThan(tester.getTopLeft(history).dy),
+      );
+      expect(tester.getTopLeft(online).dy, lessThan(200));
+      expect(find.text('历史连接'), findsOneWidget);
+      expect(
+        tester.getTopLeft(online).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('device-pairing-panel'))).dy,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'offline settings stay collapsed while reconnect remains accessible',
+    (tester) async {
+      final controller = _FakeManagement(
+        connectionStatus: DeviceConnectionStatus.disconnected,
+      );
+      await _pumpManager(tester, controller: controller);
+      expect(find.byKey(const Key('device-auto-send-phone-one')), findsNothing);
+      expect(
+        find.byKey(const Key('device-connection-phone-one')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const Key('device-settings-toggle-phone-one')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('device-auto-send-phone-one')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const Key('device-settings-toggle-phone-one')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('device-auto-send-phone-one')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'transfer history opens on demand without occupying the manager',
+    (tester) async {
+      final controller = _FakeManagement(
+        fileTransfers: [
+          FileTransfer(
+            id: 'done',
+            deviceId: 'phone-one',
+            name: 'report.pdf',
+            size: 80,
+            bytes: 80,
+            sending: true,
+            status: 'completed',
+          ),
+          FileTransfer(
+            id: 'done',
+            deviceId: 'another-device',
+            name: 'another-report.pdf',
+            size: 80,
+            bytes: 80,
+            sending: false,
+            status: 'completed',
+          ),
+        ],
+      );
+      await _pumpManager(tester, controller: controller);
+      expect(find.text('report.pdf'), findsNothing);
+      await tester.tap(find.byKey(const Key('device-transfer-history-open')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('device-transfer-history-dialog')),
+        findsOneWidget,
+      );
+      expect(find.text('report.pdf'), findsOneWidget);
+      expect(find.text('another-report.pdf'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+    },
+  );
+
   testWidgets('a connecting device can be stopped from the manager window', (
     WidgetTester tester,
   ) async {
@@ -23,15 +240,15 @@ void main() {
     expect(find.text('连接设备'), findsOneWidget);
     expect(find.text('只在你信任的设备之间传递内容。'), findsNothing);
     expect(find.text('1 台设备'), findsNothing);
-    expect(find.text('已连接设备'), findsOneWidget);
+    expect(find.text('历史连接'), findsOneWidget);
     expect(
       find.byKey(const Key('device-connection-mode-note')),
       findsOneWidget,
     );
     expect(find.textContaining('优先使用 WebRTC 直连'), findsOneWidget);
     expect(find.textContaining('端到端加密中继'), findsOneWidget);
-    expect(find.text('停止连接'), findsOneWidget);
-    await tester.tap(find.text('停止连接'));
+    expect(find.byTooltip('停止连接'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('device-connection-phone-one')));
     await tester.pump();
 
     expect(controller.disconnectedDeviceId, 'phone-one');
@@ -147,7 +364,9 @@ void main() {
   testWidgets('device setting rows support keyboard activation', (
     WidgetTester tester,
   ) async {
-    final _FakeManagement controller = _FakeManagement();
+    final _FakeManagement controller = _FakeManagement(
+      connectionStatus: DeviceConnectionStatus.connected,
+    );
     await _pumpManager(tester, controller: controller);
 
     final Finder setting = find.byKey(const Key('device-auto-send-phone-one'));
@@ -167,7 +386,10 @@ void main() {
   testWidgets('computer route is fixed to LAN with no relay selector', (
     tester,
   ) async {
-    final controller = _FakeManagement(deviceKind: LinkedDeviceKind.computer);
+    final controller = _FakeManagement(
+      deviceKind: LinkedDeviceKind.computer,
+      connectionStatus: DeviceConnectionStatus.connected,
+    );
     await _pumpManager(tester, controller: controller);
     expect(
       find.byKey(const Key('device-transport-computer-one')),
@@ -225,15 +447,35 @@ Future<void> _pumpManager(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: theme,
-      locale: locale,
-      supportedLocales: DingDongLocalizations.supportedLocales,
-      localizationsDelegates: DingDongLocalizations.localizationsDelegates,
-      home: DeviceLinkManagerScreen(controller: controller),
+    RepaintBoundary(
+      key: const Key('device-manager-preview'),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: theme,
+        locale: locale,
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
+        home: DeviceLinkManagerScreen(controller: controller),
+      ),
     ),
   );
   await tester.pump();
+}
+
+Future<void> _capture(WidgetTester tester, String name) async {
+  await tester.runAsync(() async {
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(const Key('device-manager-preview')),
+    );
+    final image = await boundary.toImage();
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    final directory = Directory('build/device-manager-preview')
+      ..createSync(recursive: true);
+    File(
+      '${directory.path}/$name.png',
+    ).writeAsBytesSync(bytes!.buffer.asUint8List());
+    image.dispose();
+  });
 }
 
 PendingDevicePairing _pendingPairing() {
@@ -251,11 +493,17 @@ PendingDevicePairing _pendingPairing() {
 }
 
 final class _FakeManagement extends ChangeNotifier
-    implements DeviceLinkManagement, LanComputerManagement {
+    implements
+        DeviceLinkManagement,
+        LanComputerManagement,
+        FileTransferManagement {
   _FakeManagement({
     this.includeDevice = true,
     this.pendingPairing,
     this.connectionStatus = DeviceConnectionStatus.connecting,
+    this.additionalDevices = const [],
+    this.statuses = const {},
+    this.fileTransfers = const [],
     LinkedDeviceKind deviceKind = LinkedDeviceKind.phone,
   }) : device = LinkedDevice(
          id: deviceKind == LinkedDeviceKind.computer
@@ -302,6 +550,16 @@ final class _FakeManagement extends ChangeNotifier
   }
 
   final LinkedDevice device;
+  final List<LinkedDevice> additionalDevices;
+  final Map<String, DeviceConnectionStatus> statuses;
+  @override
+  final List<FileTransfer> fileTransfers;
+  @override
+  Future<void> controlFileTransfer(
+    String id,
+    String deviceId,
+    String action,
+  ) async {}
 
   final bool includeDevice;
   final DeviceConnectionStatus connectionStatus;
@@ -319,8 +577,9 @@ final class _FakeManagement extends ChangeNotifier
   bool get canPair => true;
 
   @override
-  List<LinkedDevice> get devices =>
-      includeDevice ? <LinkedDevice>[device] : const <LinkedDevice>[];
+  List<LinkedDevice> get devices => includeDevice
+      ? <LinkedDevice>[device, ...additionalDevices]
+      : additionalDevices;
 
   @override
   LocalDeviceIdentity get localDevice => const LocalDeviceIdentity(
@@ -356,7 +615,8 @@ final class _FakeManagement extends ChangeNotifier
   }
 
   @override
-  bool isConnected(String deviceId) => false;
+  bool isConnected(String deviceId) =>
+      statusOf(deviceId) == DeviceConnectionStatus.connected;
 
   @override
   Future<void> reconnect(String deviceId) async {}
@@ -377,7 +637,8 @@ final class _FakeManagement extends ChangeNotifier
   }
 
   @override
-  DeviceConnectionStatus statusOf(String deviceId) => connectionStatus;
+  DeviceConnectionStatus statusOf(String deviceId) =>
+      statuses[deviceId] ?? connectionStatus;
 
   @override
   DeviceLinkActiveTransport transportOf(String deviceId) =>

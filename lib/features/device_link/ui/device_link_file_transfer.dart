@@ -344,6 +344,18 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
     if (device.kind == LinkedDeviceKind.computer) {
       await _systemClipboard?.writeFiles(<String>[output.path]);
     }
+    _rememberFileTransfer(
+      FileTransfer(
+        id: transferId,
+        deviceId: device.id,
+        name: upload.name,
+        size: upload.expectedBytes,
+        bytes: upload.receivedBytes,
+        sending: false,
+        status: 'completed',
+      ),
+    );
+    _notifyIfActive();
     onClipboardReceived?.call();
   }
 
@@ -437,6 +449,19 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
       'transferId': transferId,
       'itemId': record.id,
     });
+    _rememberFileTransfer(
+      FileTransfer(
+        id: transferId,
+        deviceId: managed.deviceId!,
+        name: path.basename(file.path),
+        size: size,
+        bytes: size,
+        sending: true,
+        status: 'sent',
+        itemId: record.id,
+      ),
+    );
+    _notifyIfActive();
   }
 
   void _ensureFileTransferCanContinue(
