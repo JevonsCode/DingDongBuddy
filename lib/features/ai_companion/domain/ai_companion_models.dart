@@ -7,6 +7,7 @@ enum AiCompanionProtocol { auto, openAI, anthropic }
 /// Every capability is independently opt-in. Provider credentials live elsewhere.
 final class AiCompanionSettings {
   const AiCompanionSettings({
+    this.automaticAnalysis = true,
     this.clipboardAnalysis = false,
     this.usageOptimization = false,
     this.progressiveDisclosure = false,
@@ -22,6 +23,7 @@ final class AiCompanionSettings {
 
   factory AiCompanionSettings.fromJson(Map<String, Object?> json) =>
       AiCompanionSettings(
+        automaticAnalysis: json['automaticAnalysis'] != false,
         clipboardAnalysis: json['clipboardAnalysis'] == true,
         usageOptimization: json['usageOptimization'] == true,
         progressiveDisclosure: json['progressiveDisclosure'] == true,
@@ -41,6 +43,7 @@ final class AiCompanionSettings {
         model: json['model'] is String ? (json['model']! as String).trim() : '',
       );
 
+  final bool automaticAnalysis;
   final bool clipboardAnalysis;
   final bool usageOptimization;
   final bool progressiveDisclosure;
@@ -60,6 +63,7 @@ final class AiCompanionSettings {
       tokenOptimization;
 
   AiCompanionSettings copyWith({
+    bool? automaticAnalysis,
     bool? clipboardAnalysis,
     bool? usageOptimization,
     bool? progressiveDisclosure,
@@ -72,6 +76,7 @@ final class AiCompanionSettings {
     String? model,
     AiCompanionProtocol? protocol,
   }) => AiCompanionSettings(
+    automaticAnalysis: automaticAnalysis ?? this.automaticAnalysis,
     clipboardAnalysis: clipboardAnalysis ?? this.clipboardAnalysis,
     usageOptimization: usageOptimization ?? this.usageOptimization,
     progressiveDisclosure: progressiveDisclosure ?? this.progressiveDisclosure,
@@ -87,6 +92,7 @@ final class AiCompanionSettings {
   );
 
   Map<String, Object> toJson() => <String, Object>{
+    'automaticAnalysis': automaticAnalysis,
     'clipboardAnalysis': clipboardAnalysis,
     'usageOptimization': usageOptimization,
     'progressiveDisclosure': progressiveDisclosure,
@@ -212,6 +218,7 @@ enum AiCompanionError {
   invalidResponse,
   timeout,
   storageUnavailable,
+  credentialUnavailable,
   requestTooLarge,
 }
 

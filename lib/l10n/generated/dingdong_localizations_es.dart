@@ -169,7 +169,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get aiCloudAnalysisDescription =>
-      'Solo al analizar: envía los recuentos habilitados y los totales de tokens a tu modelo.';
+      'Al activarlo, el análisis automático o manual envía los recuentos y estadísticas de tokens de las categorías activadas al modelo configurado.';
 
   @override
   String get aiProviderProtocol => 'Protocolo de API';
@@ -245,7 +245,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get aiInsightsEmpty =>
-      'Elige el alcance abajo y pulsa Analizar ahora en la parte superior. Los resultados aparecerán aquí.';
+      'Elige las categorías en Configuración. Aquí aparecen los resultados automáticos y el historial; también puedes analizar ahora.';
 
   @override
   String get aiLocalAnalysis => 'Análisis local · sin solicitud al modelo';
@@ -4375,4 +4375,49 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get reminderToPhone => 'Enviar al teléfono';
+
+  @override
+  String get devReminderColors => 'Colores y contadores de avisos';
+
+  @override
+  String get devReminderColorsDescription =>
+      'Pulsa un color varias veces para aumentar su contador DEV. No envía sonidos ni notificaciones, modifica avisos guardados ni crea historial.';
+
+  @override
+  String get devClearReminderColors => 'Borrar vistas previas';
+
+  @override
+  String get devReminderColorsUpdated => 'Vista previa actualizada';
+
+  @override
+  String get aiSettingsTab => 'Configuración';
+
+  @override
+  String get aiAutomaticAnalysis => 'Análisis automático';
+
+  @override
+  String get aiAutomaticAnalysisDescription =>
+      'Analiza las categorías activadas al iniciar la ventana de recursos y comprueba cada 30 minutos. Omite datos sin cambios. Desactívalo para analizar manualmente. Solo usa el modelo si se activa por separado.';
+
+  @override
+  String get aiHistoryTitle => 'Historial';
+
+  @override
+  String get aiHistoryEmpty => 'Todavía no hay análisis guardados.';
+
+  @override
+  String get aiAutomaticRun => 'Automático';
+
+  @override
+  String get aiManualRun => 'Manual';
+
+  @override
+  String get aiErrorCredentialUnavailable =>
+      'El sistema no pudo acceder a la clave API guardada. Reinicia DingDong y permite el acceso al llavero si se solicita, o introduce la clave de nuevo. Los ajustes e informes locales siguen disponibles.';
+
+  @override
+  String get aiHistoryPrevious => 'Página anterior';
+
+  @override
+  String get aiHistoryNext => 'Página siguiente';
 }

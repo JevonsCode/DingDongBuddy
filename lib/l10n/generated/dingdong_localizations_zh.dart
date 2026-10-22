@@ -158,7 +158,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get aiCloudAnalysisDescription =>
-      '仅在点击分析时，将已开启功能的数量与 Token 统计发送给配置的模型。';
+      '开启后，自动分析或点击「立即分析」时，会将已开启范围的数量与 Token 统计发送给配置的模型。';
 
   @override
   String get aiProviderProtocol => '接口协议';
@@ -226,7 +226,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiInsightsTitle => '洞察与建议';
 
   @override
-  String get aiInsightsEmpty => '选择下方的分析范围，然后点击顶部「立即分析」。结果会显示在这里。';
+  String get aiInsightsEmpty => '在「设置」中选择分析范围，自动生成的结果与历史记录会显示在这里，也可以点击「立即分析」。';
 
   @override
   String get aiLocalAnalysis => '本地分析 · 未请求模型';
@@ -4161,4 +4161,49 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get reminderToPhone => '发送到手机';
+
+  @override
+  String get devReminderColors => '提醒颜色与计数';
+
+  @override
+  String get devReminderColorsDescription =>
+      '重复点击颜色可增加对应的 DEV 预览数字。仅预览任务栏，不播放声音、不发送通知，不修改提醒配置或创建历史记录。';
+
+  @override
+  String get devClearReminderColors => '清除预览';
+
+  @override
+  String get devReminderColorsUpdated => '任务栏预览已更新';
+
+  @override
+  String get aiSettingsTab => '设置';
+
+  @override
+  String get aiAutomaticAnalysis => '自动分析';
+
+  @override
+  String get aiAutomaticAnalysisDescription =>
+      '资源窗口启动时分析已开启的范围，此后每 30 分钟检查一次，数据未变化时跳过。关闭后可手动分析；仅在另行开启模型分析时调用模型。';
+
+  @override
+  String get aiHistoryTitle => '历史记录';
+
+  @override
+  String get aiHistoryEmpty => '暂无分析记录。';
+
+  @override
+  String get aiAutomaticRun => '自动';
+
+  @override
+  String get aiManualRun => '手动';
+
+  @override
+  String get aiErrorCredentialUnavailable =>
+      '系统无法访问已保存的 API 密钥。请重启 DingDong，并在系统提示时允许访问钥匙串，或重新输入密钥。本地设置与洞察仍可使用。';
+
+  @override
+  String get aiHistoryPrevious => '上一页';
+
+  @override
+  String get aiHistoryNext => '下一页';
 }

@@ -209,6 +209,19 @@ final class PluginDesktopShellGateway
     }
   }
 
+  final Map<TrayNotificationColor, int> _developmentReminderCounts = {};
+
+  Future<void> previewReminderColor(TrayNotificationColor? color) async {
+    if (!_developmentBuild || !Platform.isMacOS) return;
+    if (color == null) {
+      _developmentReminderCounts.clear();
+    } else {
+      _developmentReminderCounts[color] =
+          ((_developmentReminderCounts[color] ?? 0) + 1).clamp(0, 999);
+    }
+    await _unreadController.refresh();
+  }
+
   Future<void> setNotificationRules(NotificationRules rules) async {
     _notificationRules = rules.sanitized();
     if (_started) await _unreadController.refresh();
@@ -318,6 +331,13 @@ final class PluginDesktopShellGateway
     required int iconSize,
     required int unreadCount,
   }) async {
+    final previewCount = _developmentReminderCounts.values.fold(
+      0,
+      (a, b) => a + b,
+    );
+    unreadCount += previewCount;
+    hot = unreadCount > 0;
+    title = hot ? ' ${unreadCount > 99 ? '99+' : unreadCount}' : '';
     final bool windows = Platform.isWindows;
     final AgentNotificationKind kind = _unreadController.primaryKind;
     final profiles = _notificationRules.profiles.where(
@@ -345,6 +365,21 @@ final class PluginDesktopShellGateway
         })
         .whereType<ReminderProfile>()
         .toList();
+    unreadProfiles.addAll(
+      _developmentReminderCounts.keys.map(
+        (color) => ReminderProfile(
+          id: 'dev-preview-${color.name}',
+          name: 'DEV ${color.name}',
+          color: color,
+          style: TrayReminderStyle.staticMarker,
+        ),
+      ),
+    );
+    final counts = {
+      ..._unreadController.unreadReminderCounts,
+      for (final e in _developmentReminderCounts.entries)
+        'dev-preview-${e.key.name}': e.value,
+    };
     final bool pulseReminder = windows
         ? (profile?.style ?? _notificationRules.trayStyleFor(kind)) ==
               TrayReminderStyle.softPulse
@@ -448,6 +483,7 @@ final class PluginDesktopShellGateway
                 for (final p in unreadProfiles)
                   {
                     'colorRgb': p.color.rgbValue,
+                    if (counts[p.id] != null) 'count': counts[p.id]!,
                     'pulse': p.style == TrayReminderStyle.softPulse,
                   },
               ]

@@ -216,6 +216,98 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             ),
             const SizedBox(height: 24),
             _TestSection(
+              title: context.l10n.devReminderColors,
+              description: context.l10n.devReminderColorsDescription,
+              cards: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-color-orange'),
+                      label: context.l10n.orange,
+                      icon: Icon(
+                        Icons.circle,
+                        size: 14,
+                        color: Color(
+                          0xff000000 | TrayNotificationColor.orange.rgbValue,
+                        ),
+                      ),
+                      onPressed: _callbackFor(DevelopmentTestAction.trayOrange),
+                    ),
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-color-pink'),
+                      label: context.l10n.pink,
+                      icon: Icon(
+                        Icons.circle,
+                        size: 14,
+                        color: Color(
+                          0xff000000 | TrayNotificationColor.pink.rgbValue,
+                        ),
+                      ),
+                      onPressed: _callbackFor(DevelopmentTestAction.trayPink),
+                    ),
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-color-blue'),
+                      label: context.l10n.blue,
+                      icon: Icon(
+                        Icons.circle,
+                        size: 14,
+                        color: Color(
+                          0xff000000 | TrayNotificationColor.blue.rgbValue,
+                        ),
+                      ),
+                      onPressed: _callbackFor(DevelopmentTestAction.trayBlue),
+                    ),
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-color-green'),
+                      label: context.l10n.green,
+                      icon: Icon(
+                        Icons.circle,
+                        size: 14,
+                        color: Color(
+                          0xff000000 | TrayNotificationColor.green.rgbValue,
+                        ),
+                      ),
+                      onPressed: _callbackFor(DevelopmentTestAction.trayGreen),
+                    ),
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-color-purple'),
+                      label: context.l10n.purple,
+                      icon: Icon(
+                        Icons.circle,
+                        size: 14,
+                        color: Color(
+                          0xff000000 | TrayNotificationColor.purple.rgbValue,
+                        ),
+                      ),
+                      onPressed: _callbackFor(DevelopmentTestAction.trayPurple),
+                    ),
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-color-amber'),
+                      label: context.l10n.amber,
+                      icon: Icon(
+                        Icons.circle,
+                        size: 14,
+                        color: Color(
+                          0xff000000 | TrayNotificationColor.amber.rgbValue,
+                        ),
+                      ),
+                      onPressed: _callbackFor(DevelopmentTestAction.trayAmber),
+                    ),
+                    DesktopActionButton(
+                      key: const Key('dev-test-panel-clear-colors'),
+                      label: context.l10n.devClearReminderColors,
+                      onPressed: _callbackFor(
+                        DevelopmentTestAction.trayClearColors,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _TestSection(
               title: context.l10n.agentAlerts,
               description: context
                   .l10n
@@ -568,6 +660,14 @@ String _successLabel(BuildContext context, DevelopmentTestAction action) {
   return switch (action) {
     DevelopmentTestAction.traySleeping => context.l10n.triggeredSleepingState,
     DevelopmentTestAction.trayNudge => context.l10n.triggeredHorizontalNudge,
+    DevelopmentTestAction.trayOrange ||
+    DevelopmentTestAction.trayPink ||
+    DevelopmentTestAction.trayBlue ||
+    DevelopmentTestAction.trayGreen ||
+    DevelopmentTestAction.trayPurple ||
+    DevelopmentTestAction.trayAmber ||
+    DevelopmentTestAction.trayClearColors =>
+      context.l10n.devReminderColorsUpdated,
     DevelopmentTestAction.agentCompletion =>
       context.l10n.createdBasicAgentCompletion,
     DevelopmentTestAction.agentRichCompletion =>

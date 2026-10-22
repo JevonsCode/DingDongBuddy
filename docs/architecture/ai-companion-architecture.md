@@ -49,6 +49,7 @@ flowchart LR
 | Prompts, Skills, MCPs, and Knowledge | `resource-library.json` plus managed Skill packages | User-managed; synchronized to supported Agent configurations |
 | Trigger groups | `trigger-groups.json` | User-managed resource scope rules |
 | Recent Agent details | `agent-activity.json` | Controlled by the recent-Agent retention settings |
+| AI+ insight history | `ai-insights.sqlite3` | Local report history with SQL pagination; latest-report preference migrated on first load |
 | User settings | Platform preferences | Loaded by both the main and dedicated Settings windows |
 | Active API port | `api-port` | Rewritten on each application start |
 

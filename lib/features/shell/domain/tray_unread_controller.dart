@@ -23,6 +23,13 @@ final class TrayUnreadController {
   int _acknowledgedEventId = 0;
   int _latestAttentionEventId = 0;
   final Map<String, int> _reminderEvents = {};
+  final Map<String, List<int>> _reminderEventHistory = {};
+  Map<String, int?> get unreadReminderCounts => {
+    for (final id in unreadReminderIds)
+      id: (_reminderEventHistory[id] ?? []).any((event) => event < 0)
+          ? null
+          : (_reminderEventHistory[id]?.length ?? 0).clamp(0, 999),
+  };
   List<String> get unreadReminderIds {
     final entries =
         _reminderEvents.entries
@@ -74,6 +81,14 @@ final class TrayUnreadController {
               _latestAttentionEventId;
         }
       }
+      _reminderEventHistory.clear();
+      for (final entry in _reminderEvents.entries) {
+        _reminderEventHistory[entry.key] = List.of(
+          state.reminderEventHistory[entry.key]?.isNotEmpty == true
+              ? state.reminderEventHistory[entry.key]!
+              : [-entry.value],
+        );
+      }
       _pruneReminderEvents();
       await _apply();
     });
@@ -86,7 +101,9 @@ final class TrayUnreadController {
     return _enqueue(() async {
       _latestEventId += 1;
       _latestReminderId = reminderId;
-      _reminderEvents[reminderId ?? kind.apiValue] = _latestEventId;
+      final id = reminderId ?? kind.apiValue;
+      _reminderEvents[id] = _latestEventId;
+      (_reminderEventHistory[id] ??= []).add(_latestEventId);
       if (kind == AgentNotificationKind.attention) {
         _latestAttentionEventId = _latestEventId;
         _latestAttentionReminderId = reminderId;
@@ -148,12 +165,27 @@ final class TrayUnreadController {
     _reminderEvents.removeWhere(
       (id, event) => event <= _acknowledgedEventId || event > _latestEventId,
     );
+    _reminderEventHistory.removeWhere(
+      (id, _) => !_reminderEvents.containsKey(id),
+    );
+    for (final history in _reminderEventHistory.values) {
+      history.removeWhere(
+        (event) =>
+            event.abs() <= _acknowledgedEventId || event.abs() > _latestEventId,
+      );
+      // 1000 recent events are enough for a 99+ display even after partial reads.
+      final offset = history.isNotEmpty && history.first < 0 ? 1 : 0;
+      if (history.length > 1000 + offset) {
+        history.removeRange(offset, history.length - 1000);
+      }
+    }
     // Profiles may be deleted and recreated between acknowledgements.
     while (_reminderEvents.length > 64) {
       final oldest = _reminderEvents.entries.reduce(
         (a, b) => a.value < b.value ? a : b,
       );
       _reminderEvents.remove(oldest.key);
+      _reminderEventHistory.remove(oldest.key);
     }
   }
 
@@ -162,6 +194,10 @@ final class TrayUnreadController {
     await store?.save(
       TrayUnreadState(
         reminderEvents: Map.unmodifiable(_reminderEvents),
+        reminderEventHistory: {
+          for (final e in _reminderEventHistory.entries)
+            e.key: List.unmodifiable(e.value),
+        },
         latestEventId: _latestEventId,
         acknowledgedEventId: _acknowledgedEventId,
         latestAttentionEventId: _latestAttentionEventId,

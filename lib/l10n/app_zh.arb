@@ -83,7 +83,7 @@
   "@aiProactiveCheckInsDescription": { "description": "AI companion." },
   "aiCloudAnalysis": "使用模型分析统计数据",
   "@aiCloudAnalysis": { "description": "AI companion." },
-  "aiCloudAnalysisDescription": "仅在点击分析时，将已开启功能的数量与 Token 统计发送给配置的模型。",
+  "aiCloudAnalysisDescription": "开启后，自动分析或点击「立即分析」时，会将已开启范围的数量与 Token 统计发送给配置的模型。",
   "@aiCloudAnalysisDescription": { "description": "AI companion." },
   "aiProviderProtocol": "接口协议",
   "@aiProviderProtocol": { "description": "AI companion model connection." },
@@ -127,7 +127,7 @@
   "@aiAnalyze": { "description": "AI companion." },
   "aiInsightsTitle": "洞察与建议",
   "@aiInsightsTitle": { "description": "AI companion." },
-  "aiInsightsEmpty": "选择下方的分析范围，然后点击顶部「立即分析」。结果会显示在这里。",
+  "aiInsightsEmpty": "在「设置」中选择分析范围，自动生成的结果与历史记录会显示在这里，也可以点击「立即分析」。",
   "@aiInsightsEmpty": { "description": "AI companion." },
   "aiLocalAnalysis": "本地分析 · 未请求模型",
   "@aiLocalAnalysis": { "description": "AI companion." },
@@ -5288,5 +5288,61 @@
   "reminderColor": "颜色",
   "@reminderColor": {"description": "Named reminder settings label"},
   "reminderToPhone": "发送到手机",
-  "@reminderToPhone": {"description": "Named reminder settings label"}
+  "@reminderToPhone": {"description": "Named reminder settings label"},
+  "devReminderColors": "提醒颜色与计数",
+  "@devReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsDescription": "重复点击颜色可增加对应的 DEV 预览数字。仅预览任务栏，不播放声音、不发送通知，不修改提醒配置或创建历史记录。",
+  "@devReminderColorsDescription": {
+    "description": "Development panel reminder color preview."
+  },
+  "devClearReminderColors": "清除预览",
+  "@devClearReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsUpdated": "任务栏预览已更新",
+  "@devReminderColorsUpdated": {
+    "description": "Development panel reminder color preview."
+  },
+  "aiSettingsTab": "设置",
+  "aiAutomaticAnalysis": "自动分析",
+  "aiAutomaticAnalysisDescription": "资源窗口启动时分析已开启的范围，此后每 30 分钟检查一次，数据未变化时跳过。关闭后可手动分析；仅在另行开启模型分析时调用模型。",
+  "aiHistoryTitle": "历史记录",
+  "aiHistoryEmpty": "暂无分析记录。",
+  "aiAutomaticRun": "自动",
+  "aiManualRun": "手动",
+  "aiErrorCredentialUnavailable": "系统无法访问已保存的 API 密钥。请重启 DingDong，并在系统提示时允许访问钥匙串，或重新输入密钥。本地设置与洞察仍可使用。",
+  "aiHistoryPrevious": "上一页",
+  "aiHistoryNext": "下一页",
+  "@aiSettingsTab": {
+    "description": "aiSettingsTab"
+  },
+  "@aiAutomaticAnalysis": {
+    "description": "aiAutomaticAnalysis"
+  },
+  "@aiAutomaticAnalysisDescription": {
+    "description": "aiAutomaticAnalysisDescription"
+  },
+  "@aiHistoryTitle": {
+    "description": "aiHistoryTitle"
+  },
+  "@aiHistoryEmpty": {
+    "description": "aiHistoryEmpty"
+  },
+  "@aiAutomaticRun": {
+    "description": "aiAutomaticRun"
+  },
+  "@aiManualRun": {
+    "description": "aiManualRun"
+  },
+  "@aiErrorCredentialUnavailable": {
+    "description": "aiErrorCredentialUnavailable"
+  },
+  "@aiHistoryPrevious": {
+    "description": "aiHistoryPrevious"
+  },
+  "@aiHistoryNext": {
+    "description": "aiHistoryNext"
+  }
 }

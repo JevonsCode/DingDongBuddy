@@ -83,7 +83,7 @@
   "@aiProactiveCheckInsDescription": { "description": "AI companion." },
   "aiCloudAnalysis": "Análisis de metadatos con el modelo",
   "@aiCloudAnalysis": { "description": "AI companion." },
-  "aiCloudAnalysisDescription": "Solo al analizar: envía los recuentos habilitados y los totales de tokens a tu modelo.",
+  "aiCloudAnalysisDescription": "Al activarlo, el análisis automático o manual envía los recuentos y estadísticas de tokens de las categorías activadas al modelo configurado.",
   "@aiCloudAnalysisDescription": { "description": "AI companion." },
   "aiProviderProtocol": "Protocolo de API",
   "@aiProviderProtocol": { "description": "AI companion model connection." },
@@ -127,7 +127,7 @@
   "@aiAnalyze": { "description": "AI companion." },
   "aiInsightsTitle": "Información y sugerencias",
   "@aiInsightsTitle": { "description": "AI companion." },
-  "aiInsightsEmpty": "Elige el alcance abajo y pulsa Analizar ahora en la parte superior. Los resultados aparecerán aquí.",
+  "aiInsightsEmpty": "Elige las categorías en Configuración. Aquí aparecen los resultados automáticos y el historial; también puedes analizar ahora.",
   "@aiInsightsEmpty": { "description": "AI companion." },
   "aiLocalAnalysis": "Análisis local · sin solicitud al modelo",
   "@aiLocalAnalysis": { "description": "AI companion." },
@@ -5288,5 +5288,61 @@
   "reminderColor": "Color",
   "@reminderColor": {"description": "Named reminder settings label"},
   "reminderToPhone": "Enviar al teléfono",
-  "@reminderToPhone": {"description": "Named reminder settings label"}
+  "@reminderToPhone": {"description": "Named reminder settings label"},
+  "devReminderColors": "Colores y contadores de avisos",
+  "@devReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsDescription": "Pulsa un color varias veces para aumentar su contador DEV. No envía sonidos ni notificaciones, modifica avisos guardados ni crea historial.",
+  "@devReminderColorsDescription": {
+    "description": "Development panel reminder color preview."
+  },
+  "devClearReminderColors": "Borrar vistas previas",
+  "@devClearReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsUpdated": "Vista previa actualizada",
+  "@devReminderColorsUpdated": {
+    "description": "Development panel reminder color preview."
+  },
+  "aiSettingsTab": "Configuración",
+  "aiAutomaticAnalysis": "Análisis automático",
+  "aiAutomaticAnalysisDescription": "Analiza las categorías activadas al iniciar la ventana de recursos y comprueba cada 30 minutos. Omite datos sin cambios. Desactívalo para analizar manualmente. Solo usa el modelo si se activa por separado.",
+  "aiHistoryTitle": "Historial",
+  "aiHistoryEmpty": "Todavía no hay análisis guardados.",
+  "aiAutomaticRun": "Automático",
+  "aiManualRun": "Manual",
+  "aiErrorCredentialUnavailable": "El sistema no pudo acceder a la clave API guardada. Reinicia DingDong y permite el acceso al llavero si se solicita, o introduce la clave de nuevo. Los ajustes e informes locales siguen disponibles.",
+  "aiHistoryPrevious": "Página anterior",
+  "aiHistoryNext": "Página siguiente",
+  "@aiSettingsTab": {
+    "description": "aiSettingsTab"
+  },
+  "@aiAutomaticAnalysis": {
+    "description": "aiAutomaticAnalysis"
+  },
+  "@aiAutomaticAnalysisDescription": {
+    "description": "aiAutomaticAnalysisDescription"
+  },
+  "@aiHistoryTitle": {
+    "description": "aiHistoryTitle"
+  },
+  "@aiHistoryEmpty": {
+    "description": "aiHistoryEmpty"
+  },
+  "@aiAutomaticRun": {
+    "description": "aiAutomaticRun"
+  },
+  "@aiManualRun": {
+    "description": "aiManualRun"
+  },
+  "@aiErrorCredentialUnavailable": {
+    "description": "aiErrorCredentialUnavailable"
+  },
+  "@aiHistoryPrevious": {
+    "description": "aiHistoryPrevious"
+  },
+  "@aiHistoryNext": {
+    "description": "aiHistoryNext"
+  }
 }

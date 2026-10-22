@@ -9,6 +9,7 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_client.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
+import 'package:dingdong/features/ai_companion/data/ai_insight_history.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_screen.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
@@ -18,6 +19,47 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('insights tab pages saved reports independently of settings', (
+    tester,
+  ) async {
+    final directory = Directory.systemTemp.createTempSync('jvs-insight-ui-');
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final history = AiInsightHistory('${directory.path}/history.sqlite3');
+    for (var i = 0; i < 23; i++) {
+      history.save(
+        AiCompanionReport(createdAt: DateTime.utc(2026, 10, 23, 0, i)),
+        automatic: i.isEven,
+      );
+    }
+    final controller = AiCompanionController(
+      store: AiCompanionPreferencesStore(
+        MemoryPreferencesBackend(),
+        secretStore: _Secrets(),
+      ),
+      history: history,
+      loadMetadata: () async => const AiCompanionMetadata(),
+    );
+    addTearDown(controller.dispose);
+    await controller.load();
+    await _pump(tester, controller);
+    expect(find.text('Insights and suggestions'), findsWidgets);
+    expect(find.byKey(const Key('ai-configure-provider')), findsNothing);
+    await _show(tester, find.byKey(const Key('ai-history-next')));
+    await tester.tap(find.byKey(const Key('ai-history-next')));
+    await tester.pumpAndSettle();
+    expect(controller.historyPage, 1);
+    expect(controller.historyEntries.length, 3);
+    await _show(tester, find.byKey(const Key('ai-history-previous')));
+    await tester.tap(find.byKey(const Key('ai-history-previous')));
+    await tester.pumpAndSettle();
+    expect(controller.historyPage, 0);
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await _show(tester, find.byKey(const Key('ai-configure-provider')));
+    expect(find.byKey(const Key('ai-configure-provider')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('AI+ keeps analysis reachable while settings scroll', (
     tester,
   ) async {
@@ -106,13 +148,18 @@ void main() {
       await tester.pumpAndSettle();
       final saved = (await fixture.store.loadSettings()).toJson();
       expect(saved[jsonKey], isTrue);
-      expect(saved.entries.where((entry) => entry.value == true), hasLength(1));
+      expect(
+        saved.entries.where(
+          (entry) => entry.value == true && entry.key != 'automaticAnalysis',
+        ),
+        hasLength(1),
+      );
       await _show(tester, find.byKey(Key('ai-feature-$key')));
       await tester.tap(find.byKey(Key('ai-feature-$key')));
       await tester.pumpAndSettle();
       expect(
         (await fixture.store.loadSettings()).toJson().entries.where(
-          (entry) => entry.value == true,
+          (entry) => entry.value == true && entry.key != 'automaticAnalysis',
         ),
         isEmpty,
       );
@@ -164,7 +211,12 @@ void main() {
       await tester.pumpAndSettle();
       final saved = (await fixture.store.loadSettings()).toJson();
       expect(saved['progressiveDisclosure'], isTrue);
-      expect(saved.entries.where((entry) => entry.value == true), hasLength(1));
+      expect(
+        saved.entries.where(
+          (entry) => entry.value == true && entry.key != 'automaticAnalysis',
+        ),
+        hasLength(1),
+      );
       await _show(tester, find.byKey(const Key('ai-analyze')));
       expect(
         tester
@@ -226,8 +278,10 @@ void main() {
 
     expect(
       tester
-          .widgetList<CompactSwitchListTile>(find.byType(CompactSwitchListTile))
-          .every((CompactSwitchListTile tile) => !tile.value),
+          .widget<CompactSwitchListTile>(
+            find.byKey(const Key('ai-feature-automatic-analysis')),
+          )
+          .value,
       isTrue,
     );
     await _show(tester, find.byKey(const Key('ai-analyze')));
@@ -431,13 +485,15 @@ void main() {
           key,
           '$previewDirectory/ai-companion-${width.toInt()}-zh-top.png',
         );
-        await _show(tester, find.text('内部 Token 消耗'));
+        await tester.tap(find.text('设置'));
+        await tester.pumpAndSettle();
         await _capture(
           tester,
           key,
           '$previewDirectory/ai-companion-${width.toInt()}-zh-usage.png',
         );
-        await _show(tester, find.byKey(const Key('ai-analyze')));
+        await tester.tap(find.text('洞察与建议').first);
+        await tester.pumpAndSettle();
         await _capture(
           tester,
           key,
@@ -475,6 +531,14 @@ Future<void> _capture(WidgetTester tester, GlobalKey key, String path) async {
 }
 
 Future<void> _show(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isEmpty) {
+    await tester.tap(
+      find.text('Settings').evaluate().isNotEmpty
+          ? find.text('Settings')
+          : find.text('设置'),
+    );
+    await tester.pumpAndSettle();
+  }
   final ScrollableState scrollable = tester.state<ScrollableState>(
     find.byType(Scrollable).first,
   );

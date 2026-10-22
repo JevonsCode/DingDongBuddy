@@ -169,7 +169,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiCloudAnalysisDescription =>
-      'On explicit analysis only: send enabled counts and Token totals to your configured model.';
+      'When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.';
 
   @override
   String get aiProviderProtocol => 'API protocol';
@@ -245,7 +245,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiInsightsEmpty =>
-      'Choose an analysis scope below, then select Analyze now at the top. Results appear here.';
+      'Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.';
 
   @override
   String get aiLocalAnalysis => 'Local analysis · no model request';
@@ -4329,4 +4329,49 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get reminderToPhone => 'Send to phone';
+
+  @override
+  String get devReminderColors => 'Reminder colors and counts';
+
+  @override
+  String get devReminderColorsDescription =>
+      'Click a color repeatedly to increase its DEV preview count. Previews do not send sounds or notifications, change saved reminders, or create history.';
+
+  @override
+  String get devClearReminderColors => 'Clear previews';
+
+  @override
+  String get devReminderColorsUpdated => 'Tray preview updated';
+
+  @override
+  String get aiSettingsTab => 'Settings';
+
+  @override
+  String get aiAutomaticAnalysis => 'Automatic analysis';
+
+  @override
+  String get aiAutomaticAnalysisDescription =>
+      'Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.';
+
+  @override
+  String get aiHistoryTitle => 'History';
+
+  @override
+  String get aiHistoryEmpty => 'No saved analyses yet.';
+
+  @override
+  String get aiAutomaticRun => 'Automatic';
+
+  @override
+  String get aiManualRun => 'Manual';
+
+  @override
+  String get aiErrorCredentialUnavailable =>
+      'The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.';
+
+  @override
+  String get aiHistoryPrevious => 'Previous page';
+
+  @override
+  String get aiHistoryNext => 'Next page';
 }

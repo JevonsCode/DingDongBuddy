@@ -68,6 +68,27 @@ Future<void> _runDevelopmentTestAction({
     case DevelopmentTestAction.trayNudge:
       await shellGateway.nudgeTrayIcon();
       return;
+    case DevelopmentTestAction.trayOrange:
+      await shellGateway.previewReminderColor(TrayNotificationColor.orange);
+      return;
+    case DevelopmentTestAction.trayPink:
+      await shellGateway.previewReminderColor(TrayNotificationColor.pink);
+      return;
+    case DevelopmentTestAction.trayBlue:
+      await shellGateway.previewReminderColor(TrayNotificationColor.blue);
+      return;
+    case DevelopmentTestAction.trayGreen:
+      await shellGateway.previewReminderColor(TrayNotificationColor.green);
+      return;
+    case DevelopmentTestAction.trayPurple:
+      await shellGateway.previewReminderColor(TrayNotificationColor.purple);
+      return;
+    case DevelopmentTestAction.trayAmber:
+      await shellGateway.previewReminderColor(TrayNotificationColor.amber);
+      return;
+    case DevelopmentTestAction.trayClearColors:
+      await shellGateway.previewReminderColor(null);
+      return;
     case DevelopmentTestAction.agentCompletion:
       await _postDevelopmentDing(
         dependencies,

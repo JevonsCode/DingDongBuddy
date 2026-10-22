@@ -83,7 +83,7 @@
   "@aiProactiveCheckInsDescription": { "description": "AI companion." },
   "aiCloudAnalysis": "Model analysis of metadata",
   "@aiCloudAnalysis": { "description": "AI companion." },
-  "aiCloudAnalysisDescription": "On explicit analysis only: send enabled counts and Token totals to your configured model.",
+  "aiCloudAnalysisDescription": "When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.",
   "@aiCloudAnalysisDescription": { "description": "AI companion." },
   "aiProviderProtocol": "API protocol",
   "@aiProviderProtocol": { "description": "AI companion model connection." },
@@ -127,7 +127,7 @@
   "@aiAnalyze": { "description": "AI companion." },
   "aiInsightsTitle": "Insights and suggestions",
   "@aiInsightsTitle": { "description": "AI companion." },
-  "aiInsightsEmpty": "Choose an analysis scope below, then select Analyze now at the top. Results appear here.",
+  "aiInsightsEmpty": "Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.",
   "@aiInsightsEmpty": { "description": "AI companion." },
   "aiLocalAnalysis": "Local analysis · no model request",
   "@aiLocalAnalysis": { "description": "AI companion." },
@@ -5289,5 +5289,61 @@
   "reminderColor": "Color",
   "@reminderColor": {"description": "Named reminder settings label"},
   "reminderToPhone": "Send to phone",
-  "@reminderToPhone": {"description": "Named reminder settings label"}
+  "@reminderToPhone": {"description": "Named reminder settings label"},
+  "devReminderColors": "Reminder colors and counts",
+  "@devReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsDescription": "Click a color repeatedly to increase its DEV preview count. Previews do not send sounds or notifications, change saved reminders, or create history.",
+  "@devReminderColorsDescription": {
+    "description": "Development panel reminder color preview."
+  },
+  "devClearReminderColors": "Clear previews",
+  "@devClearReminderColors": {
+    "description": "Development panel reminder color preview."
+  },
+  "devReminderColorsUpdated": "Tray preview updated",
+  "@devReminderColorsUpdated": {
+    "description": "Development panel reminder color preview."
+  },
+  "aiSettingsTab": "Settings",
+  "@aiSettingsTab": {
+    "description": "aiSettingsTab"
+  },
+  "aiAutomaticAnalysis": "Automatic analysis",
+  "@aiAutomaticAnalysis": {
+    "description": "aiAutomaticAnalysis"
+  },
+  "aiAutomaticAnalysisDescription": "Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.",
+  "@aiAutomaticAnalysisDescription": {
+    "description": "aiAutomaticAnalysisDescription"
+  },
+  "aiHistoryTitle": "History",
+  "@aiHistoryTitle": {
+    "description": "aiHistoryTitle"
+  },
+  "aiHistoryEmpty": "No saved analyses yet.",
+  "@aiHistoryEmpty": {
+    "description": "aiHistoryEmpty"
+  },
+  "aiAutomaticRun": "Automatic",
+  "@aiAutomaticRun": {
+    "description": "aiAutomaticRun"
+  },
+  "aiManualRun": "Manual",
+  "@aiManualRun": {
+    "description": "aiManualRun"
+  },
+  "aiErrorCredentialUnavailable": "The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.",
+  "@aiErrorCredentialUnavailable": {
+    "description": "aiErrorCredentialUnavailable"
+  },
+  "aiHistoryPrevious": "Previous page",
+  "@aiHistoryPrevious": {
+    "description": "aiHistoryPrevious"
+  },
+  "aiHistoryNext": "Next page",
+  "@aiHistoryNext": {
+    "description": "aiHistoryNext"
+  }
 }

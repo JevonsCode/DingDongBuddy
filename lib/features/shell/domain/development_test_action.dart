@@ -2,6 +2,13 @@
 enum DevelopmentTestAction {
   traySleeping('tray-sleeping'),
   trayNudge('tray-nudge'),
+  trayOrange('tray-orange'),
+  trayPink('tray-pink'),
+  trayBlue('tray-blue'),
+  trayGreen('tray-green'),
+  trayPurple('tray-purple'),
+  trayAmber('tray-amber'),
+  trayClearColors('tray-clear-colors'),
   agentCompletion('agent-completion'),
   agentRichCompletion('agent-rich-completion'),
   agentBurst('agent-burst'),
@@ -17,7 +24,8 @@ enum DevelopmentTestAction {
 
   bool get requiresTrayAnimation =>
       this == DevelopmentTestAction.traySleeping ||
-      this == DevelopmentTestAction.trayNudge;
+      this == DevelopmentTestAction.trayNudge ||
+      id.startsWith('tray-');
 
   static DevelopmentTestAction? fromId(Object? value) {
     if (value is! String) return null;

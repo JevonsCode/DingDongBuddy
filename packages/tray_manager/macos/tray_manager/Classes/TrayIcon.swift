@@ -125,9 +125,8 @@ public class TrayIcon: NSView {
             bubbleDimmed = badgeDimmed
             button.image = nil
             button.attributedTitle = NSAttributedString(string: "")
-            let shown = min(reminderBubbles.count, 3)
-            let overflowWidth: CGFloat = reminderBubbles.count > 3 ? 25 : 0
-            statusItem?.length = badgeWidth + (shown > 0 ? 5 + CGFloat(shown) * 17 : 0) + overflowWidth
+            statusItem?.length = badgeWidth + displayedBubbles.reduce(CGFloat(0)) { $0 + bubbleWidth($1) + 6 }
+
         } else {
             unreadBadgeTitle = nil
             stillBadgeImage = nil
@@ -151,22 +150,40 @@ public class TrayIcon: NSView {
         let artwork = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? stillBadgeImage : sourceImage
         artwork?.draw(in: NSRect(x: 5, y: bounds.midY - 11, width: 22, height: 22))
         drawCentered(title, x: 30)
-        for (index, bubble) in reminderBubbles.prefix(3).enumerated() {
+        var x = badgeWidth + 6
+        for bubble in displayedBubbles {
             let rgb = (bubble["colorRgb"] as? NSNumber)?.uint32Value
             let pulse = bubble["pulse"] as? Bool ?? false
             let color = badgeDisplayRgb(rgb, dimmed: bubbleDimmed && pulse)
             NSColor(cgColor: badgeBackgroundColor(color))?.setFill()
-            NSBezierPath(ovalIn: NSRect(
-                x: badgeWidth + 7 + CGFloat(index) * 17,
-                y: bounds.midY - 6, width: 12, height: 12
-            )).fill()
+            let width = bubbleWidth(bubble)
+            NSBezierPath(roundedRect: NSRect(x: x, y: 0, width: width, height: bounds.height),
+                         xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
+            let text = bubbleText(bubble)
+            drawCentered(text, x: x + (width - text.size().width) / 2)
+            x += width + 6
         }
+    }
+
+    private var displayedBubbles: [[String: Any]] {
+        var result = Array(reminderBubbles.prefix(3))
         if reminderBubbles.count > 3 {
-            drawCentered(NSAttributedString(string: "+\(reminderBubbles.count - 3)", attributes: [
-                .foregroundColor: NSColor.labelColor,
-                .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
-            ]), x: badgeWidth + 58)
+            result.append(["label": "+\(reminderBubbles.count - 3)", "colorRgb": NSNumber(value: 0x666666)])
         }
+        return result
+    }
+
+    private func bubbleText(_ bubble: [String: Any]) -> NSAttributedString {
+        let count = (bubble["count"] as? NSNumber)?.intValue
+        let label = bubble["label"] as? String ?? count.map { $0 > 99 ? "99+" : String($0) } ?? "?"
+        return NSAttributedString(string: label, attributes: [
+            .foregroundColor: NSColor.white,
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
+        ])
+    }
+
+    private func bubbleWidth(_ bubble: [String: Any]) -> CGFloat {
+        max(statusItem?.button?.bounds.height ?? 22, ceil(bubbleText(bubble).size().width) + 10)
     }
 
     private func drawCentered(_ text: NSAttributedString, x: CGFloat) {

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:cryptography/cryptography.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_client.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_analyzer.dart';
@@ -6,6 +9,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../token_usage/data/local_token_usage_repository.dart';
 import '../../token_usage/domain/token_usage_models.dart';
+import '../data/ai_insight_history.dart';
 import '../domain/ai_companion_usage.dart';
 
 export 'package:dingdong/features/ai_companion/domain/ai_companion_models.dart';
@@ -18,6 +22,7 @@ final class AiCompanionController extends ChangeNotifier {
     required AiCompanionMetadataLoader loadMetadata,
     AiCompanionClient? client,
     this.usageRepository,
+    this.history,
     this.onUsageChanged,
     DateTime Function()? now,
     // Preserve public injectable argument names while keeping fields private.
@@ -27,6 +32,52 @@ final class AiCompanionController extends ChangeNotifier {
        _loadMetadata = loadMetadata,
        _client = client ?? AiCompanionClient(),
        _now = now ?? DateTime.now;
+
+  final AiInsightHistory? history;
+  Timer? _automaticTimer;
+  Timer? _settingsAnalysisTimer;
+  String? _lastFingerprint;
+  DateTime? _lastAutomaticAttempt;
+  List<AiInsightEntry> historyEntries = const [];
+  int historyPage = 0;
+  int historyCount = 0;
+  static const historyPageSize = 20;
+
+  void startAutomaticAnalysis() {
+    _automaticTimer?.cancel();
+    _automaticTimer = Timer.periodic(const Duration(minutes: 30), (_) {
+      unawaited(analyze(automatic: true));
+    });
+    unawaited(analyze(automatic: true));
+  }
+
+  Future<void> loadHistoryPage(int page) async {
+    if (_disposed || history == null) return;
+    try {
+      historyCount = history!.count;
+      historyPage = page.clamp(
+        0,
+        ((historyCount - 1) ~/ historyPageSize).clamp(0, 1000000),
+      );
+      historyEntries = history!.page(
+        offset: historyPage * historyPageSize,
+        limit: historyPageSize,
+      );
+    } on Object {
+      _error = AiCompanionError.storageUnavailable;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> _saveAnalysis(
+    AiCompanionReport report, {
+    required bool automatic,
+    String? fingerprint,
+  }) async {
+    await _store.saveReport(report);
+    history?.save(report, automatic: automatic, fingerprint: fingerprint);
+    await loadHistoryPage(0);
+  }
 
   final LocalTokenUsageRepository? usageRepository;
   final VoidCallback? onUsageChanged;
@@ -100,12 +151,20 @@ final class AiCompanionController extends ChangeNotifier {
   Future<void> load() => _run((generation) async {
     final AiCompanionSettings loaded = await _store.loadSettings();
     final AiCompanionReport? report = await _store.loadReport();
-    final String? key = await _store.readApiKey();
-    await _loadUsage();
     if (!_current(generation)) return;
     _settings = loaded;
-    _hasStoredApiKey = key?.isNotEmpty ?? false;
     _report = _visibleReport(report, loaded);
+    _lastFingerprint = history?.fingerprint;
+    if (report != null && history != null && history!.count == 0) {
+      history!.save(report, automatic: false);
+    }
+    await loadHistoryPage(0);
+    await _loadUsage();
+    // Local settings and insights remain available when Keychain access fails.
+    if (loaded.providerEndpoint.isNotEmpty) {
+      final String? key = await _store.readApiKey();
+      if (_current(generation)) _hasStoredApiKey = key?.isNotEmpty ?? false;
+    }
   });
 
   Future<void> saveSettings(
@@ -142,18 +201,21 @@ final class AiCompanionController extends ChangeNotifier {
           sanitized.progressiveDisclosure != _settings.progressiveDisclosure ||
           sanitized.tokenOptimization != _settings.tokenOptimization;
       // Never send the old provider's credential to a newly entered endpoint.
-      if (clearApiKey || endpointChanged || replacement != null) {
+      final credentialChanged =
+          clearApiKey || endpointChanged || replacement != null;
+      if (credentialChanged) {
         await _store.writeApiKey(clearApiKey ? null : replacement);
       }
       await _store.saveSettings(sanitized);
-      final String? storedKey = await _store.readApiKey();
       if (!_current(generation)) return;
       final inclusionChanged =
           sanitized.includeInternalInGlobal !=
           _settings.includeInternalInGlobal;
       _settings = sanitized;
       if (inclusionChanged) onUsageChanged?.call();
-      _hasStoredApiKey = storedKey?.isNotEmpty ?? false;
+      if (credentialChanged) {
+        _hasStoredApiKey = !clearApiKey && (replacement?.isNotEmpty ?? false);
+      }
       _connectionVerified = false;
       _report = _visibleReport(_report, sanitized);
       // Free-form text cannot be reliably separated back into capability
@@ -165,6 +227,14 @@ final class AiCompanionController extends ChangeNotifier {
         );
       }
       await _store.saveReport(_report);
+      if (_automaticTimer != null) {
+        _settingsAnalysisTimer?.cancel();
+        _settingsAnalysisTimer = Timer(const Duration(seconds: 5), () {
+          if (_disposed) return;
+          _lastAutomaticAttempt = null;
+          unawaited(analyze(automatic: true));
+        });
+      }
     });
   }
 
@@ -177,36 +247,76 @@ final class AiCompanionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> analyze() => _run((generation) async {
-    final AiCompanionSettings activeSettings = _settings;
-    if (!activeSettings.analysisEnabled) {
-      throw const AiCompanionException(AiCompanionError.disabled);
+  Future<void> analyze({bool automatic = false}) async {
+    if (automatic &&
+        (!_settings.automaticAnalysis ||
+            !_settings.analysisEnabled ||
+            _isLoading ||
+            (_lastAutomaticAttempt != null &&
+                _now().difference(_lastAutomaticAttempt!) <
+                    const Duration(minutes: 30)))) {
+      return;
     }
-    final AiCompanionMetadata metadata = await _loadMetadata();
-    if (!_current(generation)) return;
-    final AiCompanionReport localReport = await const AiCompanionAnalyzer()
-        .analyze(activeSettings, metadata, _now());
-    if (!_current(generation)) return;
-    _report = localReport;
-    await _store.saveReport(localReport);
-    if (!_current(generation) || !activeSettings.cloudAnalysis) return;
-    final String? key = await _store.readApiKey();
-    if (!_current(generation)) return;
-    final String summary = await _client.analyze(
-      activeSettings,
-      key,
-      metadata,
-      onUsage: _recordUsage,
-    );
-    if (!_current(generation)) return;
-    _report = AiCompanionReport(
-      createdAt: localReport.createdAt,
-      suggestions: localReport.suggestions,
-      cloudSummary: summary,
-      localOnly: false,
-    );
-    await _store.saveReport(_report);
-  });
+    if (automatic) _lastAutomaticAttempt = _now();
+    await _run((generation) async {
+      final AiCompanionSettings activeSettings = _settings;
+      if (!activeSettings.analysisEnabled) {
+        throw const AiCompanionException(AiCompanionError.disabled);
+      }
+      final AiCompanionMetadata metadata = await _loadMetadata();
+      if (!_current(generation)) return;
+      final AiCompanionReport localReport = await const AiCompanionAnalyzer()
+          .analyze(activeSettings, metadata, _now());
+      if (!_current(generation)) return;
+      final fingerprint = base64Encode(
+        (await Sha256().hash(
+          utf8.encode(
+            jsonEncode({
+              'settings': activeSettings.toJson(),
+              'suggestions': localReport.suggestions
+                  .map((s) => s.toJson())
+                  .toList(),
+              'metadata': const AiCompanionAnalyzer().cloudMetadata(
+                activeSettings,
+                metadata,
+              ),
+            }),
+          ),
+        )).bytes,
+      );
+      if (!_current(generation)) return;
+      if (automatic && fingerprint == _lastFingerprint) return;
+      _report = localReport;
+      await _saveAnalysis(
+        localReport,
+        automatic: automatic,
+        fingerprint: activeSettings.cloudAnalysis ? null : fingerprint,
+      );
+      if (!activeSettings.cloudAnalysis) _lastFingerprint = fingerprint;
+      if (!_current(generation) || !activeSettings.cloudAnalysis) return;
+      final String? key = await _store.readApiKey();
+      if (!_current(generation)) return;
+      final String summary = await _client.analyze(
+        activeSettings,
+        key,
+        metadata,
+        onUsage: _recordUsage,
+      );
+      if (!_current(generation)) return;
+      _report = AiCompanionReport(
+        createdAt: localReport.createdAt,
+        suggestions: localReport.suggestions,
+        cloudSummary: summary,
+        localOnly: false,
+      );
+      await _saveAnalysis(
+        _report!,
+        automatic: automatic,
+        fingerprint: fingerprint,
+      );
+      _lastFingerprint = fingerprint;
+    });
+  }
 
   Future<void> testConnection() => _run((generation) async {
     _connectionVerified = false;
@@ -272,6 +382,8 @@ final class AiCompanionController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _automaticTimer?.cancel();
+    _settingsAnalysisTimer?.cancel();
     _generation++;
     _client.dispose();
     super.dispose();

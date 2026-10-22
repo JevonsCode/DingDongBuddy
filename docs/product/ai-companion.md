@@ -2,8 +2,13 @@
 
 Open **Resource Manager → AI+**. Clipboard insights, resource usage
 optimization, progressive disclosure advice, Token suggestions and proactive check-ins each
-have their own switch. All start off. Opening the workspace does not contact a
-model. Suggestions are read-only; review links open the existing clipboard or
+have their own switch. These capabilities start off. The **Insights and suggestions**
+tab defaults to automatic analysis of enabled categories; **Settings** contains the
+category and model configuration. Analysis starts with the resource window and
+checks every 30 minutes while that window engine is running. Changed settings are
+debounced for five seconds. Unchanged analysis inputs are skipped, including after
+restart. Turn **Automatic analysis** off for manual-only operation. Model requests
+require the separate model-analysis opt-in. Suggestions are read-only; review links open the existing clipboard or
 resource editor so changes remain explicit.
 
 Clipboard and Token analysis cover the local calendar day; resource usage
@@ -55,6 +60,14 @@ numeric Token aggregates with data-availability flags. Clipboard text, resource
 contents and titles, local identifiers, paths, images, and file contents are
 excluded structurally. Local insights remain available without a provider.
 Analysis does not upload files or grant model access to tools.
+
+Analyses are retained in local `ai-insights.sqlite3`, with 20 entries per page,
+newest first and automatic/manual source labels. Local and model results from one
+analysis update the same entry. The previous latest report is migrated on first
+load. Disabling automatic analysis does not erase history.
+
+Keychain failures are reported separately from preference failures; local settings
+and insights remain available. The app never falls back to plaintext key storage.
 
 Persisted reports contain suggestion codes and local references, plus filtered
 model summaries when requested, rather than clipboard or resource contents.

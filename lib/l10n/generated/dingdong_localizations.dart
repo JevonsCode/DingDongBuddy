@@ -358,7 +358,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'On explicit analysis only: send enabled counts and Token totals to your configured model.'**
+  /// **'When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.'**
   String get aiCloudAnalysisDescription;
 
   /// AI companion model connection.
@@ -490,7 +490,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Choose an analysis scope below, then select Analyze now at the top. Results appear here.'**
+  /// **'Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.'**
   String get aiInsightsEmpty;
 
   /// AI companion.
@@ -7525,6 +7525,90 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Send to phone'**
   String get reminderToPhone;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder colors and counts'**
+  String get devReminderColors;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Click a color repeatedly to increase its DEV preview count. Previews do not send sounds or notifications, change saved reminders, or create history.'**
+  String get devReminderColorsDescription;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear previews'**
+  String get devClearReminderColors;
+
+  /// Development panel reminder color preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tray preview updated'**
+  String get devReminderColorsUpdated;
+
+  /// aiSettingsTab
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get aiSettingsTab;
+
+  /// aiAutomaticAnalysis
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic analysis'**
+  String get aiAutomaticAnalysis;
+
+  /// aiAutomaticAnalysisDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.'**
+  String get aiAutomaticAnalysisDescription;
+
+  /// aiHistoryTitle
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get aiHistoryTitle;
+
+  /// aiHistoryEmpty
+  ///
+  /// In en, this message translates to:
+  /// **'No saved analyses yet.'**
+  String get aiHistoryEmpty;
+
+  /// aiAutomaticRun
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get aiAutomaticRun;
+
+  /// aiManualRun
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get aiManualRun;
+
+  /// aiErrorCredentialUnavailable
+  ///
+  /// In en, this message translates to:
+  /// **'The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.'**
+  String get aiErrorCredentialUnavailable;
+
+  /// aiHistoryPrevious
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get aiHistoryPrevious;
+
+  /// aiHistoryNext
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get aiHistoryNext;
 }
 
 class _DingDongLocalizationsDelegate

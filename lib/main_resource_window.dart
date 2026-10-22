@@ -249,6 +249,9 @@ Future<void> _runResourceManagerWindow(
   );
   aiCompanionController = AiCompanionController(
     store: aiStore,
+    history: AiInsightHistory(
+      '${paths.tokenUsageDatabaseFile.parent.path}/ai-insights.sqlite3',
+    ),
     usageRepository: tokenUsageRepository,
     onUsageChanged: tokenUsageController.invalidate,
     loadMetadata: () async {
@@ -287,6 +290,7 @@ Future<void> _runResourceManagerWindow(
     },
   );
   await aiCompanionController.load();
+  aiCompanionController.startAutomaticAnalysis();
   runApp(
     ResourceManagerApp(
       aiCompanionController: aiCompanionController,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_models.dart';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_privacy.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 abstract interface class AiCompanionSecretStore {
@@ -84,11 +85,24 @@ final class AiCompanionPreferencesStore implements AiCompanionStore {
       ? _backend.remove(reportKey)
       : _backend.write(reportKey, jsonEncode(value.toJson()));
   @override
-  Future<String?> readApiKey() => _secretStore.read();
+  Future<String?> readApiKey() => _credentialOperation(_secretStore.read);
   @override
-  Future<void> writeApiKey(String? value) => value == null || value.isEmpty
-      ? _secretStore.delete()
-      : _secretStore.write(value);
+  Future<void> writeApiKey(String? value) => _credentialOperation(
+    () => value == null || value.isEmpty
+        ? _secretStore.delete()
+        : _secretStore.write(value),
+  );
+
+  Future<T> _credentialOperation<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on PlatformException {
+      // Never surface platform messages, which can include keychain item data.
+      throw const AiCompanionException(AiCompanionError.credentialUnavailable);
+    } on MissingPluginException {
+      throw const AiCompanionException(AiCompanionError.credentialUnavailable);
+    }
+  }
 
   static Map<String, Object?> _decode(Object? value) {
     if (value is! String || value.length > 65536) return <String, Object?>{};

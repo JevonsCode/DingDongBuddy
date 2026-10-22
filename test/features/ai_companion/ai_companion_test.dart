@@ -132,7 +132,7 @@ void main() {
   });
 
   test(
-    'all switches default off and loading never reads local data or network',
+    'analysis is automatic by default but capabilities remain opt-in',
     () async {
       final _Transport transport = _Transport();
       int reads = 0;
@@ -146,11 +146,21 @@ void main() {
       addTearDown(controller.dispose);
       await controller.load();
       expect(
-        controller.settings.toJson().values.whereType<bool>(),
+        controller.settings
+            .toJson()
+            .entries
+            .where((e) => e.key != 'automaticAnalysis')
+            .map((e) => e.value)
+            .whereType<bool>(),
         everyElement(false),
       );
       expect(
-        controller.settings.toJson().values.whereType<bool>(),
+        controller.settings
+            .toJson()
+            .entries
+            .where((e) => e.key != 'automaticAnalysis')
+            .map((e) => e.value)
+            .whereType<bool>(),
         hasLength(8),
       );
       expect(

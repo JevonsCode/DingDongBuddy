@@ -7,7 +7,9 @@ color. Existing completion color preferences are preserved.
 
 On macOS the menu-bar badge preserves the original DingDong artwork and unread
 count. Separate colored bubbles follow it for each unread reminder type, ordered
-by its latest event. Up to three bubbles are visible; additional types show a
+by its latest event. Each bubble matches the main pill height and shows its own
+unread count in white (`99+` above 99). Legacy unread groups without per-event
+history display `?` until acknowledged, rather than inventing counts. Up to three bubbles are visible; additional types show a
 `+N` count. Types can share a color. Acknowledging an earlier snapshot leaves
 newer bubbles intact, including after restart. Hover text lists reminder names.
 On Windows the fixed-size notification-area marker uses a check or exclamation
@@ -91,3 +93,10 @@ without a client restart. No live Agent client refresh has been assumed.
 
 Spoken-text notifications are tracked in [issue #24](https://github.com/JevonsCode/DingDongBuddy/issues/24) for the next version. There is
 no `speechText` field in this version's tool schema.
+
+## Development previews
+
+DEV → Test Panel → Reminder colors and counts offers six colors. Repeated clicks
+increment a temporary per-color count; Clear preview removes only those previews.
+These are explicitly labeled DEV, do not play sounds, send notifications, change
+reminder settings or create activity history. Restarting clears them.
