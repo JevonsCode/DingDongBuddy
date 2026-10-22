@@ -1,4 +1,4 @@
-# DingDong 1.8.1-beta.1 Manual Regression Checklist
+# DingDong 1.9.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -13,9 +13,18 @@ encrypted local relay and direct data-channel routes. Content, clipboard and set
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
 
-## Paired-computer discovery and reconnection (1.8.1-beta.1)
+## Skill history, reminders and devices (1.9.0)
 
-- Install the beta on macOS and Windows while retaining the existing pairing.
+- Edit a Skill and refresh its package. Compare two versions and restore the
+  complete package while retaining its enablement, scope and delivery settings.
+- Search settings, edit a reminder, preview a sound and drag reminder order;
+  restart and verify these settings persist.
+- Verify online devices appear first and finished transfer metadata survives
+  restart; deleting a device clears its saved transfer records.
+
+## Paired-computer discovery and reconnection (1.9.0)
+
+- Install the release on macOS and Windows while retaining the existing pairing.
   Restart each application and verify it reconnects without a new pairing code.
 - Disconnect and reconnect the paired computer repeatedly. An explicit reconnect
   may show connecting; automatic retries must not flash connecting/offline.

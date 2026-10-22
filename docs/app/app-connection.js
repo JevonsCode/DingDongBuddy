@@ -1,9 +1,9 @@
 import {
   relayConnectionWasReplaced,
   shouldReconnectRelay,
-} from "./connection-policy.js?shell=51";
-import { pairingsMatch } from "./pairing-state.js?shell=51";
-import { wantsAgentNotifications } from "./notification-policy.js?shell=51";
+} from "./connection-policy.js?shell=52";
+import { pairingsMatch } from "./pairing-state.js?shell=52";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=52";
 import {
   encodedEnvelopeByteLength,
   encodeRelayFrame,
@@ -12,7 +12,7 @@ import {
   openEnvelope,
   relayFrameByteLength,
   sealEnvelope,
-} from "./app-codecs.js?shell=51";
+} from "./app-codecs.js?shell=52";
 
 // Encrypted relay/WebRTC lifecycle and ordered inbound message dispatch.
 export const maximumQueuedInboundEntries = 256;

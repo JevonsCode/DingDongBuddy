@@ -48,8 +48,8 @@ final class SkillVersionHistory {
       );
     }
     final File file = File(path.join(directory.path, name));
-    await _requireSafeAncestors(file.path);
-    await _requireSafeAncestors('${file.path}.lock');
+    await _requireSafeAncestors(file.path, directory.path);
+    await _requireSafeAncestors('${file.path}.lock', directory.path);
     return SafeManagedFile(file).snapshot();
   }
 
@@ -72,8 +72,8 @@ final class SkillVersionHistory {
       return;
     }
     final File file = File(path.join(directory.path, name));
-    await _requireSafeAncestors(file.path);
-    await _requireSafeAncestors('${file.path}.lock');
+    await _requireSafeAncestors(file.path, directory.path);
+    await _requireSafeAncestors('${file.path}.lock', directory.path);
     final SafeManagedFile managed = SafeManagedFile(file);
     if (contents == null) {
       await managed.deleteIfUnchanged(expected);
@@ -139,7 +139,7 @@ final class SkillVersionHistory {
     final String? packagePath = resource.packagePath;
     final bool hasPackage = packagePath != null && packagePath.isNotEmpty;
     if (hasPackage) {
-      await _requireSafeAncestors(packagePath);
+      await _requireSafeAncestors(packagePath, packagePath);
       final Directory directory = Directory(packagePath);
       if (!await directory.exists()) {
         throw FileSystemException('Skill package is missing.', packagePath);
@@ -303,7 +303,7 @@ final class SkillVersionHistory {
     _validateSnapshot(value);
     final Directory? directory = root;
     if (directory != null) {
-      await _requireSafeAncestors(directory.path);
+      await _requireSafeAncestors(directory.path, directory.path);
       await directory.create(recursive: true);
     }
     final Directory staging = await (directory ?? Directory.systemTemp)
@@ -447,8 +447,14 @@ void _validateSnapshot(SkillSnapshot value) {
   }
 }
 
-Future<void> _requireSafeAncestors(String target) async {
-  String current = path.absolute(target);
+Future<void> _requireSafeAncestors(String target, String root) async {
+  // Parent directories can be OS aliases (for example /var on macOS).
+  // Reject links at and within the managed root, not outside that boundary.
+  final String boundary = path.normalize(path.absolute(root));
+  String current = path.normalize(path.absolute(target));
+  if (current != boundary && !path.isWithin(boundary, current)) {
+    throw FileSystemException('Skill history target escapes its root.', target);
+  }
   while (true) {
     final FileSystemEntityType type = await FileSystemEntity.type(
       current,
@@ -460,9 +466,8 @@ Future<void> _requireSafeAncestors(String target) async {
         current,
       );
     }
-    final String parent = path.dirname(current);
-    if (parent == current) return;
-    current = parent;
+    if (current == boundary) return;
+    current = path.dirname(current);
   }
 }
 

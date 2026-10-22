@@ -176,6 +176,35 @@ void main() {
   );
 
   test(
+    'parent directory aliases work but links inside history stay rejected',
+    () async {
+      final Directory real = Directory('${temp.path}/real')..createSync();
+      final Link alias = Link('${temp.path}/alias')..createSync(real.path);
+      final SkillVersionHistory aliased = SkillVersionHistory(
+        Directory('${alias.path}/history'),
+      );
+      await (await aliased.prepare([], [_skill()])).commit();
+      expect(await aliased.versions('one'), hasLength(1));
+      final Directory outside = Directory('${temp.path}/outside')..createSync();
+      final Directory manifests = Directory('${alias.path}/history/manifests');
+      manifests.deleteSync(recursive: true);
+      Link(manifests.path).createSync(outside.path);
+      await expectLater(
+        aliased.versions('one'),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(outside.listSync(), isEmpty);
+      final Link rootAlias = Link('${temp.path}/root-alias')
+        ..createSync(real.path);
+      await expectLater(
+        SkillVersionHistory(Directory(rootAlias.path)).versions('one'),
+        throwsA(isA<FileSystemException>()),
+      );
+    },
+    skip: Platform.isWindows,
+  );
+
+  test(
     'executable bits and symlink rejection on POSIX',
     () async {
       final Directory package = Directory('${temp.path}/package')..createSync();

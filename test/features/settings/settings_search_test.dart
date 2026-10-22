@@ -130,7 +130,7 @@ void main() {
           'goldens/settings_search_${dark ? 'dark' : 'light'}.png',
         ),
       );
-    });
+    }, tags: ['golden']);
   }
   testWidgets(
     'filters groups locally, keeps editing active, clears and handles no results',

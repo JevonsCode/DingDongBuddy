@@ -147,16 +147,27 @@ enum TrayIconLayoutTest {
             precondition(panel.frame.height == fullHeight, "Closing starts from the current height")
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.04))
             let closingHeight = panel.frame.height
+            let closingOpacity = panel.alphaValue
+            precondition(closingOpacity > 0 && closingOpacity < 1, "Retraction fades as it shrinks")
             precondition(closingHeight < fullHeight && panel.isVisible)
             precondition(abs(panel.frame.maxY - fixedTop) < 0.1, "Top stays anchored")
             precondition(abs(firstBadgeScreenY() - firstY) < 0.5, "Numbers reveal without shifting or scaling")
             try captureOverflow(panel.contentView!, "overflow-retracting", .aqua)
             icon.setOverflowExpanded(true)
             precondition(panel.frame.height == closingHeight, "Reversing must not jump")
+            precondition(abs(panel.alphaValue - closingOpacity) < 0.001, "Reopening preserves current opacity")
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.03))
             precondition(panel.frame.height > closingHeight)
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.24))
             precondition(abs(panel.frame.height - fullHeight) < 0.1)
+            precondition(abs(panel.alphaValue - 1) < 0.001, "Reopened panel is fully visible")
+            icon.setOverflowExpanded(false)
+            let deadline = Date(timeIntervalSinceNow: 0.15)
+            while panel.frame.height > fullHeight / 4 && Date() < deadline {
+                RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.003))
+            }
+            precondition(panel.isVisible && panel.frame.height <= fullHeight / 4)
+            precondition(panel.alphaValue <= 0.001, "Panel disappears by one-quarter remaining height")
         }
         icon.setOverflowExpanded(false, animated: false)
         precondition(!panel.isVisible, "Immediate/Reduce Motion path dismisses without waiting")

@@ -215,7 +215,8 @@ public class TrayIcon: NSView {
         panel.isReleasedWhenClosed = false
         panel.level = .popUpMenu
         panel.collectionBehavior = [.transient, .moveToActiveSpace, .fullScreenAuxiliary, .ignoresCycle]
-        let currentHeight = panel.isVisible ? panel.frame.height : 1
+        let wasVisible = panel.isVisible
+        let currentHeight = wasVisible ? panel.frame.height : 1
         panel.contentView = content
         content.autoresizingMask = [.width, .height]
         let anchor = window.convertToScreen(convert(rect, to: nil))
@@ -227,7 +228,7 @@ public class TrayIcon: NSView {
         overflowAnimationTimer?.invalidate()
         overflowAnimationTimer = nil
         layoutOverflow(height: currentHeight)
-        panel.alphaValue = 1
+        if !wasVisible { panel.alphaValue = 1 }
         panel.orderFrontRegardless()
         setOverflowExpanded(true, animated: animated)
         removeOverflowMonitors()
@@ -308,9 +309,12 @@ public class TrayIcon: NSView {
         overflowAnimationTimer = nil
         overflowExpanded = expanded
         let start = panel.frame.height
+        let startOpacity = panel.alphaValue
+        let fadeHeight = overflowTargetFrame.height / 4
         guard animated, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
               panel.isVisible, abs(target - start) > 0.1 else {
             layoutOverflow(height: target)
+            panel.alphaValue = expanded ? 1 : 0
             if !expanded { panel.orderOut(nil); removeOverflowMonitors() }
             return
         }
@@ -320,8 +324,12 @@ public class TrayIcon: NSView {
             guard let self else { timer.invalidate(); return }
             let progress = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
                 ? 1 : min(1, (CACurrentMediaTime() - startedAt) / duration)
-            let h = start + (target - start) * CGFloat(1 - pow(1 - progress, 3))
+            let eased = CGFloat(1 - pow(1 - progress, 3))
+            let h = start + (target - start) * eased
             self.layoutOverflow(height: h)
+            panel.alphaValue = expanded
+                ? startOpacity + (1 - startOpacity) * eased
+                : startOpacity * max(0, min(1, (h - fadeHeight) / max(1, start - fadeHeight)))
             if progress >= 1 {
                 timer.invalidate()
                 self.overflowAnimationTimer = nil

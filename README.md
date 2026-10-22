@@ -237,11 +237,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.8.0:
+Published stable downloads · 1.9.0:
 
-- [macOS · Apple silicon · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-arm64.dmg)
-- [macOS · Intel · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-macos-x64.dmg)
-- [Windows x64 · 1.8.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.8.0/DingDong-1.8.0-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-arm64.dmg)
+- [macOS · Intel · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-x64.dmg)
+- [Windows x64 · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

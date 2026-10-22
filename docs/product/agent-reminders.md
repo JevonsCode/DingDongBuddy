@@ -20,7 +20,9 @@ macOS popover below it with the hidden fourth and later types in array order,
 showing color, localized name and own count. Up to eight rows fit before scrolling;
 the panel remains open while the pointer is inside and closes shortly after exit,
 on outside click, when reminders clear, or when overflow no longer exists. Native
-popover animation honors Reduce Motion. It does not acknowledge reminders or call `NSApp.activate`. Hover text still lists all active reminder names.
+panel reveals downward from a fixed top edge. On retraction it also fades out,
+becoming fully transparent by one-quarter remaining height. Rapid reopening
+continues from the current height and opacity. The animation honors Reduce Motion. It does not acknowledge reminders or call `NSApp.activate`. Hover text still lists all active reminder names.
 Each circle has a one-point vertical optical inset. Counts stay centered in the
 complete circle even when overlapped. `99+` caps large counts; `?` preserves
 unknown legacy history until acknowledged. Snapshot acknowledgement preserves

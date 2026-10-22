@@ -81,42 +81,36 @@ void main() {
     );
   });
 
-  test(
-    'desktop hosts consume application version 1.8.1-beta.1 from pubspec',
-    () {
-      final String pubspec = File('pubspec.yaml').readAsStringSync();
-      final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
-      final String windowsResources = File(
-        'windows/runner/Runner.rc',
-      ).readAsStringSync();
-      final String releaseVersion = File(
-        'lib/features/settings/domain/release_update.dart',
-      ).readAsStringSync();
+  test('desktop hosts consume application version 1.9.0 from pubspec', () {
+    final String pubspec = File('pubspec.yaml').readAsStringSync();
+    final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
+    final String windowsResources = File(
+      'windows/runner/Runner.rc',
+    ).readAsStringSync();
+    final String releaseVersion = File(
+      'lib/features/settings/domain/release_update.dart',
+    ).readAsStringSync();
 
-      expect(pubspec, contains('version: 1.8.1-beta.1+71'));
-      expect(
-        releaseVersion,
-        contains("const String currentAppVersion = '1.8.1-beta.1';"),
-      );
-      expect(releaseVersion, contains("const String currentAppBuild = '71';"));
-      // Protocol client/server info reuses the one Dart version constant.
-      for (final String path in const <String>[
-        'lib/features/agent_api/data/mcp_server.dart',
-        'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
-      ]) {
-        final String source = File(path).readAsStringSync();
-        expect(source, contains("'version': currentAppVersion"), reason: path);
-        expect(source, isNot(contains('1.7.0')), reason: path);
-      }
-      expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
-      expect(windowsResources, contains('FLUTTER_VERSION'));
-      expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,8,1,71'));
-      expect(
-        windowsResources,
-        contains('#define VERSION_AS_STRING "1.8.1-beta.1"'),
-      );
-    },
-  );
+    expect(pubspec, contains('version: 1.9.0+72'));
+    expect(
+      releaseVersion,
+      contains("const String currentAppVersion = '1.9.0';"),
+    );
+    expect(releaseVersion, contains("const String currentAppBuild = '72';"));
+    // Protocol client/server info reuses the one Dart version constant.
+    for (final String path in const <String>[
+      'lib/features/agent_api/data/mcp_server.dart',
+      'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
+    ]) {
+      final String source = File(path).readAsStringSync();
+      expect(source, contains("'version': currentAppVersion"), reason: path);
+      expect(source, isNot(contains('1.7.0')), reason: path);
+    }
+    expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
+    expect(windowsResources, contains('FLUTTER_VERSION'));
+    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,9,0,72'));
+    expect(windowsResources, contains('#define VERSION_AS_STRING "1.9.0"'));
+  });
 
   test('macOS About uses the canonical DingDong logo', () {
     final File canonicalLogo = File('Assets/DingDongIP/AgentToolIcon.png');
@@ -450,7 +444,7 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.8.0</span>'));
+    expect(website, contains('<span class="demo-version">v1.9.0</span>'));
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -616,17 +610,15 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.8.0"'));
-    expect(releaseMetadata, contains('"latestBuild": "70"'));
-    expect(releaseMetadata, contains('"latestVersion": "1.8.1-beta.1"'));
-    expect(releaseMetadata, contains('"latestBuild": "71"'));
-    expect(releaseMetadata, contains('"prerelease": true'));
-    expect(releaseMetadata, contains('Adds an opt-in AI companion'));
-    expect(releaseMetadata, contains('optional local backup'));
+    expect(releaseMetadata, contains('"latestVersion": "1.9.0"'));
+    expect(releaseMetadata, contains('"latestBuild": "72"'));
+    expect(releaseMetadata, contains('"prerelease": false'));
+    expect(releaseMetadata, contains('Adds Skill version history'));
+    expect(releaseMetadata, contains('configurable Agent reminders'));
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));
-    expect(releaseMetadata, contains('DingDong-1.8.0-windows-x64-Setup.exe'));
+    expect(releaseMetadata, contains('DingDong-1.9.0-windows-x64-Setup.exe'));
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
