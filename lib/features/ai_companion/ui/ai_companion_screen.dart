@@ -4,14 +4,11 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
-import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../../token_usage/domain/token_usage_models.dart';
 
 /// Optional companion workspace. Loading or opening it never contacts a model.
 class AiCompanionScreen extends StatefulWidget {
@@ -30,8 +27,7 @@ class AiCompanionScreen extends StatefulWidget {
   State<AiCompanionScreen> createState() => _AiCompanionScreenState();
 }
 
-class _AiCompanionScreenState extends State<AiCompanionScreen>
-    with WidgetsBindingObserver {
+class _AiCompanionScreenState extends State<AiCompanionScreen> {
   Timer? _checkInTimer;
   final _scrollController = ScrollController();
   DateTime? _checkInsEnabledAt;
@@ -39,24 +35,14 @@ class _AiCompanionScreenState extends State<AiCompanionScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    unawaited(widget.controller.refreshInternalUsage());
     widget.controller.addListener(_updateCheckInTimer);
     _updateCheckInTimer();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(widget.controller.refreshInternalUsage());
-    }
   }
 
   @override
   void didUpdateWidget(AiCompanionScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller == widget.controller) return;
-    unawaited(widget.controller.refreshInternalUsage());
     oldWidget.controller.removeListener(_updateCheckInTimer);
     _checkInTimer?.cancel();
     _checkInTimer = null;
@@ -93,7 +79,6 @@ class _AiCompanionScreenState extends State<AiCompanionScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     widget.controller.removeListener(_updateCheckInTimer);
     _checkInTimer?.cancel();
     _scrollController.dispose();
@@ -290,7 +275,13 @@ class _AiCompanionScreenState extends State<AiCompanionScreen>
                     ),
                   ],
                 ),
-                _internalUsage(context),
+                if (!controller.usageStorageAvailable)
+                  Text(
+                    l10n.aiInternalStorageError,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -427,91 +418,6 @@ class _AiCompanionScreenState extends State<AiCompanionScreen>
     );
   }
 
-  Widget _internalUsage(BuildContext context) {
-    final controller = widget.controller;
-    final settings = controller.settings;
-    final l10n = context.l10n;
-    final now = (widget.now ?? DateTime.now)().toLocal();
-    final today = controller.internalUsage.days.where(
-      (d) =>
-          d.day.year == now.year &&
-          d.day.month == now.month &&
-          d.day.day == now.day,
-    );
-    final format = NumberFormat.decimalPattern(
-      Localizations.localeOf(context).toLanguageTag(),
-    );
-    String count(int? n) =>
-        n == null ? l10n.aiInternalUnknown : format.format(n);
-    Widget row(String title, TokenUsageTotals totals, int requests) {
-      final total = totals.totalIsExact
-          ? count(totals.totalTokens)
-          : totals.totalTokens == 0
-          ? l10n.aiInternalUnknown
-          : '≥${count(totals.totalTokens)}';
-      return Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$title: $total Token · ${l10n.aiInternalRequests(requests)}',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${l10n.tokenUsageInput} ${count(totals.inputTokens)} · ${l10n.tokenUsageOutput} ${count(totals.outputTokens)} · ${l10n.tokenUsageCacheRead} ${count(totals.cachedInputTokens)} · ${l10n.tokenUsageCacheWrite} ${count(totals.cacheWriteInputTokens)}',
-            ),
-          ],
-        ),
-      );
-    }
-
-    return _Section(
-      title: l10n.aiInternalUsageTitle,
-      action: DesktopIconButton(
-        key: const Key('ai-refresh-usage'),
-        tooltip: l10n.refresh,
-        onPressed: controller.refreshInternalUsage,
-        icon: const Icon(Icons.refresh, size: 18),
-      ),
-      children: [
-        Text(l10n.aiInternalUsageDescription),
-        _feature(
-          key: 'include-internal',
-          title: l10n.aiIncludeInternal,
-          description: l10n.aiIncludeInternalDescription,
-          value: settings.includeInternalInGlobal,
-          change: (value) => settings.copyWith(includeInternalInGlobal: value),
-        ),
-        if (!controller.usageStorageAvailable)
-          Text(
-            l10n.aiInternalStorageError,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          )
-        else ...[
-          row(
-            l10n.tokenUsageToday,
-            TokenUsageTotals.sum(today.map((d) => d.totals)),
-            today.fold(0, (n, d) => n + d.eventCount),
-          ),
-          row(
-            l10n.aiInternalCumulative,
-            controller.internalUsage.totals,
-            controller.internalUsage.days.fold(0, (n, d) => n + d.eventCount),
-          ),
-        ],
-        if (controller.lastUsage != null)
-          row(l10n.aiInternalLast, controller.lastUsage!.totals, 1),
-        const SizedBox(height: 8),
-        Text(
-          l10n.aiInternalPartial,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
-    );
-  }
-
   Widget _feature({
     required String key,
     required String title,
@@ -531,10 +437,9 @@ class _AiCompanionScreenState extends State<AiCompanionScreen>
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children, this.action});
+  const _Section({required this.title, required this.children});
   final String title;
   final List<Widget> children;
-  final Widget? action;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -550,7 +455,6 @@ class _Section extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            ?action,
           ],
         ),
         const Divider(height: 20),

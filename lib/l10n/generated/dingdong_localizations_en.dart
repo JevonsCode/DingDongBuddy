@@ -3777,7 +3777,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get tokenUsageTitle => 'Token history';
 
   @override
-  String get tokenUsageSubtitle => 'Daily usage across your local Agents.';
+  String get tokenUsageSubtitle => 'Daily usage across Agents and DingDong.';
 
   @override
   String get tokenUsageLocalOnly => 'Stored on this device';
@@ -3860,7 +3860,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get tokenUsageCoverageNote =>
-      'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.';
+      'Counts come from supported local Agent logs and DingDong API usage receipts. Missing or unsupported records do not mean zero usage. Nothing is uploaded.';
 
   @override
   String get tokenUsageAvailable => 'Logs found';
@@ -4251,4 +4251,45 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get aiInternalStorageError =>
       'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.';
+
+  @override
+  String get tokenUsageIncludeInternal => 'Include DingDong usage';
+
+  @override
+  String get tokenUsageOnlyInternal => 'DingDong only';
+
+  @override
+  String get tokenUsageFilterSaveFailed =>
+      'Could not save this preference. Try again.';
+
+  @override
+  String get tokenUsageAgents => 'Agents';
+
+  @override
+  String get tokenUsageNoAgents => 'No Agents selected';
+
+  @override
+  String get tokenUsageAgentSourcesHelp =>
+      'Supported local log readers, not a list of connected Agents. Multiple selections are allowed.';
+
+  @override
+  String get tokenUsageFunctions => 'DingDong usage by feature';
+
+  @override
+  String get tokenUsageFunctionSelection => 'Resource selection';
+
+  @override
+  String get tokenUsageFunctionAnalysis => 'Model analysis';
+
+  @override
+  String get tokenUsageFunctionConnection => 'Connection tests';
+
+  @override
+  String get tokenUsageFunctionOther => 'Other / unclassified';
+
+  @override
+  String get tokenUsageFunction => 'Feature';
+
+  @override
+  String get tokenUsageRequests => 'Requests';
 }

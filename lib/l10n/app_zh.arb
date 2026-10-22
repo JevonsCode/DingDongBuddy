@@ -4620,7 +4620,7 @@
   "@tokenUsageTitle": {
     "description": "Local token history interface."
   },
-  "tokenUsageSubtitle": "每天用了多少 Token，一眼看清。",
+  "tokenUsageSubtitle": "查看 Agent 和 DingDong 自身的每日 Token 用量。",
   "@tokenUsageSubtitle": {
     "description": "Local token history interface."
   },
@@ -4732,7 +4732,7 @@
   "@tokenUsageCoverageTitle": {
     "description": "Local token history interface."
   },
-  "tokenUsageCoverageNote": "只统计支持的 Agent 本地日志中已提供的用量。未支持或未找到日志不代表用量为零，数据不会上传。",
+  "tokenUsageCoverageNote": "统计来自支持的 Agent 本地日志和 DingDong 接口返回的用量。未支持或未找到记录不代表用量为零，数据不会上传。",
   "@tokenUsageCoverageNote": {
     "description": "Local token history interface."
   },
@@ -5212,5 +5212,57 @@
   },
   "@aiInternalStorageError": {
     "description": "Internal AI token accounting."
+  },
+  "tokenUsageIncludeInternal": "包含 DingDong 自身用量",
+  "tokenUsageOnlyInternal": "仅 DingDong",
+  "tokenUsageFilterSaveFailed": "未能保存此设置，请重试。",
+  "tokenUsageAgents": "Agent",
+  "tokenUsageNoAgents": "未选择 Agent",
+  "tokenUsageAgentSourcesHelp": "支持读取本机用量日志的平台，并非已接入 DingDong 的 Agent 列表。可多选。",
+  "tokenUsageFunctions": "DingDong 功能用量",
+  "tokenUsageFunctionSelection": "资源筛选",
+  "tokenUsageFunctionAnalysis": "模型分析",
+  "tokenUsageFunctionConnection": "连接测试",
+  "tokenUsageFunctionOther": "其他／未分类",
+  "@tokenUsageIncludeInternal": {
+    "description": "tokenUsageIncludeInternal"
+  },
+  "@tokenUsageOnlyInternal": {
+    "description": "tokenUsageOnlyInternal"
+  },
+  "@tokenUsageFilterSaveFailed": {
+    "description": "tokenUsageFilterSaveFailed"
+  },
+  "@tokenUsageAgents": {
+    "description": "tokenUsageAgents"
+  },
+  "@tokenUsageNoAgents": {
+    "description": "tokenUsageNoAgents"
+  },
+  "@tokenUsageAgentSourcesHelp": {
+    "description": "tokenUsageAgentSourcesHelp"
+  },
+  "@tokenUsageFunctions": {
+    "description": "tokenUsageFunctions"
+  },
+  "@tokenUsageFunctionSelection": {
+    "description": "tokenUsageFunctionSelection"
+  },
+  "@tokenUsageFunctionAnalysis": {
+    "description": "tokenUsageFunctionAnalysis"
+  },
+  "@tokenUsageFunctionConnection": {
+    "description": "tokenUsageFunctionConnection"
+  },
+  "@tokenUsageFunctionOther": {
+    "description": "tokenUsageFunctionOther"
+  },
+  "tokenUsageFunction": "功能",
+  "tokenUsageRequests": "请求次数",
+  "@tokenUsageFunction": {
+    "description": "tokenUsageFunction"
+  },
+  "@tokenUsageRequests": {
+    "description": "tokenUsageRequests"
   }
 }

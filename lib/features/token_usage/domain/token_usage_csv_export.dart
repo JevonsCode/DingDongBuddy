@@ -10,6 +10,7 @@ final class TokenUsageCsvExport {
     TokenUsageSnapshot snapshot, {
     required this.year,
     this.source,
+    this.sources,
     this.from,
     this.to,
   }) : assert((from == null) == (to == null)),
@@ -20,7 +21,8 @@ final class TokenUsageCsvExport {
                  (from == null
                      ? day.day.year == year
                      : tokenUsageDayInRange(day.day, from, to!)) &&
-                 (source == null || day.source == source),
+                 (source == null || day.source == source) &&
+                 (sources == null || sources.contains(day.source)),
            )
            .toList(growable: false) {
     days.sort((a, b) {
@@ -33,6 +35,7 @@ final class TokenUsageCsvExport {
 
   final int year;
   final ConversationTokenUsageSource? source;
+  final Set<ConversationTokenUsageSource>? sources;
   final DateTime? from;
   final DateTime? to;
   final List<TokenUsageDay> days;
@@ -60,7 +63,10 @@ final class TokenUsageCsvExport {
       if (_snapshot.refreshedAt == null) 'never_refreshed',
     };
     for (final selectedSource
-        in source == null ? ConversationTokenUsageSource.values : [source!]) {
+        in sources ??
+            (source == null
+                ? ConversationTokenUsageSource.values.toSet()
+                : {source!})) {
       if (selectedSource == ConversationTokenUsageSource.dingdong &&
           !_snapshot.coverage.any((c) => c.source == selectedSource)) {
         continue;
@@ -93,7 +99,7 @@ final class TokenUsageCsvExport {
 
   String get suggestedName =>
       'dingdong-token-usage-${from == null ? '$year' : '${_compactDate(from!)}-${_compactDate(to!)}'}'
-      '-${source?.apiValue ?? 'all'}.csv';
+      '-${source?.apiValue ?? (sources == null ? 'all' : ((sources!.map((s) => s.apiValue).toList()..sort()).join('+')))}.csv';
 
   static String _compactDate(DateTime value) =>
       '${value.year.toString().padLeft(4, '0')}'
@@ -120,6 +126,7 @@ final class TokenUsageCsvExport {
         'partial_event_count',
         'coverage_status',
         'coverage_diagnostics',
+        'internal_function',
       ],
       for (final day in days)
         [
@@ -145,6 +152,7 @@ final class TokenUsageCsvExport {
           day.partialEventCount,
           diagnostics.isEmpty ? 'complete_scan' : 'partial_or_unavailable',
           diagnostics.join(','),
+          day.internalPurpose,
         ],
     ];
     // Machine-readable integers never contain locale thousands separators.

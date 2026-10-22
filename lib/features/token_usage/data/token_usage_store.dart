@@ -157,7 +157,7 @@ final class TokenUsageStore {
 
   TokenUsageSnapshot internalSnapshot({DateTime? from, DateTime? through}) {
     final rows = database.select(
-      '''SELECT day, COUNT(*) AS events, SUM(total) AS total,
+      '''SELECT day, purpose, COUNT(*) AS events, SUM(total) AS total,
       CASE WHEN COUNT(input)=COUNT(*) THEN SUM(input) END AS input,
       CASE WHEN COUNT(output)=COUNT(*) THEN SUM(output) END AS output,
       CASE WHEN COUNT(cached)=COUNT(*) THEN SUM(cached) END AS cached,
@@ -165,7 +165,7 @@ final class TokenUsageStore {
       CASE WHEN COUNT(reasoning)=COUNT(*) THEN SUM(reasoning) END AS reasoning,
       MIN(exact) AS exact, MIN(complete) AS complete, SUM(1-complete) AS partial
       FROM ai_companion_usage WHERE (? IS NULL OR day>=?) AND (? IS NULL OR day<=?)
-      GROUP BY day ORDER BY day''',
+      GROUP BY day, purpose ORDER BY day, purpose''',
       [
         from == null ? null : dayKey(from),
         from == null ? null : dayKey(from),
@@ -179,6 +179,7 @@ final class TokenUsageStore {
           TokenUsageDay(
             day: DateTime.parse(row['day'] as String),
             source: ConversationTokenUsageSource.dingdong,
+            internalPurpose: row['purpose'] as String,
             eventCount: row['events'] as int,
             partialEventCount: row['partial'] as int,
             totals: TokenUsageTotals(

@@ -149,7 +149,16 @@ void main() {
         await controller.analyze();
         expect(controller.error, isNull);
         expect(controller.internalUsage.totals.totalTokens, 24);
-        expect(controller.internalUsage.days.single.eventCount, 2);
+        expect(
+          controller.internalUsage.days.fold(0, (n, day) => n + day.eventCount),
+          2,
+        );
+        expect(
+          controller.internalUsage.days
+              .map((day) => day.internalPurpose)
+              .toSet(),
+          {'analysis', 'connectionTest'},
+        );
         await global.refresh();
         expect(global.snapshot.totals.totalTokens, 0);
         await controller.saveSettings(

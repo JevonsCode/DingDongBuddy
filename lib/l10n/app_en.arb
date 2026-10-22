@@ -4620,7 +4620,7 @@
   "@tokenUsageTitle": {
     "description": "Local token history interface."
   },
-  "tokenUsageSubtitle": "Daily usage across your local Agents.",
+  "tokenUsageSubtitle": "Daily usage across Agents and DingDong.",
   "@tokenUsageSubtitle": {
     "description": "Local token history interface."
   },
@@ -4732,7 +4732,7 @@
   "@tokenUsageCoverageTitle": {
     "description": "Local token history interface."
   },
-  "tokenUsageCoverageNote": "Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.",
+  "tokenUsageCoverageNote": "Counts come from supported local Agent logs and DingDong API usage receipts. Missing or unsupported records do not mean zero usage. Nothing is uploaded.",
   "@tokenUsageCoverageNote": {
     "description": "Local token history interface."
   },
@@ -5213,5 +5213,57 @@
   },
   "@aiInternalStorageError": {
     "description": "Internal AI token accounting."
+  },
+  "tokenUsageIncludeInternal": "Include DingDong usage",
+  "tokenUsageOnlyInternal": "DingDong only",
+  "tokenUsageFilterSaveFailed": "Could not save this preference. Try again.",
+  "tokenUsageAgents": "Agents",
+  "tokenUsageNoAgents": "No Agents selected",
+  "tokenUsageAgentSourcesHelp": "Supported local log readers, not a list of connected Agents. Multiple selections are allowed.",
+  "tokenUsageFunctions": "DingDong usage by feature",
+  "tokenUsageFunctionSelection": "Resource selection",
+  "tokenUsageFunctionAnalysis": "Model analysis",
+  "tokenUsageFunctionConnection": "Connection tests",
+  "tokenUsageFunctionOther": "Other / unclassified",
+  "@tokenUsageIncludeInternal": {
+    "description": "tokenUsageIncludeInternal"
+  },
+  "@tokenUsageOnlyInternal": {
+    "description": "tokenUsageOnlyInternal"
+  },
+  "@tokenUsageFilterSaveFailed": {
+    "description": "tokenUsageFilterSaveFailed"
+  },
+  "@tokenUsageAgents": {
+    "description": "tokenUsageAgents"
+  },
+  "@tokenUsageNoAgents": {
+    "description": "tokenUsageNoAgents"
+  },
+  "@tokenUsageAgentSourcesHelp": {
+    "description": "tokenUsageAgentSourcesHelp"
+  },
+  "@tokenUsageFunctions": {
+    "description": "tokenUsageFunctions"
+  },
+  "@tokenUsageFunctionSelection": {
+    "description": "tokenUsageFunctionSelection"
+  },
+  "@tokenUsageFunctionAnalysis": {
+    "description": "tokenUsageFunctionAnalysis"
+  },
+  "@tokenUsageFunctionConnection": {
+    "description": "tokenUsageFunctionConnection"
+  },
+  "@tokenUsageFunctionOther": {
+    "description": "tokenUsageFunctionOther"
+  },
+  "tokenUsageFunction": "Feature",
+  "tokenUsageRequests": "Requests",
+  "@tokenUsageFunction": {
+    "description": "tokenUsageFunction"
+  },
+  "@tokenUsageRequests": {
+    "description": "tokenUsageRequests"
   }
 }

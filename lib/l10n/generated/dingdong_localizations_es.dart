@@ -3821,7 +3821,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get tokenUsageTitle => 'Historial de tokens';
 
   @override
-  String get tokenUsageSubtitle => 'Uso diario de tus Agents locales.';
+  String get tokenUsageSubtitle => 'Uso diario de Agents y DingDong.';
 
   @override
   String get tokenUsageLocalOnly => 'Guardado en este dispositivo';
@@ -3905,7 +3905,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get tokenUsageCoverageNote =>
-      'Solo se cuenta el uso informado en registros locales de Agents compatibles. Los registros ausentes o no compatibles no indican uso cero. No se sube ningún dato.';
+      'Los datos proceden de registros locales de Agents compatibles y del uso devuelto por la API de DingDong. Los registros ausentes o no compatibles no indican uso cero. No se sube ningún dato.';
 
   @override
   String get tokenUsageAvailable => 'Registros encontrados';
@@ -4297,4 +4297,45 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get aiInternalStorageError =>
       'No se pudo guardar o leer el uso interno; los totales pueden estar incompletos. Las respuestas no se ven afectadas.';
+
+  @override
+  String get tokenUsageIncludeInternal => 'Incluir el uso de DingDong';
+
+  @override
+  String get tokenUsageOnlyInternal => 'Solo DingDong';
+
+  @override
+  String get tokenUsageFilterSaveFailed =>
+      'No se pudo guardar esta preferencia. Inténtalo de nuevo.';
+
+  @override
+  String get tokenUsageAgents => 'Agentes';
+
+  @override
+  String get tokenUsageNoAgents => 'Ningún agente seleccionado';
+
+  @override
+  String get tokenUsageAgentSourcesHelp =>
+      'Lectores compatibles de registros locales, no agentes conectados. Puedes seleccionar varios.';
+
+  @override
+  String get tokenUsageFunctions => 'Uso de DingDong por función';
+
+  @override
+  String get tokenUsageFunctionSelection => 'Selección de recursos';
+
+  @override
+  String get tokenUsageFunctionAnalysis => 'Análisis del modelo';
+
+  @override
+  String get tokenUsageFunctionConnection => 'Pruebas de conexión';
+
+  @override
+  String get tokenUsageFunctionOther => 'Otros / sin clasificar';
+
+  @override
+  String get tokenUsageFunction => 'Función';
+
+  @override
+  String get tokenUsageRequests => 'Solicitudes';
 }

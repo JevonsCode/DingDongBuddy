@@ -3639,7 +3639,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get tokenUsageTitle => 'Token 用量';
 
   @override
-  String get tokenUsageSubtitle => '每天用了多少 Token，一眼看清。';
+  String get tokenUsageSubtitle => '查看 Agent 和 DingDong 自身的每日 Token 用量。';
 
   @override
   String get tokenUsageLocalOnly => '仅保存在本机';
@@ -3721,7 +3721,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get tokenUsageCoverageNote =>
-      '只统计支持的 Agent 本地日志中已提供的用量。未支持或未找到日志不代表用量为零，数据不会上传。';
+      '统计来自支持的 Agent 本地日志和 DingDong 接口返回的用量。未支持或未找到记录不代表用量为零，数据不会上传。';
 
   @override
   String get tokenUsageAvailable => '已找到日志';
@@ -4084,4 +4084,44 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get aiInternalStorageError => '内部用量暂时无法保存或读取，累计值可能不完整。模型回复不受影响。';
+
+  @override
+  String get tokenUsageIncludeInternal => '包含 DingDong 自身用量';
+
+  @override
+  String get tokenUsageOnlyInternal => '仅 DingDong';
+
+  @override
+  String get tokenUsageFilterSaveFailed => '未能保存此设置，请重试。';
+
+  @override
+  String get tokenUsageAgents => 'Agent';
+
+  @override
+  String get tokenUsageNoAgents => '未选择 Agent';
+
+  @override
+  String get tokenUsageAgentSourcesHelp =>
+      '支持读取本机用量日志的平台，并非已接入 DingDong 的 Agent 列表。可多选。';
+
+  @override
+  String get tokenUsageFunctions => 'DingDong 功能用量';
+
+  @override
+  String get tokenUsageFunctionSelection => '资源筛选';
+
+  @override
+  String get tokenUsageFunctionAnalysis => '模型分析';
+
+  @override
+  String get tokenUsageFunctionConnection => '连接测试';
+
+  @override
+  String get tokenUsageFunctionOther => '其他／未分类';
+
+  @override
+  String get tokenUsageFunction => '功能';
+
+  @override
+  String get tokenUsageRequests => '请求次数';
 }

@@ -105,21 +105,23 @@ Completions parameters they support.
 
 ## Internal token accounting
 
-The AI page shows today's internal usage, all-time recorded usage, and the last
-request in this window. Model-assisted analysis, resource selection and connection tests
-record numeric API usage; local analysis and check-ins do not call a model.
-The dedicated ledger stores only a
-random receipt ID, operation, time and numeric usage, never request content or keys.
-It survives restarts and ignores duplicate receipt IDs.
-Opening AI+, returning to the app, or using the usage refresh icon reads the local
-ledger again, including receipts from background selection; it makes no model request.
+Open **Token usage** to inspect DingDong's own API usage alongside supported
+Agent history. **Include DingDong usage** defaults off and is saved across
+restarts. **DingDong only** temporarily limits the page to internal receipts and
+disables the Agent picker; leaving that mode restores the prior Agent selection
+and inclusion preference. The multi-select Agent menu lists supported local log
+readers (Codex, Claude Code and Pi) with their observed availability, not clients
+that have connected to DingDong.
 
-**Include in global statistics** defaults off, including for existing settings.
-Internal history is always visible separately. Enabling the switch includes all
-recorded internal history as the DingDong source in global totals, filters and
-CSV export; disabling it excludes that source without deleting or reimporting
-history. New receipts and switch changes invalidate the cached global view.
-History begins with requests recorded by this version; past calls are not guessed.
+Summary counts, calendar cells, day details, coverage and CSV use the selected
+sources. The calendar displays the selected year within the chosen date range.
+Internal feature rows summarize resource selection, model analysis and connection
+tests for the selected period. CSV includes each receipt group's feature name.
+Missing components remain unknown. The separate numeric ledger survives restarts
+and ignores duplicate receipt IDs; it stores no request content or keys. Changing
+filters reads the loaded local data and never calls a model. Refreshing or
+reopening Token usage reloads local history, including background selection.
+Recording begins with requests observed by this version; past calls are not guessed.
 
 Counts come from the configured service, not local text-length estimates.
 OpenAI prompt tokens include cache reads; Anthropic input adds reported cache

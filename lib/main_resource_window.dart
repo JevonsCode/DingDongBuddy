@@ -239,12 +239,14 @@ Future<void> _runResourceManagerWindow(
     SharedPreferencesBackend(),
     development: paths.development,
   );
+  late final AiCompanionController aiCompanionController;
   final tokenUsageController = TokenUsageController.fromRepository(
     tokenUsageRepository,
     includeInternal: () async =>
         (await aiStore.loadSettings()).includeInternalInGlobal,
+    saveInternalInclusion: (value) =>
+        aiCompanionController.setInternalInclusion(value),
   );
-  late final AiCompanionController aiCompanionController;
   aiCompanionController = AiCompanionController(
     store: aiStore,
     usageRepository: tokenUsageRepository,

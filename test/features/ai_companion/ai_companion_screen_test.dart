@@ -27,7 +27,8 @@ void main() {
     await _pump(tester, fixture.controller);
     expect(find.text('AI+'), findsOneWidget);
     expect(find.byKey(const Key('ai-analyze')).hitTestable(), findsOneWidget);
-    await _show(tester, find.byKey(const Key('ai-feature-include-internal')));
+    expect(find.byKey(const Key('ai-feature-include-internal')), findsNothing);
+    await _show(tester, find.byKey(const Key('ai-configure-provider')));
     expect(find.byKey(const Key('ai-analyze')).hitTestable(), findsOneWidget);
     expect(fixture.transport.requests, isEmpty);
     expect(tester.takeException(), isNull);
@@ -99,7 +100,6 @@ void main() {
       ('tokens', 'tokenOptimization'),
       ('check-ins', 'proactiveCheckIns'),
       ('cloud', 'cloudAnalysis'),
-      ('include-internal', 'includeInternalInGlobal'),
     ]) {
       await _show(tester, find.byKey(Key('ai-feature-$key')));
       await tester.tap(find.byKey(Key('ai-feature-$key')));

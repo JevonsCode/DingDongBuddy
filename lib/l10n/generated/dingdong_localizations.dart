@@ -6551,7 +6551,7 @@ abstract class DingDongLocalizations {
   /// Local token history interface.
   ///
   /// In en, this message translates to:
-  /// **'Daily usage across your local Agents.'**
+  /// **'Daily usage across Agents and DingDong.'**
   String get tokenUsageSubtitle;
 
   /// Local token history interface.
@@ -6707,7 +6707,7 @@ abstract class DingDongLocalizations {
   /// Local token history interface.
   ///
   /// In en, this message translates to:
-  /// **'Only usage reported in supported local Agent logs is counted. Missing or unsupported logs do not mean zero usage. Nothing is uploaded.'**
+  /// **'Counts come from supported local Agent logs and DingDong API usage receipts. Missing or unsupported records do not mean zero usage. Nothing is uploaded.'**
   String get tokenUsageCoverageNote;
 
   /// Local token history interface.
@@ -7375,6 +7375,84 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.'**
   String get aiInternalStorageError;
+
+  /// tokenUsageIncludeInternal
+  ///
+  /// In en, this message translates to:
+  /// **'Include DingDong usage'**
+  String get tokenUsageIncludeInternal;
+
+  /// tokenUsageOnlyInternal
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong only'**
+  String get tokenUsageOnlyInternal;
+
+  /// tokenUsageFilterSaveFailed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this preference. Try again.'**
+  String get tokenUsageFilterSaveFailed;
+
+  /// tokenUsageAgents
+  ///
+  /// In en, this message translates to:
+  /// **'Agents'**
+  String get tokenUsageAgents;
+
+  /// tokenUsageNoAgents
+  ///
+  /// In en, this message translates to:
+  /// **'No Agents selected'**
+  String get tokenUsageNoAgents;
+
+  /// tokenUsageAgentSourcesHelp
+  ///
+  /// In en, this message translates to:
+  /// **'Supported local log readers, not a list of connected Agents. Multiple selections are allowed.'**
+  String get tokenUsageAgentSourcesHelp;
+
+  /// tokenUsageFunctions
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong usage by feature'**
+  String get tokenUsageFunctions;
+
+  /// tokenUsageFunctionSelection
+  ///
+  /// In en, this message translates to:
+  /// **'Resource selection'**
+  String get tokenUsageFunctionSelection;
+
+  /// tokenUsageFunctionAnalysis
+  ///
+  /// In en, this message translates to:
+  /// **'Model analysis'**
+  String get tokenUsageFunctionAnalysis;
+
+  /// tokenUsageFunctionConnection
+  ///
+  /// In en, this message translates to:
+  /// **'Connection tests'**
+  String get tokenUsageFunctionConnection;
+
+  /// tokenUsageFunctionOther
+  ///
+  /// In en, this message translates to:
+  /// **'Other / unclassified'**
+  String get tokenUsageFunctionOther;
+
+  /// tokenUsageFunction
+  ///
+  /// In en, this message translates to:
+  /// **'Feature'**
+  String get tokenUsageFunction;
+
+  /// tokenUsageRequests
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get tokenUsageRequests;
 }
 
 class _DingDongLocalizationsDelegate

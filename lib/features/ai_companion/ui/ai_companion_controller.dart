@@ -168,6 +168,15 @@ final class AiCompanionController extends ChangeNotifier {
     });
   }
 
+  Future<void> setInternalInclusion(bool value) async {
+    final updated = _settings.copyWith(includeInternalInGlobal: value);
+    await _store.saveSettings(updated);
+    if (_disposed) return;
+    _settings = updated;
+    onUsageChanged?.call();
+    notifyListeners();
+  }
+
   Future<void> analyze() => _run((generation) async {
     final AiCompanionSettings activeSettings = _settings;
     if (!activeSettings.analysisEnabled) {

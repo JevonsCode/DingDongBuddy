@@ -14,6 +14,177 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'usage scope includes internal records and disables Agent selection',
+    (tester) async {
+      final controller = TokenUsageController.preview(
+        TokenUsageSnapshot(
+          days: [
+            ...usageFixture().days,
+            TokenUsageDay(
+              day: DateTime(2026, 1, 10),
+              source: ConversationTokenUsageSource.dingdong,
+              totals: const TokenUsageTotals(totalTokens: 100),
+              eventCount: 1,
+            ),
+          ],
+          coverage: usageFixture().coverage,
+        ),
+      );
+      addTearDown(controller.dispose);
+      await pumpUsage(tester, controller);
+      expect(find.byKey(const Key('token-usage-agent-filter')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('token-usage-include-internal')));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('token-usage-period')),
+          matching: find.text('2,500'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('token-usage-only-internal')));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('token-usage-period')),
+          matching: find.text('100'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('token-usage-agent-filter')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('token-usage-source-codex')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'multi-select and internal-only share heatmap, features and export scope',
+    (tester) async {
+      final snapshot = TokenUsageSnapshot(
+        days: [
+          ...usageFixture().days,
+          TokenUsageDay(
+            day: DateTime(2026, 1, 10),
+            source: ConversationTokenUsageSource.dingdong,
+            internalPurpose: 'resourceSelection',
+            totals: const TokenUsageTotals(
+              totalTokens: 100,
+              inputTokens: 80,
+              outputTokens: 20,
+            ),
+            eventCount: 1,
+          ),
+          TokenUsageDay(
+            day: DateTime(2026, 1, 10),
+            source: ConversationTokenUsageSource.dingdong,
+            internalPurpose: 'analysis',
+            totals: const TokenUsageTotals(
+              totalTokens: 40,
+              totalIsExact: false,
+            ),
+            eventCount: 1,
+          ),
+        ],
+        coverage: [
+          ...usageFixture().coverage,
+          const TokenUsageSourceCoverage(
+            source: ConversationTokenUsageSource.dingdong,
+            availability: TokenUsageAvailability.available,
+          ),
+        ],
+      );
+      final controller = TokenUsageController.preview(snapshot);
+      addTearDown(controller.dispose);
+      String? exported;
+      await pumpUsage(
+        tester,
+        controller,
+        saveExport:
+            ({
+              required contents,
+              required suggestedName,
+              required confirmButtonText,
+              required fileTypeLabel,
+            }) async {
+              exported = contents;
+              return true;
+            },
+      );
+      await selectAgents(tester, ['codex', 'pi']);
+      await tester.tap(find.byKey(const Key('token-usage-include-internal')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('token-usage-export')));
+      await tester.pumpAndSettle();
+      expect(exported, contains('codex'));
+      expect(exported, isNot(contains(',claude-code,')));
+      expect(exported, contains('resourceSelection'));
+      expect(exported, contains(',analysis'));
+      await tester.tap(find.byKey(const Key('token-usage-only-internal')));
+      await tester.pumpAndSettle();
+      final heatmap = tester.widget<TokenUsageHeatmap>(
+        find.byType(TokenUsageHeatmap),
+      );
+      expect(
+        heatmap.dailyTotals.values.fold(0, (n, t) => n + t.totalTokens),
+        140,
+      );
+      await tester.tap(find.byKey(const Key('token-usage-export')));
+      await tester.pumpAndSettle();
+      expect(exported, isNot(contains(',codex,')));
+      expect(exported, isNot(contains(',pi,')));
+      await tester.ensureVisible(
+        find.byKey(const Key('token-usage-functions')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Resource selection'), findsOneWidget);
+      expect(find.text('Model analysis'), findsOneWidget);
+      expect(find.text('Connection tests'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('token-usage-only-internal')),
+        -300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const Key('token-usage-only-internal')));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('token-usage-agent-filter')),
+          matching: find.text('Codex, Pi'),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  test(
+    'inclusion preference persists, while save failure retains the prior scope',
+    () async {
+      var persisted = false;
+      var fail = false;
+      final controller = TokenUsageController(
+        loadSnapshot: () async => const TokenUsageSnapshot(),
+        readInternalInclusion: () async => persisted,
+        saveInternalInclusion: (value) async {
+          if (fail) throw StateError('disk unavailable');
+          persisted = value;
+        },
+      );
+      addTearDown(controller.dispose);
+      await controller.refresh();
+      expect(controller.includeInternal, isFalse);
+      await controller.setIncludeInternal(true);
+      await controller.refresh();
+      expect(controller.includeInternal, isTrue);
+      fail = true;
+      await controller.setIncludeInternal(false);
+      expect(controller.includeInternal, isTrue);
+      expect(controller.inclusionError, isNotNull);
+    },
+  );
+
   testWidgets('day selection and Agent filter retain authoritative totals', (
     WidgetTester tester,
   ) async {
@@ -40,7 +211,7 @@ void main() {
     expect(find.text('Total  1,000'), findsOneWidget);
     expect(find.text('Total  500'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('token-usage-source-codex')));
+    await selectAgents(tester, ['codex']);
     await tester.pumpAndSettle();
     expect(
       find.byKey(const Key('token-usage-detail-claude-code')),
@@ -104,7 +275,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('token-usage-export')));
     await tester.pumpAndSettle();
-    expect(savedName, 'dingdong-token-usage-20251212-20260110-all.csv');
+    expect(
+      savedName,
+      'dingdong-token-usage-20251212-20260110-claude-code+codex+pi.csv',
+    );
     expect(savedContents, contains('2025-12-20,codex,40'));
     expect(tester.takeException(), isNull);
   });
@@ -207,7 +381,26 @@ void main() {
         .l10n;
     expect(find.text('Total  1,000'), findsOneWidget);
     expect(find.textContaining('≥ 1,000'), findsNothing);
-    expect(find.text(strings.tokenUsageDateAttributionNote), findsNWidgets(2));
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('token-usage-day-detail')),
+        matching: find.text(strings.tokenUsageDateAttributionNote),
+      ),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('token-usage-coverage')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('token-usage-coverage')),
+        matching: find.text(strings.tokenUsageDateAttributionNote),
+      ),
+      findsOneWidget,
+    );
     expect(
       find.text(strings.tokenUsageIncompleteCumulativeNote),
       findsOneWidget,
@@ -334,7 +527,7 @@ void main() {
       expect(find.text('Codex · No local logs found'), findsOneWidget);
       expect(
         find.textContaining(
-          'Missing or unsupported logs do not mean zero usage.',
+          'Missing or unsupported records do not mean zero usage.',
         ),
         findsOneWidget,
       );
@@ -366,13 +559,13 @@ void main() {
     addTearDown(controller.dispose);
     await pumpUsage(tester, controller);
     expectSummaryValues('Not reported');
-    await tester.tap(find.byKey(const Key('token-usage-source-claude-code')));
+    await selectAgents(tester, ['claude-code']);
     await tester.pumpAndSettle();
     expectSummaryValues('Not reported');
-    await tester.tap(find.byKey(const Key('token-usage-source-pi')));
+    await selectAgents(tester, ['pi']);
     await tester.pumpAndSettle();
     expectSummaryValues('Not reported');
-    await tester.tap(find.byKey(const Key('token-usage-source-codex')));
+    await selectAgents(tester, ['codex']);
     await tester.pumpAndSettle();
     expectSummaryValues('0');
   });
@@ -405,7 +598,7 @@ void main() {
     final controller = TokenUsageController.preview(usageFixture());
     addTearDown(controller.dispose);
     await pumpUsage(tester, controller);
-    await tester.tap(find.byKey(const Key('token-usage-source-pi')));
+    await selectAgents(tester, ['pi']);
     await tester.tap(find.byKey(const Key('token-usage-year-filter')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('2025').last);
@@ -506,7 +699,7 @@ void main() {
               throw StateError('write failed');
             },
       );
-      await tester.tap(find.byKey(const Key('token-usage-source-codex')));
+      await selectAgents(tester, ['codex']);
       await tester.tap(find.byKey(const Key('token-usage-year-filter')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('2025').last);
@@ -620,10 +813,6 @@ void main() {
     expect(find.text('Total  ≈ 300'), findsOneWidget);
     expect(find.textContaining('≥ 300'), findsNothing);
     expect(find.text(strings.tokenUsageLowerBoundNote), findsNothing);
-    expect(
-      find.text(strings.tokenUsageAmbiguousCumulativeNote),
-      findsOneWidget,
-    );
     final Tooltip tooltip = tester.widget<Tooltip>(
       find.descendant(
         of: find.byKey(const Key('token-usage-day-2026-01-10')),
@@ -632,6 +821,16 @@ void main() {
     );
     expect(tooltip.message, contains('≈ 300'));
     expect(tooltip.message, isNot(contains('≥')));
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('token-usage-coverage')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text(strings.tokenUsageAmbiguousCumulativeNote),
+      findsOneWidget,
+    );
   });
 
   testWidgets('empty history with ambiguous counters remains unknown', (
@@ -906,3 +1105,31 @@ TokenUsageSnapshot usageFixture() => TokenUsageSnapshot(
     ),
   ],
 );
+
+Future<void> selectAgents(WidgetTester tester, List<String> sources) async {
+  await tester.ensureVisible(find.byKey(const Key('token-usage-agent-filter')));
+  await tester.tap(find.byKey(const Key('token-usage-agent-filter')));
+  await tester.pumpAndSettle();
+  final all = find.byWidgetPredicate(
+    (w) =>
+        w is CheckboxMenuButton && w.key == const Key('token-usage-source-all'),
+  );
+  if (!tester.widget<CheckboxMenuButton>(all).value!) {
+    await tester.tap(all);
+    await tester.pumpAndSettle();
+  }
+  await tester.tap(all);
+  await tester.pumpAndSettle();
+  for (final source in sources) {
+    await tester.tap(
+      find.byWidgetPredicate(
+        (w) =>
+            w is CheckboxMenuButton &&
+            w.key == Key('token-usage-source-$source'),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+  await tester.tap(find.text('Token history').first);
+  await tester.pumpAndSettle();
+}
