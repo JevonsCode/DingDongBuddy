@@ -24,3 +24,16 @@ Add a Version history action to the existing Skill detail header. Open a restrai
 ## Verification
 
 Test durable restart, online/manual saves, no-op refresh, non-content changes, whole-package and binary restoration, restore lineage, historical package survival after cleanup, failed synchronization/history write, and concurrent stale saves. Test arbitrary diff directions, additions/deletions, trailing newlines, binary and permission changes. Widget tests cover selectors, restore, empty/loading/error states and narrow width. Render actual widget screenshots for visual review; desktop runtime acceptance is reported separately if unavailable. Run relevant library tests and analyzer, then broader suite as appropriate.
+
+## Implementation and validation (2026-10-23)
+
+Open a Skill in Resources and use the history icon in the detail header. Choose either comparison endpoint independently; restore applies the right-hand version as a new revision. History is stored locally in `Skill History` beside the resource JSON. Existing historical content predating this feature is unavailable.
+
+When current Agent settings require native delivery, restoring a document-only version builds a minimal package from the historical document. Restoration uses a snapshot-specific artifact identity, retaining metadata bytes excluded from native deployment hashes. Local history restores preserve all recorded files and bypass online import size/count limits; ordinary imports retain their existing limits.
+
+- `flutter analyze --no-pub`: no issues.
+- `flutter test --no-pub --exclude-tags golden --concurrency=2`: 1290 passed, 12 skipped.
+- Screenshot-enabled dialog/diff checks: 15 passed, including actual desktop, narrow and dark widget renders, inspected locally. Screenshots are local QA outputs in `.design-qa/skill-history/`.
+- Spec compliance and independent code quality reviews approved after fixes. Regressions include full binary/empty-directory/metadata restoration, more than 600 package files, failed history writes, native Agent restoration and nested mutation locks.
+- A default-concurrency run exposed an existing real-time tray mascot test race (35ms wait versus a 50ms idle threshold). Its isolated rerun and the full concurrency-2 run passed; no unrelated timer behavior was modified.
+- POSIX permissions require Linux/macOS execution (that platform-only test is skipped on Windows). Screenshot checks establish rendered widget layout; no installed-desktop upgrade or manual native runtime acceptance was performed. Golden-tagged tests were excluded from the full suite.

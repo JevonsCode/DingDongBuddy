@@ -10,6 +10,7 @@ import 'package:dingdong/features/library/domain/library_import_history.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
+import 'package:dingdong/features/library/domain/skill_version.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter/foundation.dart';
 
@@ -93,6 +94,21 @@ final class LibraryViewModel extends ChangeNotifier {
   bool get pinnedOnly => _pinnedOnly;
 
   Resource? get selectedResource => _selectedResource;
+
+  bool get supportsSkillVersions => _repository is SkillVersionStore;
+
+  SkillVersionStore get _versionStore => _repository as SkillVersionStore;
+
+  Future<List<SkillVersion>> loadSkillVersions(String resourceId) =>
+      _versionStore.loadSkillVersions(resourceId);
+
+  Future<SkillSnapshot> loadSkillSnapshot(String snapshotId) =>
+      _versionStore.loadSkillSnapshot(snapshotId);
+
+  Future<void> restoreSkillVersion(String resourceId, int version) async {
+    await _versionStore.restoreSkillVersion(resourceId, version);
+    await load();
+  }
 
   bool get isCreating => _isCreating;
 
@@ -305,7 +321,12 @@ final class LibraryViewModel extends ChangeNotifier {
       createdAt: timestamp,
       updatedAt: timestamp,
     );
-    await save(resource);
+    await save(
+      resource,
+      source: type == ResourceType.skill && (updateUrl ?? '').trim().isNotEmpty
+          ? SkillVersionSource.online
+          : SkillVersionSource.manual,
+    );
     _isCreating = false;
     _creatingTitle = '';
     _creatingContent = '';
@@ -341,7 +362,11 @@ final class LibraryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> save(Resource resource, {bool select = true}) async {
+  Future<void> save(
+    Resource resource, {
+    bool select = true,
+    SkillVersionSource source = SkillVersionSource.manual,
+  }) async {
     final List<Resource> previousResources = _resources;
     final Resource? previousSelected = _selectedResource;
     _resources = <Resource>[
@@ -349,7 +374,11 @@ final class LibraryViewModel extends ChangeNotifier {
       resource,
     ];
     try {
-      await _repository.save(_resources);
+      if (_repository case final SkillVersionStore versions) {
+        await versions.saveWithSkillVersionSource(_resources, source: source);
+      } else {
+        await _repository.save(_resources);
+      }
       if (select) {
         _selectedResource = resource;
       } else if (_selectedResource?.id == resource.id) {
@@ -545,7 +574,7 @@ final class LibraryViewModel extends ChangeNotifier {
       updateUrl: link,
       updatedAt: _now().toUtc(),
     );
-    await save(updated);
+    await save(updated, source: SkillVersionSource.online);
     return updated;
   }
 

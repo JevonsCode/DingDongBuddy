@@ -9,19 +9,53 @@ final class SynchronizedResourceStore
         ResourceUsageStore,
         ResourceInvocationStore,
         ExclusiveResourceStore,
+        SkillVersionStore,
         ResourceFileLocator {
   SynchronizedResourceStore(
     this._delegate,
     this._synchronizer, {
     this.issueCenter,
     this.onChanged,
-  });
+    SkillVersionHistory? skillVersionHistory,
+  }) : _skillVersionHistory =
+           skillVersionHistory ??
+           (_delegate is ResourceFileLocator &&
+                   (_delegate as ResourceFileLocator).resourceFile != null
+               ? SkillVersionHistory(
+                   Directory(
+                     path.join(
+                       (_delegate as ResourceFileLocator)
+                           .resourceFile!
+                           .parent
+                           .path,
+                       'Skill History',
+                     ),
+                   ),
+                 )
+               : SkillVersionHistory.memory()) {
+    final Directory? historyRoot = _skillVersionHistory.root;
+    if (historyRoot != null &&
+        (path.equals(
+              path.canonicalize(historyRoot.path),
+              path.canonicalize(_synchronizer.packageRoot.path),
+            ) ||
+            path.isWithin(
+              path.canonicalize(_synchronizer.packageRoot.path),
+              path.canonicalize(historyRoot.path),
+            ))) {
+      throw ArgumentError(
+        'Skill history must be stored outside the package cleanup root.',
+      );
+    }
+  }
 
   final ResourceStore _delegate;
   final AgentResourceSynchronizer _synchronizer;
   final IssueCenterController? issueCenter;
   final void Function()? onChanged;
+  final SkillVersionHistory _skillVersionHistory;
   List<Resource>? _lastLoaded;
+  static final Object _mutationZoneKey = Object();
 
   @override
   File? get resourceFile {
@@ -33,10 +67,25 @@ final class SynchronizedResourceStore
 
   Future<T> _exclusive<T>(Future<T> Function() action) {
     final ResourceStore delegate = _delegate;
+    final Set<ResourceStore> held =
+        Zone.current[_mutationZoneKey] as Set<ResourceStore>? ??
+        const <ResourceStore>{};
+    if (held.contains(delegate)) return action();
+    Future<T> lockedAction() => runZoned(
+      action,
+      zoneValues: <Object, Object>{
+        _mutationZoneKey: <ResourceStore>{...held, delegate},
+      },
+    );
     if (delegate is ResourceRepository) {
-      return delegate.exclusive(action);
+      return delegate.exclusive(lockedAction);
     }
-    return action();
+    if (delegate is ExclusiveResourceStore) {
+      return (delegate as ExclusiveResourceStore).exclusiveMutation(
+        lockedAction,
+      );
+    }
+    return lockedAction();
   }
 
   @override
@@ -44,33 +93,149 @@ final class SynchronizedResourceStore
       _exclusive(action);
 
   @override
-  Future<List<Resource>> load() async {
+  Future<List<Resource>> load() => _exclusive(() async {
     final List<Resource> resources = await _delegate.load();
+    final SkillHistoryTransaction baseline = await _skillVersionHistory.prepare(
+      const <Resource>[],
+      resources,
+      source: SkillVersionSource.initial,
+      baselineOnly: true,
+    );
+    await baseline.commit();
     _lastLoaded = List<Resource>.of(resources);
     return resources;
-  }
+  });
 
   @override
   Future<void> save(List<Resource> resources) =>
       _exclusive(() => _saveLocked(resources));
 
-  Future<void> _saveLocked(List<Resource> resources) async {
+  @override
+  Future<void> saveWithSkillVersionSource(
+    List<Resource> resources, {
+    required SkillVersionSource source,
+  }) => _exclusive(() => _saveLocked(resources, source: source));
+
+  @override
+  Future<List<SkillVersion>> loadSkillVersions(String resourceId) =>
+      _exclusive(() async {
+        final List<Resource> resources = await _delegate.load();
+        final SkillHistoryTransaction baseline = await _skillVersionHistory
+            .prepare(
+              const <Resource>[],
+              resources,
+              source: SkillVersionSource.initial,
+              baselineOnly: true,
+            );
+        await baseline.commit();
+        return _skillVersionHistory.versions(resourceId);
+      });
+
+  @override
+  Future<SkillSnapshot> loadSkillSnapshot(String snapshotId) =>
+      _exclusive(() => _skillVersionHistory.snapshot(snapshotId));
+
+  @override
+  Future<void> restoreSkillVersion(
+    String resourceId,
+    int version,
+  ) => _exclusive(() async {
+    final List<Resource> current = await _delegate.load();
+    final int index = current.indexWhere(
+      (Resource resource) =>
+          resource.id == resourceId && resource.type == ResourceType.skill,
+    );
+    if (index < 0) throw StateError('The Skill no longer exists.');
+    final List<SkillVersion> versions = await _skillVersionHistory.versions(
+      resourceId,
+    );
+    final SkillVersion selected = versions.firstWhere(
+      (SkillVersion item) => item.number == version,
+      orElse: () => throw StateError('The Skill version no longer exists.'),
+    );
+    final SkillSnapshot snapshot = await _skillVersionHistory.snapshot(
+      selected.snapshotId,
+    );
+    final Resource active = current[index];
+    SkillPackageInstallResult? installed;
+    Directory? staging;
+    final GitHubSkillPackageInstaller installer = GitHubSkillPackageInstaller(
+      _synchronizer.packageRoot,
+      preserveAllFiles: true,
+    );
+    try {
+      final bool needsNativePackage = active.skillDeliveryByAgent.values.any(
+        (SkillDeliveryMode mode) => mode != SkillDeliveryMode.dynamic,
+      );
+      if (snapshot.hasPackage || needsNativePackage) {
+        staging = await _skillVersionHistory.materialize(snapshot);
+        installed = await installer.installForResource(
+          staging.uri,
+          // Native deployment digests exclude their receipt file; snapshot
+          // identity still distinguishes every byte retained by history.
+          resourceId: _skillVersionHistory.resourceKey(
+            '$resourceId:${selected.snapshotId}',
+          ),
+        );
+      }
+      final List<Resource> updated = List<Resource>.of(current);
+      updated[index] = active.copyWith(
+        title: snapshot.title,
+        content: snapshot.document,
+        updateUrl: snapshot.sourceUrl ?? '',
+        packagePath: installed?.directoryPath ?? '',
+        skillPackageDigest: installed?.packageDigest,
+        updatedAt: DateTime.now(),
+      );
+      await _saveLocked(
+        updated,
+        source: SkillVersionSource.restored,
+        restoredResourceId: resourceId,
+        restoredFrom: version,
+        freshBase: current,
+      );
+    } on Object {
+      if (installed != null && installed.directoryPath != active.packagePath) {
+        await installer.rollback(installed);
+      }
+      rethrow;
+    } finally {
+      if (staging != null && await staging.exists()) {
+        await staging.delete(recursive: true);
+      }
+    }
+  });
+
+  Future<void> _saveLocked(
+    List<Resource> resources, {
+    SkillVersionSource? source,
+    String? restoredResourceId,
+    int? restoredFrom,
+    List<Resource>? freshBase,
+  }) async {
     final List<Resource> previous = await _delegate.load();
     final List<Resource> proposed = _mergeConcurrentResources(
-      base: _lastLoaded ?? previous,
+      base: freshBase ?? _lastLoaded ?? previous,
       current: previous,
       proposed: resources,
     );
+    final SkillHistoryTransaction history = await _skillVersionHistory.prepare(
+      previous,
+      proposed,
+      source: source,
+      restoredResourceId: restoredResourceId,
+      restoredFrom: restoredFrom,
+    );
     await _delegate.save(proposed);
-    if (_onlyAgentResourceUsageChanged(previous, proposed)) {
-      _lastLoaded = List<Resource>.of(proposed);
-      onChanged?.call();
-      return;
-    }
     try {
-      final List<AppIssue> issues = await _synchronizer.sync(proposed);
-      await _cleanupRemovedPackages(previous, proposed);
-      issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
+      final List<AppIssue>? issues =
+          _onlyAgentResourceUsageChanged(previous, proposed)
+          ? null
+          : await _synchronizer.sync(proposed);
+      await history.commit();
+      if (issues != null) {
+        issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
+      }
     } on Object catch (error, stackTrace) {
       final List<AppIssue> issues = error is AppIssueException
           ? error.issues
@@ -84,6 +249,7 @@ final class SynchronizedResourceStore
                 detail: error.toString(),
               ),
             ];
+      await history.rollback();
       await _delegate.save(previous);
       _lastLoaded = List<Resource>.of(previous);
       try {
@@ -94,6 +260,13 @@ final class SynchronizedResourceStore
       await _cleanupRemovedPackages(proposed, previous);
       issueCenter?.replaceSource(agentResourceSyncIssueSource, issues);
       Error.throwWithStackTrace(error, stackTrace);
+    }
+    // Disposal follows the durable resource + Agent + history commit. A cleanup
+    // failure must not roll back to an artifact that was already partly removed.
+    try {
+      await _cleanupRemovedPackages(previous, proposed);
+    } on FileSystemException {
+      // A later replacement/deletion can retry disposal; history stays intact.
     }
     _lastLoaded = List<Resource>.of(proposed);
     onChanged?.call();
@@ -235,7 +408,8 @@ final class SynchronizedResourceStore
       final Directory generated = Directory(
         path.join(_synchronizer.packageRoot.path, resource.id),
       );
-      if (!active.contains(path.canonicalize(generated.path)) &&
+      if (path.isWithin(managedRoot, path.canonicalize(generated.path)) &&
+          !active.contains(path.canonicalize(generated.path)) &&
           await generated.exists()) {
         await generated.delete(recursive: true);
       }
@@ -246,7 +420,8 @@ final class SynchronizedResourceStore
         final Directory downloaded = Directory(
           path.join(_synchronizer.packageRoot.path, _skillName(resource)),
         );
-        if (!active.contains(path.canonicalize(downloaded.path)) &&
+        if (path.isWithin(managedRoot, path.canonicalize(downloaded.path)) &&
+            !active.contains(path.canonicalize(downloaded.path)) &&
             await downloaded.exists()) {
           await downloaded.delete(recursive: true);
         }

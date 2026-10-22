@@ -103,6 +103,198 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Skill version history: skillVersionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Version history'**
+  String get skillVersionHistory;
+
+  /// Skill version history: skillVersionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get skillVersionCurrent;
+
+  /// Skill version history: skillVersionInitial.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial snapshot'**
+  String get skillVersionInitial;
+
+  /// Skill version history: skillVersionManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual save'**
+  String get skillVersionManual;
+
+  /// Skill version history: skillVersionOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online refresh'**
+  String get skillVersionOnline;
+
+  /// Skill version history: skillVersionRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored from v{number}'**
+  String skillVersionRestored(int number);
+
+  /// Skill version history: skillVersionFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare from'**
+  String get skillVersionFrom;
+
+  /// Skill version history: skillVersionTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare to'**
+  String get skillVersionTo;
+
+  /// Skill version history: skillVersionRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this version'**
+  String get skillVersionRestore;
+
+  /// Skill version history: skillVersionConfirmRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore v{number}?'**
+  String skillVersionConfirmRestore(int number);
+
+  /// Skill version history: skillVersionRestoreExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This creates a new version. Current Agent settings and existing history are kept.'**
+  String get skillVersionRestoreExplanation;
+
+  /// Skill version history: skillVersionNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved versions yet.'**
+  String get skillVersionNoHistory;
+
+  /// Skill version history: skillVersionOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Only one saved version. Its content is shown below.'**
+  String get skillVersionOne;
+
+  /// Skill version history: skillVersionNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'No differences between these versions.'**
+  String get skillVersionNoChanges;
+
+  /// Skill version history: skillVersionLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load version history: {error}'**
+  String skillVersionLoadError(String error);
+
+  /// Skill version history: skillVersionCompareError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not compare these versions: {error}'**
+  String skillVersionCompareError(String error);
+
+  /// Skill version history: skillVersionRestoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore this version: {error}'**
+  String skillVersionRestoreError(String error);
+
+  /// Skill version history: skillVersionRestoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring…'**
+  String get skillVersionRestoring;
+
+  /// Skill version history: skillVersionBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Binary file changed'**
+  String get skillVersionBinary;
+
+  /// Skill version history: skillVersionEmptyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty file'**
+  String get skillVersionEmptyFile;
+
+  /// Skill version history: skillVersionDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory'**
+  String get skillVersionDirectory;
+
+  /// Skill version history: skillVersionPermissionsChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Executable permission changed'**
+  String get skillVersionPermissionsChanged;
+
+  /// Skill version history: skillVersionLargeFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Large file: showing removed and added content.'**
+  String get skillVersionLargeFile;
+
+  /// Skill version history: skillVersionNoNewline.
+  ///
+  /// In en, this message translates to:
+  /// **'No newline at end of file'**
+  String get skillVersionNoNewline;
+
+  /// Skill version history: skillVersionAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get skillVersionAdded;
+
+  /// Skill version history: skillVersionRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get skillVersionRemoved;
+
+  /// Skill version history: skillVersionModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get skillVersionModified;
+
+  /// Skill version history: skillVersionSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get skillVersionSource;
+
+  /// Skill version history: skillVersionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill name'**
+  String get skillVersionName;
+
+  /// Skill version history: skillVersionPackageChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Package structure changed'**
+  String get skillVersionPackageChanged;
+
+  /// Skill version history: skillVersionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get skillVersionRetry;
+
+  /// Skill version history: skillVersionFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed files ({count})'**
+  String skillVersionFiles(int count);
+
   /// Independent progressive disclosure advice.
   ///
   /// In en, this message translates to:

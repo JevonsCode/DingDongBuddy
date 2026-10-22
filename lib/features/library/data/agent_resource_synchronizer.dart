@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -15,6 +16,7 @@ import 'package:dingdong/features/library/data/codex_project_hook_inventory.dart
 import 'package:dingdong/features/library/data/native_skill_delivery_coordinator.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/skill_deployment_store.dart';
+import 'package:dingdong/features/library/data/skill_version_history.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resources.dart';
 import 'package:dingdong/features/library/domain/managed_mcp_identity.dart';
@@ -23,6 +25,7 @@ import 'package:dingdong/features/library/domain/resource_configuration.dart';
 import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/skill_deployment_plan.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
+import 'package:dingdong/features/library/domain/skill_version.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
 

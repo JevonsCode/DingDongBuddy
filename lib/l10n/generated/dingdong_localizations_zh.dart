@@ -9,6 +9,114 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get skillVersionHistory => '版本历史';
+
+  @override
+  String get skillVersionCurrent => '当前';
+
+  @override
+  String get skillVersionInitial => '初始快照';
+
+  @override
+  String get skillVersionManual => '手动保存';
+
+  @override
+  String get skillVersionOnline => '在线更新';
+
+  @override
+  String skillVersionRestored(int number) {
+    return '从 v$number 恢复';
+  }
+
+  @override
+  String get skillVersionFrom => '对比起点';
+
+  @override
+  String get skillVersionTo => '对比终点';
+
+  @override
+  String get skillVersionRestore => '恢复此版本';
+
+  @override
+  String skillVersionConfirmRestore(int number) {
+    return '恢复到 v$number？';
+  }
+
+  @override
+  String get skillVersionRestoreExplanation => '恢复会生成一个新版本，保留当前 Agent 配置和已有历史。';
+
+  @override
+  String get skillVersionNoHistory => '暂无已保存的版本。';
+
+  @override
+  String get skillVersionOne => '目前只有一个版本，下方显示已保存的内容。';
+
+  @override
+  String get skillVersionNoChanges => '这两个版本没有差异。';
+
+  @override
+  String skillVersionLoadError(String error) {
+    return '无法加载版本历史：$error';
+  }
+
+  @override
+  String skillVersionCompareError(String error) {
+    return '无法对比这两个版本：$error';
+  }
+
+  @override
+  String skillVersionRestoreError(String error) {
+    return '无法恢复此版本：$error';
+  }
+
+  @override
+  String get skillVersionRestoring => '正在恢复…';
+
+  @override
+  String get skillVersionBinary => '二进制文件已变更';
+
+  @override
+  String get skillVersionEmptyFile => '空文件';
+
+  @override
+  String get skillVersionDirectory => '目录';
+
+  @override
+  String get skillVersionPermissionsChanged => '执行权限已变更';
+
+  @override
+  String get skillVersionLargeFile => '文件较大，显示删除和新增的完整内容。';
+
+  @override
+  String get skillVersionNoNewline => '文件末尾无换行';
+
+  @override
+  String get skillVersionAdded => '新增';
+
+  @override
+  String get skillVersionRemoved => '删除';
+
+  @override
+  String get skillVersionModified => '修改';
+
+  @override
+  String get skillVersionSource => '来源';
+
+  @override
+  String get skillVersionName => '技能名称';
+
+  @override
+  String get skillVersionPackageChanged => '技能包结构已变更';
+
+  @override
+  String get skillVersionRetry => '重试';
+
+  @override
+  String skillVersionFiles(int count) {
+    return '变更文件（$count）';
+  }
+
+  @override
   String get aiProgressiveDisclosure => '渐进式披露建议';
 
   @override
