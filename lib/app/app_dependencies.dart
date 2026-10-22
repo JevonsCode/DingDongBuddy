@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
@@ -33,6 +32,8 @@ import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/built_in_resource_installer.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
+import 'package:dingdong/features/settings/data/reminder_audio_importer.dart';
+import 'package:dingdong/features/settings/data/reminder_settings_service.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/token_usage/data/local_token_usage_repository.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
@@ -79,7 +80,12 @@ Future<bool> shouldDeliverAgentNotification({
   CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
 }) async {
-  if (!_isNotificationKindEnabled(request.notificationKind, settings)) {
+  final profile = request.reminderId == null
+      ? null
+      : settings.reminderProfile(request.reminderId);
+  if (request.reminderId != null
+      ? profile?.enabled != true
+      : !_isNotificationKindEnabled(request.notificationKind, settings)) {
     return false;
   }
   if (!settings.notifyCodexVoiceActivity && isCodexVoiceNotification != null) {
@@ -173,11 +179,22 @@ Future<void> deliverAgentNotification({
   } on Object {
     // An unknown start time never hides a reminder.
   }
+  final profile = settings.reminderProfile(request.reminderId);
   final AgentNotificationPlan plan = planAgentNotification(
-    kind: request.notificationKind,
-    completionSound: settings.selectedSound,
-    completionCustomSoundPath: settings.customSoundPath,
-    rules: settings.notificationRules,
+    kind: profile?.kind ?? request.notificationKind,
+    completionSound: profile?.sound ?? settings.selectedSound,
+    completionCustomSoundPath:
+        profile?.customSoundPath ?? settings.customSoundPath,
+    rules: profile == null
+        ? settings.notificationRules
+        : settings.notificationRules.copyWith(
+            attentionSound: sameAsCompletionSound,
+            completionToPhone: profile.toPhone,
+            attentionToPhone: profile.toPhone,
+            completionMinimumMinutes: profile.builtIn
+                ? settings.notificationRules.completionMinimumMinutes
+                : 0,
+          ),
     now: currentTime,
     taskDuration: startedAt == null ? null : currentTime.difference(startedAt),
   );
@@ -185,7 +202,10 @@ Future<void> deliverAgentNotification({
       (request.sound == DingSound.defaultSound
               ? request.copyWith(sound: DingSound.parse(plan.sound))
               : request)
-          .copyWith(alertPhone: plan.alertPhone);
+          .copyWith(
+            alertPhone: plan.alertPhone,
+            notificationKind: profile?.kind,
+          );
   await deliverNotificationIndependently(
     nativeDelivery: () async {
       if (!suppressNativeNotification && plan.alertDesktop) {
@@ -439,15 +459,22 @@ final class AppDependencies {
               notificationGateway.trigger(
                 resolvedRequest,
                 flashCount:
-                    settings.notificationRules.trayStyleFor(
-                          resolvedRequest.notificationKind,
-                        ) ==
+                    (settings
+                                .reminderProfile(resolvedRequest.reminderId)
+                                ?.style ??
+                            settings.notificationRules.trayStyleFor(
+                              resolvedRequest.notificationKind,
+                            )) ==
                         TrayReminderStyle.staticMarker
                     ? 0
                     : 8,
-                customSoundPath: settings.customSoundPathFor(
-                  resolvedRequest.notificationKind,
-                ),
+                customSoundPath:
+                    settings
+                        .reminderProfile(resolvedRequest.reminderId)
+                        ?.customSoundPath ??
+                    settings.customSoundPathFor(
+                      resolvedRequest.notificationKind,
+                    ),
               ),
           companionDelivery: onNotification,
           onFiltered: onFilteredNotification,
@@ -467,15 +494,22 @@ final class AppDependencies {
               notificationGateway.trigger(
                 resolvedRequest,
                 flashCount:
-                    settings.notificationRules.trayStyleFor(
-                          resolvedRequest.notificationKind,
-                        ) ==
+                    (settings
+                                .reminderProfile(resolvedRequest.reminderId)
+                                ?.style ??
+                            settings.notificationRules.trayStyleFor(
+                              resolvedRequest.notificationKind,
+                            )) ==
                         TrayReminderStyle.staticMarker
                     ? 0
                     : 8,
-                customSoundPath: settings.customSoundPathFor(
-                  resolvedRequest.notificationKind,
-                ),
+                customSoundPath:
+                    settings
+                        .reminderProfile(resolvedRequest.reminderId)
+                        ?.customSoundPath ??
+                    settings.customSoundPathFor(
+                      resolvedRequest.notificationKind,
+                    ),
               ),
           companionDelivery: onSuppressedNotification,
           onFiltered: onFilteredNotification,
@@ -510,6 +544,17 @@ final class AppDependencies {
         );
       }()),
       onShowUi: onShowUi,
+      reminderSettings: ReminderSettingsService(
+        settingsRepository,
+        ReminderAudioImporter(
+          Directory(
+            '${paths.applicationSupportDirectory.path}/Reminder Sounds',
+          ),
+        ),
+        onChanged: () async {
+          await onSettingsChangedByAgent?.call();
+        },
+      ).call,
       updateReminderSounds: ({String? completion, String? attention}) async {
         final AppSettings next = (await settingsRepository.load())
             .withReminderSounds(completion: completion, attention: attention);

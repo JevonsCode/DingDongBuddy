@@ -5,9 +5,12 @@ import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.d
 import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/notification_rules.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
+
+export 'package:dingdong/features/settings/domain/reminder_profile.dart';
 
 export 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 
@@ -129,6 +132,93 @@ final class AppSettings {
   final int agentSetupAcknowledgedRevision;
   final int apiPort;
   final SelectionPluginConfiguration selectionPlugin;
+
+  /// Legacy settings stay authoritative for the two built-ins, so upgrades
+  /// and older integrations preserve existing preferences without duplication.
+  List<ReminderProfile> get reminderProfiles => [
+    for (final kind in AgentNotificationKind.values)
+      ReminderProfile(
+        id: kind.apiValue,
+        name: kind.apiValue,
+        enabled: kind == AgentNotificationKind.attention
+            ? notifyAgentAttention
+            : notifyAgentCompletion,
+        kind: kind,
+        style: notificationRules.trayStyleFor(kind),
+        color: notificationRules.trayColorFor(
+          kind,
+          legacyCompletionColor: trayNotificationColor,
+        ),
+        sound: soundFor(kind),
+        customSoundPath: customSoundPathFor(kind),
+        toPhone: kind == AgentNotificationKind.attention
+            ? notificationRules.attentionToPhone
+            : notificationRules.completionToPhone,
+      ),
+    ...notificationRules.profiles,
+  ];
+  ReminderProfile? reminderProfile(String? id) {
+    for (final profile in reminderProfiles) {
+      if (profile.id == id) return profile;
+    }
+    return null;
+  }
+
+  AppSettings withReminderProfile(ReminderProfile profile) {
+    if (profile.builtIn) {
+      final attention = profile.id == 'attention';
+      return copyWith(
+        notifyAgentAttention: attention ? profile.enabled : null,
+        notifyAgentCompletion: attention ? null : profile.enabled,
+        selectedSound: attention ? null : profile.sound,
+        customSoundPath: attention ? customSoundPath : profile.customSoundPath,
+        notificationRules: attention
+            ? notificationRules.copyWith(
+                attentionSound:
+                    notificationRules.attentionSound == sameAsCompletionSound &&
+                        profile.sound == selectedSound &&
+                        profile.customSoundPath == customSoundPath
+                    ? sameAsCompletionSound
+                    : profile.sound,
+                attentionCustomSoundPath: profile.customSoundPath,
+                attentionTrayStyle: profile.style,
+                attentionTrayColor: profile.color,
+                attentionToPhone: profile.toPhone,
+              )
+            : notificationRules.copyWith(
+                completionTrayStyle: profile.style,
+                completionTrayColor: profile.color,
+                completionToPhone: profile.toPhone,
+              ),
+      );
+    }
+    final profiles = [...notificationRules.profiles];
+    final index = profiles.indexWhere((x) => x.id == profile.id);
+    if (index < 0) {
+      if (profiles.length >= 32) {
+        throw const FormatException('Maximum 32 custom reminders.');
+      }
+      profiles.add(profile);
+    } else {
+      profiles[index] = profile;
+    }
+    return copyWith(
+      notificationRules: notificationRules.copyWith(profiles: profiles),
+    );
+  }
+
+  AppSettings withoutReminderProfile(String id) {
+    if (id == 'completion' || id == 'attention') {
+      throw const FormatException(
+        'Disable built-in reminders instead of deleting them.',
+      );
+    }
+    return copyWith(
+      notificationRules: notificationRules.copyWith(
+        profiles: notificationRules.profiles.where((x) => x.id != id).toList(),
+      ),
+    );
+  }
 
   /// Saved sound for one reminder kind, before any API-supplied override.
   String soundFor(AgentNotificationKind kind) =>

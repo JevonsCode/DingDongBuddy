@@ -43,6 +43,7 @@ void main() {
       'agentPluginsSourceGit',
       'actionCountTimes',
       'categoryRuleKeywordsExample',
+      'reminderColor', // Color is the same word in English and Spanish.
       'general',
       'hoursHCount',
       'httpsExampleComDingdongResourcesJson',

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 
@@ -28,6 +27,8 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
         latest,
       );
       return TrayUnreadState(
+        latestReminderId: json['latestReminderId'] as String?,
+        latestAttentionReminderId: json['latestAttentionReminderId'] as String?,
         latestEventId: latest,
         acknowledgedEventId: acknowledged,
         latestAttentionEventId:
@@ -46,6 +47,8 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
     return _preferences.write(
       _key,
       jsonEncode(<String, Object?>{
+        'latestReminderId': state.latestReminderId,
+        'latestAttentionReminderId': state.latestAttentionReminderId,
         'latestEventId': state.latestEventId,
         'acknowledgedEventId': state.acknowledgedEventId,
         'latestAttentionEventId': state.latestAttentionEventId,

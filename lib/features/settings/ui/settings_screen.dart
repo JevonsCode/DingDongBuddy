@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
-import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_segmented_control.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
@@ -16,8 +14,8 @@ import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/global_hot_key_recorder.dart';
 import 'package:dingdong/features/settings/ui/quick_paste_permission_section.dart';
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
+import 'package:dingdong/features/settings/ui/reminder_profiles_editor.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
-import 'package:dingdong/features/settings/ui/sound_choices.dart';
 import 'package:dingdong/features/settings/ui/system_usage_section.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

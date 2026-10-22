@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
@@ -120,6 +119,25 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
       'dingdong_get_skill_deployments' => _skillDeployments(arguments),
       'dingdong_reconcile_skill' => _reconcileSkill(arguments),
       'dingdong_notify' => _notify(arguments),
+      'dingdong_list_reminders' => _transport.request(
+        method: 'GET',
+        path: '/settings/reminders',
+      ),
+      'dingdong_upsert_reminder' => _transport.request(
+        method: 'POST',
+        path: '/settings/reminders',
+        body: {...arguments, 'action': 'upsert'},
+      ),
+      'dingdong_delete_reminder' => _transport.request(
+        method: 'POST',
+        path: '/settings/reminders',
+        body: {...arguments, 'action': 'delete'},
+      ),
+      'dingdong_import_reminder_sound' => _transport.request(
+        method: 'POST',
+        path: '/settings/reminders',
+        body: {...arguments, 'action': 'importSound'},
+      ),
       'dingdong_set_reminder_sounds' => _transport.request(
         method: 'POST',
         path: '/settings/reminder-sounds',

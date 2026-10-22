@@ -233,7 +233,7 @@ void main() {
         find.byKey(const Key('settings-notify-codex-voice-activity')),
         findsOneWidget,
       );
-      final CompactSwitchListTile completionNotificationSwitch = tester.widget(
+      final CompactSwitch completionNotificationSwitch = tester.widget(
         find.byKey(const Key('settings-notify-agent-completion')),
       );
       expect(completionNotificationSwitch.value, isTrue);
@@ -244,7 +244,7 @@ void main() {
         backend.values['dingdong.agentActivity.notifyCompletions'],
         isFalse,
       );
-      final CompactSwitchListTile attentionNotificationSwitch = tester.widget(
+      final CompactSwitch attentionNotificationSwitch = tester.widget(
         find.byKey(const Key('settings-notify-agent-attention')),
       );
       expect(attentionNotificationSwitch.value, isTrue);
@@ -289,23 +289,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('settings-api-port')), findsOneWidget);
-      expect(find.byKey(const Key('settings-sound')), findsOneWidget);
-      expect(
-        find.byKey(const Key('settings-tray-notification-color')),
-        findsOneWidget,
-      );
-      for (final String color in <String>[
-        'orange',
-        'pink',
-        'blue',
-        'green',
-        'purple',
-      ]) {
-        expect(
-          find.byKey(Key('settings-tray-notification-color-$color')),
-          findsOneWidget,
-        );
-      }
+      expect(find.byKey(const Key('edit-reminder-completion')), findsOneWidget);
+      expect(find.byKey(const Key('add-reminder')), findsOneWidget);
       expect(
         find.byKey(const Key('settings-clear-clipboard-images')),
         findsOneWidget,
@@ -342,14 +327,24 @@ void main() {
       await tester.pumpAndSettle();
       expect(backend.values['dingdong.panel.themeMode'], 'dark');
 
-      final Finder purple = find.byKey(
-        const Key('settings-tray-notification-color-purple'),
+      await tester.ensureVisible(
+        find.byKey(const Key('edit-reminder-completion')),
       );
-      await tester.ensureVisible(purple);
       await tester.pumpAndSettle();
-      await tester.tap(purple);
+      await tester.tap(find.byKey(const Key('edit-reminder-completion')));
       await tester.pumpAndSettle();
-      expect(backend.values['dingdong.macos.trayNotificationColor'], 'purple');
+      await tester.tap(find.byKey(const Key('reminder-color-purple')));
+      await tester.tap(find.byKey(const Key('save-reminder')));
+      await tester.pumpAndSettle();
+      expect(
+        model.settings.reminderProfile('completion')!.color,
+        TrayNotificationColor.purple,
+      );
+      final persisted = await SettingsRepository(backend).load();
+      expect(
+        persisted.reminderProfile('completion')!.color,
+        TrayNotificationColor.purple,
+      );
     },
   );
 
@@ -686,23 +681,32 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byKey(const Key('settings-sound')));
+    await tester.ensureVisible(
+      find.byKey(const Key('edit-reminder-completion')),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('settings-sound')));
+    await tester.tap(find.byKey(const Key('edit-reminder-completion')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('reminder-sound')));
     await tester.pumpAndSettle();
 
     expect(find.text('DingDong Classic'), findsWidgets);
-    expect(find.text('DingDong Soft'), findsOneWidget);
-    expect(find.text('DingDong Bright'), findsOneWidget);
-    expect(find.text('DingDong Crisp'), findsOneWidget);
+    expect(find.text('DingDong Soft'), findsWidgets);
+    expect(find.text('DingDong Bright'), findsWidgets);
+    expect(find.text('DingDong Crisp'), findsWidgets);
     expect(find.text('DingDong Wood'), findsNothing);
-    expect(find.text('DingDong Deep'), findsOneWidget);
+    expect(find.text('DingDong Deep'), findsWidgets);
     expect(find.text('Joy'), findsNothing);
     expect(find.text('Candy'), findsNothing);
 
-    await tester.tap(find.text('DingDong Crisp'));
+    await tester.tap(find.text('DingDong Crisp').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('settings-preview-sound')));
+    await tester.tap(find.byKey(const Key('save-reminder')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('preview-reminder-sound-dingCrisp')),
+    );
+    await tester.tap(find.byKey(const Key('preview-reminder-sound-dingCrisp')));
     await tester.pump();
 
     expect(preview.sounds, <String>['dingCrisp']);

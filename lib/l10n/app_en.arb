@@ -5265,5 +5265,29 @@
   },
   "@tokenUsageRequests": {
     "description": "tokenUsageRequests"
-  }
+  },
+  "reminderProfiles": "Reminders",
+  "@reminderProfiles": {"description": "Named reminder settings label"},
+  "addReminder": "Add reminder",
+  "@addReminder": {"description": "Named reminder settings label"},
+  "reminderSounds": "Sounds",
+  "@reminderSounds": {"description": "Named reminder settings label"},
+  "importReminderSound": "Import sound",
+  "@importReminderSound": {"description": "Named reminder settings label"},
+  "reminderAudioFormat": "PCM WAV · Up to 15 seconds / 5 MiB",
+  "@reminderAudioFormat": {"description": "Named reminder settings label"},
+  "reminderAudioImportFailed": "Could not import. Choose a readable PCM WAV file, up to 15 seconds and 5 MiB.",
+  "@reminderAudioImportFailed": {"description": "Named reminder settings label"},
+  "reminderNameRequired": "Enter a reminder name.",
+  "@reminderNameRequired": {"description": "Named reminder settings label"},
+  "reminderCondition": "When to use (for the Agent)",
+  "@reminderCondition": {"description": "Named reminder settings label"},
+  "reminderKind": "Priority",
+  "@reminderKind": {"description": "Named reminder settings label"},
+  "reminderStyle": "Tray style",
+  "@reminderStyle": {"description": "Named reminder settings label"},
+  "reminderColor": "Color",
+  "@reminderColor": {"description": "Named reminder settings label"},
+  "reminderToPhone": "Send to phone",
+  "@reminderToPhone": {"description": "Named reminder settings label"}
 }

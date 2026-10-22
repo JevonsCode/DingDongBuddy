@@ -4124,4 +4124,41 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get tokenUsageRequests => '请求次数';
+
+  @override
+  String get reminderProfiles => '提醒';
+
+  @override
+  String get addReminder => '新增提醒';
+
+  @override
+  String get reminderSounds => '声音';
+
+  @override
+  String get importReminderSound => '导入声音';
+
+  @override
+  String get reminderAudioFormat => 'PCM WAV · 最长 15 秒 / 5 MiB';
+
+  @override
+  String get reminderAudioImportFailed =>
+      '导入失败。请选择可读取的 PCM WAV 文件，最长 15 秒、最大 5 MiB。';
+
+  @override
+  String get reminderNameRequired => '请输入提醒名称。';
+
+  @override
+  String get reminderCondition => '使用场景（供 Agent 判断）';
+
+  @override
+  String get reminderKind => '优先级';
+
+  @override
+  String get reminderStyle => '任务栏样式';
+
+  @override
+  String get reminderColor => '颜色';
+
+  @override
+  String get reminderToPhone => '发送到手机';
 }

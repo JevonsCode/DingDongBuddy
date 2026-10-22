@@ -4292,4 +4292,41 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get tokenUsageRequests => 'Requests';
+
+  @override
+  String get reminderProfiles => 'Reminders';
+
+  @override
+  String get addReminder => 'Add reminder';
+
+  @override
+  String get reminderSounds => 'Sounds';
+
+  @override
+  String get importReminderSound => 'Import sound';
+
+  @override
+  String get reminderAudioFormat => 'PCM WAV · Up to 15 seconds / 5 MiB';
+
+  @override
+  String get reminderAudioImportFailed =>
+      'Could not import. Choose a readable PCM WAV file, up to 15 seconds and 5 MiB.';
+
+  @override
+  String get reminderNameRequired => 'Enter a reminder name.';
+
+  @override
+  String get reminderCondition => 'When to use (for the Agent)';
+
+  @override
+  String get reminderKind => 'Priority';
+
+  @override
+  String get reminderStyle => 'Tray style';
+
+  @override
+  String get reminderColor => 'Color';
+
+  @override
+  String get reminderToPhone => 'Send to phone';
 }

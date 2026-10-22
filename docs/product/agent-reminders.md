@@ -25,3 +25,62 @@ blocked. Completion hooks and explicit attention calls remain distinct sources.
 
 These styles apply to DingDong's tray/menu-bar surface. Operating-system banners
 and phone notifications keep their own platform presentation and delivery rules.
+
+## Named reminders
+
+The Reminders list starts with `completion` and `attention`. Their existing
+switches, colors, sounds and phone preferences remain authoritative. Add up to
+32 custom profiles, each with a name, optional condition hint, enabled switch,
+priority (completion or attention), tray style, color, sound and phone switch.
+Custom profiles can be deleted; built-ins can be disabled. Attention priority
+still wins over a later completion, including after restarting DingDong.
+
+The Agent decides whether a condition such as “build failed” or “review ready”
+has occurred. DingDong stores the presets and delivers the selected notification;
+it does not evaluate natural-language conditions or call a model to monitor
+conversations. The condition hint is descriptive data, not an executable rule.
+A custom profile's switch is independent of the two built-in switches. Quiet
+hours, voice-task filters and subagent filters still apply. The minimum completion
+duration applies to the built-in completion profile, not explicit custom events.
+
+Agent tools:
+
+- `dingdong_list_reminders`: read profiles and imported sounds.
+- `dingdong_upsert_reminder`: create or patch by stable `id`. New IDs require a
+  `name`. Names are at most 64 characters; condition descriptions at most 160.
+- `dingdong_delete_reminder`: delete a custom profile, leaving shared sounds.
+- `dingdong_import_reminder_sound`: copy an existing absolute local file into
+  DingDong's audio library. AI-prepared files use this same path. Mono/stereo PCM
+  WAV only, maximum 15 seconds and 5 MiB; no URL fetching or audio generation.
+- `dingdong_notify`: pass `reminderId` to select that profile. Omit `sound` to use
+  its saved audio. An unknown ID fails rather than ringing the default reminder.
+
+Example tool arguments (example configuration, not a live user setting):
+
+```json
+{"id":"build-error","name":"Build failed","description":"When a build or test fails","kind":"attention","color":"pink","style":"softPulse","sound":"dingDeep"}
+```
+
+When that condition occurs:
+
+```json
+{"reminderId":"build-error","message":"Tests failed; a decision is needed","source":"Codex"}
+```
+
+For imported audio, use `sound: "custom"` and the returned `sounds[].path` as
+`customSoundPath` in the profile. At most 64 imported sounds are retained. The
+source file can be removed after import. Existing custom sound paths remain
+compatible. Colors and audio can be reused by any number of profiles. The sound
+list shows the referencing profiles as colored dots at the right; more than two
+overlap and the tooltip lists all names, including disabled profiles.
+
+The loopback API provides `GET /settings/reminders` and
+`POST /settings/reminders` with action `upsert`, `delete` or `importSound`.
+`POST /ding` accepts the same `reminderId`. The older
+`POST /settings/reminder-sounds` and `dingdong_set_reminder_sounds` continue to
+configure the built-ins. MCP clients must refresh their tool catalog after
+upgrading to discover the four new tools; editing saved profiles takes effect
+without a client restart. No live Agent client refresh has been assumed.
+
+Spoken-text notifications are tracked in [issue #24](https://github.com/JevonsCode/DingDongBuddy/issues/24) for the next version. There is
+no `speechText` field in this version's tool schema.

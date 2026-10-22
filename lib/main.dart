@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'dart:ffi' as ffi;
 import 'dart:io';
 
@@ -290,7 +291,10 @@ Future<void> main(List<String> arguments) async {
           ]),
         );
       }
-      await shellGateway.markUnread(kind: request.notificationKind);
+      await shellGateway.markUnread(
+        kind: request.notificationKind,
+        reminderId: request.reminderId,
+      );
       await deviceLinkController.sendAgentCompleted(
         request,
         activity: completion.activity,

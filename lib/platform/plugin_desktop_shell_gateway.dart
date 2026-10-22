@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
@@ -240,7 +239,8 @@ final class PluginDesktopShellGateway
 
   Future<void> markUnread({
     AgentNotificationKind kind = AgentNotificationKind.completion,
-  }) => _unreadController.markUnread(kind: kind);
+    String? reminderId,
+  }) => _unreadController.markUnread(kind: kind, reminderId: reminderId);
 
   Future<void> acknowledgeUnreadCount(int count) {
     if (count <= 0) {
@@ -320,12 +320,19 @@ final class PluginDesktopShellGateway
   }) async {
     final bool windows = Platform.isWindows;
     final AgentNotificationKind kind = _unreadController.primaryKind;
-    final bool pulseReminder =
-        _notificationRules.trayStyleFor(kind) == TrayReminderStyle.softPulse;
-    final TrayNotificationColor color = _notificationRules.trayColorFor(
-      kind,
-      legacyCompletionColor: _trayNotificationColor,
+    final profiles = _notificationRules.profiles.where(
+      (x) => x.id == _unreadController.primaryReminderId,
     );
+    final profile = profiles.isEmpty ? null : profiles.first;
+    final bool pulseReminder =
+        (profile?.style ?? _notificationRules.trayStyleFor(kind)) ==
+        TrayReminderStyle.softPulse;
+    final TrayNotificationColor color =
+        profile?.color ??
+        _notificationRules.trayColorFor(
+          kind,
+          legacyCompletionColor: _trayNotificationColor,
+        );
     final TrayBuddyState mascotState =
         _trayBuddyPreviewState ?? _trayBuddyState;
     final TrayBuddyState visualState = trayBuddyVisualState(

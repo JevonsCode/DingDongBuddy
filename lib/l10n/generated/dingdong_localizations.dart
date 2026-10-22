@@ -7453,6 +7453,78 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Requests'**
   String get tokenUsageRequests;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get reminderProfiles;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Add reminder'**
+  String get addReminder;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds'**
+  String get reminderSounds;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Import sound'**
+  String get importReminderSound;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'PCM WAV · Up to 15 seconds / 5 MiB'**
+  String get reminderAudioFormat;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import. Choose a readable PCM WAV file, up to 15 seconds and 5 MiB.'**
+  String get reminderAudioImportFailed;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a reminder name.'**
+  String get reminderNameRequired;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'When to use (for the Agent)'**
+  String get reminderCondition;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get reminderKind;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Tray style'**
+  String get reminderStyle;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get reminderColor;
+
+  /// Named reminder settings label
+  ///
+  /// In en, this message translates to:
+  /// **'Send to phone'**
+  String get reminderToPhone;
 }
 
 class _DingDongLocalizationsDelegate

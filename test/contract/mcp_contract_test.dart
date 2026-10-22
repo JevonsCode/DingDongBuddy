@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +187,10 @@ void main() {
           'dingdong_get_skill_deployments',
           'dingdong_reconcile_skill',
           'dingdong_notify',
+          'dingdong_list_reminders',
+          'dingdong_upsert_reminder',
+          'dingdong_delete_reminder',
+          'dingdong_import_reminder_sound',
           'dingdong_set_reminder_sounds',
         ],
       );

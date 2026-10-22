@@ -5264,5 +5264,29 @@
   },
   "@tokenUsageRequests": {
     "description": "tokenUsageRequests"
-  }
+  },
+  "reminderProfiles": "提醒",
+  "@reminderProfiles": {"description": "Named reminder settings label"},
+  "addReminder": "新增提醒",
+  "@addReminder": {"description": "Named reminder settings label"},
+  "reminderSounds": "声音",
+  "@reminderSounds": {"description": "Named reminder settings label"},
+  "importReminderSound": "导入声音",
+  "@importReminderSound": {"description": "Named reminder settings label"},
+  "reminderAudioFormat": "PCM WAV · 最长 15 秒 / 5 MiB",
+  "@reminderAudioFormat": {"description": "Named reminder settings label"},
+  "reminderAudioImportFailed": "导入失败。请选择可读取的 PCM WAV 文件，最长 15 秒、最大 5 MiB。",
+  "@reminderAudioImportFailed": {"description": "Named reminder settings label"},
+  "reminderNameRequired": "请输入提醒名称。",
+  "@reminderNameRequired": {"description": "Named reminder settings label"},
+  "reminderCondition": "使用场景（供 Agent 判断）",
+  "@reminderCondition": {"description": "Named reminder settings label"},
+  "reminderKind": "优先级",
+  "@reminderKind": {"description": "Named reminder settings label"},
+  "reminderStyle": "任务栏样式",
+  "@reminderStyle": {"description": "Named reminder settings label"},
+  "reminderColor": "颜色",
+  "@reminderColor": {"description": "Named reminder settings label"},
+  "reminderToPhone": "发送到手机",
+  "@reminderToPhone": {"description": "Named reminder settings label"}
 }

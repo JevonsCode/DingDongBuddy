@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
-
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 
 /// Applies the visual state of the desktop tray icon.
@@ -23,6 +22,12 @@ final class TrayUnreadController {
   int _latestEventId = 0;
   int _acknowledgedEventId = 0;
   int _latestAttentionEventId = 0;
+  String? _latestReminderId;
+  String? _latestAttentionReminderId;
+  String? get primaryReminderId =>
+      primaryKind == AgentNotificationKind.attention
+      ? _latestAttentionReminderId
+      : _latestReminderId;
 
   AgentNotificationKind get primaryKind =>
       _latestAttentionEventId > _acknowledgedEventId
@@ -37,6 +42,8 @@ final class TrayUnreadController {
     return _enqueue(() async {
       final TrayUnreadState state =
           await store?.load() ?? const TrayUnreadState.empty();
+      _latestReminderId = state.latestReminderId;
+      _latestAttentionReminderId = state.latestAttentionReminderId;
       _latestEventId = math.max(0, state.latestEventId);
       _acknowledgedEventId = state.acknowledgedEventId.clamp(0, _latestEventId);
       _latestAttentionEventId = state.latestAttentionEventId.clamp(
@@ -49,11 +56,14 @@ final class TrayUnreadController {
 
   Future<void> markUnread({
     AgentNotificationKind kind = AgentNotificationKind.completion,
+    String? reminderId,
   }) {
     return _enqueue(() async {
       _latestEventId += 1;
+      _latestReminderId = reminderId;
       if (kind == AgentNotificationKind.attention) {
         _latestAttentionEventId = _latestEventId;
+        _latestAttentionReminderId = reminderId;
       }
       await _persist();
       await _apply();
@@ -114,6 +124,8 @@ final class TrayUnreadController {
         latestEventId: _latestEventId,
         acknowledgedEventId: _acknowledgedEventId,
         latestAttentionEventId: _latestAttentionEventId,
+        latestReminderId: _latestReminderId,
+        latestAttentionReminderId: _latestAttentionReminderId,
       ),
     );
   }

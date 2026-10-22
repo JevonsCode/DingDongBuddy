@@ -22,15 +22,20 @@ void main() {
     () async {
       final store = PreferencesTrayUnreadStore(MemoryPreferencesBackend());
       final tray = controller(store);
-      await tray.markUnread(kind: AgentNotificationKind.attention);
+      await tray.markUnread(
+        kind: AgentNotificationKind.attention,
+        reminderId: 'error',
+      );
       await tray.markUnread();
       expect(tray.primaryKind, AgentNotificationKind.attention);
       final restored = controller(store);
       await restored.restore();
       expect(restored.primaryKind, AgentNotificationKind.attention);
+      expect(restored.primaryReminderId, 'error');
       expect(restored.count, 2);
       await restored.acknowledgeCount(1);
       expect(restored.primaryKind, AgentNotificationKind.completion);
+      expect(restored.primaryReminderId, isNull);
       expect(restored.count, 1);
     },
   );

@@ -10,8 +10,8 @@ Maintained by DingDong.
 - Each task: call `dingdong_bridge` with `acceptDelta=true`, plus `knownHash` only for a retained complete snapshot; omit after context loss. Full `active` replaces earlier ones; `unchanged` retains; merge `delta` by id. Each Prompt is a required instruction. On failure say DingDong resources could not be loaded.
 - Load a returned Skill with `dingdong_load_skill` only when its description matches the task. Call returned MCP tools only when the task needs them.
 - When the response has `footer`, end the final reply with it exactly. Never print `statusLine`.
-- Use `dingdong_notify` only when blocked or waiting for the user.
-- When the user picks sounds for finishing or needing them, save them with `dingdong_set_reminder_sounds`.
+- Use `dingdong_notify` when blocked, waiting for the user, or for an explicitly requested named event (`reminderId`).
+- Save user-chosen sounds with `dingdong_set_reminder_sounds`.
 ''';
 
 /// Short initialize-time summary for MCP hosts.
@@ -25,5 +25,5 @@ const String dingDongMcpInstructions =
 - `active.skills` lists id, name, description and content version. Load matching Skills with `dingdong_load_skill`. Pass `knownVersion` only for a fully loaded body still in context, never a catalog-only version. `unchanged` reuses it; otherwise replace it. Omit acknowledgements after context loss. Read referenced files with `dingdong_read_skill_file`.
 - `active.mcps` are tool references, not instructions; call their tools only when the task needs them.
 - When the response has `footer`, end the final reply with it exactly. After a tool from a returned MCP server finishes, call `dingdong_confirm_mcp_use` once if it is available. When a Skill load or MCP confirmation returns `footerMark`, replace `from` with `to` in the footer. Never print `statusLine`; the host renders it.
-- Use `dingdong_notify` only when blocked or waiting for the user; a completion hook sends the task-complete alert.
+- Use `dingdong_notify` when blocked, waiting for the user, or for an explicitly requested named event (`reminderId`); a completion hook sends the task-complete alert.
 - When the user asks which sound to play when you finish or when you need them, save it with `dingdong_set_reminder_sounds`.''';

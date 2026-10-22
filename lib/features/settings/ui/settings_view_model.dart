@@ -1,7 +1,6 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'dart:async';
-
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
@@ -635,6 +634,20 @@ final class SettingsViewModel extends ChangeNotifier
     _releaseStatus = _releaseStatus.withAllowBeta(value);
     notifyListeners();
     await _save();
+  }
+
+  Future<void> saveReminderProfile(ReminderProfile profile) async {
+    _settings = _settings.withReminderProfile(profile);
+    notifyListeners();
+    await _save();
+    await _onNotificationRulesChanged?.call(_settings.notificationRules);
+  }
+
+  Future<void> deleteReminderProfile(String id) async {
+    _settings = _settings.withoutReminderProfile(id);
+    notifyListeners();
+    await _save();
+    await _onNotificationRulesChanged?.call(_settings.notificationRules);
   }
 
   Future<void> setNotificationRules(NotificationRules value) async {

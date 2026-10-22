@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
@@ -53,6 +54,7 @@ typedef ReminderSoundUpdater =
 final class AgentRouter {
   AgentRouter({
     this.jevRoutes,
+    this.reminderSettings,
     void Function(DingRequest request)? onDing,
     void Function(DingRequest request)? onSuppressedDing,
     FutureOr<void> Function(AgentBridgeTaskStart start)? onAgentTaskStarted,
@@ -168,6 +170,8 @@ final class AgentRouter {
        _defaultDingMessage = defaultDingMessage ?? _englishDefaultDingMessage;
 
   final JevRoutes? jevRoutes;
+  final Future<Map<String, Object?>> Function(Map<String, Object?> command)?
+  reminderSettings;
   final JevUsageLoader? loadJevUsage;
   final BridgeResourceSelector? selectBridgeResources;
   final void Function(DingRequest request) _onDing;
@@ -351,6 +355,33 @@ final class AgentRouter {
         },
       );
     }
+    if (request.parsedUri.path == '/settings/reminders' &&
+        (request.method == 'GET' || request.method == 'POST')) {
+      if (reminderSettings == null) {
+        return const HttpResponseData(
+          statusCode: 503,
+          json: {'status': 'unavailable'},
+        );
+      }
+      try {
+        final decoded = request.method == 'GET'
+            ? <String, Object?>{'action': 'list'}
+            : jsonDecode(request.body);
+        if (decoded is! Map<String, Object?>) {
+          throw const FormatException('Provide a JSON object.');
+        }
+        return HttpResponseData(
+          statusCode: 200,
+          json: await reminderSettings!(decoded),
+        );
+      } on FormatException catch (error) {
+        return HttpResponseData.badRequest(error.message);
+      } on FileSystemException {
+        return HttpResponseData.badRequest(
+          'Cannot read or save this local audio file.',
+        );
+      }
+    }
     if (request.method == 'POST' &&
         request.parsedUri.path == '/settings/reminder-sounds') {
       return _reminderSounds(request.body);
@@ -362,6 +393,25 @@ final class AgentRouter {
           request.body,
           fallbackMessage: '',
         ).copyWith(receivedAt: now.toUtc());
+        if (parsed.reminderId != null) {
+          if (reminderSettings == null) {
+            throw const FormatException('Reminder profiles are unavailable.');
+          }
+          final state = await reminderSettings!({'action': 'list'});
+          final profiles = (state['reminders'] as List)
+              .cast<Map<String, Object?>>();
+          final matches = profiles.where((x) => x['id'] == parsed.reminderId);
+          if (matches.isEmpty) {
+            throw const FormatException(
+              'Unknown reminderId. List reminders first.',
+            );
+          }
+          parsed = parsed.copyWith(
+            notificationKind: AgentNotificationKind.parse(
+              matches.first['kind'],
+            ),
+          );
+        }
         if (parsed.message.isEmpty) {
           parsed = parsed.copyWith(
             message: await _defaultDingMessage(parsed.source ?? 'Agent'),

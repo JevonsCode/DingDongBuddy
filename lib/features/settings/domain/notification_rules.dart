@@ -1,7 +1,7 @@
 import 'dart:convert';
-
 import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:dingdong/features/settings/domain/reminder_sounds.dart';
 import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:flutter/foundation.dart';
@@ -76,6 +76,8 @@ final class QuietHours {
 @immutable
 final class NotificationRules {
   const NotificationRules({
+    this.profiles = const [],
+    this.audioLibrary = const [],
     this.attentionSound = sameAsCompletionSound,
     this.attentionCustomSoundPath,
     this.completionToPhone = true,
@@ -92,6 +94,9 @@ final class NotificationRules {
 
   /// Allowed "only alert for tasks at least this long" choices, in minutes.
   static const List<int> completionMinimumChoices = <int>[0, 1, 3, 5, 10, 30];
+
+  final List<ReminderProfile> profiles;
+  final List<ReminderAudio> audioLibrary;
 
   final String attentionSound;
   final String? attentionCustomSoundPath;
@@ -132,6 +137,8 @@ final class NotificationRules {
           ? quiet
           : const <Object?, Object?>{};
       return NotificationRules(
+        profiles: _readProfiles(json['profiles']),
+        audioLibrary: _readAudio(json['audioLibrary']),
         completionTrayStyle: TrayReminderStyle.parse(
           json['completionTrayStyle'],
           fallback: TrayReminderStyle.staticMarker,
@@ -175,6 +182,8 @@ final class NotificationRules {
   }
 
   String encode() => jsonEncode(<String, Object?>{
+    'profiles': profiles.map((x) => x.toJson()).toList(),
+    'audioLibrary': audioLibrary.map((x) => x.toJson()).toList(),
     'completionTrayStyle': completionTrayStyle.name,
     'attentionTrayStyle': attentionTrayStyle.name,
     'completionTrayColor': ?completionTrayColor?.name,
@@ -193,6 +202,8 @@ final class NotificationRules {
   });
 
   NotificationRules sanitized() => NotificationRules(
+    profiles: List.unmodifiable(profiles),
+    audioLibrary: List.unmodifiable(audioLibrary),
     completionTrayStyle: completionTrayStyle,
     attentionTrayStyle: attentionTrayStyle,
     completionTrayColor: completionTrayColor,
@@ -213,6 +224,8 @@ final class NotificationRules {
   );
 
   NotificationRules copyWith({
+    List<ReminderProfile>? profiles,
+    List<ReminderAudio>? audioLibrary,
     String? attentionSound,
     TrayReminderStyle? completionTrayStyle,
     TrayReminderStyle? attentionTrayStyle,
@@ -224,6 +237,8 @@ final class NotificationRules {
     QuietHours? quietHours,
     int? completionMinimumMinutes,
   }) => NotificationRules(
+    profiles: profiles ?? this.profiles,
+    audioLibrary: audioLibrary ?? this.audioLibrary,
     completionTrayStyle: completionTrayStyle ?? this.completionTrayStyle,
     attentionTrayStyle: attentionTrayStyle ?? this.attentionTrayStyle,
     completionTrayColor: completionTrayColor ?? this.completionTrayColor,
@@ -242,6 +257,8 @@ final class NotificationRules {
   @override
   bool operator ==(Object other) =>
       other is NotificationRules &&
+      listEquals(other.profiles, profiles) &&
+      listEquals(other.audioLibrary, audioLibrary) &&
       other.completionTrayStyle == completionTrayStyle &&
       other.attentionTrayStyle == attentionTrayStyle &&
       other.completionTrayColor == completionTrayColor &&
@@ -255,6 +272,8 @@ final class NotificationRules {
 
   @override
   int get hashCode => Object.hash(
+    Object.hashAll(profiles),
+    Object.hashAll(audioLibrary),
     completionTrayStyle,
     attentionTrayStyle,
     completionTrayColor,
@@ -327,3 +346,32 @@ int _minuteOfDay(int value, int fallback) =>
     value >= 0 && value < 24 * 60 ? value : fallback;
 
 const Object _notSet = Object();
+
+List<ReminderProfile> _readProfiles(Object? value) {
+  final result = <ReminderProfile>[];
+  if (value is! List) return result;
+  for (final item in value.take(32)) {
+    if (item is! Map) continue;
+    try {
+      final profile = ReminderProfile.fromJson(Map<String, Object?>.from(item));
+      if (!profile.builtIn && !result.any((x) => x.id == profile.id)) {
+        result.add(profile);
+      }
+    } on FormatException {
+      /* Keep valid entries when one stored entry is damaged. */
+    }
+  }
+  return result;
+}
+
+List<ReminderAudio> _readAudio(Object? value) {
+  if (value is! List) return [];
+  return [
+    for (final item in value.take(64))
+      if (item is Map && item['name'] is String && item['path'] is String)
+        ReminderAudio(
+          name: item['name'] as String,
+          path: item['path'] as String,
+        ),
+  ];
+}
