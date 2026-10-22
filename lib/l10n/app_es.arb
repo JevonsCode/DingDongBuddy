@@ -5344,5 +5344,11 @@
   },
   "@aiHistoryNext": {
     "description": "aiHistoryNext"
-  }
+  },
+  "reorderReminder": "Arrastra para reordenar",
+  "searchSettings": "Buscar ajustes",
+  "noMatchingSettings": "No hay ajustes coincidentes. Prueba otra palabra.",
+  "@reorderReminder": {"description":"Settings search and reminder ordering."},
+  "@searchSettings": {"description":"Settings search and reminder ordering."},
+  "@noMatchingSettings": {"description":"Settings search and reminder ordering."}
 }

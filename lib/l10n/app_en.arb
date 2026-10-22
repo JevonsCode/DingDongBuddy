@@ -5345,5 +5345,11 @@
   "aiHistoryNext": "Next page",
   "@aiHistoryNext": {
     "description": "aiHistoryNext"
-  }
+  },
+  "reorderReminder": "Drag to reorder",
+  "searchSettings": "Search settings",
+  "noMatchingSettings": "No matching settings. Try another keyword.",
+  "@reorderReminder": {"description":"Settings search and reminder ordering."},
+  "@searchSettings": {"description":"Settings search and reminder ordering."},
+  "@noMatchingSettings": {"description":"Settings search and reminder ordering."}
 }

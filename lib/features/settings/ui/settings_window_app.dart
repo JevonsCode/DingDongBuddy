@@ -98,6 +98,7 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
               explicitChildNodes: true,
               label: context.l10n.dingdongSettingsWindow,
               child: SettingsScreen(
+                useNativeSearch: true,
                 viewModel: widget.viewModel,
                 navigationController: _navigationController,
                 soundFileGateway: widget.soundFileGateway,

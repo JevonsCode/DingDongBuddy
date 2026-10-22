@@ -4420,4 +4420,14 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get aiHistoryNext => 'Página siguiente';
+
+  @override
+  String get reorderReminder => 'Arrastra para reordenar';
+
+  @override
+  String get searchSettings => 'Buscar ajustes';
+
+  @override
+  String get noMatchingSettings =>
+      'No hay ajustes coincidentes. Prueba otra palabra.';
 }

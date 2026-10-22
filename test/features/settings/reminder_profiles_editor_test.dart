@@ -104,6 +104,30 @@ void main() {
     return model;
   }
 
+  testWidgets('dragging a built-in reminder changes the saved order', (
+    tester,
+  ) async {
+    final model = await pumpEditor(tester);
+    final handle = find.byKey(const Key('drag-reminder-attention'));
+    final target = tester.getCenter(
+      find.byKey(const Key('drag-reminder-completion')),
+    );
+    final gesture = await tester.startGesture(tester.getCenter(handle));
+    await tester.pump();
+    await gesture.moveBy(const Offset(0, -10));
+    await tester.pump(const Duration(milliseconds: 100));
+    await gesture.moveTo(target);
+    await tester.pump(const Duration(milliseconds: 600));
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(model.settings.reminderProfiles.take(2).map((p) => p.id), [
+      'attention',
+      'completion',
+    ]);
+    expect(model.settings.notificationRules.profileOrder.first, 'attention');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('add, edit and delete a profile without touching the others', (
     tester,
   ) async {

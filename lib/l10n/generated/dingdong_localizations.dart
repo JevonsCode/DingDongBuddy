@@ -7609,6 +7609,24 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Next page'**
   String get aiHistoryNext;
+
+  /// Settings search and reminder ordering.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get reorderReminder;
+
+  /// Settings search and reminder ordering.
+  ///
+  /// In en, this message translates to:
+  /// **'Search settings'**
+  String get searchSettings;
+
+  /// Settings search and reminder ordering.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching settings. Try another keyword.'**
+  String get noMatchingSettings;
 }
 
 class _DingDongLocalizationsDelegate

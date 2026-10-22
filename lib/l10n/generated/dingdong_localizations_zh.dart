@@ -4206,4 +4206,13 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get aiHistoryNext => '下一页';
+
+  @override
+  String get reorderReminder => '拖动排序';
+
+  @override
+  String get searchSettings => '搜索设置';
+
+  @override
+  String get noMatchingSettings => '没有匹配的设置，试试其他关键词。';
 }

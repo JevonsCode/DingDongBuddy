@@ -643,6 +643,15 @@ final class SettingsViewModel extends ChangeNotifier
     await _onNotificationRulesChanged?.call(_settings.notificationRules);
   }
 
+  Future<void> reorderReminderProfile(String id, int newIndex) async {
+    final ids = _settings.reminderProfiles.map((p) => p.id).toList();
+    if (!ids.remove(id)) return;
+    ids.insert(newIndex.clamp(0, ids.length), id);
+    await setNotificationRules(
+      _settings.notificationRules.copyWith(profileOrder: ids),
+    );
+  }
+
   Future<void> deleteReminderProfile(String id) async {
     _settings = _settings.withoutReminderProfile(id);
     notifyListeners();

@@ -55,60 +55,92 @@ class ReminderProfilesEditor extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        for (final profile in profiles)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                _dot(profile.color),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_profileName(context, profile)),
-                      Text(
-                        profile.description.isEmpty
-                            ? profile.id
-                            : profile.description,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Semantics(
-                  label: _profileName(context, profile),
-                  child: CompactSwitch(
-                    key: Key('settings-notify-agent-${profile.id}'),
-                    value: profile.enabled,
-                    onChanged: (value) => viewModel.saveReminderProfile(
-                      profile.copyWith(enabled: value),
-                    ),
-                  ),
-                ),
-                DesktopIconButton(
-                  key: Key('edit-reminder-${profile.id}'),
-                  tooltip: context.l10n.edit,
-                  onPressed: () => _edit(context, profile),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                ),
-                SizedBox(
-                  width: 34,
-                  child: profile.builtIn
-                      ? null
-                      : DesktopIconButton(
-                          key: Key('delete-reminder-${profile.id}'),
-                          tooltip: context.l10n.delete,
-                          onPressed: () =>
-                              viewModel.deleteReminderProfile(profile.id),
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                        ),
-                ),
-              ],
-            ),
+        ReorderableListView(
+          key: const Key('reminder-order-list'),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          onReorderItem: (oldIndex, newIndex) =>
+              viewModel.reorderReminderProfile(profiles[oldIndex].id, newIndex),
+          proxyDecorator: (child, index, animation) => Material(
+            color: Theme.of(context).colorScheme.surface,
+            child: child,
           ),
+          children: [
+            for (final (index, profile) in profiles.indexed)
+              Padding(
+                key: ValueKey('reminder-order-${profile.id}'),
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Tooltip(
+                      message: context.l10n.reorderReminder,
+                      child: ReorderableDragStartListener(
+                        key: Key('drag-reminder-${profile.id}'),
+                        index: index,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                          child: Icon(
+                            Icons.drag_indicator,
+                            size: 18,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _dot(profile.color),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_profileName(context, profile)),
+                          Text(
+                            profile.description.isEmpty
+                                ? profile.id
+                                : profile.description,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Semantics(
+                      label: _profileName(context, profile),
+                      child: CompactSwitch(
+                        key: Key('settings-notify-agent-${profile.id}'),
+                        value: profile.enabled,
+                        onChanged: (value) => viewModel.saveReminderProfile(
+                          profile.copyWith(enabled: value),
+                        ),
+                      ),
+                    ),
+                    DesktopIconButton(
+                      key: Key('edit-reminder-${profile.id}'),
+                      tooltip: context.l10n.edit,
+                      onPressed: () => _edit(context, profile),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                    ),
+                    SizedBox(
+                      width: 34,
+                      child: profile.builtIn
+                          ? null
+                          : DesktopIconButton(
+                              key: Key('delete-reminder-${profile.id}'),
+                              tooltip: context.l10n.delete,
+                              onPressed: () =>
+                                  viewModel.deleteReminderProfile(profile.id),
+                              icon: const Icon(Icons.delete_outline, size: 18),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
         const SizedBox(height: 12),
         CompactSwitchListTile(
           key: const Key('settings-notify-codex-voice-activity'),

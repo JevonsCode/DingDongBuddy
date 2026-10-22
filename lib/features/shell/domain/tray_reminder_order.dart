@@ -10,15 +10,21 @@ List<ReminderProfile> orderedUnreadReminderProfiles({
   required Iterable<String> unreadIds,
 }) {
   final ids = unreadIds.toSet();
-  return [
-    for (final kind in AgentNotificationKind.values)
-      ReminderProfile(
-        id: kind.apiValue,
-        name: kind.apiValue,
-        kind: kind,
-        color: rules.trayColorFor(kind, legacyCompletionColor: completionColor),
-        style: rules.trayStyleFor(kind),
-      ),
-    ...rules.profiles,
-  ].where((p) => ids.contains(p.id)).toList();
+  return rules
+      .orderProfiles([
+        for (final kind in AgentNotificationKind.values)
+          ReminderProfile(
+            id: kind.apiValue,
+            name: kind.apiValue,
+            kind: kind,
+            color: rules.trayColorFor(
+              kind,
+              legacyCompletionColor: completionColor,
+            ),
+            style: rules.trayStyleFor(kind),
+          ),
+        ...rules.profiles,
+      ])
+      .where((p) => ids.contains(p.id))
+      .toList();
 }

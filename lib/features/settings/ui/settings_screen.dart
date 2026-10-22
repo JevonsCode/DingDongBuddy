@@ -23,12 +23,14 @@ import 'package:flutter/services.dart';
 
 part 'settings_fields.dart';
 part 'settings_sections.dart';
+part 'settings_search.dart';
 
 /// Desktop settings workspace grouped by user intent rather than storage keys.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     required this.viewModel,
     this.navigationController,
+    this.useNativeSearch = false,
     this.soundFileGateway,
     this.soundPreviewGateway,
     this.onRestartApplication,
@@ -36,6 +38,7 @@ class SettingsScreen extends StatefulWidget {
   });
 
   final SettingsViewModel viewModel;
+  final bool useNativeSearch;
   final SettingsNavigationController? navigationController;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
@@ -52,6 +55,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late bool _ownsNavigationController;
   bool _navigationPending = true;
   bool _navigationScheduled = false;
+  final TextEditingController _searchController = TextEditingController();
+  static const _searchChannel = MethodChannel('dingdong/settings_search');
+  bool _nativeSearchAvailable = false;
+  String? _searchPlaceholder;
+  String _query = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!widget.useNativeSearch ||
+        defaultTargetPlatform != TargetPlatform.macOS) {
+      return;
+    }
+    final placeholder = context.l10n.searchSettings;
+    if (_searchPlaceholder == placeholder) {
+      return;
+    }
+    _searchPlaceholder = placeholder;
+    _searchChannel.setMethodCallHandler((call) async {
+      if (call.method == 'queryChanged' && mounted) {
+        _setQuery(call.arguments as String);
+      }
+    });
+    unawaited(_configureNativeSearch(placeholder));
+  }
+
+  Future<void> _configureNativeSearch(String placeholder) async {
+    bool available = false;
+    try {
+      available =
+          await _searchChannel.invokeMethod<bool>('configure', {
+            'placeholder': placeholder,
+          }) ??
+          false;
+    } on MissingPluginException {
+      // Other desktop hosts use the fixed in-page search field.
+    } on PlatformException {
+      // Retain usable search if the native toolbar is unavailable.
+    }
+    if (mounted && _nativeSearchAvailable != available) {
+      setState(() => _nativeSearchAvailable = available);
+    }
+  }
+
+  void _setQuery(String value) {
+    if (!mounted || _query == value) return;
+    setState(() => _query = value);
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+  }
 
   @override
   void initState() {
@@ -85,6 +137,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_ownsNavigationController) {
       _navigationController.dispose();
     }
+    if (widget.useNativeSearch &&
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      _searchChannel.setMethodCallHandler(null);
+    }
+    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -102,6 +159,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _requestNavigation() {
+    _searchController.clear();
+    _setQuery('');
+    if (_nativeSearchAvailable) {
+      unawaited(_searchChannel.invokeMethod<void>('setQuery', ''));
+    }
     _navigationPending = true;
     _scheduleNavigation();
   }
@@ -160,9 +222,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final AppSettings settings = widget.viewModel.settings;
+          final terms = _settingsSearchTerms(context);
+          terms['notifications']!.addAll(
+            settings.reminderProfiles.expand(
+              (p) => [p.name, p.id, p.description],
+            ),
+          );
+          final words = _query
+              .trim()
+              .toLowerCase()
+              .split(RegExp(r'\s+'))
+              .where((w) => w.isNotEmpty)
+              .toList();
+          bool matches(String id) => words.every(
+            (word) => terms[id]!.join(' ').toLowerCase().contains(word),
+          );
+          final hasMatches = terms.keys.any(matches);
           return CustomScrollView(
             controller: _scrollController,
             slivers: <Widget>[
+              if (!_nativeSearchAvailable)
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SettingsSearchHeader(
+                    controller: _searchController,
+                    onChanged: _setQuery,
+                  ),
+                ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(36, 32, 36, 48),
                 sliver: SliverToBoxAdapter(
@@ -173,17 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text(
-                            context.l10n.settings2,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            context
-                                .l10n
-                                .desktopBehaviorHistoryPrivacyAndLocalAgentConnectivity,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
                           if (widget.viewModel.errorMessage !=
                               null) ...<Widget>[
                             const SizedBox(height: 18),
@@ -191,450 +266,505 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               message: widget.viewModel.errorMessage!,
                             ),
                           ],
-                          const SizedBox(height: 30),
-                          _SettingsSection(
-                            title: context.l10n.general,
-                            description: context
-                                .l10n
-                                .chooseHowDingDongBehavesWhenYouSignIn,
-                            children: <Widget>[
-                              CompactSwitchListTile(
-                                key: const Key('settings-launch-at-startup'),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(context.l10n.launchAtStartup),
-                                subtitle: Text(
-                                  context
-                                      .l10n
-                                      .startDingDongAfterYouSignInToThisComputer,
-                                ),
-                                value: settings.launchAtStartup,
-                                onChanged: widget.viewModel.setLaunchAtStartup,
-                              ),
-                              if (defaultTargetPlatform == TargetPlatform.macOS)
+                          if (!hasMatches)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              child: Text(context.l10n.noMatchingSettings),
+                            ),
+                          if (matches('general'))
+                            _SettingsSection(
+                              title: context.l10n.general,
+                              description: context
+                                  .l10n
+                                  .chooseHowDingDongBehavesWhenYouSignIn,
+                              children: <Widget>[
                                 CompactSwitchListTile(
-                                  key: const Key('settings-hide-dock-icon'),
+                                  key: const Key('settings-launch-at-startup'),
                                   contentPadding: EdgeInsets.zero,
-                                  title: Text(context.l10n.hideDockIcon),
+                                  title: Text(context.l10n.launchAtStartup),
                                   subtitle: Text(
                                     context
                                         .l10n
-                                        .keepDingDongInTheMenuBarWithoutShowingItInTheDock,
+                                        .startDingDongAfterYouSignInToThisComputer,
                                   ),
-                                  value: settings.hideDockIcon,
-                                  onChanged: widget.viewModel.setHideDockIcon,
+                                  value: settings.launchAtStartup,
+                                  onChanged:
+                                      widget.viewModel.setLaunchAtStartup,
                                 ),
-                              if (defaultTargetPlatform == TargetPlatform.macOS)
+                                if (defaultTargetPlatform ==
+                                    TargetPlatform.macOS)
+                                  CompactSwitchListTile(
+                                    key: const Key('settings-hide-dock-icon'),
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(context.l10n.hideDockIcon),
+                                    subtitle: Text(
+                                      context
+                                          .l10n
+                                          .keepDingDongInTheMenuBarWithoutShowingItInTheDock,
+                                    ),
+                                    value: settings.hideDockIcon,
+                                    onChanged: widget.viewModel.setHideDockIcon,
+                                  ),
+                                if (defaultTargetPlatform ==
+                                    TargetPlatform.macOS)
+                                  _SettingRow(
+                                    label: context
+                                        .l10n
+                                        .menuBarIconHiddenByTheCameraHousing,
+                                    child: DesktopActionButton(
+                                      key: const Key(
+                                        'settings-menu-bar-recovery',
+                                      ),
+                                      onPressed: () => unawaited(
+                                        widget.viewModel.showMenuBarRecovery(),
+                                      ),
+                                      icon: Icons.visibility_rounded,
+                                      label: context.l10n.findIcon,
+                                      tone: DesktopActionTone.soft,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          if (matches('keyboardShortcuts'))
+                            _SettingsSection(
+                              title: context.l10n.keyboardShortcuts,
+                              description: context
+                                  .l10n
+                                  .setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb,
+                              children: <Widget>[
                                 _SettingRow(
-                                  label: context
-                                      .l10n
-                                      .menuBarIconHiddenByTheCameraHousing,
-                                  child: DesktopActionButton(
-                                    key: const Key(
-                                      'settings-menu-bar-recovery',
-                                    ),
-                                    onPressed: () => unawaited(
-                                      widget.viewModel.showMenuBarRecovery(),
-                                    ),
-                                    icon: Icons.visibility_rounded,
-                                    label: context.l10n.findIcon,
-                                    tone: DesktopActionTone.soft,
+                                  label: context.l10n.openOrHideClipboard,
+                                  child: GlobalHotKeyRecorder(
+                                    value: settings.globalHotKey,
+                                    onChanged: widget.viewModel.setGlobalHotKey,
                                   ),
                                 ),
-                            ],
-                          ),
-                          _SettingsSection(
-                            title: context.l10n.keyboardShortcuts,
-                            description: context
-                                .l10n
-                                .setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb,
-                            children: <Widget>[
-                              _SettingRow(
-                                label: context.l10n.openOrHideClipboard,
-                                child: GlobalHotKeyRecorder(
-                                  value: settings.globalHotKey,
-                                  onChanged: widget.viewModel.setGlobalHotKey,
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 8,
+                                    bottom: 2,
+                                  ),
+                                  child: Text(
+                                    context
+                                        .l10n
+                                        .workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 8,
-                                  bottom: 2,
+                                _SettingRow(
+                                  label: context.l10n.dynamicWorkspace,
+                                  child: WorkspaceShortcutRecorder(
+                                    settingId: 'today',
+                                    semanticLabel:
+                                        context.l10n.dynamicWorkspaceShortcut,
+                                    value: settings.workspaceShortcuts.today,
+                                    defaultValue:
+                                        WorkspaceShortcuts.defaultToday,
+                                    onChanged: (WorkspaceShortcut value) =>
+                                        widget.viewModel.setWorkspaceShortcut(
+                                          0,
+                                          value,
+                                        ),
+                                  ),
                                 ),
-                                child: Text(
-                                  context
-                                      .l10n
-                                      .workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968,
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                _SettingRow(
+                                  label: context.l10n.libraryWorkspace,
+                                  child: WorkspaceShortcutRecorder(
+                                    settingId: 'library',
+                                    semanticLabel:
+                                        context.l10n.libraryWorkspaceShortcut,
+                                    value: settings.workspaceShortcuts.library,
+                                    defaultValue:
+                                        WorkspaceShortcuts.defaultLibrary,
+                                    onChanged: (WorkspaceShortcut value) =>
+                                        widget.viewModel.setWorkspaceShortcut(
+                                          1,
+                                          value,
+                                        ),
+                                  ),
                                 ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.dynamicWorkspace,
-                                child: WorkspaceShortcutRecorder(
-                                  settingId: 'today',
-                                  semanticLabel:
-                                      context.l10n.dynamicWorkspaceShortcut,
-                                  value: settings.workspaceShortcuts.today,
-                                  defaultValue: WorkspaceShortcuts.defaultToday,
-                                  onChanged: (WorkspaceShortcut value) => widget
-                                      .viewModel
-                                      .setWorkspaceShortcut(0, value),
+                                _SettingRow(
+                                  label: context.l10n.clipboardWorkspace,
+                                  child: WorkspaceShortcutRecorder(
+                                    settingId: 'clipboard',
+                                    semanticLabel:
+                                        context.l10n.clipboardWorkspaceShortcut,
+                                    value:
+                                        settings.workspaceShortcuts.clipboard,
+                                    defaultValue:
+                                        WorkspaceShortcuts.defaultClipboard,
+                                    onChanged: (WorkspaceShortcut value) =>
+                                        widget.viewModel.setWorkspaceShortcut(
+                                          2,
+                                          value,
+                                        ),
+                                  ),
                                 ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.libraryWorkspace,
-                                child: WorkspaceShortcutRecorder(
-                                  settingId: 'library',
-                                  semanticLabel:
-                                      context.l10n.libraryWorkspaceShortcut,
-                                  value: settings.workspaceShortcuts.library,
-                                  defaultValue:
-                                      WorkspaceShortcuts.defaultLibrary,
-                                  onChanged: (WorkspaceShortcut value) => widget
-                                      .viewModel
-                                      .setWorkspaceShortcut(1, value),
-                                ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.clipboardWorkspace,
-                                child: WorkspaceShortcutRecorder(
-                                  settingId: 'clipboard',
-                                  semanticLabel:
-                                      context.l10n.clipboardWorkspaceShortcut,
-                                  value: settings.workspaceShortcuts.clipboard,
-                                  defaultValue:
-                                      WorkspaceShortcuts.defaultClipboard,
-                                  onChanged: (WorkspaceShortcut value) => widget
-                                      .viewModel
-                                      .setWorkspaceShortcut(2, value),
-                                ),
-                              ),
-                            ],
-                          ),
-                          QuickPastePermissionSection(
-                            viewModel: widget.viewModel,
-                          ),
-                          SystemUsageSection(viewModel: widget.viewModel),
-                          _SettingsSection(
-                            title: context.l10n.appearance,
-                            description: context
-                                .l10n
-                                .keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46,
-                            children: <Widget>[
-                              _SettingRow(
-                                label: context.l10n.theme,
-                                child:
-                                    DesktopSegmentedControl<AppThemePreference>(
-                                      key: const Key('settings-theme-mode'),
-                                      value: settings.themeMode,
-                                      segments:
-                                          <DesktopSegment<AppThemePreference>>[
-                                            DesktopSegment<AppThemePreference>(
-                                              value: AppThemePreference.system,
-                                              label: Text(context.l10n.system),
-                                            ),
-                                            DesktopSegment<AppThemePreference>(
-                                              value: AppThemePreference.light,
-                                              label: Text(context.l10n.light),
-                                            ),
-                                            DesktopSegment<AppThemePreference>(
-                                              value: AppThemePreference.dark,
-                                              label: Text(context.l10n.dark),
-                                            ),
-                                          ],
-                                      onChanged: widget.viewModel.setThemeMode,
-                                    ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.language,
-                                child: SizedBox(
-                                  width: 190,
+                              ],
+                            ),
+                          if (matches('quickPaste'))
+                            QuickPastePermissionSection(
+                              viewModel: widget.viewModel,
+                            ),
+                          if (matches('storage'))
+                            SystemUsageSection(viewModel: widget.viewModel),
+                          if (matches('appearance'))
+                            _SettingsSection(
+                              title: context.l10n.appearance,
+                              description: context
+                                  .l10n
+                                  .keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46,
+                              children: <Widget>[
+                                _SettingRow(
+                                  label: context.l10n.theme,
                                   child:
-                                      DesktopSelectField<AppLanguagePreference>(
-                                        key: const Key('settings-language'),
-                                        value: settings.language,
-                                        items:
+                                      DesktopSegmentedControl<
+                                        AppThemePreference
+                                      >(
+                                        key: const Key('settings-theme-mode'),
+                                        value: settings.themeMode,
+                                        segments:
                                             <
-                                              DesktopSelectItem<
-                                                AppLanguagePreference
-                                              >
+                                              DesktopSegment<AppThemePreference>
                                             >[
-                                              DesktopSelectItem(
-                                                value: AppLanguagePreference
-                                                    .system,
-                                                label: context.l10n.system,
+                                              DesktopSegment<
+                                                AppThemePreference
+                                              >(
+                                                value:
+                                                    AppThemePreference.system,
+                                                label: Text(
+                                                  context.l10n.system,
+                                                ),
                                               ),
-                                              DesktopSelectItem(
-                                                value: AppLanguagePreference
-                                                    .english,
-                                                label: context
-                                                    .l10n
-                                                    .languageEnglish,
+                                              DesktopSegment<
+                                                AppThemePreference
+                                              >(
+                                                value: AppThemePreference.light,
+                                                label: Text(context.l10n.light),
                                               ),
-                                              DesktopSelectItem(
-                                                value: AppLanguagePreference
-                                                    .chinese,
-                                                label: context
-                                                    .l10n
-                                                    .languageChinese,
-                                              ),
-                                              DesktopSelectItem(
-                                                value: AppLanguagePreference
-                                                    .spanish,
-                                                label: context
-                                                    .l10n
-                                                    .languageSpanish,
+                                              DesktopSegment<
+                                                AppThemePreference
+                                              >(
+                                                value: AppThemePreference.dark,
+                                                label: Text(context.l10n.dark),
                                               ),
                                             ],
-                                        onChanged: widget.viewModel.setLanguage,
+                                        onChanged:
+                                            widget.viewModel.setThemeMode,
                                       ),
                                 ),
-                              ),
-                              _SettingRow(
-                                label:
-                                    '${context.l10n.windowOpacity} · ${(settings.backgroundOpacity * 100).round()}%',
-                                child: SizedBox(
-                                  width: 220,
-                                  child: DesktopSlider(
-                                    key: const Key('settings-opacity'),
-                                    value: settings.backgroundOpacity,
-                                    min: 0.82,
-                                    max: 0.96,
-                                    divisions: 14,
-                                    onChanged:
-                                        widget.viewModel.setBackgroundOpacity,
-                                  ),
-                                ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.defaultWorkspace,
-                                child:
-                                    DesktopSegmentedControl<DefaultWorkspace>(
-                                      key: const Key(
-                                        'settings-default-workspace',
-                                      ),
-                                      value: settings.defaultWorkspace,
-                                      segments:
-                                          <DesktopSegment<DefaultWorkspace>>[
-                                            DesktopSegment<DefaultWorkspace>(
-                                              value: DefaultWorkspace.today,
-                                              label: Text(
-                                                context.l10n.dynamicMessage,
-                                              ),
-                                            ),
-                                            DesktopSegment<DefaultWorkspace>(
-                                              value: DefaultWorkspace.library,
-                                              label: Text(
-                                                context.l10n.libraryMessage,
-                                              ),
-                                            ),
-                                            DesktopSegment<DefaultWorkspace>(
-                                              value: DefaultWorkspace.clipboard,
-                                              label: Text(
-                                                context.l10n.clipboard,
-                                              ),
-                                            ),
-                                          ],
-                                      onChanged:
-                                          widget.viewModel.setDefaultWorkspace,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          _SettingsSection(
-                            title: context.l10n.clipboardHistory2,
-                            description: context
-                                .l10n
-                                .historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236,
-                            children: <Widget>[
-                              CompactSwitchListTile(
-                                key: const Key('settings-clipboard-monitoring'),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context.l10n.monitorClipboardChanges,
-                                ),
-                                subtitle: Text(
-                                  context
-                                      .l10n
-                                      .captureTextFilesAndImagesWhileDingDongIsRunning,
-                                ),
-                                value: settings.clipboardMonitoring,
-                                onChanged:
-                                    widget.viewModel.setClipboardMonitoring,
-                              ),
-                              CompactSwitchListTile(
-                                key: const Key(
-                                  'settings-agent-clipboard-content',
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  context
-                                      .l10n
-                                      .allowAgentsToReadClipboardContent,
-                                ),
-                                subtitle: Text(
-                                  context
-                                      .l10n
-                                      .offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f,
-                                ),
-                                value: settings.allowAgentClipboardContent,
-                                onChanged: widget
-                                    .viewModel
-                                    .setAllowAgentClipboardContent,
-                              ),
-                              _SettingRow(
-                                label: context.l10n.maximumItems,
-                                child: _NumberField(
-                                  key: const Key('settings-retention-items'),
-                                  initialValue: settings.clipboardMaxItems,
-                                  onChanged: (int value) =>
-                                      widget.viewModel.setRetention(
-                                        maxItems: value,
-                                        maxAgeDays:
-                                            settings.clipboardMaxAgeDays,
-                                      ),
-                                ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.retentionDays,
-                                child: _NumberField(
-                                  key: const Key('settings-retention-days'),
-                                  initialValue: settings.clipboardMaxAgeDays,
-                                  onChanged: (int value) =>
-                                      widget.viewModel.setRetention(
-                                        maxItems: settings.clipboardMaxItems,
-                                        maxAgeDays: value,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          _SettingsSection(
-                            title: context.l10n.recentAgents,
-                            description: context
-                                .l10n
-                                .completionDetailsStayOnThisDeviceCountingMetadata_9920ce29,
-                            children: <Widget>[
-                              CompactSwitchListTile(
-                                key: const Key(
-                                  'settings-agent-activity-group-sessions',
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(context.l10n.groupRepeatedSessions),
-                                subtitle: Text(
-                                  context
-                                      .l10n
-                                      .keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb,
-                                ),
-                                value: settings.groupRepeatedAgentSessions,
-                                onChanged: widget
-                                    .viewModel
-                                    .setGroupRepeatedAgentSessions,
-                              ),
-                              CompactSwitchListTile(
-                                key: const Key(
-                                  'settings-agent-activity-remember',
-                                ),
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(context.l10n.rememberAfterRestart),
-                                subtitle: Text(
-                                  context
-                                      .l10n
-                                      .whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory,
-                                ),
-                                value: settings.rememberAgentActivity,
-                                onChanged:
-                                    widget.viewModel.setRememberAgentActivity,
-                              ),
-                              _SettingRow(
-                                label: context.l10n.maximumDetailedItems,
-                                child: _NumberField(
-                                  key: const Key(
-                                    'settings-agent-activity-items',
-                                  ),
-                                  initialValue: settings.agentActivityMaxItems,
-                                  onChanged: (int value) =>
-                                      widget.viewModel.setAgentActivityPolicy(
-                                        maxItems: value,
-                                        countHours:
-                                            settings.agentActivityCountHours,
-                                      ),
-                                ),
-                              ),
-                              _SettingRow(
-                                label: context.l10n.countWindowHours,
-                                child: _NumberField(
-                                  key: const Key(
-                                    'settings-agent-activity-hours',
-                                  ),
-                                  initialValue:
-                                      settings.agentActivityCountHours,
-                                  onChanged: (int value) =>
-                                      widget.viewModel.setAgentActivityPolicy(
-                                        maxItems:
-                                            settings.agentActivityMaxItems,
-                                        countHours: value,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          _NotificationSettingsSection(
-                            viewModel: widget.viewModel,
-                            settings: settings,
-                            soundFileGateway: widget.soundFileGateway,
-                            soundPreviewGateway: widget.soundPreviewGateway,
-                          ),
-                          _ConversationFooterSettingsSection(
-                            viewModel: widget.viewModel,
-                            settings: settings,
-                          ),
-                          _SettingsSection(
-                            title: context.l10n.agentAPI,
-                            description: context
-                                .l10n
-                                .dingdongListensOnlyOnTheLocalLoopbackInterface,
-                            children: <Widget>[
-                              _SettingRow(
-                                label: context.l10n.localPort,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    _NumberField(
-                                      key: const Key('settings-api-port'),
-                                      initialValue: settings.apiPort,
-                                      onChanged: widget.viewModel.setApiPort,
-                                    ),
-                                    if (widget.viewModel.requiresRestart &&
-                                        widget.onRestartApplication !=
-                                            null) ...<Widget>[
-                                      const SizedBox(width: 8),
-                                      DesktopActionButton(
-                                        key: const Key('settings-restart'),
-                                        onPressed: () =>
-                                            widget.onRestartApplication!.call(),
-                                        icon: const Icon(
-                                          Icons.restart_alt_rounded,
-                                          size: 17,
+                                _SettingRow(
+                                  label: context.l10n.language,
+                                  child: SizedBox(
+                                    width: 190,
+                                    child:
+                                        DesktopSelectField<
+                                          AppLanguagePreference
+                                        >(
+                                          key: const Key('settings-language'),
+                                          value: settings.language,
+                                          items:
+                                              <
+                                                DesktopSelectItem<
+                                                  AppLanguagePreference
+                                                >
+                                              >[
+                                                DesktopSelectItem(
+                                                  value: AppLanguagePreference
+                                                      .system,
+                                                  label: context.l10n.system,
+                                                ),
+                                                DesktopSelectItem(
+                                                  value: AppLanguagePreference
+                                                      .english,
+                                                  label: context
+                                                      .l10n
+                                                      .languageEnglish,
+                                                ),
+                                                DesktopSelectItem(
+                                                  value: AppLanguagePreference
+                                                      .chinese,
+                                                  label: context
+                                                      .l10n
+                                                      .languageChinese,
+                                                ),
+                                                DesktopSelectItem(
+                                                  value: AppLanguagePreference
+                                                      .spanish,
+                                                  label: context
+                                                      .l10n
+                                                      .languageSpanish,
+                                                ),
+                                              ],
+                                          onChanged:
+                                              widget.viewModel.setLanguage,
                                         ),
-                                        label: context.l10n.restart,
-                                        tone: DesktopActionTone.soft,
-                                      ),
-                                    ],
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                context
-                                    .l10n
-                                    .portChangesApplyTheNextTimeDingDongStarts,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                          ReleaseSettingsSection(
-                            key: _releaseSectionKey,
-                            viewModel: widget.viewModel,
-                          ),
+                                _SettingRow(
+                                  label:
+                                      '${context.l10n.windowOpacity} · ${(settings.backgroundOpacity * 100).round()}%',
+                                  child: SizedBox(
+                                    width: 220,
+                                    child: DesktopSlider(
+                                      key: const Key('settings-opacity'),
+                                      value: settings.backgroundOpacity,
+                                      min: 0.82,
+                                      max: 0.96,
+                                      divisions: 14,
+                                      onChanged:
+                                          widget.viewModel.setBackgroundOpacity,
+                                    ),
+                                  ),
+                                ),
+                                _SettingRow(
+                                  label: context.l10n.defaultWorkspace,
+                                  child:
+                                      DesktopSegmentedControl<DefaultWorkspace>(
+                                        key: const Key(
+                                          'settings-default-workspace',
+                                        ),
+                                        value: settings.defaultWorkspace,
+                                        segments:
+                                            <DesktopSegment<DefaultWorkspace>>[
+                                              DesktopSegment<DefaultWorkspace>(
+                                                value: DefaultWorkspace.today,
+                                                label: Text(
+                                                  context.l10n.dynamicMessage,
+                                                ),
+                                              ),
+                                              DesktopSegment<DefaultWorkspace>(
+                                                value: DefaultWorkspace.library,
+                                                label: Text(
+                                                  context.l10n.libraryMessage,
+                                                ),
+                                              ),
+                                              DesktopSegment<DefaultWorkspace>(
+                                                value:
+                                                    DefaultWorkspace.clipboard,
+                                                label: Text(
+                                                  context.l10n.clipboard,
+                                                ),
+                                              ),
+                                            ],
+                                        onChanged: widget
+                                            .viewModel
+                                            .setDefaultWorkspace,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          if (matches('clipboardHistory2'))
+                            _SettingsSection(
+                              title: context.l10n.clipboardHistory2,
+                              description: context
+                                  .l10n
+                                  .historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236,
+                              children: <Widget>[
+                                CompactSwitchListTile(
+                                  key: const Key(
+                                    'settings-clipboard-monitoring',
+                                  ),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    context.l10n.monitorClipboardChanges,
+                                  ),
+                                  subtitle: Text(
+                                    context
+                                        .l10n
+                                        .captureTextFilesAndImagesWhileDingDongIsRunning,
+                                  ),
+                                  value: settings.clipboardMonitoring,
+                                  onChanged:
+                                      widget.viewModel.setClipboardMonitoring,
+                                ),
+                                CompactSwitchListTile(
+                                  key: const Key(
+                                    'settings-agent-clipboard-content',
+                                  ),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    context
+                                        .l10n
+                                        .allowAgentsToReadClipboardContent,
+                                  ),
+                                  subtitle: Text(
+                                    context
+                                        .l10n
+                                        .offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f,
+                                  ),
+                                  value: settings.allowAgentClipboardContent,
+                                  onChanged: widget
+                                      .viewModel
+                                      .setAllowAgentClipboardContent,
+                                ),
+                                _SettingRow(
+                                  label: context.l10n.maximumItems,
+                                  child: _NumberField(
+                                    key: const Key('settings-retention-items'),
+                                    initialValue: settings.clipboardMaxItems,
+                                    onChanged: (int value) =>
+                                        widget.viewModel.setRetention(
+                                          maxItems: value,
+                                          maxAgeDays:
+                                              settings.clipboardMaxAgeDays,
+                                        ),
+                                  ),
+                                ),
+                                _SettingRow(
+                                  label: context.l10n.retentionDays,
+                                  child: _NumberField(
+                                    key: const Key('settings-retention-days'),
+                                    initialValue: settings.clipboardMaxAgeDays,
+                                    onChanged: (int value) =>
+                                        widget.viewModel.setRetention(
+                                          maxItems: settings.clipboardMaxItems,
+                                          maxAgeDays: value,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (matches('recentAgents'))
+                            _SettingsSection(
+                              title: context.l10n.recentAgents,
+                              description: context
+                                  .l10n
+                                  .completionDetailsStayOnThisDeviceCountingMetadata_9920ce29,
+                              children: <Widget>[
+                                CompactSwitchListTile(
+                                  key: const Key(
+                                    'settings-agent-activity-group-sessions',
+                                  ),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    context.l10n.groupRepeatedSessions,
+                                  ),
+                                  subtitle: Text(
+                                    context
+                                        .l10n
+                                        .keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb,
+                                  ),
+                                  value: settings.groupRepeatedAgentSessions,
+                                  onChanged: widget
+                                      .viewModel
+                                      .setGroupRepeatedAgentSessions,
+                                ),
+                                CompactSwitchListTile(
+                                  key: const Key(
+                                    'settings-agent-activity-remember',
+                                  ),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    context.l10n.rememberAfterRestart,
+                                  ),
+                                  subtitle: Text(
+                                    context
+                                        .l10n
+                                        .whenDisabledTheNextLaunchStartsWithAnEmptyAgentHistory,
+                                  ),
+                                  value: settings.rememberAgentActivity,
+                                  onChanged:
+                                      widget.viewModel.setRememberAgentActivity,
+                                ),
+                                _SettingRow(
+                                  label: context.l10n.maximumDetailedItems,
+                                  child: _NumberField(
+                                    key: const Key(
+                                      'settings-agent-activity-items',
+                                    ),
+                                    initialValue:
+                                        settings.agentActivityMaxItems,
+                                    onChanged: (int value) =>
+                                        widget.viewModel.setAgentActivityPolicy(
+                                          maxItems: value,
+                                          countHours:
+                                              settings.agentActivityCountHours,
+                                        ),
+                                  ),
+                                ),
+                                _SettingRow(
+                                  label: context.l10n.countWindowHours,
+                                  child: _NumberField(
+                                    key: const Key(
+                                      'settings-agent-activity-hours',
+                                    ),
+                                    initialValue:
+                                        settings.agentActivityCountHours,
+                                    onChanged: (int value) =>
+                                        widget.viewModel.setAgentActivityPolicy(
+                                          maxItems:
+                                              settings.agentActivityMaxItems,
+                                          countHours: value,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (matches('notifications'))
+                            _NotificationSettingsSection(
+                              viewModel: widget.viewModel,
+                              settings: settings,
+                              soundFileGateway: widget.soundFileGateway,
+                              soundPreviewGateway: widget.soundPreviewGateway,
+                            ),
+                          if (matches('footer'))
+                            _ConversationFooterSettingsSection(
+                              viewModel: widget.viewModel,
+                              settings: settings,
+                            ),
+                          if (matches('agentAPI'))
+                            _SettingsSection(
+                              title: context.l10n.agentAPI,
+                              description: context
+                                  .l10n
+                                  .dingdongListensOnlyOnTheLocalLoopbackInterface,
+                              children: <Widget>[
+                                _SettingRow(
+                                  label: context.l10n.localPort,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      _NumberField(
+                                        key: const Key('settings-api-port'),
+                                        initialValue: settings.apiPort,
+                                        onChanged: widget.viewModel.setApiPort,
+                                      ),
+                                      if (widget.viewModel.requiresRestart &&
+                                          widget.onRestartApplication !=
+                                              null) ...<Widget>[
+                                        const SizedBox(width: 8),
+                                        DesktopActionButton(
+                                          key: const Key('settings-restart'),
+                                          onPressed: () => widget
+                                              .onRestartApplication!
+                                              .call(),
+                                          icon: const Icon(
+                                            Icons.restart_alt_rounded,
+                                            size: 17,
+                                          ),
+                                          label: context.l10n.restart,
+                                          tone: DesktopActionTone.soft,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  context
+                                      .l10n
+                                      .portChangesApplyTheNextTimeDingDongStarts,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          if (matches('release'))
+                            ReleaseSettingsSection(
+                              key: _releaseSectionKey,
+                              viewModel: widget.viewModel,
+                            ),
                         ],
                       ),
                     ),

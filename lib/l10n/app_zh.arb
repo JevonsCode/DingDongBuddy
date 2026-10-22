@@ -5344,5 +5344,11 @@
   },
   "@aiHistoryNext": {
     "description": "aiHistoryNext"
-  }
+  },
+  "reorderReminder": "拖动排序",
+  "searchSettings": "搜索设置",
+  "noMatchingSettings": "没有匹配的设置，试试其他关键词。",
+  "@reorderReminder": {"description":"Settings search and reminder ordering."},
+  "@searchSettings": {"description":"Settings search and reminder ordering."},
+  "@noMatchingSettings": {"description":"Settings search and reminder ordering."}
 }

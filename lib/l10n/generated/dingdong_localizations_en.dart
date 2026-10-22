@@ -4374,4 +4374,13 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiHistoryNext => 'Next page';
+
+  @override
+  String get reorderReminder => 'Drag to reorder';
+
+  @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String get noMatchingSettings => 'No matching settings. Try another keyword.';
 }

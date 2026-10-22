@@ -9,7 +9,7 @@ import AppKit
 import CoreText
 import QuartzCore
 
-public class TrayIcon: NSView, NSPopoverDelegate {
+public class TrayIcon: NSView {
     public var onTrayIconMouseDown:(() -> Void)?
     public var onTrayIconMouseUp:(() -> Void)?
     public var onTrayIconRightMouseDown:(() -> Void)?
@@ -105,40 +105,42 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         layoutBadge()
     }
 
-    private var overflowPopover: NSPopover?
+    private var overflowPanel: NSPanel?
     private var overflowOpenWork: DispatchWorkItem?
     private var overflowCloseWork: DispatchWorkItem?
     private var overflowMonitor: Timer?
+    private var overflowLocalEvents: Any?
+    private var overflowGlobalEvents: Any?
 
     var overflowItems: [[String: Any]] {
         reminderBubbles.count > 3 ? Array(reminderBubbles.dropFirst(2)) : []
     }
 
-    /// Shared by the real popover and the native rendering test.
+    /// Shared by the real capsule and the native rendering test.
     func makeOverflowContent() -> NSViewController? {
         let items = overflowItems
         guard !items.isEmpty else { return nil }
-        let width: CGFloat = 220
-        let height = min(CGFloat(items.count) * 32 + 16, 272)
+        let width: CGFloat = 36
+        let height = min(CGFloat(items.count) * 32 + 12, 268)
         let controller = NSViewController()
         let root = TrayOverflowHoverView(frame: NSRect(x: 0, y: 0, width: width, height: height))
         root.onHover = { [weak self] inside in
             if inside { self?.overflowCloseWork?.cancel(); self?.overflowCloseWork = nil; self?.collapseWork?.cancel() }
             else { self?.scheduleOverflowClose(); self?.scheduleCollapse() }
         }
-        let scroll = NSScrollView(frame: root.bounds.insetBy(dx: 8, dy: 8))
+        let scroll = NSScrollView(frame: root.bounds.insetBy(dx: 2, dy: 6))
         scroll.autoresizingMask = [.width, .height]
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
         scroll.scrollerStyle = .overlay
         let document = TrayOverflowDocument(frame: NSRect(x: 0, y: 0,
-            width: width - 16, height: CGFloat(items.count) * 32))
+            width: width - 4, height: CGFloat(items.count) * 32))
         for (index, item) in items.enumerated() {
-            let row = NSView(frame: NSRect(x: 0, y: CGFloat(index) * 32, width: width - 16, height: 32))
+            let row = NSView(frame: NSRect(x: 0, y: CGFloat(index) * 32, width: width - 4, height: 32))
             let text = bubbleText(item).string
             let badgeWidth: CGFloat = text.count > 2 ? 32 : 24
-            let badge = NSView(frame: NSRect(x: 0, y: 4, width: badgeWidth, height: 24))
+            let badge = NSView(frame: NSRect(x: (width - 4 - badgeWidth) / 2, y: 4, width: badgeWidth, height: 24))
             badge.wantsLayer = true
             badge.layer?.cornerRadius = 12
             badge.layer?.backgroundColor = badgeBackgroundColor((item["colorRgb"] as? NSNumber)?.uint32Value)
@@ -150,19 +152,10 @@ public class TrayIcon: NSView, NSPopoverDelegate {
             badge.addSubview(count)
             row.addSubview(badge)
             let name = item["name"] as? String ?? item["id"] as? String ?? ""
-            let label = NSTextField(labelWithString: name)
-            label.font = .systemFont(ofSize: 13)
-            label.textColor = .labelColor
-            label.lineBreakMode = .byTruncatingTail
-            label.maximumNumberOfLines = 1
-            label.toolTip = name
-            label.frame = NSRect(x: badgeWidth + 10, y: 7, width: width - badgeWidth - 30, height: 18)
-            row.addSubview(label)
             row.setAccessibilityElement(true)
             row.setAccessibilityRole(.staticText)
             row.setAccessibilityLabel("\(name), \(text)")
             badge.setAccessibilityHidden(true)
-            label.setAccessibilityHidden(true)
             document.addSubview(row)
         }
         scroll.documentView = document
@@ -181,17 +174,17 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         return rect.contains(convert(window.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil))
     }
 
-    private var mouseInsideOverflowPopover: Bool {
-        guard overflowPopover?.isShown == true, let window = overflowPopover?.contentViewController?.view.window else { return false }
-        // Include the small gap/arrow between the anchor and the content.
-        return window.frame.insetBy(dx: -6, dy: -8).contains(NSEvent.mouseLocation)
+    private var mouseInsideOverflowPanel: Bool {
+        guard let panel = overflowPanel, panel.isVisible else { return false }
+        // Bridge the two-point gap so moving down from the ellipsis is stable.
+        return panel.frame.insetBy(dx: -6, dy: -8).contains(NSEvent.mouseLocation)
     }
 
     public override func mouseMoved(with event: NSEvent) {
         if mouseInsideOverflow {
             overflowCloseWork?.cancel()
             overflowCloseWork = nil
-            guard overflowPopover?.isShown != true, overflowOpenWork == nil else { return }
+            guard overflowPanel?.isVisible != true, overflowOpenWork == nil else { return }
             let work = DispatchWorkItem { [weak self] in
                 self?.overflowOpenWork = nil
                 guard let self, self.mouseInsideOverflow else { return }
@@ -206,35 +199,74 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         }
     }
 
-    private func showOverflow() {
-        guard let rect = overflowRect, let content = makeOverflowContent(), window != nil else { return }
-        let popover = overflowPopover ?? NSPopover()
-        popover.behavior = .transient
-        popover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        popover.delegate = self
-        popover.contentViewController = content
-        overflowPopover = popover
-        // Native popover owns screen-edge placement, shadow and appearance.
-        popover.show(relativeTo: rect, of: self, preferredEdge: .minY)
-        overflowMonitor?.invalidate()
-        // The arrow/chrome lies outside the root view's tracking rect. Keep
-        // exit handling alive even when someone pauses there before leaving.
+    func showOverflow(animated: Bool = true) {
+        guard let rect = overflowRect, let content = makeOverflowContent(), let window else { return }
+        let panel = overflowPanel ?? TrayOverflowPanel(contentRect: .zero,
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        panel.identifier = NSUserInterfaceItemIdentifier("dingdong.reminder-overflow")
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        panel.level = .popUpMenu
+        panel.collectionBehavior = [.transient, .moveToActiveSpace, .fullScreenAuxiliary, .ignoresCycle]
+        panel.contentViewController = content
+        let anchor = window.convertToScreen(convert(rect, to: nil))
+        let screen = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
+        let size = content.preferredContentSize
+        let x = min(max(anchor.midX - size.width / 2, screen.minX + 4), screen.maxX - size.width - 4)
+        let y = max(screen.minY + 4, min(anchor.minY - 2 - size.height, screen.maxY - size.height))
+        panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height), display: true)
+        let fade = animated && !panel.isVisible && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        panel.alphaValue = fade ? 0 : 1
+        overflowPanel = panel
+        panel.orderFrontRegardless()
+        if fade {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.12
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                panel.animator().alphaValue = 1
+            }
+        }
+        removeOverflowMonitors()
         let monitor = Timer(timeInterval: 0.1, repeats: true) { [weak self] timer in
-            guard let self, self.overflowPopover?.isShown == true else { timer.invalidate(); return }
-            if self.mouseInsideOverflow || self.mouseInsideOverflowPopover {
+            guard let self, self.overflowPanel?.isVisible == true else { timer.invalidate(); return }
+            if self.mouseInsideOverflow || self.mouseInsideOverflowPanel {
                 self.overflowCloseWork?.cancel()
                 self.overflowCloseWork = nil
             } else if self.overflowCloseWork == nil { self.scheduleOverflowClose() }
         }
         overflowMonitor = monitor
         RunLoop.main.add(monitor, forMode: .common)
+        overflowGlobalEvents = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
+            self?.closeOverflow()
+            self?.scheduleCollapse()
+        }
+        overflowLocalEvents = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown, .keyDown]) { [weak self] event in
+            if let self, event.type == .keyDown && event.keyCode == 53 ||
+                event.type != .keyDown && !self.mouseInsideOverflowPanel && !self.mouseInsideOverflow {
+                self.closeOverflow()
+                self.scheduleCollapse()
+            }
+            return event
+        }
+    }
+
+    private func removeOverflowMonitors() {
+        overflowMonitor?.invalidate()
+        overflowMonitor = nil
+        if let monitor = overflowLocalEvents { NSEvent.removeMonitor(monitor) }
+        if let monitor = overflowGlobalEvents { NSEvent.removeMonitor(monitor) }
+        overflowLocalEvents = nil
+        overflowGlobalEvents = nil
     }
 
     private func scheduleOverflowClose() {
         overflowCloseWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             self?.overflowCloseWork = nil
-            guard let self, !self.mouseInsideOverflow, !self.mouseInsideOverflowPopover else { return }
+            guard let self, !self.mouseInsideOverflow, !self.mouseInsideOverflowPanel else { return }
             self.closeOverflow()
         }
         overflowCloseWork = work
@@ -246,15 +278,8 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         overflowOpenWork = nil
         overflowCloseWork?.cancel()
         overflowCloseWork = nil
-        overflowMonitor?.invalidate()
-        overflowMonitor = nil
-        overflowPopover?.close()
-    }
-
-    public func popoverDidClose(_ notification: Notification) {
-        overflowMonitor?.invalidate()
-        overflowMonitor = nil
-        scheduleCollapse()
+        removeOverflowMonitors()
+        overflowPanel?.orderOut(nil)
     }
 
     private var unreadBadgeTitle: NSAttributedString?
@@ -275,10 +300,9 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         transitionTimer?.invalidate()
         overflowOpenWork?.cancel()
         overflowCloseWork?.cancel()
-        overflowMonitor?.invalidate()
+        removeOverflowMonitors()
         collapseWork?.cancel()
-        overflowPopover?.delegate = nil
-        overflowPopover?.close()
+        overflowPanel?.orderOut(nil)
     }
 
     // A single progress value drives drawing and status-item width together.
@@ -335,6 +359,9 @@ public class TrayIcon: NSView, NSPopoverDelegate {
     }
 
     public override func mouseExited(with event: NSEvent) {
+        statusItem?.button?.state = .off
+        statusItem?.button?.highlight(false)
+        statusItem?.button?.needsDisplay = true
         overflowOpenWork?.cancel()
         overflowOpenWork = nil
         scheduleOverflowClose()
@@ -349,7 +376,7 @@ public class TrayIcon: NSView, NSPopoverDelegate {
             guard let self, let button = self.statusItem?.button,
                   let window = button.window else { return }
             let screenRect = window.convertToScreen(button.convert(button.bounds, to: nil))
-            guard !screenRect.contains(NSEvent.mouseLocation), !self.mouseInsideOverflowPopover else { return }
+            guard !screenRect.contains(NSEvent.mouseLocation), !self.mouseInsideOverflowPanel else { return }
             self.closeOverflow()
             self.setHoverExpanded(false)
         }
@@ -365,6 +392,13 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         }
         statusItem?.length = transitionWidth + (width - transitionWidth) * transitionProgress
         frame = button.bounds
+        // AppKit may retain a status-item highlight while its width shrinks.
+        // Reset the state and redraw the parent, including the exposed tail.
+        button.state = .off
+        button.highlight(false)
+        button.layer?.isOpaque = false
+        button.needsDisplay = true
+        button.superview?.needsDisplay = true
         needsDisplay = true
     }
     
@@ -374,6 +408,13 @@ public class TrayIcon: NSView, NSPopoverDelegate {
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? "DingDong"
         statusItem?.autosaveName = "\(bundleIdentifier).primary-status-item"
         statusItem?.button?.addSubview(self)
+        // The custom badges supply their own visual feedback. A status-button
+        // highlight otherwise paints a translucent capsule behind the last dot.
+        statusItem?.button?.isBordered = false
+        if let cell = statusItem?.button?.cell as? NSButtonCell {
+            cell.highlightsBy = []
+            cell.showsStateBy = []
+        }
         statusItem?.button?.window?.acceptsMouseMovedEvents = true
     }
     
@@ -481,8 +522,8 @@ public class TrayIcon: NSView, NSPopoverDelegate {
             if changed { animateScene(from: oldScene, width: oldWidth) }
             else { layoutBadge() }
             if overflowItems.isEmpty { closeOverflow() }
-            else if changed && overflowPopover?.isShown == true {
-                overflowPopover?.contentViewController = makeOverflowContent()
+            else if changed && overflowPanel?.isVisible == true {
+                showOverflow(animated: false)
             }
 
         } else {
@@ -593,7 +634,7 @@ public class TrayIcon: NSView, NSPopoverDelegate {
 
     public func setToolTip(_ toolTip: String) {
         if let button = statusItem?.button {
-            button.toolTip = toolTip
+            button.toolTip = nil
             button.setAccessibilityLabel(toolTip)
         }
     }
@@ -608,13 +649,12 @@ public class TrayIcon: NSView, NSPopoverDelegate {
             button.mouseDown(with: event)
             return
         }
-        statusItem?.button?.highlight(true)
-        self.onTrayIconMouseDown!()
+        self.onTrayIconMouseDown?()
     }
     
     public override func mouseUp(with event: NSEvent) {
         statusItem?.button?.highlight(false)
-        self.onTrayIconMouseUp!()
+        self.onTrayIconMouseUp?()
     }
     
     public override func rightMouseDown(with event: NSEvent) {
@@ -627,6 +667,11 @@ public class TrayIcon: NSView, NSPopoverDelegate {
     }
 }
 
+private final class TrayOverflowPanel: NSPanel {
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
 private final class TrayOverflowDocument: NSView {
     override var isFlipped: Bool { true }
 }
@@ -634,6 +679,15 @@ private final class TrayOverflowDocument: NSView {
 private final class TrayOverflowHoverView: NSView {
     var onHover: ((Bool) -> Void)?
     private var hoverArea: NSTrackingArea?
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.windowBackgroundColor.setFill()
+        NSBezierPath(roundedRect: bounds, xRadius: bounds.width / 2,
+            yRadius: bounds.width / 2).fill()
+    }
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
+    }
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let area = hoverArea { removeTrackingArea(area) }

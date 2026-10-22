@@ -77,6 +77,7 @@ final class QuietHours {
 final class NotificationRules {
   const NotificationRules({
     this.profiles = const [],
+    this.profileOrder = const [],
     this.audioLibrary = const [],
     this.attentionSound = sameAsCompletionSound,
     this.attentionCustomSoundPath,
@@ -96,6 +97,17 @@ final class NotificationRules {
   static const List<int> completionMinimumChoices = <int>[0, 1, 3, 5, 10, 30];
 
   final List<ReminderProfile> profiles;
+  final List<String> profileOrder;
+
+  List<ReminderProfile> orderProfiles(List<ReminderProfile> values) {
+    final byId = {for (final p in values) p.id: p};
+    return [
+      for (final id in profileOrder)
+        if (byId.containsKey(id)) byId.remove(id)!,
+      ...byId.values,
+    ];
+  }
+
   final List<ReminderAudio> audioLibrary;
 
   final String attentionSound;
@@ -138,6 +150,12 @@ final class NotificationRules {
           : const <Object?, Object?>{};
       return NotificationRules(
         profiles: _readProfiles(json['profiles']),
+        profileOrder: json['profileOrder'] is List
+            ? (json['profileOrder'] as List)
+                  .whereType<String>()
+                  .take(34)
+                  .toList()
+            : const [],
         audioLibrary: _readAudio(json['audioLibrary']),
         completionTrayStyle: TrayReminderStyle.parse(
           json['completionTrayStyle'],
@@ -183,6 +201,7 @@ final class NotificationRules {
 
   String encode() => jsonEncode(<String, Object?>{
     'profiles': profiles.map((x) => x.toJson()).toList(),
+    'profileOrder': profileOrder,
     'audioLibrary': audioLibrary.map((x) => x.toJson()).toList(),
     'completionTrayStyle': completionTrayStyle.name,
     'attentionTrayStyle': attentionTrayStyle.name,
@@ -203,6 +222,16 @@ final class NotificationRules {
 
   NotificationRules sanitized() => NotificationRules(
     profiles: List.unmodifiable(profiles),
+    profileOrder: List.unmodifiable(
+      profileOrder
+          .where(
+            (id) =>
+                id == 'completion' ||
+                id == 'attention' ||
+                profiles.any((p) => p.id == id),
+          )
+          .toSet(),
+    ),
     audioLibrary: List.unmodifiable(audioLibrary),
     completionTrayStyle: completionTrayStyle,
     attentionTrayStyle: attentionTrayStyle,
@@ -225,6 +254,7 @@ final class NotificationRules {
 
   NotificationRules copyWith({
     List<ReminderProfile>? profiles,
+    List<String>? profileOrder,
     List<ReminderAudio>? audioLibrary,
     String? attentionSound,
     TrayReminderStyle? completionTrayStyle,
@@ -238,6 +268,7 @@ final class NotificationRules {
     int? completionMinimumMinutes,
   }) => NotificationRules(
     profiles: profiles ?? this.profiles,
+    profileOrder: profileOrder ?? this.profileOrder,
     audioLibrary: audioLibrary ?? this.audioLibrary,
     completionTrayStyle: completionTrayStyle ?? this.completionTrayStyle,
     attentionTrayStyle: attentionTrayStyle ?? this.attentionTrayStyle,
@@ -258,6 +289,7 @@ final class NotificationRules {
   bool operator ==(Object other) =>
       other is NotificationRules &&
       listEquals(other.profiles, profiles) &&
+      listEquals(other.profileOrder, profileOrder) &&
       listEquals(other.audioLibrary, audioLibrary) &&
       other.completionTrayStyle == completionTrayStyle &&
       other.attentionTrayStyle == attentionTrayStyle &&
@@ -273,6 +305,7 @@ final class NotificationRules {
   @override
   int get hashCode => Object.hash(
     Object.hashAll(profiles),
+    Object.hashAll(profileOrder),
     Object.hashAll(audioLibrary),
     completionTrayStyle,
     attentionTrayStyle,

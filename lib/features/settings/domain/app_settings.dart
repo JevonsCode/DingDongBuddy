@@ -135,28 +135,29 @@ final class AppSettings {
 
   /// Legacy settings stay authoritative for the two built-ins, so upgrades
   /// and older integrations preserve existing preferences without duplication.
-  List<ReminderProfile> get reminderProfiles => [
-    for (final kind in AgentNotificationKind.values)
-      ReminderProfile(
-        id: kind.apiValue,
-        name: kind.apiValue,
-        enabled: kind == AgentNotificationKind.attention
-            ? notifyAgentAttention
-            : notifyAgentCompletion,
-        kind: kind,
-        style: notificationRules.trayStyleFor(kind),
-        color: notificationRules.trayColorFor(
-          kind,
-          legacyCompletionColor: trayNotificationColor,
-        ),
-        sound: soundFor(kind),
-        customSoundPath: customSoundPathFor(kind),
-        toPhone: kind == AgentNotificationKind.attention
-            ? notificationRules.attentionToPhone
-            : notificationRules.completionToPhone,
-      ),
-    ...notificationRules.profiles,
-  ];
+  List<ReminderProfile> get reminderProfiles =>
+      notificationRules.orderProfiles([
+        for (final kind in AgentNotificationKind.values)
+          ReminderProfile(
+            id: kind.apiValue,
+            name: kind.apiValue,
+            enabled: kind == AgentNotificationKind.attention
+                ? notifyAgentAttention
+                : notifyAgentCompletion,
+            kind: kind,
+            style: notificationRules.trayStyleFor(kind),
+            color: notificationRules.trayColorFor(
+              kind,
+              legacyCompletionColor: trayNotificationColor,
+            ),
+            sound: soundFor(kind),
+            customSoundPath: customSoundPathFor(kind),
+            toPhone: kind == AgentNotificationKind.attention
+                ? notificationRules.attentionToPhone
+                : notificationRules.completionToPhone,
+          ),
+        ...notificationRules.profiles,
+      ]);
   ReminderProfile? reminderProfile(String? id) {
     for (final profile in reminderProfiles) {
       if (profile.id == id) return profile;

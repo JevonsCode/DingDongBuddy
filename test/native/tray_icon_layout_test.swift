@@ -10,6 +10,10 @@ enum TrayIconLayoutTest {
         let asset = NSImage(contentsOfFile: CommandLine.arguments[1])!
         asset.size = NSSize(width: 22, height: 22)
         icon.setImage(asset, "left")
+        icon.setToolTip("Sensitive reminder names")
+        precondition(icon.statusItem!.button!.toolTip == nil)
+        precondition(icon.statusItem!.button!.accessibilityLabel() == "Sensitive reminder names")
+        precondition((icon.statusItem!.button!.cell as! NSButtonCell).highlightsBy.isEmpty)
         let bubbles: [[String: Any]] = [0xDB7333, 0xE95795, 0x397DDD, 0x29A071, 0x9575CD, 0x9B6B00].enumerated().map {
             ["id": "test-\($0.offset)", "name": "Reminder \($0.offset + 1)", "colorRgb": NSNumber(value: $0.element), "count": NSNumber(value: 1)]
         }
@@ -49,7 +53,11 @@ enum TrayIconLayoutTest {
         precondition(icon.frame.width > expanded)
         try capture("expanded-99")
         let largeExpanded = icon.frame.width
+        icon.statusItem!.button!.highlight(true)
+        icon.statusItem!.button!.state = .on
         icon.setHoverExpanded(false, animated: false)
+        precondition(!icon.statusItem!.button!.isHighlighted && icon.statusItem!.button!.state == .off,
+            "Collapsing clears retained native highlight/state")
         precondition(icon.frame.width < largeExpanded, "Reduced-motion path switches immediately")
         icon.setHoverExpanded(true)
         icon.setTitle("", "", nil)
@@ -90,6 +98,10 @@ enum TrayIconLayoutTest {
         try capture("five-types-stacked")
         let overflow = icon.makeOverflowContent()
         precondition(overflow != nil, "Five types must expose hidden reminder rows")
+        precondition(overflow!.preferredContentSize.width == 36, "Only a narrow vertical strip")
+        let firstRow = (overflow!.view.subviews.first as! NSScrollView).documentView!.subviews.first!
+        precondition(firstRow.subviews.count == 1, "No visible reminder name")
+        precondition(firstRow.accessibilityLabel() == "Reminder 3, 1", "Names remain accessible")
         precondition(icon.overflowItems.count == 2, "Show hidden fourth and fifth types")
         precondition(icon.overflowItems.first?["name"] as? String == "Reminder 3")
         func captureOverflow(_ controller: NSViewController, _ name: String, _ appearance: NSAppearance.Name) throws {
@@ -101,8 +113,8 @@ enum TrayIconLayoutTest {
             let image = NSImage(size: view.bounds.size)
             image.lockFocus()
             NSAppearance(named: appearance)!.performAsCurrentDrawingAppearance {
-                NSColor.windowBackgroundColor.setFill()
-                view.bounds.fill()
+                NSColor.clear.setFill()
+                view.bounds.fill(using: .copy)
             }
             NSImage(cgImage: bitmap.cgImage!, size: view.bounds.size).draw(in: view.bounds)
             image.unlockFocus()
@@ -111,6 +123,18 @@ enum TrayIconLayoutTest {
         }
         try captureOverflow(overflow!, "overflow-list-light", .aqua)
         try captureOverflow(overflow!, "overflow-list-dark", .darkAqua)
+        icon.showOverflow(animated: false)
+        let panel = NSApp.windows.first { $0.identifier?.rawValue == "dingdong.reminder-overflow" }!
+        precondition(panel is NSPanel && !panel.styleMask.contains(.titled))
+        precondition(panel.styleMask.contains(.nonactivatingPanel) && !panel.isKeyWindow)
+        precondition(panel.frame.size == overflow!.preferredContentSize, "Capsule has no arrow/chrome")
+        icon.setTitle(" 1", "unreadBadge", 0x9575CD, Array(bubbles.prefix(3)), false, "completion")
+        precondition(!panel.isVisible, "Four types dismiss the capsule and its monitors")
+        var clicked = false
+        icon.onTrayIconMouseDown = { clicked = true }
+        icon.mouseDown(with: event)
+        precondition(clicked && !icon.statusItem!.button!.isHighlighted, "Press keeps the action without a highlight")
+
         let many = (0..<40).map { index -> [String: Any] in
             ["id": "many-\(index)", "name": "Reminder \(index + 1)", "colorRgb": 0xDB7333, "count": index + 1]
         }
