@@ -103,6 +103,7 @@ enum TrayIconLayoutTest {
         precondition(firstRow.subviews.count == 1, "No visible reminder name")
         let lowerBadge = firstRow.subviews.first!
         precondition(lowerBadge.frame.height == icon.bounds.height - 2, "Dropdown and tray badges share height")
+        precondition(lowerBadge.frame.width == lowerBadge.frame.height, "Single-digit reminders must be circles, not flattened capsules")
         precondition(overflow!.frame.size.width == lowerBadge.frame.width + 12, "Keep uniform side padding")
         precondition(firstRow.accessibilityLabel() == "Reminder 3, 1", "Names remain accessible")
         precondition(icon.overflowItems.count == 2, "Show hidden fourth and fifth types")

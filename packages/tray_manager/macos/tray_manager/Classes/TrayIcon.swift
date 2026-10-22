@@ -647,7 +647,7 @@ public class TrayIcon: NSView {
         if bubble["id"] as? String == "@overflow" {
             return (statusItem?.button?.bounds.height ?? 22) - 2
         }
-        return max(statusItem?.button?.bounds.height ?? 22, ceil(bubbleText(bubble).size().width) + 10)
+        return max((statusItem?.button?.bounds.height ?? 22) - 2, ceil(bubbleText(bubble).size().width) + 10)
     }
 
     private func drawCentered(_ text: NSAttributedString, centerX: CGFloat) {
