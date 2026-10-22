@@ -121,14 +121,14 @@ public class TrayIcon: NSView {
         let items = overflowItems
         guard !items.isEmpty else { return nil }
         let width: CGFloat = 36
-        let height = min(CGFloat(items.count) * 32 + 12, 268)
+        let height = min(CGFloat(items.count) * 32 + 4, 260)
         let controller = NSViewController()
         let root = TrayOverflowHoverView(frame: NSRect(x: 0, y: 0, width: width, height: height))
         root.onHover = { [weak self] inside in
             if inside { self?.overflowCloseWork?.cancel(); self?.overflowCloseWork = nil; self?.collapseWork?.cancel() }
             else { self?.scheduleOverflowClose(); self?.scheduleCollapse() }
         }
-        let scroll = NSScrollView(frame: root.bounds.insetBy(dx: 2, dy: 6))
+        let scroll = NSScrollView(frame: root.bounds.insetBy(dx: 2, dy: 2))
         scroll.autoresizingMask = [.width, .height]
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
@@ -176,7 +176,7 @@ public class TrayIcon: NSView {
 
     private var mouseInsideOverflowPanel: Bool {
         guard let panel = overflowPanel, panel.isVisible else { return false }
-        // Bridge the two-point gap so moving down from the ellipsis is stable.
+        // Bridge the six-point gap so moving down from the ellipsis is stable.
         return panel.frame.insetBy(dx: -6, dy: -8).contains(NSEvent.mouseLocation)
     }
 
@@ -216,7 +216,7 @@ public class TrayIcon: NSView {
         let screen = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
         let size = content.preferredContentSize
         let x = min(max(anchor.midX - size.width / 2, screen.minX + 4), screen.maxX - size.width - 4)
-        let y = max(screen.minY + 4, min(anchor.minY - 2 - size.height, screen.maxY - size.height))
+        let y = max(screen.minY + 4, min(anchor.minY, screen.maxY) - 6 - size.height)
         panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height), display: true)
         let fade = animated && !panel.isVisible && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         panel.alphaValue = fade ? 0 : 1
@@ -681,8 +681,17 @@ private final class TrayOverflowHoverView: NSView {
     private var hoverArea: NSTrackingArea?
     override func draw(_ dirtyRect: NSRect) {
         NSColor.windowBackgroundColor.setFill()
-        NSBezierPath(roundedRect: bounds, xRadius: bounds.width / 2,
-            yRadius: bounds.width / 2).fill()
+        let radius = bounds.width / 2
+        let capsule = NSBezierPath()
+        capsule.move(to: NSPoint(x: bounds.maxX, y: bounds.minY + radius))
+        capsule.line(to: NSPoint(x: bounds.maxX, y: bounds.maxY - radius))
+        capsule.appendArc(withCenter: NSPoint(x: bounds.midX, y: bounds.maxY - radius),
+            radius: radius, startAngle: 0, endAngle: 180)
+        capsule.line(to: NSPoint(x: bounds.minX, y: bounds.minY + radius))
+        capsule.appendArc(withCenter: NSPoint(x: bounds.midX, y: bounds.minY + radius),
+            radius: radius, startAngle: 180, endAngle: 360)
+        capsule.close()
+        capsule.fill()
     }
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()

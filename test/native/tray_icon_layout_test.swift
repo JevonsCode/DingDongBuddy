@@ -128,6 +128,8 @@ enum TrayIconLayoutTest {
         precondition(panel is NSPanel && !panel.styleMask.contains(.titled))
         precondition(panel.styleMask.contains(.nonactivatingPanel) && !panel.isKeyWindow)
         precondition(panel.frame.size == overflow!.preferredContentSize, "Capsule has no arrow/chrome")
+        precondition(panel.frame.maxY <= icon.window!.screen!.visibleFrame.maxY - 6,
+            "Leave a visible gap below the menu bar")
         icon.setTitle(" 1", "unreadBadge", 0x9575CD, Array(bubbles.prefix(3)), false, "completion")
         precondition(!panel.isVisible, "Four types dismiss the capsule and its monitors")
         var clicked = false
