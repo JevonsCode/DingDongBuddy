@@ -1,6 +1,7 @@
 #include "tray_visual.h"
 
 #include <algorithm>
+#include <cmath>
 
 using std::max;
 using std::min;
@@ -103,6 +104,44 @@ HICON CreateTrayIcon(HICON source_icon, int width, int height) {
       static_cast<Gdiplus::REAL>(bounds.bottom - bounds.top),
       Gdiplus::UnitPixel);
 
+  HICON icon = nullptr;
+  return canvas.GetHICON(&icon) == Gdiplus::Ok ? icon : nullptr;
+}
+
+HICON CreateReminderTrayIcon(int width, int height, DWORD rgb, bool attention,
+                             bool dimmed) {
+  if (width <= 0 || height <= 0 || !Runtime().ready()) return nullptr;
+  Gdiplus::Bitmap canvas(width, height, PixelFormat32bppARGB);
+  Gdiplus::Graphics graphics(&canvas);
+  graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
+  graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+  graphics.ScaleTransform(width / 16.0f, height / 16.0f);
+  const double intensity = dimmed ? 0.88 : 1.0;
+  const BYTE red = static_cast<BYTE>(((rgb >> 16) & 0xFF) * intensity);
+  const BYTE green = static_cast<BYTE>(((rgb >> 8) & 0xFF) * intensity);
+  const BYTE blue = static_cast<BYTE>((rgb & 0xFF) * intensity);
+  Gdiplus::SolidBrush background(Gdiplus::Color(255, red, green, blue));
+  graphics.FillEllipse(&background, 0.5f, 0.5f, 15.0f, 15.0f);
+  const auto linear = [](BYTE value) {
+    const double channel = value / 255.0;
+    return channel <= 0.04045 ? channel / 12.92 : std::pow((channel + 0.055) / 1.055, 2.4);
+  };
+  const bool dark_text = 0.2126 * linear(red) + 0.7152 * linear(green) +
+                         0.0722 * linear(blue) > 0.179;
+  const auto foreground = dark_text ? Gdiplus::Color(255, 0, 0, 0)
+                                    : Gdiplus::Color(255, 255, 255, 255);
+  Gdiplus::Pen pen(foreground, 1.8f);
+  pen.SetStartCap(Gdiplus::LineCapRound);
+  pen.SetEndCap(Gdiplus::LineCapRound);
+  pen.SetLineJoin(Gdiplus::LineJoinRound);
+  if (attention) {
+    graphics.DrawLine(&pen, 8.0f, 4.0f, 8.0f, 8.7f);
+    Gdiplus::SolidBrush dot(foreground);
+    graphics.FillEllipse(&dot, 7.1f, 10.5f, 1.8f, 1.8f);
+  } else {
+    Gdiplus::PointF points[] = {{4.3f, 8.1f}, {7.0f, 10.8f}, {11.9f, 5.4f}};
+    graphics.DrawLines(&pen, points, 3);
+  }
   HICON icon = nullptr;
   return canvas.GetHICON(&icon) == Gdiplus::Ok ? icon : nullptr;
 }

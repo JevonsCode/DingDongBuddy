@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 
 /// Applies the visual state of the desktop tray icon.
@@ -20,6 +22,12 @@ final class TrayUnreadController {
   Future<void> _tail = Future<void>.value();
   int _latestEventId = 0;
   int _acknowledgedEventId = 0;
+  int _latestAttentionEventId = 0;
+
+  AgentNotificationKind get primaryKind =>
+      _latestAttentionEventId > _acknowledgedEventId
+      ? AgentNotificationKind.attention
+      : AgentNotificationKind.completion;
 
   int get count => (_latestEventId - _acknowledgedEventId).clamp(0, 999);
 
@@ -31,13 +39,22 @@ final class TrayUnreadController {
           await store?.load() ?? const TrayUnreadState.empty();
       _latestEventId = math.max(0, state.latestEventId);
       _acknowledgedEventId = state.acknowledgedEventId.clamp(0, _latestEventId);
+      _latestAttentionEventId = state.latestAttentionEventId.clamp(
+        0,
+        _latestEventId,
+      );
       await _apply();
     });
   }
 
-  Future<void> markUnread() {
+  Future<void> markUnread({
+    AgentNotificationKind kind = AgentNotificationKind.completion,
+  }) {
     return _enqueue(() async {
       _latestEventId += 1;
+      if (kind == AgentNotificationKind.attention) {
+        _latestAttentionEventId = _latestEventId;
+      }
       await _persist();
       await _apply();
     });
@@ -96,6 +113,7 @@ final class TrayUnreadController {
       TrayUnreadState(
         latestEventId: _latestEventId,
         acknowledgedEventId: _acknowledgedEventId,
+        latestAttentionEventId: _latestAttentionEventId,
       ),
     );
   }

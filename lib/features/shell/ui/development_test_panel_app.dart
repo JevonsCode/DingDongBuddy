@@ -431,22 +431,7 @@ class _TestSection extends StatelessWidget {
           ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
-        LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            const double gap = 12;
-            final int columns = constraints.maxWidth >= 680 ? 2 : 1;
-            final double width = columns == 1
-                ? constraints.maxWidth
-                : (constraints.maxWidth - gap) / 2;
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
-              children: cards
-                  .map((Widget card) => SizedBox(width: width, child: card))
-                  .toList(growable: false),
-            );
-          },
-        ),
+        Column(children: cards),
       ],
     );
   }
@@ -475,19 +460,16 @@ class _TestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
-      constraints: const BoxConstraints(minHeight: 154),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.outlineVariant),
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
-              Icon(icon, size: 21, color: colors.primary),
+              Icon(icon, size: 18, color: colors.onSurfaceVariant),
               const SizedBox(width: 9),
               Expanded(
                 child: Text(

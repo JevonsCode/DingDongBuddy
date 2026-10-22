@@ -163,7 +163,8 @@ class _SummaryCard extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return SizedBox(
       width: width,
-      child: _Panel(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -179,16 +180,16 @@ class _SummaryCard extends StatelessWidget {
                 Icon(icon, size: 17, color: colors.onSurfaceVariant),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
                 value,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 27,
+                  fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: -0.8,
+                  letterSpacing: -0.3,
                 ),
               ),
             ),
@@ -222,18 +223,14 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isError ? colors.errorContainer : colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(6),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
             icon,
             size: 18,
-            color: isError ? colors.onErrorContainer : colors.onSurfaceVariant,
+            color: isError ? colors.error : colors.onSurfaceVariant,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -250,9 +247,7 @@ class _Notice extends StatelessWidget {
                 Text(
                   message,
                   style: TextStyle(
-                    color: isError
-                        ? colors.onErrorContainer
-                        : colors.onSurfaceVariant,
+                    color: isError ? colors.error : colors.onSurfaceVariant,
                   ),
                 ),
               ],

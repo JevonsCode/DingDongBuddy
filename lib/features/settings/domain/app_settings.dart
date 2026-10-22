@@ -5,8 +5,11 @@ import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.d
 import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/domain/notification_rules.dart';
+import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:dingdong/features/settings/domain/workspace_shortcuts.dart';
 import 'package:flutter/foundation.dart';
+
+export 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 
 /// Language choice persisted independently from the current system locale.
 enum AppLanguagePreference {
@@ -51,29 +54,6 @@ enum DefaultWorkspace {
     return values.firstWhere(
       (DefaultWorkspace item) => item.name == value,
       orElse: () => DefaultWorkspace.today,
-    );
-  }
-}
-
-/// Preset background colors used by the macOS unread notification capsule.
-enum TrayNotificationColor {
-  orange(0xDB7333),
-  pink(0xE85991),
-  blue(0x3B7DDD),
-  green(0x2F9D68),
-  purple(0x8C5BD6);
-
-  const TrayNotificationColor(this.rgbValue);
-
-  final int rgbValue;
-
-  static TrayNotificationColor parse(
-    Object? value, {
-    TrayNotificationColor fallback = TrayNotificationColor.orange,
-  }) {
-    return values.firstWhere(
-      (TrayNotificationColor item) => item.name == value,
-      orElse: () => fallback,
     );
   }
 }

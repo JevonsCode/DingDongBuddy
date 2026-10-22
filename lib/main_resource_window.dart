@@ -235,15 +235,20 @@ Future<void> _runResourceManagerWindow(
   final tokenUsageRepository = LocalTokenUsageRepository(
     databasePath: paths.tokenUsageDatabaseFile.path,
   );
+  final aiStore = AiCompanionPreferencesStore(
+    SharedPreferencesBackend(),
+    development: paths.development,
+  );
   final tokenUsageController = TokenUsageController.fromRepository(
     tokenUsageRepository,
+    includeInternal: () async =>
+        (await aiStore.loadSettings()).includeInternalInGlobal,
   );
   late final AiCompanionController aiCompanionController;
   aiCompanionController = AiCompanionController(
-    store: AiCompanionPreferencesStore(
-      SharedPreferencesBackend(),
-      development: paths.development,
-    ),
+    store: aiStore,
+    usageRepository: tokenUsageRepository,
+    onUsageChanged: tokenUsageController.invalidate,
     loadMetadata: () async {
       final AiCompanionSettings enabled = aiCompanionController.settings;
       final DateTime now = DateTime.now();
@@ -274,6 +279,7 @@ Future<void> _runResourceManagerWindow(
             : await tokenUsageRepository.readSnapshot(
                 from: today,
                 through: today,
+                includeInternal: enabled.includeInternalInGlobal,
               ),
       );
     },

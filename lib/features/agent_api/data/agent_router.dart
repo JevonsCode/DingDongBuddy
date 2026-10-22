@@ -13,6 +13,7 @@ import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/agent_compatibility_routes.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/agent_state_routes.dart';
+import 'package:dingdong/features/agent_api/data/bridge_snapshot_cache.dart';
 import 'package:dingdong/features/agent_api/data/claude_mcp_use_recorder.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_collection_routes.dart';
 import 'package:dingdong/features/agent_api/data/clipboard_routes.dart';
@@ -25,6 +26,7 @@ import 'package:dingdong/features/agent_api/data/http_response_data.dart';
 import 'package:dingdong/features/agent_api/data/library_routes.dart';
 import 'package:dingdong/features/agent_api/data/resource_query_utils.dart';
 import 'package:dingdong/features/agent_api/data/trigger_group_routes.dart';
+import 'package:dingdong/features/agent_api/domain/bridge_resource_selection.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_footer_symbols.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
@@ -71,6 +73,7 @@ final class AgentRouter {
     Future<bool> Function()? loadShowConversationTokenUsage,
     ConversationTokenUsageLoader? loadConversationTokenUsage,
     this.loadJevUsage,
+    this.selectBridgeResources,
     FutureOr<String> Function(String source)? defaultDingMessage,
     void Function(bool value)? onClipboardMonitoring,
     void Function(int index)? onShowUi,
@@ -127,6 +130,7 @@ final class AgentRouter {
                loadShowConversationTokenUsage: loadShowConversationTokenUsage,
                loadConversationTokenUsage: loadConversationTokenUsage,
                loadJevUsage: loadJevUsage,
+               selectBridgeResources: selectBridgeResources,
                now: now,
              ),
        _agentStateRoutes = resourceStore == null
@@ -165,6 +169,7 @@ final class AgentRouter {
 
   final JevRoutes? jevRoutes;
   final JevUsageLoader? loadJevUsage;
+  final BridgeResourceSelector? selectBridgeResources;
   final void Function(DingRequest request) _onDing;
   final void Function(DingRequest request) _onSuppressedDing;
   final ClaudeMcpUseRecorder _claudeMcpUseRecorder;
@@ -183,6 +188,7 @@ final class AgentRouter {
   final ClipboardCollectionRoutes? _clipboardCollectionRoutes;
   final DesktopControlRoutes _desktopControlRoutes;
   final ResourceStore? _resourceStore;
+  final BridgeSnapshotCache _bridgeSnapshots = BridgeSnapshotCache();
   final TriggerGroupStore? _triggerGroupStore;
   final SkillDeploymentStore? _skillDeploymentStore;
   final String Function() _idGenerator;
@@ -442,6 +448,7 @@ final class AgentRouter {
           : bridgeRoute(
               AgentBridge(
                 store,
+                snapshots: _bridgeSnapshots,
                 triggerGroupStore: _triggerGroupStore,
                 querySkillDeploymentPresence:
                     _skillDeploymentStore?.queryPresence,
@@ -451,6 +458,7 @@ final class AgentRouter {
                 loadShowConversationTokenUsage: _loadShowConversationTokenUsage,
                 loadConversationTokenUsage: _loadConversationTokenUsage,
                 loadJevUsage: loadJevUsage,
+                selectBridgeResources: selectBridgeResources,
               ),
             );
     }

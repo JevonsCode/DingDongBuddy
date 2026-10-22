@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/settings/domain/reminder_sounds.dart';
+import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:flutter/foundation.dart';
 
 export 'package:dingdong/features/settings/domain/reminder_sounds.dart';
@@ -81,6 +82,10 @@ final class NotificationRules {
     this.attentionToPhone = true,
     this.quietHours = const QuietHours(),
     this.completionMinimumMinutes = 0,
+    this.completionTrayStyle = TrayReminderStyle.staticMarker,
+    this.attentionTrayStyle = TrayReminderStyle.softPulse,
+    this.completionTrayColor,
+    this.attentionTrayColor = TrayNotificationColor.amber,
   });
 
   static const NotificationRules defaultValue = NotificationRules();
@@ -97,6 +102,24 @@ final class NotificationRules {
   /// Completions of tasks observed to run for less than this are recorded
   /// without sound, flashing or phone push. Zero alerts for every task.
   final int completionMinimumMinutes;
+  final TrayReminderStyle completionTrayStyle;
+  final TrayReminderStyle attentionTrayStyle;
+
+  /// Null preserves the existing user-selected menu bar color.
+  final TrayNotificationColor? completionTrayColor;
+  final TrayNotificationColor attentionTrayColor;
+
+  TrayReminderStyle trayStyleFor(AgentNotificationKind kind) =>
+      kind == AgentNotificationKind.attention
+      ? attentionTrayStyle
+      : completionTrayStyle;
+
+  TrayNotificationColor trayColorFor(
+    AgentNotificationKind kind, {
+    required TrayNotificationColor legacyCompletionColor,
+  }) => kind == AgentNotificationKind.attention
+      ? attentionTrayColor
+      : completionTrayColor ?? legacyCompletionColor;
 
   static NotificationRules parse(Object? value) {
     if (value is! String || value.trim().isEmpty) return defaultValue;
@@ -109,6 +132,21 @@ final class NotificationRules {
           ? quiet
           : const <Object?, Object?>{};
       return NotificationRules(
+        completionTrayStyle: TrayReminderStyle.parse(
+          json['completionTrayStyle'],
+          fallback: TrayReminderStyle.staticMarker,
+        ),
+        attentionTrayStyle: TrayReminderStyle.parse(
+          json['attentionTrayStyle'],
+          fallback: TrayReminderStyle.softPulse,
+        ),
+        completionTrayColor: json['completionTrayColor'] is String
+            ? TrayNotificationColor.parse(json['completionTrayColor'])
+            : null,
+        attentionTrayColor: TrayNotificationColor.parse(
+          json['attentionTrayColor'],
+          fallback: TrayNotificationColor.amber,
+        ),
         attentionSound: json['attentionSound'] is String
             ? json['attentionSound']! as String
             : sameAsCompletionSound,
@@ -137,6 +175,10 @@ final class NotificationRules {
   }
 
   String encode() => jsonEncode(<String, Object?>{
+    'completionTrayStyle': completionTrayStyle.name,
+    'attentionTrayStyle': attentionTrayStyle.name,
+    'completionTrayColor': ?completionTrayColor?.name,
+    'attentionTrayColor': attentionTrayColor.name,
     'attentionSound': attentionSound,
     'attentionCustomSoundPath': ?attentionCustomSoundPath,
     'completionToPhone': completionToPhone,
@@ -151,6 +193,10 @@ final class NotificationRules {
   });
 
   NotificationRules sanitized() => NotificationRules(
+    completionTrayStyle: completionTrayStyle,
+    attentionTrayStyle: attentionTrayStyle,
+    completionTrayColor: completionTrayColor,
+    attentionTrayColor: attentionTrayColor,
     attentionSound:
         attentionSound == sameAsCompletionSound ||
             notificationSoundValues.contains(attentionSound)
@@ -168,12 +214,20 @@ final class NotificationRules {
 
   NotificationRules copyWith({
     String? attentionSound,
+    TrayReminderStyle? completionTrayStyle,
+    TrayReminderStyle? attentionTrayStyle,
+    TrayNotificationColor? completionTrayColor,
+    TrayNotificationColor? attentionTrayColor,
     Object? attentionCustomSoundPath = _notSet,
     bool? completionToPhone,
     bool? attentionToPhone,
     QuietHours? quietHours,
     int? completionMinimumMinutes,
   }) => NotificationRules(
+    completionTrayStyle: completionTrayStyle ?? this.completionTrayStyle,
+    attentionTrayStyle: attentionTrayStyle ?? this.attentionTrayStyle,
+    completionTrayColor: completionTrayColor ?? this.completionTrayColor,
+    attentionTrayColor: attentionTrayColor ?? this.attentionTrayColor,
     attentionSound: attentionSound ?? this.attentionSound,
     attentionCustomSoundPath: identical(attentionCustomSoundPath, _notSet)
         ? this.attentionCustomSoundPath
@@ -188,6 +242,10 @@ final class NotificationRules {
   @override
   bool operator ==(Object other) =>
       other is NotificationRules &&
+      other.completionTrayStyle == completionTrayStyle &&
+      other.attentionTrayStyle == attentionTrayStyle &&
+      other.completionTrayColor == completionTrayColor &&
+      other.attentionTrayColor == attentionTrayColor &&
       other.attentionSound == attentionSound &&
       other.attentionCustomSoundPath == attentionCustomSoundPath &&
       other.completionToPhone == completionToPhone &&
@@ -197,6 +255,10 @@ final class NotificationRules {
 
   @override
   int get hashCode => Object.hash(
+    completionTrayStyle,
+    attentionTrayStyle,
+    completionTrayColor,
+    attentionTrayColor,
     attentionSound,
     attentionCustomSoundPath,
     completionToPhone,

@@ -94,7 +94,9 @@ public class TrayIcon: NSView {
     public func setTitle(
         _ title: String,
         _ style: String,
-        _ badgeColorRgb: UInt32?
+        _ badgeColorRgb: UInt32?,
+        _ badgeSymbol: String? = nil,
+        _ badgeDimmed: Bool = false
     ) {
         guard let button = statusItem?.button else { return }
 
@@ -102,11 +104,26 @@ public class TrayIcon: NSView {
         let isUnreadBadge = style == "unreadBadge" && !countText.isEmpty
 
         if isUnreadBadge {
+            let displayRgb = badgeDisplayRgb(badgeColorRgb, dimmed: badgeDimmed)
+            let foreground = badgeForegroundColor(displayRgb)
+            if #available(macOS 11.0, *), let name = badgeSymbol,
+               let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+                let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+                let configured = symbol.withSymbolConfiguration(configuration) ?? symbol
+                let tinted = NSImage(size: configured.size, flipped: false) { rect in
+                    configured.draw(in: rect)
+                    foreground.setFill()
+                    rect.fill(using: .sourceAtop)
+                    return true
+                }
+                tinted.isTemplate = false
+                button.image = tinted
+            }
             button.title = ""
             let badgeTitle = NSAttributedString(
                 string: " \(countText)",
                 attributes: [
-                    .foregroundColor: NSColor.white,
+                    .foregroundColor: foreground,
                     .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
                 ]
             )
@@ -122,7 +139,7 @@ public class TrayIcon: NSView {
             button.attributedTitle = layoutTitle
             button.imagePosition = .imageLeading
             button.wantsLayer = true
-            button.layer?.backgroundColor = badgeBackgroundColor(badgeColorRgb)
+            button.layer?.backgroundColor = badgeBackgroundColor(displayRgb)
             button.layer?.cornerRadius = 12
             button.layer?.masksToBounds = true
             statusItem?.length = countText.count > 2 ? 65 : 55
@@ -172,13 +189,35 @@ public class TrayIcon: NSView {
             calibratedRed: red,
             green: green,
             blue: blue,
-            alpha: 0.95
+            alpha: 1.0
         ).cgColor
     }
     
+    private func badgeDisplayRgb(_ rgb: UInt32?, dimmed: Bool) -> UInt32 {
+        let value = rgb ?? 0xDB7333
+        guard dimmed && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return value }
+        let red = UInt32(Double((value >> 16) & 0xFF) * 0.88)
+        let green = UInt32(Double((value >> 8) & 0xFF) * 0.88)
+        let blue = UInt32(Double(value & 0xFF) * 0.88)
+        return (red << 16) | (green << 8) | blue
+    }
+
+    private func badgeForegroundColor(_ rgb: UInt32?) -> NSColor {
+        let value = rgb ?? 0xDB7333
+        func linear(_ value: UInt32) -> Double {
+            let channel = Double(value) / 255
+            return channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        }
+        let luminance = 0.2126 * linear((value >> 16) & 0xFF)
+            + 0.7152 * linear((value >> 8) & 0xFF)
+            + 0.0722 * linear(value & 0xFF)
+        return luminance > 0.179 ? .black : .white
+    }
+
     public func setToolTip(_ toolTip: String) {
         if let button = statusItem?.button {
-            button.toolTip  = toolTip
+            button.toolTip = toolTip
+            button.setAccessibilityLabel(toolTip)
         }
     }
     

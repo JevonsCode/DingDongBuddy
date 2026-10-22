@@ -6,12 +6,16 @@ import 'package:flutter/services.dart';
 final class NativeNotificationGateway implements SoundPreviewGateway {
   static const MethodChannel _channel = MethodChannel('dingdong/notification');
 
-  Future<void> trigger(DingRequest request, {String? customSoundPath}) {
+  Future<void> trigger(
+    DingRequest request, {
+    String? customSoundPath,
+    int? flashCount,
+  }) {
     return _channel.invokeMethod<void>('notify', <String, Object?>{
       'message': request.message,
       'source': request.source,
       'sound': request.sound.apiValue,
-      'flashCount': request.flashCount,
+      'flashCount': flashCount ?? request.flashCount,
       'customSoundPath': ?customSoundPath,
     });
   }

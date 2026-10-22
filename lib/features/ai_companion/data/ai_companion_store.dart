@@ -39,7 +39,7 @@ abstract interface class AiCompanionStore {
 }
 
 /// Separate preference keys avoid overwriting other open settings windows.
-/// Chat text is deliberately ephemeral; reports contain suggestion codes and
+/// Reports contain suggestion codes and
 /// local references, never raw clipboard or resource content.
 final class AiCompanionPreferencesStore implements AiCompanionStore {
   AiCompanionPreferencesStore(

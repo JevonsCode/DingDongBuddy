@@ -120,6 +120,9 @@ class TrayManager {
     int iconSize = 18, // macOS only
     String? attentionIconPath, // Windows only
     int unreadCount = 0, // Windows only
+    String? reminderKind, // Windows only
+    int? badgeColorRgb, // Windows only
+    bool animateUnread = true, // Windows only
   }) async {
     final Map<String, dynamic> arguments = {
       'id': shortid.generate(),
@@ -151,6 +154,11 @@ class TrayManager {
         break;
       case TargetPlatform.windows:
         arguments['unreadCount'] = unreadCount.clamp(0, 999);
+        if (reminderKind != null) arguments['reminderKind'] = reminderKind;
+        if (badgeColorRgb != null) {
+          arguments['badgeColorRgb'] = badgeColorRgb & 0xFFFFFF;
+        }
+        arguments['animateUnread'] = animateUnread;
         if (attentionIconPath != null) {
           arguments['attentionIconPath'] = path.joinAll([
             path.dirname(Platform.resolvedExecutable),
@@ -209,11 +217,15 @@ class TrayManager {
     String title, {
     TrayTitleStyle style = TrayTitleStyle.plain,
     int? badgeColorRgb,
+    String? badgeSymbol,
+    bool badgeDimmed = false,
   }) async {
     final Map<String, dynamic> arguments = {
       'title': title,
       'style': style.name,
       if (badgeColorRgb != null) 'badgeColorRgb': badgeColorRgb & 0xFFFFFF,
+      if (badgeSymbol != null) 'badgeSymbol': badgeSymbol,
+      if (badgeDimmed) 'badgeDimmed': true,
     };
     await _channel.invokeMethod('setTitle', arguments);
   }

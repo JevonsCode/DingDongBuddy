@@ -523,6 +523,23 @@ third-party Agent accounts or remote model availability have been verified.
   Counters, timestamps, palette, ANSI variants, and the full capsule appear only
   with `expand="all"`. Repeating the call with `knownHash` set to the previous
   hash returns `{unchanged: true}` while nothing changed.
+- With `acceptDelta=true`, retain the complete merged snapshot in context and
+  acknowledge its `hash` as `knownHash`. A changed snapshot returns `mode=delta`,
+  the acknowledged `baseHash`, a new `hash`, and `delta.upsert/remove/order` keyed
+  by resource kind and stable IDs. Verify the baseline, apply all changes, then
+  advance the hash. A single resource edit must not repeat other resource bodies.
+  Unknown/evicted baselines return full `active`; callers without delta support
+  continue receiving full snapshots. Omit `knownHash` after context loss.
+- Skill catalog entries include a content `version` shared with full Skill loads.
+  Body-only edits and managed package digest changes invalidate it. A load with
+  `knownVersion` for a fully loaded body still in context returns `unchanged`
+  without the body/manifest. Never acknowledge a catalog-only version. Enabled,
+  scope and delivery checks still run before any conditional response.
+- Delta manifests are bounded in memory (64 snapshots, 512 resources each) and
+  contain IDs/content hashes only. Source, workspace, repository, conversation
+  and expansion mode partition acknowledgements. A session ID alone never
+  authorizes skipping content; this prevents missing instructions after context
+  compaction. GET Bridge and stdio MCP must forward acknowledgements correctly.
 - Codex desktop includes the footer exactly once as a single Markdown text line.
   `DingDong` remains text; the footer uses the exact user-configurable symbols.
   No image, MCP Apps renderer, or outer tool card is created. Other footer hosts
@@ -758,3 +775,20 @@ third-party Agent accounts or remote model availability have been verified.
 - With subagent notifications off, primary and fallback callbacks for a known internal, non-persisted Codex thread must not play sound, flash, or add/update activity history. A persisted main conversation remains identifiable and openable.
 - A deduplicated completion callback may enrich the existing activity record, but must not deliver a second native sound or flash. A fallback without a matching primary still notifies once.
 - With attention notifications off and completion notifications on, an attention signal must not consume the next completion callback, with or without an explicit conversation ID.
+# AI+ resource selection and taskbar reminders
+
+- AI+ automatic resource selection starts off. Opening the page and refreshing
+  usage must not make a provider request. Enabling selection affects the next
+  Bridge call; verify candidate selection with a test provider, including empty,
+  invalid-ID and timeout responses. Confirm local fallback, mandatory Prompts,
+  explicit resource names, and independent scope validation on Skill load.
+- Repeat the same Bridge selection to verify no extra model call; change task,
+  context, resource version or provider to verify invalidation. Check internal
+  receipts separately and confirm global totals exclude them by default.
+- AI+ analysis stays reachable after scrolling; results appear at the top by
+  category. Check narrow and wide windows, error messages and usage refresh.
+- Disable completion and enable needs-input. Emit each through the development
+  instance’s local Agent API: only attention should mark the tray. Re-enable completion and test
+  both colors/styles; a later completion must not replace an unread attention
+  marker. Acknowledge, restart and verify count/type restoration. Check reduced
+  animation settings. Perform these checks separately on macOS and Windows.

@@ -29,6 +29,7 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
     Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
+    Future<void> Function(NotificationRules value)? onNotificationRulesChanged,
     Future<void> Function(bool enabled)? onLifecycleTelemetryChanged,
     ReleaseMetadataSource? releaseMetadataSource,
     ExternalLinkGateway? externalLinkGateway,
@@ -49,6 +50,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onShowMenuBarRecovery = onShowMenuBarRecovery,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
        _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
+       _onNotificationRulesChanged = onNotificationRulesChanged,
        _onLifecycleTelemetryChanged = onLifecycleTelemetryChanged,
        _releaseMetadataSource = releaseMetadataSource,
        _externalLinkGateway = externalLinkGateway,
@@ -69,6 +71,8 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
   final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
+  final Future<void> Function(NotificationRules value)?
+  _onNotificationRulesChanged;
   final Future<void> Function(bool enabled)? _onLifecycleTelemetryChanged;
   final ReleaseMetadataSource? _releaseMetadataSource;
   final ExternalLinkGateway? _externalLinkGateway;
@@ -170,6 +174,8 @@ final class SettingsViewModel extends ChangeNotifier
       await _onTrayNotificationColorChanged?.call(
         _settings.trayNotificationColor,
       );
+      if (_disposed) return;
+      await _onNotificationRulesChanged?.call(_settings.notificationRules);
       if (_disposed) return;
       String? loadWarning;
       final Future<bool> Function(GlobalHotKey value)? updateGlobalHotKey =
@@ -635,6 +641,7 @@ final class SettingsViewModel extends ChangeNotifier
     _settings = _settings.copyWith(notificationRules: value);
     notifyListeners();
     await _save();
+    await _onNotificationRulesChanged?.call(_settings.notificationRules);
   }
 
   Future<void> setNotifyAgentCompletion(bool value) async {

@@ -2,18 +2,23 @@ import 'package:dingdong/features/ai_companion/data/ai_companion_client.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_analyzer.dart';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_models.dart';
-import 'package:dingdong/features/ai_companion/domain/ai_companion_privacy.dart';
 import 'package:flutter/foundation.dart';
+
+import '../../token_usage/data/local_token_usage_repository.dart';
+import '../../token_usage/domain/token_usage_models.dart';
+import '../domain/ai_companion_usage.dart';
 
 export 'package:dingdong/features/ai_companion/domain/ai_companion_models.dart';
 
 /// Suggestions are read-only. No resource, clipboard, tool or file mutation is
-/// available to the model, and chat history never enters persistent settings.
+/// available to the model.
 final class AiCompanionController extends ChangeNotifier {
   AiCompanionController({
     required AiCompanionStore store,
     required AiCompanionMetadataLoader loadMetadata,
     AiCompanionClient? client,
+    this.usageRepository,
+    this.onUsageChanged,
     DateTime Function()? now,
     // Preserve public injectable argument names while keeping fields private.
     // ignore: prefer_initializing_formals
@@ -23,13 +28,51 @@ final class AiCompanionController extends ChangeNotifier {
        _client = client ?? AiCompanionClient(),
        _now = now ?? DateTime.now;
 
+  final LocalTokenUsageRepository? usageRepository;
+  final VoidCallback? onUsageChanged;
+  TokenUsageSnapshot internalUsage = const TokenUsageSnapshot();
+  AiCompanionUsageRecord? lastUsage;
+  bool usageStorageAvailable = true;
+  bool _usageWriteFailed = false;
+
+  Future<void> _loadUsage() async {
+    if (usageRepository == null) return;
+    internalUsage = await usageRepository!.readInternalSnapshot();
+    usageStorageAvailable =
+        internalUsage.storageAvailable && !_usageWriteFailed;
+  }
+
+  /// Reads receipts written by the background selector without calling a model.
+  Future<void> refreshInternalUsage() async {
+    if (_disposed || usageRepository == null) return;
+    try {
+      await _loadUsage();
+    } on Object {
+      usageStorageAvailable = false;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> _recordUsage(AiCompanionUsageRecord record) async {
+    lastUsage = record;
+    if (usageRepository == null) return;
+    try {
+      await usageRepository!.recordInternalUsage(record);
+      await _loadUsage();
+      onUsageChanged?.call();
+    } on Object {
+      _usageWriteFailed = true;
+      usageStorageAvailable = false;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
   final AiCompanionStore _store;
   final AiCompanionMetadataLoader _loadMetadata;
   final AiCompanionClient _client;
   final DateTime Function() _now;
   AiCompanionSettings _settings = const AiCompanionSettings();
   AiCompanionReport? _report;
-  final List<AiChatMessage> _messages = <AiChatMessage>[];
   AiCompanionError? _error;
   bool _isLoading = false;
   bool _hasStoredApiKey = false;
@@ -40,8 +83,6 @@ final class AiCompanionController extends ChangeNotifier {
 
   AiCompanionSettings get settings => _settings;
   AiCompanionReport? get report => _report;
-  List<AiChatMessage> get messages =>
-      List<AiChatMessage>.unmodifiable(_messages);
   AiCompanionError? get error => _error;
   bool get isLoading => _isLoading;
   bool get loading => _isLoading;
@@ -60,6 +101,7 @@ final class AiCompanionController extends ChangeNotifier {
     final AiCompanionSettings loaded = await _store.loadSettings();
     final AiCompanionReport? report = await _store.loadReport();
     final String? key = await _store.readApiKey();
+    await _loadUsage();
     if (!_current(generation)) return;
     _settings = loaded;
     _hasStoredApiKey = key?.isNotEmpty ?? false;
@@ -93,6 +135,7 @@ final class AiCompanionController extends ChangeNotifier {
           sanitized.providerEndpoint != _settings.providerEndpoint;
       final bool cloudContextChanged =
           endpointChanged ||
+          sanitized.protocol != _settings.protocol ||
           sanitized.model != _settings.model ||
           sanitized.clipboardAnalysis != _settings.clipboardAnalysis ||
           sanitized.usageOptimization != _settings.usageOptimization ||
@@ -105,10 +148,13 @@ final class AiCompanionController extends ChangeNotifier {
       await _store.saveSettings(sanitized);
       final String? storedKey = await _store.readApiKey();
       if (!_current(generation)) return;
+      final inclusionChanged =
+          sanitized.includeInternalInGlobal !=
+          _settings.includeInternalInGlobal;
       _settings = sanitized;
+      if (inclusionChanged) onUsageChanged?.call();
       _hasStoredApiKey = storedKey?.isNotEmpty ?? false;
       _connectionVerified = false;
-      if (!sanitized.emotionalSupport || endpointChanged) _messages.clear();
       _report = _visibleReport(_report, sanitized);
       // Free-form text cannot be reliably separated back into capability
       // categories. Keep only filtered local suggestions after a context change.
@@ -137,7 +183,12 @@ final class AiCompanionController extends ChangeNotifier {
     if (!_current(generation) || !activeSettings.cloudAnalysis) return;
     final String? key = await _store.readApiKey();
     if (!_current(generation)) return;
-    final String summary = await _client.analyze(activeSettings, key, metadata);
+    final String summary = await _client.analyze(
+      activeSettings,
+      key,
+      metadata,
+      onUsage: _recordUsage,
+    );
     if (!_current(generation)) return;
     _report = AiCompanionReport(
       createdAt: localReport.createdAt,
@@ -148,42 +199,11 @@ final class AiCompanionController extends ChangeNotifier {
     await _store.saveReport(_report);
   });
 
-  Future<void> sendMessage(String text) => _run((generation) async {
-    if (!_settings.emotionalSupport) {
-      throw const AiCompanionException(AiCompanionError.disabled);
-    }
-    final String trimmed = text.trim();
-    if (trimmed.isEmpty) {
-      throw const AiCompanionException(AiCompanionError.emptyMessage);
-    }
-    if (trimmed.length > 4000) {
-      throw const AiCompanionException(AiCompanionError.messageTooLong);
-    }
-    final String? key = await _store.readApiKey();
-    if (!_current(generation)) return;
-    if (!const AiCompanionPrivacy().isSafeText(trimmed, providerKey: key)) {
-      throw const AiCompanionException(AiCompanionError.sensitiveInput);
-    }
-    final AiChatMessage user = AiChatMessage(role: 'user', text: trimmed);
-    final String response = await _client.chat(_settings, key, <AiChatMessage>[
-      ..._messages,
-      user,
-    ]);
-    if (!_current(generation)) return;
-    _messages.addAll(<AiChatMessage>[
-      user,
-      AiChatMessage(role: 'assistant', text: response),
-    ]);
-    if (_messages.length > 20) {
-      _messages.removeRange(0, _messages.length - 20);
-    }
-  });
-
   Future<void> testConnection() => _run((generation) async {
     _connectionVerified = false;
     final String? key = await _store.readApiKey();
     if (!_current(generation)) return;
-    await _client.testConnection(_settings, key);
+    await _client.testConnection(_settings, key, onUsage: _recordUsage);
     if (_current(generation)) _connectionVerified = true;
   });
 
@@ -218,16 +238,6 @@ final class AiCompanionController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  void clearConversation() {
-    if (_disposed) return;
-    _generation++;
-    _client.dispose();
-    _isLoading = false;
-    _messages.clear();
-    _error = null;
-    notifyListeners();
-  }
-
   Future<void> _run(Future<void> Function(int) action) async {
     if (_disposed || _isLoading) return;
     final int generation = _generation;
@@ -255,7 +265,6 @@ final class AiCompanionController extends ChangeNotifier {
     _disposed = true;
     _generation++;
     _client.dispose();
-    _messages.clear();
     super.dispose();
   }
 }

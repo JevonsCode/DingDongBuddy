@@ -6,6 +6,32 @@ import 'package:path/path.dart' as p;
 
 void main() {
   test(
+    'version acknowledgements pass through without implicit session reuse',
+    () async {
+      final transport = _RecordingMcpHttpTransport();
+      final executor = LoopbackMcpToolExecutor(
+        transport,
+        currentDirectory: () => '/workspace/test',
+        repositoryUrlResolver: (_) async => null,
+      );
+      await executor.execute('dingdong_bridge', {
+        'acceptDelta': true,
+        'knownHash': 'retained',
+      });
+      expect(transport.body?['acceptDelta'], true);
+      expect(transport.body?['knownHash'], 'retained');
+      await executor.execute('dingdong_bridge', {});
+      expect(transport.body?.containsKey('knownHash'), false);
+      await executor.execute('dingdong_load_skill', {
+        'id': 'review',
+        'knownVersion': 'loaded',
+      });
+      expect(transport.query?['knownVersion'], 'loaded');
+      await executor.execute('dingdong_load_skill', {'id': 'review'});
+      expect(transport.query?.containsKey('knownVersion'), false);
+    },
+  );
+  test(
     'Jev inherits only the current successful bridge conversation',
     () async {
       final transport = _RecordingMcpHttpTransport();

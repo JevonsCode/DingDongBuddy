@@ -1,4 +1,4 @@
-import { formatTime } from "./app-formatters.js?shell=50";
+import { formatTime } from "./app-formatters.js?shell=51";
 
 export const downloadHistoryKey = "dingdong.download-history.v1";
 const maximumHistoryEntries = 300;

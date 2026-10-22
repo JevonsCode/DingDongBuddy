@@ -290,7 +290,7 @@ Future<void> main(List<String> arguments) async {
           ]),
         );
       }
-      await shellGateway.markUnread();
+      await shellGateway.markUnread(kind: request.notificationKind);
       await deviceLinkController.sendAgentCompleted(
         request,
         activity: completion.activity,
@@ -431,6 +431,7 @@ Future<void> main(List<String> arguments) async {
     onDockIconHiddenChanged: shellGateway.setDockIconHidden,
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
+    onNotificationRulesChanged: shellGateway.setNotificationRules,
     onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
     onLifecycleTelemetryChanged: lifecycleTelemetryController.setEnabled,
     releaseMetadataSource: HttpReleaseMetadataSource(),

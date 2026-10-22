@@ -61,6 +61,10 @@ final class TokenUsageCsvExport {
     };
     for (final selectedSource
         in source == null ? ConversationTokenUsageSource.values : [source!]) {
+      if (selectedSource == ConversationTokenUsageSource.dingdong &&
+          !_snapshot.coverage.any((c) => c.source == selectedSource)) {
+        continue;
+      }
       final coverage = _snapshot.coverage.where(
         (item) => item.source == selectedSource,
       );
@@ -75,7 +79,10 @@ final class TokenUsageCsvExport {
         if (item.availability == TokenUsageAvailability.unreadable) {
           warnings.add('source_unreadable');
         }
-        if (item.filesScanned == 0) warnings.add('no_importable_logs');
+        if (item.filesScanned == 0 &&
+            item.source != ConversationTokenUsageSource.dingdong) {
+          warnings.add('no_importable_logs');
+        }
         if (item.malformedRows > 0) warnings.add('malformed_usage_rows');
         if (item.undatedRows > 0) warnings.add('missing_event_dates');
         if (item.pendingFiles > 0) warnings.add('pending_transcript_tail');

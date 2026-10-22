@@ -216,6 +216,7 @@ void main() {
         ]),
       );
       expect(properties.keys, contains('knownHash'));
+      expect(properties.keys, contains('acceptDelta'));
       for (final String required in <String>[
         'authoritative snapshot',
         'required instructions',
@@ -278,6 +279,7 @@ void main() {
           toolNamed('dingdong_load_skill')['inputSchema']
               as Map<String, Object?>;
       expect(loadSchema['required'], isNull);
+      expect(loadSchema['properties'] as Map, contains('knownVersion'));
       expect(
         toolNamed('dingdong_load_skill')['description'],
         contains('footerMark'),

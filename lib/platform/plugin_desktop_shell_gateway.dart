@@ -5,8 +5,10 @@ import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
+import 'package:dingdong/features/settings/domain/notification_rules.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
@@ -71,6 +73,7 @@ final class PluginDesktopShellGateway
   bool _hideDockIcon = false;
   double _windowOpacity = 0.90;
   TrayNotificationColor _trayNotificationColor;
+  NotificationRules _notificationRules = NotificationRules.defaultValue;
   TrayBuddyState _trayBuddyState = TrayBuddyState.normal;
   TrayBuddyState? _trayBuddyPreviewState;
   TrayBuddyState? _animatedTrayBuddyState;
@@ -202,9 +205,14 @@ final class PluginDesktopShellGateway
       return;
     }
     _trayNotificationColor = value;
-    if (_started && Platform.isMacOS) {
+    if (_started && (Platform.isMacOS || Platform.isWindows)) {
       await _unreadController.refresh();
     }
+  }
+
+  Future<void> setNotificationRules(NotificationRules rules) async {
+    _notificationRules = rules.sanitized();
+    if (_started) await _unreadController.refresh();
   }
 
   Future<bool> setGlobalHotKey(GlobalHotKey value) async {
@@ -230,7 +238,9 @@ final class PluginDesktopShellGateway
     return windowManager.startDragging();
   }
 
-  Future<void> markUnread() => _unreadController.markUnread();
+  Future<void> markUnread({
+    AgentNotificationKind kind = AgentNotificationKind.completion,
+  }) => _unreadController.markUnread(kind: kind);
 
   Future<void> acknowledgeUnreadCount(int count) {
     if (count <= 0) {
@@ -309,6 +319,13 @@ final class PluginDesktopShellGateway
     required int unreadCount,
   }) async {
     final bool windows = Platform.isWindows;
+    final AgentNotificationKind kind = _unreadController.primaryKind;
+    final bool pulseReminder =
+        _notificationRules.trayStyleFor(kind) == TrayReminderStyle.softPulse;
+    final TrayNotificationColor color = _notificationRules.trayColorFor(
+      kind,
+      legacyCompletionColor: _trayNotificationColor,
+    );
     final TrayBuddyState mascotState =
         _trayBuddyPreviewState ?? _trayBuddyState;
     final TrayBuddyState visualState = trayBuddyVisualState(
@@ -316,10 +333,14 @@ final class PluginDesktopShellGateway
       state: mascotState,
     );
     final bool useNativeAttentionAnimation =
-        windows && hot && visualState == TrayBuddyState.reminder;
+        windows &&
+        hot &&
+        pulseReminder &&
+        visualState == TrayBuddyState.reminder;
     _updateTrayBuddyFrameAnimation(
       visualState,
       useNativeAttention: useNativeAttentionAnimation,
+      staticReminder: hot && !pulseReminder,
     );
     final bool alternateFrame = _trayBuddyAlternateFrame;
     final WindowsTrayIconState windowsState = windowsTrayBuddyIconState(
@@ -358,17 +379,31 @@ final class PluginDesktopShellGateway
             )
           : null,
       unreadCount: windows ? unreadCount : 0,
+      reminderKind: hot ? kind.apiValue : null,
+      badgeColorRgb: hot ? color.rgbValue : null,
+      animateUnread: pulseReminder,
     );
-    if (windows) {
-      await trayManager.setToolTip(
-        windowsTrayTooltip(unreadCount: unreadCount, strings: _localizations()),
-      );
-    }
+    final DingDongLocalizations strings = _localizations();
+    final String unreadTooltip = windowsTrayTooltip(
+      unreadCount: unreadCount,
+      strings: strings,
+    );
+    await trayManager.setToolTip(
+      hot
+          ? '${kind == AgentNotificationKind.attention ? strings.needsYourInput : strings.agentCompletionNotifications} · $unreadTooltip'
+          : unreadTooltip,
+    );
     if (Platform.isMacOS) {
       await trayManager.setTitle(
         title,
         style: macOSTrayTitleStyle(hot: hot),
-        badgeColorRgb: _trayNotificationColor.rgbValue,
+        badgeColorRgb: color.rgbValue,
+        badgeSymbol: hot
+            ? (kind == AgentNotificationKind.attention
+                  ? 'bell.fill'
+                  : 'checkmark')
+            : null,
+        badgeDimmed: hot && pulseReminder && alternateFrame,
       );
     }
   }
@@ -376,8 +411,9 @@ final class PluginDesktopShellGateway
   void _updateTrayBuddyFrameAnimation(
     TrayBuddyState visualState, {
     required bool useNativeAttention,
+    bool staticReminder = false,
   }) {
-    final Duration? interval = useNativeAttention
+    final Duration? interval = useNativeAttention || staticReminder
         ? null
         : trayBuddyFrameInterval(visualState);
     final bool animationAlreadyMatches =

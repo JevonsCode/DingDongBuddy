@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:path/path.dart' as path;
 import 'package:sqlite3/sqlite3.dart';
 
+import '../../ai_companion/domain/ai_companion_usage.dart';
 import '../domain/token_usage_models.dart';
 import 'token_usage_store.dart';
 import 'token_usage_transcript_parser.dart';
@@ -380,10 +381,35 @@ final class LocalTokenUsageRepository {
     }
   }
 
+  Future<void> recordInternalUsage(AiCompanionUsageRecord record) async {
+    final store = await _ensureStore();
+    if (store == null) throw StateError('usage_storage_unavailable');
+    store.recordInternalUsage(record);
+  }
+
+  Future<TokenUsageSnapshot> readInternalSnapshot({
+    DateTime? from,
+    DateTime? through,
+  }) async {
+    try {
+      final store = await _ensureStore();
+      if (store != null) {
+        return store.internalSnapshot(from: from, through: through);
+      }
+    } on Object {
+      /* Expose unavailable storage independently of model errors. */
+    }
+    return const TokenUsageSnapshot(
+      storageAvailable: false,
+      warnings: ['storage_unavailable'],
+    );
+  }
+
   Future<TokenUsageSnapshot> readSnapshot({
     DateTime? from,
     DateTime? through,
     ConversationTokenUsageSource? source,
+    bool includeInternal = false,
   }) async {
     final store = await _ensureStore();
     if (store == null) {
@@ -395,6 +421,12 @@ final class LocalTokenUsageRepository {
         through: through,
         source: source,
       );
+      final internal =
+          includeInternal &&
+              (source == null ||
+                  source == ConversationTokenUsageSource.dingdong)
+          ? store.internalSnapshot(from: from, through: through)
+          : const TokenUsageSnapshot();
       final warnings = <String>{..._warnings, ...snapshot.warnings};
       for (final coverage in snapshot.coverage) {
         if (coverage.malformedRows > 0) warnings.add('malformed_usage_rows');
@@ -405,8 +437,8 @@ final class LocalTokenUsageRepository {
         }
       }
       return TokenUsageSnapshot(
-        days: snapshot.days,
-        coverage: snapshot.coverage,
+        days: [...snapshot.days, ...internal.days],
+        coverage: [...snapshot.coverage, ...internal.coverage],
         refreshedAt: snapshot.refreshedAt,
         warnings: List.unmodifiable(warnings),
       );

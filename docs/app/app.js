@@ -1,25 +1,25 @@
-import { computerDisplayName } from "./app-formatters.js?shell=50";
-import { renderTransferProgress } from './transfer-progress.js?shell=50';
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=50";
+import { computerDisplayName } from "./app-formatters.js?shell=51";
+import { renderTransferProgress } from './transfer-progress.js?shell=51';
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=51";
 import {
   defaultDeviceName,
   detectDeviceName,
   shouldUpgradeAutomaticDeviceName,
-} from "./device-name.js?shell=50";
+} from "./device-name.js?shell=51";
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=50";
+} from "./notification-policy.js?shell=51";
 import {
   extractPairingFragment,
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=50";
+} from "./pairing-state.js?shell=51";
 import {
   createPairingScanner,
   pairingScannerSupported,
-} from "./pairing-scanner.js?shell=50";
+} from "./pairing-scanner.js?shell=51";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -27,21 +27,21 @@ import {
   contentTabs,
   isContentTab,
   parseContentTabLaunch,
-} from "./content-navigation.js?shell=50";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=50";
-import { createInstallationController } from "./app-installation.js?shell=50";
-import { createAgentNotificationController } from "./app-notifications.js?shell=50";
-import { createAppRenderer } from "./app-rendering.js?shell=50";
-import { createConnectionController } from "./app-connection.js?shell=50";
-import { createDeviceSettingsController } from "./app-settings.js?shell=50";
-import { createPairingController } from "./app-pairing.js?shell=50";
-import { createContentTransferController } from "./app-content-transfer.js?shell=50";
+} from "./content-navigation.js?shell=51";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=51";
+import { createInstallationController } from "./app-installation.js?shell=51";
+import { createAgentNotificationController } from "./app-notifications.js?shell=51";
+import { createAppRenderer } from "./app-rendering.js?shell=51";
+import { createConnectionController } from "./app-connection.js?shell=51";
+import { createDeviceSettingsController } from "./app-settings.js?shell=51";
+import { createPairingController } from "./app-pairing.js?shell=51";
+import { createContentTransferController } from "./app-content-transfer.js?shell=51";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=50";
+} from "./app-platform.js?shell=51";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",

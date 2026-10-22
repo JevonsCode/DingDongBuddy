@@ -67,16 +67,30 @@ class _NotificationSettingsSection extends StatelessWidget {
           value: settings.notifySubagentActivity,
           onChanged: viewModel.setNotifySubagentActivity,
         ),
-        if (defaultTargetPlatform == TargetPlatform.macOS)
+        if (defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.windows) ...<Widget>[
+          _trayStyleRow(context, attention: false),
           _SettingRow(
-            label:
-                '${context.l10n.menuBarAlertColor} · '
-                '${_trayNotificationColorLabel(context, settings.trayNotificationColor)}',
+            label: context.l10n.completionTrayColor,
             child: _TrayNotificationColorPicker(
-              value: settings.trayNotificationColor,
-              onChanged: viewModel.setTrayNotificationColor,
+              value:
+                  rules.completionTrayColor ?? settings.trayNotificationColor,
+              onChanged: (color) => rules.completionTrayColor == null
+                  ? viewModel.setTrayNotificationColor(color)
+                  : _setRules(rules.copyWith(completionTrayColor: color)),
             ),
           ),
+          _trayStyleRow(context, attention: true),
+          _SettingRow(
+            label: context.l10n.attentionTrayColor,
+            child: _TrayNotificationColorPicker(
+              keyPrefix: 'settings-attention-tray-color',
+              value: rules.attentionTrayColor,
+              onChanged: (color) =>
+                  _setRules(rules.copyWith(attentionTrayColor: color)),
+            ),
+          ),
+        ],
         _SettingRow(
           label: context.l10n.completionSound,
           child: Row(
@@ -251,6 +265,42 @@ class _NotificationSettingsSection extends StatelessWidget {
 
   Future<void> _setRules(NotificationRules value) =>
       viewModel.setNotificationRules(value);
+
+  Widget _trayStyleRow(BuildContext context, {required bool attention}) {
+    return _SettingRow(
+      label: attention
+          ? context.l10n.attentionTrayStyle
+          : context.l10n.completionTrayStyle,
+      child: SizedBox(
+        width: 220,
+        child: DesktopSelectField<TrayReminderStyle>(
+          key: Key(
+            attention
+                ? 'settings-attention-tray-style'
+                : 'settings-completion-tray-style',
+          ),
+          value: attention
+              ? rules.attentionTrayStyle
+              : rules.completionTrayStyle,
+          items: <DesktopSelectItem<TrayReminderStyle>>[
+            DesktopSelectItem(
+              value: TrayReminderStyle.staticMarker,
+              label: context.l10n.trayStyleStatic,
+            ),
+            DesktopSelectItem(
+              value: TrayReminderStyle.softPulse,
+              label: context.l10n.trayStylePulse,
+            ),
+          ],
+          onChanged: (value) => _setRules(
+            attention
+                ? rules.copyWith(attentionTrayStyle: value)
+                : rules.copyWith(completionTrayStyle: value),
+          ),
+        ),
+      ),
+    );
+  }
 
   List<Widget> _attentionSoundRows(BuildContext context) {
     final String sound = rules.attentionSound;
@@ -637,17 +687,19 @@ final class _ConversationFooterSymbolInputFormatter extends TextInputFormatter {
 
 class _TrayNotificationColorPicker extends StatelessWidget {
   const _TrayNotificationColorPicker({
+    this.keyPrefix = 'settings-tray-notification-color',
     required this.value,
     required this.onChanged,
   });
 
+  final String keyPrefix;
   final TrayNotificationColor value;
   final ValueChanged<TrayNotificationColor> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return DesktopSegmentedControl<TrayNotificationColor>(
-      key: const Key('settings-tray-notification-color'),
+      key: Key(keyPrefix),
       value: value,
       minimumSegmentWidth: 40,
       segments: TrayNotificationColor.values
@@ -662,7 +714,7 @@ class _TrayNotificationColorPicker extends StatelessWidget {
                   label: label,
                   selected: selected,
                   child: Container(
-                    key: Key('settings-tray-notification-color-${color.name}'),
+                    key: Key('$keyPrefix-${color.name}'),
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
@@ -680,10 +732,16 @@ class _TrayNotificationColorPicker extends StatelessWidget {
                       ],
                     ),
                     child: selected
-                        ? const Icon(
+                        ? Icon(
                             Icons.check_rounded,
                             size: 14,
-                            color: Colors.white,
+                            color:
+                                Color(
+                                      0xFF000000 | color.rgbValue,
+                                    ).computeLuminance() >
+                                    0.179
+                                ? Colors.black
+                                : Colors.white,
                           )
                         : null,
                   ),
@@ -707,5 +765,6 @@ String _trayNotificationColorLabel(
     TrayNotificationColor.blue => context.l10n.blue,
     TrayNotificationColor.green => context.l10n.green,
     TrayNotificationColor.purple => context.l10n.purple,
+    TrayNotificationColor.amber => context.l10n.amber,
   };
 }

@@ -147,9 +147,13 @@ final class McpServer {
       name: 'dingdong_bridge',
       title: 'DingDong Bridge',
       description:
-          'Call first at the start of each user request. The response is the authoritative snapshot and replaces earlier ones. active.prompts are required instructions: apply each in full. active.skills lists id, name and description; load a matching one with dingdong_load_skill. active.mcps are tool references (serverName, title), not instructions. When footer is present, end the final reply with it exactly, applying footerMark replacements from Skill loads and MCP confirmations; never print statusLine. While the previous response is still in context, pass its hash as knownHash to get {unchanged:true} instead of a repeat. expand="all" adds diagnostics.',
+          'Call first each user request with acceptDelta=true. Full active is the authoritative snapshot; prompts are required instructions. Skills include id, name and description plus version; use dingdong_load_skill on match. MCPs are tool references. Always pass knownHash ONLY while its complete merged snapshot remains in context; omit after context loss. unchanged retains it. mode=delta: require matching baseHash, apply delta upsert/remove/order by id; advance hash only after merging. Otherwise retry without knownHash. End with footer exactly, applying footerMark; never print statusLine. expand="all" adds diagnostics.',
       properties: <String, Object?>{
         'task': _stringProperty(),
+        'taskContext': _stringProperty(
+          description:
+              'Optional task context explicitly supplied for AI resource selection (maximum 4000 characters). Never send secrets, clipboard content, raw MCP configuration or full history.',
+        ),
         'source': _stringProperty(
           description:
               'Current Agent source, such as Codex, Claude Code, or Cursor. '
@@ -172,6 +176,7 @@ final class McpServer {
           description:
               'hash from the previous bridge response in this conversation.',
         ),
+        'acceptDelta': _booleanProperty(),
       },
     ),
     _tool(
@@ -258,11 +263,15 @@ final class McpServer {
       name: 'dingdong_load_skill',
       title: 'Load DingDong Skill',
       description:
-          'After a current dingdong_bridge Skill description matches the task, fetch its complete SKILL.md by id or name and apply it. Enabled state and scope are checked again on every load. Apply a returned footerMark to the footer.',
+          'Load a matching current Skill by id or name and apply its complete SKILL.md. If the full loaded body is still in context, pass its knownVersion to avoid repetition; NEVER acknowledge a catalog-only version. unchanged retains the loaded body; otherwise replace it. Omit knownVersion after context loss. Enabled state and scope are checked on every load. Apply footerMark.',
       properties: <String, Object?>{
         'name': _stringProperty(
           description:
               'Skill name. Provide name or id; id wins when both are set.',
+        ),
+        'knownVersion': _stringProperty(
+          description:
+              'Version of a fully loaded Skill body still retained in context, not a catalog-only version.',
         ),
         'id': _stringProperty(description: 'Skill resource id.'),
         'workspacePath': _stringProperty(

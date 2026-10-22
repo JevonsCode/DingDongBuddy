@@ -222,7 +222,8 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
               (TokenUsageSourceCoverage coverage) =>
                   (_source == null || coverage.source == _source) &&
                   coverage.availability == TokenUsageAvailability.available &&
-                  coverage.filesScanned > 0,
+                  (coverage.filesScanned > 0 ||
+                      coverage.source == ConversationTokenUsageSource.dingdong),
             );
         final Map<DateTime, List<TokenUsageTotals>> byDay =
             <DateTime, List<TokenUsageTotals>>{};
@@ -417,7 +418,11 @@ class _TokenUsageScreenState extends State<TokenUsageScreen> {
                   for (final ConversationTokenUsageSource? source
                       in <ConversationTokenUsageSource?>[
                         null,
-                        ...ConversationTokenUsageSource.values,
+                        ...ConversationTokenUsageSource.values.where(
+                          (source) =>
+                              source != ConversationTokenUsageSource.dingdong ||
+                              snapshot.coverage.any((c) => c.source == source),
+                        ),
                       ])
                     ChoiceChip(
                       key: Key(
@@ -504,6 +509,7 @@ String tokenUsageSourceLabel(ConversationTokenUsageSource source) =>
       ConversationTokenUsageSource.codex => 'Codex',
       ConversationTokenUsageSource.claudeCode => 'Claude Code',
       ConversationTokenUsageSource.pi => 'Pi',
+      ConversationTokenUsageSource.dingdong => 'DingDong',
     };
 
 String _locale(BuildContext context) =>

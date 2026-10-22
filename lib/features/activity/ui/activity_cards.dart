@@ -540,13 +540,6 @@ class _EnabledResourceCard extends StatelessWidget {
     final Brightness brightness = Theme.of(context).brightness;
     final ResourceCardPresentation display =
         ResourceCardPresentation.fromResource(resource);
-    final Color background = switch (resource.type) {
-      ResourceType.prompt => PopupStyle.of(context).warmSurface,
-      ResourceType.skill => PopupStyle.of(context).skillSurface,
-      ResourceType.mcp => PopupStyle.mcpSurface(brightness),
-      ResourceType.knowledge ||
-      ResourceType.clipboard => PopupStyle.of(context).surface,
-    };
     final String symbol = switch (resource.type) {
       ResourceType.prompt => 'prompt',
       ResourceType.skill => 'skill',
@@ -577,7 +570,12 @@ class _EnabledResourceCard extends StatelessWidget {
         key: Key('today-enabled-${resource.id}'),
         height: 92,
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-        decoration: PopupStyle.of(context).card(color: background, radius: 9),
+        decoration: BoxDecoration(
+          color: PopupStyle.of(context).surface,
+          border: Border(
+            bottom: BorderSide(color: PopupStyle.of(context).border),
+          ),
+        ),
         child: Row(
           children: <Widget>[
             SizedBox(

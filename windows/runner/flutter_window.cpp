@@ -508,7 +508,9 @@ bool FlutterWindow::OnCreate() {
           }
         }
         flash_info.dwTimeout = 0;
-        ::FlashWindowEx(&flash_info);
+        if (flash_info.uCount > 0) {
+          ::FlashWindowEx(&flash_info);
+        }
         result->Success();
       });
   launch_at_startup_channel_ =

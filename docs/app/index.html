@@ -12,7 +12,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=50" />
+    <link rel="stylesheet" href="./styles.css?shell=51" />
   </head>
   <body>
     <div class="app-shell">
@@ -62,7 +62,6 @@
 
         <section id="pwa-launcher-view" class="pwa-launcher-view" hidden>
           <img src="../assets/dingdong-pwa-192.png" alt="DingDong" />
-          <p class="eyebrow">DingDong App</p>
           <h2>请在 DingDong App 里使用</h2>
           <p>这台手机已安装 DingDong App。浏览器页面不接收通知，请在 App 里使用。</p>
           <button id="open-pwa-app-button" class="primary-button" type="button">
@@ -75,7 +74,6 @@
 
         <section id="pair-view" class="pair-view" hidden>
           <img class="pair-mascot" src="../assets/dingdong-thinking-icon.png" alt="DingDong" />
-          <p class="eyebrow">新的连接</p>
           <h2 id="pair-title">连接这台电脑？</h2>
           <p id="pair-description" class="supporting-text"></p>
           <label class="field-label" for="device-name">这台手机的名称</label>
@@ -245,7 +243,6 @@
       <form method="dialog">
         <div class="dialog-header">
           <div>
-            <p class="eyebrow">连接的电脑</p>
             <h2 id="device-switcher-title">选择当前设备</h2>
             <span id="device-switcher-summary" class="dialog-summary">0 台在线</span>
           </div>
@@ -270,7 +267,6 @@
       <form method="dialog">
         <div class="dialog-header">
           <div>
-            <p class="eyebrow">当前设备</p>
             <h2 id="settings-device-name">连接设置</h2>
           </div>
           <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
@@ -327,7 +323,6 @@
       <form method="dialog">
         <div class="dialog-header">
           <div>
-            <p class="eyebrow">连接设备</p>
             <h2 id="delete-device-title">删除这台电脑？</h2>
           </div>
           <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
@@ -351,8 +346,8 @@
       <form method="dialog">
         <div class="dialog-header">
           <div>
-            <p id="install-dialog-eyebrow" class="eyebrow">安装到手机</p>
             <h2 id="install-dialog-title">把 DingDong 当作 App 使用</h2>
+            <p id="install-dialog-eyebrow" class="dialog-summary">安装到手机</p>
           </div>
           <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
         </div>
@@ -370,8 +365,8 @@
       <form method="dialog">
         <div class="dialog-header">
           <div>
-            <p id="notification-help-eyebrow" class="eyebrow">通知设置</p>
             <h2 id="notification-help-title">检查 Agent 提醒</h2>
+            <p id="notification-help-eyebrow" class="dialog-summary">通知设置</p>
           </div>
           <button class="icon-button" value="cancel" aria-label="关闭" type="submit">×</button>
         </div>
@@ -459,6 +454,6 @@
       </div>
     </dialog>
 
-    <script type="module" src="./app.js?shell=50"></script>
+    <script type="module" src="./app.js?shell=51"></script>
   </body>
 </html>

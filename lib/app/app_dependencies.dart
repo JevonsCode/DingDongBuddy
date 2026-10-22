@@ -13,6 +13,8 @@ import 'package:dingdong/features/agent_api/data/agent_http_server.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/conversation_token_usage_resolver.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
+import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
+import 'package:dingdong/features/ai_companion/data/ai_resource_selector.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -32,6 +34,7 @@ import 'package:dingdong/features/library/domain/built_in_resource_installer.dar
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/token_usage/data/local_token_usage_repository.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/native_clipboard_change_source.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
@@ -380,7 +383,26 @@ final class AppDependencies {
     final LocalConversationTokenUsageResolver tokenUsageResolver =
         LocalConversationTokenUsageResolver();
     final JevService jev = openJevService(paths);
+    final aiResourceSelector = AiResourceSelector(
+      store: AiCompanionPreferencesStore(
+        preferences,
+        development: paths.development,
+      ),
+      onUsage: (record) async {
+        // Keep the host's background use in the same separate numeric ledger.
+        // A short-lived connection observes writes from auxiliary engines too.
+        final repository = LocalTokenUsageRepository(
+          databasePath: paths.tokenUsageDatabaseFile.path,
+        );
+        try {
+          await repository.recordInternalUsage(record);
+        } finally {
+          await repository.close();
+        }
+      },
+    );
     final AgentRouter router = AgentRouter(
+      selectBridgeResources: aiResourceSelector.select,
       jevRoutes: JevRoutes(jev),
       loadJevUsage: (request) async {
         final id = request.conversationId;
@@ -416,6 +438,13 @@ final class AppDependencies {
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
                 resolvedRequest,
+                flashCount:
+                    settings.notificationRules.trayStyleFor(
+                          resolvedRequest.notificationKind,
+                        ) ==
+                        TrayReminderStyle.staticMarker
+                    ? 0
+                    : 8,
                 customSoundPath: settings.customSoundPathFor(
                   resolvedRequest.notificationKind,
                 ),
@@ -437,6 +466,13 @@ final class AppDependencies {
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
                 resolvedRequest,
+                flashCount:
+                    settings.notificationRules.trayStyleFor(
+                          resolvedRequest.notificationKind,
+                        ) ==
+                        TrayReminderStyle.staticMarker
+                    ? 0
+                    : 8,
                 customSoundPath: settings.customSoundPathFor(
                   resolvedRequest.notificationKind,
                 ),

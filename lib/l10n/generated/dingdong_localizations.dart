@@ -103,6 +103,72 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get amber;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft pulse'**
+  String get trayStylePulse;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Static marker'**
+  String get trayStyleStatic;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs-input reminder color'**
+  String get attentionTrayColor;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion reminder color'**
+  String get completionTrayColor;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs-input reminder style'**
+  String get attentionTrayStyle;
+
+  /// Reminder presentation and AI+ results.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion reminder style'**
+  String get completionTrayStyle;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions in this category in the current report. Analyze again after changing the scope.'**
+  String get aiCategoryNoSuggestions;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure a model first. Local rules apply until one is available.'**
+  String get aiRoutingNeedsProvider;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'When an Agent requests resources, let your configured model select from the task, supplied context and candidate summaries. Off by default; failures fall back to local rules.'**
+  String get aiAutoResourceSelectionDescription;
+
+  /// AI+ resource selection and analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'AI resource selection'**
+  String get aiAutoResourceSelection;
+
   /// Independent progressive disclosure advice.
   ///
   /// In en, this message translates to:
@@ -112,7 +178,7 @@ abstract class DingDongLocalizations {
   /// Independent progressive disclosure advice.
   ///
   /// In en, this message translates to:
-  /// **'Review task-matched or manual Prompt loading and the MCP servers needed for each task. Advice never changes configuration and cannot control third-party Agents\' native tool-schema loading.'**
+  /// **'Review always-on Prompts and MCP scope for on-demand loading. This does not change native client tool loading.'**
   String get aiProgressiveDisclosureDescription;
 
   /// Independent progressive disclosure advice.
@@ -214,25 +280,25 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'AI companion'**
+  /// **'AI+'**
   String get aiCompanionTitle;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Local insights, useful suggestions, and a space to talk.'**
+  /// **'Select resources on demand and review insights.'**
   String get aiCompanionSubtitle;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Everything starts off. Local analysis stays on this device. Cloud analysis sends only counts and usage totals; clipboard text, resource contents, paths, files and images are never attached. Chat sends only the messages you choose to write after local sensitive-content checks.'**
+  /// **'Each feature is opt-in. Statistics analysis sends only counts and usage; resource selection sends the task, supplied context and candidate summaries. Clipboard text is not sent.'**
   String get aiPrivacySummary;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Choose what helps you'**
+  /// **'Analysis scope'**
   String get aiFeaturesTitle;
 
   /// AI companion.
@@ -286,18 +352,6 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Supportive chat'**
-  String get aiEmotionalSupport;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Talk to your configured model. Messages stay in memory until cleared or the window closes.'**
-  String get aiEmotionalSupportDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
   /// **'Model analysis of metadata'**
   String get aiCloudAnalysis;
 
@@ -306,6 +360,36 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'On explicit analysis only: send enabled counts and Token totals to your configured model.'**
   String get aiCloudAnalysisDescription;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'API protocol'**
+  String get aiProviderProtocol;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (OpenAI / Anthropic)'**
+  String get aiProviderProtocolAuto;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed (401/403). Check the API key and service permissions.'**
+  String get aiErrorAuthenticationFailed;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint or model not found (404/405). Check the service URL, protocol and model name.'**
+  String get aiErrorEndpointNotFound;
+
+  /// AI companion model connection.
+  ///
+  /// In en, this message translates to:
+  /// **'The service is rate limiting requests (429). Check your quota or try again later.'**
+  String get aiErrorRateLimited;
 
   /// AI companion.
   ///
@@ -322,7 +406,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'OpenAI-compatible base URL'**
+  /// **'Service URL'**
   String get aiProviderEndpoint;
 
   /// AI companion.
@@ -364,7 +448,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Use HTTPS for a cloud provider or HTTP on a loopback address for a local model. Saving settings does not verify connectivity.'**
+  /// **'Supports OpenAI and Anthropic, over HTTP or HTTPS. Auto tries the other protocol when an endpoint is not found. Saving does not test the connection.'**
   String get aiProviderHelp;
 
   /// AI companion.
@@ -394,19 +478,19 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Analyze enabled features'**
+  /// **'Analyze now'**
   String get aiAnalyze;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Suggestions'**
+  /// **'Insights and suggestions'**
   String get aiInsightsTitle;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Enable a feature and run an analysis to see suggestions from your local data.'**
+  /// **'Choose an analysis scope below, then select Analyze now at the top. Results appear here.'**
   String get aiInsightsEmpty;
 
   /// AI companion.
@@ -430,67 +514,13 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'A space to talk'**
-  String get aiChatTitle;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Write what is on your mind. Local checks block common secrets and sensitive patterns; review your message before sending.'**
-  String get aiChatDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Write a message…'**
-  String get aiChatPlaceholder;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Send message'**
-  String get aiChatSend;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear conversation'**
-  String get aiChatClear;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get aiChatYou;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Companion'**
-  String get aiChatAssistant;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable supportive chat to start a conversation.'**
-  String get aiChatDisabled;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure a model before sending a message.'**
-  String get aiChatNeedsProvider;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
   /// **'Take a moment'**
   String get aiCheckInNow;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'The AI companion is unavailable in this window. Reopen Resource Manager to try again.'**
+  /// **'AI+ is unavailable in this window. Reopen Resource Manager.'**
   String get aiUnavailable;
 
   /// AI companion.
@@ -502,7 +532,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid HTTPS base URL, or a loopback HTTP address, and a model name.'**
+  /// **'Enter a valid HTTP or HTTPS service URL and model name, without credentials, query parameters or fragments in the URL.'**
   String get aiErrorInvalidProvider;
 
   /// AI companion.
@@ -510,12 +540,6 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'This cloud model needs an API key. Add it in model settings.'**
   String get aiErrorMissingApiKey;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'This message may contain sensitive information. Remove it before sending.'**
-  String get aiErrorSensitiveInput;
 
   /// AI companion.
   ///
@@ -550,14 +574,8 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Write a message before sending.'**
-  String get aiErrorEmptyMessage;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'This message is too long. Shorten it before sending.'**
-  String get aiErrorMessageTooLong;
+  /// **'The model request is too large. Reduce the analysis scope and try again.'**
+  String get aiErrorRequestTooLarge;
 
   /// Duplicate resource cleanup.
   ///
@@ -7297,6 +7315,66 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.'**
   String get allowBetaUpdatesDescription;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal token usage'**
+  String get aiInternalUsageTitle;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in global statistics'**
+  String get aiIncludeInternal;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default. When enabled, global statistics include all recorded internal usage. Turning it off keeps the separate history here.'**
+  String get aiIncludeInternalDescription;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Records API usage for resource selection, model analysis and connection tests without saving request content.'**
+  String get aiInternalUsageDescription;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get aiInternalCumulative;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Last request in this window'**
+  String get aiInternalLast;
+
+  /// No description provided for @aiInternalRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} requests'**
+  String aiInternalRequests(int count);
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported'**
+  String get aiInternalUnknown;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Only reported usage is counted; missing fields are not zero. Cache tokens are included in input.'**
+  String get aiInternalPartial;
+
+  /// Internal AI token accounting.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.'**
+  String get aiInternalStorageError;
 }
 
 class _DingDongLocalizationsDelegate

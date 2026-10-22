@@ -30,6 +30,11 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
       return TrayUnreadState(
         latestEventId: latest,
         acknowledgedEventId: acknowledged,
+        latestAttentionEventId:
+            (json['latestAttentionEventId'] is int
+                    ? json['latestAttentionEventId']! as int
+                    : 0)
+                .clamp(0, latest),
       );
     } on Object {
       return const TrayUnreadState.empty();
@@ -43,6 +48,7 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
       jsonEncode(<String, Object?>{
         'latestEventId': state.latestEventId,
         'acknowledgedEventId': state.acknowledgedEventId,
+        'latestAttentionEventId': state.latestAttentionEventId,
       }),
     );
   }

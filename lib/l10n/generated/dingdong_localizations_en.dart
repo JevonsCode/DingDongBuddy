@@ -9,11 +9,47 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get amber => 'Amber';
+
+  @override
+  String get trayStylePulse => 'Soft pulse';
+
+  @override
+  String get trayStyleStatic => 'Static marker';
+
+  @override
+  String get attentionTrayColor => 'Needs-input reminder color';
+
+  @override
+  String get completionTrayColor => 'Completion reminder color';
+
+  @override
+  String get attentionTrayStyle => 'Needs-input reminder style';
+
+  @override
+  String get completionTrayStyle => 'Completion reminder style';
+
+  @override
+  String get aiCategoryNoSuggestions =>
+      'No suggestions in this category in the current report. Analyze again after changing the scope.';
+
+  @override
+  String get aiRoutingNeedsProvider =>
+      'Configure a model first. Local rules apply until one is available.';
+
+  @override
+  String get aiAutoResourceSelectionDescription =>
+      'When an Agent requests resources, let your configured model select from the task, supplied context and candidate summaries. Off by default; failures fall back to local rules.';
+
+  @override
+  String get aiAutoResourceSelection => 'AI resource selection';
+
+  @override
   String get aiProgressiveDisclosure => 'Progressive disclosure advice';
 
   @override
   String get aiProgressiveDisclosureDescription =>
-      'Review task-matched or manual Prompt loading and the MCP servers needed for each task. Advice never changes configuration and cannot control third-party Agents\' native tool-schema loading.';
+      'Review always-on Prompts and MCP scope for on-demand loading. This does not change native client tool loading.';
 
   @override
   String aiProgressivePrompt(int count) {
@@ -87,18 +123,18 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'You have been here a while. Take a breath, stretch, or step away for a moment.';
 
   @override
-  String get aiCompanionTitle => 'AI companion';
+  String get aiCompanionTitle => 'AI+';
 
   @override
   String get aiCompanionSubtitle =>
-      'Local insights, useful suggestions, and a space to talk.';
+      'Select resources on demand and review insights.';
 
   @override
   String get aiPrivacySummary =>
-      'Everything starts off. Local analysis stays on this device. Cloud analysis sends only counts and usage totals; clipboard text, resource contents, paths, files and images are never attached. Chat sends only the messages you choose to write after local sensitive-content checks.';
+      'Each feature is opt-in. Statistics analysis sends only counts and usage; resource selection sends the task, supplied context and candidate summaries. Clipboard text is not sent.';
 
   @override
-  String get aiFeaturesTitle => 'Choose what helps you';
+  String get aiFeaturesTitle => 'Analysis scope';
 
   @override
   String get aiClipboardAnalysis => 'Clipboard insights';
@@ -129,18 +165,29 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'A local reminder after an hour with this page open, at most once every two hours. No automatic network requests.';
 
   @override
-  String get aiEmotionalSupport => 'Supportive chat';
-
-  @override
-  String get aiEmotionalSupportDescription =>
-      'Talk to your configured model. Messages stay in memory until cleared or the window closes.';
-
-  @override
   String get aiCloudAnalysis => 'Model analysis of metadata';
 
   @override
   String get aiCloudAnalysisDescription =>
       'On explicit analysis only: send enabled counts and Token totals to your configured model.';
+
+  @override
+  String get aiProviderProtocol => 'API protocol';
+
+  @override
+  String get aiProviderProtocolAuto => 'Auto (OpenAI / Anthropic)';
+
+  @override
+  String get aiErrorAuthenticationFailed =>
+      'Authentication failed (401/403). Check the API key and service permissions.';
+
+  @override
+  String get aiErrorEndpointNotFound =>
+      'Endpoint or model not found (404/405). Check the service URL, protocol and model name.';
+
+  @override
+  String get aiErrorRateLimited =>
+      'The service is rate limiting requests (429). Check your quota or try again later.';
 
   @override
   String get aiProviderTitle => 'Model connection';
@@ -149,7 +196,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiConfigureProvider => 'Configure model';
 
   @override
-  String get aiProviderEndpoint => 'OpenAI-compatible base URL';
+  String get aiProviderEndpoint => 'Service URL';
 
   @override
   String get aiProviderEndpointHint =>
@@ -174,7 +221,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiProviderHelp =>
-      'Use HTTPS for a cloud provider or HTTP on a loopback address for a local model. Saving settings does not verify connectivity.';
+      'Supports OpenAI and Anthropic, over HTTP or HTTPS. Auto tries the other protocol when an endpoint is not found. Saving does not test the connection.';
 
   @override
   String get aiProviderNotConfigured =>
@@ -191,14 +238,14 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiTestConnection => 'Test connection';
 
   @override
-  String get aiAnalyze => 'Analyze enabled features';
+  String get aiAnalyze => 'Analyze now';
 
   @override
-  String get aiInsightsTitle => 'Suggestions';
+  String get aiInsightsTitle => 'Insights and suggestions';
 
   @override
   String get aiInsightsEmpty =>
-      'Enable a feature and run an analysis to see suggestions from your local data.';
+      'Choose an analysis scope below, then select Analyze now at the top. Results appear here.';
 
   @override
   String get aiLocalAnalysis => 'Local analysis · no model request';
@@ -211,56 +258,22 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Suggestions are read-only. Review changes in the relevant workspace.';
 
   @override
-  String get aiChatTitle => 'A space to talk';
-
-  @override
-  String get aiChatDescription =>
-      'Write what is on your mind. Local checks block common secrets and sensitive patterns; review your message before sending.';
-
-  @override
-  String get aiChatPlaceholder => 'Write a message…';
-
-  @override
-  String get aiChatSend => 'Send message';
-
-  @override
-  String get aiChatClear => 'Clear conversation';
-
-  @override
-  String get aiChatYou => 'You';
-
-  @override
-  String get aiChatAssistant => 'Companion';
-
-  @override
-  String get aiChatDisabled =>
-      'Enable supportive chat to start a conversation.';
-
-  @override
-  String get aiChatNeedsProvider =>
-      'Configure a model before sending a message.';
-
-  @override
   String get aiCheckInNow => 'Take a moment';
 
   @override
   String get aiUnavailable =>
-      'The AI companion is unavailable in this window. Reopen Resource Manager to try again.';
+      'AI+ is unavailable in this window. Reopen Resource Manager.';
 
   @override
   String get aiErrorDisabled => 'Enable the relevant feature first.';
 
   @override
   String get aiErrorInvalidProvider =>
-      'Enter a valid HTTPS base URL, or a loopback HTTP address, and a model name.';
+      'Enter a valid HTTP or HTTPS service URL and model name, without credentials, query parameters or fragments in the URL.';
 
   @override
   String get aiErrorMissingApiKey =>
       'This cloud model needs an API key. Add it in model settings.';
-
-  @override
-  String get aiErrorSensitiveInput =>
-      'This message may contain sensitive information. Remove it before sending.';
 
   @override
   String get aiErrorSensitiveOutput =>
@@ -282,11 +295,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Settings or secure storage could not be accessed. Try again before enabling features.';
 
   @override
-  String get aiErrorEmptyMessage => 'Write a message before sending.';
-
-  @override
-  String get aiErrorMessageTooLong =>
-      'This message is too long. Shorten it before sending.';
+  String get aiErrorRequestTooLarge =>
+      'The model request is too large. Reduce the analysis scope and try again.';
 
   @override
   String get resolveDuplicate => 'Resolve duplicate';
@@ -4205,4 +4215,40 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get allowBetaUpdatesDescription =>
       'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.';
+
+  @override
+  String get aiInternalUsageTitle => 'Internal token usage';
+
+  @override
+  String get aiIncludeInternal => 'Include in global statistics';
+
+  @override
+  String get aiIncludeInternalDescription =>
+      'Off by default. When enabled, global statistics include all recorded internal usage. Turning it off keeps the separate history here.';
+
+  @override
+  String get aiInternalUsageDescription =>
+      'Records API usage for resource selection, model analysis and connection tests without saving request content.';
+
+  @override
+  String get aiInternalCumulative => 'All time';
+
+  @override
+  String get aiInternalLast => 'Last request in this window';
+
+  @override
+  String aiInternalRequests(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get aiInternalUnknown => 'Not reported';
+
+  @override
+  String get aiInternalPartial =>
+      'Only reported usage is counted; missing fields are not zero. Cache tokens are included in input.';
+
+  @override
+  String get aiInternalStorageError =>
+      'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.';
 }

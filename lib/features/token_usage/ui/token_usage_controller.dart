@@ -18,14 +18,18 @@ class TokenUsageController extends ChangeNotifier {
        _snapshot = initialSnapshot ?? const TokenUsageSnapshot(),
        _hasLoaded = initialSnapshot != null;
 
-  TokenUsageController.fromRepository(LocalTokenUsageRepository repository)
-    : this(
-        loadSnapshot: () async {
-          await repository.refresh();
-          return repository.readSnapshot();
-        },
-        cancelRefresh: repository.cancelRefresh,
-      );
+  TokenUsageController.fromRepository(
+    LocalTokenUsageRepository repository, {
+    Future<bool> Function()? includeInternal,
+  }) : this(
+         loadSnapshot: () async {
+           await repository.refresh();
+           return repository.readSnapshot(
+             includeInternal: await includeInternal?.call() ?? false,
+           );
+         },
+         cancelRefresh: repository.cancelRefresh,
+       );
 
   TokenUsageController.preview(TokenUsageSnapshot snapshot)
     : this(loadSnapshot: () async => snapshot, initialSnapshot: snapshot);
@@ -37,6 +41,7 @@ class TokenUsageController extends ChangeNotifier {
   bool _isLoading = false;
   bool _isCancelling = false;
   bool _disposed = false;
+  int _revision = 0;
   Object? _error;
 
   TokenUsageSnapshot get snapshot => _snapshot;
@@ -46,8 +51,16 @@ class TokenUsageController extends ChangeNotifier {
   bool get isCancelling => _isCancelling;
   Object? get error => _error;
 
+  void invalidate() {
+    if (_disposed) return;
+    _revision++;
+    _hasLoaded = false;
+    notifyListeners();
+  }
+
   Future<void> refresh() async {
     if (_disposed || _isLoading) return;
+    final revision = _revision;
     _isLoading = true;
     _isCancelling = false;
     _error = null;
@@ -56,7 +69,7 @@ class TokenUsageController extends ChangeNotifier {
       final TokenUsageSnapshot snapshot = await _loadSnapshot();
       if (_disposed) return;
       _snapshot = snapshot;
-      _hasLoaded = true;
+      _hasLoaded = revision == _revision;
     } on Object catch (error) {
       if (_disposed) return;
       _error = error;

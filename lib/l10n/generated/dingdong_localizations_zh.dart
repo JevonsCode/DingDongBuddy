@@ -9,11 +9,45 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get amber => '琥珀';
+
+  @override
+  String get trayStylePulse => '柔和闪动';
+
+  @override
+  String get trayStyleStatic => '静态标记';
+
+  @override
+  String get attentionTrayColor => '需要我时的提醒颜色';
+
+  @override
+  String get completionTrayColor => '完成提醒颜色';
+
+  @override
+  String get attentionTrayStyle => '需要我时的提醒样式';
+
+  @override
+  String get completionTrayStyle => '完成提醒样式';
+
+  @override
+  String get aiCategoryNoSuggestions => '当前报告没有此类建议。更改范围后请重新分析。';
+
+  @override
+  String get aiRoutingNeedsProvider => '请先配置模型。未配置时继续使用本地规则。';
+
+  @override
+  String get aiAutoResourceSelectionDescription =>
+      'Agent 请求资源时，将当前任务、传入的上下文与候选摘要交给已配置模型筛选。默认关闭；失败时回退本地规则。';
+
+  @override
+  String get aiAutoResourceSelection => 'AI 自动筛选资源';
+
+  @override
   String get aiProgressiveDisclosure => '渐进式披露建议';
 
   @override
   String get aiProgressiveDisclosureDescription =>
-      '检查 Prompt 的任务匹配或手动加载方式，以及任务所需的 MCP 范围。仅提供建议，不修改配置，也无法改变第三方 Agent 原生加载工具 Schema 的方式。';
+      '检查常驻 Prompt 与 MCP 范围，给出按需加载建议。不会改变客户端原生工具加载方式。';
 
   @override
   String aiProgressivePrompt(int count) {
@@ -82,17 +116,17 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiTakeABreakSuggestion => '已经忙了一阵，可以缓口气、伸展一下，或暂时离开屏幕。';
 
   @override
-  String get aiCompanionTitle => 'AI 伙伴';
+  String get aiCompanionTitle => 'AI+';
 
   @override
-  String get aiCompanionSubtitle => '本地洞察、实用建议，也可以聊聊近况。';
+  String get aiCompanionSubtitle => '按需筛选资源，查看洞察与建议。';
 
   @override
   String get aiPrivacySummary =>
-      '所有功能默认关闭。本地分析留在此设备；云端分析仅发送数量与用量统计，不附带剪贴板文本、资源正文、路径、文件或图片。聊天仅发送你主动输入并通过本地敏感内容检查的消息。';
+      '各项功能独立开启。统计分析只发送数量与用量；自动资源筛选会发送任务、传入上下文和候选摘要。剪贴板正文不会发送。';
 
   @override
-  String get aiFeaturesTitle => '选择你需要的功能';
+  String get aiFeaturesTitle => '分析范围';
 
   @override
   String get aiClipboardAnalysis => '剪贴板洞察';
@@ -120,17 +154,26 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       '此页面持续打开一小时后显示本地关怀提醒，最多每两小时一次，不自动发起网络请求。';
 
   @override
-  String get aiEmotionalSupport => '情绪陪伴';
-
-  @override
-  String get aiEmotionalSupportDescription => '与你配置的模型聊天。消息仅暂存内存，清空或关闭窗口后移除。';
-
-  @override
   String get aiCloudAnalysis => '使用模型分析统计数据';
 
   @override
   String get aiCloudAnalysisDescription =>
       '仅在点击分析时，将已开启功能的数量与 Token 统计发送给配置的模型。';
+
+  @override
+  String get aiProviderProtocol => '接口协议';
+
+  @override
+  String get aiProviderProtocolAuto => '自动识别（OpenAI / Anthropic）';
+
+  @override
+  String get aiErrorAuthenticationFailed => '认证失败（401/403），请检查 API 密钥和服务权限。';
+
+  @override
+  String get aiErrorEndpointNotFound => '接口或模型不存在（404/405），请检查服务地址、接口协议和模型名称。';
+
+  @override
+  String get aiErrorRateLimited => '服务请求受限（429），请检查额度或稍后重试。';
 
   @override
   String get aiProviderTitle => '模型连接';
@@ -139,7 +182,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiConfigureProvider => '配置模型';
 
   @override
-  String get aiProviderEndpoint => '兼容 OpenAI 的基础 URL';
+  String get aiProviderEndpoint => '服务地址';
 
   @override
   String get aiProviderEndpointHint =>
@@ -161,7 +204,8 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiRemoveApiKey => '移除已保存的密钥';
 
   @override
-  String get aiProviderHelp => '云端模型使用 HTTPS，本地模型可使用回环地址的 HTTP。保存配置不代表已成功连接。';
+  String get aiProviderHelp =>
+      '支持 OpenAI 和 Anthropic，可使用 HTTP 或 HTTPS。自动模式会在接口不存在时尝试另一种协议。保存后请测试连接。';
 
   @override
   String get aiProviderNotConfigured => '尚未配置模型。开启分析功能后即可查看本地洞察。';
@@ -176,13 +220,13 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiTestConnection => '测试连接';
 
   @override
-  String get aiAnalyze => '分析已开启的功能';
+  String get aiAnalyze => '立即分析';
 
   @override
-  String get aiInsightsTitle => '建议';
+  String get aiInsightsTitle => '洞察与建议';
 
   @override
-  String get aiInsightsEmpty => '开启功能并点击分析，即可根据本地数据查看建议。';
+  String get aiInsightsEmpty => '选择下方的分析范围，然后点击顶部「立即分析」。结果会显示在这里。';
 
   @override
   String get aiLocalAnalysis => '本地分析 · 未请求模型';
@@ -194,50 +238,20 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiReadOnly => '建议不会修改数据，请在对应页面审阅后操作。';
 
   @override
-  String get aiChatTitle => '聊聊近况';
-
-  @override
-  String get aiChatDescription => '可以聊聊你的想法。本地检查会拦截常见密钥与敏感格式，发送前仍请确认消息内容。';
-
-  @override
-  String get aiChatPlaceholder => '写下想聊的话…';
-
-  @override
-  String get aiChatSend => '发送消息';
-
-  @override
-  String get aiChatClear => '清空对话';
-
-  @override
-  String get aiChatYou => '你';
-
-  @override
-  String get aiChatAssistant => '伙伴';
-
-  @override
-  String get aiChatDisabled => '开启情绪陪伴后即可开始对话。';
-
-  @override
-  String get aiChatNeedsProvider => '请先配置模型，再发送消息。';
-
-  @override
   String get aiCheckInNow => '休息一下';
 
   @override
-  String get aiUnavailable => '此窗口暂时无法使用 AI 伙伴，请重新打开资源管理器。';
+  String get aiUnavailable => '此窗口暂时无法使用 AI+，请重新打开资源管理器。';
 
   @override
   String get aiErrorDisabled => '请先开启对应功能。';
 
   @override
   String get aiErrorInvalidProvider =>
-      '请输入有效的 HTTPS 基础 URL 或本机回环 HTTP 地址，以及模型名称。';
+      '请输入有效的 HTTP 或 HTTPS 服务地址及模型名称；地址不能包含账号、查询参数或片段。';
 
   @override
   String get aiErrorMissingApiKey => '此云端模型需要 API 密钥，请在模型配置中添加。';
-
-  @override
-  String get aiErrorSensitiveInput => '消息可能包含敏感信息，请移除后再发送。';
 
   @override
   String get aiErrorSensitiveOutput => '模型回复可能包含敏感信息，已隐藏。';
@@ -255,10 +269,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiErrorStorageUnavailable => '无法读取配置或安全存储，请稍后重试。';
 
   @override
-  String get aiErrorEmptyMessage => '请先输入消息。';
-
-  @override
-  String get aiErrorMessageTooLong => '消息过长，请缩短后再发送。';
+  String get aiErrorRequestTooLarge => '模型请求内容过多，请缩小分析范围后重试。';
 
   @override
   String get resolveDuplicate => '处理重复项';
@@ -4040,4 +4051,37 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String get allowBetaUpdatesDescription =>
       '提前体验尚未正式发布的新功能，测试版可能不够稳定。关闭后会停留在当前测试版，直到更新的正式版发布。';
+
+  @override
+  String get aiInternalUsageTitle => '内部 Token 消耗';
+
+  @override
+  String get aiIncludeInternal => '计入全局统计';
+
+  @override
+  String get aiIncludeInternalDescription =>
+      '默认关闭。开启后，全局 Token 统计包含已记录的内部用量；关闭后仍可在这里查看。';
+
+  @override
+  String get aiInternalUsageDescription => '记录资源筛选、模型分析和连接测试的接口用量，不保存请求内容。';
+
+  @override
+  String get aiInternalCumulative => '累计';
+
+  @override
+  String get aiInternalLast => '本窗口最近一次';
+
+  @override
+  String aiInternalRequests(int count) {
+    return '$count 次请求';
+  }
+
+  @override
+  String get aiInternalUnknown => '未返回';
+
+  @override
+  String get aiInternalPartial => '仅累计已返回用量；缺失字段不按零计算。缓存已包含在输入中。';
+
+  @override
+  String get aiInternalStorageError => '内部用量暂时无法保存或读取，累计值可能不完整。模型回复不受影响。';
 }

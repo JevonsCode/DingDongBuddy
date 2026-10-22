@@ -358,12 +358,21 @@ void TrayManagerPlugin::SetIcon(
   const int next_count =
       count_value == nullptr ? 0 : std::clamp(*count_value, 0, 999);
 
+  auto* kind_value = std::get_if<std::string>(ValueOrNull(args, "reminderKind"));
+  auto* color_value = std::get_if<int>(ValueOrNull(args, "badgeColorRgb"));
+  const bool custom_reminder = next_count > 0 && kind_value != nullptr;
+  const bool needs_input = kind_value != nullptr && *kind_value == "attention";
+  const DWORD reminder_rgb = color_value == nullptr ? 0x966500 : static_cast<DWORD>(*color_value);
+  const auto* animate_value = std::get_if<bool>(ValueOrNull(args, "animateUnread"));
+  const bool animate_unread = animate_value == nullptr || *animate_value;
   const int icon_width = GetSystemMetrics(SM_CXSMICON);
   const int icon_height = GetSystemMetrics(SM_CYSMICON);
-  HICON replacement_rendered_icon = tray_manager::CreateTrayIcon(
-      replacement_icon, icon_width, icon_height);
-  HICON replacement_attention_rendered_icon = tray_manager::CreateTrayIcon(
-      replacement_attention_icon, icon_width, icon_height);
+  HICON replacement_rendered_icon = custom_reminder
+      ? tray_manager::CreateReminderTrayIcon(icon_width, icon_height, reminder_rgb, needs_input)
+      : tray_manager::CreateTrayIcon(replacement_icon, icon_width, icon_height);
+  HICON replacement_attention_rendered_icon = custom_reminder
+      ? tray_manager::CreateReminderTrayIcon(icon_width, icon_height, reminder_rgb, needs_input, true)
+      : tray_manager::CreateTrayIcon(replacement_attention_icon, icon_width, icon_height);
   if (replacement_rendered_icon == nullptr ||
       replacement_attention_rendered_icon == nullptr) {
     if (replacement_rendered_icon != nullptr) {
@@ -388,7 +397,7 @@ void TrayManagerPlugin::SetIcon(
   attention_rendered_icon = replacement_attention_rendered_icon;
   unread_count = next_count;
 
-  if (unread_count > 0) {
+  if (unread_count > 0 && animate_unread) {
     StartAttentionFlash();
   } else {
     CancelAttentionFlash();
@@ -437,6 +446,12 @@ void TrayManagerPlugin::CancelAttentionFlash() {
 }
 
 void TrayManagerPlugin::StartAttentionFlash() {
+  BOOL animation_enabled = TRUE;
+  SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation_enabled, 0);
+  if (!animation_enabled) {
+    CancelAttentionFlash();
+    return;
+  }
   if (unread_count <= 0 || rendered_icon == nullptr ||
       attention_rendered_icon == nullptr) {
     CancelAttentionFlash();
@@ -465,6 +480,12 @@ void TrayManagerPlugin::StartAttentionFlash() {
 }
 
 void TrayManagerPlugin::AdvanceAttentionFlash() {
+  BOOL animation_enabled = TRUE;
+  SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &animation_enabled, 0);
+  if (!animation_enabled) {
+    CancelAttentionFlash();
+    return;
+  }
   if (!attention_timer_active || unread_count <= 0) {
     CancelAttentionFlash();
     return;

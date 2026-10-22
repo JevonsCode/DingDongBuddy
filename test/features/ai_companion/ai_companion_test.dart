@@ -17,6 +17,27 @@ final DateTime _now = DateTime.utc(2026, 10, 21, 12);
 
 void main() {
   test(
+    'analysis still blocks sensitive output and provider key echoes',
+    () async {
+      final backend = MemoryPreferencesBackend();
+      final transport = _Transport();
+      final controller = _controller(transport: transport, backend: backend);
+      addTearDown(controller.dispose);
+      await controller.saveSettings(
+        _configured.copyWith(cloudAnalysis: true, tokenOptimization: true),
+        apiKey: 'dummy-key-private',
+      );
+      for (final reply in ['password=leaked', 'dummy-key-private']) {
+        transport.reply = reply;
+        await controller.analyze();
+        expect(controller.error, AiCompanionError.sensitiveOutput);
+        expect(controller.report?.cloudSummary, isNull);
+        expect(jsonEncode(backend.values), isNot(contains(reply)));
+      }
+    },
+  );
+
+  test(
     'analysis category or provider changes clear visible and persisted cloud text',
     () async {
       final changes =
@@ -130,15 +151,13 @@ void main() {
       );
       expect(
         controller.settings.toJson().values.whereType<bool>(),
-        hasLength(7),
+        hasLength(8),
       );
       expect(
         AiCompanionSettings.fromJson(<String, Object?>{}).progressiveDisclosure,
         false,
       );
       await controller.analyze();
-      expect(controller.error, AiCompanionError.disabled);
-      await controller.sendMessage('Hello');
       expect(controller.error, AiCompanionError.disabled);
       await controller.checkIn(activeMinutes: 120);
       expect(reads, 0);
@@ -556,92 +575,12 @@ void main() {
     },
   );
 
-  for (final String input in <String>[
-    'password=short',
-    'my password is short',
-    '密码是简单密码',
-    'Bearer abc123',
-    'sk-proj-abcdefghijklmno',
-    'ghp_abcdefghijklmnopqrstuvwxyz',
-    'eyJabc.def.ghi',
-    '-----BEGIN PRIVATE KEY-----',
-    'abcdefABCDEF1234567890abcdefABCDEF1234567890',
-    r'C:\Users\private\secrets',
-    '/Users/private/secrets',
-    '../private/data',
-    '~/private/data',
-    'photo.png',
-    'notes.txt',
-    'data:image/png;base64,abc',
-    '![picture](anything)',
-    'https://private.example/image',
-  ]) {
-    test(
-      'local chat filter blocks sensitive or file input: ${input.length} chars ${input.hashCode}',
-      () async {
-        final _Transport transport = _Transport();
-        final controller = _controller(transport: transport);
-        addTearDown(controller.dispose);
-        await controller.saveSettings(
-          _configured.copyWith(emotionalSupport: true),
-          apiKey: 'dummy',
-        );
-        await controller.sendMessage(input);
-        expect(controller.error, AiCompanionError.sensitiveInput);
-        expect(controller.messages, isEmpty);
-        expect(transport.requests, isEmpty);
-      },
-    );
-  }
-
-  test(
-    'chat output is filtered, API key echo blocked, history never persisted',
-    () async {
-      final _Transport transport = _Transport()..reply = 'password=leaked';
-      final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
-      final _Secrets secrets = _Secrets();
-      int reads = 0;
-      final controller = _controller(
-        transport: transport,
-        backend: backend,
-        secrets: secrets,
-        loader: () async {
-          reads++;
-          return const AiCompanionMetadata();
-        },
-      );
-      addTearDown(controller.dispose);
-      await controller.saveSettings(
-        _configured.copyWith(emotionalSupport: true),
-        apiKey: 'unusual-short-provider-key',
-      );
-      await controller.sendMessage('I feel overwhelmed today.');
-      expect(controller.error, AiCompanionError.sensitiveOutput);
-      expect(controller.messages, isEmpty);
-      transport.reply = 'unusual-short-provider-key';
-      await controller.sendMessage('Please help me take a break.');
-      expect(controller.error, AiCompanionError.sensitiveOutput);
-      transport.reply = 'A short pause can help. What feels most urgent?';
-      await controller.sendMessage('I feel overwhelmed today.');
-      expect(controller.error, isNull);
-      expect(controller.messages, hasLength(2));
-      expect(reads, 0);
-      final String saved = jsonEncode(backend.values);
-      expect(saved.contains('unusual-short-provider-key'), false);
-      expect(saved.contains('overwhelmed'), false);
-      expect(secrets.value, 'unusual-short-provider-key');
-    },
-  );
-
   test('provider endpoint change drops the previous credential', () async {
     final _Transport transport = _Transport();
     final _Secrets secrets = _Secrets();
     final controller = _controller(transport: transport, secrets: secrets);
     addTearDown(controller.dispose);
-    await controller.saveSettings(
-      _configured.copyWith(emotionalSupport: true),
-      apiKey: 'dummy',
-    );
+    await controller.saveSettings(_configured, apiKey: 'dummy');
     await controller.saveSettings(
       controller.settings.copyWith(
         providerEndpoint: 'https://other.example/v1',
@@ -649,7 +588,7 @@ void main() {
     );
     expect(controller.hasStoredApiKey, false);
     expect(secrets.value, isNull);
-    await controller.sendMessage('Hello');
+    await controller.testConnection();
     expect(controller.error, AiCompanionError.missingApiKey);
     expect(transport.requests, isEmpty);
   });
@@ -755,12 +694,14 @@ void main() {
     },
   );
 
-  test('provider URL validation permits explicit loopback and HTTPS only', () {
+  test('provider URL validation permits explicit HTTP and HTTPS services', () {
     for (final String endpoint in <String>[
       'http://127.0.0.1:11434',
       'http://localhost:11434/v1',
       'http://[::1]:11434/v1',
       'https://provider.example/v1',
+      'http://provider.example/v1',
+      'http://192.168.1.2/v1',
     ]) {
       expect(
         AiCompanionClient.validateProvider(
@@ -770,8 +711,6 @@ void main() {
       );
     }
     for (final String endpoint in <String>[
-      'http://provider.example/v1',
-      'http://192.168.1.2/v1',
       'https://user:password@provider.example/v1',
       'https://provider.example/v1?api_key=secret',
       'https://provider.example/v1#fragment',
@@ -827,23 +766,17 @@ void main() {
         AiCompanionSettings(
           providerEndpoint: 'http://127.0.0.1:${server.port}/v1',
           model: 'local-model',
-          emotionalSupport: true,
         ),
         apiKey: 'local-dummy',
       );
       await controller.testConnection();
       expect(controller.error, isNull);
       expect(controller.connectionVerified, true);
-      await controller.sendMessage('Hello');
-      expect(controller.messages, hasLength(2));
-      controller.clearConversation();
-      await controller.sendMessage('Please help me pause.');
-      expect(controller.error, isNull);
-      expect(controller.messages, hasLength(2));
+      await controller.testConnection();
       expect(paths, everyElement('/v1/chat/completions'));
       expect(auth, everyElement('Bearer local-dummy'));
-      expect(payloads, hasLength(3));
-      expect((payloads.last['messages'] as List).length, 2);
+      expect(payloads, hasLength(2));
+      expect((payloads.last['messages'] as List).length, 1);
       expect(payloads.last.containsKey('tools'), false);
     },
   );
@@ -951,7 +884,7 @@ void main() {
     'failure diagnostics contain no raw provider body or exception message',
     () async {
       final transport = _Transport()
-        ..status = 401
+        ..status = 500
         ..reply = 'password=raw-provider-error';
       final client = AiCompanionClient(transport: transport);
       addTearDown(client.dispose);
@@ -963,7 +896,9 @@ void main() {
         expect(error.toString(), 'AiCompanionException(providerUnavailable)');
       }
       expect(
-        const AiCompanionPrivacy().isSafeText('I feel tired and want to talk.'),
+        const AiCompanionPrivacy().isSafeText(
+          'Review resource usage and enable task matching.',
+        ),
         true,
       );
     },

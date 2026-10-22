@@ -32,22 +32,19 @@ class _ResourceCards extends StatelessWidget {
       key: const Key('resource-list'),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       itemCount: resources.length,
-      itemExtent: 124,
+      itemExtent: 116,
       itemBuilder: (BuildContext context, int index) {
         final Resource resource = resources[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: _ResourceCard(
-            resource: resource,
-            onToggleEnabled: () => unawaited(_toggleEnabled(resource)),
-            onCopy: clipboardGateway == null
-                ? null
-                : () => clipboardGateway!.writeText(resource.content),
-            onEdit: launcher == null
-                ? null
-                : () => launcher!.show(editingResourceId: resource.id),
-            onDelete: () => _confirmDelete(context, resource),
-          ),
+        return _ResourceCard(
+          resource: resource,
+          onToggleEnabled: () => unawaited(_toggleEnabled(resource)),
+          onCopy: clipboardGateway == null
+              ? null
+              : () => clipboardGateway!.writeText(resource.content),
+          onEdit: launcher == null
+              ? null
+              : () => launcher!.show(editingResourceId: resource.id),
+          onDelete: () => _confirmDelete(context, resource),
         );
       },
     );
@@ -112,28 +109,17 @@ class _ResourceCard extends StatelessWidget {
     final List<String> visibleTags = tags.take(4).toList(growable: false);
     final int hiddenTagCount = tags.length - visibleTags.length;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final bool isMcp = resource.type == ResourceType.mcp;
-    final Color background = switch (resource.type) {
-      ResourceType.prompt => PopupStyle.of(context).warmSurface,
-      ResourceType.skill => PopupStyle.of(context).skillSurface,
-      ResourceType.mcp => PopupStyle.mcpSurface(Theme.of(context).brightness),
-      _ => PopupStyle.of(context).surfaceSoft,
-    };
-    final BoxDecoration decoration = isMcp
-        ? BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: PopupStyle.mcpBorder(Theme.of(context).brightness),
-            ),
-          )
-        : PopupStyle.of(context).card(color: background, radius: 9);
+    final PopupPalette palette = PopupStyle.of(context);
+    final BoxDecoration decoration = BoxDecoration(
+      color: palette.surface,
+      border: Border(bottom: BorderSide(color: palette.border)),
+    );
     return Opacity(
       opacity: resource.enabled ? 1 : 0.58,
       child: Container(
         key: Key('resource-card-${resource.id}'),
         decoration: decoration,
-        padding: const EdgeInsets.fromLTRB(14, 12, 11, 10),
+        padding: const EdgeInsets.fromLTRB(2, 12, 0, 10),
         child: Row(
           children: <Widget>[
             SizedBox(
