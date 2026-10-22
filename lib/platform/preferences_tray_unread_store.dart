@@ -27,6 +27,18 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
         latest,
       );
       return TrayUnreadState(
+        reminderEvents: {
+          if (json['reminderEvents'] is Map)
+            for (final entry in (json['reminderEvents'] as Map).entries.take(
+              64,
+            ))
+              if (entry.key is String &&
+                  (entry.key as String).length <= 64 &&
+                  entry.value is int &&
+                  (entry.value as int) > acknowledged &&
+                  (entry.value as int) <= latest)
+                entry.key as String: entry.value as int,
+        },
         latestReminderId: json['latestReminderId'] as String?,
         latestAttentionReminderId: json['latestAttentionReminderId'] as String?,
         latestEventId: latest,
@@ -47,6 +59,7 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
     return _preferences.write(
       _key,
       jsonEncode(<String, Object?>{
+        'reminderEvents': state.reminderEvents,
         'latestReminderId': state.latestReminderId,
         'latestAttentionReminderId': state.latestAttentionReminderId,
         'latestEventId': state.latestEventId,

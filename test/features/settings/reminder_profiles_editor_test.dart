@@ -134,6 +134,25 @@ void main() {
       (tester) async {
         await pumpEditor(tester, dark: dark);
         expect(tester.takeException(), isNull);
+        expect(find.byType(ReminderUsageDots), findsNothing);
+        expect(
+          find.byKey(const Key('settings-notify-codex-voice-activity')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('settings-notify-subagent-activity')),
+          findsOneWidget,
+        );
+        await expectLater(
+          find.byType(Scaffold),
+          matchesGoldenFile(
+            'goldens/reminder_profiles_${dark ? 'dark' : 'light'}.png',
+          ),
+        );
+        await tester.tap(find.byKey(const Key('edit-reminder-build-error')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('reminder-sound')));
+        await tester.pumpAndSettle();
         final dots = tester
             .widgetList<ReminderUsageDots>(find.byType(ReminderUsageDots))
             .where((x) => x.profiles.isNotEmpty)
@@ -145,16 +164,23 @@ void main() {
               .length,
           2,
         );
+        expect(tester.takeException(), isNull);
         await expectLater(
-          find.byType(Scaffold),
+          find.byType(Overlay),
           matchesGoldenFile(
-            'goldens/reminder_profiles_${dark ? 'dark' : 'light'}.png',
+            'goldens/reminder_sound_menu_${dark ? 'dark' : 'light'}.png',
           ),
         );
+        await tester.tap(
+          find.byKey(const Key('preview-reminder-sound-dingCrisp')),
+        );
+        await tester.pumpAndSettle();
+        // Preview must neither close the menu nor change the selection.
+        expect(find.byKey(const Key('sound-option-dingSoft')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('sound-option-dingSoft')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('sound-option-dingSoft')), findsNothing);
         if (!dark) {
-          await tester.tap(find.byKey(const Key('edit-reminder-build-error')));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
           await expectLater(
             find.byType(Overlay),
             matchesGoldenFile('goldens/reminder_profile_editor.png'),

@@ -5,17 +5,21 @@ are independent. Turn completion off and needs-input on to be interrupted only
 when the Agent requests your help. Each type has its own sound, tray style and
 color. Existing completion color preferences are preserved.
 
-On macOS the menu-bar badge uses a check for completion and a bell for attention.
-On Windows the notification-area marker uses a check or exclamation mark. Hover
-text identifies the reminder type and unread count. An unread needs-input event
-takes priority over subsequent completion events until acknowledged.
+On macOS the menu-bar badge preserves the original DingDong artwork and unread
+count. Separate colored bubbles follow it for each unread reminder type, ordered
+by its latest event. Up to three bubbles are visible; additional types show a
+`+N` count. Types can share a color. Acknowledging an earlier snapshot leaves
+newer bubbles intact, including after restart. Hover text lists reminder names.
+On Windows the fixed-size notification-area marker uses a check or exclamation
+mark; the trailing-bubble layout is macOS-specific. An unread needs-input event
+still takes priority over subsequent completion events until acknowledged.
 
 **Static marker** keeps a steady badge. **Soft pulse** alternates two close color
 shades; it does not hide the icon. System reduced-animation preferences suppress
 the pulse. Completion defaults to static; needs-input defaults to soft pulse and
-amber. Color presets are reinforced by different glyphs, so color is not the only
-way to tell the types apart. Gradient styling is not offered for the small tray
-marker.
+amber. The macOS bubbles pulse individually according to their saved style;
+the original capsule keeps its completion color. Hover names and the activity
+list identify types that share colors. Gradient styling is not offered.
 
 Tell the Agent, for example: “When you need a decision or action from me, call
 DingDong to remind me.” The Agent must explicitly send an `attention` event using
@@ -71,8 +75,11 @@ For imported audio, use `sound: "custom"` and the returned `sounds[].path` as
 `customSoundPath` in the profile. At most 64 imported sounds are retained. The
 source file can be removed after import. Existing custom sound paths remain
 compatible. Colors and audio can be reused by any number of profiles. The sound
-list shows the referencing profiles as colored dots at the right; more than two
-overlap and the tooltip lists all names, including disabled profiles.
+dropdown in the reminder editor shows referencing profiles as colored dots at
+the right; more than two overlap and the tooltip lists all names, including
+disabled profiles. Preview buttons do not select a sound or close the menu.
+Import is available at the bottom of the dropdown. There is no separate exposed
+sound list. Codex voice-task and subagent switches belong to the Reminders group.
 
 The loopback API provides `GET /settings/reminders` and
 `POST /settings/reminders` with action `upsert`, `delete` or `importSound`.

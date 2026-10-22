@@ -32,10 +32,10 @@ class ReminderProfilesEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profiles = settings.reminderProfiles;
-    final sounds = _sounds(context, settings);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -109,67 +109,31 @@ class ReminderProfilesEditor extends StatelessWidget {
               ],
             ),
           ),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                context.l10n.reminderSounds,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-            DesktopActionButton(
-              key: const Key('import-reminder-sound'),
-              label: context.l10n.importReminderSound,
-              onPressed:
-                  soundFileGateway == null ||
-                      settings.notificationRules.audioLibrary.length >= 64
-                  ? null
-                  : () => _import(context),
-              tone: DesktopActionTone.neutral,
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          context.l10n.reminderAudioFormat,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        for (final sound in sounds)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Row(
-              children: [
-                Expanded(child: Text(sound.label)),
-                DesktopIconButton(
-                  key: Key('preview-reminder-sound-${sound.key}'),
-                  tooltip: context.l10n.previewSound,
-                  onPressed: soundPreviewGateway == null || sound.key == 'muted'
-                      ? null
-                      : () => soundPreviewGateway!.preview(
-                          sound: sound.path == null ? sound.key : 'custom',
-                          customSoundPath: sound.path,
-                        ),
-                  icon: const Icon(Icons.volume_up_outlined, size: 18),
-                ),
-                SizedBox(
-                  width: 84,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: ReminderUsageDots(
-                      profiles: profiles
-                          .where((x) => x.soundKey == sound.key)
-                          .toList(),
-                      names: profiles
-                          .where((x) => x.soundKey == sound.key)
-                          .map((x) => _profileName(context, x))
-                          .toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        const SizedBox(height: 12),
+        CompactSwitchListTile(
+          key: const Key('settings-notify-codex-voice-activity'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.codexVoiceTaskNotifications),
+          subtitle: Text(
+            context
+                .l10n
+                .whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958,
           ),
+          value: settings.notifyCodexVoiceActivity,
+          onChanged: viewModel.setNotifyCodexVoiceActivity,
+        ),
+        CompactSwitchListTile(
+          key: const Key('settings-notify-subagent-activity'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(context.l10n.subagentNotifications),
+          subtitle: Text(
+            context
+                .l10n
+                .whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98,
+          ),
+          value: settings.notifySubagentActivity,
+          onChanged: viewModel.setNotifySubagentActivity,
+        ),
       ],
     );
   }
@@ -179,7 +143,9 @@ class ReminderProfilesEditor extends StatelessWidget {
       context: context,
       builder: (_) => _ReminderDialog(
         profile: existing,
-        sounds: _sounds(context, settings),
+        viewModel: viewModel,
+        previewGateway: soundPreviewGateway,
+        onImport: soundFileGateway == null ? null : _import,
       ),
     );
     if (profile != null) await viewModel.saveReminderProfile(profile);
@@ -320,9 +286,16 @@ List<_Sound> _sounds(BuildContext context, AppSettings settings) {
 }
 
 class _ReminderDialog extends StatefulWidget {
-  const _ReminderDialog({required this.profile, required this.sounds});
+  const _ReminderDialog({
+    required this.profile,
+    required this.viewModel,
+    this.previewGateway,
+    this.onImport,
+  });
   final ReminderProfile? profile;
-  final List<_Sound> sounds;
+  final SettingsViewModel viewModel;
+  final SoundPreviewGateway? previewGateway;
+  final Future<void> Function(BuildContext)? onImport;
   @override
   State<_ReminderDialog> createState() => _ReminderDialogState();
 }
@@ -483,25 +456,23 @@ class _ReminderDialogState extends State<_ReminderDialog> {
               ),
               field(
                 strings.sound,
-                DesktopSelectField<String>(
+                _ReminderSoundPicker(
                   key: const Key('reminder-sound'),
-                  semanticLabel: strings.sound,
-                  value: widget.sounds.any((x) => x.key == profile.soundKey)
-                      ? profile.soundKey
-                      : 'default',
-                  items: [
-                    for (final sound in widget.sounds)
-                      DesktopSelectItem(value: sound.key, label: sound.label),
-                  ],
-                  onChanged: (v) {
-                    final sound = widget.sounds.firstWhere((x) => x.key == v);
-                    setState(
-                      () => profile = profile.copyWith(
-                        sound: sound.path == null ? sound.key : 'custom',
-                        customSoundPath: sound.path,
-                      ),
-                    );
-                  },
+                  settings: widget.viewModel.settings,
+                  value: profile.soundKey,
+                  previewGateway: widget.previewGateway,
+                  onImport: widget.onImport == null
+                      ? null
+                      : () async {
+                          await widget.onImport!(context);
+                          if (mounted) setState(() {});
+                        },
+                  onChanged: (sound) => setState(
+                    () => profile = profile.copyWith(
+                      sound: sound.path == null ? sound.key : 'custom',
+                      customSoundPath: sound.path,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -540,6 +511,217 @@ class _ReminderDialogState extends State<_ReminderDialog> {
           },
         ),
       ],
+    );
+  }
+}
+
+/// Sound choices stay next to the reminder being edited, including preview and reuse markers.
+class _ReminderSoundPicker extends StatelessWidget {
+  const _ReminderSoundPicker({
+    required this.settings,
+    required this.value,
+    required this.onChanged,
+    this.previewGateway,
+    this.onImport,
+    super.key,
+  });
+  final AppSettings settings;
+  final String value;
+  final ValueChanged<_Sound> onChanged;
+  final SoundPreviewGateway? previewGateway;
+  final Future<void> Function()? onImport;
+
+  @override
+  Widget build(BuildContext context) {
+    final sounds = _sounds(context, settings);
+    final selected = sounds.firstWhere(
+      (s) => s.key == value,
+      orElse: () => sounds.first,
+    );
+    final colors = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return MenuAnchor(
+          alignmentOffset: const Offset(0, 6),
+          style: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(
+              colors.surfaceContainerLowest,
+            ),
+            elevation: const WidgetStatePropertyAll(0),
+            side: WidgetStatePropertyAll(
+              BorderSide(color: colors.outlineVariant),
+            ),
+            minimumSize: WidgetStatePropertyAll(Size(width, 0)),
+            maximumSize: WidgetStatePropertyAll(Size(width, 380)),
+            padding: const WidgetStatePropertyAll(EdgeInsets.all(8)),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+          menuChildren: [
+            SizedBox(
+              width: width - 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 280),
+                    child: ScrollConfiguration(
+                      behavior: ScrollConfiguration.of(
+                        context,
+                      ).copyWith(scrollbars: false),
+                      child: SingleChildScrollView(
+                        primary: false,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final sound in sounds)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: MenuItemButton(
+                                      key: Key('sound-option-${sound.key}'),
+                                      onPressed: () => onChanged(sound),
+                                      leadingIcon: SizedBox(
+                                        width: 18,
+                                        child: sound.key == value
+                                            ? Icon(
+                                                Icons.check,
+                                                size: 16,
+                                                color: colors.primary,
+                                              )
+                                            : null,
+                                      ),
+                                      style: MenuItemButton.styleFrom(
+                                        minimumSize: const Size(0, 36),
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        sound.label,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 34,
+                                    child:
+                                        sound.key == 'muted' ||
+                                            previewGateway == null
+                                        ? null
+                                        : DesktopIconButton(
+                                            key: Key(
+                                              'preview-reminder-sound-${sound.key}',
+                                            ),
+                                            tooltip: context.l10n.previewSound,
+                                            onPressed: () =>
+                                                previewGateway!.preview(
+                                                  sound: sound.path == null
+                                                      ? sound.key
+                                                      : 'custom',
+                                                  customSoundPath: sound.path,
+                                                ),
+                                            icon: const Icon(
+                                              Icons.volume_up_outlined,
+                                              size: 17,
+                                            ),
+                                          ),
+                                  ),
+                                  SizedBox(
+                                    width: 82,
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: ReminderUsageDots(
+                                        profiles: settings.reminderProfiles
+                                            .where(
+                                              (p) => p.soundKey == sound.key,
+                                            )
+                                            .toList(),
+                                        names: settings.reminderProfiles
+                                            .where(
+                                              (p) => p.soundKey == sound.key,
+                                            )
+                                            .map(
+                                              (p) => _profileName(context, p),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 16),
+                  MenuItemButton(
+                    key: const Key('import-reminder-sound'),
+                    onPressed:
+                        onImport == null ||
+                            settings.notificationRules.audioLibrary.length >= 64
+                        ? null
+                        : onImport,
+                    leadingIcon: const Icon(
+                      Icons.file_upload_outlined,
+                      size: 18,
+                    ),
+                    child: Text(context.l10n.importReminderSound),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 2),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        context.l10n.reminderAudioFormat,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          builder: (context, controller, child) => Semantics(
+            label: context.l10n.sound,
+            value: selected.label,
+            expanded: controller.isOpen,
+            button: true,
+            child: DesktopActionButton(
+              height: 38,
+              tone: DesktopActionTone.neutral,
+              onPressed: () =>
+                  controller.isOpen ? controller.close() : controller.open(),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      selected.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    controller.isOpen
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

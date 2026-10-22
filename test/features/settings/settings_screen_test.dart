@@ -699,15 +699,15 @@ void main() {
     expect(find.text('Joy'), findsNothing);
     expect(find.text('Candy'), findsNothing);
 
-    await tester.tap(find.text('DingDong Crisp').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('save-reminder')));
-    await tester.pumpAndSettle();
     await tester.ensureVisible(
       find.byKey(const Key('preview-reminder-sound-dingCrisp')),
     );
     await tester.tap(find.byKey(const Key('preview-reminder-sound-dingCrisp')));
     await tester.pump();
+    await tester.tap(find.text('DingDong Crisp').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-reminder')));
+    await tester.pumpAndSettle();
 
     expect(preview.sounds, <String>['dingCrisp']);
   });

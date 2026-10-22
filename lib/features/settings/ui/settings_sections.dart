@@ -27,30 +27,6 @@ class _NotificationSettingsSection extends StatelessWidget {
           soundFileGateway: soundFileGateway,
           soundPreviewGateway: soundPreviewGateway,
         ),
-        CompactSwitchListTile(
-          key: const Key('settings-notify-codex-voice-activity'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(context.l10n.codexVoiceTaskNotifications),
-          subtitle: Text(
-            context
-                .l10n
-                .whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958,
-          ),
-          value: settings.notifyCodexVoiceActivity,
-          onChanged: viewModel.setNotifyCodexVoiceActivity,
-        ),
-        CompactSwitchListTile(
-          key: const Key('settings-notify-subagent-activity'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(context.l10n.subagentNotifications),
-          subtitle: Text(
-            context
-                .l10n
-                .whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98,
-          ),
-          value: settings.notifySubagentActivity,
-          onChanged: viewModel.setNotifySubagentActivity,
-        ),
         _SettingRow(
           label: context.l10n.completionMinimumDuration,
           child: SizedBox(

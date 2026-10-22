@@ -18,6 +18,32 @@ void main() {
       );
 
   test(
+    'bubbles retain distinct reminder types through restart and partial acknowledgement',
+    () async {
+      final store = PreferencesTrayUnreadStore(MemoryPreferencesBackend());
+      final tray = controller(store);
+      await tray.markUnread(reminderId: 'build');
+      await tray.markUnread(
+        kind: AgentNotificationKind.attention,
+        reminderId: 'review',
+      );
+      final old = tray.snapshot();
+      await tray.markUnread(reminderId: 'build');
+      await tray.markUnread();
+      expect(tray.unreadReminderIds, ['review', 'build', 'completion']);
+      final restored = controller(store);
+      await restored.restore();
+      expect(restored.unreadReminderIds, tray.unreadReminderIds);
+      await restored.acknowledge(old);
+      expect(restored.unreadReminderIds, ['build', 'completion']);
+      await restored.acknowledgeCount(1);
+      expect(restored.unreadReminderIds, ['completion']);
+      await restored.clear();
+      expect(restored.unreadReminderIds, isEmpty);
+    },
+  );
+
+  test(
     'attention stays primary after a later completion and across restart',
     () async {
       final store = PreferencesTrayUnreadStore(MemoryPreferencesBackend());

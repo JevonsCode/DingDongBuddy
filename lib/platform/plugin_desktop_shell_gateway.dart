@@ -324,9 +324,31 @@ final class PluginDesktopShellGateway
       (x) => x.id == _unreadController.primaryReminderId,
     );
     final profile = profiles.isEmpty ? null : profiles.first;
-    final bool pulseReminder =
-        (profile?.style ?? _notificationRules.trayStyleFor(kind)) ==
-        TrayReminderStyle.softPulse;
+    final unreadProfiles = _unreadController.unreadReminderIds
+        .map((id) {
+          final custom = _notificationRules.profiles.where((p) => p.id == id);
+          if (custom.isNotEmpty) return custom.first;
+          if (id != 'completion' && id != 'attention') return null;
+          final reminderKind = id == 'attention'
+              ? AgentNotificationKind.attention
+              : AgentNotificationKind.completion;
+          return ReminderProfile(
+            id: id,
+            name: id,
+            kind: reminderKind,
+            color: _notificationRules.trayColorFor(
+              reminderKind,
+              legacyCompletionColor: _trayNotificationColor,
+            ),
+            style: _notificationRules.trayStyleFor(reminderKind),
+          );
+        })
+        .whereType<ReminderProfile>()
+        .toList();
+    final bool pulseReminder = windows
+        ? (profile?.style ?? _notificationRules.trayStyleFor(kind)) ==
+              TrayReminderStyle.softPulse
+        : unreadProfiles.any((p) => p.style == TrayReminderStyle.softPulse);
     final TrayNotificationColor color =
         profile?.color ??
         _notificationRules.trayColorFor(
@@ -395,8 +417,19 @@ final class PluginDesktopShellGateway
       unreadCount: unreadCount,
       strings: strings,
     );
+    final reminderNames = unreadProfiles
+        .map(
+          (p) => switch (p.id) {
+            'completion' => strings.agentCompletionNotifications,
+            'attention' => strings.needsYourInput,
+            _ => p.name,
+          },
+        )
+        .join(' · ');
     await trayManager.setToolTip(
-      hot
+      hot && !windows && reminderNames.isNotEmpty
+          ? '$reminderNames · $unreadTooltip'
+          : hot
           ? '${kind == AgentNotificationKind.attention ? strings.needsYourInput : strings.agentCompletionNotifications} · $unreadTooltip'
           : unreadTooltip,
     );
@@ -404,12 +437,21 @@ final class PluginDesktopShellGateway
       await trayManager.setTitle(
         title,
         style: macOSTrayTitleStyle(hot: hot),
-        badgeColorRgb: color.rgbValue,
-        badgeSymbol: hot
-            ? (kind == AgentNotificationKind.attention
-                  ? 'bell.fill'
-                  : 'checkmark')
-            : null,
+        badgeColorRgb: _notificationRules
+            .trayColorFor(
+              AgentNotificationKind.completion,
+              legacyCompletionColor: _trayNotificationColor,
+            )
+            .rgbValue,
+        reminderBubbles: hot
+            ? [
+                for (final p in unreadProfiles)
+                  {
+                    'colorRgb': p.color.rgbValue,
+                    'pulse': p.style == TrayReminderStyle.softPulse,
+                  },
+              ]
+            : const [],
         badgeDimmed: hot && pulseReminder && alternateFrame,
       );
     }

@@ -18,6 +18,12 @@ public class TrayIcon: NSView {
     
     var statusItem: NSStatusItem?
     private var unreadBadgeTitle: NSAttributedString?
+    private var sourceImage: NSImage?
+    private var stillBadgeImage: NSImage?
+    private var badgeWidth: CGFloat = 55
+    private var badgeRgb: UInt32?
+    private var reminderBubbles: [[String: Any]] = []
+    private var bubbleDimmed = false
     
     public init() {
         super.init(frame: NSRect.zero)
@@ -46,7 +52,8 @@ public class TrayIcon: NSView {
     
     public func setImage(_ image: NSImage, _ imagePosition: String) {
         if let button = statusItem?.button {
-            button.image = image
+            sourceImage = image
+            button.image = unreadBadgeTitle == nil ? image : nil
             setImagePosition(imagePosition)
         }
 
@@ -95,87 +102,80 @@ public class TrayIcon: NSView {
         _ title: String,
         _ style: String,
         _ badgeColorRgb: UInt32?,
-        _ badgeSymbol: String? = nil,
+        _ bubbles: [[String: Any]] = [],
         _ badgeDimmed: Bool = false
     ) {
         guard let button = statusItem?.button else { return }
-
         let countText = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let isUnreadBadge = style == "unreadBadge" && !countText.isEmpty
-
+        button.wantsLayer = true
+        button.layer?.backgroundColor = nil
+        button.layer?.masksToBounds = false
         if isUnreadBadge {
-            let displayRgb = badgeDisplayRgb(badgeColorRgb, dimmed: badgeDimmed)
-            let foreground = badgeForegroundColor(displayRgb)
-            if #available(macOS 11.0, *), let name = badgeSymbol,
-               let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
-                let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
-                let configured = symbol.withSymbolConfiguration(configuration) ?? symbol
-                let tinted = NSImage(size: configured.size, flipped: false) { rect in
-                    configured.draw(in: rect)
-                    foreground.setFill()
-                    rect.fill(using: .sourceAtop)
-                    return true
-                }
-                tinted.isTemplate = false
-                button.image = tinted
-            }
-            button.title = ""
-            let badgeTitle = NSAttributedString(
-                string: " \(countText)",
-                attributes: [
-                    .foregroundColor: foreground,
-                    .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
-                ]
-            )
-            unreadBadgeTitle = badgeTitle
-            // Keep AppKit's image/title spacing and accessible title, but draw
-            // the visible count ourselves: NSStatusBarButton ignores baselineOffset.
-            let layoutTitle = NSMutableAttributedString(attributedString: badgeTitle)
-            layoutTitle.addAttribute(
-                .foregroundColor,
-                value: NSColor.clear,
-                range: NSRange(location: 0, length: layoutTitle.length)
-            )
-            button.attributedTitle = layoutTitle
-            button.imagePosition = .imageLeading
-            button.wantsLayer = true
-            button.layer?.backgroundColor = badgeBackgroundColor(displayRgb)
-            button.layer?.cornerRadius = 12
-            button.layer?.masksToBounds = true
-            statusItem?.length = countText.count > 2 ? 65 : 55
+            // Preserve DingDong's artwork and count. Reminder types are separate
+            // trailing bubbles, never replacements for the app's identity.
+            if unreadBadgeTitle == nil { stillBadgeImage = sourceImage }
+            unreadBadgeTitle = NSAttributedString(string: countText, attributes: [
+                .foregroundColor: NSColor.white,
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
+            ])
+            badgeWidth = countText.count > 2 ? 65 : 55
+            badgeRgb = badgeColorRgb
+            reminderBubbles = Array(bubbles.prefix(64))
+            bubbleDimmed = badgeDimmed
+            button.image = nil
+            button.attributedTitle = NSAttributedString(string: "")
+            let shown = min(reminderBubbles.count, 3)
+            let overflowWidth: CGFloat = reminderBubbles.count > 3 ? 25 : 0
+            statusItem?.length = badgeWidth + (shown > 0 ? 5 + CGFloat(shown) * 17 : 0) + overflowWidth
         } else {
             unreadBadgeTitle = nil
+            stillBadgeImage = nil
+            reminderBubbles = []
+            button.image = sourceImage
             button.title = title
             button.attributedTitle = NSAttributedString(string: title)
             button.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
-            button.layer?.backgroundColor = nil
-            button.layer?.cornerRadius = 0
-            button.layer?.masksToBounds = false
-            button.wantsLayer = false
-            statusItem?.length = title.isEmpty
-                ? NSStatusItem.squareLength
-                : NSStatusItem.variableLength
+            statusItem?.length = title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
         }
-        self.frame = statusItem!.button!.frame
+        self.frame = button.bounds
         needsDisplay = true
     }
 
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        guard let title = unreadBadgeTitle,
-              let button = statusItem?.button,
-              let cell = button.cell,
-              let context = NSGraphicsContext.current?.cgContext else { return }
+        guard let title = unreadBadgeTitle else { return }
+        let pill = NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height)
+        NSColor(cgColor: badgeBackgroundColor(badgeRgb))?.setFill()
+        NSBezierPath(roundedRect: pill, xRadius: 12, yRadius: 12).fill()
+        let artwork = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? stillBadgeImage : sourceImage
+        artwork?.draw(in: NSRect(x: 5, y: bounds.midY - 11, width: 22, height: 22))
+        drawCentered(title, x: 30)
+        for (index, bubble) in reminderBubbles.prefix(3).enumerated() {
+            let rgb = (bubble["colorRgb"] as? NSNumber)?.uint32Value
+            let pulse = bubble["pulse"] as? Bool ?? false
+            let color = badgeDisplayRgb(rgb, dimmed: bubbleDimmed && pulse)
+            NSColor(cgColor: badgeBackgroundColor(color))?.setFill()
+            NSBezierPath(ovalIn: NSRect(
+                x: badgeWidth + 7 + CGFloat(index) * 17,
+                y: bounds.midY - 6, width: 12, height: 12
+            )).fill()
+        }
+        if reminderBubbles.count > 3 {
+            drawCentered(NSAttributedString(string: "+\(reminderBubbles.count - 3)", attributes: [
+                .foregroundColor: NSColor.labelColor,
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+            ]), x: badgeWidth + 58)
+        }
+    }
 
-        let line = CTLineCreateWithAttributedString(title)
+    private func drawCentered(_ text: NSAttributedString, x: CGFloat) {
+        guard let context = NSGraphicsContext.current?.cgContext else { return }
+        let line = CTLineCreateWithAttributedString(text)
         let glyphBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
-        let titleRect = convert(cell.titleRect(forBounds: button.bounds), from: button)
         context.saveGState()
         context.textMatrix = .identity
-        context.textPosition = CGPoint(
-            x: titleRect.minX,
-            y: bounds.midY - glyphBounds.midY
-        )
+        context.textPosition = CGPoint(x: x, y: bounds.midY - glyphBounds.midY)
         CTLineDraw(line, context)
         context.restoreGState()
     }
@@ -200,18 +200,6 @@ public class TrayIcon: NSView {
         let green = UInt32(Double((value >> 8) & 0xFF) * 0.88)
         let blue = UInt32(Double(value & 0xFF) * 0.88)
         return (red << 16) | (green << 8) | blue
-    }
-
-    private func badgeForegroundColor(_ rgb: UInt32?) -> NSColor {
-        let value = rgb ?? 0xDB7333
-        func linear(_ value: UInt32) -> Double {
-            let channel = Double(value) / 255
-            return channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
-        }
-        let luminance = 0.2126 * linear((value >> 16) & 0xFF)
-            + 0.7152 * linear((value >> 8) & 0xFF)
-            + 0.0722 * linear(value & 0xFF)
-        return luminance > 0.179 ? .black : .white
     }
 
     public func setToolTip(_ toolTip: String) {

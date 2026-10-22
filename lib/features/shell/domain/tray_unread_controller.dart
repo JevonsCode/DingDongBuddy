@@ -22,6 +22,16 @@ final class TrayUnreadController {
   int _latestEventId = 0;
   int _acknowledgedEventId = 0;
   int _latestAttentionEventId = 0;
+  final Map<String, int> _reminderEvents = {};
+  List<String> get unreadReminderIds {
+    final entries =
+        _reminderEvents.entries
+            .where((e) => e.value > _acknowledgedEventId)
+            .toList()
+          ..sort((a, b) => a.value.compareTo(b.value));
+    return entries.map((e) => e.key).toList(growable: false);
+  }
+
   String? _latestReminderId;
   String? _latestAttentionReminderId;
   String? get primaryReminderId =>
@@ -50,6 +60,21 @@ final class TrayUnreadController {
         0,
         _latestEventId,
       );
+      _reminderEvents.clear();
+      _reminderEvents.addAll(state.reminderEvents);
+      // Older installations only persisted the latest event and attention event.
+      if (_reminderEvents.isEmpty && count > 0) {
+        _reminderEvents[_latestReminderId ??
+                (_latestAttentionEventId == _latestEventId
+                    ? 'attention'
+                    : 'completion')] =
+            _latestEventId;
+        if (_latestAttentionEventId > _acknowledgedEventId) {
+          _reminderEvents[_latestAttentionReminderId ?? 'attention'] =
+              _latestAttentionEventId;
+        }
+      }
+      _pruneReminderEvents();
       await _apply();
     });
   }
@@ -61,6 +86,7 @@ final class TrayUnreadController {
     return _enqueue(() async {
       _latestEventId += 1;
       _latestReminderId = reminderId;
+      _reminderEvents[reminderId ?? kind.apiValue] = _latestEventId;
       if (kind == AgentNotificationKind.attention) {
         _latestAttentionEventId = _latestEventId;
         _latestAttentionReminderId = reminderId;
@@ -118,9 +144,24 @@ final class TrayUnreadController {
     );
   }
 
+  void _pruneReminderEvents() {
+    _reminderEvents.removeWhere(
+      (id, event) => event <= _acknowledgedEventId || event > _latestEventId,
+    );
+    // Profiles may be deleted and recreated between acknowledgements.
+    while (_reminderEvents.length > 64) {
+      final oldest = _reminderEvents.entries.reduce(
+        (a, b) => a.value < b.value ? a : b,
+      );
+      _reminderEvents.remove(oldest.key);
+    }
+  }
+
   Future<void> _persist() async {
+    _pruneReminderEvents();
     await store?.save(
       TrayUnreadState(
+        reminderEvents: Map.unmodifiable(_reminderEvents),
         latestEventId: _latestEventId,
         acknowledgedEventId: _acknowledgedEventId,
         latestAttentionEventId: _latestAttentionEventId,

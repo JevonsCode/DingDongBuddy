@@ -6,6 +6,7 @@ final class TrayUnreadState {
     this.latestAttentionEventId = 0,
     this.latestReminderId,
     this.latestAttentionReminderId,
+    this.reminderEvents = const {},
   });
 
   const TrayUnreadState.empty()
@@ -13,8 +14,11 @@ final class TrayUnreadState {
       acknowledgedEventId = 0,
       latestAttentionEventId = 0,
       latestReminderId = null,
-      latestAttentionReminderId = null;
+      latestAttentionReminderId = null,
+      reminderEvents = const {};
 
+  /// Last event for each reminder type; counts still use the monotonic cursor.
+  final Map<String, int> reminderEvents;
   final int latestEventId;
   final int acknowledgedEventId;
   final int latestAttentionEventId;

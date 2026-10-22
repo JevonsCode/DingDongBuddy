@@ -217,14 +217,14 @@ class TrayManager {
     String title, {
     TrayTitleStyle style = TrayTitleStyle.plain,
     int? badgeColorRgb,
-    String? badgeSymbol,
+    List<Map<String, Object>> reminderBubbles = const [],
     bool badgeDimmed = false,
   }) async {
     final Map<String, dynamic> arguments = {
       'title': title,
       'style': style.name,
       if (badgeColorRgb != null) 'badgeColorRgb': badgeColorRgb & 0xFFFFFF,
-      if (badgeSymbol != null) 'badgeSymbol': badgeSymbol,
+      if (reminderBubbles.isNotEmpty) 'reminderBubbles': reminderBubbles,
       if (badgeDimmed) 'badgeDimmed': true,
     };
     await _channel.invokeMethod('setTitle', arguments);
