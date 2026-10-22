@@ -11,6 +11,7 @@ import 'package:dingdong/features/settings/domain/notification_rules.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_gateway.dart';
 import 'package:dingdong/features/shell/domain/popup_window_policy.dart';
 import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
+import 'package:dingdong/features/shell/domain/tray_reminder_order.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 import 'package:flutter/foundation.dart';
@@ -344,36 +345,22 @@ final class PluginDesktopShellGateway
       (x) => x.id == _unreadController.primaryReminderId,
     );
     final profile = profiles.isEmpty ? null : profiles.first;
-    final unreadProfiles = _unreadController.unreadReminderIds
-        .map((id) {
-          final custom = _notificationRules.profiles.where((p) => p.id == id);
-          if (custom.isNotEmpty) return custom.first;
-          if (id != 'completion' && id != 'attention') return null;
-          final reminderKind = id == 'attention'
-              ? AgentNotificationKind.attention
-              : AgentNotificationKind.completion;
-          return ReminderProfile(
-            id: id,
-            name: id,
-            kind: reminderKind,
-            color: _notificationRules.trayColorFor(
-              reminderKind,
-              legacyCompletionColor: _trayNotificationColor,
-            ),
-            style: _notificationRules.trayStyleFor(reminderKind),
-          );
-        })
-        .whereType<ReminderProfile>()
-        .toList();
+    final unreadProfiles = orderedUnreadReminderProfiles(
+      rules: _notificationRules,
+      completionColor: _trayNotificationColor,
+      unreadIds: _unreadController.unreadReminderIds,
+    );
     unreadProfiles.addAll(
-      _developmentReminderCounts.keys.map(
-        (color) => ReminderProfile(
-          id: 'dev-preview-${color.name}',
-          name: 'DEV ${color.name}',
-          color: color,
-          style: TrayReminderStyle.staticMarker,
-        ),
-      ),
+      TrayNotificationColor.values
+          .where(_developmentReminderCounts.containsKey)
+          .map(
+            (color) => ReminderProfile(
+              id: 'dev-preview-${color.name}',
+              name: 'DEV ${color.name}',
+              color: color,
+              style: TrayReminderStyle.staticMarker,
+            ),
+          ),
     );
     final counts = {
       ..._unreadController.unreadReminderCounts,
@@ -470,18 +457,25 @@ final class PluginDesktopShellGateway
     );
     if (Platform.isMacOS) {
       await trayManager.setTitle(
-        title,
+        unreadProfiles.isEmpty
+            ? title
+            : ' ${counts[unreadProfiles.first.id] == null
+                  ? '?'
+                  : counts[unreadProfiles.first.id]! > 99
+                  ? '99+'
+                  : counts[unreadProfiles.first.id]}',
         style: macOSTrayTitleStyle(hot: hot),
-        badgeColorRgb: _notificationRules
-            .trayColorFor(
-              AgentNotificationKind.completion,
-              legacyCompletionColor: _trayNotificationColor,
-            )
-            .rgbValue,
+        badgeId: unreadProfiles.firstOrNull?.id,
+        badgePulse:
+            unreadProfiles.firstOrNull?.style == TrayReminderStyle.softPulse,
+        badgeColorRgb:
+            unreadProfiles.firstOrNull?.color.rgbValue ??
+            _trayNotificationColor.rgbValue,
         reminderBubbles: hot
             ? [
-                for (final p in unreadProfiles)
+                for (final p in unreadProfiles.skip(1))
                   {
+                    'id': p.id,
                     'colorRgb': p.color.rgbValue,
                     if (counts[p.id] != null) 'count': counts[p.id]!,
                     'pulse': p.style == TrayReminderStyle.softPulse,

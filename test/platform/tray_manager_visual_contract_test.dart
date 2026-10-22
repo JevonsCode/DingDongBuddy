@@ -54,6 +54,7 @@ void main() {
       ' 1',
       style: TrayTitleStyle.unreadBadge,
       badgeColorRgb: TrayNotificationColor.purple.rgbValue,
+      badgeId: 'completion',
       reminderBubbles: [
         {'colorRgb': 0x397ddd, 'pulse': true},
       ],
@@ -65,6 +66,7 @@ void main() {
       'title': ' 1',
       'style': 'unreadBadge',
       'badgeColorRgb': TrayNotificationColor.purple.rgbValue,
+      'badgeId': 'completion',
       'reminderBubbles': [
         {'colorRgb': 0x397ddd, 'pulse': true},
       ],
@@ -579,10 +581,10 @@ void main() {
     expect(gateway, contains('staticReminder: hot && !pulseReminder'));
     expect(source, isNot(contains('NSImage(systemSymbolName:')));
     expect(source, contains('artwork?.draw(in:'));
-    expect(source, contains('reminderBubbles.prefix(3)'));
+    expect(source, contains('reminderBubbles.count > 3 ? 2 : 3'));
     expect(source, contains('accessibilityDisplayShouldReduceMotion'));
     expect(gateway, isNot(contains('hot || macDevelopment')));
-    expect(gateway, contains('await trayManager.setTitle(\n        title,'));
+    expect(gateway, contains('orderedUnreadReminderProfiles('));
     expect(plugin, contains('args["badgeColorRgb"] as? NSNumber'));
     expect(source, contains('style == "unreadBadge" && !countText.isEmpty'));
     expect(source, contains('let value = rgb ?? 0xDB7333'));

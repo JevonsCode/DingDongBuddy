@@ -5,19 +5,29 @@ are independent. Turn completion off and needs-input on to be interrupted only
 when the Agent requests your help. Each type has its own sound, tray style and
 color. Existing completion color preferences are preserved.
 
-On macOS the menu-bar badge preserves the original DingDong artwork and unread
-count. Separate colored bubbles follow it for each unread reminder type, ordered
-by its latest event. Trailing bubbles have a one-point vertical optical inset so their perceived height
-matches the main pill, and each shows its own
-unread count in white (`99+` above 99). Legacy unread groups without per-event
-history display `?` until acknowledged, rather than inventing counts. Up to three bubbles are visible; additional types show a
-`+N` count. Types can share a color. Acknowledging an earlier snapshot leaves
-newer bubbles intact, including after restart. Bubbles overlap by eight points at
-rest; hovering opens three-point gaps. A 200ms ease-out transition drives both
-bubble positions and status-item width, and can reverse from its current position.
-System Reduce Motion switches states immediately. Leaving collapses after a short delay, with
-a screen-bounds check to prevent flicker during status-item resizing. The main
-pill fits its artwork and number instead of reserving a fixed width. Hover text lists reminder names.
+On macOS unread reminder types follow the same array order as Settings. The first
+active type supplies the main capsule's color and its own unread count alongside
+the original DingDong artwork. It is not duplicated in the trailing circles and
+the capsule does not display a global total. Missing types are skipped; for example,
+A/orange becomes primary when completion is absent. A new completion moves A to
+the next slot and takes the primary capsule when it precedes A in the array.
+
+There are at most four visible slots including the main capsule. Exactly four
+active types show their own colors and counts; above four, show the first three
+types and a gray circle with three centered white dots in slot four. The dots
+indicate other types, not a count. Hover text lists all active reminder names.
+Each circle has a one-point vertical optical inset. Counts stay centered in the
+complete circle even when overlapped. `99+` caps large counts; `?` preserves
+unknown legacy history until acknowledged. Snapshot acknowledgement preserves
+newer counts across restarts.
+
+Bubbles overlap by eight points at rest; hovering opens three-point gaps over a
+200ms ease-out transition. Type insertion, removal and promotion use stable IDs
+to interpolate position, size, color and opacity over 220ms. Interrupted transitions
+continue from their current geometry. System Reduce Motion switches immediately.
+Leaving collapses after a short delay and verifies the current screen bounds to
+avoid enter/exit loops during resizing. The primary capsule fits its artwork and
+number rather than reserving a fixed width.
 On Windows the fixed-size notification-area marker uses a check or exclamation
 mark; the trailing-bubble layout is macOS-specific. An unread needs-input event
 still takes priority over subsequent completion events until acknowledged.
@@ -26,7 +36,7 @@ still takes priority over subsequent completion events until acknowledged.
 shades; it does not hide the icon. System reduced-animation preferences suppress
 the pulse. Completion defaults to static; needs-input defaults to soft pulse and
 amber. The macOS bubbles pulse individually according to their saved style;
-the original capsule keeps its completion color. Hover names and the activity
+the primary capsule uses its active type’s color. Hover names and the activity
 list identify types that share colors. Gradient styling is not offered.
 
 Tell the Agent, for example: “When you need a decision or action from me, call

@@ -17,11 +17,100 @@ public class TrayIcon: NSView {
     public var onAppearanceChanged:((Bool) -> Void)?
     
     var statusItem: NSStatusItem?
+    private struct BadgeFrame {
+        var id: String
+        var rect: NSRect
+        var text: NSAttributedString
+        var textX: CGFloat
+        var color: NSColor
+        var alpha: CGFloat = 1
+    }
+    private var badgeId = "primary"
+    private var transitionFrom: [BadgeFrame] = []
+    private var transitionProgress: CGFloat = 1
+    private var transitionWidth: CGFloat = 0
+    private var transitionTimer: Timer?
+
+    private func targetScene() -> [BadgeFrame] {
+        guard let title = unreadBadgeTitle else { return [] }
+        var result = [BadgeFrame(id: badgeId,
+            rect: NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height),
+            text: title, textX: 31 + title.size().width / 2,
+            color: NSColor(cgColor: badgeBackgroundColor(badgeDisplayRgb(badgeRgb, dimmed: bubbleDimmed && badgePulse)))!)]
+        var x = badgeWidth + bubbleSpacing
+        for (index, bubble) in displayedBubbles.enumerated() {
+            let width = bubbleWidth(bubble)
+            let rgb = (bubble["colorRgb"] as? NSNumber)?.uint32Value
+            let pulse = bubble["pulse"] as? Bool ?? false
+            let color = badgeDisplayRgb(rgb, dimmed: bubbleDimmed && pulse)
+            result.append(BadgeFrame(id: bubble["id"] as? String ?? "tail-\(index)",
+                rect: NSRect(x: x, y: 1, width: width, height: bounds.height - 2),
+                text: bubbleText(bubble), textX: x + width / 2,
+                color: NSColor(cgColor: badgeBackgroundColor(color))!))
+            x += width + bubbleSpacing
+        }
+        return result
+    }
+
+    private func renderedScene() -> [BadgeFrame] {
+        let target = targetScene()
+        guard transitionProgress < 1 else { return target }
+        let progress = transitionProgress
+        func mix(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * progress }
+        var result = target.map { item -> BadgeFrame in
+            let previous = transitionFrom.first { $0.id == item.id }
+            var from = previous ?? item
+            if previous == nil { from.alpha = 0; from.rect.origin.x += 8; from.textX += 8 }
+            var frame = item
+            frame.rect = NSRect(x: mix(from.rect.minX, item.rect.minX),
+                y: mix(from.rect.minY, item.rect.minY),
+                width: mix(from.rect.width, item.rect.width), height: mix(from.rect.height, item.rect.height))
+            frame.textX = mix(from.textX, item.textX)
+            frame.color = from.color.blended(withFraction: progress, of: item.color) ?? item.color
+            frame.alpha = mix(from.alpha, 1)
+            return frame
+        }
+        for var removed in transitionFrom where !target.contains(where: { $0.id == removed.id }) {
+            removed.alpha *= 1 - progress
+            result.append(removed)
+        }
+        return result
+    }
+
+    private func animateScene(from scene: [BadgeFrame], width: CGFloat) {
+        transitionTimer?.invalidate()
+        guard !scene.isEmpty, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+            transitionProgress = 1
+            layoutBadge()
+            return
+        }
+        transitionFrom = scene
+        transitionWidth = width
+        transitionProgress = 0
+        let startedAt = CACurrentMediaTime()
+        let timer = Timer(timeInterval: 1.0 / 60, repeats: true) { [weak self] timer in
+            guard let self else { timer.invalidate(); return }
+            let progress = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                ? 1 : min(1, (CACurrentMediaTime() - startedAt) / 0.22)
+            self.transitionProgress = CGFloat(1 - pow(1 - progress, 3))
+            self.layoutBadge()
+            if progress >= 1 {
+                timer.invalidate()
+                self.transitionTimer = nil
+                self.transitionFrom = []
+            }
+        }
+        transitionTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+        layoutBadge()
+    }
+
     private var unreadBadgeTitle: NSAttributedString?
     private var sourceImage: NSImage?
     private var stillBadgeImage: NSImage?
     private var badgeWidth: CGFloat = 55
     private var badgeRgb: UInt32?
+    private var badgePulse = false
     private var reminderBubbles: [[String: Any]] = []
     private var bubbleDimmed = false
     private var hoverExpanded = false
@@ -29,7 +118,7 @@ public class TrayIcon: NSView {
     private var expansionTimer: Timer?
     private var bubbleSpacing: CGFloat { -8 + 11 * expansion }
 
-    deinit { expansionTimer?.invalidate() }
+    deinit { expansionTimer?.invalidate(); transitionTimer?.invalidate() }
 
     // A single progress value drives drawing and status-item width together.
     // Retargeting starts at the rendered position, including rapid reversals.
@@ -104,7 +193,7 @@ public class TrayIcon: NSView {
         for bubble in displayedBubbles {
             width += bubbleWidth(bubble) + bubbleSpacing
         }
-        statusItem?.length = width
+        statusItem?.length = transitionWidth + (width - transitionWidth) * transitionProgress
         frame = button.bounds
         needsDisplay = true
     }
@@ -187,7 +276,9 @@ public class TrayIcon: NSView {
         _ style: String,
         _ badgeColorRgb: UInt32?,
         _ bubbles: [[String: Any]] = [],
-        _ badgeDimmed: Bool = false
+        _ badgeDimmed: Bool = false,
+        _ primaryId: String? = nil,
+        _ primaryPulse: Bool = false
     ) {
         guard let button = statusItem?.button else { return }
         let countText = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -196,6 +287,13 @@ public class TrayIcon: NSView {
         button.layer?.backgroundColor = nil
         button.layer?.masksToBounds = false
         if isUnreadBadge {
+            let oldScene = renderedScene()
+            let oldWidth = bounds.width
+            let nextId = primaryId ?? "primary"
+            let changed = badgeId != nextId || unreadBadgeTitle?.string != countText || badgeRgb != badgeColorRgb ||
+                !NSArray(array: reminderBubbles).isEqual(to: Array(bubbles.prefix(64)))
+            badgeId = nextId
+            badgePulse = primaryPulse
             // Preserve DingDong's artwork and count. Reminder types are separate
             // trailing bubbles, never replacements for the app's identity.
             if unreadBadgeTitle == nil { stillBadgeImage = sourceImage }
@@ -209,7 +307,8 @@ public class TrayIcon: NSView {
             bubbleDimmed = badgeDimmed
             button.image = nil
             button.attributedTitle = NSAttributedString(string: "")
-            layoutBadge()
+            if changed { animateScene(from: oldScene, width: oldWidth) }
+            else { layoutBadge() }
 
         } else {
             collapseWork?.cancel()
@@ -217,6 +316,10 @@ public class TrayIcon: NSView {
             expansionTimer?.invalidate()
             expansionTimer = nil
             expansion = 0
+            transitionTimer?.invalidate()
+            transitionTimer = nil
+            transitionProgress = 1
+            transitionFrom = []
             unreadBadgeTitle = nil
             stillBadgeImage = nil
             reminderBubbles = []
@@ -232,39 +335,33 @@ public class TrayIcon: NSView {
 
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        guard let title = unreadBadgeTitle else { return }
-        // All surfaces share the same vertical centre. Round badges need a
-        // one-point optical inset to avoid appearing taller than the long pill.
-        var positioned: [(bubble: [String: Any], x: CGFloat)] = []
-        var x = badgeWidth + bubbleSpacing
-        for bubble in displayedBubbles {
-            positioned.append((bubble, x))
-            x += bubbleWidth(bubble) + bubbleSpacing
+        guard unreadBadgeTitle != nil else { return }
+        // Text remains centred on each complete badge, including while occluded.
+        for badge in renderedScene().reversed() {
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current?.cgContext.setAlpha(badge.alpha)
+            badge.color.setFill()
+            NSBezierPath(roundedRect: badge.rect, xRadius: badge.rect.height / 2,
+                yRadius: badge.rect.height / 2).fill()
+            if badge.id == "@overflow" {
+                NSColor.white.setFill()
+                for offset in [-4.0, 0.0, 4.0] {
+                    NSBezierPath(ovalIn: NSRect(x: badge.rect.midX + offset - 1,
+                        y: badge.rect.midY - 1, width: 2, height: 2)).fill()
+                }
+            } else {
+                drawCentered(badge.text, centerX: badge.textX)
+            }
+            NSGraphicsContext.restoreGraphicsState()
         }
-        // Back-to-front drawing makes the preceding badge cover each overlap.
-        for (bubble, x) in positioned.reversed() {
-            let rgb = (bubble["colorRgb"] as? NSNumber)?.uint32Value
-            let pulse = bubble["pulse"] as? Bool ?? false
-            let color = badgeDisplayRgb(rgb, dimmed: bubbleDimmed && pulse)
-            NSColor(cgColor: badgeBackgroundColor(color))?.setFill()
-            let width = bubbleWidth(bubble)
-            let rect = NSRect(x: x, y: 1, width: width, height: bounds.height - 2)
-            NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2).fill()
-            let text = bubbleText(bubble)
-            drawCentered(text, centerX: x + width / 2 + max(0, -bubbleSpacing) / 2)
-        }
-        let pill = NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height)
-        NSColor(cgColor: badgeBackgroundColor(badgeRgb))?.setFill()
-        NSBezierPath(roundedRect: pill, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
         let artwork = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? stillBadgeImage : sourceImage
         artwork?.draw(in: NSRect(x: 5, y: bounds.midY - 11, width: 22, height: 22))
-        drawCentered(title, centerX: 31 + title.size().width / 2)
     }
 
     private var displayedBubbles: [[String: Any]] {
-        var result = Array(reminderBubbles.prefix(3))
+        var result = Array(reminderBubbles.prefix(reminderBubbles.count > 3 ? 2 : 3))
         if reminderBubbles.count > 3 {
-            result.append(["label": "+\(reminderBubbles.count - 3)", "colorRgb": NSNumber(value: 0x666666)])
+            result.append(["id": "@overflow", "label": "", "colorRgb": NSNumber(value: 0x666666)])
         }
         return result
     }
@@ -279,7 +376,10 @@ public class TrayIcon: NSView {
     }
 
     private func bubbleWidth(_ bubble: [String: Any]) -> CGFloat {
-        max(statusItem?.button?.bounds.height ?? 22, ceil(bubbleText(bubble).size().width) + 10)
+        if bubble["id"] as? String == "@overflow" {
+            return (statusItem?.button?.bounds.height ?? 22) - 2
+        }
+        return max(statusItem?.button?.bounds.height ?? 22, ceil(bubbleText(bubble).size().width) + 10)
     }
 
     private func drawCentered(_ text: NSAttributedString, centerX: CGFloat) {
