@@ -29,6 +29,8 @@ final class LanComputerLink extends ChangeNotifier {
            subnetReader ??
            (() async => [LanSubnet(InternetAddress.loopbackIPv4, 8)]);
   final int discoveryPort;
+  @visibleForTesting
+  int? get discoveryListenPort => _udp?.port;
   final DateTime Function() _now;
   final Future<List<LanSubnet>> Function() _readSubnets;
   static final _group = InternetAddress('239.255.68.68');
@@ -97,6 +99,13 @@ final class LanComputerLink extends ChangeNotifier {
         ..writeEventsEnabled = false
         ..multicastHops = 1
         ..multicastLoopback = false;
+      _udp!.setRawOption(
+        RawSocketOption.fromInt(
+          RawSocketOption.levelIPv4,
+          Platform.isLinux ? 2 : 4, // IP_TTL for directed discovery as well.
+          1,
+        ),
+      );
       await _refreshInterfaces();
       _udp!.listen(
         (event) {
@@ -174,6 +183,7 @@ final class LanComputerLink extends ChangeNotifier {
       }
     }
     _interfaces = next;
+    error = null;
   }
 
   Future<void> _tick() async {
@@ -186,7 +196,7 @@ final class LanComputerLink extends ChangeNotifier {
       _announce();
       for (final session in _sessions.values.toList()) {
         if (session.connected && !session._hasLocalPeer) session._drop();
-        if (!session.connected) unawaited(session.connect());
+        if (!session.connected) unawaited(session._connect(background: true));
       }
       notifyListeners();
     } on Object {
@@ -206,11 +216,11 @@ final class LanComputerLink extends ChangeNotifier {
 
   void _announce() {
     final socket = _udp;
-    if (socket == null || _server == null || _closed || discoveryPort == 0) {
+    if (socket == null || _server == null || _closed) {
       return;
     }
     final bytes = utf8.encode(jsonEncode(advertisement));
-    for (final iface in _interfaces) {
+    for (final iface in _interfaces.where((_) => discoveryPort != 0)) {
       for (final address in iface.addresses.where(
         (a) => _subnets.any((s) => s.address.address == a.address),
       )) {
@@ -226,6 +236,23 @@ final class LanComputerLink extends ChangeNotifier {
         } on SocketException {
           /* An adapter may disappear during enumeration. */
         }
+      }
+    }
+    // A router or adapter can pass multicast in only one direction. Reply to
+    // actual discovery senders and keep their view of us fresh across retries.
+    // Destinations stay transient, bounded and subject to the same LAN policy.
+    final sent = <(String, int)>{};
+    for (final endpoint in _endpoints.values) {
+      if (!endpoint.fresh ||
+          !_allowed(endpoint.address) ||
+          endpoint.discoveryPort <= 0 ||
+          !sent.add((endpoint.address.address, endpoint.discoveryPort))) {
+        continue;
+      }
+      try {
+        socket.send(bytes, endpoint.address, endpoint.discoveryPort);
+      } on SocketException {
+        // The next discovery tick will retry while the endpoint stays fresh.
       }
     }
   }
@@ -260,6 +287,7 @@ final class LanComputerLink extends ChangeNotifier {
         packet.address,
         port,
         json['pairing'] == true,
+        packet.port,
       );
       if (isNew) _announce();
       notifyListeners();
@@ -552,12 +580,20 @@ final class LanComputerLink extends ChangeNotifier {
 }
 
 final class _Endpoint {
-  _Endpoint(this.id, this.name, this.address, this.port, this.pairing);
+  _Endpoint(
+    this.id,
+    this.name,
+    this.address,
+    this.port,
+    this.pairing,
+    this.discoveryPort,
+  );
   final String id;
   final String name;
   final InternetAddress address;
   final int port;
   final bool pairing;
+  final int discoveryPort;
   final DateTime seen = DateTime.now();
   bool get fresh =>
       DateTime.now().difference(seen) < const Duration(seconds: 8);

@@ -11,6 +11,94 @@ import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('discovery replies and stays alive without outbound multicast', () async {
+    // Real UDP loopback fixtures: no physical multicast interface is selected.
+    final remote = await RawDatagramSocket.bind(
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(remote.close);
+    final received = <Map>[];
+    final subscription = remote.listen((event) {
+      if (event != RawSocketEvent.read) return;
+      Datagram? packet;
+      while ((packet = remote.receive()) != null) {
+        received.add(jsonDecode(utf8.decode(packet!.data)) as Map);
+      }
+    });
+    addTearDown(subscription.cancel);
+    final link = LanComputerLink.loopbackTest()
+      ..identity = const LocalDeviceIdentity(
+        id: 'local',
+        name: 'local',
+        platform: 'test',
+      );
+    addTearDown(link.close);
+    await link.start();
+    final advertisement = utf8.encode(
+      jsonEncode({
+        'protocol': 'dingdong-lan-v1',
+        'id': 'remote',
+        'name': 'remote',
+        'port': 12345,
+        'pairing': false,
+      }),
+    );
+    remote.send(
+      advertisement,
+      InternetAddress.loopbackIPv4,
+      link.discoveryListenPort!,
+    );
+    await _until(() => link.nearby.isNotEmpty);
+    await _until(() => received.isNotEmpty);
+    expect(received.first, link.advertisement);
+    await _until(() => received.length >= 2);
+    expect(received.every((packet) => packet['id'] == 'local'), isTrue);
+  });
+
+  test(
+    'successful adapter refresh clears a previous discovery error',
+    () async {
+      final link = _service('local');
+      addTearDown(link.close);
+      await link.start();
+      link.error = 'network'; // Explicit transient network-error fixture.
+      await link.refresh();
+      expect(link.error, isNull);
+    },
+  );
+
+  test('background reconnects do not flash connecting and offline', () async {
+    final pair = await _Pair.create();
+    addTearDown(pair.close);
+    await pair.host.beginPairing();
+    pair.discover();
+    await pair.peer.join('host', pair.host.pairingCode!);
+    pair.host.session(pair.hostDevice!);
+    final session = pair.peer.session(
+      pair.peerDevice!.copyWith(secret: LanPairingCrypto.token()),
+    );
+    final statuses = <DeviceConnectionStatus>[];
+    final subscription = session.events.listen((event) {
+      if (event is DeviceLinkStatusEvent) statuses.add(event.status);
+    });
+    addTearDown(subscription.cancel);
+    await session.connect();
+    await Future<void>.delayed(const Duration(milliseconds: 2300));
+    expect(
+      statuses.where((status) => status == DeviceConnectionStatus.connecting),
+      hasLength(1),
+    );
+    expect(statuses.last, DeviceConnectionStatus.disconnected);
+    await session.connect();
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      statuses.where((status) => status == DeviceConnectionStatus.connecting),
+      hasLength(2),
+      reason: 'an explicit reconnect still provides feedback',
+    );
+  });
+
   if (const bool.fromEnvironment('DINGDONG_LAN_SMOKE')) {
     test(
       'production adapter inventory and multicast listener start locally',

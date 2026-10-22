@@ -1,4 +1,4 @@
-# DingDong 1.6.4 Manual Regression Checklist
+# DingDong 1.8.1-beta.1 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,22 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## Paired-computer discovery and reconnection (1.8.1-beta.1)
+
+- Install the beta on macOS and Windows while retaining the existing pairing.
+  Restart each application and verify it reconnects without a new pairing code.
+- Disconnect and reconnect the paired computer repeatedly. An explicit reconnect
+  may show connecting; automatic retries must not flash connecting/offline.
+- Sleep and wake each computer, then interrupt and restore its Wi-Fi connection.
+  Verify the original trusted device reconnects when the LAN becomes reachable.
+- Reassign a computer's DHCP address on the same LAN. Verify discovery learns
+  its current address and TCP port without editing an IP or replacing its trust.
+- Exercise a LAN where multicast advertisements arrive in only one direction.
+  Keep the connection open across multiple eight-second discovery lifetimes.
+- After a network error, refresh successfully and verify the stale discovery
+  warning disappears. Record real DHCP and sleep/wake results separately from
+  loopback UDP/TCP fixtures and automated status-event tests.
 
 ## PWA previews, dates and download records (1.5.7)
 
