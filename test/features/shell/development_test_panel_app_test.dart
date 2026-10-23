@@ -135,6 +135,7 @@ void main() {
       'dev-test-panel-color-amber': DevelopmentTestAction.trayAmber,
       'dev-test-panel-clear-colors': DevelopmentTestAction.trayClearColors,
       'dev-test-panel-agent-basic': DevelopmentTestAction.agentCompletion,
+      'dev-test-panel-agent-attention': DevelopmentTestAction.agentAttention,
       'dev-test-panel-agent-burst': DevelopmentTestAction.agentBurst,
       'dev-test-panel-phone-file': DevelopmentTestAction.phoneClipboardFile,
       'dev-test-panel-auto-send': DevelopmentTestAction.autoSendClipboard,
@@ -174,6 +175,14 @@ void main() {
       ),
     );
     expect(sleeping.onPressed, isNull);
+
+    // Color/count previews are available on Windows even though the macOS-only
+    // nudge animation is unavailable there.
+    final Finder color = find.byKey(const Key('dev-test-panel-color-orange'));
+    await tester.ensureVisible(color);
+    await tester.tap(color);
+    await tester.pumpAndSettle();
+    expect(actions.removeLast(), DevelopmentTestAction.trayOrange);
 
     final Finder agentBasic = find.byKey(
       const Key('dev-test-panel-agent-basic'),

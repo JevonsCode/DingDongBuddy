@@ -5303,6 +5303,12 @@
   "@reminderToPhone": {
     "description": "Named reminder settings label"
   },
+  "trayBuddyWaiting": "¡Te toca!",
+  "trayBuddyReady": "Hay novedades",
+  "trayBuddyUnread": "Avisos sin leer",
+  "trayBuddyOpen": "Haz clic para abrir DingDong",
+  "devAttentionDescription": "Crea un aviso DEV que necesita tu respuesta. Pasa el cursor sobre el icono para ver el contador.",
+  "devAttentionCreated": "Creado: necesita tu respuesta",
   "devReminderColors": "Colores y contadores de avisos",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."

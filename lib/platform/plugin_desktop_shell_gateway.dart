@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/platform/windows_tray_icon_selector.dart';
+import 'package:dingdong/core/platform/windows_tray_reminder_preview.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
@@ -213,7 +214,9 @@ final class PluginDesktopShellGateway
   final Map<TrayNotificationColor, int> _developmentReminderCounts = {};
 
   Future<void> previewReminderColor(TrayNotificationColor? color) async {
-    if (!_developmentBuild || !Platform.isMacOS) return;
+    if (!_developmentBuild || (!Platform.isMacOS && !Platform.isWindows)) {
+      return;
+    }
     if (color == null) {
       _developmentReminderCounts.clear();
     } else {
@@ -372,7 +375,9 @@ final class PluginDesktopShellGateway
               TrayReminderStyle.softPulse
         : unreadProfiles.any((p) => p.style == TrayReminderStyle.softPulse);
     final TrayNotificationColor color =
-        profile?.color ??
+        (windows && _unreadController.count == 0 && unreadProfiles.isNotEmpty
+            ? unreadProfiles.first.color
+            : profile?.color) ??
         _notificationRules.trayColorFor(
           kind,
           legacyCompletionColor: _trayNotificationColor,
@@ -445,13 +450,31 @@ final class PluginDesktopShellGateway
       _ => p.name,
     };
     final reminderNames = unreadProfiles.map(reminderName).join(' · ');
+    final preview = WindowsTrayReminderPreview(
+      unreadCount: unreadCount,
+      needsInput: kind == AgentNotificationKind.attention,
+      strings: strings,
+      profiles: unreadProfiles,
+      counts: counts,
+    );
     await trayManager.setToolTip(
-      hot && !windows && reminderNames.isNotEmpty
+      windows
+          ? preview.tooltip(strings)
+          : hot && reminderNames.isNotEmpty
           ? '$reminderNames · $unreadTooltip'
           : hot
           ? '${kind == AgentNotificationKind.attention ? strings.needsYourInput : strings.agentCompletionNotifications} · $unreadTooltip'
           : unreadTooltip,
     );
+    if (windows) {
+      await trayManager.setReminderPreview(
+        title: preview.title,
+        subtitle: preview.subtitle,
+        footer: preview.footer,
+        totalCount: preview.totalCount,
+        rows: preview.rows,
+      );
+    }
     if (Platform.isMacOS) {
       await trayManager.setTitle(
         unreadProfiles.isEmpty

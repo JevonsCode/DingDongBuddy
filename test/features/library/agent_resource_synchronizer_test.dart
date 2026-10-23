@@ -18,6 +18,185 @@ import 'package:path/path.dart' as path;
 
 void main() {
   test(
+    'sandbox preserves Agent files and ignores earlier live sync state',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sandbox-sync-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory home = Directory(path.join(temp.path, 'home'));
+      Directory(path.join(home.path, '.codex')).createSync(recursive: true);
+      final File prompt = File(path.join(home.path, '.codex', 'AGENTS.md'))
+        ..writeAsStringSync('Keep my instructions.\n');
+      final File mcp = File(path.join(home.path, '.codex', 'config.toml'))
+        ..writeAsStringSync(
+          '[mcp_servers.dingdong]\ncommand = "stable-dingdong-mcp"\n',
+        );
+      final Directory packages = Directory(path.join(temp.path, 'packages'));
+      final List<AgentAdapter> adapters = <AgentAdapter>[
+        AgentAdapter.parse(_codexAdapter),
+      ];
+      final AgentResourceSynchronizer live =
+          await AgentResourceSynchronizer.currentUser(
+            packages,
+            loadAdapters: () async => adapters,
+            homeDirectory: home.path,
+          );
+      await live.sync(<Resource>[
+        _resource(
+          id: 'STABLE-MCP',
+          type: ResourceType.mcp,
+          content: '{"type":"stdio","command":"stable-server"}',
+        ),
+      ]);
+      final File legacySkill =
+          File(
+              path.join(
+                home.path,
+                '.codex',
+                'skills',
+                'stable-skill',
+                'SKILL.md',
+              ),
+            )
+            ..createSync(recursive: true)
+            ..writeAsStringSync('Stable managed Skill.\n');
+      final File legacyMarker = File(
+        path.join(legacySkill.parent.path, '.dingdong-managed'),
+      )..writeAsStringSync('STABLE-SKILL');
+      // A previous DEV run may have left a live-target deployment journal.
+      // The sandbox must not read, recover, or mutate that state.
+      final File oldJournal = live.deploymentStore.journalFile
+        ..createSync(recursive: true)
+        ..writeAsStringSync('old live deployment state');
+      final files = <File>[
+        prompt,
+        mcp,
+        legacySkill,
+        legacyMarker,
+        live.managedStateFile,
+        oldJournal,
+      ];
+      final before = <String, List<int>>{
+        for (final file in files) file.path: file.readAsBytesSync(),
+      };
+      var adapterLoads = 0;
+      final AgentResourceSynchronizer sandbox =
+          await AgentResourceSynchronizer.currentUser(
+            packages,
+            loadAdapters: () async {
+              adapterLoads += 1;
+              return adapters;
+            },
+            homeDirectory: home.path,
+            sandbox: true,
+          );
+
+      expect(await sandbox.inspect(const <Resource>[]), isEmpty);
+      expect(await sandbox.sync(const <Resource>[]), isEmpty);
+      expect(adapterLoads, 0);
+      expect(sandbox.skillRoots, isEmpty);
+      expect(sandbox.projectSkillRoots, isEmpty);
+      expect(sandbox.skillTargets, isEmpty);
+      expect(sandbox.promptTargets, isEmpty);
+      expect(sandbox.mcpTargets, isEmpty);
+      expect(sandbox.externalSkillCatalogs, isEmpty);
+      expect(sandbox.nativeSkillDelivery.hookInventory, isNull);
+      expect(sandbox.managedStateFile.path, isNot(live.managedStateFile.path));
+      expect(
+        sandbox.deploymentStore.root.path,
+        isNot(live.deploymentStore.root.path),
+      );
+      for (final file in files) {
+        expect(file.readAsBytesSync(), before[file.path], reason: file.path);
+      }
+    },
+  );
+
+  test(
+    'sandbox saves enabled resources without deploying to Agent projects',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-sandbox-resource-save-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory home = Directory(path.join(temp.path, 'home'));
+      final File mcp = File(path.join(home.path, '.codex', 'config.toml'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('[mcp_servers.personal]\ncommand = "my-server"\n');
+      final Directory project = Directory(path.join(temp.path, 'project'))
+        ..createSync();
+      final File hooks = File(path.join(project.path, '.codex', 'hooks.json'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync('{"hooks":{}}\n');
+      final Directory packages = Directory(path.join(temp.path, 'packages'));
+      final Directory package = Directory(
+        path.join(packages.path, 'impeccable'),
+      );
+      final File skill = File(path.join(package.path, 'SKILL.md'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync(
+          '---\nname: impeccable\ndescription: Project test\n---\n',
+        );
+      final AgentResourceSynchronizer synchronizer =
+          await AgentResourceSynchronizer.currentUser(
+            packages,
+            loadAdapters: () async =>
+                throw StateError('A sandbox must not discover Agent targets.'),
+            homeDirectory: home.path,
+            sandbox: true,
+          );
+      final ResourceStore store = SynchronizedResourceStore(
+        ResourceRepository(
+          ResourceFileService(File(path.join(temp.path, 'resources.json'))),
+        ),
+        synchronizer,
+      );
+      final List<Resource> resources = <Resource>[
+        _resource(
+          id: 'DEV-MCP',
+          type: ResourceType.mcp,
+          content: '{"type":"stdio","command":"dev-server"}',
+        ),
+        _resource(
+          id: 'DEV-SKILL',
+          type: ResourceType.skill,
+          content: skill.readAsStringSync(),
+          packagePath: package.path,
+          skillProjectPaths: <String>[project.path],
+        ).copyWith(
+          skillDeliveryByAgent: const <String, SkillDeliveryMode>{
+            'codex': SkillDeliveryMode.nativeProject,
+          },
+          skillHooksEnabledByAgent: const <String, bool>{'codex': true},
+        ),
+      ];
+
+      await store.save(resources);
+      expect(await store.load(), hasLength(2));
+      await store.save(const <Resource>[]);
+      expect(await store.load(), isEmpty);
+      expect(
+        mcp.readAsStringSync(),
+        '[mcp_servers.personal]\ncommand = "my-server"\n',
+      );
+      expect(hooks.readAsStringSync(), '{"hooks":{}}\n');
+      expect(
+        Directory(path.join(project.path, '.agents')).existsSync(),
+        isFalse,
+      );
+      expect(
+        Directory(path.join(home.path, '.codex', 'skills')).existsSync(),
+        isFalse,
+      );
+      expect(
+        File(path.join(home.path, '.codex', 'AGENTS.md')).existsSync(),
+        isFalse,
+      );
+    },
+  );
+
+  test(
     'current user discovery includes native Codex and Claude prompts',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(

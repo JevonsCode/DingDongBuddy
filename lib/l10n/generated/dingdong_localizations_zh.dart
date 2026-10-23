@@ -3998,6 +3998,24 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get reminderToPhone => '发送到手机';
 
   @override
+  String get trayBuddyWaiting => '轮到你啦';
+
+  @override
+  String get trayBuddyReady => '有新消息啦';
+
+  @override
+  String get trayBuddyUnread => '待查看的提醒';
+
+  @override
+  String get trayBuddyOpen => '点击打开 DingDong';
+
+  @override
+  String get devAttentionDescription => '创建一条需要你确认的 DEV 提醒。悬停到托盘小伙伴上即可查看计数。';
+
+  @override
+  String get devAttentionCreated => '已创建：等待你的确认';
+
+  @override
   String get devReminderColors => '提醒颜色与计数';
 
   @override

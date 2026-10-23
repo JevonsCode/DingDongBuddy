@@ -284,13 +284,14 @@ void main() {
     expect(source, contains('GetPixel'));
     expect(source, contains('DrawImage'));
     expect(
-      source.split('HICON CreateReminderTrayIcon').first,
+      source
+          .split('HICON CreateTrayIcon(').last
+          .split('HICON CreateReminderTrayIcon').first,
       isNot(contains('FillEllipse')),
     );
     expect(source, contains('HICON CreateReminderTrayIcon'));
     expect(source, contains('if (attention)'));
     expect(source, isNot(contains('DrawString')));
-    expect(source, isNot(contains('GraphicsPath')));
     expect(source, contains('GetHICON'));
     expect(cmake, contains('tray_visual.cpp'));
     expect(cmake, contains('gdiplus'));

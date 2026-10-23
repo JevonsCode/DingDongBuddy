@@ -108,6 +108,8 @@ final class AgentResourceSynchronizer {
     );
   }
 
+  /// In [sandbox] mode, resources stay local to DingDong's own data directory.
+  /// Agent discovery and recovery of earlier live-target state are excluded.
   static Future<AgentResourceSynchronizer> currentUser(
     Directory packageRoot, {
     required AgentAdapterLoader loadAdapters,
@@ -115,7 +117,26 @@ final class AgentResourceSynchronizer {
     TriggerGroupStore? triggerGroupStore,
     String? homeDirectory,
     CodexProjectHookInventory? projectHookInventory,
+    bool sandbox = false,
   }) async {
+    if (sandbox) {
+      final Directory stateRoot = Directory(
+        path.join(packageRoot.parent.path, 'Agent Sync Sandbox'),
+      );
+      return AgentResourceSynchronizer(
+        packageRoot: packageRoot,
+        skillRoots: const <Directory>[],
+        mcpTargets: const <AgentMcpTarget>[],
+        triggerGroupStore: triggerGroupStore,
+        managedStateFile: File(
+          path.join(stateRoot.path, 'agent-sync-state.json'),
+        ),
+        deploymentStore: SkillDeploymentStore(
+          Directory(path.join(stateRoot.path, 'Skill Deployments')),
+        ),
+        skillPackageInstaller: skillPackageInstaller,
+      );
+    }
     final String home =
         homeDirectory ??
         Platform.environment['HOME'] ??

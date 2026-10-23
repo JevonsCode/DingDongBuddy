@@ -9,6 +9,7 @@ set(PLUGIN_NAME "tray_manager_plugin")
 add_library(${PLUGIN_NAME} SHARED
   "tray_manager_plugin.cpp"
   "tray_visual.cpp"
+  "tray_hover_card.cpp"
 )
 apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
@@ -25,6 +26,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE
   gdi32
   gdiplus
   shell32
+  shcore
 )
 
 # List of absolute paths to libraries that should be bundled with the plugin

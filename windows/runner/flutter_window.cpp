@@ -13,7 +13,11 @@ namespace {
 
 constexpr wchar_t kRunKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+#ifdef DINGDONG_DEVELOPMENT
+constexpr wchar_t kRunValueName[] = L"DingDong DEV";
+#else
 constexpr wchar_t kRunValueName[] = L"DingDong";
+#endif
 
 bool IsLaunchAtStartupEnabled() {
   wchar_t value[MAX_PATH * 2] = {};

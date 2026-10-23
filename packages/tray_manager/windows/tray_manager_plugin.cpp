@@ -1,4 +1,5 @@
 #include "include/tray_manager/tray_manager_plugin.h"
+#include "tray_hover_card.h"
 #include "tray_visual.h"
 
 // This must be included before many other Windows headers.
@@ -16,6 +17,8 @@
 #include <array>
 #include <cmath>
 #include <codecvt>
+#include <cstdint>
+#include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -35,6 +38,60 @@ const flutter::EncodableValue* ValueOrNull(const flutter::EncodableMap& map,
     return nullptr;
   }
   return &(it->second);
+}
+
+bool ReadNonNegativeInt(const flutter::EncodableValue* value, int* target) {
+  if (value == nullptr) {
+    return false;
+  }
+  int64_t number;
+  if (const auto* small_value = std::get_if<int>(value)) {
+    number = *small_value;
+  } else if (const auto* large_value = std::get_if<int64_t>(value)) {
+    number = *large_value;
+  } else {
+    return false;
+  }
+  if (number < 0 || number > std::numeric_limits<int>::max()) {
+    return false;
+  }
+  *target = static_cast<int>(number);
+  return true;
+}
+
+bool ReadPreviewText(const flutter::EncodableMap& args, const char* key,
+                     size_t limit, std::wstring* target, bool single_line = true) {
+  const auto* value = std::get_if<std::string>(ValueOrNull(args, key));
+  if (value == nullptr || value->size() > 4096) {
+    return false;
+  }
+  target->clear();
+  if (value->empty()) {
+    return true;
+  }
+  const int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+                                       value->data(),
+                                       static_cast<int>(value->size()), nullptr, 0);
+  if (size <= 0) {
+    return false;
+  }
+  target->resize(size);
+  MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, value->data(),
+                       static_cast<int>(value->size()), target->data(), size);
+  if (target->size() > limit) {
+    target->resize(limit);
+    // Keep a truncation boundary outside a UTF-16 surrogate pair.
+    if (!target->empty() && target->back() >= 0xD800 && target->back() <= 0xDBFF) {
+      target->pop_back();
+    }
+  }
+  for (wchar_t& character : *target) {
+    if (character < L' ' &&
+        (single_line || (character != L'\n' && character != L'\r' && character != L'\t'))) {
+      character = L' ';
+    }
+  }
+  return true;
 }
 
 double SrgbChannelToLinear(BYTE value) {
@@ -87,6 +144,9 @@ class TrayManagerPlugin : public flutter::Plugin {
   int unread_count = 0;
   bool attention_frame = false;
   bool attention_timer_active = false;
+  std::wstring tooltip_text;
+  bool tooltip_suppressed = false;
+  std::unique_ptr<tray_manager::TrayHoverCard> hover_card;
   // do create pop-up menu only once.
   HMENU hMenu = CreatePopupMenu();
   bool tray_icon_setted = false;
@@ -104,6 +164,7 @@ class TrayManagerPlugin : public flutter::Plugin {
   void TrayManagerPlugin::DestroyIconResources();
   bool TrayManagerPlugin::TaskbarSurfaceIsLight();
   void TrayManagerPlugin::NotifyTaskbarAppearanceChanged();
+  void TrayManagerPlugin::ApplyNativeToolTip();
 
   // Called for top-level WindowProc delegation.
   std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hwnd,
@@ -118,6 +179,9 @@ class TrayManagerPlugin : public flutter::Plugin {
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void TrayManagerPlugin::SetToolTip(
+      const flutter::MethodCall<flutter::EncodableValue>& method_call,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void TrayManagerPlugin::SetReminderPreview(
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void TrayManagerPlugin::SetContextMenu(
@@ -171,9 +235,22 @@ TrayManagerPlugin::TrayManagerPlugin(flutter::PluginRegistrarWindows* registrar)
         return HandleWindowProc(hwnd, message, wparam, lparam);
       });
   windows_taskbar_created_message_id = RegisterWindowMessage(L"TaskbarCreated");
+  hover_card = std::make_unique<tray_manager::TrayHoverCard>(
+      GetMainWindow(),
+      [] {
+        if (channel != nullptr) {
+          channel->InvokeMethod("onTrayIconMouseDown",
+                                std::make_unique<flutter::EncodableValue>());
+        }
+      },
+      [this](bool visible) {
+        tooltip_suppressed = visible;
+        ApplyNativeToolTip();
+      });
 }
 
 TrayManagerPlugin::~TrayManagerPlugin() {
+  hover_card.reset();
   if (tray_icon_setted) {
     Shell_NotifyIcon(NIM_DELETE, &nid);
     tray_icon_setted = false;
@@ -251,6 +328,7 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
              wParam == kAttentionFlashTimerId) {
     AdvanceAttentionFlash();
   } else if (message == WM_COMMAND) {
+    hover_card->Dismiss();
     flutter::EncodableMap eventData = flutter::EncodableMap();
     eventData[flutter::EncodableValue("id")] =
         flutter::EncodableValue((int)wParam);
@@ -259,12 +337,26 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
                           std::make_unique<flutter::EncodableValue>(eventData));
   } else if (message == WM_MYMESSAGE) {
     switch (lParam) {
+      case WM_MOUSEMOVE:
+        if (tray_icon_setted) {
+          hover_card->OnTrayMouseMove(niif);
+        }
+        break;
+      case WM_LBUTTONDOWN:
+      case WM_RBUTTONDOWN:
+      case WM_MBUTTONDOWN:
+      case WM_LBUTTONDBLCLK:
+      case WM_RBUTTONDBLCLK:
+        hover_card->Dismiss();
+        break;
       case WM_LBUTTONUP:
+        hover_card->Dismiss();
         NotifyTaskbarAppearanceChanged();
         channel->InvokeMethod("onTrayIconMouseDown",
                               std::make_unique<flutter::EncodableValue>());
         break;
       case WM_RBUTTONUP:
+        hover_card->Dismiss();
         NotifyTaskbarAppearanceChanged();
         channel->InvokeMethod("onTrayIconRightMouseDown",
                               std::make_unique<flutter::EncodableValue>());
@@ -273,6 +365,7 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
         return DefWindowProc(hWnd, message, wParam, lParam);
     };
   } else if (message == windows_taskbar_created_message_id) {
+    hover_card->Reset();
     if (windows_taskbar_created_message_id != 0 && tray_icon_setted) {
       tray_icon_setted = false;
       ApplyIconFrame(unread_count > 0 && attention_frame);
@@ -280,8 +373,12 @@ std::optional<LRESULT> TrayManagerPlugin::HandleWindowProc(HWND hWnd,
     NotifyTaskbarAppearanceChanged();
   } else if (message == WM_SETTINGCHANGE || message == WM_THEMECHANGED ||
              message == WM_DWMCOLORIZATIONCOLORCHANGED) {
+    hover_card->Reset();
     NotifyTaskbarAppearanceChanged();
+  } else if (message == WM_CANCELMODE || message == WM_CONTEXTMENU) {
+    hover_card->Dismiss();
   } else if (message == WM_POWERBROADCAST) {
+    hover_card->Reset();
     // Handle power management events (sleep/wake)
     switch (wParam) {
       case PBT_APMRESUMEAUTOMATIC:
@@ -307,6 +404,7 @@ HWND TrayManagerPlugin::GetMainWindow() {
 void TrayManagerPlugin::Destroy(
     const flutter::MethodCall<flutter::EncodableValue>& method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  hover_card->SetEnabled(false);
   if (tray_icon_setted) {
     Shell_NotifyIcon(NIM_DELETE, &nid);
   }
@@ -396,6 +494,7 @@ void TrayManagerPlugin::SetIcon(
   rendered_icon = replacement_rendered_icon;
   attention_rendered_icon = replacement_attention_rendered_icon;
   unread_count = next_count;
+  hover_card->SetEnabled(unread_count > 0);
 
   if (unread_count > 0 && animate_unread) {
     StartAttentionFlash();
@@ -494,6 +593,9 @@ void TrayManagerPlugin::AdvanceAttentionFlash() {
 }
 
 void TrayManagerPlugin::DestroyIconResources() {
+  if (hover_card != nullptr) {
+    hover_card->SetEnabled(false);
+  }
   CancelAttentionFlash();
   if (attention_rendered_icon != nullptr) {
     DestroyIcon(attention_rendered_icon);
@@ -615,15 +717,69 @@ void TrayManagerPlugin::SetToolTip(
   const flutter::EncodableMap& args =
       std::get<flutter::EncodableMap>(*method_call.arguments());
 
-  std::string toolTip =
-      std::get<std::string>(args.at(flutter::EncodableValue("toolTip")));
+  if (!ReadPreviewText(args, "toolTip", 127, &tooltip_text, false)) {
+    result->Error("invalid_tooltip", "The tray tooltip must be UTF-8 text.");
+    return;
+  }
+  ApplyNativeToolTip();
 
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  result->Success(flutter::EncodableValue(true));
+}
+
+void TrayManagerPlugin::ApplyNativeToolTip() {
+  // Keep the ordinary tooltip for fallback/accessibility, but suppress its
+  // visual popup while the richer card is visible.
   nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
   StringCchCopy(nid.szTip, _countof(nid.szTip),
-                converter.from_bytes(toolTip).c_str());
-  Shell_NotifyIcon(NIM_MODIFY, &nid);
+                tooltip_suppressed ? L"" : tooltip_text.c_str());
+  if (tray_icon_setted) {
+    Shell_NotifyIcon(NIM_MODIFY, &nid);
+  }
+}
 
+void TrayManagerPlugin::SetReminderPreview(
+    const flutter::MethodCall<flutter::EncodableValue>& method_call,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  const auto* args = method_call.arguments() == nullptr
+                         ? nullptr
+                         : std::get_if<flutter::EncodableMap>(method_call.arguments());
+  tray_manager::ReminderPreview preview;
+  const flutter::EncodableList* rows = args == nullptr
+      ? nullptr
+      : std::get_if<flutter::EncodableList>(ValueOrNull(*args, "rows"));
+  if (args == nullptr || rows == nullptr || rows->size() > 64 ||
+      !ReadNonNegativeInt(ValueOrNull(*args, "totalCount"), &preview.total_count) ||
+      !ReadPreviewText(*args, "title", 96, &preview.title) ||
+      !ReadPreviewText(*args, "subtitle", 160, &preview.subtitle) ||
+      !ReadPreviewText(*args, "footer", 96, &preview.footer)) {
+    result->Error("invalid_reminder_preview",
+                  "Expected a reminder preview with text, a nonnegative count and at most 64 rows.");
+    return;
+  }
+  for (const auto& value : *rows) {
+    const auto* row_args = std::get_if<flutter::EncodableMap>(&value);
+    tray_manager::ReminderPreviewRow row;
+    int color_rgb = 0;
+    if (row_args == nullptr ||
+        !ReadPreviewText(*row_args, "name", 96, &row.name) ||
+        !ReadNonNegativeInt(ValueOrNull(*row_args, "colorRgb"), &color_rgb) ||
+        color_rgb > 0xFFFFFF) {
+      result->Error("invalid_reminder_preview", "A reminder row is invalid.");
+      return;
+    }
+    if (const auto* count = ValueOrNull(*row_args, "count")) {
+      int number = 0;
+      if (!ReadNonNegativeInt(count, &number)) {
+        result->Error("invalid_reminder_preview", "A reminder row count is invalid.");
+        return;
+      }
+      row.count = number;
+    }
+    row.color = RGB((color_rgb >> 16) & 0xFF, (color_rgb >> 8) & 0xFF,
+                      color_rgb & 0xFF);
+    preview.rows.push_back(std::move(row));
+  }
+  hover_card->SetPreview(std::move(preview));
   result->Success(flutter::EncodableValue(true));
 }
 
@@ -642,6 +798,7 @@ void TrayManagerPlugin::SetContextMenu(
 void TrayManagerPlugin::PopUpContextMenu(
     const flutter::MethodCall<flutter::EncodableValue>& method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  hover_card->Dismiss();
   const flutter::EncodableMap& args =
       std::get<flutter::EncodableMap>(*method_call.arguments());
 
@@ -718,6 +875,8 @@ void TrayManagerPlugin::HandleMethodCall(
     SetIcon(method_call, std::move(result));
   } else if (method_call.method_name().compare("setToolTip") == 0) {
     SetToolTip(method_call, std::move(result));
+  } else if (method_call.method_name().compare("setReminderPreview") == 0) {
+    SetReminderPreview(method_call, std::move(result));
   } else if (method_call.method_name().compare("setContextMenu") == 0) {
     SetContextMenu(method_call, std::move(result));
   } else if (method_call.method_name().compare("popUpContextMenu") == 0) {
