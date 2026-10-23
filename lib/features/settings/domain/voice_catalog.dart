@@ -6,7 +6,7 @@ const voiceCatalogRepository = 'JevonsCode/dingdong-voices';
 const voiceCatalogLabel = 'voice-approved';
 const voiceCatalogMaxBytes = 5 * 1024 * 1024;
 const voiceCatalogWebsite =
-    'https://xn--8ovp9s.xn--m8txu.com/dingdongbuddy/voices/';
+    'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/voices/';
 
 /// Only GitHub's attachment storage is accepted, never arbitrary Issue URLs.
 bool isVoiceAttachment(Uri uri) =>
