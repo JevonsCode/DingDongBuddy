@@ -12,7 +12,13 @@ This checklist keeps the first session focused on DingDong's free local tools: o
 6. Connect the DingDong MCP and the supported native completion Hook in the target Agent, preserving unrelated client settings.
 7. Start a small Agent task and confirm it calls `dingdong_bridge` at task start.
 8. Confirm that the completion Hook records the final event once, then choose which Agent events notify and which sound they use. Do not add a duplicate `dingdong_notify` call for the same completion; use it for a blocker, a request for attention, or a client without a completion Hook.
-9. In the 1.7.0 development version, open Resource Manager → Token history to inspect the daily heatmap for supported Codex, Claude Code, and Pi sources. Filter by year or source and select a day. Published 1.6.2 downloads do not include this feature yet.
+9. Open Resource Manager → Token history to inspect the daily heatmap for supported Codex, Claude Code and Pi sources. Filter by date or source, select a day, or export CSV. Include DingDong usage only if wanted; it starts off.
+10. Open a Skill and use Version history to compare saved versions. A restore creates a new version and preserves its current scope.
+11. In Settings → Notifications, configure completion and needs-input separately or add a named reminder with its own sound and color. Its condition is a hint for the Agent, not a background monitor.
+12. To use AI+, configure the endpoint, protocol, model and token under Resource Manager → AI+. Test the connection, then opt into Automatic resource selection if wanted. Merely opening or saving this page makes no model request.
+13. Pair a trusted device if wanted. Check Online devices separately from Connection history, and open Transfer history for past file records.
+
+See the [user guides](README.md) for feature-specific steps and boundaries.
 
 ## Good Empty States
 

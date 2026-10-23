@@ -28,7 +28,7 @@ and important reminders can also reach a trusted phone through the mobile PWA.
 > Configure a model once; resource selection runs only when an Agent requests it.
 > Internal model Token usage is tracked separately.
 
-See the [AI+ setup and privacy boundaries](docs/product/ai-companion.md).
+See the [AI+ setup and privacy boundaries](docs/product/ai-companion.md) or browse the [user guides](docs/product/README.md).
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -40,7 +40,7 @@ stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 | --- | --- |
 | Clipboard content | Search and classify text, links, images, files, paths, and commands; groups, matching rules, pin saved items, preview, system open, copy, paste, share, and QR Code |
 | Prompt | Full instructions delivered automatically when enabled scope rules match the current task |
-| Skill | Complete packages with `SKILL.md`, scripts, references, and assets; summary-first discovery and on-demand loading |
+| Skill | Complete packages with `SKILL.md`, scripts, references, and assets; on-demand loading, local version history, comparison and restoration |
 | MCP | One managed server configuration synchronized into matching Agent clients while unrelated configuration is preserved |
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
 | Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
@@ -72,6 +72,12 @@ events should notify you and which sound they use. Completion, blockers, and
 requests for a decision stay distinguishable. The client's own notifications
 are not automatically replaced; choose your preferred setup in each client.
 
+In **Settings → Notifications**, control completion and needs-input reminders
+separately, or add named reminders with their own color, sound, tray style and
+phone setting. Agents can select one by `reminderId`. Custom sounds support
+PCM WAV files up to 15 seconds and 5 MiB. A saved condition describes when an
+Agent should notify; it does not start a monitor. See [Agent reminders](docs/product/agent-reminders.md).
+
 ## Local daily Token history
 
 Open **Resource Manager → Token history** to see a
@@ -84,6 +90,26 @@ invented zero.
 This history stores numeric usage aggregates locally, not conversation text,
 and is separate from anonymous installation statistics. Token counts show
 usage, not money or a complete bill.
+
+You can export the selected usage as CSV. **Include DingDong usage** starts off;
+enable it to include resource-selection and connection-test receipts, or choose
+**DingDong only** to inspect them separately. Changing filters does not call a
+model. See [AI+ Token accounting](docs/product/ai-companion.md#internal-token-accounting).
+
+## AI+ selects resources for the current task
+
+Open **Resource Manager → AI+**, configure your model endpoint, protocol and
+model, then enable **Automatic resource selection** if wanted; it starts off.
+When an Agent calls Bridge, the model can narrow eligible task-matched Prompts,
+Skills and MCP references using the task, optional context and candidate
+descriptions. Always-enabled resources and explicitly named eligible resources
+are retained. Failed or invalid selections fall back to local matching.
+
+AI+ does not analyze your clipboard, produce insights or schedule check-ins.
+Opening the page or saving settings does not invoke the model. Its token is
+saved in ordinary local preferences; re-enter a token previously stored in
+Keychain. See the [AI+ guide](docs/product/ai-companion.md) for configuration and
+exact data boundaries.
 
 ## Optional system selection tools on macOS
 
@@ -134,6 +160,20 @@ flowchart LR
 | Skill | The bridge returns the complete matching catalog as ID, name, and description only | Match the description, call `dingdong_load_skill`, then read only referenced package files with `dingdong_read_skill_file` |
 | MCP | Enabled servers are synchronized into native client configuration; the bridge returns summary metadata plus stable server provenance | Treat MCP entries as available tools, not instructions; after a real call, send one `dingdong_confirm_mcp_use` receipt so the footer can mark it truthfully |
 
+### Skill version history
+
+Open a Skill and select **Version history** in its detail header. Manual saves
+and online refreshes retain the full document and package when content changes.
+Compare any two versions, including nonadjacent versions, and restore the
+right-hand version after confirmation. Restoration creates a new version and
+keeps the current scope, enablement and Agent delivery settings. History stays
+on this computer and cannot recover content from before recording began.
+See the [Skill version history guide](docs/product/skill-version-history.md).
+
+Bridge also supports acknowledged snapshots and Skill versions, so callers can
+avoid receiving unchanged content while retaining their baseline. After losing
+context, callers request a full snapshot again. See [Bridge context delivery](docs/product/bridge-context-delivery.md).
+
 ### A resource receipt at the end of each reply
 
 After the Bridge is connected, supported Agents append one compact resource
@@ -180,6 +220,11 @@ each device can be disconnected, reconnected, or deleted independently. Scan
 another computer to add it without replacing the existing pairing. The phone
 keeps every computer connected when possible and lets you switch the active
 computer from the online status beside the header.
+
+The desktop device manager separates **Online devices** from **Connection history**.
+Use **Transfer history** in its header to inspect up to 100 completed, sent,
+failed or cancelled file records retained locally across restarts. These are
+metadata, not file backups or restart-resumable transfers. See [Connected devices](docs/product/connected-devices.md).
 
 The PWA checks for a fresh application shell while online. Its device settings
 also provide a manual upgrade action; applying an update preserves all saved

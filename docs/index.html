@@ -21,6 +21,7 @@
         <a href="#resources" data-i18n="nav.resources">Resources</a>
         <a href="#mcp" data-i18n="nav.mcp">Connect</a>
         <a href="#download" data-i18n="nav.download">Download</a>
+        <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/README.md" data-i18n="nav.docs">Docs</a>
         <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       </nav>
 
@@ -224,6 +225,8 @@
             <p data-i18n="devices.connectionBody">Verified local connections have no file-size limit. Other routes keep the 25 MB limit. Follow progress on desktop or mobile, and pause or resume while both apps stay open.</p>
           </article>
         </div>
+        <p class="device-platform-note" data-i18n="devices.history">The desktop device manager separates Online devices from Connection history. Open Transfer history for the latest 100 finished file records saved locally across restarts. A history entry is not a file backup or a transfer you can resume after restarting.</p>
+        <p><a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/connected-devices.md" data-i18n="devices.guide">Pairing and transfer guide →</a></p>
         <p class="device-platform-note" data-i18n="devices.platformNote">On the same local network, DingDong tries a direct WebRTC connection first. Otherwise it uses an end-to-end encrypted relay. Android can use the web app without installing it. On iPhone and iPad, add it to the Home Screen to enable push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders. Your phone controls notification vibration.</p>
       </section>
 
@@ -277,6 +280,30 @@
         <p class="agent-support-note" data-i18n="resources.clientNote">Pi and Grok Build currently support Skill syncing. MCP setup and completion hooks vary by client; check the options shown in DingDong.</p>
 
         <div class="conversation-heading">
+          <h3 data-i18n="resourceUpdates.title">Choose what arrives. Keep what changed.</h3>
+        </div>
+        <div class="conversation-grid">
+          <article class="conversation-example">
+            <span class="example-kind">AI+</span>
+            <h3 data-i18n="resourceUpdates.aiTitle">Select resources for the task.</h3>
+            <p class="example-result" data-i18n="resourceUpdates.aiBody">Automatic resource selection starts off. Enable it in Resource Manager → AI+. Your model can narrow eligible Prompts, Skills and MCP references from the task and candidate descriptions. Required and explicitly named eligible resources stay; failures fall back to local matching.</p>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/ai-companion.md" data-i18n="resourceUpdates.aiGuide">AI+ setup and data boundaries →</a>
+          </article>
+          <article class="conversation-example">
+            <span class="example-kind">Skill</span>
+            <h3 data-i18n="resourceUpdates.historyTitle">Compare versions. Restore a complete package.</h3>
+            <p class="example-result" data-i18n="resourceUpdates.historyBody">Open Version history on a Skill to compare any two saved versions. Manual saves and online refreshes retain changed documents and package files locally. Restoring creates a new version and preserves the current scope and enablement.</p>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/skill-version-history.md" data-i18n="resourceUpdates.historyGuide">Skill version history guide →</a>
+          </article>
+          <article class="conversation-example">
+            <span class="example-kind">Bridge</span>
+            <h3 data-i18n="resourceUpdates.bridgeTitle">Skip content the Agent still has.</h3>
+            <p class="example-result" data-i18n="resourceUpdates.bridgeBody">Agents that retain a complete snapshot can confirm it to receive only changes. Skill loads can also reuse a confirmed version. After losing context, the Agent requests the full content again.</p>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/bridge-context-delivery.md" data-i18n="resourceUpdates.bridgeGuide">Bridge integration guide →</a>
+          </article>
+        </div>
+
+        <div class="conversation-heading">
           <h3 data-i18n="examples.title">What you can ask your Agent</h3>
           <p data-i18n="examples.body">Enable the resources and choose where they apply first. Then ask in your own words.</p>
         </div>
@@ -301,9 +328,9 @@
 
       <section class="resource-system" id="token-history">
         <div class="section-heading">
-          <p class="section-tag" data-i18n="usage.eyebrow">New in 1.9.0</p>
+          <p class="section-tag" data-i18n="usage.eyebrow">Local usage records</p>
           <h2 data-i18n="usage.title">See your Token usage, day by day.</h2>
-          <p data-i18n="usage.body">Resource Manager gets a Token history page: a daily heatmap, filters for year and source, and a breakdown for each day.</p>
+          <p data-i18n="usage.body">Open Token usage for a daily heatmap, date and source filters, day details and CSV export. Optionally include DingDong’s own model usage or view it separately; changing filters makes no model request.</p>
         </div>
         <div class="conversation-grid">
           <article class="conversation-example">
@@ -473,6 +500,8 @@
           <h2 data-i18n="sounds.title">Choose the sound that brings you back.</h2>
           <p data-i18n="sounds.body">Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.</p>
           <p class="sound-life-note" data-i18n="sounds.note">Listen to a few below before choosing.</p>
+          <p data-i18n="sounds.profiles">In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.</p>
+          <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/agent-reminders.md" data-i18n="sounds.guide">Reminder setup and Agent tools →</a>
         </div>
 
         <div class="sound-grid" aria-label="DingDong sound previews">
@@ -656,6 +685,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <span>DingDong</span>
       <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="footer.releases">Releases</a>
+      <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/README.md" data-i18n="nav.docs">Docs</a>
       <a href="https://github.com/JevonsCode/DingDongCodexPet" data-i18n="footer.pet">Codex pet project (access required)</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml" data-i18n="footer.feedback">Feedback</a>
       <a href="./dingdong-release.json" data-i18n="footer.metadata">Metadata</a>
@@ -669,6 +699,21 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       const copy = {
         en: {
+          "nav.docs": "Docs",
+          "resourceUpdates.title": "Choose what arrives. Keep what changed.",
+          "resourceUpdates.aiTitle": "Select resources for the task.",
+          "resourceUpdates.aiBody": "Automatic resource selection starts off. Enable it in Resource Manager → AI+. Your model can narrow eligible Prompts, Skills and MCP references from the task and candidate descriptions. Required and explicitly named eligible resources stay; failures fall back to local matching.",
+          "resourceUpdates.aiGuide": "AI+ setup and data boundaries →",
+          "resourceUpdates.historyTitle": "Compare versions. Restore a complete package.",
+          "resourceUpdates.historyBody": "Open Version history on a Skill to compare any two saved versions. Manual saves and online refreshes retain changed documents and package files locally. Restoring creates a new version and preserves the current scope and enablement.",
+          "resourceUpdates.historyGuide": "Skill version history guide →",
+          "resourceUpdates.bridgeTitle": "Skip content the Agent still has.",
+          "resourceUpdates.bridgeBody": "Agents that retain a complete snapshot can confirm it to receive only changes. Skill loads can also reuse a confirmed version. After losing context, the Agent requests the full content again.",
+          "resourceUpdates.bridgeGuide": "Bridge integration guide →",
+          "devices.history": "The desktop device manager separates Online devices from Connection history. Open Transfer history for the latest 100 finished file records saved locally across restarts. A history entry is not a file backup or a transfer you can resume after restarting.",
+          "devices.guide": "Pairing and transfer guide →",
+          "sounds.profiles": "In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.",
+          "sounds.guide": "Reminder setup and Agent tools →",
           "footer.pet": "Codex pet project (access required)",
           "nav.product": "Features",
           "nav.devices": "Devices",
@@ -701,9 +746,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.feedback": "The copied value will appear at the top of Clipboard.",
           "demo.copySuccess": "Copied. Clipboard now has a new first item.",
           "demo.footer": "API listening on 127.0.0.1:2333 · ⌘⇧V ready",
-          "usage.eyebrow": "New in 1.9.0",
+          "usage.eyebrow": "Local usage records",
           "usage.title": "See your Token usage, day by day.",
-          "usage.body": "Resource Manager gets a Token history page: a daily heatmap, filters for year and source, and a breakdown for each day.",
+          "usage.body": "Open Token usage for a daily heatmap, date and source filters, day details and CSV export. Optionally include DingDong’s own model usage or view it separately; changing filters makes no model request.",
           "usage.sourcesTitle": "Reads the records your Agents already keep.",
           "usage.sourcesBody": "Counts come from the local records that Codex, Claude Code, and Pi write. Repeated cumulative records are counted once.",
           "usage.coverageLabel": "Known counts",
@@ -925,6 +970,21 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "resources.clientNote": "Pi and Grok Build currently support Skill syncing. MCP setup and completion hooks vary by client; check the options shown in DingDong.",
         },
         zh: {
+          "nav.docs": "文档",
+          "resourceUpdates.title": "按任务选资源，改过的也能找回来",
+          "resourceUpdates.aiTitle": "AI+ 帮 Agent 筛选当前需要的资源",
+          "resourceUpdates.aiBody": "自动资源筛选默认关闭，在“资源管理 → AI+”按需开启。模型根据任务和候选简介，缩小符合范围的 Prompt、Skill 和 MCP 目录；必需资源、明确点名且符合范围的资源会保留，失败时回退到本地匹配。",
+          "resourceUpdates.aiGuide": "AI+ 配置与数据边界 →",
+          "resourceUpdates.historyTitle": "比较版本，恢复完整 Skill 包",
+          "resourceUpdates.historyBody": "打开 Skill 的“版本历史”，任意选择两个已存版本比较。手动保存和在线刷新会在内容变化时，本地保留文档和配套文件；恢复会生成新版本，保留当前作用域和启用状态。",
+          "resourceUpdates.historyGuide": "Skill 版本历史使用说明 →",
+          "resourceUpdates.bridgeTitle": "Agent 仍保留的内容，省去重复交付",
+          "resourceUpdates.bridgeBody": "Agent 仍持有完整快照时，可确认基线，只接收变化；Skill 加载也能复用已确认的版本。上下文丢失后，重新请求完整内容。",
+          "resourceUpdates.bridgeGuide": "Bridge 接入说明 →",
+          "devices.history": "桌面设备管理将“在线设备”与“连接历史”分开显示。打开“传输历史”，查看跨重启保留在本机的最近 100 条已结束文件记录。历史记录不等于文件备份，也不代表重启后还能续传。",
+          "devices.guide": "设备配对与传输说明 →",
+          "sounds.profiles": "在“设置 → 通知”中分别控制完成与需要处理提醒，也可添加命名提醒，单独选择声音、颜色、托盘样式和手机开关。Agent 通过 reminderId 选择提醒；保存条件不会自行启动监控。自定义音频支持不超过 15 秒、5 MiB 的 PCM WAV。",
+          "sounds.guide": "提醒设置与 Agent 工具说明 →",
           "footer.pet": "Codex 宠物项目（需访问权限）",
           "nav.product": "功能",
           "nav.devices": "多设备",
@@ -957,9 +1017,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "demo.feedback": "点一下复制，列表顶部会多一条记录",
           "demo.copySuccess": "已复制，记录已经放到最上面",
           "demo.footer": "API 正在监听 127.0.0.1:2333 · ⌘⇧V 就绪",
-          "usage.eyebrow": "1.9.0 新增",
+          "usage.eyebrow": "本地用量记录",
           "usage.title": "每天用了多少 Token，一眼看到",
-          "usage.body": "资源管理里新增 Token 用量：每日热力图，可按年份和来源筛选，点开某一天看明细。",
+          "usage.body": "打开 Token 用量，查看每日热力图，按日期和来源筛选、点开明细或导出 CSV。也可按需加入 DingDong 自身模型用量，或单独查看；切换筛选不会调用模型。",
           "usage.sourcesTitle": "读取 Agent 本地已有的记录",
           "usage.sourcesBody": "数据来自 Codex、Claude Code、Pi 在本地留下的记录；重复的累计记录只算一次。",
           "usage.coverageLabel": "已知数量",

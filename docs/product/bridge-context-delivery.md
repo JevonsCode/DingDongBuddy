@@ -44,7 +44,7 @@ installation/update flow must be re-imported to update the managed digest.
 Scope and activation rules filter resources locally. Snapshot and Skill-version
 deduplication make no AI requests. Separately, AI+ offers automatic resource
 selection, off by default: when enabled, a bounded model request can narrow the
-eligible Skill and task-matched MCP catalog before Bridge returns it. Mandatory
+eligible Skill, task-matched Prompt and MCP catalog before Bridge returns it. Mandatory
 and explicitly named eligible resources are preserved; invalid selections fall
 back to local rules. Cached decisions avoid repeated selection requests. The
 calling Agent still chooses and loads Skill bodies. See [AI+](ai-companion.md) for
