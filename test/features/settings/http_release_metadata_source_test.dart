@@ -7,6 +7,65 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'published beta metadata preserves stable and enables opted-in updates',
+    () async {
+      final payload =
+          jsonDecode(File('docs/dingdong-release.json').readAsStringSync())
+              as Map<String, Object?>;
+      final client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      final uri = await _serveMetadata(payload);
+      final metadata = await HttpReleaseMetadataSource(
+        client: client,
+        metadataUris: [uri],
+      ).fetch();
+      expect(metadata.latestVersion, '1.9.1');
+      expect(metadata.latestBuild, '73');
+      expect(payload['prerelease'], false);
+      final stable = ReleaseStatus(
+        currentVersion: '1.9.1',
+        currentBuild: '73',
+        metadata: metadata,
+      );
+      expect(stable.targetIsBeta, false);
+      expect(stable.isUpdateAvailable, false);
+      final optedIn = stable.withAllowBeta(true);
+      expect(optedIn.targetIsBeta, true);
+      expect(optedIn.latestVersion, '1.9.2-beta.1');
+      expect(optedIn.target?.latestBuild, '79');
+      expect(optedIn.isUpdateAvailable, true);
+      expect(
+        optedIn.releasePage.path,
+        '/JevonsCode/DingDongBuddy/releases/tag/v1.9.2-beta.1',
+      );
+      final installedBeta = ReleaseStatus(
+        currentVersion: '1.9.2-beta.1',
+        currentBuild: '79',
+        metadata: metadata,
+        allowBeta: true,
+      );
+      expect(installedBeta.isUpdateAvailable, false);
+      final beta = payload['beta']! as Map<String, Object?>;
+      expect(beta['prerelease'], true);
+      for (final entry in [
+        (payload['downloads'], '1.9.1', false),
+        (beta['downloads'], '1.9.2-beta.1', true),
+      ]) {
+        for (final platform in (entry.$1! as Map<String, Object?>).values) {
+          for (final asset in (platform! as Map<String, Object?>).values) {
+            final download = asset! as Map<String, Object?>;
+            expect(download['beta'], entry.$3);
+            expect(
+              Uri.parse(download['url']! as String).path,
+              contains('/releases/download/v${entry.$2}/'),
+            );
+          }
+        }
+      }
+    },
+  );
+
+  test(
     'prefers separate localized notes while preserving the legacy array',
     () async {
       final HttpClient client = HttpClient();
