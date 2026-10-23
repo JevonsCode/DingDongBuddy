@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/mcp_setup_prompt.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -81,36 +82,52 @@ void main() {
     );
   });
 
-  test('desktop hosts consume application version 1.9.1 from pubspec', () {
-    final String pubspec = File('pubspec.yaml').readAsStringSync();
-    final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
-    final String windowsResources = File(
-      'windows/runner/Runner.rc',
-    ).readAsStringSync();
-    final String releaseVersion = File(
-      'lib/features/settings/domain/release_update.dart',
-    ).readAsStringSync();
+  test(
+    'desktop hosts consume the declared application version from pubspec',
+    () {
+      final String pubspec = File('pubspec.yaml').readAsStringSync();
+      final String macInfo = File('macos/Runner/Info.plist').readAsStringSync();
+      final String windowsResources = File(
+        'windows/runner/Runner.rc',
+      ).readAsStringSync();
+      final String releaseVersion = File(
+        'lib/features/settings/domain/release_update.dart',
+      ).readAsStringSync();
 
-    expect(pubspec, contains('version: 1.9.1+73'));
-    expect(
-      releaseVersion,
-      contains("const String currentAppVersion = '1.9.1';"),
-    );
-    expect(releaseVersion, contains("const String currentAppBuild = '73';"));
-    // Protocol client/server info reuses the one Dart version constant.
-    for (final String path in const <String>[
-      'lib/features/agent_api/data/mcp_server.dart',
-      'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
-    ]) {
-      final String source = File(path).readAsStringSync();
-      expect(source, contains("'version': currentAppVersion"), reason: path);
-      expect(source, isNot(contains('1.7.0')), reason: path);
-    }
-    expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
-    expect(windowsResources, contains('FLUTTER_VERSION'));
-    expect(windowsResources, contains('#define VERSION_AS_NUMBER 1,9,1,73'));
-    expect(windowsResources, contains('#define VERSION_AS_STRING "1.9.1"'));
-  });
+      expect(pubspec, contains('version: $currentAppVersion+$currentAppBuild'));
+      expect(
+        releaseVersion,
+        contains("const String currentAppVersion = '$currentAppVersion';"),
+      );
+      expect(
+        releaseVersion,
+        contains("const String currentAppBuild = '$currentAppBuild';"),
+      );
+      // Protocol client/server info reuses the one Dart version constant.
+      for (final String path in const <String>[
+        'lib/features/agent_api/data/mcp_server.dart',
+        'lib/features/agent_adapters/data/codex_completion_hook_gateway.dart',
+      ]) {
+        final String source = File(path).readAsStringSync();
+        expect(source, contains("'version': currentAppVersion"), reason: path);
+        expect(source, isNot(contains('1.7.0')), reason: path);
+      }
+      expect(macInfo, contains(r'$(FLUTTER_BUILD_NAME)'));
+      expect(windowsResources, contains('FLUTTER_VERSION'));
+      final nativeVersion = currentAppVersion
+          .split('-')
+          .first
+          .replaceAll('.', ',');
+      expect(
+        windowsResources,
+        contains('#define VERSION_AS_NUMBER $nativeVersion,$currentAppBuild'),
+      );
+      expect(
+        windowsResources,
+        contains('#define VERSION_AS_STRING "$currentAppVersion"'),
+      );
+    },
+  );
 
   test('macOS About uses the canonical DingDong logo', () {
     final File canonicalLogo = File('Assets/DingDongIP/AgentToolIcon.png');
@@ -444,7 +461,12 @@ void main() {
     expect(website, isNot(contains('知识库')));
     expect(website, contains('activeTab: "library"'));
     expect(website, isNot(contains('./assets/symbols/refresh.png')));
-    expect(website, contains('<span class="demo-version">v1.9.1</span>'));
+    final published = jsonDecode(releaseMetadata) as Map<String, dynamic>;
+    final publishedVersion = published['latestVersion'] as String;
+    expect(
+      website,
+      contains('<span class="demo-version">v$publishedVersion</span>'),
+    );
     expect(website, contains('class="macos-menu-bar"'));
     expect(website, isNot(contains('class="macos-window-controls"')));
     for (final String color in <String>[
@@ -610,18 +632,28 @@ void main() {
     ]) {
       expect(File('docs/assets/symbols/$symbol.png').existsSync(), isTrue);
     }
-    expect(releaseMetadata, contains('"latestVersion": "1.9.1"'));
-    expect(releaseMetadata, contains('"latestBuild": "73"'));
-    expect(releaseMetadata, contains('"prerelease": false'));
+    // The public updater remains on the published release while a candidate builds.
     expect(
-      releaseMetadata,
-      contains('Simplifies AI+ to on-demand Prompt, Skill and MCP selection'),
+      compareVersions(publishedVersion, currentAppVersion),
+      lessThanOrEqualTo(0),
     );
-    expect(releaseMetadata, contains('rear menu-bar reminder bubbles steady'));
+    expect(
+      int.parse(published['latestBuild'] as String),
+      lessThanOrEqualTo(int.parse(currentAppBuild)),
+    );
+    expect(releaseMetadata, contains('"prerelease": false'));
+    expect(published['notes'], isNotEmpty);
+    final localizedNotes = published['notesByLanguage'] as Map<String, dynamic>;
+    for (final locale in ['en', 'zh', 'es']) {
+      expect(localizedNotes[locale], isNotEmpty, reason: locale);
+    }
     expect(releaseMetadata, contains('"arm64"'));
     expect(releaseMetadata, contains('"x86_64"'));
     expect(releaseMetadata, contains('"beta": false'));
-    expect(releaseMetadata, contains('DingDong-1.9.1-windows-x64-Setup.exe'));
+    expect(
+      releaseMetadata,
+      contains('DingDong-$publishedVersion-windows-x64-Setup.exe'),
+    );
   });
 
   test('desktop builds bundle the compiled DingDong MCP executable', () {
@@ -832,7 +864,17 @@ void main() {
       greaterThan(workflow.indexOf('name: Publish GitHub release')),
     );
     expect(releaseGate, contains(r'--ref "$tag"'));
-    expect(releaseGate, contains("jq -r '.prerelease // false'"));
+    expect(releaseGate, contains(r'case "$version" in'));
+    expect(releaseGate, contains('automatic publication is disabled.'));
+    expect(
+      releaseGate.indexOf('automatic publication is disabled.'),
+      lessThan(releaseGate.indexOf('device_link_origin=')),
+    );
+    expect(releaseGate, isNot(contains("jq -r '.prerelease // false'")));
+    expect(
+      workflow,
+      contains('Prerelease version tags must be published as prereleases.'),
+    );
     expect(releaseGate, contains(r'-f prerelease="$prerelease"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
     expect(pagesWorkflow, contains('source_ref:'));

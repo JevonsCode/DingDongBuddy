@@ -212,6 +212,25 @@ class TrayManager {
     await _channel.invokeMethod('setToolTip', arguments);
   }
 
+  /// Updates the Windows hover card without acknowledging any reminders.
+  /// A zero count hides the card. Omit a row's count when it is unknown.
+  Future<void> setReminderPreview({
+    required String title,
+    required String subtitle,
+    required String footer,
+    required int totalCount,
+    List<Map<String, Object>> rows = const [],
+  }) async {
+    if (defaultTargetPlatform != TargetPlatform.windows) return;
+    await _channel.invokeMethod('setReminderPreview', <String, Object>{
+      'title': title,
+      'subtitle': subtitle,
+      'footer': footer,
+      'totalCount': totalCount.clamp(0, 999),
+      'rows': rows.take(64).toList(growable: false),
+    });
+  }
+
   /// Sets the title for this tray icon.
   Future<void> setTitle(
     String title, {

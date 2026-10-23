@@ -111,6 +111,22 @@ saved in ordinary local preferences; re-enter a token previously stored in
 Keychain. See the [AI+ guide](docs/product/ai-companion.md) for configuration and
 exact data boundaries.
 
+## Optional Windows screenshot and selection plugins
+
+The DingDong 1.9.2-beta.1 release candidate adds optional Windows plugins under **Resource Manager → Plugins**.
+Capture with **Ctrl+Alt+A**, annotate in the embedded editor, then copy or save a
+PNG. Text selection offers Copy, Translate, Explain and Polish; text is sent to
+the configured model only after an explicit model action. Protected fields and
+unreadable selections are excluded. Plugin details list sources, licenses and
+versions; Agent client plugin inventories are separate in Resources.
+
+Windows unread reminders retain the original DingDong artwork with optional
+rocking motion and a hover capsule showing counts by reminder group. Static
+reminder and reduced-motion settings remain respected.
+
+See the [Windows plugin guide](docs/product/screenshot-plugin.md) for setup,
+privacy boundaries and remaining cross-application acceptance coverage.
+
 ## Optional system selection tools on macOS
 
 DingDong 1.5.4 includes the native selection plugin developed in Fuli.

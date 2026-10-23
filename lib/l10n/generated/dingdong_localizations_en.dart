@@ -9,6 +9,123 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get pluginOpenSource => 'Open-source components';
+
+  @override
+  String get pluginViewSource => 'View source';
+
+  @override
+  String get pluginCheckUpstream => 'Check upstream';
+
+  @override
+  String get pluginLicenses => 'Licenses';
+
+  @override
+  String get pluginScreenshotSourceNote =>
+      'Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.';
+
+  @override
+  String get pluginSelectionSourceNote =>
+      'Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.';
+
+  @override
+  String get pluginUpstreamChanged =>
+      'Upstream changes are available. They require adaptation and testing before a DingDong update; this does not install them.';
+
+  @override
+  String get pluginUpstreamCurrent =>
+      'No newer upstream version or change was found.';
+
+  @override
+  String get pluginUpstreamUnavailable =>
+      'Could not check the source. Please try again later.';
+
+  @override
+  String get screenshotPluginTitle => 'Screenshot';
+
+  @override
+  String get screenshotPluginDescription =>
+      'Capture a region, add annotations, then copy or save a PNG.';
+
+  @override
+  String get screenshotEnable => 'Enable screenshot plugin';
+
+  @override
+  String get screenshotEnableDescription =>
+      'Register the shortcut while DingDong is running.';
+
+  @override
+  String get screenshotShortcut => 'Screenshot shortcut';
+
+  @override
+  String get screenshotCaptureNow => 'Capture now';
+
+  @override
+  String get screenshotUnsupported =>
+      'Screenshot capture is currently available on Windows only.';
+
+  @override
+  String get screenshotRunning => 'Ready · shortcut registered';
+
+  @override
+  String get screenshotStopped => 'Disabled · shortcut released';
+
+  @override
+  String get screenshotUnavailable =>
+      'Could not start screenshot capture. Refresh or try enabling again.';
+
+  @override
+  String get screenshotCapturing =>
+      'Capture editor is open · press Esc to cancel';
+
+  @override
+  String get screenshotHelp =>
+      'Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.';
+
+  @override
+  String get screenshotConflict =>
+      'This shortcut is already in use. Choose another combination.';
+
+  @override
+  String get screenshotPersistenceError =>
+      'Could not save the setting. The previous shortcut has been restored.';
+
+  @override
+  String get screenshotRollbackError =>
+      'Could not restore the previous shortcut. Refresh and enable again.';
+
+  @override
+  String get screenshotCaptureError =>
+      'Could not capture the screen. Try again.';
+
+  @override
+  String get screenshotExportError =>
+      'Could not copy or save. Try again or press Esc to cancel.';
+
+  @override
+  String get screenshotRectangle => 'Rectangle';
+
+  @override
+  String get screenshotArrow => 'Arrow';
+
+  @override
+  String get screenshotText => 'Text';
+
+  @override
+  String get screenshotUndo => 'Undo';
+
+  @override
+  String get screenshotReselect => 'Reselect';
+
+  @override
+  String get screenshotNativeHint =>
+      'Drag to select · Release to edit · Esc cancel';
+
+  @override
+  String get selectionWindowsDiagnosis =>
+      'System selection supports Windows and macOS. This platform is not yet supported.';
+
+  @override
   String get amber => 'Amber';
 
   @override
@@ -3390,7 +3507,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get selectionTokenPlaceholder => 'Paste your own token';
 
   @override
-  String get selectionTokenSaved => 'Saved securely in Keychain';
+  String get selectionTokenSaved => 'Saved in system secure storage';
 
   @override
   String get selectionTokenNotSaved => 'Not configured';
@@ -3832,7 +3949,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get agentPluginsPageDescription =>
-      'Manage DingDong extensions and inspect plugins installed in your local Agents.';
+      'Manage optional extensions built into DingDong.';
 
   @override
   String get agentPluginsDingDongExtensions => 'DingDong extensions';
@@ -4151,6 +4268,25 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get reminderToPhone => 'Send to phone';
+
+  @override
+  String get trayBuddyWaiting => 'Your turn!';
+
+  @override
+  String get trayBuddyReady => 'Something for you';
+
+  @override
+  String get trayBuddyUnread => 'Unread reminders';
+
+  @override
+  String get trayBuddyOpen => 'Click to open DingDong';
+
+  @override
+  String get devAttentionDescription =>
+      'Create a DEV reminder that needs your input. Hover over the tray buddy to see its count.';
+
+  @override
+  String get devAttentionCreated => 'Created: needs your input';
 
   @override
   String get devReminderColors => 'Reminder colors and counts';

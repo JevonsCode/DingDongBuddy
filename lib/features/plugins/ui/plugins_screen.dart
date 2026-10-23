@@ -6,27 +6,27 @@
 // FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
-import 'package:dingdong/features/agent_plugins/domain/agent_plugin_inventory.dart';
-import 'package:dingdong/features/agent_plugins/ui/agent_plugins_section.dart';
 import 'package:dingdong/features/jev/ui/jev_plugin_section.dart';
+import 'package:dingdong/features/screenshot/domain/screenshot_plugin.dart';
+import 'package:dingdong/features/screenshot/ui/screenshot_plugin_section.dart';
 import 'package:dingdong/features/selection/ui/selection_plugin_section.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-enum _Plugin { jev, selection }
+enum _Plugin { jev, selection, screenshot }
 
 class PluginsScreen extends StatefulWidget {
   const PluginsScreen({
     this.jevAction,
+    this.screenshotAction,
     this.selectionViewModel,
-    this.agentPluginInventory,
     super.key,
   });
 
   final JevAction? jevAction;
+  final ScreenshotAction? screenshotAction;
   final SettingsViewModel? selectionViewModel;
-  final AgentPluginInventory? agentPluginInventory;
 
   @override
   State<PluginsScreen> createState() => _PluginsScreenState();
@@ -60,10 +60,6 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    l.agentPluginsDingDongExtensions,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
                   _entry(
                     context,
                     plugin: _Plugin.jev,
@@ -71,16 +67,24 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     description: l.jevDescription,
                     icon: Icons.auto_awesome_outlined,
                   ),
-                  if (defaultTargetPlatform == TargetPlatform.macOS)
-                    _entry(
-                      context,
-                      plugin: _Plugin.selection,
-                      title: l.systemSelectionTools,
-                      description: l.systemSelectionToolsDescription,
-                      icon: Icons.text_fields_rounded,
-                    ),
-                  const SizedBox(height: 28),
-                  AgentPluginsSection(inventory: widget.agentPluginInventory),
+                  _entry(
+                    context,
+                    plugin: _Plugin.screenshot,
+                    title: l.screenshotPluginTitle,
+                    description: l.screenshotPluginDescription,
+                    icon: Icons.screenshot_monitor_outlined,
+                  ),
+                  _entry(
+                    context,
+                    plugin: _Plugin.selection,
+                    title: l.systemSelectionTools,
+                    description:
+                        (defaultTargetPlatform == TargetPlatform.macOS ||
+                            defaultTargetPlatform == TargetPlatform.windows)
+                        ? l.systemSelectionToolsDescription
+                        : l.selectionWindowsDiagnosis,
+                    icon: Icons.text_fields_rounded,
+                  ),
                 ] else ...[
                   DesktopActionButton(
                     key: const Key('plugins-back'),
@@ -96,8 +100,19 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     else
                       Text(l.pluginUnavailable),
                   if (_selected == _Plugin.selection)
-                    if (widget.selectionViewModel case final model?)
+                    if (defaultTargetPlatform != TargetPlatform.macOS &&
+                        defaultTargetPlatform != TargetPlatform.windows)
+                      Text(
+                        l.selectionWindowsDiagnosis,
+                        key: const Key('selection-platform-diagnosis'),
+                      )
+                    else if (widget.selectionViewModel case final model?)
                       SelectionPluginSection(viewModel: model)
+                    else
+                      Text(l.pluginUnavailable),
+                  if (_selected == _Plugin.screenshot)
+                    if (widget.screenshotAction case final action?)
+                      ScreenshotPluginSection(action: action)
                     else
                       Text(l.pluginUnavailable),
                 ],
@@ -121,38 +136,48 @@ class _PluginsScreenState extends State<PluginsScreen> {
         bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
     ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 22,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: Key('plugin-row-${plugin.name}'),
+        onTap: () => setState(() => _selected = plugin),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 5),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Semantics(
+                label: '${context.l10n.pluginOpen} $title',
+                child: DesktopActionButton(
+                  key: Key('plugin-open-${plugin.name}'),
+                  label: context.l10n.pluginOpen,
+                  icon: Icons.chevron_right,
+                  tone: DesktopActionTone.neutral,
+                  onPressed: () => setState(() => _selected = plugin),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: 5),
-                Text(description, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Semantics(
-            label: '${context.l10n.pluginOpen} $title',
-            child: DesktopActionButton(
-              key: Key('plugin-open-${plugin.name}'),
-              label: context.l10n.pluginOpen,
-              icon: Icons.chevron_right,
-              tone: DesktopActionTone.neutral,
-              onPressed: () => setState(() => _selected = plugin),
-            ),
-          ),
-        ],
+        ),
       ),
     ),
   );

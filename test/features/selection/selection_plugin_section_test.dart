@@ -91,7 +91,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.token, 'user-token');
-    expect(find.text('Saved securely in Keychain'), findsOneWidget);
+    expect(find.text('Saved in system secure storage'), findsOneWidget);
 
     await tester.ensureVisible(
       find.byKey(const Key('settings-selection-token-clear')),
@@ -135,7 +135,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gateway.token, 'user-token');
-    expect(find.text('Saved securely in Keychain'), findsOneWidget);
+    expect(find.text('Saved in system secure storage'), findsOneWidget);
 
     await tester.ensureVisible(
       find.byKey(const Key('settings-selection-token-clear')),

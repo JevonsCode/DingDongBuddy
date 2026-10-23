@@ -37,6 +37,14 @@ jobs:
           tag_version="${RELEASE_TAG#v}"
           app_version="$(sed -n 's/^version: \([^+]*\).*/\1/p' pubspec.yaml)"
           test "$tag_version" = "$app_version"
+          case "$tag_version" in
+            *-*)
+              if [ "${{ inputs.prerelease }}" != "true" ]; then
+                echo "Prerelease version tags must be published as prereleases."
+                exit 1
+              fi
+              ;;
+          esac
       - name: Verify the tag was tested and its web release is deployed
         env:
           GH_TOKEN: ${{ github.token }}

@@ -68,6 +68,7 @@ Future<void> _runResourceManagerWindow(
   final AgentResourceSynchronizer resourceSynchronizer =
       await AgentResourceSynchronizer.currentUser(
         paths.skillPackagesDirectory,
+        sandbox: Platform.isWindows && paths.development,
         loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
         triggerGroupStore: baseTriggerGroupStore,
       );
@@ -184,7 +185,9 @@ Future<void> _runResourceManagerWindow(
           : TrayNotificationColor.orange,
     ),
     selectionOnlyPersistence: true,
-    selectionPluginGateway: Platform.isMacOS ? pluginHost : null,
+    selectionPluginGateway: (Platform.isMacOS || Platform.isWindows)
+        ? pluginHost
+        : null,
     restoreSelectionPluginOnLoad: false,
     onSettingsSaved: pluginHost?.notifyChanged,
   );
@@ -267,6 +270,7 @@ Future<void> _runResourceManagerWindow(
       windowController: windowController,
       initialDestination: initialDestination,
       jevAction: pluginHost?.jevAction,
+      screenshotAction: pluginHost?.screenshotAction,
       pluginSettings: pluginSettings,
       openClipboardCategoriesOnLaunch:
           arguments['openClipboardCategories'] == true,

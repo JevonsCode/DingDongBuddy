@@ -1,4 +1,118 @@
 {
+  "pluginOpenSource": "Open-source components",
+  "@pluginOpenSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginViewSource": "View source",
+  "@pluginViewSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginCheckUpstream": "Check upstream",
+  "@pluginCheckUpstream": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginLicenses": "Licenses",
+  "@pluginLicenses": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginScreenshotSourceNote": "Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.",
+  "@pluginScreenshotSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginSelectionSourceNote": "Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.",
+  "@pluginSelectionSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamChanged": "Upstream changes are available. They require adaptation and testing before a DingDong update; this does not install them.",
+  "@pluginUpstreamChanged": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamCurrent": "No newer upstream version or change was found.",
+  "@pluginUpstreamCurrent": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamUnavailable": "Could not check the source. Please try again later.",
+  "@pluginUpstreamUnavailable": {"description": "Embedded plugin attribution and upstream update status."},
+  "screenshotPluginTitle": "Screenshot",
+  "@screenshotPluginTitle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotPluginDescription": "Capture a region, add annotations, then copy or save a PNG.",
+  "@screenshotPluginDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotEnable": "Enable screenshot plugin",
+  "@screenshotEnable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotEnableDescription": "Register the shortcut while DingDong is running.",
+  "@screenshotEnableDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotShortcut": "Screenshot shortcut",
+  "@screenshotShortcut": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotCaptureNow": "Capture now",
+  "@screenshotCaptureNow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotUnsupported": "Screenshot capture is currently available on Windows only.",
+  "@screenshotUnsupported": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotRunning": "Ready · shortcut registered",
+  "@screenshotRunning": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotStopped": "Disabled · shortcut released",
+  "@screenshotStopped": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotUnavailable": "Could not start screenshot capture. Refresh or try enabling again.",
+  "@screenshotUnavailable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotCapturing": "Capture editor is open · press Esc to cancel",
+  "@screenshotCapturing": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotHelp": "Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.",
+  "@screenshotHelp": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotConflict": "This shortcut is already in use. Choose another combination.",
+  "@screenshotConflict": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotPersistenceError": "Could not save the setting. The previous shortcut has been restored.",
+  "@screenshotPersistenceError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotRollbackError": "Could not restore the previous shortcut. Refresh and enable again.",
+  "@screenshotRollbackError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotCaptureError": "Could not capture the screen. Try again.",
+  "@screenshotCaptureError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotExportError": "Could not copy or save. Try again or press Esc to cancel.",
+  "@screenshotExportError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotRectangle": "Rectangle",
+  "@screenshotRectangle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotArrow": "Arrow",
+  "@screenshotArrow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotText": "Text",
+  "@screenshotText": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotUndo": "Undo",
+  "@screenshotUndo": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotReselect": "Reselect",
+  "@screenshotReselect": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotNativeHint": "Drag to select · Release to edit · Esc cancel",
+  "@screenshotNativeHint": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "selectionWindowsDiagnosis": "System selection supports Windows and macOS. This platform is not yet supported.",
+  "@selectionWindowsDiagnosis": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
   "amber": "Amber",
   "@amber": {
     "description": "Reminder presentation and AI+ results."
@@ -4399,7 +4513,7 @@
   "@selectionTokenPlaceholder": {
     "description": "Placeholder for the secret token field."
   },
-  "selectionTokenSaved": "Saved securely in Keychain",
+  "selectionTokenSaved": "Saved in system secure storage",
   "@selectionTokenSaved": {
     "description": "Token is present in native secure storage."
   },
@@ -4907,7 +5021,7 @@
     "description": "Development preview release status and feedback guidance."
   },
   "agentPluginsTitle": "Agent plugins",
-  "agentPluginsPageDescription": "Manage DingDong extensions and inspect plugins installed in your local Agents.",
+  "agentPluginsPageDescription": "Manage optional extensions built into DingDong.",
   "agentPluginsDingDongExtensions": "DingDong extensions",
   "agentPluginsRead": "Read local inventory",
   "agentPluginsRefresh": "Refresh inventory",
@@ -5304,6 +5418,18 @@
   "@reminderToPhone": {
     "description": "Named reminder settings label"
   },
+  "trayBuddyWaiting": "Your turn!",
+  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
+  "trayBuddyReady": "Something for you",
+  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
+  "trayBuddyUnread": "Unread reminders",
+  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
+  "trayBuddyOpen": "Click to open DingDong",
+  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
+  "devAttentionDescription": "Create a DEV reminder that needs your input. Hover over the tray buddy to see its count.",
+  "@devAttentionDescription": {"description": "Development panel attention preview description."},
+  "devAttentionCreated": "Created: needs your input",
+  "@devAttentionCreated": {"description": "Development panel attention action success status."},
   "devReminderColors": "Reminder colors and counts",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."

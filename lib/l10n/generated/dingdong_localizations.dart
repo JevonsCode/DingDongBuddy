@@ -103,6 +103,204 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source components'**
+  String get pluginOpenSource;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'View source'**
+  String get pluginViewSource;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Check upstream'**
+  String get pluginCheckUpstream;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses'**
+  String get pluginLicenses;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.'**
+  String get pluginScreenshotSourceNote;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.'**
+  String get pluginSelectionSourceNote;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Upstream changes are available. They require adaptation and testing before a DingDong update; this does not install them.'**
+  String get pluginUpstreamChanged;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'No newer upstream version or change was found.'**
+  String get pluginUpstreamCurrent;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check the source. Please try again later.'**
+  String get pluginUpstreamUnavailable;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot'**
+  String get screenshotPluginTitle;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture a region, add annotations, then copy or save a PNG.'**
+  String get screenshotPluginDescription;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable screenshot plugin'**
+  String get screenshotEnable;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Register the shortcut while DingDong is running.'**
+  String get screenshotEnableDescription;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot shortcut'**
+  String get screenshotShortcut;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture now'**
+  String get screenshotCaptureNow;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot capture is currently available on Windows only.'**
+  String get screenshotUnsupported;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready · shortcut registered'**
+  String get screenshotRunning;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled · shortcut released'**
+  String get screenshotStopped;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start screenshot capture. Refresh or try enabling again.'**
+  String get screenshotUnavailable;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture editor is open · press Esc to cancel'**
+  String get screenshotCapturing;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.'**
+  String get screenshotHelp;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'This shortcut is already in use. Choose another combination.'**
+  String get screenshotConflict;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the setting. The previous shortcut has been restored.'**
+  String get screenshotPersistenceError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore the previous shortcut. Refresh and enable again.'**
+  String get screenshotRollbackError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not capture the screen. Try again.'**
+  String get screenshotCaptureError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy or save. Try again or press Esc to cancel.'**
+  String get screenshotExportError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get screenshotRectangle;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get screenshotArrow;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get screenshotText;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get screenshotUndo;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Reselect'**
+  String get screenshotReselect;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to select · Release to edit · Esc cancel'**
+  String get screenshotNativeHint;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'System selection supports Windows and macOS. This platform is not yet supported.'**
+  String get selectionWindowsDiagnosis;
+
   /// Reminder presentation and AI+ results.
   ///
   /// In en, this message translates to:
@@ -5994,7 +6192,7 @@ abstract class DingDongLocalizations {
   /// Token is present in native secure storage.
   ///
   /// In en, this message translates to:
-  /// **'Saved securely in Keychain'**
+  /// **'Saved in system secure storage'**
   String get selectionTokenSaved;
 
   /// No token is present in native secure storage.
@@ -6671,7 +6869,7 @@ abstract class DingDongLocalizations {
   /// Read-only inventory of plugins installed in native Agents.
   ///
   /// In en, this message translates to:
-  /// **'Manage DingDong extensions and inspect plugins installed in your local Agents.'**
+  /// **'Manage optional extensions built into DingDong.'**
   String get agentPluginsPageDescription;
 
   /// Read-only inventory of plugins installed in native Agents.
@@ -7243,6 +7441,42 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Send to phone'**
   String get reminderToPhone;
+
+  /// Friendly tray hover heading when an agent needs user input.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn!'**
+  String get trayBuddyWaiting;
+
+  /// Friendly tray hover heading for completed work.
+  ///
+  /// In en, this message translates to:
+  /// **'Something for you'**
+  String get trayBuddyReady;
+
+  /// Caption for the Windows hover card total count.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread reminders'**
+  String get trayBuddyUnread;
+
+  /// Action hint on the native tray hover card.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to open DingDong'**
+  String get trayBuddyOpen;
+
+  /// Development panel attention preview description.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a DEV reminder that needs your input. Hover over the tray buddy to see its count.'**
+  String get devAttentionDescription;
+
+  /// Development panel attention action success status.
+  ///
+  /// In en, this message translates to:
+  /// **'Created: needs your input'**
+  String get devAttentionCreated;
 
   /// Development panel reminder color preview.
   ///

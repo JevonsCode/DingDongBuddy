@@ -8,12 +8,18 @@
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
 #include "application_updater.h"
+#include "screenshot_plugin.h"
+#include "windows_selection_monitor.h"
 
 namespace {
 
 constexpr wchar_t kRunKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+#ifdef DINGDONG_DEVELOPMENT
+constexpr wchar_t kRunValueName[] = L"DingDong DEV";
+#else
 constexpr wchar_t kRunValueName[] = L"DingDong";
+#endif
 
 bool IsLaunchAtStartupEnabled() {
   wchar_t value[MAX_PATH * 2] = {};
@@ -543,6 +549,10 @@ bool FlutterWindow::OnCreate() {
         }
         result->NotImplemented();
       });
+  screenshot_plugin_ = std::make_unique<ScreenshotPlugin>(
+      GetHandle(), flutter_controller_->engine()->messenger());
+  selection_monitor_ = std::make_unique<WindowsSelectionMonitor>(
+      GetHandle(), flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -558,6 +568,8 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  selection_monitor_.reset();
+  screenshot_plugin_.reset();
   if (flutter_controller_) {
     if (hotkey_registered_) {
       ::UnregisterHotKey(GetHandle(), 0xDD01);
@@ -579,6 +591,9 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (selection_monitor_ && selection_monitor_->HandleMessage(message)) {
+    return 0;
+  }
   if (message == kDingDongExitForUpdateMessage) {
     // Do not let window_manager turn this close into "hide to tray". Velopack
     // is already waiting for this process to terminate before swapping files.
@@ -598,6 +613,9 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 
   switch (message) {
     case WM_HOTKEY:
+      if (screenshot_plugin_ && screenshot_plugin_->HandleHotKey(wparam)) {
+        return 0;
+      }
       if (wparam == 0xDD01 && hotkey_channel_) {
         const HWND foreground = ::GetForegroundWindow();
         if (foreground && foreground != GetHandle()) {

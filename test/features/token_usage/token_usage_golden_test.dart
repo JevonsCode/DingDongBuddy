@@ -110,9 +110,9 @@ Future<void> _loadGoldenFonts() async {
   ]) {
     final FontLoader loader = FontLoader(family);
     for (final String face in <String>[
-      'roboto-regular.ttf',
-      'roboto-medium.ttf',
-      'roboto-bold.ttf',
+      'Roboto-Regular.ttf',
+      'Roboto-Medium.ttf',
+      'Roboto-Bold.ttf',
     ]) {
       loader.addFont(
         File.fromUri(
@@ -126,7 +126,7 @@ Future<void> _loadGoldenFonts() async {
     ..addFont(
       File.fromUri(
         sdk.resolve(
-          'bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+          'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
         ),
       ).readAsBytes().then(ByteData.sublistView),
     );

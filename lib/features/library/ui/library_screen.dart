@@ -4,6 +4,8 @@ import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/features/agent_plugins/domain/agent_plugin_inventory.dart';
+import 'package:dingdong/features/agent_plugins/ui/agent_plugins_section.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_import_history.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
@@ -26,6 +28,7 @@ class LibraryScreen extends StatefulWidget {
     this.contextMenuGateway,
     this.onOpenExternalLink,
     this.skillAgents = ResourceEditor.defaultSkillDeliveryAgents,
+    this.agentPluginInventory,
     super.key,
   });
 
@@ -34,6 +37,7 @@ class LibraryScreen extends StatefulWidget {
   final DesktopContextMenuGateway? contextMenuGateway;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
   final List<SkillDeliveryAgentOption> skillAgents;
+  final AgentPluginInventory? agentPluginInventory;
 
   @override
   State<LibraryScreen> createState() => LibraryScreenState();
@@ -42,6 +46,28 @@ class LibraryScreen extends StatefulWidget {
 class LibraryScreenState extends State<LibraryScreen> {
   bool _editorDirty = false;
   int _editorEpoch = 0;
+  bool _showAgentPlugins = false;
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(text: widget.viewModel.query);
+  }
+
+  @override
+  void didUpdateWidget(covariant LibraryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel != widget.viewModel) {
+      _searchController.text = widget.viewModel.query;
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<bool> confirmDiscardChanges() async {
     if (!_editorDirty) {
@@ -83,6 +109,7 @@ class LibraryScreenState extends State<LibraryScreen> {
 
   Future<void> _closeEditor() async {
     if (await confirmDiscardChanges()) {
+      _showAgentPlugins = false;
       widget.viewModel.closeEditor();
     }
   }
@@ -115,10 +142,43 @@ class LibraryScreenState extends State<LibraryScreen> {
                     Expanded(child: _buildEditor(context)),
                   ],
                 )
+              : _showAgentPlugins
+              ? SizedBox.expand(
+                  child: SingleChildScrollView(
+                    key: const Key('library-agent-plugins-page'),
+                    padding: const EdgeInsets.all(24),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 860),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DesktopActionButton(
+                              key: const Key('library-agent-plugins-back'),
+                              label: context.l10n.backToResources,
+                              icon: Icons.arrow_back,
+                              tone: DesktopActionTone.neutral,
+                              onPressed: () =>
+                                  setState(() => _showAgentPlugins = false),
+                            ),
+                            const SizedBox(height: 24),
+                            AgentPluginsSection(
+                              inventory: widget.agentPluginInventory,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
               : Column(
                   children: <Widget>[
                     ResourceFilterBar(
                       viewModel: widget.viewModel,
+                      searchController: _searchController,
+                      onShowAgentPlugins: () =>
+                          setState(() => _showAgentPlugins = true),
                       onImportJson: widget.transferGateway == null
                           ? null
                           : () => _importJson(context),

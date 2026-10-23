@@ -283,14 +283,10 @@ void main() {
     expect(source, contains('kTrayArtOccupancy'));
     expect(source, contains('GetPixel'));
     expect(source, contains('DrawImage'));
-    expect(
-      source.split('HICON CreateReminderTrayIcon').first,
-      isNot(contains('FillEllipse')),
-    );
-    expect(source, contains('HICON CreateReminderTrayIcon'));
-    expect(source, contains('if (attention)'));
+    expect(source, isNot(contains('FillEllipse')));
+    expect(source, isNot(contains('CreateReminderTrayIcon')));
+    expect(source, isNot(contains('DrawBuddy')));
     expect(source, isNot(contains('DrawString')));
-    expect(source, isNot(contains('GraphicsPath')));
     expect(source, contains('GetHICON'));
     expect(cmake, contains('tray_visual.cpp'));
     expect(cmake, contains('gdiplus'));
@@ -615,10 +611,14 @@ void main() {
     expect(source, contains('if (replacement_icon == nullptr)'));
     expect(source, contains('ValueOrNull(args, "unreadCount")'));
     expect(source, contains('ValueOrNull(args, "animateUnread")'));
-    expect(source, contains('CreateReminderTrayIcon'));
+    expect(source, isNot(contains('CreateReminderTrayIcon')));
     expect(source, contains('SPI_GETCLIENTAREAANIMATION'));
     expect(source, contains('ValueOrNull(args, "attentionIconPath")'));
-    expect(source, contains('kAttentionFlashIntervalMs = 700'));
+    final motion = File(
+      'packages/tray_manager/windows/tray_visual.h',
+    ).readAsStringSync();
+    expect(motion, contains('kTrayWiggleFrameIntervalMs = 80'));
+    expect(motion, contains('kTrayWiggleRestIntervalMs = 1500'));
     expect(source, contains('StartAttentionFlash'));
     expect(source, contains('AdvanceAttentionFlash'));
     expect(source, contains('CancelAttentionFlash'));

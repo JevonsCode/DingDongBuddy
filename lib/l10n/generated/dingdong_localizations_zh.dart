@@ -9,6 +9,107 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get pluginOpenSource => '开源组件';
+
+  @override
+  String get pluginViewSource => '查看源码';
+
+  @override
+  String get pluginCheckUpstream => '检查上游更新';
+
+  @override
+  String get pluginLicenses => '开源许可';
+
+  @override
+  String get pluginScreenshotSourceNote => '通过固定版本依赖复用开源编辑引擎；钉东提供截图、快捷键和界面适配。';
+
+  @override
+  String get pluginSelectionSourceNote =>
+      '选择性复用此项目的 Windows 取词代码；浮条、配置和模型调用由钉东实现。';
+
+  @override
+  String get pluginUpstreamChanged => '上游已有更新，需适配测试后随钉东更新提供；此次检查不会安装更新。';
+
+  @override
+  String get pluginUpstreamCurrent => '未发现更新的上游版本或代码变更。';
+
+  @override
+  String get pluginUpstreamUnavailable => '暂时无法检查来源，请稍后重试。';
+
+  @override
+  String get screenshotPluginTitle => '截图';
+
+  @override
+  String get screenshotPluginDescription => '快捷截图、框选区域与标注，复制图片或保存为 PNG。';
+
+  @override
+  String get screenshotEnable => '启用截图插件';
+
+  @override
+  String get screenshotEnableDescription => '叮咚运行时可通过全局快捷键截图。';
+
+  @override
+  String get screenshotShortcut => '截图快捷键';
+
+  @override
+  String get screenshotCaptureNow => '立即截图';
+
+  @override
+  String get screenshotUnsupported => '截图功能当前仅支持 Windows。';
+
+  @override
+  String get screenshotRunning => '已就绪 · 快捷键已注册';
+
+  @override
+  String get screenshotStopped => '未启用 · 快捷键已释放';
+
+  @override
+  String get screenshotUnavailable => '截图未能启动，请刷新状态或重新启用。';
+
+  @override
+  String get screenshotCapturing => '截图编辑中 · 按 Esc 取消';
+
+  @override
+  String get screenshotHelp =>
+      '拖动框选后进入编辑器，可绘制箭头、形状、文字或马赛克。使用工具栏复制、保存、撤销或取消；图片在主动复制或保存前只在内存中处理。';
+
+  @override
+  String get screenshotConflict => '这个快捷键已被占用，请换一个组合。';
+
+  @override
+  String get screenshotPersistenceError => '设置未能保存，已恢复原来的快捷键。';
+
+  @override
+  String get screenshotRollbackError => '原快捷键恢复失败，请刷新状态并重新启用。';
+
+  @override
+  String get screenshotCaptureError => '无法截取屏幕，请重试。';
+
+  @override
+  String get screenshotExportError => '复制或保存失败，请重试，或按 Esc 取消。';
+
+  @override
+  String get screenshotRectangle => '矩形';
+
+  @override
+  String get screenshotArrow => '箭头';
+
+  @override
+  String get screenshotText => '文字';
+
+  @override
+  String get screenshotUndo => '撤销';
+
+  @override
+  String get screenshotReselect => '重选';
+
+  @override
+  String get screenshotNativeHint => '拖动框选 · 松开进入编辑 · Esc 取消';
+
+  @override
+  String get selectionWindowsDiagnosis => '系统划词目前支持 Windows 和 macOS；此平台暂未支持。';
+
+  @override
   String get amber => '琥珀';
 
   @override
@@ -3283,7 +3384,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get selectionTokenPlaceholder => '粘贴你自己的 Token';
 
   @override
-  String get selectionTokenSaved => '已安全保存到钥匙串';
+  String get selectionTokenSaved => '已保存到系统安全存储';
 
   @override
   String get selectionTokenNotSaved => '未配置';
@@ -3311,8 +3412,8 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       'statusUnavailable': '无法读取插件状态，请再次刷新。',
       'permissionSettingsUnavailable': '请打开系统设置中的辅助功能设置，允许 DingDong。',
       'tokenRequired': '请输入你自己的 API Token。',
-      'tokenSaveFailed': 'Token 保存失败，请解锁钥匙串后重试。',
-      'tokenRemoveFailed': 'Token 移除失败，请解锁钥匙串后重试。',
+      'tokenSaveFailed': 'Token 保存失败，请检查系统安全存储后重试。',
+      'tokenRemoveFailed': 'Token 移除失败，请检查系统安全存储后重试。',
       'other': '插件更新失败，请刷新状态后重试。',
     });
     return '$_temp0';
@@ -3695,8 +3796,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get agentPluginsTitle => 'Agent 插件';
 
   @override
-  String get agentPluginsPageDescription =>
-      '管理 DingDong 扩展，并查看本机 Agent 已安装的插件。';
+  String get agentPluginsPageDescription => '管理叮咚自身的可选扩展功能。';
 
   @override
   String get agentPluginsDingDongExtensions => 'DingDong 扩展';
@@ -3996,6 +4096,24 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get reminderToPhone => '发送到手机';
+
+  @override
+  String get trayBuddyWaiting => '轮到你啦';
+
+  @override
+  String get trayBuddyReady => '有新消息啦';
+
+  @override
+  String get trayBuddyUnread => '待查看的提醒';
+
+  @override
+  String get trayBuddyOpen => '点击打开 DingDong';
+
+  @override
+  String get devAttentionDescription => '创建一条需要你确认的 DEV 提醒。悬停到托盘小伙伴上即可查看计数。';
+
+  @override
+  String get devAttentionCreated => '已创建：等待你的确认';
 
   @override
   String get devReminderColors => '提醒颜色与计数';

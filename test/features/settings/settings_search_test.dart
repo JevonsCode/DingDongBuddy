@@ -25,7 +25,7 @@ void main() {
         ..addFont(
           File.fromUri(
             sdk.resolve(
-              'bin/cache/artifacts/material_fonts/roboto-regular.ttf',
+              'bin/cache/artifacts/material_fonts/Roboto-Regular.ttf',
             ),
           ).readAsBytes().then(ByteData.sublistView),
         );
@@ -34,7 +34,7 @@ void main() {
     await (FontLoader('MaterialIcons')..addFont(
           File.fromUri(
             sdk.resolve(
-              'bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+              'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
             ),
           ).readAsBytes().then(ByteData.sublistView),
         ))

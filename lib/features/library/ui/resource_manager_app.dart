@@ -27,6 +27,7 @@ import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
 import 'package:dingdong/features/plugins/ui/plugins_screen.dart';
+import 'package:dingdong/features/screenshot/domain/screenshot_plugin.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
@@ -55,6 +56,7 @@ class ResourceManagerApp extends StatefulWidget {
     this.onLoadHostIssues,
     this.onOpenExternalLink,
     this.jevAction,
+    this.screenshotAction,
     this.pluginSettings,
     this.tokenUsageController,
     this.onCloseTokenUsage,
@@ -63,6 +65,7 @@ class ResourceManagerApp extends StatefulWidget {
   });
 
   final JevAction? jevAction;
+  final ScreenshotAction? screenshotAction;
   final SettingsViewModel? pluginSettings;
   final TokenUsageController? tokenUsageController;
   final Future<void> Function()? onCloseTokenUsage;
@@ -333,6 +336,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                               ),
                       ResourceManagerDestination.plugins => PluginsScreen(
                         jevAction: widget.jevAction,
+                        screenshotAction: widget.screenshotAction,
                         selectionViewModel: widget.pluginSettings,
                       ),
                       ResourceManagerDestination.issues => IssueCenterScreen(

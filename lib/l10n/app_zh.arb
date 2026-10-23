@@ -1,4 +1,118 @@
 {
+  "pluginOpenSource": "开源组件",
+  "@pluginOpenSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginViewSource": "查看源码",
+  "@pluginViewSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginCheckUpstream": "检查上游更新",
+  "@pluginCheckUpstream": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginLicenses": "开源许可",
+  "@pluginLicenses": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginScreenshotSourceNote": "通过固定版本依赖复用开源编辑引擎；钉东提供截图、快捷键和界面适配。",
+  "@pluginScreenshotSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginSelectionSourceNote": "选择性复用此项目的 Windows 取词代码；浮条、配置和模型调用由钉东实现。",
+  "@pluginSelectionSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamChanged": "上游已有更新，需适配测试后随钉东更新提供；此次检查不会安装更新。",
+  "@pluginUpstreamChanged": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamCurrent": "未发现更新的上游版本或代码变更。",
+  "@pluginUpstreamCurrent": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamUnavailable": "暂时无法检查来源，请稍后重试。",
+  "@pluginUpstreamUnavailable": {"description": "Embedded plugin attribution and upstream update status."},
+  "@screenshotPluginTitle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotPluginDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotEnable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotEnableDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotShortcut": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCaptureNow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUnsupported": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRunning": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotStopped": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUnavailable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCapturing": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotHelp": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotConflict": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotPersistenceError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRollbackError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCaptureError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotExportError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRectangle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotArrow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotText": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUndo": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotReselect": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotNativeHint": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@selectionWindowsDiagnosis": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotPluginTitle": "截图",
+  "screenshotPluginDescription": "快捷截图、框选区域与标注，复制图片或保存为 PNG。",
+  "screenshotEnable": "启用截图插件",
+  "screenshotEnableDescription": "叮咚运行时可通过全局快捷键截图。",
+  "screenshotShortcut": "截图快捷键",
+  "screenshotCaptureNow": "立即截图",
+  "screenshotUnsupported": "截图功能当前仅支持 Windows。",
+  "screenshotRunning": "已就绪 · 快捷键已注册",
+  "screenshotStopped": "未启用 · 快捷键已释放",
+  "screenshotUnavailable": "截图未能启动，请刷新状态或重新启用。",
+  "screenshotCapturing": "截图编辑中 · 按 Esc 取消",
+  "screenshotHelp": "拖动框选后进入编辑器，可绘制箭头、形状、文字或马赛克。使用工具栏复制、保存、撤销或取消；图片在主动复制或保存前只在内存中处理。",
+  "screenshotConflict": "这个快捷键已被占用，请换一个组合。",
+  "screenshotPersistenceError": "设置未能保存，已恢复原来的快捷键。",
+  "screenshotRollbackError": "原快捷键恢复失败，请刷新状态并重新启用。",
+  "screenshotCaptureError": "无法截取屏幕，请重试。",
+  "screenshotExportError": "复制或保存失败，请重试，或按 Esc 取消。",
+  "screenshotRectangle": "矩形",
+  "screenshotArrow": "箭头",
+  "screenshotText": "文字",
+  "screenshotUndo": "撤销",
+  "screenshotReselect": "重选",
+  "screenshotNativeHint": "拖动框选 · 松开进入编辑 · Esc 取消",
+  "selectionWindowsDiagnosis": "系统划词目前支持 Windows 和 macOS；此平台暂未支持。",
   "amber": "琥珀",
   "@amber": {
     "description": "Reminder presentation and AI+ results."
@@ -4399,7 +4513,7 @@
   "@selectionTokenPlaceholder": {
     "description": "Placeholder for the secret token field."
   },
-  "selectionTokenSaved": "已安全保存到钥匙串",
+  "selectionTokenSaved": "已保存到系统安全存储",
   "@selectionTokenSaved": {
     "description": "Token is present in native secure storage."
   },
@@ -4419,7 +4533,7 @@
   "@selectionConfigurationApply": {
     "description": "Action that validates and persists selection model settings."
   },
-  "selectionPluginError": "{reason, select, invalidEndpoint{请输入不含账号、查询参数或片段的服务地址。} emptyModel{请输入模型名称。} emptyTargetLanguage{请输入目标语言。} localEndpointRequired{Ollama 和 LM Studio 必须使用本机回环 HTTP 地址。} remoteHttpsRequired{远程模型服务必须使用 HTTPS。} updateFailed{插件更新失败，请刷新状态后重试。} persistenceFailed{插件状态已改变，但设置保存失败。请检查本机存储后重新应用。} unavailable{原生插件不可用，请安装包含系统划词功能的构建。} statusUnavailable{无法读取插件状态，请再次刷新。} permissionSettingsUnavailable{请打开系统设置中的辅助功能设置，允许 DingDong。} tokenRequired{请输入你自己的 API Token。} tokenSaveFailed{Token 保存失败，请解锁钥匙串后重试。} tokenRemoveFailed{Token 移除失败，请解锁钥匙串后重试。} other{插件更新失败，请刷新状态后重试。}}",
+  "selectionPluginError": "{reason, select, invalidEndpoint{请输入不含账号、查询参数或片段的服务地址。} emptyModel{请输入模型名称。} emptyTargetLanguage{请输入目标语言。} localEndpointRequired{Ollama 和 LM Studio 必须使用本机回环 HTTP 地址。} remoteHttpsRequired{远程模型服务必须使用 HTTPS。} updateFailed{插件更新失败，请刷新状态后重试。} persistenceFailed{插件状态已改变，但设置保存失败。请检查本机存储后重新应用。} unavailable{原生插件不可用，请安装包含系统划词功能的构建。} statusUnavailable{无法读取插件状态，请再次刷新。} permissionSettingsUnavailable{请打开系统设置中的辅助功能设置，允许 DingDong。} tokenRequired{请输入你自己的 API Token。} tokenSaveFailed{Token 保存失败，请检查系统安全存储后重试。} tokenRemoveFailed{Token 移除失败，请检查系统安全存储后重试。} other{插件更新失败，请刷新状态后重试。}}",
   "@selectionPluginError": {
     "description": "Actionable native selection plugin validation and runtime errors.",
     "placeholders": {
@@ -4901,7 +5015,7 @@
   "releasePreviewNotice": "当前为开发预览版，更新检查仍跟随正式版。可通过“版本发布”查看本预览说明，通过“报告问题”反馈；使用现有本地数据。",
   "releasePreviewCurrent": "已安装预览版，尚未发现更新的正式版。",
   "agentPluginsTitle": "Agent 插件",
-  "agentPluginsPageDescription": "管理 DingDong 扩展，并查看本机 Agent 已安装的插件。",
+  "agentPluginsPageDescription": "管理叮咚自身的可选扩展功能。",
   "agentPluginsDingDongExtensions": "DingDong 扩展",
   "agentPluginsRead": "读取本机清单",
   "agentPluginsRefresh": "刷新清单",
@@ -5303,6 +5417,18 @@
   "@reminderToPhone": {
     "description": "Named reminder settings label"
   },
+  "trayBuddyWaiting": "轮到你啦",
+  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
+  "trayBuddyReady": "有新消息啦",
+  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
+  "trayBuddyUnread": "待查看的提醒",
+  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
+  "trayBuddyOpen": "点击打开 DingDong",
+  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
+  "devAttentionDescription": "创建一条需要你确认的 DEV 提醒。悬停到托盘小伙伴上即可查看计数。",
+  "@devAttentionDescription": {"description": "Development panel attention preview description."},
+  "devAttentionCreated": "已创建：等待你的确认",
+  "@devAttentionCreated": {"description": "Development panel attention action success status."},
   "devReminderColors": "提醒颜色与计数",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."

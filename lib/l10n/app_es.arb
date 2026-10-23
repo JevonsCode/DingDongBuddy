@@ -1,4 +1,118 @@
 {
+  "pluginOpenSource": "Componentes de código abierto",
+  "@pluginOpenSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginViewSource": "Ver código",
+  "@pluginViewSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginCheckUpstream": "Comprobar origen",
+  "@pluginCheckUpstream": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginLicenses": "Licencias",
+  "@pluginLicenses": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginScreenshotSourceNote": "Utiliza el editor mediante una dependencia fijada. DingDong aporta captura, atajos y adaptación de la interfaz.",
+  "@pluginScreenshotSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginSelectionSourceNote": "La lectura de selecciones de Windows adapta código de este proyecto. DingDong implementa la barra, los ajustes y las solicitudes al modelo.",
+  "@pluginSelectionSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamChanged": "Hay cambios en el proyecto original. Requieren adaptación y pruebas antes de una actualización de DingDong; esta comprobación no los instala.",
+  "@pluginUpstreamChanged": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamCurrent": "No se encontraron versiones ni cambios más recientes.",
+  "@pluginUpstreamCurrent": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamUnavailable": "No se pudo consultar el origen. Inténtalo más tarde.",
+  "@pluginUpstreamUnavailable": {"description": "Embedded plugin attribution and upstream update status."},
+  "@screenshotPluginTitle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotPluginDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotEnable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotEnableDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotShortcut": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCaptureNow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUnsupported": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRunning": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotStopped": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUnavailable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCapturing": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotHelp": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotConflict": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotPersistenceError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRollbackError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCaptureError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotExportError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRectangle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotArrow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotText": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUndo": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotReselect": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotNativeHint": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@selectionWindowsDiagnosis": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotPluginTitle": "Captura de pantalla",
+  "screenshotPluginDescription": "Captura una región, anota y copia o guarda como PNG.",
+  "screenshotEnable": "Activar capturas",
+  "screenshotEnableDescription": "Registrar el atajo mientras DingDong esté abierto.",
+  "screenshotShortcut": "Atajo de captura",
+  "screenshotCaptureNow": "Capturar ahora",
+  "screenshotUnsupported": "Las capturas están disponibles actualmente solo en Windows.",
+  "screenshotRunning": "Listo · atajo registrado",
+  "screenshotStopped": "Desactivado · atajo liberado",
+  "screenshotUnavailable": "No se pudo iniciar. Actualiza o vuelve a activar.",
+  "screenshotCapturing": "Editor abierto · Esc para cancelar",
+  "screenshotHelp": "Arrastra para seleccionar y edita con flechas, formas, texto o pixelado. Usa la barra para copiar, guardar, deshacer o cancelar. La imagen permanece en memoria hasta copiar o guardar.",
+  "screenshotConflict": "Este atajo ya está en uso. Elige otra combinación.",
+  "screenshotPersistenceError": "No se pudo guardar. Se restauró el atajo anterior.",
+  "screenshotRollbackError": "No se pudo restaurar el atajo. Actualiza y vuelve a activar.",
+  "screenshotCaptureError": "No se pudo capturar la pantalla. Inténtalo de nuevo.",
+  "screenshotExportError": "No se pudo copiar o guardar. Reintenta o pulsa Esc.",
+  "screenshotRectangle": "Rectángulo",
+  "screenshotArrow": "Flecha",
+  "screenshotText": "Texto",
+  "screenshotUndo": "Deshacer",
+  "screenshotReselect": "Reseleccionar",
+  "screenshotNativeHint": "Arrastra para seleccionar · Suelta para editar · Esc cancela",
+  "selectionWindowsDiagnosis": "La selección del sistema admite Windows y macOS. Esta plataforma aún no es compatible.",
   "amber": "Ámbar",
   "@amber": {
     "description": "Reminder presentation and AI+ results."
@@ -4399,7 +4513,7 @@
   "@selectionTokenPlaceholder": {
     "description": "Placeholder for the secret token field."
   },
-  "selectionTokenSaved": "Guardado de forma segura en el Llavero",
+  "selectionTokenSaved": "Guardado en el almacenamiento seguro del sistema",
   "@selectionTokenSaved": {
     "description": "Token is present in native secure storage."
   },
@@ -4901,7 +5015,7 @@
   "releasePreviewNotice": "Vista previa de desarrollo. La comprobación busca versiones estables. Consulta Versión para ver las notas y Notificar un problema para enviar comentarios. Se usan tus datos locales existentes.",
   "releasePreviewCurrent": "Vista previa instalada; no hay una versión estable más reciente.",
   "agentPluginsTitle": "Plugins de Agents",
-  "agentPluginsPageDescription": "Gestiona las extensiones de DingDong y consulta los plugins instalados en tus Agents locales.",
+  "agentPluginsPageDescription": "Gestiona las extensiones opcionales de DingDong.",
   "agentPluginsDingDongExtensions": "Extensiones de DingDong",
   "agentPluginsRead": "Leer inventario local",
   "agentPluginsRefresh": "Actualizar inventario",
@@ -5303,6 +5417,18 @@
   "@reminderToPhone": {
     "description": "Named reminder settings label"
   },
+  "trayBuddyWaiting": "¡Te toca!",
+  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
+  "trayBuddyReady": "Hay novedades",
+  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
+  "trayBuddyUnread": "Avisos sin leer",
+  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
+  "trayBuddyOpen": "Haz clic para abrir DingDong",
+  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
+  "devAttentionDescription": "Crea un aviso DEV que necesita tu respuesta. Pasa el cursor sobre el icono para ver el contador.",
+  "@devAttentionDescription": {"description": "Development panel attention preview description."},
+  "devAttentionCreated": "Creado: necesita tu respuesta",
+  "@devAttentionCreated": {"description": "Development panel attention action success status."},
   "devReminderColors": "Colores y contadores de avisos",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."
