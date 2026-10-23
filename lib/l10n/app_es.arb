@@ -1,4 +1,100 @@
 {
+  "@screenshotPluginTitle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotPluginDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotEnable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotEnableDescription": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotShortcut": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCaptureNow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUnsupported": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRunning": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotStopped": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUnavailable": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCapturing": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotHelp": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotConflict": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotPersistenceError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRollbackError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotCaptureError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotExportError": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotRectangle": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotArrow": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotText": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotUndo": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotReselect": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@screenshotNativeHint": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "@selectionWindowsDiagnosis": {
+    "description": "Screenshot extension or plugin platform availability."
+  },
+  "screenshotPluginTitle": "Captura de pantalla",
+  "screenshotPluginDescription": "Captura una región, anota y copia o guarda como PNG.",
+  "screenshotEnable": "Activar capturas",
+  "screenshotEnableDescription": "Registrar el atajo mientras DingDong esté abierto.",
+  "screenshotShortcut": "Atajo de captura",
+  "screenshotCaptureNow": "Capturar ahora",
+  "screenshotUnsupported": "Las capturas están disponibles actualmente solo en Windows.",
+  "screenshotRunning": "Listo · atajo registrado",
+  "screenshotStopped": "Desactivado · atajo liberado",
+  "screenshotUnavailable": "No se pudo iniciar. Actualiza o vuelve a activar.",
+  "screenshotCapturing": "Editor abierto · Esc para cancelar",
+  "screenshotHelp": "Arrastra para seleccionar. Añade rectángulos, flechas o texto. Ctrl+C o Intro copia; Ctrl+S guarda; Ctrl+Z deshace; Esc cancela. Clic derecho vuelve a seleccionar. La imagen permanece en memoria hasta copiar o guardar.",
+  "screenshotConflict": "Este atajo ya está en uso. Elige otra combinación.",
+  "screenshotPersistenceError": "No se pudo guardar. Se restauró el atajo anterior.",
+  "screenshotRollbackError": "No se pudo restaurar el atajo. Actualiza y vuelve a activar.",
+  "screenshotCaptureError": "No se pudo capturar la pantalla. Inténtalo de nuevo.",
+  "screenshotExportError": "No se pudo copiar o guardar. Reintenta o pulsa Esc.",
+  "screenshotRectangle": "Rectángulo",
+  "screenshotArrow": "Flecha",
+  "screenshotText": "Texto",
+  "screenshotUndo": "Deshacer",
+  "screenshotReselect": "Reseleccionar",
+  "screenshotNativeHint": "Arrastra · Esc cancela · Ctrl+C copia · Ctrl+S guarda · Ctrl+Z deshace",
+  "selectionWindowsDiagnosis": "La selección del sistema solo está implementada en macOS. Windows aún no tiene un detector nativo; configurar el modelo no lo habilita.",
   "amber": "Ámbar",
   "@amber": {
     "description": "Reminder presentation and AI+ results."

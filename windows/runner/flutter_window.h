@@ -11,6 +11,7 @@
 #include "win32_window.h"
 
 class ApplicationUpdater;
+class ScreenshotPlugin;
 
 // A window that does nothing but host a Flutter view.
 class FlutterWindow : public Win32Window {
@@ -43,6 +44,7 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       updater_channel_;
   std::shared_ptr<ApplicationUpdater> application_updater_;
+  std::unique_ptr<ScreenshotPlugin> screenshot_plugin_;
   bool hotkey_registered_ = false;
   UINT hotkey_modifiers_ = MOD_CONTROL | MOD_SHIFT | MOD_NOREPEAT;
   UINT hotkey_virtual_key_ = 'V';

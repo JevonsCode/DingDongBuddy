@@ -267,6 +267,7 @@ Future<void> _runResourceManagerWindow(
       windowController: windowController,
       initialDestination: initialDestination,
       jevAction: pluginHost?.jevAction,
+      screenshotAction: pluginHost?.screenshotAction,
       pluginSettings: pluginSettings,
       openClipboardCategoriesOnLaunch:
           arguments['openClipboardCategories'] == true,

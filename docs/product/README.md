@@ -27,3 +27,6 @@ AI+ 目前只在开启自动资源筛选、且 Agent 调用 Bridge 时按任务�
 Public changes for this release are in the [release notes](../release-notes.md).
 Design proposals, development previews and regression reports in this directory
 are engineering records; use the guides above for current product behavior.
+
+Development preview: [Windows screenshot plugin and plugin details](screenshot-plugin.md).
+This extension is not part of the published 1.9.1 release.

@@ -9,6 +9,90 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   DingDongLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get screenshotPluginTitle => 'Captura de pantalla';
+
+  @override
+  String get screenshotPluginDescription =>
+      'Captura una región, anota y copia o guarda como PNG.';
+
+  @override
+  String get screenshotEnable => 'Activar capturas';
+
+  @override
+  String get screenshotEnableDescription =>
+      'Registrar el atajo mientras DingDong esté abierto.';
+
+  @override
+  String get screenshotShortcut => 'Atajo de captura';
+
+  @override
+  String get screenshotCaptureNow => 'Capturar ahora';
+
+  @override
+  String get screenshotUnsupported =>
+      'Las capturas están disponibles actualmente solo en Windows.';
+
+  @override
+  String get screenshotRunning => 'Listo · atajo registrado';
+
+  @override
+  String get screenshotStopped => 'Desactivado · atajo liberado';
+
+  @override
+  String get screenshotUnavailable =>
+      'No se pudo iniciar. Actualiza o vuelve a activar.';
+
+  @override
+  String get screenshotCapturing => 'Editor abierto · Esc para cancelar';
+
+  @override
+  String get screenshotHelp =>
+      'Arrastra para seleccionar. Añade rectángulos, flechas o texto. Ctrl+C o Intro copia; Ctrl+S guarda; Ctrl+Z deshace; Esc cancela. Clic derecho vuelve a seleccionar. La imagen permanece en memoria hasta copiar o guardar.';
+
+  @override
+  String get screenshotConflict =>
+      'Este atajo ya está en uso. Elige otra combinación.';
+
+  @override
+  String get screenshotPersistenceError =>
+      'No se pudo guardar. Se restauró el atajo anterior.';
+
+  @override
+  String get screenshotRollbackError =>
+      'No se pudo restaurar el atajo. Actualiza y vuelve a activar.';
+
+  @override
+  String get screenshotCaptureError =>
+      'No se pudo capturar la pantalla. Inténtalo de nuevo.';
+
+  @override
+  String get screenshotExportError =>
+      'No se pudo copiar o guardar. Reintenta o pulsa Esc.';
+
+  @override
+  String get screenshotRectangle => 'Rectángulo';
+
+  @override
+  String get screenshotArrow => 'Flecha';
+
+  @override
+  String get screenshotText => 'Texto';
+
+  @override
+  String get screenshotUndo => 'Deshacer';
+
+  @override
+  String get screenshotReselect => 'Reseleccionar';
+
+  @override
+  String get screenshotNativeHint =>
+      'Arrastra · Esc cancela · Ctrl+C copia · Ctrl+S guarda · Ctrl+Z deshace';
+
+  @override
+  String get selectionWindowsDiagnosis =>
+      'La selección del sistema solo está implementada en macOS. Windows aún no tiene un detector nativo; configurar el modelo no lo habilita.';
+
+  @override
   String get amber => 'Ámbar';
 
   @override

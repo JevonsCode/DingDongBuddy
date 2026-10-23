@@ -14,10 +14,14 @@ class GlobalHotKeyRecorder extends StatefulWidget {
   const GlobalHotKeyRecorder({
     required this.value,
     required this.onChanged,
+    this.defaultValue = GlobalHotKey.defaultValue,
+    this.keyPrefix = 'settings-global-hot-key',
     super.key,
   });
 
   final GlobalHotKey value;
+  final GlobalHotKey defaultValue;
+  final String keyPrefix;
   final Future<void> Function(GlobalHotKey value) onChanged;
 
   @override
@@ -113,7 +117,7 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
               focusNode: _focusNode,
               onKeyEvent: _handleKeyEvent,
               child: DesktopActionButton(
-                key: const Key('settings-global-hot-key'),
+                key: Key(widget.keyPrefix),
                 onPressed: _recording ? _cancelRecording : _startRecording,
                 label: Text(
                   _recording
@@ -126,10 +130,10 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
             ),
             const SizedBox(width: 8),
             DesktopActionButton(
-              key: const Key('settings-global-hot-key-reset'),
-              onPressed: widget.value == GlobalHotKey.defaultValue
+              key: Key('${widget.keyPrefix}-reset'),
+              onPressed: widget.value == widget.defaultValue
                   ? null
-                  : () => widget.onChanged(GlobalHotKey.defaultValue),
+                  : () => widget.onChanged(widget.defaultValue),
               label: context.l10n.reset,
               compact: true,
             ),
@@ -139,7 +143,7 @@ class _GlobalHotKeyRecorderState extends State<GlobalHotKeyRecorder> {
           const SizedBox(height: 4),
           Text(
             _validationMessage!,
-            key: const Key('settings-global-hot-key-validation'),
+            key: Key('${widget.keyPrefix}-validation'),
             style: TextStyle(
               color: Theme.of(context).colorScheme.error,
               fontSize: 11,

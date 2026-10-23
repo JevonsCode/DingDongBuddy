@@ -53,6 +53,7 @@ import 'package:dingdong/features/library/domain/resource_manager_launcher.dart'
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
+import 'package:dingdong/features/screenshot/data/screenshot_plugin_service.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
 import 'package:dingdong/features/settings/data/io_system_data_location_gateway.dart';
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
@@ -86,6 +87,7 @@ import 'package:dingdong/platform/native_launch_at_startup.dart';
 import 'package:dingdong/platform/native_menu_bar_recovery_gateway.dart';
 import 'package:dingdong/platform/native_notification_gateway.dart';
 import 'package:dingdong/platform/native_quick_paste_gateway.dart';
+import 'package:dingdong/platform/native_screenshot_plugin_gateway.dart';
 import 'package:dingdong/platform/native_selection_plugin_gateway.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
 import 'package:dingdong/platform/preferences_tray_unread_store.dart';
@@ -452,6 +454,39 @@ Future<void> main(List<String> arguments) async {
   );
   await settingsViewModel.load();
   settingsViewModelReady = true;
+  final screenshotPlugin = ScreenshotPluginService(
+    preferencesBackend,
+    NativeScreenshotPluginGateway(
+      labels: () {
+        final l = currentLocalizations();
+        return {
+          'rectangle': l.screenshotRectangle,
+          'arrow': l.screenshotArrow,
+          'text': l.screenshotText,
+          'undo': l.screenshotUndo,
+          'reselect': l.screenshotReselect,
+          'copy': l.copy,
+          'save': l.save,
+          'cancel': l.cancel,
+          'hint': l.screenshotNativeHint,
+          'exportError': l.screenshotExportError,
+          'captureError': l.screenshotCaptureError,
+        };
+      },
+    ),
+    conflictsWithShortcut: (shortcut) async {
+      // Read current preferences so a change from any settings window is seen.
+      final settings = await dependencies.settingsRepository.load();
+      if (shortcut == settings.globalHotKey) return true;
+      final modifiers = globalHotKeyModifiers(shortcut, defaultTargetPlatform);
+      return settings.workspaceShortcuts.values.any(
+        (workspace) =>
+            workspace.key == shortcut.key &&
+            workspace.modifiers(defaultTargetPlatform) == modifiers,
+      );
+    },
+  );
+  await screenshotPlugin.load();
   settingsViewModel.startBackgroundReleaseUpdateChecks();
   unawaited(settingsViewModel.checkForUpdates());
   final DesktopShellService desktopShellService = DesktopShellService(
@@ -524,6 +559,12 @@ Future<void> main(List<String> arguments) async {
       case 'settings_jev':
         final values = Map<String, Object?>.from(call.arguments! as Map);
         return dependencies.jev.manage(
+          values['action']! as String,
+          Map<String, Object?>.from(values['arguments']! as Map),
+        );
+      case 'settings_screenshot':
+        final values = Map<String, Object?>.from(call.arguments! as Map);
+        return screenshotPlugin.manage(
           values['action']! as String,
           Map<String, Object?>.from(values['arguments']! as Map),
         );

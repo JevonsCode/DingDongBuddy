@@ -103,6 +103,150 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot'**
+  String get screenshotPluginTitle;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture a region, add annotations, then copy or save a PNG.'**
+  String get screenshotPluginDescription;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable screenshot plugin'**
+  String get screenshotEnable;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Register the shortcut while DingDong is running.'**
+  String get screenshotEnableDescription;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot shortcut'**
+  String get screenshotShortcut;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture now'**
+  String get screenshotCaptureNow;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot capture is currently available on Windows only.'**
+  String get screenshotUnsupported;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready · shortcut registered'**
+  String get screenshotRunning;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled · shortcut released'**
+  String get screenshotStopped;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start screenshot capture. Refresh or try enabling again.'**
+  String get screenshotUnavailable;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture editor is open · press Esc to cancel'**
+  String get screenshotCapturing;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to select. Use rectangle, arrow or text to annotate. Ctrl+C or Enter copies; Ctrl+S saves; Ctrl+Z undoes; Esc cancels. Right-click selects again. Images stay in memory until you copy or save.'**
+  String get screenshotHelp;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'This shortcut is already in use. Choose another combination.'**
+  String get screenshotConflict;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the setting. The previous shortcut has been restored.'**
+  String get screenshotPersistenceError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore the previous shortcut. Refresh and enable again.'**
+  String get screenshotRollbackError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not capture the screen. Try again.'**
+  String get screenshotCaptureError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy or save. Try again or press Esc to cancel.'**
+  String get screenshotExportError;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get screenshotRectangle;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get screenshotArrow;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get screenshotText;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get screenshotUndo;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Reselect'**
+  String get screenshotReselect;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to select · Esc cancel · Ctrl+C copy · Ctrl+S save · Ctrl+Z undo'**
+  String get screenshotNativeHint;
+
+  /// Screenshot extension or plugin platform availability.
+  ///
+  /// In en, this message translates to:
+  /// **'System selection tools currently support macOS only. Windows has no native selection listener yet; changing model settings will not enable selection on Windows.'**
+  String get selectionWindowsDiagnosis;
+
   /// Reminder presentation and AI+ results.
   ///
   /// In en, this message translates to:

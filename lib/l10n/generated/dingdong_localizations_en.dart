@@ -9,6 +9,91 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get screenshotPluginTitle => 'Screenshot';
+
+  @override
+  String get screenshotPluginDescription =>
+      'Capture a region, add annotations, then copy or save a PNG.';
+
+  @override
+  String get screenshotEnable => 'Enable screenshot plugin';
+
+  @override
+  String get screenshotEnableDescription =>
+      'Register the shortcut while DingDong is running.';
+
+  @override
+  String get screenshotShortcut => 'Screenshot shortcut';
+
+  @override
+  String get screenshotCaptureNow => 'Capture now';
+
+  @override
+  String get screenshotUnsupported =>
+      'Screenshot capture is currently available on Windows only.';
+
+  @override
+  String get screenshotRunning => 'Ready · shortcut registered';
+
+  @override
+  String get screenshotStopped => 'Disabled · shortcut released';
+
+  @override
+  String get screenshotUnavailable =>
+      'Could not start screenshot capture. Refresh or try enabling again.';
+
+  @override
+  String get screenshotCapturing =>
+      'Capture editor is open · press Esc to cancel';
+
+  @override
+  String get screenshotHelp =>
+      'Drag to select. Use rectangle, arrow or text to annotate. Ctrl+C or Enter copies; Ctrl+S saves; Ctrl+Z undoes; Esc cancels. Right-click selects again. Images stay in memory until you copy or save.';
+
+  @override
+  String get screenshotConflict =>
+      'This shortcut is already in use. Choose another combination.';
+
+  @override
+  String get screenshotPersistenceError =>
+      'Could not save the setting. The previous shortcut has been restored.';
+
+  @override
+  String get screenshotRollbackError =>
+      'Could not restore the previous shortcut. Refresh and enable again.';
+
+  @override
+  String get screenshotCaptureError =>
+      'Could not capture the screen. Try again.';
+
+  @override
+  String get screenshotExportError =>
+      'Could not copy or save. Try again or press Esc to cancel.';
+
+  @override
+  String get screenshotRectangle => 'Rectangle';
+
+  @override
+  String get screenshotArrow => 'Arrow';
+
+  @override
+  String get screenshotText => 'Text';
+
+  @override
+  String get screenshotUndo => 'Undo';
+
+  @override
+  String get screenshotReselect => 'Reselect';
+
+  @override
+  String get screenshotNativeHint =>
+      'Drag to select · Esc cancel · Ctrl+C copy · Ctrl+S save · Ctrl+Z undo';
+
+  @override
+  String get selectionWindowsDiagnosis =>
+      'System selection tools currently support macOS only. Windows has no native selection listener yet; changing model settings will not enable selection on Windows.';
+
+  @override
   String get amber => 'Amber';
 
   @override

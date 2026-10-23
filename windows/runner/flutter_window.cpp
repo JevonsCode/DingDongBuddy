@@ -8,6 +8,7 @@
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
 #include "application_updater.h"
+#include "screenshot_plugin.h"
 
 namespace {
 
@@ -543,6 +544,8 @@ bool FlutterWindow::OnCreate() {
         }
         result->NotImplemented();
       });
+  screenshot_plugin_ = std::make_unique<ScreenshotPlugin>(
+      GetHandle(), flutter_controller_->engine()->messenger());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -558,6 +561,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  screenshot_plugin_.reset();
   if (flutter_controller_) {
     if (hotkey_registered_) {
       ::UnregisterHotKey(GetHandle(), 0xDD01);
@@ -598,6 +602,9 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 
   switch (message) {
     case WM_HOTKEY:
+      if (screenshot_plugin_ && screenshot_plugin_->HandleHotKey(wparam)) {
+        return 0;
+      }
       if (wparam == 0xDD01 && hotkey_channel_) {
         const HWND foreground = ::GetForegroundWindow();
         if (foreground && foreground != GetHandle()) {

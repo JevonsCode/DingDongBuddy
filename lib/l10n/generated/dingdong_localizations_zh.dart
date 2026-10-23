@@ -9,6 +9,81 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get screenshotPluginTitle => '截图';
+
+  @override
+  String get screenshotPluginDescription => '快捷截图、框选区域与标注，复制图片或保存为 PNG。';
+
+  @override
+  String get screenshotEnable => '启用截图插件';
+
+  @override
+  String get screenshotEnableDescription => '叮咚运行时可通过全局快捷键截图。';
+
+  @override
+  String get screenshotShortcut => '截图快捷键';
+
+  @override
+  String get screenshotCaptureNow => '立即截图';
+
+  @override
+  String get screenshotUnsupported => '截图功能当前仅支持 Windows。';
+
+  @override
+  String get screenshotRunning => '已就绪 · 快捷键已注册';
+
+  @override
+  String get screenshotStopped => '未启用 · 快捷键已释放';
+
+  @override
+  String get screenshotUnavailable => '截图未能启动，请刷新状态或重新启用。';
+
+  @override
+  String get screenshotCapturing => '截图编辑中 · 按 Esc 取消';
+
+  @override
+  String get screenshotHelp =>
+      '拖动框选后可添加矩形、箭头或文字。Ctrl+C 或 Enter 复制，Ctrl+S 保存，Ctrl+Z 撤销，Esc 取消；右键重新框选。主动复制或保存前，图片仅保存在内存中。';
+
+  @override
+  String get screenshotConflict => '这个快捷键已被占用，请换一个组合。';
+
+  @override
+  String get screenshotPersistenceError => '设置未能保存，已恢复原来的快捷键。';
+
+  @override
+  String get screenshotRollbackError => '原快捷键恢复失败，请刷新状态并重新启用。';
+
+  @override
+  String get screenshotCaptureError => '无法截取屏幕，请重试。';
+
+  @override
+  String get screenshotExportError => '复制或保存失败，请重试，或按 Esc 取消。';
+
+  @override
+  String get screenshotRectangle => '矩形';
+
+  @override
+  String get screenshotArrow => '箭头';
+
+  @override
+  String get screenshotText => '文字';
+
+  @override
+  String get screenshotUndo => '撤销';
+
+  @override
+  String get screenshotReselect => '重选';
+
+  @override
+  String get screenshotNativeHint =>
+      '拖动框选 · Esc 取消 · Ctrl+C 复制 · Ctrl+S 保存 · Ctrl+Z 撤销';
+
+  @override
+  String get selectionWindowsDiagnosis =>
+      '系统划词目前仅支持 macOS。Windows 尚未实现原生选区监听，修改模型配置也无法启用 Windows 划词。';
+
+  @override
   String get amber => '琥珀';
 
   @override

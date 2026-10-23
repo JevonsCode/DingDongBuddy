@@ -35,6 +35,17 @@ final class MultiWindowSettingsHostBridge
   }
 
   final WindowController _parent;
+  Future<Map<String, Object?>> screenshotAction(
+    String action,
+    Map<String, Object?> arguments,
+  ) async {
+    final result = await _parent.invokeMethod<Object?>('settings_screenshot', {
+      'action': action,
+      'arguments': arguments,
+    });
+    return Map<String, Object?>.from(result! as Map);
+  }
+
   bool _isRunning = false;
 
   @override
