@@ -4499,4 +4499,61 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get aiTestingConnection => 'Conectando…';
+
+  @override
+  String get voiceCatalogTitle => 'Sonidos de la comunidad';
+
+  @override
+  String get voiceCatalogHelp =>
+      'Suscríbete para añadir un sonido revisado de ≤3 segundos al selector de este dispositivo. Se verifica al suscribirte y nunca cambia el sonido activo. Cancelar no elimina archivos usados por recordatorios.';
+
+  @override
+  String get voiceCatalogSearch =>
+      'Busca título, autor o pega un enlace de Issue';
+
+  @override
+  String get voiceCatalogEmpty =>
+      'No hay sonidos coincidentes en las páginas cargadas. Envía un sonido original o autorizado en la web.';
+
+  @override
+  String get voiceCatalogLoadFailed =>
+      'No se pudieron cargar los sonidos. Revisa tu conexión o inténtalo más tarde si GitHub limita las solicitudes.';
+
+  @override
+  String get voiceCatalogSubscribeFailed =>
+      'No se pudo suscribir. El sonido puede haber cambiado, no estar aprobado, superar 3 segundos o no estar disponible. Actualiza e inténtalo de nuevo.';
+
+  @override
+  String get voiceCatalogFull => 'Tu biblioteca está llena (64 sonidos).';
+
+  @override
+  String get voiceCatalogLinkFailed => 'No se pudo abrir el enlace.';
+
+  @override
+  String get voiceCatalogSubscribe => 'Suscribirse';
+
+  @override
+  String get voiceCatalogUnsubscribe => 'Cancelar suscripción';
+
+  @override
+  String get voiceCatalogDownloading => 'Verificando…';
+
+  @override
+  String get voiceCatalogLoadMore => 'Cargar más';
+
+  @override
+  String get voiceCatalogPageLimit =>
+      'Límite de páginas alcanzado. Consulta todos los sonidos en la web.';
+
+  @override
+  String get voiceCatalogWebsite => 'Web y envíos';
+
+  @override
+  String get voiceCatalogRefresh => 'Actualizar';
+
+  @override
+  String get voiceCatalogFindIssue => 'Buscar enlace de Issue';
+
+  @override
+  String get voiceCatalogSubscribed => 'Suscrito en este dispositivo';
 }

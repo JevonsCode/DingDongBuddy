@@ -5650,5 +5650,22 @@
   "aiTestingConnection": "Conectando…",
   "@aiTestingConnection": {
     "description": "AI model configuration and operation status."
-  }
+  },
+  "voiceCatalogTitle": "Sonidos de la comunidad",
+  "voiceCatalogHelp": "Suscríbete para añadir un sonido revisado de ≤3 segundos al selector de este dispositivo. Se verifica al suscribirte y nunca cambia el sonido activo. Cancelar no elimina archivos usados por recordatorios.",
+  "voiceCatalogSearch": "Busca título, autor o pega un enlace de Issue",
+  "voiceCatalogEmpty": "No hay sonidos coincidentes en las páginas cargadas. Envía un sonido original o autorizado en la web.",
+  "voiceCatalogLoadFailed": "No se pudieron cargar los sonidos. Revisa tu conexión o inténtalo más tarde si GitHub limita las solicitudes.",
+  "voiceCatalogSubscribeFailed": "No se pudo suscribir. El sonido puede haber cambiado, no estar aprobado, superar 3 segundos o no estar disponible. Actualiza e inténtalo de nuevo.",
+  "voiceCatalogFull": "Tu biblioteca está llena (64 sonidos).",
+  "voiceCatalogLinkFailed": "No se pudo abrir el enlace.",
+  "voiceCatalogSubscribe": "Suscribirse",
+  "voiceCatalogUnsubscribe": "Cancelar suscripción",
+  "voiceCatalogDownloading": "Verificando…",
+  "voiceCatalogLoadMore": "Cargar más",
+  "voiceCatalogPageLimit": "Límite de páginas alcanzado. Consulta todos los sonidos en la web.",
+  "voiceCatalogWebsite": "Web y envíos",
+  "voiceCatalogRefresh": "Actualizar",
+  "voiceCatalogFindIssue": "Buscar enlace de Issue",
+  "voiceCatalogSubscribed": "Suscrito en este dispositivo"
 }

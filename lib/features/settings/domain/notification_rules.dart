@@ -405,6 +405,24 @@ List<ReminderAudio> _readAudio(Object? value) {
         ReminderAudio(
           name: item['name'] as String,
           path: item['path'] as String,
+          sourceIssue: item['sourceIssue'] is String
+              ? item['sourceIssue'] as String
+              : null,
+          sourceAuthor: item['sourceAuthor'] is String
+              ? item['sourceAuthor'] as String
+              : null,
+          sourceLicense: item['sourceLicense'] is String
+              ? item['sourceLicense'] as String
+              : null,
+          sourceAttribution: item['sourceAttribution'] is String
+              ? item['sourceAttribution'] as String
+              : null,
+          audioSha256: item['audioSha256'] is String
+              ? item['audioSha256'] as String
+              : null,
+          metadataSha256: item['metadataSha256'] is String
+              ? item['metadataSha256'] as String
+              : null,
         ),
   ];
 }

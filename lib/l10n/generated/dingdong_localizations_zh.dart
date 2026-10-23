@@ -4271,4 +4271,57 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get aiTestingConnection => '正在连接…';
+
+  @override
+  String get voiceCatalogTitle => '社区声音';
+
+  @override
+  String get voiceCatalogHelp =>
+      '订阅后，审核通过的 ≤3 秒声音会加入本设备的声音选择器。订阅时校验音频，不会自动切换当前声音。取消订阅不会删除现有提醒正在使用的文件。';
+
+  @override
+  String get voiceCatalogSearch => '搜索标题、作者或粘贴 Issue 链接';
+
+  @override
+  String get voiceCatalogEmpty => '已加载的页面暂无匹配声音。可以去网站投稿原创或已获授权的声音。';
+
+  @override
+  String get voiceCatalogLoadFailed => '无法加载 GitHub 声音库。请检查网络；若请求受限，请稍后重试。';
+
+  @override
+  String get voiceCatalogSubscribeFailed =>
+      '订阅失败。声音可能已修改、未获所有者审核、超过 3 秒或暂时不可用。请刷新后重试。';
+
+  @override
+  String get voiceCatalogFull => '声音库已满（最多 64 个）。';
+
+  @override
+  String get voiceCatalogLinkFailed => '无法打开链接。';
+
+  @override
+  String get voiceCatalogSubscribe => '订阅';
+
+  @override
+  String get voiceCatalogUnsubscribe => '取消订阅';
+
+  @override
+  String get voiceCatalogDownloading => '校验中…';
+
+  @override
+  String get voiceCatalogLoadMore => '加载更多';
+
+  @override
+  String get voiceCatalogPageLimit => '已达页面上限，请前往网站查看全部声音。';
+
+  @override
+  String get voiceCatalogWebsite => '网站与投稿';
+
+  @override
+  String get voiceCatalogRefresh => '刷新';
+
+  @override
+  String get voiceCatalogFindIssue => '查找 Issue 链接';
+
+  @override
+  String get voiceCatalogSubscribed => '本设备已订阅';
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
@@ -13,6 +14,7 @@ import 'package:dingdong/features/settings/domain/app_settings.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:dingdong/features/settings/ui/voice_catalog_dialog.dart';
 import 'package:flutter/material.dart';
 
 /// The same saved profiles are edited here and through the Agent API.
@@ -55,6 +57,18 @@ class ReminderProfilesEditor extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('open-voice-catalog'),
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => VoiceCatalogDialog(viewModel: viewModel),
+            ),
+            icon: const Icon(Icons.library_music_outlined, size: 18),
+            label: Text(context.l10n.voiceCatalogTitle),
+          ),
+        ),
         ReorderableListView(
           key: const Key('reminder-order-list'),
           shrinkWrap: true,

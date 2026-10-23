@@ -131,13 +131,56 @@ final class ReminderProfile {
 }
 
 final class ReminderAudio {
-  const ReminderAudio({required this.name, required this.path});
+  const ReminderAudio({
+    required this.name,
+    required this.path,
+    this.sourceIssue,
+    this.sourceAuthor,
+    this.sourceLicense,
+    this.sourceAttribution,
+    this.audioSha256,
+    this.metadataSha256,
+  });
   final String name;
   final String path;
-  Map<String, Object?> toJson() => {'name': name, 'path': path};
+
+  /// Present only for an explicitly subscribed, pinned catalog voice.
+  final String? sourceIssue;
+  final String? sourceAuthor,
+      sourceLicense,
+      sourceAttribution,
+      audioSha256,
+      metadataSha256;
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'path': path,
+    'sourceIssue': ?sourceIssue,
+    'sourceAuthor': ?sourceAuthor,
+    'sourceLicense': ?sourceLicense,
+    'sourceAttribution': ?sourceAttribution,
+    'audioSha256': ?audioSha256,
+    'metadataSha256': ?metadataSha256,
+  };
   @override
   bool operator ==(Object other) =>
-      other is ReminderAudio && name == other.name && path == other.path;
+      other is ReminderAudio &&
+      name == other.name &&
+      path == other.path &&
+      sourceIssue == other.sourceIssue &&
+      sourceAuthor == other.sourceAuthor &&
+      sourceLicense == other.sourceLicense &&
+      sourceAttribution == other.sourceAttribution &&
+      audioSha256 == other.audioSha256 &&
+      metadataSha256 == other.metadataSha256;
   @override
-  int get hashCode => Object.hash(name, path);
+  int get hashCode => Object.hash(
+    name,
+    path,
+    sourceIssue,
+    sourceAuthor,
+    sourceLicense,
+    sourceAttribution,
+    audioSha256,
+    metadataSha256,
+  );
 }
