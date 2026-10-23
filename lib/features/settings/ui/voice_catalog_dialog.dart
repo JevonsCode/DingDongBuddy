@@ -1,6 +1,11 @@
 import 'dart:io';
 import 'package:dingdong/app/app_data_paths.dart';
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_disclosure.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/features/settings/data/voice_catalog_service.dart';
 import 'package:dingdong/features/settings/domain/voice_catalog.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -215,7 +220,8 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
         .audioLibrary
         .map((a) => a.sourceIssue)
         .toSet();
-    return AlertDialog(
+    return DesktopAlertDialog(
+      maxWidth: 660,
       title: Text(l10n.voiceCatalogTitle),
       content: SizedBox(
         width: 620,
@@ -223,7 +229,7 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
+            DesktopTextField(
               controller: _search,
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) {
@@ -231,7 +237,7 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
               },
               decoration: InputDecoration(
                 labelText: l10n.voiceCatalogSearch,
-                suffixIcon: IconButton(
+                suffixIcon: DesktopIconButton(
                   tooltip: l10n.voiceCatalogFindIssue,
                   onPressed: _loading ? null : _findIssue,
                   icon: const Icon(Icons.link),
@@ -252,44 +258,39 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
                 children: [
                   Text(l10n.voiceCatalogHelp),
                   if (savedVoices.isNotEmpty)
-                    ExpansionTile(
+                    DesktopDisclosure(
                       title: Text(l10n.voiceCatalogSubscribed),
-                      children: [
-                        SizedBox(
-                          height: (savedVoices.length * 56.0).clamp(0.0, 168.0),
-                          child: ListView(
-                            children: [
-                              for (final audio in savedVoices)
-                                ListTile(
-                                  title: Text(
-                                    audio.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  subtitle: Text(
-                                    [
-                                      audio.sourceAuthor,
-                                      audio.sourceLicense,
-                                      audio.sourceAttribution,
-                                    ].whereType<String>().join(' · '),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: IconButton(
-                                    tooltip: l10n.voiceCatalogUnsubscribe,
-                                    onPressed: _subscribing != null
-                                        ? null
-                                        : () =>
-                                              _unsubscribe(audio.sourceIssue!),
-                                    icon: const Icon(
-                                      Icons.remove_circle_outline,
-                                    ),
-                                  ),
+                      child: SizedBox(
+                        height: (savedVoices.length * 56.0).clamp(0.0, 168.0),
+                        child: ListView(
+                          children: [
+                            for (final audio in savedVoices)
+                              ListTile(
+                                title: Text(
+                                  audio.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                            ],
-                          ),
+                                subtitle: Text(
+                                  [
+                                    audio.sourceAuthor,
+                                    audio.sourceLicense,
+                                    audio.sourceAttribution,
+                                  ].whereType<String>().join(' · '),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: DesktopIconButton(
+                                  tooltip: l10n.voiceCatalogUnsubscribe,
+                                  onPressed: _subscribing != null
+                                      ? null
+                                      : () => _unsubscribe(audio.sourceIssue!),
+                                  icon: const Icon(Icons.remove_circle_outline),
+                                ),
+                              ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   const SizedBox(height: 12),
 
@@ -332,7 +333,8 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
                               spacing: 8,
                               runSpacing: 4,
                               children: [
-                                FilledButton(
+                                DesktopActionButton(
+                                  tone: DesktopActionTone.primary,
                                   onPressed: _subscribing != null
                                       ? null
                                       : subscriptions.contains(
@@ -352,7 +354,7 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
                                         : l10n.voiceCatalogSubscribe,
                                   ),
                                 ),
-                                TextButton(
+                                DesktopActionButton(
                                   onPressed: () => _open(voice.issueUrl),
                                   child: Text(
                                     '👍 ${voice.likes}  👎 ${voice.dislikes} · GitHub',
@@ -365,7 +367,7 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
                       ),
                     ),
                   if (_more)
-                    TextButton(
+                    DesktopActionButton(
                       onPressed: _loading || _page >= 10 ? null : () => _load(),
                       child: Text(
                         _page >= 10
@@ -380,15 +382,15 @@ class _VoiceCatalogDialogState extends State<VoiceCatalogDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        DesktopActionButton(
           onPressed: () => _open(Uri.parse(voiceCatalogWebsite)),
           child: Text(l10n.voiceCatalogWebsite),
         ),
-        TextButton(
+        DesktopActionButton(
           onPressed: _loading ? null : () => _load(refresh: true),
           child: Text(l10n.voiceCatalogRefresh),
         ),
-        TextButton(
+        DesktopActionButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.close),
         ),
