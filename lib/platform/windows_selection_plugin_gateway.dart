@@ -38,21 +38,55 @@ final class MultiWindowSelectionOverlayHost implements SelectionOverlayHost {
   final String parentWindowId;
   WindowController? _window;
   Future<void>? _creating;
-  bool _ready = false;
+  String? _readyWindowId;
+  bool get _ready => _window != null && _readyWindowId == _window!.windowId;
 
   void ready(String windowId) {
-    _window = WindowController.fromWindowId(windowId);
-    _ready = true;
+    // A delayed ready event from an old child must not replace a live child.
+    if (_window != null && _window!.windowId != windowId) return;
+    if (_window == null && _creating == null) return;
+    _readyWindowId = windowId;
   }
 
   @override
   Future<void> present(Map<String, Object?> state) async {
-    if (_window == null) {
-      await (_creating ??= _create());
-      _creating = null;
+    final pendingWindow = _window;
+    if (pendingWindow != null && !_ready) {
+      // The child can disappear before sending its ready handshake, too.
+      await _forgetIfMissing(pendingWindow);
     }
-    if (_ready) {
-      await _window!.invokeMethod<void>('selection_state', state);
+    if (_window == null) {
+      final creating = _creating ??= _create();
+      try {
+        await creating;
+      } finally {
+        // A failed creation must not poison every later selection. An older
+        // waiter must not clear a newer attempt started after its failure.
+        if (identical(_creating, creating)) _creating = null;
+      }
+    }
+    final window = _window;
+    if (window != null && _ready) {
+      try {
+        await window.invokeMethod<void>('selection_state', state);
+      } catch (_) {
+        await _forgetIfMissing(window);
+        rethrow;
+      }
+    }
+  }
+
+  Future<void> _forgetIfMissing(WindowController window) async {
+    try {
+      final windows = await WindowController.getAll();
+      if (identical(_window, window) &&
+          !windows.any((candidate) => candidate.windowId == window.windowId)) {
+        _window = null;
+        _readyWindowId = null;
+      }
+    } catch (_) {
+      // An uncertain lookup is not evidence that the child was destroyed.
+      // Retain its identity rather than risk creating duplicate windows.
     }
   }
 
@@ -71,7 +105,14 @@ final class MultiWindowSelectionOverlayHost implements SelectionOverlayHost {
 
   @override
   Future<void> hide() async {
-    await _window?.hide();
+    final window = _window;
+    if (window == null) return;
+    try {
+      await window.hide();
+    } catch (_) {
+      await _forgetIfMissing(window);
+      rethrow;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 # DingDong user guides · 使用文档
 
-These guides describe the published DingDong 1.9.1 features. Start with
+These guides describe the DingDong 1.9.2 release candidate features. Start with
 [first-run onboarding](onboarding.md) or the [中文项目介绍](../../README.zh.md).
 
 | Feature / 功能 | Guide / 说明 |
@@ -28,5 +28,5 @@ Public changes for this release are in the [release notes](../release-notes.md).
 Design proposals, development previews and regression reports in this directory
 are engineering records; use the guides above for current product behavior.
 
-Development preview: [Windows screenshot plugin and plugin details](screenshot-plugin.md).
-This extension is not part of the published 1.9.1 release.
+Windows plugins: [Windows screenshot plugin and plugin details](screenshot-plugin.md).
+Available in 1.9.2; screenshot capture and the new selection toolbar are Windows-only.

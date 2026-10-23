@@ -1,10 +1,10 @@
-import { parseContentTabLaunch } from "./content-navigation.js?shell=53";
-import { base64UrlDecode } from "./app-codecs.js?shell=53";
+import { parseContentTabLaunch } from "./content-navigation.js?shell=54";
+import { base64UrlDecode } from "./app-codecs.js?shell=54";
 import {
   extractPairingFragment,
   isScannedPairing,
   pairingsMatch,
-} from "./pairing-state.js?shell=53";
+} from "./pairing-state.js?shell=54";
 
 // QR launch capture, multi-device replacement, and explicit pairing confirmation.
 export function createPairingController({

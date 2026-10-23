@@ -5418,11 +5418,17 @@
     "description": "Named reminder settings label"
   },
   "trayBuddyWaiting": "轮到你啦",
+  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
   "trayBuddyReady": "有新消息啦",
+  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
   "trayBuddyUnread": "待查看的提醒",
+  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
   "trayBuddyOpen": "点击打开 DingDong",
+  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
   "devAttentionDescription": "创建一条需要你确认的 DEV 提醒。悬停到托盘小伙伴上即可查看计数。",
+  "@devAttentionDescription": {"description": "Development panel attention preview description."},
   "devAttentionCreated": "已创建：等待你的确认",
+  "@devAttentionCreated": {"description": "Development panel attention action success status."},
   "devReminderColors": "提醒颜色与计数",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."

@@ -18,6 +18,7 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
@@ -42,19 +43,23 @@ void main() {
     expect(scope.controller, same(controller));
   });
 
-  testWidgets('DingDong starts with the Dynamic workspace at version 1.9.1', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const DingDongApp());
+  testWidgets(
+    'DingDong starts with the Dynamic workspace at the declared version',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const DingDongApp());
 
-    expect(find.text('Dynamic'), findsWidgets);
-    expect(find.byKey(const Key('app-version-1.9.1')), findsOneWidget);
-    expect(find.text('v1.9.1'), findsOneWidget);
-    expect(find.byKey(const Key('popup-development-badge')), findsNothing);
-    expect(find.text('Resource library'), findsOneWidget);
-    expect(find.text('Clipboard history'), findsOneWidget);
-    expect(find.text('API | Agent connections'), findsOneWidget);
-  });
+      expect(find.text('Dynamic'), findsWidgets);
+      expect(
+        find.byKey(const Key('app-version-$currentAppVersion')),
+        findsOneWidget,
+      );
+      expect(find.text('v$currentAppVersion'), findsOneWidget);
+      expect(find.byKey(const Key('popup-development-badge')), findsNothing);
+      expect(find.text('Resource library'), findsOneWidget);
+      expect(find.text('Clipboard history'), findsOneWidget);
+      expect(find.text('API | Agent connections'), findsOneWidget);
+    },
+  );
 
   testWidgets('development build is visibly labeled beside DingDong', (
     WidgetTester tester,

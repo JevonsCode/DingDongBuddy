@@ -94,7 +94,7 @@ void main() {
     expectOpaqueBackground(tester, const Size(1120, 780));
   });
 
-  testWidgets('hidden editor reopens without waiting for suspended frames', (
+  testWidgets('hidden editor paints the new capture before showing', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1120, 780);
@@ -115,11 +115,15 @@ void main() {
     picture.dispose();
     final messenger = tester.binding.defaultBinaryMessenger;
     final showsWithFramesEnabled = <bool>[];
+    final shownSessions = <Key?>[];
     final finishedSessions = <int>[];
     messenger.setMockMethodCallHandler(manager, (call) async {
       if (call.method.startsWith('is')) return false;
       if (call.method == 'show') {
         showsWithFramesEnabled.add(tester.binding.framesEnabled);
+        shownSessions.add(
+          tester.widget<ScreenshotEditor>(find.byType(ScreenshotEditor)).key,
+        );
         tester.binding.handleAppLifecycleStateChanged(
           AppLifecycleState.resumed,
         );
@@ -164,9 +168,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ScreenshotEditor), findsOneWidget);
     expect(showsWithFramesEnabled, [true]);
-    await tester
-        .widget<ScreenshotEditor>(find.byType(ScreenshotEditor))
-        .onClose();
+    final firstEditor = tester.widget<ScreenshotEditor>(
+      find.byType(ScreenshotEditor),
+    );
+    expect(firstEditor.isCaptureCurrent!(), true);
+    final closed = firstEditor.onClose();
+    // Invalidation does not depend on pumping the removal frame.
+    expect(firstEditor.isCaptureCurrent!(), false);
+    await closed;
     await tester.pump();
     expect(finishedSessions, [1]);
     expect(tester.binding.framesEnabled, false);
@@ -193,7 +202,9 @@ void main() {
       },
     );
     await tester.idle();
+    await tester.pumpAndSettle();
     expect(showsWithFramesEnabled, [true, false]);
+    expect(shownSessions, [const ValueKey(1), const ValueKey(2)]);
     expect(reopened.isCompleted, true);
     await tester.pumpAndSettle();
     expect(find.byType(ScreenshotEditor), findsOneWidget);

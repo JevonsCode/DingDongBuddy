@@ -52,6 +52,8 @@ void main() {
     Future<void> Function(Uint8List)? copy,
     Future<bool> Function(Uint8List)? save,
     Future<String?> Function()? selectSavePath,
+    bool Function()? isCaptureCurrent,
+    Future<Uint8List> Function()? captureImage,
   }) async {
     tester.view.physicalSize = const Size(1120, 780);
     tester.view.devicePixelRatio = 1;
@@ -69,6 +71,8 @@ void main() {
             copyImage: copy,
             saveImage: save,
             selectSavePath: selectSavePath,
+            isCaptureCurrent: isCaptureCurrent,
+            captureImage: captureImage,
           ),
         ),
       ),
@@ -235,6 +239,74 @@ void main() {
       expect(closed, 0);
     },
   );
+
+  testWidgets(
+    'invalidated capture cannot save while its editor is still mounted',
+    (tester) async {
+      final chosenPath = Completer<String?>();
+      final opened = Completer<void>();
+      final directory = Directory.systemTemp.createTempSync('dingdong-cancel-');
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final output = File('${directory.path}/stale.png');
+      var current = true;
+      var closed = 0;
+      await open(
+        tester,
+        close: () async {
+          closed++;
+        },
+        isCaptureCurrent: () => current,
+        selectSavePath: () {
+          opened.complete();
+          return chosenPath.future;
+        },
+      );
+      await tester.tap(find.text('另存为'));
+      await tester.runAsync(() async {
+        await opened.future.timeout(const Duration(seconds: 3));
+      });
+      // Dismiss/disable invalidates synchronously, before any teardown frame.
+      current = false;
+      chosenPath.complete(output.path);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      expect(find.byType(ScreenshotEditor), findsOneWidget);
+      expect(output.existsSync(), isFalse);
+      expect(closed, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets('invalidated export never writes to the clipboard', (
+    tester,
+  ) async {
+    var current = true;
+    var copied = 0;
+    var closed = 0;
+    final rendered = Completer<Uint8List>();
+    await open(
+      tester,
+      close: () async {
+        closed++;
+      },
+      isCaptureCurrent: () => current,
+      copy: (_) async {
+        copied++;
+      },
+      captureImage: () => rendered.future,
+    );
+    await tester.tap(find.text('复制图片'));
+    current = false;
+    rendered.complete(bytes);
+    await tester.idle();
+    await tester.pumpAndSettle();
+    expect(copied, 0);
+    expect(closed, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
 
   testWidgets('cancelled save and failed copy retain the editor for retry', (
     tester,

@@ -110,6 +110,7 @@ class _ScreenshotEditorWindowState extends State<ScreenshotEditorWindow>
   Future<void> _load(int session) async {
     final revision = ++_loadRevision;
     _session = session;
+    if (mounted) setState(() => _bytes = null);
     try {
       final bytes = await NativeScreenshotPluginGateway.editorChannel
           .invokeMethod<Uint8List>('read', session);
@@ -125,9 +126,14 @@ class _ScreenshotEditorWindowState extends State<ScreenshotEditorWindow>
         _bytes = bytes;
         _settings = settings;
       });
-      // Hidden Windows engines suspend scheduled frames. Show first so reuse
-      // cannot wait forever for a frame; the retained opaque scene is safe and
-      // this path never resizes the native window.
+      // Submit a fresh scene while hidden, before exposing the native window.
+      // Warm-up frames do not depend on native vsync, including the interval
+      // before a hidden window's lifecycle notification reaches Flutter.
+      final binding = WidgetsBinding.instance;
+      final frame = binding.endOfFrame;
+      binding.scheduleWarmUpFrame();
+      await frame;
+      if (!mounted || revision != _loadRevision) return;
       await windowManager.show();
       if (!mounted || revision != _loadRevision) return;
       await windowManager.focus();
@@ -162,27 +168,31 @@ class _ScreenshotEditorWindowState extends State<ScreenshotEditorWindow>
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: AppTheme.desktopPanelLight(),
-    darkTheme: AppTheme.desktopPanelDark(),
-    themeMode: switch (_settings.themeMode) {
-      AppThemePreference.light => ThemeMode.light,
-      AppThemePreference.dark => ThemeMode.dark,
-      AppThemePreference.system => ThemeMode.system,
-    },
-    locale: resolveAppLocale(_settings.language),
-    supportedLocales: const [Locale('zh'), Locale('en'), Locale('es')],
-    localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    home: _bytes == null
-        ? const ScreenshotEditorBackground()
-        : ScreenshotEditor(
-            key: ValueKey(_session),
-            bytes: _bytes!,
-            language: resolveAppLocale(_settings.language).languageCode,
-            onClose: _close,
-          ),
-  );
+  Widget build(BuildContext context) {
+    final revision = _loadRevision;
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.desktopPanelLight(),
+      darkTheme: AppTheme.desktopPanelDark(),
+      themeMode: switch (_settings.themeMode) {
+        AppThemePreference.light => ThemeMode.light,
+        AppThemePreference.dark => ThemeMode.dark,
+        AppThemePreference.system => ThemeMode.system,
+      },
+      locale: resolveAppLocale(_settings.language),
+      supportedLocales: const [Locale('zh'), Locale('en'), Locale('es')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: _bytes == null
+          ? const ScreenshotEditorBackground()
+          : ScreenshotEditor(
+              key: ValueKey(_session),
+              bytes: _bytes!,
+              language: resolveAppLocale(_settings.language).languageCode,
+              onClose: _close,
+              isCaptureCurrent: () => mounted && revision == _loadRevision,
+            ),
+    );
+  }
 }
 
 /// DingDong desktop chrome around pro_image_editor 14.16.0 (BSD-3-Clause),
@@ -196,6 +206,8 @@ class ScreenshotEditor extends StatefulWidget {
     this.copyImage,
     this.saveImage,
     this.selectSavePath,
+    this.isCaptureCurrent,
+    @visibleForTesting this.captureImage,
   });
   final Uint8List bytes;
   final Future<void> Function() onClose;
@@ -203,6 +215,9 @@ class ScreenshotEditor extends StatefulWidget {
   final Future<void> Function(Uint8List)? copyImage;
   final Future<bool> Function(Uint8List)? saveImage;
   final Future<String?> Function()? selectSavePath;
+  // Invalidated synchronously by the host, before a scheduled widget teardown.
+  final bool Function()? isCaptureCurrent;
+  final Future<Uint8List> Function()? captureImage;
   @override
   State<ScreenshotEditor> createState() => _ScreenshotEditorState();
 }
@@ -211,6 +226,8 @@ class _ScreenshotEditorState extends State<ScreenshotEditor> {
   final _editorKey = GlobalKey<ProImageEditorState>();
   bool _busy = false;
   String? _error;
+  bool get _captureIsCurrent =>
+      mounted && (widget.isCaptureCurrent?.call() ?? true);
   String t(String en, String zh, String es) => switch (widget.language) {
     'zh' => zh,
     'es' => es,
@@ -237,7 +254,9 @@ class _ScreenshotEditorState extends State<ScreenshotEditor> {
     final path = await (widget.selectSavePath ?? _selectSavePath)();
     // The native picker can outlive a disabled plugin or a replaced capture.
     // Check after the await so a stale dialog can never write the old image.
-    if (!mounted || !identical(widget.bytes, capture) || path == null) {
+    if (!_captureIsCurrent ||
+        !identical(widget.bytes, capture) ||
+        path == null) {
       return false;
     }
     await XFile.fromData(bytes, mimeType: 'image/png').saveTo(path);
@@ -245,22 +264,24 @@ class _ScreenshotEditorState extends State<ScreenshotEditor> {
   }
 
   Future<void> _export({required bool save}) async {
-    if (_busy || _editorKey.currentState == null) return;
+    if (!_captureIsCurrent || _busy || _editorKey.currentState == null) return;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final png = await _editorKey.currentState!.captureEditorImage();
+      final png =
+          await (widget.captureImage?.call() ??
+              _editorKey.currentState!.captureEditorImage());
       if (png.isEmpty) throw StateError('Empty editor output');
-      if (!mounted) return;
+      if (!_captureIsCurrent) return;
       if (save) {
         final saved = await (widget.saveImage ?? _save)(png);
         if (!saved) return;
       } else {
         await (widget.copyImage ?? Pasteboard.writeImage)(png);
       }
-      if (mounted) await widget.onClose();
+      if (_captureIsCurrent) await widget.onClose();
     } catch (_) {
       if (mounted) {
         setState(
