@@ -143,29 +143,31 @@ class LibraryScreenState extends State<LibraryScreen> {
                   ],
                 )
               : _showAgentPlugins
-              ? SingleChildScrollView(
-                  key: const Key('library-agent-plugins-page'),
-                  padding: const EdgeInsets.all(24),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 860),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          DesktopActionButton(
-                            key: const Key('library-agent-plugins-back'),
-                            label: context.l10n.backToResources,
-                            icon: Icons.arrow_back,
-                            tone: DesktopActionTone.neutral,
-                            onPressed: () =>
-                                setState(() => _showAgentPlugins = false),
-                          ),
-                          const SizedBox(height: 24),
-                          AgentPluginsSection(
-                            inventory: widget.agentPluginInventory,
-                          ),
-                        ],
+              ? SizedBox.expand(
+                  child: SingleChildScrollView(
+                    key: const Key('library-agent-plugins-page'),
+                    padding: const EdgeInsets.all(24),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 860),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DesktopActionButton(
+                              key: const Key('library-agent-plugins-back'),
+                              label: context.l10n.backToResources,
+                              icon: Icons.arrow_back,
+                              tone: DesktopActionTone.neutral,
+                              onPressed: () =>
+                                  setState(() => _showAgentPlugins = false),
+                            ),
+                            const SizedBox(height: 24),
+                            AgentPluginsSection(
+                              inventory: widget.agentPluginInventory,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -101,6 +101,39 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets('resource inventory starts at the top beside the sidebar', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1080, 752));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final model = LibraryViewModel(InMemoryResourceStore());
+    await model.load();
+    addTearDown(model.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Row(
+            children: [
+              const SizedBox(width: 177),
+              Expanded(
+                child: LibraryScreen(
+                  viewModel: model,
+                  agentPluginInventory: _Inventory(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('library-agent-plugins-open')));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.byKey(const Key('library-agent-plugins-back'))).dy,
+      lessThan(80),
+    );
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'inventory is on demand, refreshable, and separate from DingDong extensions',
     (tester) async {
