@@ -6815,7 +6815,7 @@ abstract class DingDongLocalizations {
   /// Read-only inventory of plugins installed in native Agents.
   ///
   /// In en, this message translates to:
-  /// **'Manage DingDong extensions and inspect plugins installed in your local Agents.'**
+  /// **'Manage optional extensions built into DingDong.'**
   String get agentPluginsPageDescription;
 
   /// Read-only inventory of plugins installed in native Agents.

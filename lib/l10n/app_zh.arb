@@ -4997,7 +4997,7 @@
   "releasePreviewNotice": "当前为开发预览版，更新检查仍跟随正式版。可通过“版本发布”查看本预览说明，通过“报告问题”反馈；使用现有本地数据。",
   "releasePreviewCurrent": "已安装预览版，尚未发现更新的正式版。",
   "agentPluginsTitle": "Agent 插件",
-  "agentPluginsPageDescription": "管理 DingDong 扩展，并查看本机 Agent 已安装的插件。",
+  "agentPluginsPageDescription": "管理叮咚自身的可选扩展功能。",
   "agentPluginsDingDongExtensions": "DingDong 扩展",
   "agentPluginsRead": "读取本机清单",
   "agentPluginsRefresh": "刷新清单",

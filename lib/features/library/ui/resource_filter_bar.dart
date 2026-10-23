@@ -16,6 +16,8 @@ class ResourceFilterBar extends StatelessWidget {
     this.onImportLink,
     this.onImportHistory,
     this.onExport,
+    this.onShowAgentPlugins,
+    this.searchController,
     super.key,
   });
 
@@ -24,6 +26,8 @@ class ResourceFilterBar extends StatelessWidget {
   final VoidCallback? onImportLink;
   final VoidCallback? onImportHistory;
   final VoidCallback? onExport;
+  final VoidCallback? onShowAgentPlugins;
+  final TextEditingController? searchController;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +38,7 @@ class ResourceFilterBar extends StatelessWidget {
         children: <Widget>[
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              if (constraints.maxWidth < 520) {
+              if (constraints.maxWidth < 1000) {
                 return Row(
                   children: <Widget>[
                     Expanded(
@@ -46,6 +50,25 @@ class ResourceFilterBar extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (onShowAgentPlugins != null &&
+                        constraints.maxWidth >= 480)
+                      DesktopActionButton(
+                        key: const Key('library-agent-plugins-open'),
+                        label: context.l10n.agentPluginsTitle,
+                        icon: Icons.extension_outlined,
+                        onPressed: onShowAgentPlugins,
+                        tone: DesktopActionTone.neutral,
+                        compact: true,
+                      ),
+                    if (constraints.maxWidth >= 520) ...[
+                      const SizedBox(width: 10),
+                      DesktopActionButton(
+                        onPressed: viewModel.startCreating,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: context.l10n.newResource,
+                        tone: DesktopActionTone.primary,
+                      ),
+                    ],
                     DesktopMenuButton<_LibraryAction>(
                       key: const Key('library-actions'),
                       tooltip: context.l10n.resourceActions,
@@ -61,9 +84,17 @@ class ResourceFilterBar extends StatelessWidget {
                             onImportHistory?.call();
                           case _LibraryAction.export:
                             onExport?.call();
+                          case _LibraryAction.agentPlugins:
+                            onShowAgentPlugins?.call();
                         }
                       },
                       entries: <DesktopMenuEntry<_LibraryAction>>[
+                        if (onShowAgentPlugins != null)
+                          DesktopMenuItem<_LibraryAction>(
+                            value: _LibraryAction.agentPlugins,
+                            label: context.l10n.agentPluginsTitle,
+                            symbol: 'manage',
+                          ),
                         DesktopMenuItem<_LibraryAction>(
                           value: _LibraryAction.create,
                           label: context.l10n.newResource,
@@ -115,6 +146,17 @@ class ResourceFilterBar extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  if (onShowAgentPlugins != null) ...[
+                    DesktopActionButton(
+                      key: const Key('library-agent-plugins-open'),
+                      label: context.l10n.agentPluginsTitle,
+                      icon: Icons.extension_outlined,
+                      onPressed: onShowAgentPlugins,
+                      tone: DesktopActionTone.neutral,
+                      compact: true,
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                   _TransferActionGroup(
                     children: <Widget>[
                       _TransferActionButton(
@@ -159,6 +201,7 @@ class ResourceFilterBar extends StatelessWidget {
             builder: (BuildContext context, BoxConstraints constraints) {
               final Widget search = DesktopSearchField(
                 key: const Key('resource-search'),
+                controller: searchController,
                 onChanged: viewModel.setQuery,
                 height: 36,
                 hintText: context.l10n.searchNameOrContent,
@@ -256,7 +299,14 @@ class _TypeFilters extends StatelessWidget {
   );
 }
 
-enum _LibraryAction { create, importJson, importLink, importHistory, export }
+enum _LibraryAction {
+  create,
+  importJson,
+  importLink,
+  importHistory,
+  export,
+  agentPlugins,
+}
 
 class _TransferActionGroup extends StatelessWidget {
   const _TransferActionGroup({required this.children});

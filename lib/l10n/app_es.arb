@@ -4997,7 +4997,7 @@
   "releasePreviewNotice": "Vista previa de desarrollo. La comprobación busca versiones estables. Consulta Versión para ver las notas y Notificar un problema para enviar comentarios. Se usan tus datos locales existentes.",
   "releasePreviewCurrent": "Vista previa instalada; no hay una versión estable más reciente.",
   "agentPluginsTitle": "Plugins de Agents",
-  "agentPluginsPageDescription": "Gestiona las extensiones de DingDong y consulta los plugins instalados en tus Agents locales.",
+  "agentPluginsPageDescription": "Gestiona las extensiones opcionales de DingDong.",
   "agentPluginsDingDongExtensions": "Extensiones de DingDong",
   "agentPluginsRead": "Leer inventario local",
   "agentPluginsRefresh": "Actualizar inventario",

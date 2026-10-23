@@ -3770,8 +3770,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get agentPluginsTitle => 'Agent 插件';
 
   @override
-  String get agentPluginsPageDescription =>
-      '管理 DingDong 扩展，并查看本机 Agent 已安装的插件。';
+  String get agentPluginsPageDescription => '管理叮咚自身的可选扩展功能。';
 
   @override
   String get agentPluginsDingDongExtensions => 'DingDong 扩展';

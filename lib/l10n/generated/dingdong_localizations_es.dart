@@ -3963,7 +3963,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get agentPluginsPageDescription =>
-      'Gestiona las extensiones de DingDong y consulta los plugins instalados en tus Agents locales.';
+      'Gestiona las extensiones opcionales de DingDong.';
 
   @override
   String get agentPluginsDingDongExtensions => 'Extensiones de DingDong';

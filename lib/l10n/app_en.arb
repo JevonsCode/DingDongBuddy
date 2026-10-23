@@ -5003,7 +5003,7 @@
     "description": "Development preview release status and feedback guidance."
   },
   "agentPluginsTitle": "Agent plugins",
-  "agentPluginsPageDescription": "Manage DingDong extensions and inspect plugins installed in your local Agents.",
+  "agentPluginsPageDescription": "Manage optional extensions built into DingDong.",
   "agentPluginsDingDongExtensions": "DingDong extensions",
   "agentPluginsRead": "Read local inventory",
   "agentPluginsRefresh": "Refresh inventory",
