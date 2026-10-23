@@ -157,7 +157,7 @@ static void VerifyGlyphCentering(tray_manager::TrayHoverCard& card,
           const double dx = x + 0.5 - cx, dy = y + 0.5 - cy;
           // Isolate actual dark glyph pixels inside the solid orange circle;
           // exclude its anti-aliased boundary and the capsule's dark surface.
-          if (dx * dx + dy * dy < radius * radius && GetRValue(PixelAt(x, y)) < 160) {
+          if (dx * dx + dy * dy < radius * radius && GetRValue(PixelAt(x, y)) < 236) {
             left = std::min(left, x); top = std::min(top, y);
             right = std::max(right, x); bottom = std::max(bottom, y);
           }
