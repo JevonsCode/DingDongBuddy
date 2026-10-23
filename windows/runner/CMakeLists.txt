@@ -43,6 +43,22 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_MINOR=${FLUTT
 target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_PATCH=${FLUTTER_VERSION_PATCH}")
 target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION_BUILD=${FLUTTER_VERSION_BUILD}")
 
+# DEV builds must isolate both Dart data and Windows path-provider preferences.
+if(FLUTTER_VERSION MATCHES "-dev[.+-]")
+  target_compile_definitions(${BINARY_NAME} PRIVATE "DINGDONG_DEVELOPMENT")
+  add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E touch
+      "$<TARGET_FILE_DIR:${BINARY_NAME}>/dingdong-development.marker"
+    VERBATIM
+  )
+else()
+  add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E rm -f
+      "$<TARGET_FILE_DIR:${BINARY_NAME}>/dingdong-development.marker"
+    VERBATIM
+  )
+endif()
+
 # Disable Windows macros that collide with C++ standard library functions.
 target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 

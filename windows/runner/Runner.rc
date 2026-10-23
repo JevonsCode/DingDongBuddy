@@ -95,7 +95,11 @@ BEGIN
             VALUE "InternalName", "DingDong" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 Jevons. All rights reserved." "\0"
             VALUE "OriginalFilename", "DingDong.exe" "\0"
+#ifdef DINGDONG_DEVELOPMENT
+            VALUE "ProductName", "DingDong DEV" "\0"
+#else
             VALUE "ProductName", "DingDong" "\0"
+#endif
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

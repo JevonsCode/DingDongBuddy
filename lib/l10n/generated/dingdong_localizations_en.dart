@@ -4270,6 +4270,25 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get reminderToPhone => 'Send to phone';
 
   @override
+  String get trayBuddyWaiting => 'Your turn!';
+
+  @override
+  String get trayBuddyReady => 'Something for you';
+
+  @override
+  String get trayBuddyUnread => 'Unread reminders';
+
+  @override
+  String get trayBuddyOpen => 'Click to open DingDong';
+
+  @override
+  String get devAttentionDescription =>
+      'Create a DEV reminder that needs your input. Hover over the tray buddy to see its count.';
+
+  @override
+  String get devAttentionCreated => 'Created: needs your input';
+
+  @override
   String get devReminderColors => 'Reminder colors and counts';
 
   @override

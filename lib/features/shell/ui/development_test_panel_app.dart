@@ -327,6 +327,16 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
+                  title: context.l10n.needsYourInput,
+                  description: context.l10n.devAttentionDescription,
+                  buttonLabel: context.l10n.notify,
+                  buttonKey: const Key('dev-test-panel-agent-attention'),
+                  icon: Icons.waving_hand_outlined,
+                  running:
+                      _runningAction == DevelopmentTestAction.agentAttention,
+                  onPressed: _callbackFor(DevelopmentTestAction.agentAttention),
+                ),
+                _TestCard(
                   title: context.l10n.richMobileDetail,
                   description: context
                       .l10n
@@ -670,6 +680,7 @@ String _successLabel(BuildContext context, DevelopmentTestAction action) {
       context.l10n.devReminderColorsUpdated,
     DevelopmentTestAction.agentCompletion =>
       context.l10n.createdBasicAgentCompletion,
+    DevelopmentTestAction.agentAttention => context.l10n.devAttentionCreated,
     DevelopmentTestAction.agentRichCompletion =>
       context.l10n.createdRichMobileAgentDetail,
     DevelopmentTestAction.agentBurst =>

@@ -7442,6 +7442,42 @@ abstract class DingDongLocalizations {
   /// **'Send to phone'**
   String get reminderToPhone;
 
+  /// Friendly tray hover heading when an agent needs user input.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn!'**
+  String get trayBuddyWaiting;
+
+  /// Friendly tray hover heading for completed work.
+  ///
+  /// In en, this message translates to:
+  /// **'Something for you'**
+  String get trayBuddyReady;
+
+  /// Caption for the Windows hover card total count.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread reminders'**
+  String get trayBuddyUnread;
+
+  /// Action hint on the native tray hover card.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to open DingDong'**
+  String get trayBuddyOpen;
+
+  /// Development panel attention preview description.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a DEV reminder that needs your input. Hover over the tray buddy to see its count.'**
+  String get devAttentionDescription;
+
+  /// Development panel attention action success status.
+  ///
+  /// In en, this message translates to:
+  /// **'Created: needs your input'**
+  String get devAttentionCreated;
+
   /// Development panel reminder color preview.
   ///
   /// In en, this message translates to:

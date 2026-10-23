@@ -96,6 +96,14 @@ Future<void> _runDevelopmentTestAction({
         detail: strings.devAgentCompletedDetail,
       );
       return;
+    case DevelopmentTestAction.agentAttention:
+      await _postDevelopmentDing(
+        dependencies,
+        message: 'DEV · ${strings.needsYourInput}',
+        detail: strings.devAttentionDescription,
+        notificationKind: 'attention',
+      );
+      return;
     case DevelopmentTestAction.agentRichCompletion:
       await _postDevelopmentDing(
         dependencies,
@@ -193,6 +201,7 @@ Future<void> _postDevelopmentDing(
   required String detail,
   String source = 'DingDong DEV',
   String sound = 'default',
+  String notificationKind = 'completion',
 }) async {
   final HttpClient client = HttpClient()
     ..connectionTimeout = const Duration(seconds: 3);
@@ -207,6 +216,7 @@ Future<void> _postDevelopmentDing(
         'detail': detail,
         'source': source,
         'sound': sound,
+        'notificationKind': notificationKind,
         'flashCount': 4,
       }),
     );

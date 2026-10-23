@@ -108,39 +108,80 @@ HICON CreateTrayIcon(HICON source_icon, int width, int height) {
   return canvas.GetHICON(&icon) == Gdiplus::Ok ? icon : nullptr;
 }
 
-HICON CreateReminderTrayIcon(int width, int height, DWORD rgb, bool attention,
-                             bool dimmed) {
-  if (width <= 0 || height <= 0 || !Runtime().ready()) return nullptr;
+HICON CreateTrayIconMotionFrame(HICON source_icon, int width, int height,
+                                size_t frame) {
+  if (source_icon == nullptr || width <= 0 || height <= 0 ||
+      frame >= kTrayWiggleAngles.size() || !Runtime().ready()) {
+    return nullptr;
+  }
+  std::unique_ptr<Gdiplus::Bitmap> source(
+      Gdiplus::Bitmap::FromHICON(source_icon));
+  if (source == nullptr || source->GetLastStatus() != Gdiplus::Ok) {
+    return nullptr;
+  }
+  const AlphaBounds bounds = FindAlphaBounds(*source);
+  const float side = static_cast<float>(std::min(width, height));
+  const float angle = kTrayWiggleAngles[frame];
+  const float radians = angle * 3.14159265358979323846f / 180.0f;
+  const float cosine = std::cos(radians);
+  const float sine = std::sin(radians);
+  float min_x = side;
+  float max_x = -side;
+  float min_y = side;
+  float max_y = -side;
+  // Fit the actual rotated silhouette, rather than an oversized square. This
+  // leaves the original IP as large as possible during the visible rock.
+  for (int y = bounds.top; y < bounds.bottom; ++y) {
+    for (int x = bounds.left; x < bounds.right; ++x) {
+      Gdiplus::Color color;
+      if (source->GetPixel(x, y, &color) != Gdiplus::Ok ||
+          color.GetAlpha() <= 8) {
+        continue;
+      }
+      for (int corner = 0; corner < 4; ++corner) {
+        const float px = ((x + (corner & 1) - bounds.left) /
+                              static_cast<float>(bounds.right - bounds.left) -
+                          0.5f) * side;
+        const float py = ((y + (corner >> 1) - bounds.top) /
+                              static_cast<float>(bounds.bottom - bounds.top) -
+                          0.5f) * side;
+        const float rx = px * cosine - py * sine;
+        const float ry = px * sine + py * cosine;
+        min_x = std::min(min_x, rx);
+        max_x = std::max(max_x, rx);
+        min_y = std::min(min_y, ry);
+        max_y = std::max(max_y, ry);
+      }
+    }
+  }
+  const float offset_x = kTrayWiggleOffsets[frame] * side / 16.0f;
+  const float margin = side / 64.0f;
+  const float fit = std::min(
+      1.0f, std::min((width - 2.0f * margin - 2.0f * std::abs(offset_x)) /
+                        std::max(1.0f, max_x - min_x),
+                    (height - 2.0f * margin) /
+                        std::max(1.0f, max_y - min_y)));
+  const float center_x = (min_x + max_x) / 2.0f;
+  const float center_y = (min_y + max_y) / 2.0f;
   Gdiplus::Bitmap canvas(width, height, PixelFormat32bppARGB);
-  Gdiplus::Graphics graphics(&canvas);
-  graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
-  graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-  graphics.ScaleTransform(width / 16.0f, height / 16.0f);
-  const double intensity = dimmed ? 0.88 : 1.0;
-  const BYTE red = static_cast<BYTE>(((rgb >> 16) & 0xFF) * intensity);
-  const BYTE green = static_cast<BYTE>(((rgb >> 8) & 0xFF) * intensity);
-  const BYTE blue = static_cast<BYTE>((rgb & 0xFF) * intensity);
-  Gdiplus::SolidBrush background(Gdiplus::Color(255, red, green, blue));
-  graphics.FillEllipse(&background, 0.5f, 0.5f, 15.0f, 15.0f);
-  const auto linear = [](BYTE value) {
-    const double channel = value / 255.0;
-    return channel <= 0.04045 ? channel / 12.92 : std::pow((channel + 0.055) / 1.055, 2.4);
-  };
-  const bool dark_text = 0.2126 * linear(red) + 0.7152 * linear(green) +
-                         0.0722 * linear(blue) > 0.179;
-  const auto foreground = dark_text ? Gdiplus::Color(255, 0, 0, 0)
-                                    : Gdiplus::Color(255, 255, 255, 255);
-  Gdiplus::Pen pen(foreground, 1.8f);
-  pen.SetStartCap(Gdiplus::LineCapRound);
-  pen.SetEndCap(Gdiplus::LineCapRound);
-  pen.SetLineJoin(Gdiplus::LineJoinRound);
-  if (attention) {
-    graphics.DrawLine(&pen, 8.0f, 4.0f, 8.0f, 8.7f);
-    Gdiplus::SolidBrush dot(foreground);
-    graphics.FillEllipse(&dot, 7.1f, 10.5f, 1.8f, 1.8f);
-  } else {
-    Gdiplus::PointF points[] = {{4.3f, 8.1f}, {7.0f, 10.8f}, {11.9f, 5.4f}};
-    graphics.DrawLines(&pen, points, 3);
+  if (canvas.GetLastStatus() != Gdiplus::Ok) return nullptr;
+  {
+    Gdiplus::Graphics graphics(&canvas);
+    graphics.Clear(Gdiplus::Color(0, 0, 0, 0));
+    graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+    graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
+    Gdiplus::Matrix transform(fit * cosine, fit * sine, -fit * sine,
+                              fit * cosine,
+                              width / 2.0f + offset_x - fit * center_x,
+                              height / 2.0f - fit * center_y);
+    graphics.SetTransform(&transform);
+    graphics.DrawImage(
+        source.get(), Gdiplus::RectF(-side / 2.0f, -side / 2.0f, side, side),
+        static_cast<Gdiplus::REAL>(bounds.left),
+        static_cast<Gdiplus::REAL>(bounds.top),
+        static_cast<Gdiplus::REAL>(bounds.right - bounds.left),
+        static_cast<Gdiplus::REAL>(bounds.bottom - bounds.top),
+        Gdiplus::UnitPixel);
   }
   HICON icon = nullptr;
   return canvas.GetHICON(&icon) == Gdiplus::Ok ? icon : nullptr;

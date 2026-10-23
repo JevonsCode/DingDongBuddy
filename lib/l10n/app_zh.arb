@@ -5417,6 +5417,12 @@
   "@reminderToPhone": {
     "description": "Named reminder settings label"
   },
+  "trayBuddyWaiting": "轮到你啦",
+  "trayBuddyReady": "有新消息啦",
+  "trayBuddyUnread": "待查看的提醒",
+  "trayBuddyOpen": "点击打开 DingDong",
+  "devAttentionDescription": "创建一条需要你确认的 DEV 提醒。悬停到托盘小伙伴上即可查看计数。",
+  "devAttentionCreated": "已创建：等待你的确认",
   "devReminderColors": "提醒颜色与计数",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."

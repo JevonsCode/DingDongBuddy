@@ -364,6 +364,7 @@ final class AppDependencies {
     final AgentResourceSynchronizer resourceSynchronizer =
         await AgentResourceSynchronizer.currentUser(
           paths.skillPackagesDirectory,
+          sandbox: Platform.isWindows && paths.development,
           loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
           skillPackageInstaller: skillPackageInstaller,
           triggerGroupStore: baseTriggerGroupStore,

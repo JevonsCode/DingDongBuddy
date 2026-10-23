@@ -5418,6 +5418,18 @@
   "@reminderToPhone": {
     "description": "Named reminder settings label"
   },
+  "trayBuddyWaiting": "Your turn!",
+  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
+  "trayBuddyReady": "Something for you",
+  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
+  "trayBuddyUnread": "Unread reminders",
+  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
+  "trayBuddyOpen": "Click to open DingDong",
+  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
+  "devAttentionDescription": "Create a DEV reminder that needs your input. Hover over the tray buddy to see its count.",
+  "@devAttentionDescription": {"description": "Development panel attention preview description."},
+  "devAttentionCreated": "Created: needs your input",
+  "@devAttentionCreated": {"description": "Development panel attention action success status."},
   "devReminderColors": "Reminder colors and counts",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."
