@@ -5667,5 +5667,56 @@
   "voiceCatalogWebsite": "网站与投稿",
   "voiceCatalogRefresh": "刷新",
   "voiceCatalogFindIssue": "查找 Issue 链接",
-  "voiceCatalogSubscribed": "本设备已订阅"
+  "voiceCatalogSubscribed": "本设备已订阅",
+  "@voiceCatalogTitle": {
+    "description": "Community voice catalog: Title."
+  },
+  "@voiceCatalogHelp": {
+    "description": "Community voice catalog: Help."
+  },
+  "@voiceCatalogSearch": {
+    "description": "Community voice catalog: Search."
+  },
+  "@voiceCatalogEmpty": {
+    "description": "Community voice catalog: Empty."
+  },
+  "@voiceCatalogLoadFailed": {
+    "description": "Community voice catalog: LoadFailed."
+  },
+  "@voiceCatalogSubscribeFailed": {
+    "description": "Community voice catalog: SubscribeFailed."
+  },
+  "@voiceCatalogFull": {
+    "description": "Community voice catalog: Full."
+  },
+  "@voiceCatalogLinkFailed": {
+    "description": "Community voice catalog: LinkFailed."
+  },
+  "@voiceCatalogSubscribe": {
+    "description": "Community voice catalog: Subscribe."
+  },
+  "@voiceCatalogUnsubscribe": {
+    "description": "Community voice catalog: Unsubscribe."
+  },
+  "@voiceCatalogDownloading": {
+    "description": "Community voice catalog: Downloading."
+  },
+  "@voiceCatalogLoadMore": {
+    "description": "Community voice catalog: LoadMore."
+  },
+  "@voiceCatalogPageLimit": {
+    "description": "Community voice catalog: PageLimit."
+  },
+  "@voiceCatalogWebsite": {
+    "description": "Community voice catalog: Website."
+  },
+  "@voiceCatalogRefresh": {
+    "description": "Community voice catalog: Refresh."
+  },
+  "@voiceCatalogFindIssue": {
+    "description": "Community voice catalog: FindIssue."
+  },
+  "@voiceCatalogSubscribed": {
+    "description": "Heading for pinned local community voice subscriptions, including delisted voices."
+  }
 }

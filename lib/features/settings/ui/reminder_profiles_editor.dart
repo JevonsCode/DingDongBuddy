@@ -59,7 +59,7 @@ class ReminderProfilesEditor extends StatelessWidget {
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: TextButton.icon(
+          child: DesktopActionButton(
             key: const Key('open-voice-catalog'),
             onPressed: () => showDialog<void>(
               context: context,
