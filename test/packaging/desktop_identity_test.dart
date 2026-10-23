@@ -864,7 +864,17 @@ void main() {
       greaterThan(workflow.indexOf('name: Publish GitHub release')),
     );
     expect(releaseGate, contains(r'--ref "$tag"'));
-    expect(releaseGate, contains("jq -r '.prerelease // false'"));
+    expect(releaseGate, contains(r'case "$version" in'));
+    expect(releaseGate, contains('automatic publication is disabled.'));
+    expect(
+      releaseGate.indexOf('automatic publication is disabled.'),
+      lessThan(releaseGate.indexOf('device_link_origin=')),
+    );
+    expect(releaseGate, isNot(contains("jq -r '.prerelease // false'")));
+    expect(
+      workflow,
+      contains('Prerelease version tags must be published as prereleases.'),
+    );
     expect(releaseGate, contains(r'-f prerelease="$prerelease"'));
     expect(pagesWorkflow, contains('workflow_dispatch:'));
     expect(pagesWorkflow, contains('source_ref:'));

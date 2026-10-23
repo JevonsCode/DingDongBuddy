@@ -113,7 +113,7 @@ exact data boundaries.
 
 ## Optional Windows screenshot and selection plugins
 
-The DingDong 1.9.2 release candidate adds optional Windows plugins under **Resource Manager → Plugins**.
+The DingDong 1.9.2-beta.1 release candidate adds optional Windows plugins under **Resource Manager → Plugins**.
 Capture with **Ctrl+Alt+A**, annotate in the embedded editor, then copy or save a
 PNG. Text selection offers Copy, Translate, Explain and Polish; text is sent to
 the configured model only after an explicit model action. Protected fields and

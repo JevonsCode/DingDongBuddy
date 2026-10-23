@@ -1,4 +1,4 @@
-# DingDong 1.9.2
+# DingDong 1.9.2-beta.1
 
 - Adds optional Windows screenshot capture and embedded editing with annotations, undo/redo, copy and PNG saving; fixes black bands and reopening the editor.
 - Adds Windows text selection with copy, translate, explain and polish actions. Model requests occur only after an explicit action; protected fields and unreadable selections are excluded.
@@ -8,7 +8,7 @@
 
 ---
 
-# DingDong 1.9.2 正式版
+# DingDong 1.9.2-beta.1 测试版
 
 - 新增可选的 Windows 截图与内置编辑器，支持标注、撤销/重做、复制和保存 PNG，并修复黑边与重新打开编辑器的问题。
 - 补齐 Windows 划词，提供复制、翻译、解释和润色；只有主动点击模型动作才发送文字，排除密码框和无法读取的选区。
@@ -18,7 +18,7 @@
 
 ---
 
-# DingDong 1.9.2
+# DingDong 1.9.2-beta.1
 
 - Añade capturas opcionales en Windows y un editor integrado con anotaciones, deshacer y rehacer, copia y guardado PNG; corrige las bandas negras y la reapertura del editor.
 - Añade selección de texto en Windows con acciones para copiar, traducir, explicar y pulir. Solo se envía texto al modelo tras una acción explícita; se excluyen los campos protegidos y las selecciones ilegibles.

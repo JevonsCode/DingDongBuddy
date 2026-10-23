@@ -61,7 +61,7 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.9.2";
+const currentPwaVersion = "1.9.2-beta.1";
 // The shell version is the `?shell=` this module was loaded with, so it cannot
 // drift from index.html, the service worker cache, and version.json.
 const currentPwaShellVersion =
