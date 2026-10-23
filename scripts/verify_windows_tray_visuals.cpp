@@ -106,7 +106,7 @@ size_t DifferentPixels(const Pixels& first, const Pixels& second) {
   return count;
 }
 
-void CheckOriginalArtwork(const Pixels& pixels) {
+void CheckOriginalArtwork(const Pixels& pixels, bool require_orange = true) {
   // The existing bicubic asset resize can leave one alpha level of ringing.
   Require(AlphaAt(pixels, 0, 0) <= 2 &&
               AlphaAt(pixels, pixels.width - 1, 0) <= 2 &&
@@ -135,8 +135,21 @@ void CheckOriginalArtwork(const Pixels& pixels) {
           "Original artwork lost transparent surroundings");
   Require(antialiased >= pixels.width,
           "Original artwork lost antialiased alpha coverage");
-  Require(navy > 0 && white > 0 && orange > 0,
+  Require(navy > 0 && white > 0 && (!require_orange || orange > 0),
           "Original navy/white/orange reminder palette was not preserved");
+}
+
+double AlphaCentroidX(const Pixels& pixels) {
+  double weighted = 0;
+  double total = 0;
+  for (int y = 0; y < pixels.height; ++y) {
+    for (int x = 0; x < pixels.width; ++x) {
+      const BYTE alpha = AlphaAt(pixels, x, y);
+      weighted += (x + 0.5) * alpha;
+      total += alpha;
+    }
+  }
+  return weighted / total;
 }
 CLSID PngEncoder() {
   UINT count = 0;
@@ -230,6 +243,50 @@ void SaveSheet(const std::filesystem::path& output, const CLSID& encoder,
           "Could not save original reminder contact sheet");
 }
 
+void SaveMotionSheet(const std::filesystem::path& output, const CLSID& encoder,
+                     const std::array<HICON, 2>& sources) {
+  Gdiplus::Bitmap sheet(1160, 760, PixelFormat32bppARGB);
+  Gdiplus::Graphics graphics(&sheet);
+  graphics.Clear(Gdiplus::Color(255, 235, 237, 241));
+  Label(graphics, L"Original DingDong IP - full-size rest and visible whole-IP rocking",
+        20, 12, Gdiplus::Color(255, 25, 28, 36), 20);
+  Label(graphics, L"80 ms x 8 frames, then 1500 ms full-size rest. Each cell: actual pixels and 64 px detail.",
+        20, 43, Gdiplus::Color(255, 62, 66, 78));
+  const std::array<const wchar_t*, 3> labels = {
+      L"Full-size rest", L"Left -18 degrees", L"Right +18 degrees"};
+  for (int theme = 0; theme < 2; ++theme) {
+    const float x = 20.0f + theme * 570.0f;
+    const auto background = theme == 0 ? Gdiplus::Color(255, 249, 250, 252)
+                                        : Gdiplus::Color(255, 30, 31, 35);
+    const auto foreground = theme == 0 ? Gdiplus::Color(255, 36, 40, 48)
+                                        : Gdiplus::Color(255, 240, 242, 248);
+    Gdiplus::SolidBrush panel(background);
+    graphics.FillRectangle(&panel, x, 78.0f, 550.0f, 653.0f);
+    Label(graphics, theme == 0 ? L"Light taskbar" : L"Dark taskbar", x + 12,
+          88, foreground, 15);
+    for (size_t state = 0; state < labels.size(); ++state) {
+      Label(graphics, labels[state], x + 24 + state * 174, 116, foreground);
+    }
+    for (size_t row = 0; row < kSizes.size(); ++row) {
+      const int size = kSizes[row];
+      const float y = 146.0f + static_cast<float>(row) * 94.0f;
+      const std::wstring label = std::to_wstring(size) + L" px";
+      Label(graphics, label.c_str(), x + 8, y + 68, foreground);
+      for (size_t state = 0; state < labels.size(); ++state) {
+        Icon icon(state == 0
+                      ? tray_manager::CreateTrayIcon(sources[0], size, size)
+                      : tray_manager::CreateTrayIconMotionFrame(
+                            sources[(state - 1) % 2], size, size, state - 1));
+        auto pixels = ReadIcon(icon.get(), size, size);
+        DrawSample(graphics, pixels, x + 15 + state * 174, y, size);
+      }
+    }
+  }
+  Require(sheet.Save((output / L"original-ip-rocking-contact-sheet.png").c_str(),
+                      &encoder) == Gdiplus::Ok,
+          "Could not save rocking contact sheet");
+}
+
 }  // namespace
 
 int wmain(int argc, wchar_t** argv) {
@@ -259,6 +316,10 @@ int wmain(int argc, wchar_t** argv) {
                 tray_manager::CreateTrayIcon(first.get(), 0, 16) == nullptr &&
                 tray_manager::CreateTrayIcon(first.get(), 16, -1) == nullptr,
             "Null sources and invalid dimensions must be rejected");
+    Require(tray_manager::CreateTrayIconMotionFrame(nullptr, 16, 16, 0) == nullptr &&
+                tray_manager::CreateTrayIconMotionFrame(first.get(), 0, 16, 0) == nullptr &&
+                tray_manager::CreateTrayIconMotionFrame(first.get(), 16, 16, 8) == nullptr,
+            "Motion renderer must reject invalid sources, sizes and indices");
     int generated = 0;
     for (int size : kSizes) {
       std::array<Pixels, 2> frames{};
@@ -279,6 +340,29 @@ int wmain(int argc, wchar_t** argv) {
           static_cast<double>(AlphaSum(frames[1])) / AlphaSum(frames[0]);
       Require(coverage_ratio > 0.90 && coverage_ratio < 1.10,
               "Original animation must keep the IP visible");
+      std::array<Pixels, tray_manager::kTrayWiggleAngles.size()> motion{};
+      for (size_t frame = 0; frame < motion.size(); ++frame) {
+        Icon icon(tray_manager::CreateTrayIconMotionFrame(
+            sources[frame % 2], size, size, frame));
+        motion[frame] = ReadIcon(icon.get(), size, size);
+        auto bitmap = BitmapFrom(motion[frame]);
+        const std::wstring file = L"motion-frame-" + std::to_wstring(frame + 1) +
+            L"-" + std::to_wstring(size) + L"px.png";
+        Require(bitmap->Save((output / file).c_str(), &encoder) == Gdiplus::Ok,
+                "Could not save original IP motion PNG");
+        CheckOriginalArtwork(motion[frame], false);
+        const double visible_ratio =
+            static_cast<double>(AlphaSum(motion[frame])) / AlphaSum(frames[0]);
+        Require(visible_ratio > 0.55 && visible_ratio <= 1.05,
+                "Motion frame made the original IP too small or clipped");
+        ++generated;
+      }
+      Require(DifferentPixels(motion[0], motion[1]) >=
+                  static_cast<size_t>(size * size / 8),
+              "Whole-IP rocking must visibly change at least 12.5% of pixels");
+      Require(std::abs(AlphaCentroidX(motion[1]) - AlphaCentroidX(motion[0])) >=
+                  size * 0.04,
+              "Whole-IP movement must include visible lateral travel");
     }
     {
       Icon rectangular(tray_manager::CreateTrayIcon(first.get(), 32, 20));
@@ -287,16 +371,19 @@ int wmain(int argc, wchar_t** argv) {
     const DWORD gdi_before = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
     const DWORD user_before = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
     for (int index = 0; index < 300; ++index) {
-      Icon icon(tray_manager::CreateTrayIcon(sources[index % 2], 16, 16));
+      Icon icon(tray_manager::CreateTrayIconMotionFrame(
+          sources[index % 2], 16, 16, index % tray_manager::kTrayWiggleAngles.size()));
     }
     Require(GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS) == gdi_before &&
                 GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS) == user_before,
             "Repeated original HICON rendering leaked a GDI or USER object");
     SaveSheet(output, encoder, sources);
+    SaveMotionSheet(output, encoder, sources);
     std::cout << "PASS: " << generated
-              << " original asset HICONs across six DPI sizes and two bell-shake frames\n"
+              << " original asset HICONs across six DPI sizes, two rest and eight rocking frames\n"
               << "PASS: physical dimensions, transparent corners, antialiasing, original palette\n"
               << "PASS: distinct original frames, visible alpha coverage, rectangular input\n"
+              << "PASS: whole-IP pixel changes >=12.5%, lateral travel >=4% of cell\n"
               << "PASS: no GDI or USER object growth after 300 rendering/destruction cycles\n";
     std::wcout << L"Assets: " << std::filesystem::absolute(resources).wstring()
                << L"\nArtifacts: " << std::filesystem::absolute(output).wstring()

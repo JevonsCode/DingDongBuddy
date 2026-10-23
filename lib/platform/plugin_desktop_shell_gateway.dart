@@ -371,8 +371,9 @@ final class PluginDesktopShellGateway
         'dev-preview-${e.key.name}': e.value,
     };
     final bool pulseReminder = windows
-        ? (profile?.style ?? _notificationRules.trayStyleFor(kind)) ==
-              TrayReminderStyle.softPulse
+        ? (_unreadController.count == 0 && previewCount > 0) ||
+              (profile?.style ?? _notificationRules.trayStyleFor(kind)) ==
+                  TrayReminderStyle.softPulse
         : unreadProfiles.any((p) => p.style == TrayReminderStyle.softPulse);
     final TrayNotificationColor color =
         (windows && _unreadController.count == 0 && unreadProfiles.isNotEmpty

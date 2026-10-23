@@ -27,7 +27,6 @@
 #define WM_MYMESSAGE (WM_USER + 1)
 
 constexpr UINT_PTR kAttentionFlashTimerId = 0xD1D0;
-constexpr UINT kAttentionFlashIntervalMs = 700;
 
 namespace {
 
@@ -141,6 +140,9 @@ class TrayManagerPlugin : public flutter::Plugin {
   HICON attention_source_icon = nullptr;
   HICON rendered_icon = nullptr;
   HICON attention_rendered_icon = nullptr;
+  std::array<HICON, tray_manager::kTrayWiggleAngles.size()> attention_motion_icons{};
+  size_t attention_motion_index = 0;
+  bool attention_resting = false;
   int unread_count = 0;
   bool attention_frame = false;
   bool attention_timer_active = false;
@@ -466,8 +468,21 @@ void TrayManagerPlugin::SetIcon(
       tray_manager::CreateTrayIcon(replacement_icon, icon_width, icon_height);
   HICON replacement_attention_rendered_icon = tray_manager::CreateTrayIcon(
       replacement_attention_icon, icon_width, icon_height);
+  std::array<HICON, tray_manager::kTrayWiggleAngles.size()> replacement_motion{};
+  bool motion_ready = true;
+  if (next_count > 0 && animate_unread) {
+    for (size_t frame = 0; frame < replacement_motion.size(); ++frame) {
+      replacement_motion[frame] = tray_manager::CreateTrayIconMotionFrame(
+          frame % 2 == 0 ? replacement_icon : replacement_attention_icon,
+          icon_width, icon_height, frame);
+      motion_ready = motion_ready && replacement_motion[frame] != nullptr;
+    }
+  }
   if (replacement_rendered_icon == nullptr ||
-      replacement_attention_rendered_icon == nullptr) {
+      replacement_attention_rendered_icon == nullptr || !motion_ready) {
+    for (HICON motion_icon : replacement_motion) {
+      if (motion_icon != nullptr) DestroyIcon(motion_icon);
+    }
     if (replacement_rendered_icon != nullptr) {
       DestroyIcon(replacement_rendered_icon);
     }
@@ -484,10 +499,12 @@ void TrayManagerPlugin::SetIcon(
   HICON previous_attention_source = attention_source_icon;
   HICON previous_rendered = rendered_icon;
   HICON previous_attention_rendered = attention_rendered_icon;
+  const auto previous_motion = attention_motion_icons;
   source_icon = replacement_icon;
   attention_source_icon = replacement_attention_icon;
   rendered_icon = replacement_rendered_icon;
   attention_rendered_icon = replacement_attention_rendered_icon;
+  attention_motion_icons = replacement_motion;
   unread_count = next_count;
   hover_card->SetEnabled(unread_count > 0);
 
@@ -510,12 +527,18 @@ void TrayManagerPlugin::SetIcon(
   if (previous_attention_rendered != nullptr) {
     DestroyIcon(previous_attention_rendered);
   }
+  for (HICON motion_icon : previous_motion) {
+    if (motion_icon != nullptr) DestroyIcon(motion_icon);
+  }
 
   result->Success(flutter::EncodableValue(true));
 }
 
 void TrayManagerPlugin::ApplyIconFrame(bool attention) {
   HICON next_icon = attention ? attention_rendered_icon : rendered_icon;
+  if (attention && attention_motion_icons[attention_motion_index] != nullptr) {
+    next_icon = attention_motion_icons[attention_motion_index];
+  }
   if (next_icon == nullptr) {
     return;
   }
@@ -531,6 +554,8 @@ void TrayManagerPlugin::CancelAttentionFlash() {
   }
   attention_timer_active = false;
   attention_frame = false;
+  attention_motion_index = 0;
+  attention_resting = false;
   if (rendered_icon != nullptr) {
     nid.hIcon = rendered_icon;
     if (tray_icon_setted) {
@@ -547,7 +572,7 @@ void TrayManagerPlugin::StartAttentionFlash() {
     return;
   }
   if (unread_count <= 0 || rendered_icon == nullptr ||
-      attention_rendered_icon == nullptr) {
+      attention_motion_icons[0] == nullptr) {
     CancelAttentionFlash();
     return;
   }
@@ -563,9 +588,11 @@ void TrayManagerPlugin::StartAttentionFlash() {
     return;
   }
 
+  attention_motion_index = 0;
+  attention_resting = false;
   ApplyIconFrame(true);
   if (SetTimer(window, kAttentionFlashTimerId,
-               kAttentionFlashIntervalMs, nullptr) == 0) {
+               tray_manager::kTrayWiggleFrameIntervalMs, nullptr) == 0) {
     attention_frame = false;
     ApplyIconFrame(false);
     return;
@@ -584,7 +611,31 @@ void TrayManagerPlugin::AdvanceAttentionFlash() {
     CancelAttentionFlash();
     return;
   }
-  ApplyIconFrame(!attention_frame);
+  HWND window = GetMainWindow();
+  if (window == nullptr) {
+    CancelAttentionFlash();
+    return;
+  }
+  if (attention_resting) {
+    attention_resting = false;
+    attention_motion_index = 0;
+    ApplyIconFrame(true);
+    if (SetTimer(window, kAttentionFlashTimerId,
+                 tray_manager::kTrayWiggleFrameIntervalMs, nullptr) == 0) {
+      CancelAttentionFlash();
+    }
+  } else if (attention_motion_index + 1 < attention_motion_icons.size()) {
+    ++attention_motion_index;
+    ApplyIconFrame(true);
+  } else {
+    attention_resting = true;
+    attention_motion_index = 0;
+    ApplyIconFrame(false);
+    if (SetTimer(window, kAttentionFlashTimerId,
+                 tray_manager::kTrayWiggleRestIntervalMs, nullptr) == 0) {
+      CancelAttentionFlash();
+    }
+  }
 }
 
 void TrayManagerPlugin::DestroyIconResources() {
@@ -592,6 +643,10 @@ void TrayManagerPlugin::DestroyIconResources() {
     hover_card->SetEnabled(false);
   }
   CancelAttentionFlash();
+  for (HICON& motion_icon : attention_motion_icons) {
+    if (motion_icon != nullptr) DestroyIcon(motion_icon);
+    motion_icon = nullptr;
+  }
   if (attention_rendered_icon != nullptr) {
     DestroyIcon(attention_rendered_icon);
   }

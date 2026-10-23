@@ -614,7 +614,11 @@ void main() {
     expect(source, isNot(contains('CreateReminderTrayIcon')));
     expect(source, contains('SPI_GETCLIENTAREAANIMATION'));
     expect(source, contains('ValueOrNull(args, "attentionIconPath")'));
-    expect(source, contains('kAttentionFlashIntervalMs = 700'));
+    final motion = File(
+      'packages/tray_manager/windows/tray_visual.h',
+    ).readAsStringSync();
+    expect(motion, contains('kTrayWiggleFrameIntervalMs = 80'));
+    expect(motion, contains('kTrayWiggleRestIntervalMs = 1500'));
     expect(source, contains('StartAttentionFlash'));
     expect(source, contains('AdvanceAttentionFlash'));
     expect(source, contains('CancelAttentionFlash'));

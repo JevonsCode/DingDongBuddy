@@ -193,11 +193,14 @@ int wmain(int argc, wchar_t* argv[]) {
   CHECK(card.body_bounds_.left >= info.rcWork.left && card.body_bounds_.right <= info.rcWork.right);
   CHECK(card.body_bounds_.top >= info.rcWork.top && card.body_bounds_.bottom <= info.rcWork.bottom);
   const auto normal_layout = card.MakeLayout(600, 600);
-  CHECK(normal_layout.width == 98 && normal_layout.height == 58);
-  CHECK(normal_layout.capsule.bottom - normal_layout.capsule.top == 32);
+  CHECK(normal_layout.width == 40 && normal_layout.height == 156);
+  CHECK(normal_layout.capsule.bottom - normal_layout.capsule.top == 130);
   CHECK(normal_layout.count_text == L"5" && preview.total_count == 12);
   CHECK(normal_layout.primary_color == preview.rows.front().color);
   CHECK(normal_layout.ball_centers.size() == preview.rows.size());
+  CHECK((normal_layout.ball_counts == std::vector<std::wstring>{L"5", L"4", L"?", L"3"}));
+  CHECK(normal_layout.ball_centers.front().x == normal_layout.ball_centers.back().x);
+  CHECK(normal_layout.ball_centers.front().y < normal_layout.ball_centers.back().y);
   CHECK(card.badge_bounds_.bottom < card.body_bounds_.top);
   const POINT top_badge = {(card.badge_bounds_.left + card.badge_bounds_.right) / 2,
                            (card.badge_bounds_.top + card.badge_bounds_.bottom) / 2};
@@ -209,7 +212,8 @@ int wmain(int argc, wchar_t* argv[]) {
   for (size_t index = 0; index < normal_layout.ball_centers.size(); ++index) {
     const auto& point = normal_layout.ball_centers[index];
     CHECK(PixelAt(tray_manager::kShadowMargin + point.x,
-                    tray_manager::kBodyTop + point.y) == preview.rows[index].color);
+                    tray_manager::kBodyTop + point.y - normal_layout.ball_diameter / 2 + 3) ==
+          preview.rows[index].color);
   }
   CHECK(PixelAt(tray_manager::kShadowMargin +
                     (normal_layout.badge.left + normal_layout.badge.right) / 2,
@@ -222,12 +226,14 @@ int wmain(int argc, wchar_t* argv[]) {
   invisible_metadata.footer = L"INVISIBLE FOOTER";
   invisible_metadata.total_count = 987;
   for (auto& row : invisible_metadata.rows) row.name = L"INVISIBLE GROUP NAME";
-  invisible_metadata.rows[1].count = 12345;
-  invisible_metadata.rows[2].count = 999;
-  invisible_metadata.rows[3].count = 0;
   card.SetPreview(invisible_metadata);
-  // Pixel identity proves no visible wording, totals, or internal ball counts.
+  // Pixel identity proves names, wording and totals are not visible.
   CHECK(test_last_pixels == baseline_pixels);
+  auto secondary_changed = preview;
+  secondary_changed.rows[1].count = 7;
+  card.SetPreview(secondary_changed);
+  CHECK(card.MakeLayout(600, 600).ball_counts[1] == L"7");
+  CHECK(test_last_pixels != baseline_pixels);
   auto first_changed = preview;
   first_changed.rows.front().count = 6;
   card.SetPreview(first_changed);
@@ -329,21 +335,43 @@ int wmain(int argc, wchar_t* argv[]) {
   }
   test_capture = (output / L"card-64-groups.png").wstring();
   card.SetPreview(many_groups);
-  const auto wrapped = card.MakeLayout(600, 600);
-  CHECK(wrapped.ball_centers.size() == 64);
-  CHECK(wrapped.width <= 186 && wrapped.height <= 212);
-  CHECK(wrapped.ball_centers.front().y < wrapped.ball_centers.back().y);
-  for (size_t index = 0; index < wrapped.ball_centers.size(); ++index) {
-    const auto& point = wrapped.ball_centers[index];
+  const int actual_max_width = MulDiv(info.rcWork.right - info.rcWork.left, 96,
+                                     static_cast<int>(test_dpi)) - 36;
+  const int actual_max_height = MulDiv(info.rcWork.bottom - info.rcWork.top, 96,
+                                      static_cast<int>(test_dpi)) - 36;
+  const auto column = card.MakeLayout(actual_max_width, actual_max_height);
+  CHECK(column.ball_centers.size() == 64);
+  CHECK(column.width == 40 && column.height <= actual_max_height);
+  CHECK(column.ball_centers.front().x == column.ball_centers.back().x);
+  CHECK(column.ball_centers.front().y < column.ball_centers.back().y);
+  CHECK(column.scroll_max > 0 && card.scroll_max_ == column.scroll_max);
+  for (size_t index = 0; index < column.ball_centers.size(); ++index) {
+    const auto& point = column.ball_centers[index];
+    card.scroll_offset_ = std::clamp(
+        static_cast<int>(point.y - (column.capsule.top + column.capsule.bottom) / 2),
+        0, card.scroll_max_);
+    CHECK(card.Show(test_anchor));
+    CHECK(column.ball_counts[index] == std::to_wstring(index + 1));
     CHECK(PixelAt(tray_manager::Scale(tray_manager::kShadowMargin + point.x, test_dpi),
-                    tray_manager::Scale(tray_manager::kBodyTop + point.y, test_dpi)) ==
+                    tray_manager::Scale(tray_manager::kBodyTop + point.y -
+                        card.scroll_offset_ - column.ball_diameter / 2 + 3, test_dpi)) ==
           many_groups.rows[index].color);
   }
-  const auto narrow_wrap = card.MakeLayout(100, 600);
-  CHECK(narrow_wrap.ball_centers.size() == 64 && narrow_wrap.width <= 100);
-  const auto short_wrap = card.MakeLayout(400, 130);
-  CHECK(short_wrap.ball_centers.size() == 64 && short_wrap.height <= 130);
-  CHECK(test_captures == 7);
+  const int at_bottom = card.scroll_offset_;
+  SendMessageW(card.window_, WM_MOUSEWHEEL, MAKEWPARAM(0, WHEEL_DELTA), 0);
+  CHECK(card.scroll_offset_ < at_bottom);
+  SendMessageW(card.window_, WM_MOUSEWHEEL, MAKEWPARAM(0, WHEEL_DELTA * 100), 0);
+  CHECK(card.scroll_offset_ == 0);
+  test_capture = (output / L"card-64-groups-bottom.png").wstring();
+  SendMessageW(card.window_, WM_MOUSEWHEEL, MAKEWPARAM(0, -WHEEL_DELTA * 100), 0);
+  CHECK(card.scroll_offset_ == card.scroll_max_);
+  CHECK(GetForegroundWindow() == initial_focus);
+  const auto narrow_column = card.MakeLayout(100, 600);
+  CHECK(narrow_column.ball_centers.size() == 64 && narrow_column.width == 40);
+  const auto short_column = card.MakeLayout(400, 130);
+  CHECK(short_column.ball_centers.size() == 64 && short_column.height == 130);
+  CHECK(short_column.scroll_max > 0);
+  CHECK(test_captures == 8);
   card.SetPreview(preview);
   CHECK(GetForegroundWindow() == initial_focus);
   const POINT final_badge = {(card.badge_bounds_.left + card.badge_bounds_.right) / 2,
@@ -361,7 +389,7 @@ int wmain(int argc, wchar_t* argv[]) {
   card.OnTrayMouseMove(identifier);
   CHECK(!card.visible_ && !card.timer_active_);
   const RECT work = {0, 0, 1920, 1040};
-  const SIZE size = {122, 82};
+  const SIZE size = {64, 180};
   for (RECT anchor : {RECT{1800, 1050, 1824, 1074}, RECT{1800, -30, 1824, -6},
                       RECT{-30, 800, -6, 824}, RECT{1926, 800, 1950, 824},
                       RECT{100, 100, 124, 124}}) {

@@ -4,11 +4,13 @@ This local preview starts from main at `5525050` (1.9.1). It preserves the actua
 DingDong reminder IP and adds a visual-only hover capsule using the existing
 reminder colors, priority order, and read semantics.
 
-- Reminders use the original `ding-w` / `ding-w2` adaptive tray assets with their
-  existing bell-shaking frames. No replacement character, redrawn face or tint.
+- Reminders use the original `ding-w` / `ding-w2` adaptive tray assets. The whole
+  original IP rocks visibly in a short burst, pauses, and repeats while unread.
+  No replacement character, redrawn face or tint.
   Native reduced-motion preferences and each reminder's static/pulse choice
   still control animation.
-- Hover: a small capsule contains plain colored balls in reminder priority order.
+- Hover: a vertical capsule stacks colored circles in reminder priority order.
+  Each circle contains its own group's count. Long lists scroll vertically.
   A separate circular badge above it shows only the first-priority group's count
   and uses that group's color. No visible titles, names, footer or app label.
   The capsule does not acknowledge reminders. Clicking uses the existing tray-open
@@ -22,7 +24,7 @@ reminder colors, priority order, and read semantics.
 
 ## Local installation
 
-Version `1.9.2-dev.2+75` is a local development artifact, not a public release.
+Version `1.9.2-dev.3+76` is a local development artifact, not a public release.
 The `-dev` Windows build writes `dingdong-development.marker` and uses the
 `DingDong DEV` product identity. This isolates both app files in
 `%APPDATA%\DingDong DEV` and path-provider preferences in

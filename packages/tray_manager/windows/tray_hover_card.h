@@ -51,6 +51,7 @@ class TrayHoverCard {
   bool ReadAnchor(RECT* rect) const;
   bool PointerIsInside(const POINT& point) const;
   void PollPointer();
+  void Scroll(int wheel_delta);
   bool Show(const RECT& anchor);
   void Hide();
   Layout MakeLayout(int max_width, int max_height) const;
@@ -65,6 +66,10 @@ class TrayHoverCard {
   RECT body_bounds_ = {};
   RECT badge_bounds_ = {};
   int capsule_corner_radius_ = 0;
+  int scroll_offset_ = 0;
+  int scroll_max_ = 0;
+  int scroll_step_ = 30;
+  int wheel_remainder_ = 0;
   bool enabled_ = false;
   bool visible_ = false;
   bool timer_active_ = false;

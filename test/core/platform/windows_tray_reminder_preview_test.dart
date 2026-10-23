@@ -47,6 +47,7 @@ void main() {
           calls.lastWhere((c) => c.method == 'setIcon').arguments
               as Map<Object?, Object?>;
       expect(icon['badgeColorRgb'], TrayNotificationColor.blue.rgbValue);
+      expect(icon['animateUnread'], isTrue);
       expect(icon['iconPath'], endsWith('tray_icon_adaptive_unread.ico'));
       expect(calls.lastWhere((c) => c.method == 'setToolTip').arguments, {
         'toolTip': '',
@@ -62,6 +63,16 @@ void main() {
               as Map<Object?, Object?>;
       expect(cleared['totalCount'], 1);
       expect(cleared['rows'], hasLength(1));
+
+      final staticGateway = PluginDesktopShellGateway(developmentBuild: true);
+      await staticGateway.markUnread(kind: AgentNotificationKind.completion);
+      await staticGateway.previewReminderColor(TrayNotificationColor.blue);
+      final staticReminder =
+          calls.lastWhere((c) => c.method == 'setIcon').arguments
+              as Map<Object?, Object?>;
+      // A DEV color preview must not override a real reminder's static choice.
+      expect(staticReminder['animateUnread'], isFalse);
+      await staticGateway.previewReminderColor(null);
     },
     skip: !Platform.isWindows,
   );
