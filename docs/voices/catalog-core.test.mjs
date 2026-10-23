@@ -19,3 +19,16 @@ test('missing approval does not even request the attachment',async()=>{const ori
 test('display fields are never interpreted as HTML and API origin is bound',()=>{const v=parseIssue({...fixture.issue,title:'<img src=x onerror=alert(1)>'});assert.equal(v.title,'<img src=x onerror=alert(1)>');assert.throws(()=>parseIssue({...fixture.issue,html_url:'https://evil.example/issues/7'}));const ui=fs.readFileSync(new URL('./voices.js',import.meta.url),'utf8');assert.equal(/innerHTML|outerHTML|insertAdjacentHTML|document\.write\(/.test(ui),false);});
 test('Source mutations invalidate approval and missing Source is rejected',async()=>{const changed={...fixture.issue,body:fixture.issue.body.replace('Original synthesis.','Different claimed provenance.')};const hash=await sha256(canonicalMetadata(parseIssue(changed)));assert.equal(approvalFromComment(fixture.approval,7,hash),null);for(const body of [fixture.issue.body.replace('Original synthesis.',''),fixture.issue.body.replace('Original synthesis.','_No response_'),fixture.issue.body.replace('### Source','### Missing source')])assert.throws(()=>parseIssue({...fixture.issue,body}));});
 test('DOT approval supports only exact optional prefix, preserving owner checks',()=>{const valid={...fixture.approval,body:'🕵🏻‍♀️[DOT]\n'+fixture.approval.body};assert.ok(approvalFromComment(valid,7,fixture.metadataSha256));assert.equal(approvalFromComment({...valid,user:{id:1}},7,fixture.metadataSha256),null);assert.equal(approvalFromComment({...valid,author_association:'CONTRIBUTOR'},7,fixture.metadataSha256),null);for(const body of ['hello\n'+fixture.approval.body,'🕵🏻‍♀️[DOT] comment\n'+fixture.approval.body,'🕵🏻‍♀️[DOT]\n```json\n'+fixture.approval.body+'\n```','🕵🏻‍♀️[DOT]\n'+fixture.approval.body+'\nextra text'])assert.equal(approvalFromComment({...fixture.approval,body},7,fixture.metadataSha256),null);});
+
+test('homepage sound section links to the lowercase catalog route in both locales', () => {
+  const home = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const section = home.match(/<section class="sound-section"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(section);
+  assert.match(section, /href="\/dingdongbuddy\/voices\/" data-i18n="sounds.catalog"/);
+  assert.equal((home.match(/"sounds.catalog":/g) || []).length, 2);
+  assert.ok(home.includes('"sounds.catalog": "Explore community voices →"'));
+  assert.ok(home.includes('"sounds.catalog": "打开社区声音库 →"'));
+  const route = new URL('/dingdongbuddy/voices/', 'https://example.test/dingdongbuddy/');
+  assert.equal(route.pathname, '/dingdongbuddy/voices/');
+  assert.ok(fs.existsSync(new URL('../dingdongbuddy/voices/index.html', import.meta.url)));
+});
