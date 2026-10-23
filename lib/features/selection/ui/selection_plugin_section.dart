@@ -6,8 +6,11 @@ import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
+import 'package:dingdong/features/plugins/domain/plugin_source.dart';
+import 'package:dingdong/features/plugins/ui/plugin_source_note.dart';
 import 'package:dingdong/features/selection/domain/selection_plugin_configuration.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Optional system-wide selection tools hosted by the DingDong process.
@@ -315,6 +318,8 @@ class _SelectionPluginSectionState extends State<SelectionPluginSection> {
                   ),
                 ),
               ],
+              if (defaultTargetPlatform == TargetPlatform.windows)
+                const PluginSourceNote(source: PluginSource.selection),
               if (widget.viewModel.selectionPluginConfigurationError !=
                   null) ...<Widget>[
                 const SizedBox(height: 8),

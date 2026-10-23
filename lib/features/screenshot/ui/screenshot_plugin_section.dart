@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/features/plugins/domain/plugin_source.dart';
+import 'package:dingdong/features/plugins/ui/plugin_source_note.dart';
 import 'package:dingdong/features/screenshot/domain/screenshot_plugin.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/ui/global_hot_key_recorder.dart';
@@ -194,6 +196,7 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
             ],
           ),
         ],
+        const PluginSourceNote(source: PluginSource.screenshot),
         if (errorText != null) ...[
           const SizedBox(height: 16),
           Semantics(

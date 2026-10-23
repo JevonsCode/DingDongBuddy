@@ -9,6 +9,38 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   DingDongLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get pluginOpenSource => 'Open-source components';
+
+  @override
+  String get pluginViewSource => 'View source';
+
+  @override
+  String get pluginCheckUpstream => 'Check upstream';
+
+  @override
+  String get pluginLicenses => 'Licenses';
+
+  @override
+  String get pluginScreenshotSourceNote =>
+      'Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.';
+
+  @override
+  String get pluginSelectionSourceNote =>
+      'Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.';
+
+  @override
+  String get pluginUpstreamChanged =>
+      'Upstream changes are available. They require adaptation and testing before a DingDong update; this does not install them.';
+
+  @override
+  String get pluginUpstreamCurrent =>
+      'No newer upstream version or change was found.';
+
+  @override
+  String get pluginUpstreamUnavailable =>
+      'Could not check the source. Please try again later.';
+
+  @override
   String get screenshotPluginTitle => 'Screenshot';
 
   @override
@@ -48,7 +80,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get screenshotHelp =>
-      'Drag to select. Use rectangle, arrow or text to annotate. Ctrl+C or Enter copies; Ctrl+S saves; Ctrl+Z undoes; Esc cancels. Right-click selects again. Images stay in memory until you copy or save.';
+      'Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.';
 
   @override
   String get screenshotConflict =>
@@ -87,11 +119,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get screenshotNativeHint =>
-      'Drag to select · Esc cancel · Ctrl+C copy · Ctrl+S save · Ctrl+Z undo';
+      'Drag to select · Release to edit · Esc cancel';
 
   @override
   String get selectionWindowsDiagnosis =>
-      'System selection tools currently support macOS only. Windows has no native selection listener yet; changing model settings will not enable selection on Windows.';
+      'System selection supports Windows and macOS. This platform is not yet supported.';
 
   @override
   String get amber => 'Amber';
@@ -3475,7 +3507,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get selectionTokenPlaceholder => 'Paste your own token';
 
   @override
-  String get selectionTokenSaved => 'Saved securely in Keychain';
+  String get selectionTokenSaved => 'Saved in system secure storage';
 
   @override
   String get selectionTokenNotSaved => 'Not configured';

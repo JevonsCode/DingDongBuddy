@@ -9,6 +9,38 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   DingDongLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get pluginOpenSource => 'Componentes de código abierto';
+
+  @override
+  String get pluginViewSource => 'Ver código';
+
+  @override
+  String get pluginCheckUpstream => 'Comprobar origen';
+
+  @override
+  String get pluginLicenses => 'Licencias';
+
+  @override
+  String get pluginScreenshotSourceNote =>
+      'Utiliza el editor mediante una dependencia fijada. DingDong aporta captura, atajos y adaptación de la interfaz.';
+
+  @override
+  String get pluginSelectionSourceNote =>
+      'La lectura de selecciones de Windows adapta código de este proyecto. DingDong implementa la barra, los ajustes y las solicitudes al modelo.';
+
+  @override
+  String get pluginUpstreamChanged =>
+      'Hay cambios en el proyecto original. Requieren adaptación y pruebas antes de una actualización de DingDong; esta comprobación no los instala.';
+
+  @override
+  String get pluginUpstreamCurrent =>
+      'No se encontraron versiones ni cambios más recientes.';
+
+  @override
+  String get pluginUpstreamUnavailable =>
+      'No se pudo consultar el origen. Inténtalo más tarde.';
+
+  @override
   String get screenshotPluginTitle => 'Captura de pantalla';
 
   @override
@@ -47,7 +79,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get screenshotHelp =>
-      'Arrastra para seleccionar. Añade rectángulos, flechas o texto. Ctrl+C o Intro copia; Ctrl+S guarda; Ctrl+Z deshace; Esc cancela. Clic derecho vuelve a seleccionar. La imagen permanece en memoria hasta copiar o guardar.';
+      'Arrastra para seleccionar y edita con flechas, formas, texto o pixelado. Usa la barra para copiar, guardar, deshacer o cancelar. La imagen permanece en memoria hasta copiar o guardar.';
 
   @override
   String get screenshotConflict =>
@@ -86,11 +118,11 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get screenshotNativeHint =>
-      'Arrastra · Esc cancela · Ctrl+C copia · Ctrl+S guarda · Ctrl+Z deshace';
+      'Arrastra para seleccionar · Suelta para editar · Esc cancela';
 
   @override
   String get selectionWindowsDiagnosis =>
-      'La selección del sistema solo está implementada en macOS. Windows aún no tiene un detector nativo; configurar el modelo no lo habilita.';
+      'La selección del sistema admite Windows y macOS. Esta plataforma aún no es compatible.';
 
   @override
   String get amber => 'Ámbar';
@@ -3518,7 +3550,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get selectionTokenPlaceholder => 'Pega tu propio token';
 
   @override
-  String get selectionTokenSaved => 'Guardado de forma segura en el Llavero';
+  String get selectionTokenSaved =>
+      'Guardado en el almacenamiento seguro del sistema';
 
   @override
   String get selectionTokenNotSaved => 'Sin configurar';

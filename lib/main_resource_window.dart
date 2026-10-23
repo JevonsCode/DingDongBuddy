@@ -184,7 +184,9 @@ Future<void> _runResourceManagerWindow(
           : TrayNotificationColor.orange,
     ),
     selectionOnlyPersistence: true,
-    selectionPluginGateway: Platform.isMacOS ? pluginHost : null,
+    selectionPluginGateway: (Platform.isMacOS || Platform.isWindows)
+        ? pluginHost
+        : null,
     restoreSelectionPluginOnLoad: false,
     onSettingsSaved: pluginHost?.notifyChanged,
   );

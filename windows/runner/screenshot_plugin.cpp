@@ -2,7 +2,8 @@
 #include "screenshot_geometry.h"
 
 #include <windowsx.h>
-#include <commdlg.h>
+#include <objidl.h>
+#include <flutter/method_result_functions.h>
 // Older Windows SDK GDI+ headers expect unqualified min/max even with NOMINMAX.
 namespace Gdiplus { using std::min; using std::max; }
 #pragma warning(push)
@@ -53,30 +54,23 @@ UINT VirtualKey(const std::string& key) {
   auto it = keys.find(key);
   return it == keys.end() ? 0 : it->second;
 }
-enum class Tool { select, rectangle, arrow, text };
-struct Annotation { Tool tool; Point a; Point b; std::wstring text; };
 }  // namespace
 
 struct ScreenshotPlugin::Impl {
   HWND owner;
   HWND overlay = nullptr;
-  HWND edit = nullptr;
-  WNDPROC edit_proc = nullptr;
   HDC snapshot_dc = nullptr;
   HBITMAP bitmap = nullptr;
   HGDIOBJ previous_bitmap = nullptr;
   HFONT font = nullptr;
   ULONG_PTR gdiplus = 0;
   int screen_x = 0, screen_y = 0, width = 0, height = 0;
-  int button_width = 70, toolbar_height = 38;
   bool registered = false, dragging = false, selected = false;
+  bool editing = false;
   UINT hotkey_id = kHotkeyA, modifiers = 0, key = 0;
-  Tool tool = Tool::select;
-  Point start{}, current{}, text_position{};
+  Point start{}, current{};
   Rect region{};
-  RECT toolbar{};
   RECT hint_bounds{};
-  std::vector<Annotation> annotations;
   std::wstring error;
   std::map<std::string, std::wstring> labels;
   std::unique_ptr<flutter::MethodChannel<Value>> channel;
@@ -99,9 +93,12 @@ struct ScreenshotPlugin::Impl {
         else result->Error(failure, failure);
       } else if (call.method_name() == "capture") {
         if (!registered) result->Error("disabled", "disabled");
-        else if (overlay) result->Error("capture_busy", "capture_busy");
+        else if (overlay || editing) result->Error("capture_busy", "capture_busy");
         else if (!Capture()) result->Error("capture_failed", "capture_failed");
         else result->Success();
+      } else if (call.method_name() == "finish") {
+        editing = false;
+        result->Success();
       } else {
         result->NotImplemented();
       }
@@ -118,7 +115,7 @@ struct ScreenshotPlugin::Impl {
   Value Status() const {
     return Value(Map{{Value("supported"), Value(gdiplus != 0)},
                      {Value("running"), Value(registered)},
-                     {Value("capturing"), Value(overlay != nullptr)}});
+                     {Value("capturing"), Value(overlay != nullptr || editing)}});
   }
 
   std::wstring Label(const std::string& id, const wchar_t* fallback) const {
@@ -181,7 +178,6 @@ struct ScreenshotPlugin::Impl {
     previous_bitmap = nullptr;
     if (font) DeleteObject(font);
     font = nullptr;
-    annotations.clear();
     error.clear();
   }
 
@@ -191,12 +187,12 @@ struct ScreenshotPlugin::Impl {
       overlay = nullptr;
       DestroyWindow(window);
     }
-    edit = nullptr;
+    editing = false;
     ReleaseBitmap();
   }
 
   bool Capture() {
-    if (overlay) return false;
+    if (overlay || editing) return false;
     screen_x = GetSystemMetrics(SM_XVIRTUALSCREEN);
     screen_y = GetSystemMetrics(SM_YVIRTUALSCREEN);
     width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -225,25 +221,25 @@ struct ScreenshotPlugin::Impl {
       ReleaseBitmap(); return false;
     }
     selected = dragging = false;
-    tool = Tool::select;
     region = {};
     overlay = CreateWindowExW(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, kOverlayClass,
         L"DingDong Screenshot", WS_POPUP, screen_x, screen_y, width, height,
         owner, nullptr, cls.hInstance, this);
     if (!overlay) { ReleaseBitmap(); return false; }
     const int dpi = static_cast<int>(GetDpiForWindow(overlay));
-    button_width = MulDiv(72, dpi, 96);
-    toolbar_height = MulDiv(40, dpi, 96);
     font = CreateFontW(-MulDiv(13, dpi, 96), 0, 0, 0, FW_NORMAL, FALSE, FALSE,
         FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
     POINT cursor{}; GetCursorPos(&cursor);
     MONITORINFO monitor{sizeof(MONITORINFO)};
     GetMonitorInfoW(MonitorFromPoint(cursor, MONITOR_DEFAULTTOPRIMARY), &monitor);
-    hint_bounds = {monitor.rcMonitor.left - screen_x + 24,
-                   monitor.rcMonitor.top - screen_y + 20,
-                   monitor.rcMonitor.right - screen_x - 24,
-                   monitor.rcMonitor.top - screen_y + 52};
+    const int hint_width = std::min(MulDiv(520, dpi, 96),
+        static_cast<int>(monitor.rcMonitor.right - monitor.rcMonitor.left) - 48);
+    const int hint_left = monitor.rcMonitor.left - screen_x +
+        (monitor.rcMonitor.right - monitor.rcMonitor.left - hint_width) / 2;
+    hint_bounds = {hint_left, monitor.rcMonitor.top - screen_y + MulDiv(24, dpi, 96),
+                   hint_left + hint_width,
+                   monitor.rcMonitor.top - screen_y + MulDiv(64, dpi, 96)};
     ShowWindow(overlay, SW_SHOW);
     SetWindowPos(overlay, HWND_TOPMOST, screen_x, screen_y, width, height,
                  SWP_SHOWWINDOW);
@@ -251,15 +247,6 @@ struct ScreenshotPlugin::Impl {
     SetFocus(overlay);
     UpdateWindow(overlay);
     return true;
-  }
-
-  static LRESULT CALLBACK EditProc(HWND hwnd, UINT message, WPARAM w, LPARAM l) {
-    auto* self = reinterpret_cast<Impl*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
-    if (message == WM_KEYDOWN && (w == VK_RETURN || w == VK_ESCAPE)) {
-      self->FinishText(w == VK_RETURN);
-      return 0;
-    }
-    return CallWindowProcW(self->edit_proc, hwnd, message, w, l);
   }
 
   static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM w, LPARAM l) {
@@ -292,7 +279,6 @@ struct ScreenshotPlugin::Impl {
         self->Key(w); return 0;
       case WM_DISPLAYCHANGE:
       case WM_CLOSE: self->Close(); return 0;
-      case WM_DESTROY: self->edit = nullptr; return 0;
     }
     return DefWindowProcW(hwnd, message, w, l);
   }
@@ -308,18 +294,6 @@ struct ScreenshotPlugin::Impl {
             monitor.rcMonitor.right - screen_x, monitor.rcMonitor.bottom - screen_y};
   }
 
-  void PositionToolbar() {
-    const RECT monitor = SelectionMonitor();
-    const int toolbar_width = button_width * 8;
-    const int x = static_cast<int>(std::clamp<LONG>(region.right - toolbar_width, monitor.left,
-                              std::max(monitor.left, monitor.right - toolbar_width)));
-    int y = region.bottom + 10;
-    if (y + toolbar_height > monitor.bottom) y = region.top - toolbar_height - 10;
-    y = static_cast<int>(std::clamp<LONG>(y, monitor.top,
-        std::max(monitor.top, monitor.bottom - toolbar_height)));
-    toolbar = {x, y, x + toolbar_width, y + toolbar_height};
-  }
-
   void Text(HDC dc, const std::wstring& value, RECT bounds, COLORREF color,
             UINT flags = DT_LEFT | DT_VCENTER | DT_SINGLELINE) {
     SetBkMode(dc, TRANSPARENT);
@@ -327,32 +301,6 @@ struct ScreenshotPlugin::Impl {
     auto old = SelectObject(dc, font ? font : GetStockObject(DEFAULT_GUI_FONT));
     DrawTextW(dc, value.c_str(), static_cast<int>(value.size()), &bounds, flags);
     SelectObject(dc, old);
-  }
-
-  void DrawAnnotations(HDC dc) {
-    Gdiplus::Graphics graphics(dc);
-    graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    graphics.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
-    graphics.SetClip(Gdiplus::Rect(region.left, region.top, region.width(), region.height()));
-    auto draw = [&](const Annotation& item) {
-      Gdiplus::Pen pen(Gdiplus::Color(255, 244, 74, 80), 3.0f);
-      if (item.tool == Tool::rectangle) {
-        Rect r = screenshot::Region(item.a, item.b, width, height);
-        graphics.DrawRectangle(&pen, r.left, r.top, r.width(), r.height());
-      } else if (item.tool == Tool::arrow) {
-        Gdiplus::AdjustableArrowCap cap(5.0f, 6.0f, TRUE);
-        pen.SetCustomEndCap(&cap);
-        graphics.DrawLine(&pen, item.a.x, item.a.y, item.b.x, item.b.y);
-      } else if (item.tool == Tool::text) {
-        Gdiplus::Font text_font(dc, font);
-        Gdiplus::SolidBrush brush(Gdiplus::Color(255, 244, 74, 80));
-        graphics.DrawString(item.text.c_str(), static_cast<int>(item.text.size()),
-            &text_font, Gdiplus::PointF(static_cast<float>(item.a.x),
-                                      static_cast<float>(item.a.y)), &brush);
-      }
-    };
-    for (const auto& item : annotations) draw(item);
-    if (dragging && selected && tool != Tool::select) draw({tool, start, current, L""});
   }
 
   void Paint(HWND hwnd) {
@@ -375,7 +323,6 @@ struct ScreenshotPlugin::Impl {
     if (region.usable()) {
       BitBlt(dc, region.left, region.top, region.width(), region.height(),
              snapshot_dc, region.left, region.top, SRCCOPY);
-      DrawAnnotations(dc);
       HPEN border = CreatePen(PS_SOLID, 2, RGB(74, 158, 255));
       auto old_pen = SelectObject(dc, border);
       auto old_brush = SelectObject(dc, GetStockObject(NULL_BRUSH));
@@ -391,30 +338,15 @@ struct ScreenshotPlugin::Impl {
       FillRect(dc, &size_rect, reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
       Text(dc, dimensions, size_rect, RGB(255, 255, 255), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
-    if (selected) {
-      PositionToolbar();
-      HBRUSH background = CreateSolidBrush(RGB(32, 36, 43));
-      FillRect(dc, &toolbar, background); DeleteObject(background);
-      const std::wstring buttons[] = {
-        Label("rectangle", L"Rect"), Label("arrow", L"Arrow"),
-        Label("text", L"Text"), Label("undo", L"Undo"),
-        Label("reselect", L"Reselect"), Label("save", L"Save"),
-        Label("copy", L"Copy"), Label("cancel", L"Cancel")};
-      for (int i = 0; i < 8; ++i) {
-        RECT bounds{toolbar.left + i * button_width, toolbar.top,
-                    toolbar.left + (i + 1) * button_width, toolbar.bottom};
-        const bool active = (i == 0 && tool == Tool::rectangle) ||
-            (i == 1 && tool == Tool::arrow) || (i == 2 && tool == Tool::text);
-        if (active || i == 6) {
-          HBRUSH fill = CreateSolidBrush(active ? RGB(65, 81, 104) : RGB(36, 109, 221));
-          FillRect(dc, &bounds, fill); DeleteObject(fill);
-        }
-        Text(dc, buttons[i], bounds, RGB(245, 247, 250), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-      }
-    }
-    const auto hint = error.empty() ? Label("hint", L"Drag to select | Esc cancel | Ctrl+C copy | Ctrl+S save") : error;
+    const auto hint = error.empty() ? Label("hint", L"Drag to select an area. Release to edit. Esc to cancel.") : error;
     RECT hint_rect = hint_bounds;
-    FillRect(dc, &hint_rect, reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+    HBRUSH hint_brush = CreateSolidBrush(RGB(31, 42, 49));
+    auto previous_hint_brush = SelectObject(dc, hint_brush);
+    auto previous_hint_pen = SelectObject(dc, GetStockObject(NULL_PEN));
+    RoundRect(dc, hint_rect.left, hint_rect.top, hint_rect.right, hint_rect.bottom, 16, 16);
+    SelectObject(dc, previous_hint_pen);
+    SelectObject(dc, previous_hint_brush);
+    DeleteObject(hint_brush);
     Text(dc, hint, hint_rect, error.empty() ? RGB(245, 247, 250) : RGB(255, 166, 166),
          DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     BitBlt(window_dc, 0, 0, width, height, dc, 0, 0, SRCCOPY);
@@ -422,171 +354,84 @@ struct ScreenshotPlugin::Impl {
     EndPaint(hwnd, &paint);
   }
 
-  void FinishText(bool commit) {
-    if (!edit) return;
-    if (commit) {
-      int length = GetWindowTextLengthW(edit);
-      std::wstring value(static_cast<size_t>(length) + 1, L'\0');
-      GetWindowTextW(edit, value.data(), length + 1);
-      value.resize(length);
-      if (!value.empty()) annotations.push_back({Tool::text, text_position, text_position, value});
-    }
-    DestroyWindow(edit); edit = nullptr;
-    SetFocus(overlay); InvalidateRect(overlay, nullptr, FALSE);
-  }
-
   void PointerDown(Point p) {
-    if (edit) FinishText(true);
-    if (selected) {
-      PositionToolbar();
-      POINT win_point{p.x, p.y};
-      if (PtInRect(&toolbar, win_point)) {
-        const int index = (p.x - toolbar.left) / button_width;
-        if (index == 0) tool = Tool::rectangle;
-        if (index == 1) tool = Tool::arrow;
-        if (index == 2) tool = Tool::text;
-        if (index == 3 && !annotations.empty()) annotations.pop_back();
-        if (index == 4) { Reselect(); return; }
-        if (index == 5) { Export(true); return; }
-        if (index == 6) { Export(false); return; }
-        if (index == 7) { Close(); return; }
-        InvalidateRect(overlay, nullptr, FALSE); return;
-      }
-      if (p.x < region.left || p.x >= region.right || p.y < region.top || p.y >= region.bottom) return;
-      if (tool == Tool::text) {
-        text_position = p;
-        const int available = region.right - p.x;
-        edit = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"", WS_CHILD | WS_VISIBLE |
-              WS_TABSTOP | ES_AUTOHSCROLL, p.x, p.y, std::min(360, std::max(40, available)),
-              32, overlay, nullptr, GetModuleHandleW(nullptr), nullptr);
-        if (edit) {
-          SendMessageW(edit, WM_SETFONT, reinterpret_cast<WPARAM>(font), TRUE);
-          SendMessageW(edit, EM_SETLIMITTEXT, 1000, 0);
-          SetWindowLongPtrW(edit, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-          edit_proc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(edit, GWLP_WNDPROC,
-              reinterpret_cast<LONG_PTR>(EditProc)));
-          SetFocus(edit);
-        }
-        return;
-      }
-      if (tool == Tool::select) return;
-    }
     dragging = true; start = current = p;
     SetCapture(overlay);
   }
-
   void PointerUp() {
     if (!dragging) return;
     dragging = false;
     ReleaseCapture();
-    if (!selected) {
-      selected = region.usable();
-    } else if (start.x != current.x || start.y != current.y) {
-      annotations.push_back({tool, start, current, L""});
-    }
-    InvalidateRect(overlay, nullptr, FALSE);
+    selected = region.usable();
+    if (selected) OpenEditor();
   }
-
   void Reselect() {
-    FinishText(false);
-    selected = dragging = false; region = {}; tool = Tool::select;
-    annotations.clear(); error.clear();
+    selected = dragging = false;
+    region = {};
+    error.clear();
     InvalidateRect(overlay, nullptr, FALSE);
   }
-
   void Key(WPARAM value) {
-    if (value == VK_ESCAPE) { Close(); return; }
-    if (!selected) return;
-    const bool control = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-    if (value == VK_RETURN || (control && value == 'C')) Export(false);
-    else if (control && value == 'S') Export(true);
-    else if (control && value == 'Z' && !annotations.empty()) {
-      annotations.pop_back(); InvalidateRect(overlay, nullptr, FALSE);
-    }
+    if (value == VK_ESCAPE) Close();
+    else if (value == VK_RETURN && selected) OpenEditor();
   }
 
-  bool Copy(HDC dc, HBITMAP output) {
-    BITMAPINFO info{};
-    info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    info.bmiHeader.biWidth = region.width();
-    info.bmiHeader.biHeight = -region.height();
-    info.bmiHeader.biPlanes = 1;
-    info.bmiHeader.biBitCount = 32;
-    info.bmiHeader.biCompression = BI_RGB;
-    const size_t bytes = static_cast<size_t>(region.width()) * region.height() * 4;
-    HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + bytes);
-    if (!memory) return false;
-    auto* data = static_cast<BYTE*>(GlobalLock(memory));
-    if (!data) { GlobalFree(memory); return false; }
-    memcpy(data, &info.bmiHeader, sizeof(BITMAPINFOHEADER));
-    const bool read = GetDIBits(dc, output, 0, region.height(),
-          data + sizeof(BITMAPINFOHEADER), &info, DIB_RGB_COLORS) == region.height();
-    GlobalUnlock(memory);
-    if (!read || !OpenClipboard(overlay)) { GlobalFree(memory); return false; }
-    bool written = false;
-    if (EmptyClipboard()) written = SetClipboardData(CF_DIB, memory) != nullptr;
-    CloseClipboard();
-    if (!written) GlobalFree(memory);
-    return written;
-  }
-
-  bool Save(HBITMAP output, bool* cancelled) {
-    SYSTEMTIME now{}; GetLocalTime(&now);
-    wchar_t filename[MAX_PATH]{};
-    swprintf_s(filename, L"DingDong-%04u%02u%02u-%02u%02u%02u.png",
-        now.wYear, now.wMonth, now.wDay, now.wHour, now.wMinute, now.wSecond);
-    OPENFILENAMEW dialog{};
-    dialog.lStructSize = sizeof(dialog);
-    dialog.hwndOwner = overlay;
-    dialog.lpstrFile = filename; dialog.nMaxFile = MAX_PATH;
-    dialog.lpstrFilter = L"PNG image (*.png)\0*.png\0\0";
-    dialog.lpstrDefExt = L"png";
-    dialog.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-    // A topmost capture must not hide the system save dialog.
-    SetWindowPos(overlay, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    const bool chosen = GetSaveFileNameW(&dialog) != FALSE;
-    SetWindowPos(overlay, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    if (!chosen) { *cancelled = CommDlgExtendedError() == 0; return false; }
-    UINT count = 0, size = 0;
-    if (Gdiplus::GetImageEncodersSize(&count, &size) != Gdiplus::Ok || !size) return false;
-    std::vector<BYTE> codecs(size);
-    auto* encoders = reinterpret_cast<Gdiplus::ImageCodecInfo*>(codecs.data());
-    if (Gdiplus::GetImageEncoders(count, size, encoders) != Gdiplus::Ok) return false;
-    for (UINT i = 0; i < count; ++i) {
-      if (wcscmp(encoders[i].MimeType, L"image/png") == 0) {
-        Gdiplus::Bitmap image(output, nullptr);
-        return image.Save(filename, &encoders[i].Clsid, nullptr) == Gdiplus::Ok;
-      }
-    }
-    return false;
-  }
-
-  void Export(bool save) {
-    if (!selected || !region.usable()) return;
-    FinishText(true);
+  // Pass selected physical pixels in memory; Flutter owns all annotations.
+  void OpenEditor() {
     HDC dc = CreateCompatibleDC(snapshot_dc);
     HBITMAP output = CreateCompatibleBitmap(snapshot_dc, region.width(), region.height());
-    if (!dc || !output) {
-      if (dc) DeleteDC(dc);
-      if (output) DeleteObject(output);
-      error = Label("exportError", L"Could not export. Retry or press Esc to cancel.");
-      InvalidateRect(overlay, nullptr, FALSE); return;
+    std::vector<uint8_t> png;
+    if (dc && output) {
+      auto old = SelectObject(dc, output);
+      BitBlt(dc, 0, 0, region.width(), region.height(), snapshot_dc,
+             region.left, region.top, SRCCOPY);
+      SelectObject(dc, old);
+      UINT count = 0, size = 0;
+      if (Gdiplus::GetImageEncodersSize(&count, &size) == Gdiplus::Ok && size) {
+        std::vector<BYTE> codecs(size);
+        auto* encoders = reinterpret_cast<Gdiplus::ImageCodecInfo*>(codecs.data());
+        if (Gdiplus::GetImageEncoders(count, size, encoders) == Gdiplus::Ok) {
+          for (UINT i = 0; i < count; ++i) {
+            if (wcscmp(encoders[i].MimeType, L"image/png") != 0) continue;
+            IStream* stream = nullptr;
+            if (SUCCEEDED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
+              Gdiplus::Bitmap image(output, nullptr);
+              if (image.Save(stream, &encoders[i].Clsid, nullptr) == Gdiplus::Ok) {
+                STATSTG stat{};
+                HGLOBAL memory = nullptr;
+                if (SUCCEEDED(stream->Stat(&stat, STATFLAG_NONAME)) &&
+                    SUCCEEDED(GetHGlobalFromStream(stream, &memory)) &&
+                    stat.cbSize.HighPart == 0) {
+                  auto* data = static_cast<uint8_t*>(GlobalLock(memory));
+                  if (data) {
+                    png.assign(data, data + stat.cbSize.LowPart);
+                    GlobalUnlock(memory);
+                  }
+                }
+              }
+              stream->Release();
+            }
+            break;
+          }
+        }
+      }
     }
-    auto old = SelectObject(dc, output);
-    BitBlt(dc, 0, 0, region.width(), region.height(), snapshot_dc, region.left, region.top, SRCCOPY);
-    SetViewportOrgEx(dc, -region.left, -region.top, nullptr);
-    DrawAnnotations(dc);
-    SetViewportOrgEx(dc, 0, 0, nullptr);
-    // GetDIBits requires the bitmap to be deselected from every DC.
-    SelectObject(dc, old);
-    bool cancelled = false;
-    const bool success = save ? Save(output, &cancelled) : Copy(dc, output);
-    DeleteObject(output); DeleteDC(dc);
-    if (success) Close();
-    else if (!cancelled) {
-      error = Label("exportError", L"Could not export. Retry or press Esc to cancel.");
+    if (output) DeleteObject(output);
+    if (dc) DeleteDC(dc);
+    if (png.empty()) {
+      error = Label("exportError", L"Could not open editor. Retry or press Esc.");
       InvalidateRect(overlay, nullptr, FALSE);
+      return;
     }
+    Close();
+    editing = true;
+    channel->InvokeMethod("edit", std::make_unique<Value>(std::move(png)),
+        std::make_unique<flutter::MethodResultFunctions<Value>>(
+            nullptr,
+            [this](const std::string&, const std::string&, const Value*) {
+              editing = false;
+            },
+            [this]() { editing = false; }));
   }
 };
 
@@ -595,7 +440,7 @@ ScreenshotPlugin::ScreenshotPlugin(HWND owner, flutter::BinaryMessenger* messeng
 ScreenshotPlugin::~ScreenshotPlugin() = default;
 bool ScreenshotPlugin::HandleHotKey(WPARAM id) {
   if (!impl_->registered || id != impl_->hotkey_id) return false;
-  if (!impl_->overlay && !impl_->Capture()) {
+  if (!impl_->overlay && !impl_->editing && !impl_->Capture()) {
     MessageBoxW(nullptr, impl_->Label("captureError", L"Could not capture the screen.").c_str(),
         L"DingDong", MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
   }

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'dart:ffi' as ffi;
 import 'dart:io';
 
@@ -11,6 +10,7 @@ import 'package:dingdong/app/app_locale.dart';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/app/mcp_command_path.dart';
+import 'package:dingdong/app/plugin_licenses.dart';
 import 'package:dingdong/app/token_usage_background_service.dart';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
@@ -54,6 +54,9 @@ import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/screenshot/data/screenshot_plugin_service.dart';
+import 'package:dingdong/features/screenshot/ui/screenshot_editor_app.dart';
+import 'package:dingdong/features/selection/domain/selection_plugin_gateway.dart';
+import 'package:dingdong/features/selection/ui/selection_overlay_app.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
 import 'package:dingdong/features/settings/data/io_system_data_location_gateway.dart';
 import 'package:dingdong/features/settings/data/io_system_usage_source.dart';
@@ -94,6 +97,7 @@ import 'package:dingdong/platform/preferences_tray_unread_store.dart';
 import 'package:dingdong/platform/shared_preferences_backend.dart';
 import 'package:dingdong/platform/url_launcher_clipboard_content_launcher.dart';
 import 'package:dingdong/platform/url_launcher_external_link_gateway.dart';
+import 'package:dingdong/platform/windows_selection_plugin_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -110,11 +114,25 @@ part 'main_system_maintenance.dart';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerPluginLicenses();
   final WindowController windowController =
       await WindowController.fromCurrentEngine();
   final Map<String, Object?> windowArguments = decodeDesktopWindowArguments(
     windowController.arguments,
   );
+  if (windowArguments['kind'] == selectionOverlayWindowKind) {
+    runApp(
+      SelectionOverlayApp(
+        windowController: windowController,
+        parentWindowId: windowArguments['parentWindowId']! as String,
+      ),
+    );
+    return;
+  }
+  if (windowArguments['kind'] == screenshotEditorWindowKind) {
+    await runScreenshotEditorWindow(windowController, windowArguments);
+    return;
+  }
   if (windowArguments['kind'] == deviceLinkManagerWindowKind) {
     await _runDeviceLinkManagerWindow(windowController, windowArguments);
     return;
@@ -421,8 +439,17 @@ Future<void> main(List<String> arguments) async {
   await dependencies.start();
   shellController.open(dependencies.initialSettings.defaultWorkspace.index);
   final NativeQuickPasteGateway quickPasteGateway = NativeQuickPasteGateway();
-  const NativeSelectionPluginGateway selectionPluginGateway =
-      NativeSelectionPluginGateway();
+  final windowsSelectionGateway = Platform.isWindows
+      ? WindowsSelectionPluginGateway(
+          parentWindowId: windowController.windowId,
+          languageCode: () => currentLocalizations().localeName,
+          themeMode: () => settingsViewModelReady
+              ? settingsViewModel.settings.themeMode.name
+              : 'system',
+        )
+      : null;
+  final SelectionPluginGateway selectionPluginGateway =
+      windowsSelectionGateway ?? const NativeSelectionPluginGateway();
   final NativeLaunchAtStartup launchAtStartup = NativeLaunchAtStartup();
   final NativeNotificationGateway notificationGateway =
       NativeNotificationGateway();
@@ -443,7 +470,10 @@ Future<void> main(List<String> arguments) async {
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: applicationUpdater,
     quickPastePermissionGateway: quickPasteGateway,
-    selectionPluginGateway: Platform.isMacOS ? selectionPluginGateway : null,
+    selectionPluginGateway: (Platform.isMacOS || Platform.isWindows)
+        ? selectionPluginGateway
+        : null,
+    restoreSelectionPluginOnLoad: !Platform.isWindows,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(
       dependencies.paths.applicationSupportDirectory,
@@ -545,6 +575,9 @@ Future<void> main(List<String> arguments) async {
       return handleDeviceLinkManagerHostCall(deviceLinkController, call);
     }
     switch (call.method) {
+      case 'selection_ready':
+      case 'selection_action':
+        return windowsSelectionGateway?.handleWindowCall(call);
       case 'settings_launch_is_enabled':
         return await launchAtStartup.isEnabled();
       case 'settings_launch_set':
@@ -759,6 +792,12 @@ Future<void> main(List<String> arguments) async {
   }
 
   await windowController.setWindowMethodHandler(handleChildWindowCall);
+  if (windowsSelectionGateway != null) {
+    // The overlay handshake must have a host before restored monitoring starts.
+    await settingsViewModel.setSelectionPluginConfiguration(
+      settingsViewModel.settings.selectionPlugin,
+    );
+  }
   final tokenUsageBackgroundService = TokenUsageBackgroundService(
     LocalTokenUsageRepository(
       databasePath: appDataPaths.tokenUsageDatabaseFile.path,

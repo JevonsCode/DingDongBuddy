@@ -21,6 +21,7 @@ dependencies:
   intl: ^0.20.2
   pasteboard: ^0.5.0
   path: ^1.9.1
+  pro_image_editor: 14.16.0
   qr_flutter: ^4.1.0
   screen_retriever: ^0.2.2
   shared_preferences: ^2.5.5
@@ -45,6 +46,7 @@ flutter:
   generate: true
   uses-material-design: true
   assets:
+    - third_party/selection-hook/LICENSE
     - Assets/
     - Assets/DingDongIP/
     - Assets/Sounds/

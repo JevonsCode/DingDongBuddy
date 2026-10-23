@@ -5,7 +5,7 @@
 #include <flutter/binary_messenger.h>
 #include <memory>
 
-/// Windows-only capture editor. A single instance belongs to the primary engine.
+/// Windows-only region capture and in-memory PNG handoff. A single instance belongs to the primary engine.
 class ScreenshotPlugin {
  public:
   ScreenshotPlugin(HWND owner, flutter::BinaryMessenger* messenger);

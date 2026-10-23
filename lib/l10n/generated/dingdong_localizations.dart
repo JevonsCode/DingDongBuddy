@@ -103,6 +103,60 @@ abstract class DingDongLocalizations {
     Locale('es'),
   ];
 
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source components'**
+  String get pluginOpenSource;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'View source'**
+  String get pluginViewSource;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Check upstream'**
+  String get pluginCheckUpstream;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses'**
+  String get pluginLicenses;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.'**
+  String get pluginScreenshotSourceNote;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.'**
+  String get pluginSelectionSourceNote;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Upstream changes are available. They require adaptation and testing before a DingDong update; this does not install them.'**
+  String get pluginUpstreamChanged;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'No newer upstream version or change was found.'**
+  String get pluginUpstreamCurrent;
+
+  /// Embedded plugin attribution and upstream update status.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check the source. Please try again later.'**
+  String get pluginUpstreamUnavailable;
+
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
@@ -172,7 +226,7 @@ abstract class DingDongLocalizations {
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Drag to select. Use rectangle, arrow or text to annotate. Ctrl+C or Enter copies; Ctrl+S saves; Ctrl+Z undoes; Esc cancels. Right-click selects again. Images stay in memory until you copy or save.'**
+  /// **'Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.'**
   String get screenshotHelp;
 
   /// Screenshot extension or plugin platform availability.
@@ -238,13 +292,13 @@ abstract class DingDongLocalizations {
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Drag to select · Esc cancel · Ctrl+C copy · Ctrl+S save · Ctrl+Z undo'**
+  /// **'Drag to select · Release to edit · Esc cancel'**
   String get screenshotNativeHint;
 
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'System selection tools currently support macOS only. Windows has no native selection listener yet; changing model settings will not enable selection on Windows.'**
+  /// **'System selection supports Windows and macOS. This platform is not yet supported.'**
   String get selectionWindowsDiagnosis;
 
   /// Reminder presentation and AI+ results.
@@ -6138,7 +6192,7 @@ abstract class DingDongLocalizations {
   /// Token is present in native secure storage.
   ///
   /// In en, this message translates to:
-  /// **'Saved securely in Keychain'**
+  /// **'Saved in system secure storage'**
   String get selectionTokenSaved;
 
   /// No token is present in native secure storage.

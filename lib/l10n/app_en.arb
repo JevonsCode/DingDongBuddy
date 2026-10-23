@@ -1,4 +1,22 @@
 {
+  "pluginOpenSource": "Open-source components",
+  "@pluginOpenSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginViewSource": "View source",
+  "@pluginViewSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginCheckUpstream": "Check upstream",
+  "@pluginCheckUpstream": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginLicenses": "Licenses",
+  "@pluginLicenses": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginScreenshotSourceNote": "Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.",
+  "@pluginScreenshotSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginSelectionSourceNote": "Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.",
+  "@pluginSelectionSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamChanged": "Upstream changes are available. They require adaptation and testing before a DingDong update; this does not install them.",
+  "@pluginUpstreamChanged": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamCurrent": "No newer upstream version or change was found.",
+  "@pluginUpstreamCurrent": {"description": "Embedded plugin attribution and upstream update status."},
+  "pluginUpstreamUnavailable": "Could not check the source. Please try again later.",
+  "@pluginUpstreamUnavailable": {"description": "Embedded plugin attribution and upstream update status."},
   "screenshotPluginTitle": "Screenshot",
   "@screenshotPluginTitle": {
     "description": "Screenshot extension or plugin platform availability."
@@ -43,7 +61,7 @@
   "@screenshotCapturing": {
     "description": "Screenshot extension or plugin platform availability."
   },
-  "screenshotHelp": "Drag to select. Use rectangle, arrow or text to annotate. Ctrl+C or Enter copies; Ctrl+S saves; Ctrl+Z undoes; Esc cancels. Right-click selects again. Images stay in memory until you copy or save.",
+  "screenshotHelp": "Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.",
   "@screenshotHelp": {
     "description": "Screenshot extension or plugin platform availability."
   },
@@ -87,11 +105,11 @@
   "@screenshotReselect": {
     "description": "Screenshot extension or plugin platform availability."
   },
-  "screenshotNativeHint": "Drag to select · Esc cancel · Ctrl+C copy · Ctrl+S save · Ctrl+Z undo",
+  "screenshotNativeHint": "Drag to select · Release to edit · Esc cancel",
   "@screenshotNativeHint": {
     "description": "Screenshot extension or plugin platform availability."
   },
-  "selectionWindowsDiagnosis": "System selection tools currently support macOS only. Windows has no native selection listener yet; changing model settings will not enable selection on Windows.",
+  "selectionWindowsDiagnosis": "System selection supports Windows and macOS. This platform is not yet supported.",
   "@selectionWindowsDiagnosis": {
     "description": "Screenshot extension or plugin platform availability."
   },
@@ -4495,7 +4513,7 @@
   "@selectionTokenPlaceholder": {
     "description": "Placeholder for the secret token field."
   },
-  "selectionTokenSaved": "Saved securely in Keychain",
+  "selectionTokenSaved": "Saved in system secure storage",
   "@selectionTokenSaved": {
     "description": "Token is present in native secure storage."
   },

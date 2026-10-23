@@ -73,7 +73,9 @@ Future<void> _runSettingsWindow(
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: hostBridge,
     quickPastePermissionGateway: hostBridge,
-    selectionPluginGateway: Platform.isMacOS ? hostBridge : null,
+    selectionPluginGateway: (Platform.isMacOS || Platform.isWindows)
+        ? hostBridge
+        : null,
     restoreSelectionPluginOnLoad: false,
     onSettingsSaved: hostBridge.notifyChanged,
     mcpCommandPath: _mcpCommandPath(),

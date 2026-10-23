@@ -108,7 +108,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.byKey(const Key('selection-platform-diagnosis')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.byKey(const Key('settings-selection-enabled')), findsNothing);
     },

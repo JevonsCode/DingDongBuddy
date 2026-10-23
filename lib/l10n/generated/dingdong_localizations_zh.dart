@@ -9,6 +9,34 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   DingDongLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get pluginOpenSource => '开源组件';
+
+  @override
+  String get pluginViewSource => '查看源码';
+
+  @override
+  String get pluginCheckUpstream => '检查上游更新';
+
+  @override
+  String get pluginLicenses => '开源许可';
+
+  @override
+  String get pluginScreenshotSourceNote => '通过固定版本依赖复用开源编辑引擎；钉东提供截图、快捷键和界面适配。';
+
+  @override
+  String get pluginSelectionSourceNote =>
+      '选择性复用此项目的 Windows 取词代码；浮条、配置和模型调用由钉东实现。';
+
+  @override
+  String get pluginUpstreamChanged => '上游已有更新，需适配测试后随钉东更新提供；此次检查不会安装更新。';
+
+  @override
+  String get pluginUpstreamCurrent => '未发现更新的上游版本或代码变更。';
+
+  @override
+  String get pluginUpstreamUnavailable => '暂时无法检查来源，请稍后重试。';
+
+  @override
   String get screenshotPluginTitle => '截图';
 
   @override
@@ -43,7 +71,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get screenshotHelp =>
-      '拖动框选后可添加矩形、箭头或文字。Ctrl+C 或 Enter 复制，Ctrl+S 保存，Ctrl+Z 撤销，Esc 取消；右键重新框选。主动复制或保存前，图片仅保存在内存中。';
+      '拖动框选后进入编辑器，可绘制箭头、形状、文字或马赛克。使用工具栏复制、保存、撤销或取消；图片在主动复制或保存前只在内存中处理。';
 
   @override
   String get screenshotConflict => '这个快捷键已被占用，请换一个组合。';
@@ -76,12 +104,10 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get screenshotReselect => '重选';
 
   @override
-  String get screenshotNativeHint =>
-      '拖动框选 · Esc 取消 · Ctrl+C 复制 · Ctrl+S 保存 · Ctrl+Z 撤销';
+  String get screenshotNativeHint => '拖动框选 · 松开进入编辑 · Esc 取消';
 
   @override
-  String get selectionWindowsDiagnosis =>
-      '系统划词目前仅支持 macOS。Windows 尚未实现原生选区监听，修改模型配置也无法启用 Windows 划词。';
+  String get selectionWindowsDiagnosis => '系统划词目前支持 Windows 和 macOS；此平台暂未支持。';
 
   @override
   String get amber => '琥珀';
@@ -3358,7 +3384,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get selectionTokenPlaceholder => '粘贴你自己的 Token';
 
   @override
-  String get selectionTokenSaved => '已安全保存到钥匙串';
+  String get selectionTokenSaved => '已保存到系统安全存储';
 
   @override
   String get selectionTokenNotSaved => '未配置';
@@ -3386,8 +3412,8 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       'statusUnavailable': '无法读取插件状态，请再次刷新。',
       'permissionSettingsUnavailable': '请打开系统设置中的辅助功能设置，允许 DingDong。',
       'tokenRequired': '请输入你自己的 API Token。',
-      'tokenSaveFailed': 'Token 保存失败，请解锁钥匙串后重试。',
-      'tokenRemoveFailed': 'Token 移除失败，请解锁钥匙串后重试。',
+      'tokenSaveFailed': 'Token 保存失败，请检查系统安全存储后重试。',
+      'tokenRemoveFailed': 'Token 移除失败，请检查系统安全存储后重试。',
       'other': '插件更新失败，请刷新状态后重试。',
     });
     return '$_temp0';

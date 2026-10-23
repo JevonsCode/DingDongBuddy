@@ -78,7 +78,9 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     context,
                     plugin: _Plugin.selection,
                     title: l.systemSelectionTools,
-                    description: defaultTargetPlatform == TargetPlatform.macOS
+                    description:
+                        (defaultTargetPlatform == TargetPlatform.macOS ||
+                            defaultTargetPlatform == TargetPlatform.windows)
                         ? l.systemSelectionToolsDescription
                         : l.selectionWindowsDiagnosis,
                     icon: Icons.text_fields_rounded,
@@ -98,7 +100,8 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     else
                       Text(l.pluginUnavailable),
                   if (_selected == _Plugin.selection)
-                    if (defaultTargetPlatform != TargetPlatform.macOS)
+                    if (defaultTargetPlatform != TargetPlatform.macOS &&
+                        defaultTargetPlatform != TargetPlatform.windows)
                       Text(
                         l.selectionWindowsDiagnosis,
                         key: const Key('selection-platform-diagnosis'),

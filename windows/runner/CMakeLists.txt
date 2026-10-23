@@ -22,6 +22,8 @@ add_executable(${BINARY_NAME} WIN32
   "application_updater.cpp"
   "flutter_window.cpp"
   "screenshot_plugin.cpp"
+  "windows_selection_monitor.cpp"
+  "../../third_party/selection-hook/engine.cc"
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"
@@ -50,6 +52,7 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_link_libraries(${BINARY_NAME} PRIVATE "winmm.lib")
 target_link_libraries(${BINARY_NAME} PRIVATE "gdiplus.lib" "comdlg32.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "ole32.lib" "oleaut32.lib" "oleacc.lib" "uiautomationcore.lib")
 target_include_directories(${BINARY_NAME} PRIVATE
   "${CMAKE_SOURCE_DIR}"
   "${dingdong_velopack_SOURCE_DIR}/include"
