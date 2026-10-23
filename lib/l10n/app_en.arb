@@ -5525,5 +5525,73 @@
   "aiTestingConnection": "Connecting…",
   "@aiTestingConnection": {
     "description": "AI model configuration and operation status."
+  },
+  "voiceCatalogTitle": "Community voices",
+  "voiceCatalogHelp": "Subscribe to add a reviewed, ≤3-second voice to this device’s sound picker. Audio is verified on subscribe. Your current sound never changes automatically. Unsubscribing keeps files used by existing reminders.",
+  "voiceCatalogSearch": "Search title, author or paste an Issue link",
+  "voiceCatalogEmpty": "No matching voices on loaded pages yet. Submit an original or licensed sound on the website.",
+  "voiceCatalogLoadFailed": "Could not load GitHub voices. Check your connection or try later if rate limited.",
+  "voiceCatalogSubscribeFailed": "Could not subscribe. The voice may have changed, lack owner approval, exceed 3 seconds, or be unavailable. Refresh and retry.",
+  "voiceCatalogFull": "Your sound library is full (64 sounds).",
+  "voiceCatalogLinkFailed": "Could not open the link.",
+  "voiceCatalogSubscribe": "Subscribe",
+  "voiceCatalogUnsubscribe": "Unsubscribe",
+  "voiceCatalogDownloading": "Verifying…",
+  "voiceCatalogLoadMore": "Load more",
+  "voiceCatalogPageLimit": "Page limit reached. Browse all voices on the website.",
+  "voiceCatalogWebsite": "Website & submissions",
+  "voiceCatalogRefresh": "Refresh",
+  "voiceCatalogFindIssue": "Find Issue link",
+  "@voiceCatalogTitle": {
+    "description": "Community voice catalog: Title."
+  },
+  "@voiceCatalogHelp": {
+    "description": "Community voice catalog: Help."
+  },
+  "@voiceCatalogSearch": {
+    "description": "Community voice catalog: Search."
+  },
+  "@voiceCatalogEmpty": {
+    "description": "Community voice catalog: Empty."
+  },
+  "@voiceCatalogLoadFailed": {
+    "description": "Community voice catalog: LoadFailed."
+  },
+  "@voiceCatalogSubscribeFailed": {
+    "description": "Community voice catalog: SubscribeFailed."
+  },
+  "@voiceCatalogFull": {
+    "description": "Community voice catalog: Full."
+  },
+  "@voiceCatalogLinkFailed": {
+    "description": "Community voice catalog: LinkFailed."
+  },
+  "@voiceCatalogSubscribe": {
+    "description": "Community voice catalog: Subscribe."
+  },
+  "@voiceCatalogUnsubscribe": {
+    "description": "Community voice catalog: Unsubscribe."
+  },
+  "@voiceCatalogDownloading": {
+    "description": "Community voice catalog: Downloading."
+  },
+  "@voiceCatalogLoadMore": {
+    "description": "Community voice catalog: LoadMore."
+  },
+  "@voiceCatalogPageLimit": {
+    "description": "Community voice catalog: PageLimit."
+  },
+  "@voiceCatalogWebsite": {
+    "description": "Community voice catalog: Website."
+  },
+  "@voiceCatalogRefresh": {
+    "description": "Community voice catalog: Refresh."
+  },
+  "@voiceCatalogFindIssue": {
+    "description": "Community voice catalog: FindIssue."
+  },
+  "voiceCatalogSubscribed": "Subscribed on this device",
+  "@voiceCatalogSubscribed": {
+    "description": "Heading for pinned local community voice subscriptions, including delisted voices."
   }
 }

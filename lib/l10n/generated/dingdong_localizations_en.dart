@@ -4312,4 +4312,61 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiTestingConnection => 'Connecting…';
+
+  @override
+  String get voiceCatalogTitle => 'Community voices';
+
+  @override
+  String get voiceCatalogHelp =>
+      'Subscribe to add a reviewed, ≤3-second voice to this device’s sound picker. Audio is verified on subscribe. Your current sound never changes automatically. Unsubscribing keeps files used by existing reminders.';
+
+  @override
+  String get voiceCatalogSearch =>
+      'Search title, author or paste an Issue link';
+
+  @override
+  String get voiceCatalogEmpty =>
+      'No matching voices on loaded pages yet. Submit an original or licensed sound on the website.';
+
+  @override
+  String get voiceCatalogLoadFailed =>
+      'Could not load GitHub voices. Check your connection or try later if rate limited.';
+
+  @override
+  String get voiceCatalogSubscribeFailed =>
+      'Could not subscribe. The voice may have changed, lack owner approval, exceed 3 seconds, or be unavailable. Refresh and retry.';
+
+  @override
+  String get voiceCatalogFull => 'Your sound library is full (64 sounds).';
+
+  @override
+  String get voiceCatalogLinkFailed => 'Could not open the link.';
+
+  @override
+  String get voiceCatalogSubscribe => 'Subscribe';
+
+  @override
+  String get voiceCatalogUnsubscribe => 'Unsubscribe';
+
+  @override
+  String get voiceCatalogDownloading => 'Verifying…';
+
+  @override
+  String get voiceCatalogLoadMore => 'Load more';
+
+  @override
+  String get voiceCatalogPageLimit =>
+      'Page limit reached. Browse all voices on the website.';
+
+  @override
+  String get voiceCatalogWebsite => 'Website & submissions';
+
+  @override
+  String get voiceCatalogRefresh => 'Refresh';
+
+  @override
+  String get voiceCatalogFindIssue => 'Find Issue link';
+
+  @override
+  String get voiceCatalogSubscribed => 'Subscribed on this device';
 }

@@ -7531,6 +7531,108 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Connecting…'**
   String get aiTestingConnection;
+
+  /// Community voice catalog: Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Community voices'**
+  String get voiceCatalogTitle;
+
+  /// Community voice catalog: Help.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to add a reviewed, ≤3-second voice to this device’s sound picker. Audio is verified on subscribe. Your current sound never changes automatically. Unsubscribing keeps files used by existing reminders.'**
+  String get voiceCatalogHelp;
+
+  /// Community voice catalog: Search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search title, author or paste an Issue link'**
+  String get voiceCatalogSearch;
+
+  /// Community voice catalog: Empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching voices on loaded pages yet. Submit an original or licensed sound on the website.'**
+  String get voiceCatalogEmpty;
+
+  /// Community voice catalog: LoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load GitHub voices. Check your connection or try later if rate limited.'**
+  String get voiceCatalogLoadFailed;
+
+  /// Community voice catalog: SubscribeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not subscribe. The voice may have changed, lack owner approval, exceed 3 seconds, or be unavailable. Refresh and retry.'**
+  String get voiceCatalogSubscribeFailed;
+
+  /// Community voice catalog: Full.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound library is full (64 sounds).'**
+  String get voiceCatalogFull;
+
+  /// Community voice catalog: LinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link.'**
+  String get voiceCatalogLinkFailed;
+
+  /// Community voice catalog: Subscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get voiceCatalogSubscribe;
+
+  /// Community voice catalog: Unsubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe'**
+  String get voiceCatalogUnsubscribe;
+
+  /// Community voice catalog: Downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying…'**
+  String get voiceCatalogDownloading;
+
+  /// Community voice catalog: LoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get voiceCatalogLoadMore;
+
+  /// Community voice catalog: PageLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Page limit reached. Browse all voices on the website.'**
+  String get voiceCatalogPageLimit;
+
+  /// Community voice catalog: Website.
+  ///
+  /// In en, this message translates to:
+  /// **'Website & submissions'**
+  String get voiceCatalogWebsite;
+
+  /// Community voice catalog: Refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get voiceCatalogRefresh;
+
+  /// Community voice catalog: FindIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Issue link'**
+  String get voiceCatalogFindIssue;
+
+  /// Heading for pinned local community voice subscriptions, including delisted voices.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed on this device'**
+  String get voiceCatalogSubscribed;
 }
 
 class _DingDongLocalizationsDelegate
