@@ -84,15 +84,26 @@ void RoundedPath(Gdiplus::GraphicsPath* path, const Gdiplus::RectF& rect,
 
 void DrawCount(Gdiplus::Graphics* graphics, const std::wstring& count,
               const Gdiplus::RectF& bounds, const Gdiplus::Color& color) {
-  Gdiplus::Font font(L"Segoe UI", 12, Gdiplus::FontStyleBold,
-                      Gdiplus::UnitPixel);
-  Gdiplus::StringFormat format;
-  format.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
-  format.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-  format.SetAlignment(Gdiplus::StringAlignmentCenter);
+  if (count.empty()) return;
+  Gdiplus::FontFamily family(L"Segoe UI");
+  Gdiplus::GraphicsPath glyphs;
+  if (glyphs.AddString(count.c_str(), static_cast<INT>(count.size()), &family,
+                        Gdiplus::FontStyleBold, 12, Gdiplus::PointF(0, 0),
+                        Gdiplus::StringFormat::GenericTypographic()) != Gdiplus::Ok) {
+    return;
+  }
+  // Center the visible glyph outlines, excluding the font's line spacing and
+  // side bearings. Line-box centering leaves short digits visibly off-center.
+  Gdiplus::RectF ink;
+  if (glyphs.GetBounds(&ink) != Gdiplus::Ok || ink.Width <= 0 || ink.Height <= 0) {
+    return;
+  }
+  Gdiplus::Matrix translation;
+  translation.Translate(bounds.X + (bounds.Width - ink.Width) / 2 - ink.X,
+                          bounds.Y + (bounds.Height - ink.Height) / 2 - ink.Y);
+  glyphs.Transform(&translation);
   Gdiplus::SolidBrush brush(color);
-  graphics->DrawString(count.c_str(), static_cast<INT>(count.size()), &font,
-                       bounds, &format, &brush);
+  graphics->FillPath(&brush, &glyphs);
 }
 
 // Respect each taskbar edge. An icon in Explorer's overflow panel is inside

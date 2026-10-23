@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <optional>
 #include <string>
@@ -127,6 +128,53 @@ static COLORREF PixelAt(int x, int y) {
   const size_t offset = (static_cast<size_t>(y) * test_last_size.cx + x) * 4;
   return RGB(test_last_pixels[offset + 2], test_last_pixels[offset + 1],
                test_last_pixels[offset]);
+}
+
+static void VerifyGlyphCentering(tray_manager::TrayHoverCard& card,
+                                  const std::filesystem::path& output) {
+  std::ofstream metrics(output / L"glyph-centering.csv");
+  metrics << "dpi,count,left,top,right,bottom,offset_x,offset_y\n";
+  double worst_x = 0, worst_y = 0;
+  for (UINT dpi : {96u, 120u, 144u, 192u}) {
+    test_dpi = dpi;
+    for (const std::wstring count : {L"1", L"2", L"3", L"4", L"0", L"8",
+                                     L"10", L"99", L"12345", L"?"}) {
+      tray_manager::ReminderPreview sample;
+      sample.total_count = 1;
+      sample.rows = {{L"Hidden glyph fixture",
+                       count == L"?" ? std::optional<int>{} : std::stoi(count),
+                       RGB(236, 159, 58)}};
+      card.SetPreview(sample);
+      CHECK(card.Show(test_anchor));
+      const auto layout = card.MakeLayout(600, 600);
+      const double scale = dpi / 96.0;
+      const double cx = (tray_manager::kShadowMargin + layout.ball_centers[0].x) * scale;
+      const double cy = (tray_manager::kBodyTop + layout.ball_centers[0].y) * scale;
+      const double radius = (layout.ball_diameter / 2.0 - 2) * scale;
+      int left = test_last_size.cx, top = test_last_size.cy, right = -1, bottom = -1;
+      for (int y = 0; y < test_last_size.cy; ++y) {
+        for (int x = 0; x < test_last_size.cx; ++x) {
+          const double dx = x + 0.5 - cx, dy = y + 0.5 - cy;
+          // Isolate actual dark glyph pixels inside the solid orange circle;
+          // exclude its anti-aliased boundary and the capsule's dark surface.
+          if (dx * dx + dy * dy < radius * radius && GetRValue(PixelAt(x, y)) < 160) {
+            left = std::min(left, x); top = std::min(top, y);
+            right = std::max(right, x); bottom = std::max(bottom, y);
+          }
+        }
+      }
+      CHECK(right >= left && bottom >= top);
+      const double dx = (left + right + 1) / 2.0 - cx;
+      const double dy = (top + bottom + 1) / 2.0 - cy;
+      worst_x = std::max(worst_x, std::abs(dx));
+      worst_y = std::max(worst_y, std::abs(dy));
+      metrics << dpi << ',';
+      for (wchar_t symbol : count) metrics << static_cast<char>(symbol);
+      metrics << ',' << left << ',' << top << ',' << right << ',' << bottom << ',' << dx << ',' << dy << '\n';
+      CHECK(std::abs(dx) <= 1.0 && std::abs(dy) <= 1.0);
+    }
+  }
+  std::cout << "Glyph ink maximum center offset: x=" << worst_x << "px, y=" << worst_y << "px\n";
 }
 
 int wmain(int argc, wchar_t* argv[]) {
@@ -396,6 +444,7 @@ int wmain(int argc, wchar_t* argv[]) {
     CHECK(placed.left >= work.left && placed.right <= work.right &&
           placed.top >= work.top && placed.bottom <= work.bottom);
   }
+  VerifyGlyphCentering(card, output);
   DestroyWindow(owner);
   CHECK(card.window_ == nullptr && !card.visible_ && !card.timer_active_);
   std::cout << test_checks << " native checks, " << test_failures << " failures; "

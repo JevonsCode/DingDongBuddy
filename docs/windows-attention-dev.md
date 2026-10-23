@@ -23,7 +23,7 @@ reminder colors, priority order, and read semantics.
 
 ## Local installation
 
-Version `1.9.2-dev.4+77` is a local development artifact, not a public release.
+Version `1.9.2-dev.5+78` is a local development artifact, not a public release.
 The `-dev` Windows build writes `dingdong-development.marker` and uses the
 `DingDong DEV` product identity. This isolates both app files in
 `%APPDATA%\DingDong DEV` and path-provider preferences in
