@@ -193,21 +193,24 @@ int wmain(int argc, wchar_t* argv[]) {
   CHECK(card.body_bounds_.left >= info.rcWork.left && card.body_bounds_.right <= info.rcWork.right);
   CHECK(card.body_bounds_.top >= info.rcWork.top && card.body_bounds_.bottom <= info.rcWork.bottom);
   const auto normal_layout = card.MakeLayout(600, 600);
-  CHECK(normal_layout.width == 40 && normal_layout.height == 156);
+  CHECK(normal_layout.width == 40 && normal_layout.height == 130);
   CHECK(normal_layout.capsule.bottom - normal_layout.capsule.top == 130);
-  CHECK(normal_layout.count_text == L"5" && preview.total_count == 12);
-  CHECK(normal_layout.primary_color == preview.rows.front().color);
+  CHECK(normal_layout.ball_counts.front() == L"5" && preview.total_count == 12);
   CHECK(normal_layout.ball_centers.size() == preview.rows.size());
   CHECK((normal_layout.ball_counts == std::vector<std::wstring>{L"5", L"4", L"?", L"3"}));
   CHECK(normal_layout.ball_centers.front().x == normal_layout.ball_centers.back().x);
   CHECK(normal_layout.ball_centers.front().y < normal_layout.ball_centers.back().y);
-  CHECK(card.badge_bounds_.bottom < card.body_bounds_.top);
-  const POINT top_badge = {(card.badge_bounds_.left + card.badge_bounds_.right) / 2,
-                           (card.badge_bounds_.top + card.badge_bounds_.bottom) / 2};
-  CHECK(card.PointerIsInside(top_badge));
+  CHECK(normal_layout.capsule.top == 0);
+  const POINT first_circle = {(card.body_bounds_.left + card.body_bounds_.right) / 2,
+                              card.body_bounds_.top + 20};
+  CHECK(card.PointerIsInside(first_circle));
   CHECK(SendMessageW(card.window_, WM_NCHITTEST, 0,
-                       MAKELPARAM(top_badge.x, top_badge.y)) == HTCLIENT);
-  const POINT transparent_corner = {card.badge_bounds_.left, card.badge_bounds_.top};
+                       MAKELPARAM(first_circle.x, first_circle.y)) == HTCLIENT);
+  const POINT removed_badge = {first_circle.x, card.body_bounds_.top - 12};
+  CHECK(!card.PointerIsInside(removed_badge));
+  CHECK(SendMessageW(card.window_, WM_NCHITTEST, 0,
+                       MAKELPARAM(removed_badge.x, removed_badge.y)) == HTTRANSPARENT);
+  const POINT transparent_corner = {card.body_bounds_.left, card.body_bounds_.top};
   CHECK(!card.PointerIsInside(transparent_corner));
   for (size_t index = 0; index < normal_layout.ball_centers.size(); ++index) {
     const auto& point = normal_layout.ball_centers[index];
@@ -215,10 +218,6 @@ int wmain(int argc, wchar_t* argv[]) {
                     tray_manager::kBodyTop + point.y - normal_layout.ball_diameter / 2 + 3) ==
           preview.rows[index].color);
   }
-  CHECK(PixelAt(tray_manager::kShadowMargin +
-                    (normal_layout.badge.left + normal_layout.badge.right) / 2,
-                    tray_manager::kBodyTop + normal_layout.badge.top + 3) ==
-        preview.rows.front().color);
   const auto baseline_pixels = test_last_pixels;
   auto invisible_metadata = preview;
   invisible_metadata.title = L"THIS TITLE MUST NEVER BE PAINTED";
@@ -237,7 +236,7 @@ int wmain(int argc, wchar_t* argv[]) {
   auto first_changed = preview;
   first_changed.rows.front().count = 6;
   card.SetPreview(first_changed);
-  CHECK(card.MakeLayout(600, 600).count_text == L"6");
+  CHECK(card.MakeLayout(600, 600).ball_counts.front() == L"6");
   CHECK(test_last_pixels != baseline_pixels);
   card.SetPreview(preview);
   CHECK(test_last_pixels == baseline_pixels);
@@ -248,7 +247,7 @@ int wmain(int argc, wchar_t* argv[]) {
                    (card.body_bounds_.top + card.body_bounds_.bottom) / 2};
   test_now = 1450; card.PollPointer();
   CHECK(card.visible_);
-  test_pointer = top_badge;
+  test_pointer = first_circle;
   test_now = 1460; card.PollPointer();
   CHECK(card.visible_);
   test_pointer = away;
@@ -316,14 +315,14 @@ int wmain(int argc, wchar_t* argv[]) {
   unknown_primary.rows.front().count = std::nullopt;
   test_capture = (output / L"card-unknown-primary.png").wstring();
   card.SetPreview(unknown_primary);
-  CHECK(card.MakeLayout(600, 600).count_text == L"?");
+  CHECK(card.MakeLayout(600, 600).ball_counts.front() == L"?");
   auto large_primary = preview;
   large_primary.rows.front().count = 12345;
   test_capture = (output / L"card-large-primary.png").wstring();
   card.SetPreview(large_primary);
   const auto large_layout = card.MakeLayout(600, 600);
-  CHECK(large_layout.count_text == L"12345");
-  CHECK(large_layout.badge.right - large_layout.badge.left >= 48);
+  CHECK(large_layout.ball_counts.front() == L"12345");
+  CHECK(large_layout.ball_diameter >= 48);
   auto many_groups = preview;
   many_groups.total_count = 2048;
   many_groups.rows.clear();
@@ -374,10 +373,10 @@ int wmain(int argc, wchar_t* argv[]) {
   CHECK(test_captures == 8);
   card.SetPreview(preview);
   CHECK(GetForegroundWindow() == initial_focus);
-  const POINT final_badge = {(card.badge_bounds_.left + card.badge_bounds_.right) / 2,
-                             (card.badge_bounds_.top + card.badge_bounds_.bottom) / 2};
+  const POINT final_circle = {(card.body_bounds_.left + card.body_bounds_.right) / 2,
+                              card.body_bounds_.top + tray_manager::Scale(20, test_dpi)};
   CHECK(SendMessageW(card.window_, WM_NCHITTEST, 0,
-                       MAKELPARAM(final_badge.x, final_badge.y)) == HTCLIENT);
+                       MAKELPARAM(final_circle.x, final_circle.y)) == HTCLIENT);
   SendMessageW(card.window_, WM_LBUTTONDOWN, MK_LBUTTON, 0);
   SendMessageW(card.window_, WM_LBUTTONUP, 0, 0);
   CHECK(clicks == 2 && !card.visible_);
@@ -389,7 +388,7 @@ int wmain(int argc, wchar_t* argv[]) {
   card.OnTrayMouseMove(identifier);
   CHECK(!card.visible_ && !card.timer_active_);
   const RECT work = {0, 0, 1920, 1040};
-  const SIZE size = {64, 180};
+  const SIZE size = {64, 154};
   for (RECT anchor : {RECT{1800, 1050, 1824, 1074}, RECT{1800, -30, 1824, -6},
                       RECT{-30, 800, -6, 824}, RECT{1926, 800, 1950, 824},
                       RECT{100, 100, 124, 124}}) {

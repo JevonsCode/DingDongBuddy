@@ -27,7 +27,6 @@ constexpr int kBodyTop = 10;
 constexpr int kBallDiameter = 24;
 constexpr int kBallGap = 6;
 constexpr int kCapsulePadding = 8;
-constexpr int kBadgeGap = 2;
 constexpr size_t kMaximumGroups = 64;
 
 class GdiplusRuntime {
@@ -130,13 +129,10 @@ struct TrayHoverCard::Layout {
   int width = 0;
   int height = 0;
   RECT capsule = {};
-  RECT badge = {};
   std::vector<POINT> ball_centers;
   std::vector<std::wstring> ball_counts;
   int ball_diameter = kBallDiameter;
   int scroll_max = 0;
-  std::wstring count_text;
-  COLORREF primary_color = 0;
 };
 
 TrayHoverCard::TrayHoverCard(HWND owner, std::function<void()> on_click,
@@ -235,9 +231,7 @@ bool TrayHoverCard::PointerIsInside(const POINT& point) const {
     const double dy = point.y - y;
     return dx * dx + dy * dy <= radius * radius;
   };
-  return inside_round_rect(body_bounds_, capsule_corner_radius_) ||
-         inside_round_rect(badge_bounds_,
-                            (badge_bounds_.right - badge_bounds_.left) / 2.0);
+  return inside_round_rect(body_bounds_, capsule_corner_radius_);
 }
 
 void TrayHoverCard::PollPointer() {
@@ -335,27 +329,18 @@ TrayHoverCard::Layout TrayHoverCard::MakeLayout(int max_width,
     layout.ball_diameter = std::max(
         layout.ball_diameter, static_cast<int>(layout.ball_counts.back().size()) * 8 + 8);
   }
-  layout.count_text = layout.ball_counts.front();
-  layout.primary_color = preview_.rows.front().color;
-  const int badge_diameter = std::max(
-      24, static_cast<int>(layout.count_text.size()) * 8 + 8);
   const int capsule_width = kCapsulePadding * 2 + layout.ball_diameter;
-  const int available_height = max_height - badge_diameter - kBadgeGap;
-  if (capsule_width > max_width || available_height < capsule_width) {
+  if (capsule_width > max_width || max_height < capsule_width) {
     return Layout{};
   }
   const int count = static_cast<int>(preview_.rows.size());
   const int pitch = layout.ball_diameter + kBallGap;
   const int full_height = kCapsulePadding * 2 + count * pitch - kBallGap;
-  const int capsule_height = std::min(full_height, available_height);
+  const int capsule_height = std::min(full_height, max_height);
   layout.scroll_max = full_height - capsule_height;
-  layout.width = std::max(capsule_width, badge_diameter);
-  layout.height = badge_diameter + kBadgeGap + capsule_height;
-  const int capsule_left = (layout.width - capsule_width) / 2;
-  layout.capsule = {capsule_left, badge_diameter + kBadgeGap,
-                    capsule_left + capsule_width, layout.height};
-  const int badge_left = (layout.width - badge_diameter) / 2;
-  layout.badge = {badge_left, 0, badge_left + badge_diameter, badge_diameter};
+  layout.width = capsule_width;
+  layout.height = capsule_height;
+  layout.capsule = {0, 0, capsule_width, capsule_height};
   for (int index = 0; index < count; ++index) {
     layout.ball_centers.push_back(
         {layout.width / 2,
@@ -404,7 +389,6 @@ bool TrayHoverCard::Show(const RECT& anchor) {
             bounds.top + Scale(kBodyTop + rect.bottom, dpi)};
   };
   body_bounds_ = screen_rect(layout.capsule);
-  badge_bounds_ = screen_rect(layout.badge);
   capsule_corner_radius_ = Scale((layout.capsule.right - layout.capsule.left) / 2, dpi);
   // All wording is available to accessibility, never painted in the capsule.
   std::wstring accessible_name = L"DingDong. " + preview_.title + L". " +
@@ -494,10 +478,8 @@ bool TrayHoverCard::Render(const RECT& bounds, UINT dpi, const Layout& layout) {
       }
     };
     const Gdiplus::RectF capsule = rect_f(layout.capsule);
-    const Gdiplus::RectF badge = rect_f(layout.badge);
     const float capsule_radius = capsule.Width / 2;
     shadow(capsule, capsule_radius);
-    shadow(badge, badge.Width / 2);
     Gdiplus::GraphicsPath capsule_path;
     RoundedPath(&capsule_path, capsule, capsule_radius);
     Gdiplus::SolidBrush capsule_brush(background);
@@ -529,19 +511,6 @@ bool TrayHoverCard::Render(const RECT& bounds, UINT dpi, const Layout& layout) {
       DrawCount(&graphics, layout.ball_counts[index], circle, text);
     }
     graphics.Restore(saved_clip);
-    const Gdiplus::Color primary = FromColorRef(layout.primary_color);
-    Gdiplus::SolidBrush badge_brush(primary);
-    graphics.FillEllipse(&badge_brush, badge);
-    Gdiplus::Pen badge_outline(high_contrast ? border : Gdiplus::Color(70, 255, 255, 255), 1);
-    graphics.DrawEllipse(&badge_outline, badge);
-    const double lightness = 0.2126 * primary.GetR() + 0.7152 * primary.GetG() +
-                             0.0722 * primary.GetB();
-    const Gdiplus::Color count_color = lightness >= 155
-        ? Gdiplus::Color(255, 24, 28, 32)
-        : Gdiplus::Color(255, 255, 255, 255);
-    // The outside ball repeats the FIRST group's exact count, never the total.
-    // All descriptive wording remains unpainted.
-    DrawCount(&graphics, layout.count_text, badge, count_color);
   }
   POINT destination = {bounds.left, bounds.top};
   POINT source = {0, 0};

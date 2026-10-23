@@ -64,7 +64,6 @@ class TrayHoverCard {
   ReminderPreview preview_;
   NOTIFYICONIDENTIFIER identifier_ = {};
   RECT body_bounds_ = {};
-  RECT badge_bounds_ = {};
   int capsule_corner_radius_ = 0;
   int scroll_offset_ = 0;
   int scroll_max_ = 0;

@@ -11,12 +11,11 @@ reminder colors, priority order, and read semantics.
   still control animation.
 - Hover: a vertical capsule stacks colored circles in reminder priority order.
   Each circle contains its own group's count. Long lists scroll vertically.
-  A separate circular badge above it shows only the first-priority group's count
-  and uses that group's color. No visible titles, names, footer or app label.
+  No outside badge, visible titles, names, footer or app label.
   The capsule does not acknowledge reminders. Clicking uses the existing tray-open
   behavior. Leaving, clearing reminders, or opening the menu dismisses it.
 - Counts come from the existing unread controller. Unknown per-group counts from
-  legacy data remain unknown (`?`). The numeric badge is not a total count.
+  legacy data remain unknown (`?`). Each group count appears once inside the capsule.
   Text is retained in the accessible window name, while Explorer's visible text
   tooltip is blank during reminders.
 - The DEV test panel includes a needs-input example and silent color/count
@@ -24,7 +23,7 @@ reminder colors, priority order, and read semantics.
 
 ## Local installation
 
-Version `1.9.2-dev.3+76` is a local development artifact, not a public release.
+Version `1.9.2-dev.4+77` is a local development artifact, not a public release.
 The `-dev` Windows build writes `dingdong-development.marker` and uses the
 `DingDong DEV` product identity. This isolates both app files in
 `%APPDATA%\DingDong DEV` and path-provider preferences in
