@@ -174,7 +174,7 @@ void main() {
           ..addFont(
             File.fromUri(
               sdk.resolve(
-                'bin/cache/artifacts/material_fonts/materialicons-regular.otf',
+                'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
               ),
             ).readAsBytes().then(ByteData.sublistView),
           );
