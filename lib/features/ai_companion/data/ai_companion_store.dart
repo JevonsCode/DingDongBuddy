@@ -1,10 +1,8 @@
 import 'dart:convert';
 
 import 'package:dingdong/features/ai_companion/domain/ai_companion_models.dart';
-import 'package:dingdong/features/ai_companion/domain/ai_companion_privacy.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 abstract interface class AiCompanionSecretStore {
   Future<String?> read();
@@ -12,36 +10,29 @@ abstract interface class AiCompanionSecretStore {
   Future<void> delete();
 }
 
-final class SecureAiCompanionSecretStore implements AiCompanionSecretStore {
-  const SecureAiCompanionSecretStore({
-    this.key = 'dingdong.aiCompanion.providerApiKey.v1',
-    FlutterSecureStorage storage = const FlutterSecureStorage(
-      mOptions: MacOsOptions(usesDataProtectionKeychain: false),
-    ),
-    // ignore: prefer_initializing_formals
-  }) : _storage = storage;
-  final FlutterSecureStorage _storage;
+/// Provider tokens use the same local preferences as the model configuration.
+/// They remain separate from settings JSON so metadata requests never include them.
+final class PreferencesAiCompanionSecretStore
+    implements AiCompanionSecretStore {
+  const PreferencesAiCompanionSecretStore(this.backend, {required this.key});
+  final PreferencesBackend backend;
   final String key;
   @override
-  Future<String?> read() => _storage.read(key: key);
+  Future<String?> read() async => await backend.read(key) as String?;
   @override
-  Future<void> write(String value) => _storage.write(key: key, value: value);
+  Future<void> write(String value) => backend.write(key, value);
   @override
-  Future<void> delete() => _storage.delete(key: key);
+  Future<void> delete() => backend.remove(key);
 }
 
 abstract interface class AiCompanionStore {
   Future<AiCompanionSettings> loadSettings();
   Future<void> saveSettings(AiCompanionSettings value);
-  Future<AiCompanionReport?> loadReport();
-  Future<void> saveReport(AiCompanionReport? value);
   Future<String?> readApiKey();
   Future<void> writeApiKey(String? value);
 }
 
 /// Separate preference keys avoid overwriting other open settings windows.
-/// Reports contain suggestion codes and
-/// local references, never raw clipboard or resource content.
 final class AiCompanionPreferencesStore implements AiCompanionStore {
   AiCompanionPreferencesStore(
     this._backend, {
@@ -49,7 +40,8 @@ final class AiCompanionPreferencesStore implements AiCompanionStore {
     bool development = false,
   }) : _secretStore =
            secretStore ??
-           SecureAiCompanionSecretStore(
+           PreferencesAiCompanionSecretStore(
+             _backend,
              key: development
                  ? 'dingdong.dev.aiCompanion.providerApiKey.v1'
                  : 'dingdong.aiCompanion.providerApiKey.v1',
@@ -58,7 +50,6 @@ final class AiCompanionPreferencesStore implements AiCompanionStore {
   final PreferencesBackend _backend;
   final AiCompanionSecretStore _secretStore;
   static const String settingsKey = 'dingdong.aiCompanion.settings.v1';
-  static const String reportKey = 'dingdong.aiCompanion.report.v1';
 
   @override
   Future<AiCompanionSettings> loadSettings() async =>
@@ -66,24 +57,6 @@ final class AiCompanionPreferencesStore implements AiCompanionStore {
   @override
   Future<void> saveSettings(AiCompanionSettings value) =>
       _backend.write(settingsKey, jsonEncode(value.toJson()));
-  @override
-  Future<AiCompanionReport?> loadReport() async {
-    final AiCompanionReport? report = AiCompanionReport.fromJson(
-      _decode(await _backend.read(reportKey)),
-    );
-    if (report?.cloudSummary case final String summary) {
-      if (summary.length > 8000 ||
-          !const AiCompanionPrivacy().isSafeText(summary)) {
-        return null;
-      }
-    }
-    return report;
-  }
-
-  @override
-  Future<void> saveReport(AiCompanionReport? value) => value == null
-      ? _backend.remove(reportKey)
-      : _backend.write(reportKey, jsonEncode(value.toJson()));
   @override
   Future<String?> readApiKey() => _credentialOperation(_secretStore.read);
   @override
@@ -97,7 +70,7 @@ final class AiCompanionPreferencesStore implements AiCompanionStore {
     try {
       return await action();
     } on PlatformException {
-      // Never surface platform messages, which can include keychain item data.
+      // Never surface platform messages, which can include credential data.
       throw const AiCompanionException(AiCompanionError.credentialUnavailable);
     } on MissingPluginException {
       throw const AiCompanionException(AiCompanionError.credentialUnavailable);

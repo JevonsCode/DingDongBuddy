@@ -31,7 +31,6 @@ void main() {
           secretStore: Secrets(),
         ),
         usageRepository: repo,
-        loadMetadata: () async => const AiCompanionMetadata(),
         client: AiCompanionClient(
           transport: Transport((a, b, c) {
             requests++;
@@ -130,7 +129,6 @@ void main() {
         store: store,
         usageRepository: repo,
         onUsageChanged: global.invalidate,
-        loadMetadata: () async => const AiCompanionMetadata(),
         client: AiCompanionClient(
           transport: Transport(
             (a, b, c) => const AiCompanionHttpResponse(
@@ -142,22 +140,19 @@ void main() {
       );
       try {
         await controller.load();
-        await controller.saveSettings(
-          settings().copyWith(cloudAnalysis: true, tokenOptimization: true),
-        );
+        await controller.saveSettings(settings());
         await controller.testConnection();
-        await controller.analyze();
         expect(controller.error, isNull);
-        expect(controller.internalUsage.totals.totalTokens, 24);
+        expect(controller.internalUsage.totals.totalTokens, 12);
         expect(
           controller.internalUsage.days.fold(0, (n, day) => n + day.eventCount),
-          2,
+          1,
         );
         expect(
           controller.internalUsage.days
               .map((day) => day.internalPurpose)
               .toSet(),
-          {'analysis', 'connectionTest'},
+          {'connectionTest'},
         );
         await global.refresh();
         expect(global.snapshot.totals.totalTokens, 0);
@@ -166,13 +161,13 @@ void main() {
         );
         expect(global.hasLoaded, isFalse);
         await global.refresh();
-        expect(global.snapshot.totals.totalTokens, 24);
+        expect(global.snapshot.totals.totalTokens, 12);
         await controller.saveSettings(
           controller.settings.copyWith(includeInternalInGlobal: false),
         );
         await global.refresh();
         expect(global.snapshot.totals.totalTokens, 0);
-        expect(controller.internalUsage.totals.totalTokens, 24);
+        expect(controller.internalUsage.totals.totalTokens, 12);
         await repo.close();
         await controller.testConnection();
         expect(controller.error, isNull);

@@ -1,4 +1,4 @@
-# DingDong 1.9.0 Manual Regression Checklist
+# DingDong 1.9.1 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,19 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## AI resource selection and window behavior (1.9.1)
+
+- Open AI+ with no provider and with a configured provider. Only settings should
+  appear; opening the page must not request model analysis or start a timer.
+- Enter and paste a model token, save, reopen and test the configured protocol.
+  Tokens use local app preferences; older Keychain tokens require re-entry.
+- Enable task resource selection. Verify eligible Prompts, Skills and MCPs are
+  selected while disabled, manual and out-of-scope resources remain unavailable.
+- Collapse the clipboard popup and paste into a DingDong editor after copying
+  from another app; verify the intended input keeps focus.
+- Check right-edge space beside resource actions and verify rear menu-bar
+  reminder bubbles stay static while the active reminder animates.
 
 ## Skill history, reminders and devices (1.9.0)
 

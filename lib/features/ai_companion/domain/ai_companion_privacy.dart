@@ -1,6 +1,5 @@
-/// A conservative local filter for model-generated analysis text.
-/// Resource and clipboard privacy does not depend on recognizing secrets: their
-/// content is never serialized into model requests at all.
+/// Conservative checks for routing input and structured provider responses.
+/// Raw resource bodies and clipboard contents are not routing inputs.
 final class AiCompanionPrivacy {
   const AiCompanionPrivacy();
 

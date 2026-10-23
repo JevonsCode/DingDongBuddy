@@ -1,30 +1,24 @@
-# DingDong 1.9.0
+# DingDong 1.9.1
 
-- Adds Skill version history, complete-package restoration, and comparisons between any two saved versions.
-- Adds configurable Agent reminders, custom sounds, reminder ordering, and searchable settings.
-- Improves model connections with OpenAI, Anthropic and HTTP services, adds AI resource routing and separate internal Token statistics, and removes companion chat.
-- Prioritizes online devices and adds persistent file-transfer history.
-- Improves paired-computer discovery and automatic reconnection, and reduces repeated Bridge and Skill context.
-- Adds a fade-out as the menu-bar reminder panel retracts.
+- Simplifies AI+ to on-demand Prompt, Skill and MCP selection for Agents; removes insights, suggestions, automatic analysis and check-ins.
+- Accepts the model token directly in local settings, with paste and show/hide controls; re-enter tokens previously saved in Keychain.
+- Improves resource-selection timeouts and keeps local matching available when the model cannot respond.
+- Fixes popup dismissal and paste focus, adds space beside resource actions, and keeps rear menu-bar reminder bubbles steady.
 
 ---
 
-# DingDong 1.9.0 正式版
+# DingDong 1.9.1 正式版
 
-- 新增 Skill 版本历史、完整包还原及任意两个历史版本对比。
-- 新增可配置 Agent 提醒、自定义提示音、提醒排序与设置搜索。
-- 改进 OpenAI、Anthropic 和 HTTP 模型连接，新增 AI 资源路由与独立内部 Token 统计，移除陪伴聊天。
-- 在线设备优先展示，新增可跨重启保留的文件传输历史。
-- 改进已配对电脑的设备发现与自动重连，减少 Bridge 与 Skill 重复上下文。
-- 菜单栏提醒下拉面板收回时同步淡出。
+- AI+ 精简为按任务为 Agent 选择 Prompt、Skill 和 MCP，移除洞察、建议、自动分析与主动关怀。
+- 模型 Token 改为直接输入并保存在本地设置，支持粘贴和显示/隐藏；原先存入密钥库的 Token 需重新输入。
+- 调整资源筛选超时，模型无法响应时继续使用本地匹配。
+- 修复弹窗收起与粘贴焦点，增加资源操作按钮的边缘留白，后排菜单栏提醒气泡保持静止。
 
 ---
 
-# DingDong 1.9.0
+# DingDong 1.9.1
 
-- Añade historial de versiones de Skills, restauración del paquete completo y comparación entre dos versiones guardadas.
-- Añade avisos de Agents configurables, sonidos personalizados, orden de avisos y búsqueda en ajustes.
-- Mejora las conexiones OpenAI, Anthropic y HTTP, añade selección de recursos con IA y estadísticas internas de Tokens independientes, y elimina el chat de compañía.
-- Prioriza los equipos conectados y conserva el historial de transferencias entre reinicios.
-- Mejora la detección y reconexión de equipos vinculados y reduce el contexto repetido de Bridge y Skills.
-- El panel de avisos de la barra de menús se desvanece al recogerse.
+- Simplifica AI+ a la selección de Prompts, Skills y MCP bajo demanda para los Agents; elimina información, sugerencias, análisis automáticos y recordatorios de bienestar.
+- Permite introducir el token del modelo en los ajustes locales, con controles para pegarlo y mostrarlo u ocultarlo; los tokens guardados antes en Keychain deben introducirse de nuevo.
+- Ajusta el tiempo de espera de la selección de recursos y conserva la selección local si el modelo no responde.
+- Corrige el cierre de ventanas y el foco al pegar, añade margen a las acciones de recursos y mantiene estables las burbujas secundarias de avisos.

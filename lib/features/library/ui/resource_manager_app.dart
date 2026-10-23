@@ -245,27 +245,6 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
     }
   }
 
-  Future<void> _reviewAiSuggestion(AiSuggestion suggestion) async {
-    final String? id = suggestion.targetId;
-    if (id == null) return;
-    switch (suggestion.code) {
-      case AiSuggestionCode.frequentClipboard:
-      case AiSuggestionCode.repeatedClipboard:
-      case AiSuggestionCode.ungroupedClipboard:
-        widget.clipboardViewModel.load();
-        for (final record in widget.clipboardViewModel.allRecords) {
-          if (record.id == id) {
-            widget.clipboardViewModel.select(record);
-            break;
-          }
-        }
-        await _selectDestination(ResourceManagerDestination.clipboard);
-      default:
-        await widget.viewModel.load();
-        if (mounted) _openIssueResource(id);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -375,8 +354,6 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                             ? Center(child: Text(context.l10n.aiUnavailable))
                             : AiCompanionScreen(
                                 controller: widget.aiCompanionController!,
-                                onReviewSuggestion: (AiSuggestion suggestion) =>
-                                    unawaited(_reviewAiSuggestion(suggestion)),
                               ),
                     },
                   ),

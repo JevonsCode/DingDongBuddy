@@ -30,146 +30,22 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get completionTrayStyle => 'Completion reminder style';
 
   @override
-  String get aiCategoryNoSuggestions =>
-      'No suggestions in this category in the current report. Analyze again after changing the scope.';
-
-  @override
   String get aiRoutingNeedsProvider =>
-      'Configure a model first. Local rules apply until one is available.';
+      'Configure an available model first. Connection failures use local rules.';
 
   @override
   String get aiAutoResourceSelectionDescription =>
-      'When an Agent requests resources, let your configured model select from the task, supplied context and candidate summaries. Off by default; failures fall back to local rules.';
+      'When an Agent requests resources, select task-relevant Prompts, Skills and MCPs from eligible candidates. Sends only the task and candidate summaries; failures use local rules.';
 
   @override
   String get aiAutoResourceSelection => 'AI resource selection';
-
-  @override
-  String get aiProgressiveDisclosure => 'Progressive disclosure advice';
-
-  @override
-  String get aiProgressiveDisclosureDescription =>
-      'Review always-on Prompts and MCP scope for on-demand loading. This does not change native client tool loading.';
-
-  @override
-  String aiProgressivePrompt(int count) {
-    return 'This always-on Prompt contains $count characters. Keep essential shared rules brief; review task matching or manual loading for task-specific details.';
-  }
-
-  @override
-  String get aiProgressiveMcp =>
-      'Review whether this always-on MCP server is needed for the current task. Limit its scope or enable it manually when needed. Third-party Agents may still load all configured tool schemas.';
-
-  @override
-  String get aiDailyScope =>
-      'Clipboard items updated today and today\'s recorded Token totals. Copy counts and resource usage are cumulative; resource suggestions review the full library. At most 500 local items are analyzed.';
 
   @override
   String get aiProviderCredentialNote =>
       'Changing the endpoint removes its previous key. Enter a key for the new provider if it needs one.';
 
   @override
-  String get aiReviewSuggestion => 'Review item';
-
-  @override
-  String get aiNoSuggestions =>
-      'No suggestions from the available data. Nothing was changed.';
-
-  @override
-  String aiFrequentClipboard(int count) {
-    return 'Copied $count times. Consider pinning this item or saving it as a reusable Prompt.';
-  }
-
-  @override
-  String aiRepeatedClipboard(int count) {
-    return 'Found $count identical clipboard entries. Review them before removing any.';
-  }
-
-  @override
-  String aiUngroupedClipboard(int count) {
-    return '$count items have no group. Group useful items so they are easier to find.';
-  }
-
-  @override
-  String aiCandidateWithoutUse(int count) {
-    return 'Considered $count times with no recorded invocation or load. Review whether this MCP or Skill should remain available, or load it only for matching tasks.';
-  }
-
-  @override
-  String get aiAlwaysOnUnused =>
-      'This always-on resource has no recorded use for at least a week. Review its scope and consider task-matched or on-demand loading.';
-
-  @override
-  String aiLargeAlwaysOnPrompt(int count) {
-    return 'This always-on Prompt contains $count characters. Keep shared rules brief and move task-specific details to task-matched or on-demand resources.';
-  }
-
-  @override
-  String aiHighInputTokens(int count) {
-    return 'Recorded input is $count tokens and dominates usage. Review long repeated context and attach resources only when the task needs them.';
-  }
-
-  @override
-  String aiLowCacheReuse(int count) {
-    return 'Only $count cached input tokens were recorded. Stable shared prefixes may help; actual savings depend on the model provider.';
-  }
-
-  @override
-  String get aiIncompleteTokenData =>
-      'Token records are incomplete. More reliable data is needed before judging efficiency.';
-
-  @override
-  String get aiTakeABreakSuggestion =>
-      'You have been here a while. Take a breath, stretch, or step away for a moment.';
-
-  @override
   String get aiCompanionTitle => 'AI+';
-
-  @override
-  String get aiCompanionSubtitle =>
-      'Select resources on demand and review insights.';
-
-  @override
-  String get aiPrivacySummary =>
-      'Each feature is opt-in. Statistics analysis sends only counts and usage; resource selection sends the task, supplied context and candidate summaries. Clipboard text is not sent.';
-
-  @override
-  String get aiFeaturesTitle => 'Analysis scope';
-
-  @override
-  String get aiClipboardAnalysis => 'Clipboard insights';
-
-  @override
-  String get aiClipboardAnalysisDescription =>
-      'Find repeated and frequently copied items locally.';
-
-  @override
-  String get aiUsageOptimization => 'Resource suggestions';
-
-  @override
-  String get aiUsageOptimizationDescription =>
-      'Review resource usage and always-on configuration without changing them.';
-
-  @override
-  String get aiTokenOptimization => 'Token suggestions';
-
-  @override
-  String get aiTokenOptimizationDescription =>
-      'Use recorded local totals to spot opportunities to reduce usage.';
-
-  @override
-  String get aiProactiveCheckIns => 'Gentle check-ins';
-
-  @override
-  String get aiProactiveCheckInsDescription =>
-      'A local reminder after an hour with this page open, at most once every two hours. No automatic network requests.';
-
-  @override
-  String get aiCloudAnalysis => 'Model analysis of metadata';
-
-  @override
-  String get aiCloudAnalysisDescription =>
-      'When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.';
 
   @override
   String get aiProviderProtocol => 'API protocol';
@@ -206,15 +82,15 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiProviderModel => 'Model name';
 
   @override
-  String get aiProviderApiKey => 'API key';
+  String get aiProviderApiKey => 'API token';
 
   @override
   String get aiProviderKeyStored =>
-      'A key is saved securely. Leave blank to keep it.';
+      'An API token is saved on this device. Leave blank to keep it.';
 
   @override
   String get aiProviderKeyHint =>
-      'Stored in this device\'s secure storage; optional for local models.';
+      'Saved in this device’s local settings, without Keychain. Optional for local services.';
 
   @override
   String get aiRemoveApiKey => 'Remove saved key';
@@ -225,7 +101,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get aiProviderNotConfigured =>
-      'No model configured. Local insights are available after enabling an analysis feature.';
+      'No model configured. Add a model to select resources for Agent tasks.';
 
   @override
   String get aiProviderNotVerified =>
@@ -238,34 +114,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiTestConnection => 'Test connection';
 
   @override
-  String get aiAnalyze => 'Analyze now';
-
-  @override
-  String get aiInsightsTitle => 'Insights and suggestions';
-
-  @override
-  String get aiInsightsEmpty =>
-      'Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.';
-
-  @override
-  String get aiLocalAnalysis => 'Local analysis · no model request';
-
-  @override
-  String get aiCloudResult => 'Model suggestions · metadata only';
-
-  @override
-  String get aiReadOnly =>
-      'Suggestions are read-only. Review changes in the relevant workspace.';
-
-  @override
-  String get aiCheckInNow => 'Take a moment';
-
-  @override
   String get aiUnavailable =>
       'AI+ is unavailable in this window. Reopen Resource Manager.';
 
   @override
-  String get aiErrorDisabled => 'Enable the relevant feature first.';
+  String get aiErrorDisabled => 'AI resource selection is off.';
 
   @override
   String get aiErrorInvalidProvider =>
@@ -4218,40 +4071,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Get new features before the stable release. Betas may be less stable; after turning this off you stay on the beta until a newer stable version is out.';
 
   @override
-  String get aiInternalUsageTitle => 'Internal token usage';
-
-  @override
-  String get aiIncludeInternal => 'Include in global statistics';
-
-  @override
-  String get aiIncludeInternalDescription =>
-      'Off by default. When enabled, global statistics include all recorded internal usage. Turning it off keeps the separate history here.';
-
-  @override
-  String get aiInternalUsageDescription =>
-      'Records API usage for resource selection, model analysis and connection tests without saving request content.';
-
-  @override
-  String get aiInternalCumulative => 'All time';
-
-  @override
-  String get aiInternalLast => 'Last request in this window';
-
-  @override
-  String aiInternalRequests(int count) {
-    return '$count requests';
-  }
-
-  @override
-  String get aiInternalUnknown => 'Not reported';
-
-  @override
   String get aiInternalPartial =>
       'Only reported usage is counted; missing fields are not zero. Cache tokens are included in input.';
-
-  @override
-  String get aiInternalStorageError =>
-      'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.';
 
   @override
   String get tokenUsageIncludeInternal => 'Include DingDong usage';
@@ -4345,36 +4166,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get devReminderColorsUpdated => 'Tray preview updated';
 
   @override
-  String get aiSettingsTab => 'Settings';
-
-  @override
-  String get aiAutomaticAnalysis => 'Automatic analysis';
-
-  @override
-  String get aiAutomaticAnalysisDescription =>
-      'Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.';
-
-  @override
-  String get aiHistoryTitle => 'History';
-
-  @override
-  String get aiHistoryEmpty => 'No saved analyses yet.';
-
-  @override
-  String get aiAutomaticRun => 'Automatic';
-
-  @override
-  String get aiManualRun => 'Manual';
-
-  @override
   String get aiErrorCredentialUnavailable =>
-      'The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.';
-
-  @override
-  String get aiHistoryPrevious => 'Previous page';
-
-  @override
-  String get aiHistoryNext => 'Next page';
+      'Could not read the local API token. Enter it again and save.';
 
   @override
   String get reorderReminder => 'Drag to reorder';
@@ -4510,4 +4303,13 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get noFileTransferHistory => 'No file transfers yet';
+
+  @override
+  String get aiHideApiKey => 'Hide API token';
+
+  @override
+  String get aiShowApiKey => 'Show API token';
+
+  @override
+  String get aiTestingConnection => 'Connecting…';
 }

@@ -476,7 +476,7 @@ final class PluginDesktopShellGateway
                     'name': reminderName(p),
                     'colorRgb': p.color.rgbValue,
                     if (counts[p.id] != null) 'count': counts[p.id]!,
-                    'pulse': p.style == TrayReminderStyle.softPulse,
+                    'pulse': false,
                   },
               ]
             : const [],
@@ -530,8 +530,8 @@ final class PluginDesktopShellGateway
     _trayBuddyPreviewTimer?.cancel();
     _trayBuddyPreviewState = null;
     _windowVisible.value = false;
-    await onHideAuxiliaryWindows?.call();
     await windowManager.hide();
+    await onHideAuxiliaryWindows?.call();
   }
 
   Future<void> _positionPopup() async {

@@ -14,8 +14,6 @@ AiCompanionSettings settings({
   'protocol': protocol,
   'providerEndpoint': endpoint,
   'model': model,
-  'cloudAnalysis': true,
-  'tokenOptimization': true,
 });
 
 const openAI = '{"choices":[{"message":{"content":"OK"}}]}';
@@ -137,11 +135,7 @@ void main() {
     );
   });
   test('accepts explicit HTTP services and provider model IDs', () {
-    for (final host in [
-      'gateway.example.com',
-      '192.168.1.2',
-      '127.0.0.1',
-    ]) {
+    for (final host in ['gateway.example.com', '192.168.1.2', '127.0.0.1']) {
       expect(
         AiCompanionClient.validateProvider(
           settings(endpoint: 'http://$host/v1', model: 'claude-opus-5-5[1m]'),
@@ -172,14 +166,14 @@ void main() {
     },
   );
   test(
-    'Anthropic analysis separates system and parses only text blocks',
+    'Anthropic resource selection separates system and parses only text blocks',
     () async {
       final transport = Transport((uri, headers, body) {
         expect(uri.path, '/v1/messages');
         expect(headers['anthropic-version'], '2023-06-01');
         expect(headers['x-api-key'], 'dummy');
         expect(headers['Authorization'], 'Bearer dummy');
-        expect(body['system'], contains('anonymous'));
+        expect(body['system'], contains('Select optional resources'));
         expect(body['messages'], hasLength(1));
         expect(
           ((body['messages'] as List).single as Map<String, dynamic>)['role'],
@@ -187,16 +181,30 @@ void main() {
         );
         expect(body['max_tokens'], 600);
         expect(body['stream'], false);
-        return const AiCompanionHttpResponse(200, anthropic);
+        return AiCompanionHttpResponse(
+          200,
+          jsonEncode({
+            'content': [
+              {'type': 'thinking', 'thinking': 'private'},
+              {
+                'type': 'text',
+                'text': jsonEncode({
+                  'confident': true,
+                  'selected': ['r0'],
+                }),
+              },
+            ],
+          }),
+        );
       });
       final client = AiCompanionClient(transport: transport);
       expect(
-        await client.analyze(
-          settings(protocol: 'anthropic'),
+        await client.selectResources(
+          settings(protocol: 'anthropic').copyWith(autoResourceSelection: true),
           'dummy',
-          const AiCompanionMetadata(),
+          {'task': 'Review code', 'resources': []},
         ),
-        'OK again',
+        <String>{'r0'},
       );
     },
   );

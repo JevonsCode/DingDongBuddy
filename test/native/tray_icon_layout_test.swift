@@ -23,6 +23,20 @@ enum TrayIconLayoutTest {
          let rep = NSBitmapImageRep(data: image.tiffRepresentation!)!
          try rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: "\(CommandLine.arguments[2])/\(name).png"))
         }
+        func renderedPixels() -> Data {
+            let image = NSImage(size: icon.bounds.size)
+            image.lockFocus(); icon.draw(icon.bounds); image.unlockFocus()
+            return NSBitmapImageRep(data: image.tiffRepresentation!)!.representation(using: .png, properties: [:])!
+        }
+        let pulsingTail: [[String: Any]] = [["id": "rear", "colorRgb": 0x9B6B00, "count": 1, "pulse": true]]
+        icon.setTitle(" 6", "unreadBadge", 0x9575CD, pulsingTail, false, "front", false)
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.3))
+        let rearNormal = renderedPixels()
+        icon.setTitle(" 6", "unreadBadge", 0x9575CD, pulsingTail, true, "front", false)
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.3))
+        precondition(renderedPixels() == rearNormal, "Rear badge backgrounds must stay static across reminder frames")
+        print("PASS: rear reminder backgrounds remain static")
+        icon.setTitle("", "plain", nil)
         icon.setTitle(" 6", "unreadBadge", 0x9575CD)
         precondition(icon.frame.width < 55, "One digit must not reserve the former fixed width")
         icon.setTitle(" 6", "unreadBadge", 0x9575CD, bubbles, false)

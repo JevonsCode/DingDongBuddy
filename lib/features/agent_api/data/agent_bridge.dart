@@ -143,7 +143,7 @@ final class AgentBridge {
                 resourceMatchesScope(resource, context, triggerGroupsById),
           )
           .toList(growable: false);
-      final List<Resource> prompts =
+      List<Resource> prompts =
           available
               .where(
                 (Resource resource) => resource.type == ResourceType.prompt,
@@ -178,11 +178,19 @@ final class AgentBridge {
                   ? name
                   : left.resource.id.compareTo(right.resource.id);
             });
-      // AI may select only enabled, scoped optional references. Prompts and
-      // always-active MCPs never enter the selectable set. Skill activation is
-      // catalog metadata, not a requirement to load that Skill. MCP manual
-      // activation remains a local permission boundary.
+      // AI selects enabled, scoped optional resources. Always-active Prompts
+      // and MCPs remain required. Manual activation stays a local boundary;
+      // Skill activation describes catalog availability, not required loading.
       if (selectBridgeResources != null && expand != 'all') {
+        final optionalPrompts =
+            available
+                .where(
+                  (resource) =>
+                      resource.type == ResourceType.prompt &&
+                      resource.activation == ResourceActivation.taskMatch,
+                )
+                .toList()
+              ..sort(compareResources);
         final optionalMcps =
             available
                 .where(
@@ -202,10 +210,10 @@ final class AgentBridge {
               description: skill.configuration.description,
               version: await _skillVersion(skill),
             ),
-          for (final resource in optionalMcps)
+          for (final resource in [...optionalPrompts, ...optionalMcps])
             BridgeResourceCandidate(
               id: resource.id,
-              type: 'mcp',
+              type: resource.type.name,
               title: resource.title,
               description: resource.note ?? resource.tags.join(', '),
               version: await bridgeContentVersion({
@@ -229,11 +237,21 @@ final class AgentBridge {
               conversationId: conversationId,
               candidates: routingCandidates,
             ),
-          ).timeout(const Duration(seconds: 6));
+          ).timeout(const Duration(seconds: 16));
         } on Object {
           // A disabled, unavailable or uncertain router retains prior behavior.
         }
         if (chosen != null) {
+          prompts = [
+            ...prompts.where(
+              (resource) => resource.activation == ResourceActivation.always,
+            ),
+            ...optionalPrompts.where(
+              (resource) =>
+                  _explicitlyNamesResource(task, resource.title) ||
+                  chosen!.contains(resource.id),
+            ),
+          ]..sort(compareResources);
           mcps = [
             ...mcps.where(
               (resource) => resource.activation == ResourceActivation.always,

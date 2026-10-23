@@ -2,6 +2,7 @@ import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
 
 import 'ai_companion_models.dart';
 
+// `analysis` is retained only to read receipts written by retired versions.
 enum AiCompanionUsagePurpose { analysis, connectionTest, resourceSelection }
 
 /// Numeric receipt only: never persist a prompt, response, endpoint or key.

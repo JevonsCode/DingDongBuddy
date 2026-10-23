@@ -1,87 +1,15 @@
-# Optional AI+
+# AI+ resource selection
 
-Open **Resource Manager → AI+**. Clipboard insights, resource usage
-optimization, progressive disclosure advice, Token suggestions and proactive check-ins each
-have their own switch. These capabilities start off. The **Insights and suggestions**
-tab defaults to automatic analysis of enabled categories; **Settings** contains the
-category and model configuration. Analysis starts with the resource window and
-checks every 30 minutes while that window engine is running. Changed settings are
-debounced for five seconds. Unchanged analysis inputs are skipped, including after
-restart. Turn **Automatic analysis** off for manual-only operation. Model requests
-require the separate model-analysis opt-in. Suggestions are read-only; review links open the existing clipboard or
-resource editor so changes remain explicit.
+Open **Resource Manager → AI+** to configure task-driven resource selection and
+its model connection. This is one settings page. There is no insight tab, report,
+manual analysis button, scheduled analysis or proactive check-in. Opening a window
+or saving settings does not invoke a model. Old analysis settings are ignored.
 
-Clipboard and Token analysis cover the local calendar day; resource usage
-counters are cumulative. The local analysis limits its clipboard/resource input
-to 500 items and cloud resource metadata to 100 items.
+## Resource selection for Agents
 
-Local insights use deterministic rules. They identify frequently copied or
-repeated text, ungrouped items, resources repeatedly offered without evidence of
-use, large always-on Prompts, and measured Token patterns. A Skill load, Prompt
-activation, MCP invocation, and candidate match are different measurements.
-Suggestions about task matching and on-demand loading do not automatically
-rewrite Agent configuration or change a client's tool-discovery protocol.
-
-Configure an **OpenAI Chat Completions** or **Anthropic Messages** service and
-model to enable model-assisted analysis. The protocol defaults to **Auto**,
-including existing settings. Auto starts with OpenAI (or Anthropic for a complete
-`/messages` URL) and tries the other protocol only after HTTP 404/405. Authentication
-failures, rate limits, timeouts and server errors are not retried. You can select
-one protocol explicitly when the service requires it.
-
-Both HTTP and HTTPS are accepted for explicitly configured services, including
-company gateways and loopback proxies. HTTP traffic is unencrypted; use it on
-networks you trust. URLs cannot embed credentials, query parameters or fragments.
-The endpoint accepts a service root, an API base such as `/v1`, or a complete
-`/chat/completions` or `/messages` URL. A root OpenAI URL gains `/v1/chat/completions`;
-custom OpenAI bases gain `/chat/completions`. Anthropic bases gain `/v1/messages`
-unless they already end in `/v1` or `/messages`. For example:
-
-- Kiro proxy: `http://127.0.0.1:3456`, Auto or Anthropic, using a model ID provided by the proxy.
-- Company Anthropic gateway: `http://gateway.example.com/coding-plan`,
-  Anthropic, producing `/coding-plan/v1/messages`. The gateway's model access and
-  credentials must still be valid; accepting a URL does not verify upstream access.
-
-Remote providers require the user's own API key, saved in the operating system's
-secure storage. Loopback providers may leave it empty. Changing the endpoint
-clears the previous provider's key unless a new key is supplied. Anthropic requests
-send `anthropic-version: 2023-06-01`, Bearer authorization and `x-api-key` for
-compatible proxies, plus a random per-client `X-Claude-Code-Session-Id` correlation
-header required by some gateways. It does not reuse a Claude conversation or user
-identity. Requests use a fixed Content-Length for gateways that reject chunked
-JSON. System instructions are sent separately from conversation
-turns, and only returned text blocks are displayed. See the
-[Anthropic Messages API](https://platform.claude.com/docs/en/api/messages/create).
-**Test connection** makes an explicit, constant-text model request.
-
-Cloud analysis is separately opt-in and sends only bounded, whitelisted
-metadata: record counts, anonymous resource references and usage counters, and
-numeric Token aggregates with data-availability flags. Clipboard text, resource
-contents and titles, local identifiers, paths, images, and file contents are
-excluded structurally. Local insights remain available without a provider.
-Analysis does not upload files or grant model access to tools.
-
-Analyses are retained in local `ai-insights.sqlite3`, with 20 entries per page,
-newest first and automatic/manual source labels. Local and model results from one
-analysis update the same entry. The previous latest report is migrated on first
-load. Disabling automatic analysis does not erase history.
-
-Keychain failures are reported separately from preference failures; local settings
-and insights remain available. The app never falls back to plaintext key storage.
-
-Persisted reports contain suggestion codes and local references, plus filtered
-model summaries when requested, rather than clipboard or resource contents.
-
-Proactive check-ins run locally while the AI page is open and opted in. They
-offer an occasional break reminder; page-open time is not evidence of continuous
-work. A check-in does not trigger model requests or inspect clipboard content.
-Closing the page stops its timer.
-
-## Automatic resource selection
-
-**AI+ → Automatic resource selection** is a separate switch, off by default.
+**AI+ → Automatic resource selection** is off by default.
 When an Agent calls DingDong Bridge, the configured model can narrow the eligible
-Skill and task-matched MCP catalog before it is returned to the Agent. This does
+Skill, task-matched Prompt and MCP catalog before returning it to the Agent. This does
 not intercept messages before Codex's own model receives them, remove native MCP
 schemas already loaded by a client, or modify resource configuration.
 
@@ -93,9 +21,9 @@ MCP connection configuration, local IDs, workspace paths and conversation IDs
 are excluded from the model input. Known sensitive formats are screened locally;
 the user should still choose a provider suitable for their task text.
 
-Prompts and always-enabled MCP references remain mandatory. Explicitly named
-eligible Skills and MCP references are retained. Disabled, manual or out-of-scope
-MCP references cannot be enabled by the selector. Every subsequent Skill load
+Always-enabled Prompts and MCP references remain mandatory. Explicitly named
+eligible Prompts, Skills and MCP references are retained. Disabled, manual or
+out-of-scope Prompts and MCP references cannot be enabled by the selector. Every subsequent Skill load
 still validates its current scope and availability. Diagnostic `expand=all`
 does not run selection.
 
@@ -106,15 +34,27 @@ catalog, scope or provider changes invalidate the matching entry. No selection
 transcript is appended to the main conversation. Actual Token savings depend on
 the client and task; this feature does not promise a measured reduction.
 
-The four insight categories are shown at the top of AI+. **Analyze now** stays
-visible while settings scroll. Changing analysis switches changes the scope of
-the next run; it does not fabricate a new report.
+## Model connection
 
-Provider requests have time and size limits and do not follow redirects.
-Failures display a stable diagnostic category without echoing provider response
-bodies or API keys. Configured models and providers may differ in which Chat
-Completions parameters they support.
+Configure an OpenAI Chat Completions or Anthropic Messages endpoint and model.
+Auto tries the other protocol only on HTTP 404/405; authentication failures,
+rate limits, timeouts and server errors do not trigger retries. Service roots,
+API bases and full endpoint URLs are accepted over HTTP or HTTPS. A root OpenAI
+URL gains `/v1/chat/completions`; Anthropic gains `/v1/messages` unless already
+present. Loopback providers may omit the API token.
 
+The API token is stored separately in ordinary local preferences. AI+ does not
+read Keychain; a token from an older Keychain-backed configuration must be entered
+again. The field supports paste and visibility controls. Changing an endpoint
+clears the old token unless a replacement is provided. **Test connection** sends
+only a fixed probe and reports whether the model responded.
+
+Resource selection has a 15-second request limit and a 16-second Bridge budget.
+Requests have bounded sizes, use Content-Length and do not follow
+redirects. Anthropic requests include `anthropic-version`, a random client session
+ID and, when supplied, Bearer authorization plus `x-api-key`. Error diagnostics
+never echo response bodies or credentials. Routing results contain candidate IDs,
+not advice for a human reader.
 
 ## Internal token accounting
 
@@ -128,8 +68,8 @@ that have connected to DingDong.
 
 Summary counts, calendar cells, day details, coverage and CSV use the selected
 sources. The calendar displays the selected year within the chosen date range.
-Internal feature rows summarize resource selection, model analysis and connection
-tests for the selected period. CSV includes each receipt group's feature name.
+Internal feature rows summarize resource selection and connection tests for the
+selected period; older model-analysis receipts remain historical usage only. CSV includes each receipt group's feature name.
 Missing components remain unknown. The separate numeric ledger survives restarts
 and ignores duplicate receipt IDs; it stores no request content or keys. Changing
 filters reads the loaded local data and never calls a model. Refreshing or

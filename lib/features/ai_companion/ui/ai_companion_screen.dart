@@ -1,559 +1,138 @@
-import 'dart:async';
-
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
-import 'package:dingdong/core/widgets/desktop_segmented_control.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
-import '../data/ai_insight_history.dart';
-
-/// Local insights and independently configured provider-assisted analysis.
-class AiCompanionScreen extends StatefulWidget {
-  const AiCompanionScreen({
-    required this.controller,
-    this.onReviewSuggestion,
-    this.now,
-    super.key,
-  });
-
+/// One settings surface for Agent resource routing and its model connection.
+class AiCompanionScreen extends StatelessWidget {
+  const AiCompanionScreen({required this.controller, super.key});
   final AiCompanionController controller;
-  final ValueChanged<AiSuggestion>? onReviewSuggestion;
-  final DateTime Function()? now;
-
-  @override
-  State<AiCompanionScreen> createState() => _AiCompanionScreenState();
-}
-
-class _AiCompanionScreenState extends State<AiCompanionScreen> {
-  int _tab = 0;
-  AiInsightEntry? _selectedHistory;
-  Timer? _checkInTimer;
-  final _scrollController = ScrollController();
-  DateTime? _checkInsEnabledAt;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_updateCheckInTimer);
-    _updateCheckInTimer();
-  }
-
-  @override
-  void didUpdateWidget(AiCompanionScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller == widget.controller) return;
-    oldWidget.controller.removeListener(_updateCheckInTimer);
-    _checkInTimer?.cancel();
-    _checkInTimer = null;
-    _checkInsEnabledAt = null;
-    widget.controller.addListener(_updateCheckInTimer);
-    _updateCheckInTimer();
-  }
-
-  void _updateCheckInTimer() {
-    if (!widget.controller.settings.proactiveCheckIns) {
-      _checkInTimer?.cancel();
-      _checkInTimer = null;
-      _checkInsEnabledAt = null;
-    } else {
-      _checkInsEnabledAt ??= (widget.now ?? DateTime.now)();
-      _checkInTimer ??= Timer.periodic(const Duration(hours: 1), (_) async {
-        if (!mounted || !widget.controller.settings.proactiveCheckIns) return;
-        final DateTime? previous = widget.controller.report?.createdAt;
-        await widget.controller.checkIn(
-          activeMinutes: (widget.now ?? DateTime.now)()
-              .difference(_checkInsEnabledAt!)
-              .inMinutes,
-        );
-        if (mounted &&
-            widget.controller.error == null &&
-            previous != widget.controller.report?.createdAt) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.aiTakeABreakSuggestion)),
-          );
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_updateCheckInTimer);
-    _checkInTimer?.cancel();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _configureProvider() async {
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext context) =>
-          _ProviderDialog(controller: widget.controller),
-    );
-  }
-
-  Future<void> _analyze() async {
-    setState(() {
-      _tab = 0;
-      _selectedHistory = null;
-    });
-    if (_scrollController.hasClients) _scrollController.jumpTo(0);
-    await widget.controller.analyze();
-  }
-
+  Future<void> _configureProvider(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (_) => _ProviderDialog(controller: controller),
+  );
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: widget.controller,
+    animation: controller,
     builder: (context, child) {
-      final controller = widget.controller;
-      final settings = controller.settings;
       final l10n = context.l10n;
-      final colors = Theme.of(context).colorScheme;
       return Column(
         key: const Key('ai-companion-screen'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final title = Text(
-                  l10n.aiCompanionTitle,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                );
-                final action = DesktopActionButton(
-                  tone: DesktopActionTone.primary,
-                  key: const Key('ai-analyze'),
-                  onPressed: controller.isLoading || !settings.analysisEnabled
-                      ? null
-                      : _analyze,
-                  icon: const Icon(Icons.insights_outlined, size: 18),
-                  label: Text(l10n.aiAnalyze),
-                );
-                return constraints.maxWidth < 420
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [title, const SizedBox(height: 12), action],
-                      )
-                    : Row(
-                        children: [
-                          Expanded(child: title),
-                          action,
-                        ],
-                      );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: DesktopSegmentedControl<int>(
-                value: _tab,
-                segments: [
-                  DesktopSegment(value: 0, label: Text(l10n.aiInsightsTitle)),
-                  DesktopSegment(value: 1, label: Text(l10n.aiSettingsTab)),
-                ],
-                onChanged: (value) => setState(() => _tab = value),
-              ),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Text(
+              l10n.aiCompanionTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
           ),
           const Divider(height: 1),
-          if (controller.isLoading)
-            const LinearProgressIndicator(key: Key('ai-loading')),
-          if (controller.error != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: Semantics(
-                liveRegion: true,
-                child: Text(
-                  _errorText(context, controller.error!),
-                  key: const Key('ai-error'),
-                  style: TextStyle(color: colors.error),
-                ),
-              ),
-            ),
           Expanded(
             child: ListView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              padding: const EdgeInsets.all(24),
               children: [
-                if (_tab == 0) ...[
-                  _feature(
-                    key: 'automatic-analysis',
-                    title: l10n.aiAutomaticAnalysis,
-                    description: l10n.aiAutomaticAnalysisDescription,
-                    value: settings.automaticAnalysis,
-                    change: (value) =>
-                        settings.copyWith(automaticAnalysis: value),
-                  ),
-                  const SizedBox(height: 16),
-                  _insights(context),
-                  _history(context),
-                ] else ...[
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _feature(
-                          key: 'auto-resources',
-                          title: l10n.aiAutoResourceSelection,
-                          description: l10n.aiAutoResourceSelectionDescription,
-                          value: settings.autoResourceSelection,
-                          change: (value) =>
-                              settings.copyWith(autoResourceSelection: value),
-                        ),
-                        if (settings.autoResourceSelection &&
-                            !controller.isConfigured)
-                          Text(
-                            l10n.aiRoutingNeedsProvider,
-                            style: TextStyle(color: colors.onSurfaceVariant),
+                CompactSwitchListTile(
+                  key: const Key('ai-feature-auto-resources'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.aiAutoResourceSelection),
+                  subtitle: Text(l10n.aiAutoResourceSelectionDescription),
+                  value: controller.settings.autoResourceSelection,
+                  onChanged: controller.isLoading
+                      ? null
+                      : (value) => controller.saveSettings(
+                          controller.settings.copyWith(
+                            autoResourceSelection: value,
                           ),
+                        ),
+                ),
+                if (controller.settings.autoResourceSelection &&
+                    !controller.isConfigured)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      l10n.aiRoutingNeedsProvider,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 24),
+                _Section(
+                  title: l10n.aiProviderTitle,
+                  children: [
+                    Text(
+                      !controller.isConfigured
+                          ? l10n.aiProviderNotConfigured
+                          : controller.connectionVerified
+                          ? l10n.aiProviderVerified
+                          : l10n.aiProviderNotVerified,
+                    ),
+                    if (controller.isConfigured) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        controller.settings.model,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        DesktopActionButton(
+                          key: const Key('ai-configure-provider'),
+                          onPressed: controller.isLoading
+                              ? null
+                              : () => _configureProvider(context),
+                          icon: const Icon(Icons.settings_outlined, size: 18),
+                          label: Text(l10n.aiConfigureProvider),
+                        ),
+                        DesktopActionButton(
+                          key: const Key('ai-test-connection'),
+                          onPressed:
+                              controller.isLoading || !controller.isConfigured
+                              ? null
+                              : controller.testConnection,
+                          icon: controller.isTestingConnection
+                              ? _busyIcon(context)
+                              : null,
+                          child: Text(
+                            controller.isTestingConnection
+                                ? l10n.aiTestingConnection
+                                : l10n.aiTestConnection,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  _Section(
-                    title: l10n.aiFeaturesTitle,
-                    children: [
-                      _feature(
-                        key: 'clipboard',
-                        title: l10n.aiClipboardAnalysis,
-                        description: l10n.aiClipboardAnalysisDescription,
-                        value: settings.clipboardAnalysis,
-                        change: (value) =>
-                            settings.copyWith(clipboardAnalysis: value),
-                      ),
-                      _feature(
-                        key: 'resources',
-                        title: l10n.aiUsageOptimization,
-                        description: l10n.aiUsageOptimizationDescription,
-                        value: settings.usageOptimization,
-                        change: (value) =>
-                            settings.copyWith(usageOptimization: value),
-                      ),
-                      _feature(
-                        key: 'progressive-disclosure',
-                        title: l10n.aiProgressiveDisclosure,
-                        description: l10n.aiProgressiveDisclosureDescription,
-                        value: settings.progressiveDisclosure,
-                        change: (value) =>
-                            settings.copyWith(progressiveDisclosure: value),
-                      ),
-                      _feature(
-                        key: 'tokens',
-                        title: l10n.aiTokenOptimization,
-                        description: l10n.aiTokenOptimizationDescription,
-                        value: settings.tokenOptimization,
-                        change: (value) =>
-                            settings.copyWith(tokenOptimization: value),
-                      ),
-                      _feature(
-                        key: 'cloud',
-                        title: l10n.aiCloudAnalysis,
-                        description: l10n.aiCloudAnalysisDescription,
-                        value: settings.cloudAnalysis,
-                        change: (value) =>
-                            settings.copyWith(cloudAnalysis: value),
-                      ),
-                      _feature(
-                        key: 'check-ins',
-                        title: l10n.aiProactiveCheckIns,
-                        description: l10n.aiProactiveCheckInsDescription,
-                        value: settings.proactiveCheckIns,
-                        change: (value) =>
-                            settings.copyWith(proactiveCheckIns: value),
-                      ),
-                    ],
-                  ),
-                  _Section(
-                    title: l10n.aiProviderTitle,
-                    children: [
-                      Text(
-                        !controller.isConfigured
-                            ? settings.providerEndpoint.isNotEmpty &&
-                                      settings.model.isNotEmpty
-                                  ? l10n.aiErrorMissingApiKey
-                                  : l10n.aiProviderNotConfigured
-                            : controller.connectionVerified
-                            ? l10n.aiProviderVerified
-                            : l10n.aiProviderNotVerified,
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          DesktopActionButton(
-                            key: const Key('ai-configure-provider'),
-                            onPressed: controller.isLoading
-                                ? null
-                                : _configureProvider,
-                            icon: const Icon(Icons.settings_outlined, size: 18),
-                            label: Text(l10n.aiConfigureProvider),
+                    if (controller.error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            _errorText(context, controller.error!),
+                            key: const Key('ai-error'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
-                          DesktopActionButton(
-                            key: const Key('ai-test-connection'),
-                            onPressed:
-                                controller.isLoading || !controller.isConfigured
-                                ? null
-                                : controller.testConnection,
-                            child: Text(l10n.aiTestConnection),
-                          ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
-                ],
-                if (!controller.usageStorageAvailable)
-                  Text(
-                    l10n.aiInternalStorageError,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
         ],
       );
     },
-  );
-
-  Widget _insights(BuildContext context) {
-    final report = _selectedHistory?.report ?? widget.controller.report;
-    final settings = widget.controller.settings;
-    final l10n = context.l10n;
-    final groups = <(String, String, bool, Set<AiSuggestionCode>)>[
-      (
-        'clipboard',
-        l10n.aiClipboardAnalysis,
-        settings.clipboardAnalysis,
-        {
-          AiSuggestionCode.frequentClipboard,
-          AiSuggestionCode.repeatedClipboard,
-          AiSuggestionCode.ungroupedClipboard,
-        },
-      ),
-      (
-        'resources',
-        l10n.aiUsageOptimization,
-        settings.usageOptimization,
-        {AiSuggestionCode.candidateWithoutUse, AiSuggestionCode.alwaysOnUnused},
-      ),
-      (
-        'disclosure',
-        l10n.aiProgressiveDisclosure,
-        settings.progressiveDisclosure,
-        {AiSuggestionCode.progressivePrompt, AiSuggestionCode.progressiveMcp},
-      ),
-      (
-        'tokens',
-        l10n.aiTokenOptimization,
-        settings.tokenOptimization,
-        {
-          AiSuggestionCode.largeAlwaysOnPrompt,
-          AiSuggestionCode.highInputTokens,
-          AiSuggestionCode.lowCacheReuse,
-          AiSuggestionCode.incompleteTokenData,
-        },
-      ),
-      (
-        'check-ins',
-        l10n.aiProactiveCheckIns,
-        settings.proactiveCheckIns,
-        {AiSuggestionCode.takeBreak},
-      ),
-    ];
-    return _Section(
-      title: l10n.aiInsightsTitle,
-      children: [
-        if (report == null)
-          Text(l10n.aiInsightsEmpty)
-        else ...[
-          Wrap(
-            spacing: 12,
-            runSpacing: 4,
-            children: [
-              Text(
-                report.localOnly ? l10n.aiLocalAnalysis : l10n.aiCloudResult,
-                key: const Key('ai-report-source'),
-              ),
-              Text(
-                DateFormat.yMd(
-                  Localizations.localeOf(context).toLanguageTag(),
-                ).add_Hm().format(report.createdAt.toLocal()),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-          for (final (id, title, enabled, codes) in groups)
-            if ((enabled ||
-                    (_selectedHistory != null &&
-                        report.suggestions.any(
-                          (s) => codes.contains(s.code),
-                        ))) &&
-                (id != 'check-ins' ||
-                    report.suggestions.any((s) => codes.contains(s.code))))
-              Padding(
-                key: Key('ai-result-$id'),
-                padding: const EdgeInsets.only(top: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(title, style: Theme.of(context).textTheme.titleSmall),
-                    const SizedBox(height: 6),
-                    if (!report.suggestions.any((s) => codes.contains(s.code)))
-                      Text(
-                        l10n.aiCategoryNoSuggestions,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    for (final suggestion in report.suggestions.where(
-                      (s) => codes.contains(s.code),
-                    ))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(aiSuggestionText(context, suggestion)),
-                            if (suggestion.targetId != null &&
-                                widget.onReviewSuggestion != null)
-                              DesktopActionButton(
-                                key: Key(
-                                  'ai-review-${suggestion.code.name}-${suggestion.targetId}',
-                                ),
-                                tone: DesktopActionTone.soft,
-                                onPressed: () =>
-                                    widget.onReviewSuggestion!(suggestion),
-                                child: Text(l10n.aiReviewSuggestion),
-                              ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-          if (report.cloudSummary != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              l10n.aiCloudResult,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 6),
-            SelectableText(report.cloudSummary!),
-          ],
-        ],
-        const SizedBox(height: 12),
-        Text(l10n.aiReadOnly, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 4),
-        Text(l10n.aiDailyScope, style: Theme.of(context).textTheme.bodySmall),
-      ],
-    );
-  }
-
-  Widget _history(BuildContext context) {
-    final controller = widget.controller;
-    final l10n = context.l10n;
-    return _Section(
-      title: l10n.aiHistoryTitle,
-      children: [
-        if (controller.historyEntries.isEmpty) Text(l10n.aiHistoryEmpty),
-        for (final entry in controller.historyEntries)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: DesktopActionButton(
-              tone: _selectedHistory?.report.createdAt == entry.report.createdAt
-                  ? DesktopActionTone.primary
-                  : DesktopActionTone.soft,
-              onPressed: () => setState(() {
-                _selectedHistory = entry;
-                if (_scrollController.hasClients) _scrollController.jumpTo(0);
-              }),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      DateFormat.yMd(
-                        Localizations.localeOf(context).toLanguageTag(),
-                      ).add_Hms().format(entry.report.createdAt.toLocal()),
-                    ),
-                  ),
-                  Text(
-                    entry.automatic ? l10n.aiAutomaticRun : l10n.aiManualRun,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    entry.report.localOnly
-                        ? l10n.aiLocalAnalysis
-                        : l10n.aiCloudResult,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        if (controller.historyCount > AiCompanionController.historyPageSize)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              DesktopActionButton(
-                key: const Key('ai-history-previous'),
-                tooltip: l10n.aiHistoryPrevious,
-                semanticLabel: l10n.aiHistoryPrevious,
-                onPressed: controller.historyPage == 0
-                    ? null
-                    : () => controller.loadHistoryPage(
-                        controller.historyPage - 1,
-                      ),
-                child: const Icon(Icons.chevron_left),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  '${controller.historyPage + 1} / ${(controller.historyCount / AiCompanionController.historyPageSize).ceil()}',
-                ),
-              ),
-              DesktopActionButton(
-                key: const Key('ai-history-next'),
-                tooltip: l10n.aiHistoryNext,
-                semanticLabel: l10n.aiHistoryNext,
-                onPressed:
-                    (controller.historyPage + 1) *
-                            AiCompanionController.historyPageSize >=
-                        controller.historyCount
-                    ? null
-                    : () => controller.loadHistoryPage(
-                        controller.historyPage + 1,
-                      ),
-                child: const Icon(Icons.chevron_right),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  Widget _feature({
-    required String key,
-    required String title,
-    required String description,
-    required bool value,
-    required AiCompanionSettings Function(bool) change,
-  }) => CompactSwitchListTile(
-    key: Key('ai-feature-$key'),
-    contentPadding: EdgeInsets.zero,
-    title: Text(title),
-    subtitle: Text(description),
-    value: value,
-    onChanged: widget.controller.isLoading
-        ? null
-        : (bool value) => widget.controller.saveSettings(change(value)),
   );
 }
 
@@ -602,6 +181,22 @@ class _ProviderDialogState extends State<_ProviderDialog> {
   );
   final TextEditingController _apiKey = TextEditingController();
   bool _removeKey = false;
+  bool _showApiKey = false;
+  final FocusNode _apiKeyFocus = FocusNode();
+
+  Future<void> _pasteApiKey() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted || data?.text == null) return;
+    final selection = _apiKey.selection;
+    final start = selection.isValid ? selection.start : _apiKey.text.length;
+    final end = selection.isValid ? selection.end : start;
+    _apiKey.value = TextEditingValue(
+      text: _apiKey.text.replaceRange(start, end, data!.text!),
+      selection: TextSelection.collapsed(offset: start + data.text!.length),
+    );
+    _apiKeyFocus.requestFocus();
+  }
+
   late AiCompanionProtocol _protocol = widget.controller.settings.protocol;
 
   @override
@@ -609,6 +204,7 @@ class _ProviderDialogState extends State<_ProviderDialog> {
     _endpoint.dispose();
     _model.dispose();
     _apiKey.dispose();
+    _apiKeyFocus.dispose();
     super.dispose();
   }
 
@@ -687,12 +283,38 @@ class _ProviderDialogState extends State<_ProviderDialog> {
               DesktopTextField(
                 key: const Key('ai-provider-api-key'),
                 controller: _apiKey,
-                obscureText: true,
+                focusNode: _apiKeyFocus,
+                obscureText: !_showApiKey,
                 autocorrect: false,
                 enableSuggestions: false,
                 enabled: !_removeKey,
                 decoration: InputDecoration(
                   labelText: context.l10n.aiProviderApiKey,
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DesktopIconButton(
+                        key: const Key('ai-paste-api-key'),
+                        tooltip: context.l10n.paste,
+                        icon: const Icon(Icons.content_paste_outlined),
+                        onPressed: _removeKey ? null : _pasteApiKey,
+                      ),
+                      DesktopIconButton(
+                        key: const Key('ai-toggle-api-key'),
+                        tooltip: _showApiKey
+                            ? context.l10n.aiHideApiKey
+                            : context.l10n.aiShowApiKey,
+                        icon: Icon(
+                          _showApiKey
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => _showApiKey = !_showApiKey),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                  ),
                   helperText: widget.controller.hasStoredApiKey
                       ? context.l10n.aiProviderKeyStored
                       : context.l10n.aiProviderKeyHint,
@@ -761,33 +383,10 @@ String _errorText(BuildContext context, AiCompanionError error) =>
       AiCompanionError.requestTooLarge => context.l10n.aiErrorRequestTooLarge,
     };
 
-String aiSuggestionText(BuildContext context, AiSuggestion suggestion) =>
-    switch (suggestion.code) {
-      AiSuggestionCode.frequentClipboard => context.l10n.aiFrequentClipboard(
-        suggestion.count,
-      ),
-      AiSuggestionCode.repeatedClipboard => context.l10n.aiRepeatedClipboard(
-        suggestion.count,
-      ),
-      AiSuggestionCode.ungroupedClipboard => context.l10n.aiUngroupedClipboard(
-        suggestion.count,
-      ),
-      AiSuggestionCode.candidateWithoutUse =>
-        context.l10n.aiCandidateWithoutUse(suggestion.count),
-      AiSuggestionCode.alwaysOnUnused => context.l10n.aiAlwaysOnUnused,
-      AiSuggestionCode.progressivePrompt => context.l10n.aiProgressivePrompt(
-        suggestion.count,
-      ),
-      AiSuggestionCode.progressiveMcp => context.l10n.aiProgressiveMcp,
-      AiSuggestionCode.largeAlwaysOnPrompt =>
-        context.l10n.aiLargeAlwaysOnPrompt(suggestion.count),
-      AiSuggestionCode.highInputTokens => context.l10n.aiHighInputTokens(
-        suggestion.count,
-      ),
-      AiSuggestionCode.lowCacheReuse => context.l10n.aiLowCacheReuse(
-        suggestion.count,
-      ),
-      AiSuggestionCode.incompleteTokenData =>
-        context.l10n.aiIncompleteTokenData,
-      AiSuggestionCode.takeBreak => context.l10n.aiTakeABreakSuggestion,
-    };
+Widget _busyIcon(BuildContext context) =>
+    MediaQuery.disableAnimationsOf(context)
+    ? const Icon(Icons.hourglass_empty, size: 14)
+    : const SizedBox.square(
+        dimension: 14,
+        child: CircularProgressIndicator(strokeWidth: 1.5),
+      );

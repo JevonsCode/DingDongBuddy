@@ -29,7 +29,6 @@ import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dar
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
-import 'package:dingdong/features/ai_companion/data/ai_insight_history.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
@@ -71,7 +70,6 @@ import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/features/telemetry/data/http_lifecycle_telemetry_gateway.dart';
 import 'package:dingdong/features/telemetry/data/lifecycle_telemetry_controller.dart';
 import 'package:dingdong/features/token_usage/data/local_token_usage_repository.dart';
-import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
 import 'package:dingdong/platform/desktop_clipboard_gateway.dart';
 import 'package:dingdong/platform/file_selector_sound_gateway.dart';

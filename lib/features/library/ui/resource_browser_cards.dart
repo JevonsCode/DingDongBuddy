@@ -119,7 +119,7 @@ class _ResourceCard extends StatelessWidget {
       child: Container(
         key: Key('resource-card-${resource.id}'),
         decoration: decoration,
-        padding: const EdgeInsets.fromLTRB(2, 12, 0, 10),
+        padding: const EdgeInsets.fromLTRB(2, 12, 8, 10),
         child: Row(
           children: <Widget>[
             SizedBox(

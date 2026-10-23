@@ -249,48 +249,10 @@ Future<void> _runResourceManagerWindow(
   );
   aiCompanionController = AiCompanionController(
     store: aiStore,
-    history: AiInsightHistory(
-      '${paths.tokenUsageDatabaseFile.parent.path}/ai-insights.sqlite3',
-    ),
     usageRepository: tokenUsageRepository,
     onUsageChanged: tokenUsageController.invalidate,
-    loadMetadata: () async {
-      final AiCompanionSettings enabled = aiCompanionController.settings;
-      final DateTime now = DateTime.now();
-      final DateTime today = DateTime(now.year, now.month, now.day);
-      final DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
-      return AiCompanionMetadata(
-        clipboard: !enabled.clipboardAnalysis
-            ? const <ClipboardRecord>[]
-            : clipboardRepository
-                  .list(
-                    limit: settings.clipboardMaxItems,
-                    includeProtectedBeyondLimit: true,
-                  )
-                  .where((record) {
-                    final DateTime updated = record.updatedAt.toLocal();
-                    return !updated.isBefore(today) &&
-                        updated.isBefore(tomorrow);
-                  })
-                  .toList(growable: false),
-        resources:
-            enabled.usageOptimization ||
-                enabled.tokenOptimization ||
-                enabled.progressiveDisclosure
-            ? await resourceStore.load()
-            : const [],
-        tokenUsage: !enabled.tokenOptimization
-            ? const TokenUsageSnapshot()
-            : await tokenUsageRepository.readSnapshot(
-                from: today,
-                through: today,
-                includeInternal: enabled.includeInternalInGlobal,
-              ),
-      );
-    },
   );
   await aiCompanionController.load();
-  aiCompanionController.startAutomaticAnalysis();
   runApp(
     ResourceManagerApp(
       aiCompanionController: aiCompanionController,

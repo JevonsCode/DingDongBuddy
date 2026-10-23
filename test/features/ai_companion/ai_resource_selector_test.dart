@@ -34,11 +34,6 @@ class Store implements AiCompanionStore {
   Future<void> writeApiKey(String? value) async {
     key = value;
   }
-
-  @override
-  Future<AiCompanionReport?> loadReport() async => null;
-  @override
-  Future<void> saveReport(AiCompanionReport? value) async {}
 }
 
 class Transport implements AiCompanionTransport {
@@ -208,20 +203,17 @@ void main() {
     },
   );
 
-  test(
-    'toggle defaults off and serializes independently from cloud analysis',
-    () {
-      expect(AiCompanionSettings.fromJson({}).autoResourceSelection, false);
-      final settings = const AiCompanionSettings().copyWith(
-        autoResourceSelection: true,
-      );
-      expect(
-        AiCompanionSettings.fromJson(settings.toJson()).autoResourceSelection,
-        true,
-      );
-      expect(settings.cloudAnalysis, false);
-    },
-  );
+  test('resource selection defaults off and persists independently', () {
+    expect(AiCompanionSettings.fromJson({}).autoResourceSelection, false);
+    final settings = const AiCompanionSettings().copyWith(
+      autoResourceSelection: true,
+    );
+    expect(
+      AiCompanionSettings.fromJson(settings.toJson()).autoResourceSelection,
+      true,
+    );
+    expect(settings.toJson(), isNot(contains('cloudAnalysis')));
+  });
   test(
     'off makes no provider requests; on sends bounded explicit inputs only and records its purpose',
     () async {

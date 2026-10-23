@@ -28,6 +28,61 @@ Resource resource(
 );
 void main() {
   test(
+    'AI selects optional Prompts while required and explicit Prompts survive',
+    () async {
+      BridgeResourceSelectionRequest? seen;
+      Set<String>? chosen = {'optional', 'manual', 'disabled', 'scoped'};
+      final router = AgentRouter(
+        resourceStore: InMemoryResourceStore([
+          resource(
+            'required',
+            ResourceType.prompt,
+            activation: ResourceActivation.always,
+          ),
+          resource('optional', ResourceType.prompt),
+          resource('named', ResourceType.prompt),
+          resource(
+            'manual',
+            ResourceType.prompt,
+            activation: ResourceActivation.manual,
+          ),
+          resource('disabled', ResourceType.prompt, enabled: false),
+          resource('scoped', ResourceType.prompt, groups: ['missing']),
+        ]),
+        selectBridgeResources: (request) async {
+          seen = request;
+          return chosen;
+        },
+      );
+      Future<Set<Object?>> prompts(String task) async {
+        final response = await router.route(
+          HttpRequestData(
+            method: 'POST',
+            uri: '/agent/bridge',
+            body: jsonEncode({'task': task, 'source': 'Codex'}),
+          ),
+        );
+        return (((response.json['active'] as Map)['prompts'] as List)
+                .cast<Map<String, Object?>>())
+            .map((e) => e['id'])
+            .toSet();
+      }
+
+      expect(await prompts('Review changes'), {'required', 'optional'});
+      expect(seen!.candidates.map((e) => e.type).toSet(), {'prompt'});
+      expect(seen!.candidates.map((e) => e.id).toSet(), {'optional', 'named'});
+      expect(
+        seen!.candidates.map((e) => e.description).join(),
+        isNot(contains('private-config')),
+      );
+      chosen = {};
+      expect(await prompts('Use named'), {'required', 'named'});
+      chosen = null;
+      expect(await prompts('Use optional'), {'required', 'optional'});
+    },
+  );
+
+  test(
     'explicit eligible MCP title or managed name survives empty model selection without expanding scope',
     () async {
       final database = resource(

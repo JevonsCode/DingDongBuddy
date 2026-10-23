@@ -23,9 +23,8 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 只维护一份；接入的 Agent 消息统一收好，桌面提示声由你选。重要提醒和选中的
 剪贴板内容，也能送到你配对的可信手机。
 
-> **DingDong 1.9.0（构建 72）。** 新增 Skill 版本历史、还原与对比；支持可配置 Agent 提醒和模型协议；
-> 重复资源可直接处理并选择备份，同时包含 1.8 测试版的提醒、Token 历史和手机端改进。
-> 云端分析只使用匿名用量数据，剪贴板原文、图片和文件保留在本机。
+> **DingDong 1.9.1（构建 73）。** AI+ 只按当前任务为 Agent 选择 Prompt、Skill 和 MCP，
+> 移除洞察建议和自动分析，简化模型 Token 输入，并修复弹窗收起与粘贴焦点。
 
 配置方式和数据边界见 [AI 助手说明](docs/product/ai-companion.md)。
 
@@ -203,11 +202,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.9.0：
+已发布的稳定安装包 · 1.9.1：
 
-- [macOS · Apple 芯片 · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-arm64.dmg)
-- [macOS · Intel · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-x64.dmg)
-- [Windows x64 · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-arm64.dmg)
+- [macOS · Intel · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-x64.dmg)
+- [Windows x64 · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

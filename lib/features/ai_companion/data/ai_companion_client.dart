@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:dingdong/features/ai_companion/domain/ai_companion_analyzer.dart';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_models.dart';
 import 'package:dingdong/features/ai_companion/domain/ai_companion_privacy.dart';
 
@@ -156,45 +155,6 @@ final class AiCompanionClient {
     }
   }
 
-  Future<String> analyze(
-    AiCompanionSettings settings,
-    String? key,
-    AiCompanionMetadata metadata, {
-    AiCompanionUsageSink? onUsage,
-  }) async {
-    if (!settings.cloudAnalysis || !settings.analysisEnabled) {
-      throw const AiCompanionException(AiCompanionError.disabled);
-    }
-    return _complete(
-      settings,
-      key,
-      <Map<String, String>>[
-        <String, String>{
-          'role': 'system',
-          'content':
-              'Suggest concise read-only improvements from these anonymous '
-              'counts only. Candidates are not actual usage: Skills are loaded; '
-              'Prompts activated; MCPs invoked. Never infer private content or '
-              'claim measurements not provided. For progressiveDisclosure, advise '
-              'supported DingDong task-match/manual Prompt activation and MCP '
-              'scope/task-match settings, attaching only needed servers. This is '
-              'read-only configuration advice; native client tool-list protocols '
-              'are unchanged. Do not request files or secrets.',
-        },
-        <String, String>{
-          'role': 'user',
-          'content': jsonEncode(
-            const AiCompanionAnalyzer().cloudMetadata(settings, metadata),
-          ),
-        },
-      ],
-      purpose: AiCompanionUsagePurpose.analysis,
-      onUsage: onUsage,
-    );
-  }
-
-  /// The only routing inputs are the explicitly supplied bounded task and
-  /// short resource metadata. IDs are request-local aliases.
   Future<Set<String>?> selectResources(
     AiCompanionSettings settings,
     String? key,
@@ -220,9 +180,9 @@ final class AiCompanionClient {
       ],
       purpose: AiCompanionUsagePurpose.resourceSelection,
       onUsage: onUsage,
-      requestTimeout: timeout < const Duration(seconds: 5)
+      requestTimeout: timeout < const Duration(seconds: 15)
           ? timeout
-          : const Duration(seconds: 5),
+          : const Duration(seconds: 15),
     );
     final parsed = jsonDecode(answer);
     if (parsed is! Map ||

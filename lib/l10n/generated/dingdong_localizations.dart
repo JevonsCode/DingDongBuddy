@@ -148,19 +148,13 @@ abstract class DingDongLocalizations {
   /// AI+ resource selection and analysis.
   ///
   /// In en, this message translates to:
-  /// **'No suggestions in this category in the current report. Analyze again after changing the scope.'**
-  String get aiCategoryNoSuggestions;
-
-  /// AI+ resource selection and analysis.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure a model first. Local rules apply until one is available.'**
+  /// **'Configure an available model first. Connection failures use local rules.'**
   String get aiRoutingNeedsProvider;
 
   /// AI+ resource selection and analysis.
   ///
   /// In en, this message translates to:
-  /// **'When an Agent requests resources, let your configured model select from the task, supplied context and candidate summaries. Off by default; failures fall back to local rules.'**
+  /// **'When an Agent requests resources, select task-relevant Prompts, Skills and MCPs from eligible candidates. Sends only the task and candidate summaries; failures use local rules.'**
   String get aiAutoResourceSelectionDescription;
 
   /// AI+ resource selection and analysis.
@@ -169,197 +163,17 @@ abstract class DingDongLocalizations {
   /// **'AI resource selection'**
   String get aiAutoResourceSelection;
 
-  /// Independent progressive disclosure advice.
-  ///
-  /// In en, this message translates to:
-  /// **'Progressive disclosure advice'**
-  String get aiProgressiveDisclosure;
-
-  /// Independent progressive disclosure advice.
-  ///
-  /// In en, this message translates to:
-  /// **'Review always-on Prompts and MCP scope for on-demand loading. This does not change native client tool loading.'**
-  String get aiProgressiveDisclosureDescription;
-
-  /// Independent progressive disclosure advice.
-  ///
-  /// In en, this message translates to:
-  /// **'This always-on Prompt contains {count} characters. Keep essential shared rules brief; review task matching or manual loading for task-specific details.'**
-  String aiProgressivePrompt(int count);
-
-  /// Independent progressive disclosure advice.
-  ///
-  /// In en, this message translates to:
-  /// **'Review whether this always-on MCP server is needed for the current task. Limit its scope or enable it manually when needed. Third-party Agents may still load all configured tool schemas.'**
-  String get aiProgressiveMcp;
-
-  /// Scope and limits of companion analysis.
-  ///
-  /// In en, this message translates to:
-  /// **'Clipboard items updated today and today\'s recorded Token totals. Copy counts and resource usage are cumulative; resource suggestions review the full library. At most 500 local items are analyzed.'**
-  String get aiDailyScope;
-
   /// AI provider credentials.
   ///
   /// In en, this message translates to:
   /// **'Changing the endpoint removes its previous key. Enter a key for the new provider if it needs one.'**
   String get aiProviderCredentialNote;
 
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Review item'**
-  String get aiReviewSuggestion;
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'No suggestions from the available data. Nothing was changed.'**
-  String get aiNoSuggestions;
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Copied {count} times. Consider pinning this item or saving it as a reusable Prompt.'**
-  String aiFrequentClipboard(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Found {count} identical clipboard entries. Review them before removing any.'**
-  String aiRepeatedClipboard(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items have no group. Group useful items so they are easier to find.'**
-  String aiUngroupedClipboard(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Considered {count} times with no recorded invocation or load. Review whether this MCP or Skill should remain available, or load it only for matching tasks.'**
-  String aiCandidateWithoutUse(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'This always-on resource has no recorded use for at least a week. Review its scope and consider task-matched or on-demand loading.'**
-  String get aiAlwaysOnUnused;
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'This always-on Prompt contains {count} characters. Keep shared rules brief and move task-specific details to task-matched or on-demand resources.'**
-  String aiLargeAlwaysOnPrompt(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Recorded input is {count} tokens and dominates usage. Review long repeated context and attach resources only when the task needs them.'**
-  String aiHighInputTokens(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Only {count} cached input tokens were recorded. Stable shared prefixes may help; actual savings depend on the model provider.'**
-  String aiLowCacheReuse(int count);
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Token records are incomplete. More reliable data is needed before judging efficiency.'**
-  String get aiIncompleteTokenData;
-
-  /// AI companion suggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'You have been here a while. Take a breath, stretch, or step away for a moment.'**
-  String get aiTakeABreakSuggestion;
-
   /// AI companion.
   ///
   /// In en, this message translates to:
   /// **'AI+'**
   String get aiCompanionTitle;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Select resources on demand and review insights.'**
-  String get aiCompanionSubtitle;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Each feature is opt-in. Statistics analysis sends only counts and usage; resource selection sends the task, supplied context and candidate summaries. Clipboard text is not sent.'**
-  String get aiPrivacySummary;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Analysis scope'**
-  String get aiFeaturesTitle;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Clipboard insights'**
-  String get aiClipboardAnalysis;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Find repeated and frequently copied items locally.'**
-  String get aiClipboardAnalysisDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Resource suggestions'**
-  String get aiUsageOptimization;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Review resource usage and always-on configuration without changing them.'**
-  String get aiUsageOptimizationDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Token suggestions'**
-  String get aiTokenOptimization;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Use recorded local totals to spot opportunities to reduce usage.'**
-  String get aiTokenOptimizationDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Gentle check-ins'**
-  String get aiProactiveCheckIns;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'A local reminder after an hour with this page open, at most once every two hours. No automatic network requests.'**
-  String get aiProactiveCheckInsDescription;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Model analysis of metadata'**
-  String get aiCloudAnalysis;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'When enabled, analysis sends counts and Token statistics from your enabled categories to the configured model, automatically or when you click Analyze now.'**
-  String get aiCloudAnalysisDescription;
 
   /// AI companion model connection.
   ///
@@ -424,19 +238,19 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'API key'**
+  /// **'API token'**
   String get aiProviderApiKey;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'A key is saved securely. Leave blank to keep it.'**
+  /// **'An API token is saved on this device. Leave blank to keep it.'**
   String get aiProviderKeyStored;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Stored in this device\'s secure storage; optional for local models.'**
+  /// **'Saved in this device’s local settings, without Keychain. Optional for local services.'**
   String get aiProviderKeyHint;
 
   /// AI companion.
@@ -454,7 +268,7 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'No model configured. Local insights are available after enabling an analysis feature.'**
+  /// **'No model configured. Add a model to select resources for Agent tasks.'**
   String get aiProviderNotConfigured;
 
   /// AI companion.
@@ -478,55 +292,13 @@ abstract class DingDongLocalizations {
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Analyze now'**
-  String get aiAnalyze;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Insights and suggestions'**
-  String get aiInsightsTitle;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose analysis categories in Settings. Automatic results and saved history appear here; you can also analyze now.'**
-  String get aiInsightsEmpty;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Local analysis · no model request'**
-  String get aiLocalAnalysis;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Model suggestions · metadata only'**
-  String get aiCloudResult;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggestions are read-only. Review changes in the relevant workspace.'**
-  String get aiReadOnly;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
-  /// **'Take a moment'**
-  String get aiCheckInNow;
-
-  /// AI companion.
-  ///
-  /// In en, this message translates to:
   /// **'AI+ is unavailable in this window. Reopen Resource Manager.'**
   String get aiUnavailable;
 
   /// AI companion.
   ///
   /// In en, this message translates to:
-  /// **'Enable the relevant feature first.'**
+  /// **'AI resource selection is off.'**
   String get aiErrorDisabled;
 
   /// AI companion.
@@ -7319,62 +7091,8 @@ abstract class DingDongLocalizations {
   /// Internal AI token accounting.
   ///
   /// In en, this message translates to:
-  /// **'Internal token usage'**
-  String get aiInternalUsageTitle;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'Include in global statistics'**
-  String get aiIncludeInternal;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'Off by default. When enabled, global statistics include all recorded internal usage. Turning it off keeps the separate history here.'**
-  String get aiIncludeInternalDescription;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'Records API usage for resource selection, model analysis and connection tests without saving request content.'**
-  String get aiInternalUsageDescription;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'All time'**
-  String get aiInternalCumulative;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'Last request in this window'**
-  String get aiInternalLast;
-
-  /// No description provided for @aiInternalRequests.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} requests'**
-  String aiInternalRequests(int count);
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'Not reported'**
-  String get aiInternalUnknown;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
   /// **'Only reported usage is counted; missing fields are not zero. Cache tokens are included in input.'**
   String get aiInternalPartial;
-
-  /// Internal AI token accounting.
-  ///
-  /// In en, this message translates to:
-  /// **'Internal usage could not be saved or read; totals may be incomplete. Model replies are unaffected.'**
-  String get aiInternalStorageError;
 
   /// tokenUsageIncludeInternal
   ///
@@ -7550,65 +7268,11 @@ abstract class DingDongLocalizations {
   /// **'Tray preview updated'**
   String get devReminderColorsUpdated;
 
-  /// aiSettingsTab
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get aiSettingsTab;
-
-  /// aiAutomaticAnalysis
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic analysis'**
-  String get aiAutomaticAnalysis;
-
-  /// aiAutomaticAnalysisDescription
-  ///
-  /// In en, this message translates to:
-  /// **'Analyze enabled categories when the resource window starts, then check every 30 minutes. Unchanged data is skipped. Turn off to analyze manually. Model analysis runs only when separately enabled.'**
-  String get aiAutomaticAnalysisDescription;
-
-  /// aiHistoryTitle
-  ///
-  /// In en, this message translates to:
-  /// **'History'**
-  String get aiHistoryTitle;
-
-  /// aiHistoryEmpty
-  ///
-  /// In en, this message translates to:
-  /// **'No saved analyses yet.'**
-  String get aiHistoryEmpty;
-
-  /// aiAutomaticRun
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic'**
-  String get aiAutomaticRun;
-
-  /// aiManualRun
-  ///
-  /// In en, this message translates to:
-  /// **'Manual'**
-  String get aiManualRun;
-
   /// aiErrorCredentialUnavailable
   ///
   /// In en, this message translates to:
-  /// **'The system denied access to the saved API key. Restart DingDong and allow Keychain access if prompted, or re-enter the key. Local settings and insights remain available.'**
+  /// **'Could not read the local API token. Enter it again and save.'**
   String get aiErrorCredentialUnavailable;
-
-  /// aiHistoryPrevious
-  ///
-  /// In en, this message translates to:
-  /// **'Previous page'**
-  String get aiHistoryPrevious;
-
-  /// aiHistoryNext
-  ///
-  /// In en, this message translates to:
-  /// **'Next page'**
-  String get aiHistoryNext;
 
   /// Settings search and reminder ordering.
   ///
@@ -7849,6 +7513,24 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'No file transfers yet'**
   String get noFileTransferHistory;
+
+  /// AI model configuration and operation status.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide API token'**
+  String get aiHideApiKey;
+
+  /// AI model configuration and operation status.
+  ///
+  /// In en, this message translates to:
+  /// **'Show API token'**
+  String get aiShowApiKey;
+
+  /// AI model configuration and operation status.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get aiTestingConnection;
 }
 
 class _DingDongLocalizationsDelegate

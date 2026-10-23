@@ -12,8 +12,8 @@ adapters. The main application process owns:
 - clipboard monitoring, capture, history, and quick paste;
 - the Prompt, Skill, MCP, and Knowledge resource library;
 - recent Agent activity and completion notifications;
-- the opt-in AI companion, local recommendations, and explicitly requested
-  model calls described in [AI companion](../product/ai-companion.md);
+- opt-in, request-driven AI resource selection and explicit model connection
+  tests described in [AI companion](../product/ai-companion.md);
 - a loopback HTTP server used by the bundled MCP executable and local clients.
 
 The bundled MCP executable is a separate short-lived process. It discovers the
@@ -49,7 +49,6 @@ flowchart LR
 | Prompts, Skills, MCPs, and Knowledge | `resource-library.json` plus managed Skill packages | User-managed; synchronized to supported Agent configurations |
 | Trigger groups | `trigger-groups.json` | User-managed resource scope rules |
 | Recent Agent details | `agent-activity.json` | Controlled by the recent-Agent retention settings |
-| AI+ insight history | `ai-insights.sqlite3` | Local report history with SQL pagination; latest-report preference migrated on first load |
 | User settings | Platform preferences | Loaded by both the main and dedicated Settings windows |
 | Active API port | `api-port` | Rewritten on each application start |
 

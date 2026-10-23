@@ -30,146 +30,22 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get completionTrayStyle => 'Estilo de finalización';
 
   @override
-  String get aiCategoryNoSuggestions =>
-      'El informe actual no contiene sugerencias de esta categoría. Vuelve a analizar tras cambiar el alcance.';
-
-  @override
   String get aiRoutingNeedsProvider =>
-      'Configura un modelo primero. Hasta entonces se usan las reglas locales.';
+      'Configura primero un modelo disponible. Si falla la conexión, se usan las reglas locales.';
 
   @override
   String get aiAutoResourceSelectionDescription =>
-      'Cuando un Agent solicita recursos, el modelo configurado los selecciona según la tarea, el contexto enviado y los resúmenes. Desactivado por defecto; ante errores se usan reglas locales.';
+      'Cuando un Agent solicita recursos, selecciona Prompts, Skills y MCPs pertinentes entre los candidatos disponibles. Envía solo la tarea y los resúmenes; si falla, usa las reglas locales.';
 
   @override
   String get aiAutoResourceSelection => 'Selección de recursos con IA';
-
-  @override
-  String get aiProgressiveDisclosure => 'Consejos de divulgación progresiva';
-
-  @override
-  String get aiProgressiveDisclosureDescription =>
-      'Revisa los Prompts permanentes y el alcance de MCP para la carga bajo demanda. No cambia la carga nativa de herramientas del cliente.';
-
-  @override
-  String aiProgressivePrompt(int count) {
-    return 'Este Prompt permanente contiene $count caracteres. Resume las reglas comunes esenciales y revisa la carga por tarea o manual de los detalles específicos.';
-  }
-
-  @override
-  String get aiProgressiveMcp =>
-      'Revisa si la tarea actual necesita este servidor MCP permanente. Limita su alcance o actívalo manualmente cuando haga falta. Los agentes externos pueden seguir cargando todos los esquemas de herramientas configurados.';
-
-  @override
-  String get aiDailyScope =>
-      'Elementos del portapapeles actualizados hoy y tokens registrados hoy. Los recuentos de copias y uso son acumulativos; los recursos se revisan en toda la biblioteca. Se analizan hasta 500 elementos locales.';
 
   @override
   String get aiProviderCredentialNote =>
       'Cambiar la URL elimina la clave anterior. Introduce una clave para el nuevo proveedor si la necesita.';
 
   @override
-  String get aiReviewSuggestion => 'Revisar elemento';
-
-  @override
-  String get aiNoSuggestions =>
-      'No hay sugerencias para los datos disponibles. No se ha cambiado nada.';
-
-  @override
-  String aiFrequentClipboard(int count) {
-    return 'Copiado $count veces. Considera fijarlo o guardarlo como Prompt reutilizable.';
-  }
-
-  @override
-  String aiRepeatedClipboard(int count) {
-    return 'Se encontraron $count entradas idénticas en el portapapeles. Revísalas antes de eliminar alguna.';
-  }
-
-  @override
-  String aiUngroupedClipboard(int count) {
-    return 'Hay $count elementos sin grupo. Agrupa los útiles para encontrarlos con más facilidad.';
-  }
-
-  @override
-  String aiCandidateWithoutUse(int count) {
-    return 'Se consideró $count veces sin invocaciones ni cargas registradas. Revisa si necesitas este MCP o Skill, o cárgalo solo para tareas pertinentes.';
-  }
-
-  @override
-  String get aiAlwaysOnUnused =>
-      'Este recurso permanente lleva al menos una semana sin uso registrado. Revisa su alcance y considera cargarlo por tarea o bajo demanda.';
-
-  @override
-  String aiLargeAlwaysOnPrompt(int count) {
-    return 'Este Prompt permanente contiene $count caracteres. Resume las reglas comunes y carga los detalles por tarea o bajo demanda.';
-  }
-
-  @override
-  String aiHighInputTokens(int count) {
-    return 'Se registraron $count tokens de entrada, que dominan el uso. Revisa el contexto largo repetido y adjunta recursos solo cuando la tarea los necesite.';
-  }
-
-  @override
-  String aiLowCacheReuse(int count) {
-    return 'Solo se registraron $count tokens de entrada en caché. Un prefijo común estable puede ayudar; el ahorro depende del proveedor.';
-  }
-
-  @override
-  String get aiIncompleteTokenData =>
-      'Los registros de tokens están incompletos. Se necesitan datos más fiables para evaluar la eficiencia.';
-
-  @override
-  String get aiTakeABreakSuggestion =>
-      'Llevas aquí un rato. Respira, estírate o aléjate de la pantalla un momento.';
-
-  @override
   String get aiCompanionTitle => 'AI+';
-
-  @override
-  String get aiCompanionSubtitle =>
-      'Selecciona recursos bajo demanda y revisa sugerencias.';
-
-  @override
-  String get aiPrivacySummary =>
-      'Cada función se activa por separado. El análisis estadístico envía recuentos y uso; la selección de recursos envía la tarea, el contexto y los resúmenes. No se envía el texto del portapapeles.';
-
-  @override
-  String get aiFeaturesTitle => 'Alcance del análisis';
-
-  @override
-  String get aiClipboardAnalysis => 'Información del portapapeles';
-
-  @override
-  String get aiClipboardAnalysisDescription =>
-      'Detecta elementos repetidos y frecuentes de forma local.';
-
-  @override
-  String get aiUsageOptimization => 'Sugerencias de recursos';
-
-  @override
-  String get aiUsageOptimizationDescription =>
-      'Revisa el uso de recursos y su configuración permanente sin modificarlos.';
-
-  @override
-  String get aiTokenOptimization => 'Sugerencias de tokens';
-
-  @override
-  String get aiTokenOptimizationDescription =>
-      'Usa los totales locales registrados para encontrar oportunidades de ahorro.';
-
-  @override
-  String get aiProactiveCheckIns => 'Recordatorios amables';
-
-  @override
-  String get aiProactiveCheckInsDescription =>
-      'Un recordatorio local tras una hora con esta página abierta, como máximo cada dos horas. Sin solicitudes de red automáticas.';
-
-  @override
-  String get aiCloudAnalysis => 'Análisis de metadatos con el modelo';
-
-  @override
-  String get aiCloudAnalysisDescription =>
-      'Al activarlo, el análisis automático o manual envía los recuentos y estadísticas de tokens de las categorías activadas al modelo configurado.';
 
   @override
   String get aiProviderProtocol => 'Protocolo de API';
@@ -206,15 +82,15 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get aiProviderModel => 'Nombre del modelo';
 
   @override
-  String get aiProviderApiKey => 'Clave API';
+  String get aiProviderApiKey => 'Token API';
 
   @override
   String get aiProviderKeyStored =>
-      'Hay una clave guardada de forma segura. Déjalo vacío para conservarla.';
+      'Hay un token API guardado en este dispositivo. Déjalo vacío para conservarlo.';
 
   @override
   String get aiProviderKeyHint =>
-      'Se guarda en el almacenamiento seguro del dispositivo; opcional para modelos locales.';
+      'Se guarda en los ajustes locales de este dispositivo, sin llavero. Opcional para servicios locales.';
 
   @override
   String get aiRemoveApiKey => 'Eliminar clave guardada';
@@ -225,7 +101,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get aiProviderNotConfigured =>
-      'No hay modelo configurado. Activa una función de análisis para ver información local.';
+      'No hay un modelo configurado. Añade uno para seleccionar recursos según la tarea del Agent.';
 
   @override
   String get aiProviderNotVerified =>
@@ -238,34 +114,12 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get aiTestConnection => 'Probar conexión';
 
   @override
-  String get aiAnalyze => 'Analizar ahora';
-
-  @override
-  String get aiInsightsTitle => 'Información y sugerencias';
-
-  @override
-  String get aiInsightsEmpty =>
-      'Elige las categorías en Configuración. Aquí aparecen los resultados automáticos y el historial; también puedes analizar ahora.';
-
-  @override
-  String get aiLocalAnalysis => 'Análisis local · sin solicitud al modelo';
-
-  @override
-  String get aiCloudResult => 'Sugerencias del modelo · solo metadatos';
-
-  @override
-  String get aiReadOnly =>
-      'Las sugerencias son de solo lectura. Revisa los cambios en el espacio correspondiente.';
-
-  @override
-  String get aiCheckInNow => 'Tómate un momento';
-
-  @override
   String get aiUnavailable =>
       'AI+ no está disponible en esta ventana. Vuelve a abrir el gestor de recursos.';
 
   @override
-  String get aiErrorDisabled => 'Activa primero la función correspondiente.';
+  String get aiErrorDisabled =>
+      'La selección de recursos con IA está desactivada.';
 
   @override
   String get aiErrorInvalidProvider =>
@@ -4264,40 +4118,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'Recibe funciones nuevas antes de la versión estable. Las betas pueden ser menos estables; al desactivarlo te quedas en la beta hasta que salga una versión estable más nueva.';
 
   @override
-  String get aiInternalUsageTitle => 'Uso interno de tokens';
-
-  @override
-  String get aiIncludeInternal => 'Incluir en las estadísticas globales';
-
-  @override
-  String get aiIncludeInternalDescription =>
-      'Desactivado por defecto. Al activarlo, las estadísticas globales incluyen todo el uso interno registrado. El historial separado se conserva aquí.';
-
-  @override
-  String get aiInternalUsageDescription =>
-      'Registra el uso de la API en selección de recursos, análisis y pruebas de conexión sin guardar el contenido de las solicitudes.';
-
-  @override
-  String get aiInternalCumulative => 'Acumulado';
-
-  @override
-  String get aiInternalLast => 'Última solicitud en esta ventana';
-
-  @override
-  String aiInternalRequests(int count) {
-    return '$count solicitudes';
-  }
-
-  @override
-  String get aiInternalUnknown => 'No informado';
-
-  @override
   String get aiInternalPartial =>
       'Solo se cuenta el uso informado; los campos ausentes no son cero. La caché está incluida en la entrada.';
-
-  @override
-  String get aiInternalStorageError =>
-      'No se pudo guardar o leer el uso interno; los totales pueden estar incompletos. Las respuestas no se ven afectadas.';
 
   @override
   String get tokenUsageIncludeInternal => 'Incluir el uso de DingDong';
@@ -4391,36 +4213,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get devReminderColorsUpdated => 'Vista previa actualizada';
 
   @override
-  String get aiSettingsTab => 'Configuración';
-
-  @override
-  String get aiAutomaticAnalysis => 'Análisis automático';
-
-  @override
-  String get aiAutomaticAnalysisDescription =>
-      'Analiza las categorías activadas al iniciar la ventana de recursos y comprueba cada 30 minutos. Omite datos sin cambios. Desactívalo para analizar manualmente. Solo usa el modelo si se activa por separado.';
-
-  @override
-  String get aiHistoryTitle => 'Historial';
-
-  @override
-  String get aiHistoryEmpty => 'Todavía no hay análisis guardados.';
-
-  @override
-  String get aiAutomaticRun => 'Automático';
-
-  @override
-  String get aiManualRun => 'Manual';
-
-  @override
   String get aiErrorCredentialUnavailable =>
-      'El sistema no pudo acceder a la clave API guardada. Reinicia DingDong y permite el acceso al llavero si se solicita, o introduce la clave de nuevo. Los ajustes e informes locales siguen disponibles.';
-
-  @override
-  String get aiHistoryPrevious => 'Página anterior';
-
-  @override
-  String get aiHistoryNext => 'Página siguiente';
+      'No se pudo leer el token API local. Introdúcelo de nuevo y guarda.';
 
   @override
   String get reorderReminder => 'Arrastra para reordenar';
@@ -4560,4 +4354,13 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get noFileTransferHistory =>
       'Todavía no hay transferencias de archivos';
+
+  @override
+  String get aiHideApiKey => 'Ocultar token API';
+
+  @override
+  String get aiShowApiKey => 'Mostrar token API';
+
+  @override
+  String get aiTestingConnection => 'Conectando…';
 }

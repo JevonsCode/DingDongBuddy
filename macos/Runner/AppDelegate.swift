@@ -121,6 +121,7 @@ class AppDelegate: FlutterAppDelegate {
   private var hotKeyHandlerRef: EventHandlerRef?
   private var registeredHotKeyConfiguration: GlobalHotKeyConfiguration?
   private var previousApplication: NSRunningApplication?
+  private weak var previousPasteWindow: NSWindow?
   private var activeNotificationSound: NSSound?
   private var updaterChannel: FlutterMethodChannel?
   private var applicationUpdater: DingDongUpdater?
@@ -639,6 +640,14 @@ class AppDelegate: FlutterAppDelegate {
         let foreground = NSWorkspace.shared.frontmostApplication
         if foreground?.bundleIdentifier != Bundle.main.bundleIdentifier {
           app.previousApplication = foreground
+          app.previousPasteWindow = nil
+        } else if let target = NSApp.keyWindow,
+                  target !== app.mainFlutterWindow,
+                  target.level == .normal {
+          // Keep the editor window and its first responder when opening the
+          // clipboard from DingDong itself, rather than an old external app.
+          app.previousPasteWindow = target
+          app.previousApplication = nil
         }
         app.hotKeyChannel?.invokeMethod("pressed", arguments: nil)
         return noErr
@@ -703,11 +712,18 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   private func pasteIntoPreviousApplication() -> Bool {
-    guard let previousApplication else { return false }
+    let targetWindow = previousPasteWindow
+    let targetApplication = previousApplication
+    guard targetWindow != nil || targetApplication != nil else { return false }
+    if let targetWindow, !targetWindow.isVisible { return false }
     let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
     guard AXIsProcessTrustedWithOptions(options) else { return false }
     mainFlutterWindow?.orderOut(nil)
-    previousApplication.activate(options: [.activateIgnoringOtherApps])
+    if let targetWindow {
+      targetWindow.makeKeyAndOrderFront(nil)
+    } else {
+      targetApplication?.activate(options: [.activateIgnoringOtherApps])
+    }
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
       guard let keyDown = CGEvent(
         keyboardEventSource: nil,
@@ -724,6 +740,7 @@ class AppDelegate: FlutterAppDelegate {
       keyUp.post(tap: .cghidEventTap)
     }
     self.previousApplication = nil
+    self.previousPasteWindow = nil
     return true
   }
 }

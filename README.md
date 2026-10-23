@@ -24,10 +24,9 @@ maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
 
-> **AI+** provides optional insights, resource selection and separate internal
-> Token accounting. Model-assisted analysis sends anonymous usage metadata;
-> optional resource selection sends bounded task context and candidate descriptions.
-> Clipboard contents and files stay local.
+> **AI+** selects Prompts, Skills and MCP resources for an Agent’s current task.
+> Configure a model once; resource selection runs only when an Agent requests it.
+> Internal model Token usage is tracked separately.
 
 See the [AI+ setup and privacy boundaries](docs/product/ai-companion.md).
 
@@ -46,7 +45,7 @@ stay visible. A `*` marks a Skill loaded or an MCP called during that task.
 | Agent activity | Local completion, blocker, and decision alerts with unread state, repeat counts, history, and a configurable sound |
 | Agent reply footer | A compact final-line receipt for active Prompts, matching Skills, and available MCP connections; `*` marks a loaded Skill or called MCP |
 | Local Token history | Daily history and heatmap for supported Codex, Claude Code, and Pi sources; filter by date and source, inspect counts and export CSV |
-| AI+ | Optional clipboard, resource and Token insights, local check-ins and model-assisted analysis; separate switches and internal Token accounting |
+| AI+ | On-demand Prompt, Skill and MCP selection for Agents, with separate internal Token accounting |
 | Connected devices | Pair phones or computers, share Clipboard items and files explicitly, opt into automatic computer sync, and choose direct LAN or encrypted service transport |
 
 Clipboard and resource data stay on this computer by default. The lightweight
@@ -237,11 +236,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.9.0:
+Published stable downloads · 1.9.1:
 
-- [macOS · Apple silicon · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-arm64.dmg)
-- [macOS · Intel · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-macos-x64.dmg)
-- [Windows x64 · 1.9.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.0/DingDong-1.9.0-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-arm64.dmg)
+- [macOS · Intel · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-x64.dmg)
+- [Windows x64 · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

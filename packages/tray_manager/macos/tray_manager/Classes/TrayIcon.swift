@@ -41,8 +41,8 @@ public class TrayIcon: NSView {
         for (index, bubble) in displayedBubbles.enumerated() {
             let width = bubbleWidth(bubble)
             let rgb = (bubble["colorRgb"] as? NSNumber)?.uint32Value
-            let pulse = bubble["pulse"] as? Bool ?? false
-            let color = badgeDisplayRgb(rgb, dimmed: bubbleDimmed && pulse)
+            // Rear reminder bubbles retain their color while the foreground animates.
+            let color = rgb
             result.append(BadgeFrame(id: bubble["id"] as? String ?? "tail-\(index)",
                 rect: NSRect(x: x, y: 1, width: width, height: bounds.height - 2),
                 text: bubbleText(bubble), textX: x + width / 2,
