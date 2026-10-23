@@ -28,17 +28,26 @@ if ((Get-FileHash -LiteralPath $exe).Hash -ne (Get-FileHash -LiteralPath $instal
   throw 'Installed executable hash does not match the verified build.'
 }
 $shortcutPath = Join-Path ([Environment]::GetFolderPath('Desktop')) 'DingDong DEV - Windows reminders.lnk'
+$shell = New-Object -ComObject WScript.Shell
+$replaceOwnedShortcut = $false
 if (Test-Path -LiteralPath $shortcutPath) {
-  $shortcutPath = Join-Path ([Environment]::GetFolderPath('Desktop')) "DingDong DEV - $version.lnk"
+  $previousShortcut = $shell.CreateShortcut($shortcutPath)
+  $devInstallRoot = [System.IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'DingDong DEV')) + '\'
+  $previousTarget = $previousShortcut.TargetPath
+  if ($previousTarget -and [System.IO.Path]::GetFullPath($previousTarget).StartsWith($devInstallRoot, [StringComparison]::OrdinalIgnoreCase)) {
+    Copy-Item -LiteralPath $shortcutPath -Destination (Join-Path $destination 'previous-shortcut.lnk')
+    $replaceOwnedShortcut = $true
+  } else {
+    $shortcutPath = Join-Path ([Environment]::GetFolderPath('Desktop')) "DingDong DEV - $version.lnk"
+  }
 }
-if (Test-Path -LiteralPath $shortcutPath) {
+if ((Test-Path -LiteralPath $shortcutPath) -and -not $replaceOwnedShortcut) {
   throw "A shortcut for this version already exists: $shortcutPath"
 }
-$shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $installedExe
 $shortcut.WorkingDirectory = $destination
-$shortcut.Description = 'DingDong DEV: Windows tray buddy and hover reminder counts'
+$shortcut.Description = 'DingDong DEV: original reminder IP and visual capsule'
 $shortcut.Save()
 if (-not $NoStart) {
   Start-Process -FilePath $installedExe -WorkingDirectory $destination -WindowStyle Hidden

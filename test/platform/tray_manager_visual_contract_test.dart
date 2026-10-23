@@ -283,14 +283,9 @@ void main() {
     expect(source, contains('kTrayArtOccupancy'));
     expect(source, contains('GetPixel'));
     expect(source, contains('DrawImage'));
-    expect(
-      source
-          .split('HICON CreateTrayIcon(').last
-          .split('HICON CreateReminderTrayIcon').first,
-      isNot(contains('FillEllipse')),
-    );
-    expect(source, contains('HICON CreateReminderTrayIcon'));
-    expect(source, contains('if (attention)'));
+    expect(source, isNot(contains('FillEllipse')));
+    expect(source, isNot(contains('CreateReminderTrayIcon')));
+    expect(source, isNot(contains('DrawBuddy')));
     expect(source, isNot(contains('DrawString')));
     expect(source, contains('GetHICON'));
     expect(cmake, contains('tray_visual.cpp'));
@@ -616,7 +611,7 @@ void main() {
     expect(source, contains('if (replacement_icon == nullptr)'));
     expect(source, contains('ValueOrNull(args, "unreadCount")'));
     expect(source, contains('ValueOrNull(args, "animateUnread")'));
-    expect(source, contains('CreateReminderTrayIcon'));
+    expect(source, isNot(contains('CreateReminderTrayIcon')));
     expect(source, contains('SPI_GETCLIENTAREAANIMATION'));
     expect(source, contains('ValueOrNull(args, "attentionIconPath")'));
     expect(source, contains('kAttentionFlashIntervalMs = 700'));

@@ -459,7 +459,9 @@ final class PluginDesktopShellGateway
     );
     await trayManager.setToolTip(
       windows
-          ? preview.tooltip(strings)
+          // The native reminder capsule is intentionally visual-only. Do not
+          // let Explorer briefly show a second, text-heavy tooltip before it.
+          ? (hot ? '' : 'DingDong')
           : hot && reminderNames.isNotEmpty
           ? '$reminderNames · $unreadTooltip'
           : hot

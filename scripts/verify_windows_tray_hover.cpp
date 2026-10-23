@@ -13,7 +13,7 @@
 //      /Febuild\tray_hover_verification\verify.exe ^
 //      /link user32.lib gdi32.lib gdiplus.lib shell32.lib shcore.lib advapi32.lib
 //   build\tray_hover_verification\verify.exe
-// Optional argument: an output directory for the four PNG renders. The default
+// Optional argument: an output directory for the PNG renders. The default
 // is build\tray_hover_verification, relative to the current working directory.
 #include <windows.h>
 #include <shellapi.h>
@@ -47,6 +47,8 @@ static int test_failures = 0;
 static int test_checks = 0;
 static int test_captures = 0;
 static bool test_force_light = false;
+static std::vector<BYTE> test_last_pixels;
+static SIZE test_last_size = {};
 
 static HRESULT TestAnchor(const NOTIFYICONIDENTIFIER*, RECT* rect) {
   *rect = test_anchor;
@@ -70,9 +72,16 @@ static LSTATUS TestTheme(HKEY key, LPCWSTR subkey, LPCWSTR value, DWORD flags,
 static BOOL TestLayer(HWND window, HDC destination, POINT* pos, SIZE* size,
                       HDC source, POINT* src, COLORREF color,
                       BLENDFUNCTION* blend, DWORD flags) {
+  DIBSECTION dib = {};
+  if (GetObjectW(GetCurrentObject(source, OBJ_BITMAP), sizeof(dib), &dib) != sizeof(dib) ||
+      dib.dsBm.bmBits == nullptr) {
+    return FALSE;
+  }
+  const auto* bytes_begin = static_cast<const BYTE*>(dib.dsBm.bmBits);
+  test_last_pixels.assign(bytes_begin,
+                            bytes_begin + dib.dsBm.bmWidthBytes * size->cy);
+  test_last_size = *size;
   if (!test_capture.empty()) {
-    DIBSECTION dib = {};
-    GetObjectW(GetCurrentObject(source, OBJ_BITMAP), sizeof(dib), &dib);
     Gdiplus::Bitmap image(size->cx, size->cy, dib.dsBm.bmWidthBytes,
                           PixelFormat32bppPARGB,
                           static_cast<BYTE*>(dib.dsBm.bmBits));
@@ -110,6 +119,15 @@ static BOOL TestLayer(HWND window, HDC destination, POINT* pos, SIZE* size,
 #undef RegGetValueW
 
 #define CHECK(condition) do { ++test_checks; if (!(condition)) { ++test_failures; std::cerr << "FAIL line " << __LINE__ << ": " << #condition << "\n"; } } while (0)
+
+static COLORREF PixelAt(int x, int y) {
+  if (x < 0 || y < 0 || x >= test_last_size.cx || y >= test_last_size.cy) {
+    return CLR_INVALID;
+  }
+  const size_t offset = (static_cast<size_t>(y) * test_last_size.cx + x) * 4;
+  return RGB(test_last_pixels[offset + 2], test_last_pixels[offset + 1],
+               test_last_pixels[offset]);
+}
 
 int wmain(int argc, wchar_t* argv[]) {
   if (argc > 2) {
@@ -157,8 +175,7 @@ int wmain(int argc, wchar_t* argv[]) {
   preview.rows = {{L"等待输入", 5, RGB(236, 159, 58)},
                    {L"任务完成", 4, RGB(52, 173, 124)},
                    {L"构建失败", std::nullopt, RGB(230, 98, 103)},
-                   {L"Code review", 3, RGB(92, 143, 225)},
-                   {L"More reminders", 0, RGB(140, 100, 210)}};
+                   {L"Code review", 3, RGB(92, 143, 225)}};
   card.SetPreview(preview);
   card.SetEnabled(true);
   NOTIFYICONIDENTIFIER identifier = {};
@@ -175,11 +192,58 @@ int wmain(int argc, wchar_t* argv[]) {
   CHECK(SendMessageW(card.window_, WM_MOUSEACTIVATE, 0, 0) == MA_NOACTIVATE);
   CHECK(card.body_bounds_.left >= info.rcWork.left && card.body_bounds_.right <= info.rcWork.right);
   CHECK(card.body_bounds_.top >= info.rcWork.top && card.body_bounds_.bottom <= info.rcWork.bottom);
+  const auto normal_layout = card.MakeLayout(600, 600);
+  CHECK(normal_layout.width == 98 && normal_layout.height == 58);
+  CHECK(normal_layout.capsule.bottom - normal_layout.capsule.top == 32);
+  CHECK(normal_layout.count_text == L"5" && preview.total_count == 12);
+  CHECK(normal_layout.primary_color == preview.rows.front().color);
+  CHECK(normal_layout.ball_centers.size() == preview.rows.size());
+  CHECK(card.badge_bounds_.bottom < card.body_bounds_.top);
+  const POINT top_badge = {(card.badge_bounds_.left + card.badge_bounds_.right) / 2,
+                           (card.badge_bounds_.top + card.badge_bounds_.bottom) / 2};
+  CHECK(card.PointerIsInside(top_badge));
+  CHECK(SendMessageW(card.window_, WM_NCHITTEST, 0,
+                       MAKELPARAM(top_badge.x, top_badge.y)) == HTCLIENT);
+  const POINT transparent_corner = {card.badge_bounds_.left, card.badge_bounds_.top};
+  CHECK(!card.PointerIsInside(transparent_corner));
+  for (size_t index = 0; index < normal_layout.ball_centers.size(); ++index) {
+    const auto& point = normal_layout.ball_centers[index];
+    CHECK(PixelAt(tray_manager::kShadowMargin + point.x,
+                    tray_manager::kBodyTop + point.y) == preview.rows[index].color);
+  }
+  CHECK(PixelAt(tray_manager::kShadowMargin +
+                    (normal_layout.badge.left + normal_layout.badge.right) / 2,
+                    tray_manager::kBodyTop + normal_layout.badge.top + 3) ==
+        preview.rows.front().color);
+  const auto baseline_pixels = test_last_pixels;
+  auto invisible_metadata = preview;
+  invisible_metadata.title = L"THIS TITLE MUST NEVER BE PAINTED";
+  invisible_metadata.subtitle = L"INVISIBLE SUBTITLE";
+  invisible_metadata.footer = L"INVISIBLE FOOTER";
+  invisible_metadata.total_count = 987;
+  for (auto& row : invisible_metadata.rows) row.name = L"INVISIBLE GROUP NAME";
+  invisible_metadata.rows[1].count = 12345;
+  invisible_metadata.rows[2].count = 999;
+  invisible_metadata.rows[3].count = 0;
+  card.SetPreview(invisible_metadata);
+  // Pixel identity proves no visible wording, totals, or internal ball counts.
+  CHECK(test_last_pixels == baseline_pixels);
+  auto first_changed = preview;
+  first_changed.rows.front().count = 6;
+  card.SetPreview(first_changed);
+  CHECK(card.MakeLayout(600, 600).count_text == L"6");
+  CHECK(test_last_pixels != baseline_pixels);
+  card.SetPreview(preview);
+  CHECK(test_last_pixels == baseline_pixels);
   wchar_t accessible[1024] = {};
   GetWindowTextW(card.window_, accessible, 1024);
   CHECK(std::wstring(accessible).find(L"?") != std::wstring::npos);
-  test_pointer = {card.body_bounds_.left + 24, card.body_bounds_.top + 90};
+  test_pointer = {(card.body_bounds_.left + card.body_bounds_.right) / 2,
+                   (card.body_bounds_.top + card.body_bounds_.bottom) / 2};
   test_now = 1450; card.PollPointer();
+  CHECK(card.visible_);
+  test_pointer = top_badge;
+  test_now = 1460; card.PollPointer();
   CHECK(card.visible_);
   test_pointer = away;
   test_now = 1500; card.PollPointer();
@@ -242,8 +306,62 @@ int wmain(int argc, wchar_t* argv[]) {
   CHECK(card.Show(test_anchor));
   CHECK(GetForegroundWindow() == initial_focus);
   CHECK(test_captures == 4);
+  auto unknown_primary = preview;
+  unknown_primary.rows.front().count = std::nullopt;
+  test_capture = (output / L"card-unknown-primary.png").wstring();
+  card.SetPreview(unknown_primary);
+  CHECK(card.MakeLayout(600, 600).count_text == L"?");
+  auto large_primary = preview;
+  large_primary.rows.front().count = 12345;
+  test_capture = (output / L"card-large-primary.png").wstring();
+  card.SetPreview(large_primary);
+  const auto large_layout = card.MakeLayout(600, 600);
+  CHECK(large_layout.count_text == L"12345");
+  CHECK(large_layout.badge.right - large_layout.badge.left >= 48);
+  auto many_groups = preview;
+  many_groups.total_count = 2048;
+  many_groups.rows.clear();
+  for (int index = 0; index < 64; ++index) {
+    many_groups.rows.push_back({L"Group " + std::to_wstring(index), index + 1,
+                                 RGB((index * 73 + 41) % 256,
+                                     (index * 47 + 80) % 256,
+                                     (index * 29 + 119) % 256)});
+  }
+  test_capture = (output / L"card-64-groups.png").wstring();
+  card.SetPreview(many_groups);
+  const auto wrapped = card.MakeLayout(600, 600);
+  CHECK(wrapped.ball_centers.size() == 64);
+  CHECK(wrapped.width <= 186 && wrapped.height <= 212);
+  CHECK(wrapped.ball_centers.front().y < wrapped.ball_centers.back().y);
+  for (size_t index = 0; index < wrapped.ball_centers.size(); ++index) {
+    const auto& point = wrapped.ball_centers[index];
+    CHECK(PixelAt(tray_manager::Scale(tray_manager::kShadowMargin + point.x, test_dpi),
+                    tray_manager::Scale(tray_manager::kBodyTop + point.y, test_dpi)) ==
+          many_groups.rows[index].color);
+  }
+  const auto narrow_wrap = card.MakeLayout(100, 600);
+  CHECK(narrow_wrap.ball_centers.size() == 64 && narrow_wrap.width <= 100);
+  const auto short_wrap = card.MakeLayout(400, 130);
+  CHECK(short_wrap.ball_centers.size() == 64 && short_wrap.height <= 130);
+  CHECK(test_captures == 7);
+  card.SetPreview(preview);
+  CHECK(GetForegroundWindow() == initial_focus);
+  const POINT final_badge = {(card.badge_bounds_.left + card.badge_bounds_.right) / 2,
+                             (card.badge_bounds_.top + card.badge_bounds_.bottom) / 2};
+  CHECK(SendMessageW(card.window_, WM_NCHITTEST, 0,
+                       MAKELPARAM(final_badge.x, final_badge.y)) == HTCLIENT);
+  SendMessageW(card.window_, WM_LBUTTONDOWN, MK_LBUTTON, 0);
+  SendMessageW(card.window_, WM_LBUTTONUP, 0, 0);
+  CHECK(clicks == 2 && !card.visible_);
+  card.Reset();
+  auto no_groups = preview;
+  no_groups.rows.clear();
+  card.SetPreview(no_groups);
+  CHECK(card.MakeLayout(600, 600).ball_centers.empty());
+  card.OnTrayMouseMove(identifier);
+  CHECK(!card.visible_ && !card.timer_active_);
   const RECT work = {0, 0, 1920, 1040};
-  const SIZE size = {304, 230};
+  const SIZE size = {122, 82};
   for (RECT anchor : {RECT{1800, 1050, 1824, 1074}, RECT{1800, -30, 1824, -6},
                       RECT{-30, 800, -6, 824}, RECT{1926, 800, 1950, 824},
                       RECT{100, 100, 124, 124}}) {

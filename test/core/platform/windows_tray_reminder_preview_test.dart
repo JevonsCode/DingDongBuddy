@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:dingdong/app/app_localizations.dart';
-import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/core/platform/windows_tray_reminder_preview.dart';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:dingdong/platform/plugin_desktop_shell_gateway.dart';
@@ -47,6 +47,10 @@ void main() {
           calls.lastWhere((c) => c.method == 'setIcon').arguments
               as Map<Object?, Object?>;
       expect(icon['badgeColorRgb'], TrayNotificationColor.blue.rgbValue);
+      expect(icon['iconPath'], endsWith('tray_icon_adaptive_unread.ico'));
+      expect(calls.lastWhere((c) => c.method == 'setToolTip').arguments, {
+        'toolTip': '',
+      });
       await gateway.markUnread(kind: AgentNotificationKind.attention);
       final mixed =
           calls.lastWhere((c) => c.method == 'setReminderPreview').arguments

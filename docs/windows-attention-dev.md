@@ -1,25 +1,28 @@
-# Windows attention buddy preview
+# Windows reminder capsule preview
 
-This local preview starts from main at `5525050` (1.9.1). It gives the Windows
-notification-area reminder a small speech-bubble personality, while keeping the
-existing idle mascot, reminder colors, reminder ordering, and read semantics.
+This local preview starts from main at `5525050` (1.9.1). It preserves the actual
+DingDong reminder IP and adds a visual-only hover capsule using the existing
+reminder colors, priority order, and read semantics.
 
-- Needs input: an awake face with a small antenna, plus a gentle alternate wink.
-- Completed work: a calm smiling face. Native Windows reduced-motion preferences
-  and each reminder's static/pulse choice still control animation.
-- Hover: a compact QQ-style strip near the tray shows a total pill and rows of
-  colored dots, reminder names and counts. Its body is 280 logical pixels wide.
-  The card does not acknowledge reminders. Clicking uses the existing tray-open
+- Reminders use the original `ding-w` / `ding-w2` adaptive tray assets with their
+  existing bell-shaking frames. No replacement character, redrawn face or tint.
+  Native reduced-motion preferences and each reminder's static/pulse choice
+  still control animation.
+- Hover: a small capsule contains plain colored balls in reminder priority order.
+  A separate circular badge above it shows only the first-priority group's count
+  and uses that group's color. No visible titles, names, footer or app label.
+  The capsule does not acknowledge reminders. Clicking uses the existing tray-open
   behavior. Leaving, clearing reminders, or opening the menu dismisses it.
 - Counts come from the existing unread controller. Unknown per-group counts from
-  legacy data remain unknown (`?`). The native tooltip retains a total-first
-  accessible text fallback.
+  legacy data remain unknown (`?`). The numeric badge is not a total count.
+  Text is retained in the accessible window name, while Explorer's visible text
+  tooltip is blank during reminders.
 - The DEV test panel includes a needs-input example and silent color/count
   previews on Windows. Preview counts are temporary and can be cleared separately.
 
 ## Local installation
 
-Version `1.9.2-dev.1+74` is a local development artifact, not a public release.
+Version `1.9.2-dev.2+75` is a local development artifact, not a public release.
 The `-dev` Windows build writes `dingdong-development.marker` and uses the
 `DingDong DEV` product identity. This isolates both app files in
 `%APPDATA%\DingDong DEV` and path-provider preferences in

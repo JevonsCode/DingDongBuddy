@@ -44,6 +44,7 @@ class TrayHoverCard {
   void Reset();
 
  private:
+  struct Layout;
   static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wparam,
                                      LPARAM lparam);
   bool EnsureWindow();
@@ -52,7 +53,8 @@ class TrayHoverCard {
   void PollPointer();
   bool Show(const RECT& anchor);
   void Hide();
-  bool Render(const RECT& bounds, UINT dpi, int body_width, int body_height);
+  Layout MakeLayout(int max_width, int max_height) const;
+  bool Render(const RECT& bounds, UINT dpi, const Layout& layout);
 
   HWND owner_ = nullptr;
   HWND window_ = nullptr;
@@ -61,6 +63,8 @@ class TrayHoverCard {
   ReminderPreview preview_;
   NOTIFYICONIDENTIFIER identifier_ = {};
   RECT body_bounds_ = {};
+  RECT badge_bounds_ = {};
+  int capsule_corner_radius_ = 0;
   bool enabled_ = false;
   bool visible_ = false;
   bool timer_active_ = false;

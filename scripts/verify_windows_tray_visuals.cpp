@@ -106,41 +106,38 @@ size_t DifferentPixels(const Pixels& first, const Pixels& second) {
   return count;
 }
 
-void CheckTransparencyAndColor(const Pixels& pixels, DWORD rgb) {
-  Require(AlphaAt(pixels, 0, 0) == 0 &&
-              AlphaAt(pixels, pixels.width - 1, 0) == 0 &&
-              AlphaAt(pixels, 0, pixels.height - 1) == 0 &&
-              AlphaAt(pixels, pixels.width - 1, pixels.height - 1) == 0,
-          "Icon corners must remain transparent");
+void CheckOriginalArtwork(const Pixels& pixels) {
+  // The existing bicubic asset resize can leave one alpha level of ringing.
+  Require(AlphaAt(pixels, 0, 0) <= 2 &&
+              AlphaAt(pixels, pixels.width - 1, 0) <= 2 &&
+              AlphaAt(pixels, 0, pixels.height - 1) <= 2 &&
+              AlphaAt(pixels, pixels.width - 1, pixels.height - 1) <= 2,
+          "Original icon corners must remain transparent");
   int transparent = 0;
   int antialiased = 0;
-  int selected_rgb = 0;
-  for (size_t offset = 3; offset < pixels.bytes.size(); offset += 4) {
-    transparent += pixels.bytes[offset] == 0;
-    antialiased += pixels.bytes[offset] > 0 && pixels.bytes[offset] < 255;
-    if (pixels.bytes[offset] == 255 &&
-        pixels.bytes[offset - 1] == ((rgb >> 16) & 0xFF) &&
-        pixels.bytes[offset - 2] == ((rgb >> 8) & 0xFF) &&
-        pixels.bytes[offset - 3] == (rgb & 0xFF)) {
-      ++selected_rgb;
+  int navy = 0;
+  int white = 0;
+  int orange = 0;
+  for (size_t offset = 0; offset < pixels.bytes.size(); offset += 4) {
+    const int blue = pixels.bytes[offset];
+    const int green = pixels.bytes[offset + 1];
+    const int red = pixels.bytes[offset + 2];
+    const int alpha = pixels.bytes[offset + 3];
+    transparent += alpha == 0;
+    antialiased += alpha > 0 && alpha < 255;
+    if (alpha > 224) {
+      navy += red < 90 && green < 120 && blue < 150;
+      white += red > 220 && green > 220 && blue > 220;
+      orange += red > 150 && red > green + 20 && green > blue + 10;
     }
   }
   Require(transparent > pixels.width * pixels.height / 10,
-          "Icon lost its transparent surroundings");
+          "Original artwork lost transparent surroundings");
   Require(antialiased >= pixels.width,
-          "Icon boundary lost antialiased alpha coverage");
-  // Facial antialiasing can reach this point at fractional DPI; check opacity
-  // here and the exact selected fill color across the whole opaque body.
-  const size_t forehead =
-      (static_cast<size_t>(std::lround(pixels.height * 5.0 / 16.0)) *
-           pixels.width +
-       pixels.width / 2) *
-      4;
-  Require(pixels.bytes[forehead + 3] == 255,
-          "Buddy body must stay fully visible");
-  Require(selected_rgb >= 3, "Renderer changed the selected reminder RGB");
+          "Original artwork lost antialiased alpha coverage");
+  Require(navy > 0 && white > 0 && orange > 0,
+          "Original navy/white/orange reminder palette was not preserved");
 }
-
 CLSID PngEncoder() {
   UINT count = 0;
   UINT bytes = 0;
@@ -191,78 +188,46 @@ void DrawSample(Gdiplus::Graphics& graphics, Pixels& pixels, float x, float y,
 }
 
 constexpr std::array<int, 6> kSizes = {16, 20, 24, 32, 40, 48};
-constexpr std::array<DWORD, 6> kColors = {
-    0x7C6CF3, 0x3B82F6, 0xFBBF24, 0xF43F5E, 0xFFFFFF, 0x000000};
-constexpr std::array<const wchar_t*, 3> kStates = {
-    L"Waiting for you", L"Alternate wink", L"All done"};
+constexpr std::array<const wchar_t*, 2> kFrames = {
+    L"Original frame 1", L"Original frame 2"};
 
-void SaveSheets(const std::filesystem::path& output, const CLSID& encoder) {
-  Gdiplus::Bitmap sheet(1160, 760, PixelFormat32bppARGB);
+void SaveSheet(const std::filesystem::path& output, const CLSID& encoder,
+               const std::array<HICON, 2>& sources) {
+  Gdiplus::Bitmap sheet(1040, 760, PixelFormat32bppARGB);
   Gdiplus::Graphics graphics(&sheet);
   graphics.Clear(Gdiplus::Color(255, 235, 237, 241));
-  Label(graphics, L"DingDong Windows tray buddy - actual native HICON output",
+  Label(graphics, L"DingDong original reminder IP - actual Windows HICON output",
         20, 12, Gdiplus::Color(255, 25, 28, 36), 20);
-  Label(graphics, L"Each cell: physical pixels at left; nearest-neighbor 64 px detail at right. RGB #7C6CF3.",
+  Label(graphics, L"Existing adaptive unread / unread2 assets. Physical pixels at left; 64 px detail at right.",
         20, 43, Gdiplus::Color(255, 62, 66, 78));
   for (int theme = 0; theme < 2; ++theme) {
-    const float x = 20.0f + theme * 570.0f;
+    const float x = 20.0f + theme * 510.0f;
     const auto background = theme == 0 ? Gdiplus::Color(255, 249, 250, 252)
                                         : Gdiplus::Color(255, 30, 31, 35);
     const auto foreground = theme == 0 ? Gdiplus::Color(255, 36, 40, 48)
                                         : Gdiplus::Color(255, 240, 242, 248);
     Gdiplus::SolidBrush panel(background);
-    graphics.FillRectangle(&panel, x, 78.0f, 550.0f, 653.0f);
+    graphics.FillRectangle(&panel, x, 78.0f, 490.0f, 653.0f);
     Label(graphics, theme == 0 ? L"Light taskbar" : L"Dark taskbar", x + 12,
           88, foreground, 15);
-    for (size_t state = 0; state < kStates.size(); ++state) {
-      Label(graphics, kStates[state], x + 40 + state * 164, 116, foreground);
+    for (size_t frame = 0; frame < kFrames.size(); ++frame) {
+      Label(graphics, kFrames[frame], x + 60 + frame * 220, 116, foreground);
     }
     for (size_t row = 0; row < kSizes.size(); ++row) {
       const int size = kSizes[row];
       const float y = 146.0f + static_cast<float>(row) * 94.0f;
       const std::wstring label = std::to_wstring(size) + L" px";
       Label(graphics, label.c_str(), x + 8, y + 68, foreground);
-      for (size_t state = 0; state < kStates.size(); ++state) {
-        Icon icon(tray_manager::CreateReminderTrayIcon(
-            size, size, kColors[0], state != 2, state == 1));
+      for (size_t frame = 0; frame < sources.size(); ++frame) {
+        Icon icon(tray_manager::CreateTrayIcon(sources[frame], size, size));
         auto pixels = ReadIcon(icon.get(), size, size);
-        DrawSample(graphics, pixels, x + 31 + state * 164, y, size);
+        DrawSample(graphics, pixels, x + 50 + frame * 220, y, size);
       }
     }
   }
-  Require(sheet.Save((output / L"tray-buddy-contact-sheet.png").c_str(),
+  Require(sheet.Save((output / L"original-reminder-contact-sheet.png").c_str(),
                       &encoder) == Gdiplus::Ok,
-          "Could not save native icon contact sheet");
-
-  Gdiplus::Bitmap palette(1160, 660, PixelFormat32bppARGB);
-  Gdiplus::Graphics palette_graphics(&palette);
-  palette_graphics.Clear(Gdiplus::Color(255, 235, 237, 241));
-  Label(palette_graphics, L"Custom RGB and contrast - actual 24 px HICON output",
-        20, 12, Gdiplus::Color(255, 25, 28, 36), 20);
-  for (int theme = 0; theme < 2; ++theme) {
-    const float x = 20.0f + theme * 570.0f;
-    const auto background = theme == 0 ? Gdiplus::Color(255, 249, 250, 252)
-                                        : Gdiplus::Color(255, 30, 31, 35);
-    const auto foreground = theme == 0 ? Gdiplus::Color(255, 36, 40, 48)
-                                        : Gdiplus::Color(255, 240, 242, 248);
-    Gdiplus::SolidBrush panel(background);
-    palette_graphics.FillRectangle(&panel, x, 54.0f, 550.0f, 585.0f);
-    for (size_t row = 0; row < kColors.size(); ++row) {
-      const float y = 64.0f + static_cast<float>(row) * 94.0f;
-      wchar_t label[16]{};
-      swprintf_s(label, L"#%06lX", kColors[row]);
-      Label(palette_graphics, label, x + 8, y + 68, foreground);
-      for (size_t state = 0; state < kStates.size(); ++state) {
-        Icon icon(tray_manager::CreateReminderTrayIcon(
-            24, 24, kColors[row], state != 2, state == 1));
-        auto pixels = ReadIcon(icon.get(), 24, 24);
-        DrawSample(palette_graphics, pixels, x + 31 + state * 164, y, 24);
-      }
-    }
-  }
-  Require(palette.Save((output / L"tray-buddy-color-checks.png").c_str(),
-                        &encoder) == Gdiplus::Ok,
-          "Could not save custom color contact sheet");
+          "Could not save original reminder contact sheet");
 }
 
 }  // namespace
@@ -278,75 +243,63 @@ int wmain(int argc, wchar_t** argv) {
   try {
     const std::filesystem::path output =
         argc > 1 ? argv[1] : L"build\\tray_visual_verification";
+    const std::filesystem::path resources =
+        argc > 2 ? argv[2] : L"windows\\runner\\resources";
     std::filesystem::create_directories(output);
     const CLSID encoder = PngEncoder();
-    Require(tray_manager::CreateReminderTrayIcon(0, 16, kColors[0], true) ==
-                nullptr &&
-                tray_manager::CreateReminderTrayIcon(16, -1, kColors[0], false) ==
-                    nullptr,
-            "Invalid icon dimensions must be rejected");
+    // Load exactly the same repository ICOs and 64 px source sizes as SetIcon.
+    Icon first(static_cast<HICON>(LoadImageW(
+        nullptr, (resources / L"tray_icon_adaptive_unread.ico").c_str(),
+        IMAGE_ICON, 64, 64, LR_LOADFROMFILE)));
+    Icon second(static_cast<HICON>(LoadImageW(
+        nullptr, (resources / L"tray_icon_adaptive_unread2.ico").c_str(),
+        IMAGE_ICON, 64, 64, LR_LOADFROMFILE)));
+    const std::array<HICON, 2> sources = {first.get(), second.get()};
+    Require(tray_manager::CreateTrayIcon(nullptr, 16, 16) == nullptr &&
+                tray_manager::CreateTrayIcon(first.get(), 0, 16) == nullptr &&
+                tray_manager::CreateTrayIcon(first.get(), 16, -1) == nullptr,
+            "Null sources and invalid dimensions must be rejected");
     int generated = 0;
     for (int size : kSizes) {
-      for (DWORD color : kColors) {
-        std::array<Pixels, 3> states{};
-        for (size_t state = 0; state < states.size(); ++state) {
-          Icon icon(tray_manager::CreateReminderTrayIcon(
-              size, size, color, state != 2, state == 1));
-          states[state] = ReadIcon(icon.get(), size, size);
-          if (color == kColors[0]) {
-            auto bitmap = BitmapFrom(states[state]);
-            const std::wstring file = std::wstring(L"buddy-") +
-                (state == 0 ? L"attention-" : state == 1 ? L"wink-" : L"done-") +
-                std::to_wstring(size) + L"px.png";
-            Require(bitmap->Save((output / file).c_str(), &encoder) ==
-                        Gdiplus::Ok,
-                    "Could not save native icon PNG");
-          }
-          CheckTransparencyAndColor(states[state], color);
-          ++generated;
-        }
-        Require(DifferentPixels(states[0], states[1]) >= 8 &&
-                    DifferentPixels(states[0], states[2]) >= 8,
-                "Attention, completion and alternate frame must be distinct");
-        const double coverage_ratio =
-            static_cast<double>(AlphaSum(states[1])) / AlphaSum(states[0]);
-        Require(coverage_ratio > 0.95 && coverage_ratio < 1.05,
-                "Alternate frame must retain the full visible body");
-        Icon completion_alternate(tray_manager::CreateReminderTrayIcon(
-            size, size, color, false, true));
-        const Pixels completion_frame = ReadIcon(completion_alternate.get(), size, size);
-        Require(DifferentPixels(states[2], completion_frame) >= 8,
-                "Completion softPulse must have a distinct alternate frame");
-        CheckTransparencyAndColor(completion_frame, color);
+      std::array<Pixels, 2> frames{};
+      for (size_t frame = 0; frame < sources.size(); ++frame) {
+        Icon icon(tray_manager::CreateTrayIcon(sources[frame], size, size));
+        frames[frame] = ReadIcon(icon.get(), size, size);
+        auto bitmap = BitmapFrom(frames[frame]);
+        const std::wstring file = L"original-reminder-frame-" +
+            std::to_wstring(frame + 1) + L"-" + std::to_wstring(size) + L"px.png";
+        Require(bitmap->Save((output / file).c_str(), &encoder) == Gdiplus::Ok,
+                "Could not save original native icon PNG");
+        CheckOriginalArtwork(frames[frame]);
         ++generated;
       }
+      Require(DifferentPixels(frames[0], frames[1]) >= 2,
+              "Original bell-shake frames must remain distinct");
+      const double coverage_ratio =
+          static_cast<double>(AlphaSum(frames[1])) / AlphaSum(frames[0]);
+      Require(coverage_ratio > 0.90 && coverage_ratio < 1.10,
+              "Original animation must keep the IP visible");
     }
     {
-      Icon rectangular(tray_manager::CreateReminderTrayIcon(
-          32, 20, kColors[0], true));
+      Icon rectangular(tray_manager::CreateTrayIcon(first.get(), 32, 20));
       ReadIcon(rectangular.get(), 32, 20);
-      Icon source(tray_manager::CreateReminderTrayIcon(32, 32, kColors[0], true));
-      Icon resized(tray_manager::CreateTrayIcon(source.get(), 16, 16));
-      ReadIcon(resized.get(), 16, 16);
     }
-    const DWORD handles_before = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
-    const DWORD user_handles_before = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
+    const DWORD gdi_before = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+    const DWORD user_before = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
     for (int index = 0; index < 300; ++index) {
-      Icon icon(tray_manager::CreateReminderTrayIcon(
-          16, 16, kColors[index % kColors.size()], true, index % 2 == 0));
+      Icon icon(tray_manager::CreateTrayIcon(sources[index % 2], 16, 16));
     }
-    const DWORD handles_after = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
-    const DWORD user_handles_after = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
-    Require(handles_after == handles_before &&
-                user_handles_after == user_handles_before,
-            "Repeated HICON creation/destruction leaked a GDI or USER object");
-    SaveSheets(output, encoder);
+    Require(GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS) == gdi_before &&
+                GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS) == user_before,
+            "Repeated original HICON rendering leaked a GDI or USER object");
+    SaveSheet(output, encoder, sources);
     std::cout << "PASS: " << generated
-              << " native icons across six DPI sizes, six RGB colors and four states\n"
-              << "PASS: physical dimensions, transparent corners, antialiasing, exact RGB, distinct states\n"
-              << "PASS: alternate coverage within 5%, rectangular input, source-icon resizing\n"
-              << "PASS: no GDI or USER object growth after 300 creation/destruction cycles\n";
-    std::wcout << L"Artifacts: " << std::filesystem::absolute(output).wstring()
+              << " original asset HICONs across six DPI sizes and two bell-shake frames\n"
+              << "PASS: physical dimensions, transparent corners, antialiasing, original palette\n"
+              << "PASS: distinct original frames, visible alpha coverage, rectangular input\n"
+              << "PASS: no GDI or USER object growth after 300 rendering/destruction cycles\n";
+    std::wcout << L"Assets: " << std::filesystem::absolute(resources).wstring()
+               << L"\nArtifacts: " << std::filesystem::absolute(output).wstring()
                << L"\n";
   } catch (const std::exception& error) {
     std::cerr << "FAIL: " << error.what() << "\n";
