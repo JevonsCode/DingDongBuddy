@@ -1,27 +1,48 @@
-# DingDong 1.9.2-beta.1
+# DingDong 1.10.0
 
+- Adds temporary reminders with a chosen color and sound for the next use only; recent Agent events keep the original reminder definition.
+- Recent Agents loads 21 items per page by default, supports custom page size, source and date filters, pins and scrolling to load more. Removes the duplicate enabled-resource section.
+- Replaces input badges with reminder-color dots and hover details, with notification counts on the left. Temporary reminders use a white dashed border.
+- Adds shared date presets and a compact desktop range calendar; Token usage uses the same custom dropdowns.
+- Adds IP-based discovery for initial computer pairing when automatic discovery finds nothing, while retaining pairing-code verification.
+- Shows LAN connection type, this computer’s IP and each paired computer’s current or saved IP; lets you correct an IP and reconnect with the existing pairing.
+- Adds space between device connection controls and improves recovery when multicast discovery is unavailable.
 - Adds optional Windows screenshot capture and embedded editing with annotations, undo/redo, copy and PNG saving; fixes black bands and reopening the editor.
-- Adds Windows text selection with copy, translate, explain and polish actions. Model requests occur only after an explicit action; protected fields and unreadable selections are excluded.
-- Adds plugin detail pages with source, license and upstream version information; keeps Agent client plugin inventories in Resources.
-- Improves Windows tray reminders with original-art rocking motion and a hover capsule of per-group counts, while respecting reduced-motion and static reminder settings.
-- Isolates Windows DEV preferences and Agent resource synchronization from the stable installation.
+- Adds Windows text selection with copy, translate, explain and polish actions, with model requests only after an explicit action.
+- Adds plugin details with source, license and upstream version information; keeps Agent client plugin inventories in Resources.
+- Adds community notification sounds with preview, subscription and locally saved selections.
+- Improves Windows tray reminder motion and per-group counts, and isolates DEV preferences and resource synchronization from the stable installation.
 
 ---
 
-# DingDong 1.9.2-beta.1 测试版
+# DingDong 1.10.0
 
-- 新增可选的 Windows 截图与内置编辑器，支持标注、撤销/重做、复制和保存 PNG，并修复黑边与重新打开编辑器的问题。
-- 补齐 Windows 划词，提供复制、翻译、解释和润色；只有主动点击模型动作才发送文字，排除密码框和无法读取的选区。
-- 新增插件详情，展示来源、许可与上游版本信息；其他 Agent 客户端的插件清单独立放在资源中。
-- 优化 Windows 托盘提醒：保留原始形象的摇摆动画、按提醒分组显示数量的悬浮胶囊，并遵循减少动态效果与静态提醒设置。
-- 隔离 Windows DEV 的偏好设置与 Agent 资源同步，避免影响正式安装。
+- 新增仅下一次生效的临时提醒，可指定颜色与声音；最近 Agents 保留提醒当时的定义。
+- 最近 Agents 默认每页加载 21 条，可修改条数，支持来源多选、时间筛选、置顶和滚动加载，移除重复的已启用资源区块。
+- 提醒类型文字改为颜色圆点，悬停可查看定义；提醒次数显示在圆点左侧，临时提醒使用白色虚线边框。
+- 统一日期筛选选项，新增紧凑的桌面日期范围日历；Token 用量使用相同的自定义下拉组件。
+- 自动发现找不到电脑时，首次配对可输入局域网 IP 查找，仍需使用配对码验证。
+- 连接页显示局域网连接方式、本机 IP 和配对电脑当前或已保存的 IP，支持手动修改 IP 并使用原配对重连。
+- 拉开设备操作按钮间距，并改善组播发现不可用时的重连。
+- 新增可选的 Windows 截图与内置编辑器，支持标注、撤销/重做、复制和保存 PNG，修复黑边及重新打开编辑器的问题。
+- 补齐 Windows 划词的复制、翻译、解释和润色操作，仅在主动点击模型动作后发送文字。
+- 新增插件详情，展示来源、许可与上游版本；其他 Agent 客户端的插件清单放在资源中。
+- 新增社区提醒声音，支持试听、订阅和保存本机选择。
+- 优化 Windows 托盘提醒动画与分组数量，并隔离 DEV 偏好设置和资源同步，避免影响正式安装。
 
 ---
 
-# DingDong 1.9.2-beta.1
+# DingDong 1.10.0
 
-- Añade capturas opcionales en Windows y un editor integrado con anotaciones, deshacer y rehacer, copia y guardado PNG; corrige las bandas negras y la reapertura del editor.
-- Añade selección de texto en Windows con acciones para copiar, traducir, explicar y pulir. Solo se envía texto al modelo tras una acción explícita; se excluyen los campos protegidos y las selecciones ilegibles.
-- Añade detalles de plugins con su origen, licencia y versión disponible; mantiene los inventarios de plugins de clientes Agent en Recursos.
-- Mejora los avisos de la bandeja de Windows con el balanceo de la ilustración original y una cápsula con recuentos por grupo, respetando la reducción de movimiento y los avisos estáticos.
-- Aísla las preferencias y la sincronización de recursos Agent de Windows DEV de la instalación estable.
+- Añade recordatorios temporales con color y sonido para el próximo uso; los eventos recientes conservan la definición original.
+- Agentes recientes carga 21 elementos por página de forma predeterminada, permite cambiar la cantidad, filtrar fuentes y fechas, fijar y cargar más al desplazarse. Elimina la sección duplicada de recursos habilitados.
+- Sustituye las etiquetas de entrada por puntos de color con detalles al pasar el cursor. Los recuentos aparecen a la izquierda; los temporales usan un borde blanco discontinuo.
+- Unifica los filtros de fecha y añade un calendario compacto de escritorio. El uso de Tokens utiliza los mismos selectores personalizados.
+- Permite buscar por IP local al enlazar equipos cuando no aparecen automáticamente, manteniendo la verificación mediante código.
+- Muestra el tipo de conexión local y las IP actuales o guardadas de ambos equipos; permite corregir la IP y volver a conectar con el emparejamiento existente.
+- Añade espacio entre los controles de conexión y mejora la reconexión cuando no está disponible la detección por multidifusión.
+- Añade capturas opcionales en Windows y edición integrada con anotaciones, deshacer y rehacer, copia y guardado PNG; corrige las bandas negras y la reapertura del editor.
+- Añade selección de texto en Windows para copiar, traducir, explicar y pulir, con solicitudes al modelo solo tras una acción explícita.
+- Añade detalles de plugins con origen, licencia y versión; mantiene los inventarios de clientes Agent en Recursos.
+- Añade sonidos comunitarios con vista previa, suscripción y selección guardada localmente.
+- Mejora el movimiento y los recuentos de avisos de Windows, y aísla las preferencias y la sincronización DEV de la instalación estable.

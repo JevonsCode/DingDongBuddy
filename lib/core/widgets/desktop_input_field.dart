@@ -337,7 +337,10 @@ class DesktopTextField extends StatelessWidget {
 /// Form-compatible sibling for settings and editor fields.
 class DesktopTextFormField extends StatelessWidget {
   const DesktopTextFormField({
-    required this.initialValue,
+    this.initialValue,
+    this.controller,
+    this.validator,
+    this.onFieldSubmitted,
     this.decoration,
     this.onChanged,
     this.keyboardType,
@@ -348,7 +351,10 @@ class DesktopTextFormField extends StatelessWidget {
 
   final Key? _fieldKey;
 
-  final String initialValue;
+  final String? initialValue;
+  final TextEditingController? controller;
+  final FormFieldValidator<String>? validator;
+  final ValueChanged<String>? onFieldSubmitted;
   final InputDecoration? decoration;
   final ValueChanged<String>? onChanged;
   final TextInputType? keyboardType;
@@ -368,7 +374,10 @@ class DesktopTextFormField extends StatelessWidget {
             );
     return TextFormField(
       key: _fieldKey,
-      initialValue: initialValue,
+      initialValue: controller == null ? initialValue : null,
+      controller: controller,
+      validator: validator,
+      onFieldSubmitted: onFieldSubmitted,
       decoration: resolvedDecoration,
       onChanged: onChanged,
       keyboardType: keyboardType,

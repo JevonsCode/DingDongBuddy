@@ -8,8 +8,10 @@ List<ReminderProfile> orderedUnreadReminderProfiles({
   required NotificationRules rules,
   required TrayNotificationColor completionColor,
   required Iterable<String> unreadIds,
+  Map<String, ReminderProfile> snapshots = const {},
 }) {
   final ids = unreadIds.toSet();
+  final configured = {for (final p in rules.profiles) p.id};
   return rules
       .orderProfiles([
         for (final kind in AgentNotificationKind.values)
@@ -24,7 +26,11 @@ List<ReminderProfile> orderedUnreadReminderProfiles({
             style: rules.trayStyleFor(kind),
           ),
         ...rules.profiles,
+        ...snapshots.values.where(
+          (p) => !p.builtIn && !configured.contains(p.id),
+        ),
       ])
+      .map((p) => snapshots[p.id] ?? p)
       .where((p) => ids.contains(p.id))
       .toList();
 }

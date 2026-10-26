@@ -17,6 +17,7 @@ final class ReminderSettingsService {
   Future<Map<String, Object?>> _execute(Map<String, Object?> command) async {
     var settings = await repository.load();
     final action = command['action'] ?? 'list';
+    bool? consumed;
     switch (action) {
       case 'list':
         break;
@@ -27,6 +28,11 @@ final class ReminderSettingsService {
           ...?existing?.toJson(),
           ...command,
         });
+        if (profile.builtIn && profile.temporary) {
+          throw const FormatException(
+            'Built-in reminders cannot be temporary.',
+          );
+        }
         if (profile.builtIn && profile.kind.apiValue != profile.id) {
           throw const FormatException('Built-in reminder kind cannot change.');
         }
@@ -43,6 +49,20 @@ final class ReminderSettingsService {
           throw const FormatException('Select an imported customSoundPath.');
         }
         settings = settings.withReminderProfile(profile);
+      case 'consume':
+        // Compare the captured definition so an in-flight notification cannot
+        // remove a newer edit. The queue makes one-use claims atomic.
+        final id = command['id'];
+        final profile = id is String ? settings.reminderProfile(id) : null;
+        final expected = command['expected'];
+        consumed =
+            profile != null &&
+            profile.temporary &&
+            profile.enabled &&
+            expected is Map &&
+            profile ==
+                ReminderProfile.fromJson(Map<String, Object?>.from(expected));
+        if (consumed) settings = settings.withoutReminderProfile(profile.id);
       case 'delete':
         final id = command['id'];
         if (id is! String || settings.reminderProfile(id) == null) {
@@ -73,12 +93,13 @@ final class ReminderSettingsService {
       default:
         throw const FormatException('Unknown reminder action.');
     }
-    if (action != 'list') {
+    if (action != 'list' && (action != 'consume' || consumed == true)) {
       await repository.save(settings);
       await onChanged?.call();
     }
     return {
       'status': 'ok',
+      'consumed': ?consumed,
       'reminders': settings.reminderProfiles.map((x) => x.toJson()).toList(),
       'sounds': settings.notificationRules.audioLibrary
           .map((x) => x.toJson())

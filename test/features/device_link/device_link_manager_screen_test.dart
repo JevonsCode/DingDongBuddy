@@ -380,6 +380,16 @@ void main() {
         findsWidgets,
       );
 
+      await tester.enterText(
+        find.byKey(const Key('device-computer-find-address')),
+        '192.168.31.153',
+      );
+      await tester.tap(
+        find.byKey(const Key('device-computer-find-address-submit')),
+      );
+      await tester.pumpAndSettle();
+      expect(controller.discoveredAddress, '192.168.31.153');
+
       await tester.tap(find.byKey(const Key('device-computer-generate-code')));
       await tester.pumpAndSettle();
       expect(find.text('012 345'), findsOneWidget);
@@ -605,6 +615,12 @@ final class _FakeManagement extends ChangeNotifier
   String? get computerDiscoveryError => null;
   @override
   Future<void> refreshComputers() async {}
+  String? discoveredAddress;
+  @override
+  Future<void> discoverComputerAddress(String address) async {
+    discoveredAddress = address;
+  }
+
   @override
   Future<void> beginComputerPairing() async {
     computerPairingCode = '012345';

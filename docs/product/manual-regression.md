@@ -1,4 +1,4 @@
-# DingDong 1.9.1 Manual Regression Checklist
+# DingDong 1.10.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,36 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## Temporary reminders and recent Agents (1.10.0)
+
+- Create a temporary green reminder with a chosen built-in or imported sound.
+  Confirm its white dashed marker, then send two concurrent matching reminders:
+  only one may claim the temporary profile. Voice/subagent-filtered notifications
+  must leave it pending. Confirm history and tray retain its captured definition.
+- Check recent Agents in both windows: default page size 21, edited size saved,
+  source multi-selection, all eight date presets and typed custom dates. Scroll
+  through multiple pages without duplicates; pin/unpin and return to top.
+- Confirm the duplicate enabled-resource section and input badges are absent.
+  Counts precede dots; hover reveals the saved definition, including temporary status.
+- Verify both desktop calendar months, invalid/reversed date validation, Cancel,
+  Apply and keyboard controls in light/dark themes. Token filters and exports
+  must use the same local-date boundaries, including December/January.
+
+## LAN addresses, plugin tools and community sounds (1.10.0)
+
+- Verify the connection page shows physical-adapter IPs and the actual connection route.
+  Offline computer addresses must be identified as saved IPs. Check the gap between
+  reconnect and expand controls in compact windows.
+- With multicast unavailable, find an unpaired computer by its LAN IPv4 and pair
+  with its six-digit code. Wrong codes and off-subnet IPs must still fail.
+- Edit the IP of an already paired computer, save and reconnect without replacing
+  the device identity or key. Reject invalid, public and off-subnet addresses.
+  Reassign DHCP on real devices and check automatic discovery learns the new IP.
+- Exercise Windows screenshot annotation, undo/redo, copy and PNG save, then reopen
+  the editor. Test copy and explicit model actions from the selection toolbar.
+- Browse and preview community sounds, subscribe, restart and verify the saved
+  sound remains selected. Verify source/license information and unavailable states.
 
 ## AI resource selection and window behavior (1.9.1)
 

@@ -12,6 +12,54 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'a second instance gets an actionable discovery-port collision error',
+    () async {
+      final occupied = await RawDatagramSocket.bind(
+        InternetAddress.anyIPv4,
+        0,
+        reuseAddress: false,
+      );
+      addTearDown(occupied.close);
+      final link = LanComputerLink(discoveryPort: occupied.port)
+        ..identity = const LocalDeviceIdentity(
+          id: 'busy',
+          name: 'Busy fixture',
+          platform: 'test',
+        );
+      addTearDown(link.close);
+      await expectLater(link.start(), throwsA(isA<SocketException>()));
+      expect(link.error, 'address_in_use');
+    },
+  );
+  test(
+    'manual IP discovers and pairs two unpaired computers without multicast',
+    () async {
+      final host = _service('manual-host');
+      addTearDown(host.close);
+      await host.beginPairing();
+      final peer =
+          LanComputerLink.loopbackTest(
+              unicastDiscoveryPort: host.discoveryListenPort!,
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'manual-peer',
+              name: 'Manual fixture peer',
+              platform: 'test',
+            );
+      LinkedDevice? paired;
+      peer.onPaired = (value) async {
+        paired = value;
+      };
+      addTearDown(peer.close);
+      expect(host.nearby, isEmpty);
+      await peer.discoverAddress('127.0.0.1');
+      await _until(() => peer.nearby.any((e) => e.id == 'manual-host'));
+      await peer.join('manual-host', host.pairingCode!);
+      expect(paired?.kind, LinkedDeviceKind.computer);
+      expect(paired?.id, 'manual-host');
+    },
+  );
+  test(
     'saved IP bootstraps authenticated LAN sessions without multicast',
     () async {
       final host = _service('hint-host');

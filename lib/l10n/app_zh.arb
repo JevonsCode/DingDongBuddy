@@ -1,22 +1,40 @@
 {
   "pluginOpenSource": "开源组件",
-  "@pluginOpenSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginOpenSource": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginViewSource": "查看源码",
-  "@pluginViewSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginViewSource": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginCheckUpstream": "检查上游更新",
-  "@pluginCheckUpstream": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginCheckUpstream": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginLicenses": "开源许可",
-  "@pluginLicenses": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginLicenses": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginScreenshotSourceNote": "通过固定版本依赖复用开源编辑引擎；钉东提供截图、快捷键和界面适配。",
-  "@pluginScreenshotSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginScreenshotSourceNote": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginSelectionSourceNote": "选择性复用此项目的 Windows 取词代码；浮条、配置和模型调用由钉东实现。",
-  "@pluginSelectionSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginSelectionSourceNote": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginUpstreamChanged": "上游已有更新，需适配测试后随钉东更新提供；此次检查不会安装更新。",
-  "@pluginUpstreamChanged": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginUpstreamChanged": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginUpstreamCurrent": "未发现更新的上游版本或代码变更。",
-  "@pluginUpstreamCurrent": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginUpstreamCurrent": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginUpstreamUnavailable": "暂时无法检查来源，请稍后重试。",
-  "@pluginUpstreamUnavailable": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginUpstreamUnavailable": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "@screenshotPluginTitle": {
     "description": "Screenshot extension or plugin platform availability."
   },
@@ -5418,17 +5436,29 @@
     "description": "Named reminder settings label"
   },
   "trayBuddyWaiting": "轮到你啦",
-  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
+  "@trayBuddyWaiting": {
+    "description": "Friendly tray hover heading when an agent needs user input."
+  },
   "trayBuddyReady": "有新消息啦",
-  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
+  "@trayBuddyReady": {
+    "description": "Friendly tray hover heading for completed work."
+  },
   "trayBuddyUnread": "待查看的提醒",
-  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
+  "@trayBuddyUnread": {
+    "description": "Caption for the Windows hover card total count."
+  },
   "trayBuddyOpen": "点击打开 DingDong",
-  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
+  "@trayBuddyOpen": {
+    "description": "Action hint on the native tray hover card."
+  },
   "devAttentionDescription": "创建一条需要你确认的 DEV 提醒。悬停到托盘小伙伴上即可查看计数。",
-  "@devAttentionDescription": {"description": "Development panel attention preview description."},
+  "@devAttentionDescription": {
+    "description": "Development panel attention preview description."
+  },
   "devAttentionCreated": "已创建：等待你的确认",
-  "@devAttentionCreated": {"description": "Development panel attention action success status."},
+  "@devAttentionCreated": {
+    "description": "Development panel attention action success status."
+  },
   "devReminderColors": "提醒颜色与计数",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."
@@ -5772,5 +5802,113 @@
   "deviceAddressUnknown": "待发现 IP",
   "@deviceAddressUnknown": {
     "description": "Device connection address and route controls."
+  },
+  "dateFilterYesterday": "昨天",
+  "dateFilterLastThreeDays": "近三天",
+  "dateFilterThisWeek": "本周",
+  "dateFilterThisMonth": "本月",
+  "dateFilterLastMonth": "上个月",
+  "dateFilterLastThreeMonths": "近三个月",
+  "dateFilterThisYear": "本年",
+  "dateFilterCustom": "自定义",
+  "dateFilterAll": "全部时间",
+  "dateFilterStart": "开始日期",
+  "dateFilterEnd": "结束日期",
+  "dateFilterApply": "应用",
+  "dateFilterInvalidDate": "请输入有效日期（yyyy-MM-dd）",
+  "dateFilterInvalidRange": "结束日期不能早于开始日期",
+  "activitySourceFilter": "来源",
+  "activityPageSize": "每页条数",
+  "activityPin": "置顶",
+  "activityUnpin": "取消置顶",
+  "activityLoadMore": "加载更多",
+  "activityNoMatches": "没有符合筛选条件的提醒",
+  "reminderTemporary": "临时 · 仅下一次",
+  "reminderDefinitionUnavailable": "此历史记录未保存提醒定义",
+  "reminderTemporaryHelp": "仅用于下一次提醒，使用后自动移除。",
+  "lanFindByIp": "按 IP 查找电脑",
+  "lanFindByIpHelp": "自动发现找不到时，输入另一台电脑的局域网 IP，再使用配对码连接。",
+  "lanPortBusy": "局域网发现端口正被另一个叮咚实例占用，请退出重复打开的叮咚后刷新。",
+  "activityBackToTop": "回到顶部",
+  "@dateFilterYesterday": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterLastThreeDays": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterThisWeek": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterThisMonth": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterLastMonth": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterLastThreeMonths": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterThisYear": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterCustom": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterAll": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterStart": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterEnd": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterApply": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterInvalidDate": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterInvalidRange": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activitySourceFilter": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityPageSize": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityPin": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityUnpin": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityLoadMore": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityNoMatches": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@reminderTemporary": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@reminderDefinitionUnavailable": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@reminderTemporaryHelp": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@lanFindByIp": {
+    "description": "Manual LAN discovery and actionable connection errors."
+  },
+  "@lanFindByIpHelp": {
+    "description": "Manual LAN discovery and actionable connection errors."
+  },
+  "@lanPortBusy": {
+    "description": "Manual LAN discovery and actionable connection errors."
+  },
+  "@activityBackToTop": {
+    "description": "Scroll the virtual recent Agent list back to its top."
   }
 }

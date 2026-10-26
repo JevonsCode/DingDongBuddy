@@ -113,7 +113,7 @@ exact data boundaries.
 
 ## Optional Windows screenshot and selection plugins
 
-The DingDong 1.9.2-beta.1 release candidate adds optional Windows plugins under **Resource Manager → Plugins**.
+The DingDong 1.10.0 adds optional Windows plugins under **Resource Manager → Plugins**.
 Capture with **Ctrl+Alt+A**, annotate in the embedded editor, then copy or save a
 PNG. Text selection offers Copy, Translate, Explain and Polish; text is sent to
 the configured model only after an explicit model action. Protected fields and
@@ -297,11 +297,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.9.1:
+Published stable downloads · 1.10.0:
 
-- [macOS · Apple silicon · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-arm64.dmg)
-- [macOS · Intel · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-x64.dmg)
-- [Windows x64 · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-arm64.dmg)
+- [macOS · Intel · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-x64.dmg)
+- [Windows x64 · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

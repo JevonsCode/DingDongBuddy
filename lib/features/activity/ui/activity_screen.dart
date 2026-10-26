@@ -1,21 +1,19 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
-import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
-import 'package:dingdong/core/widgets/desktop_context_menu.dart';
-import 'package:dingdong/core/widgets/enabled_status_icon.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
+import 'package:dingdong/core/widgets/reminder_marker.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
 import 'package:dingdong/features/activity/ui/conversation_usage_tooltip.dart';
+import 'package:dingdong/features/activity/ui/recent_agent_feed.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
-import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
@@ -78,189 +76,144 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ]),
       builder: (BuildContext context, Widget? child) {
         _scheduleSeenAcknowledgement();
-        final List<Resource> enabled = widget
-            .libraryViewModel
-            .configurableResources
-            .where((Resource resource) => resource.enabled)
-            .toList(growable: false);
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: _MetricCard(
-                    key: const Key('today-metric-library'),
-                    symbol: 'library',
-                    value:
-                        '${widget.libraryViewModel.configurableResources.length}',
-                    label: context.l10n.resourceLibrary,
-                    onTap: () => widget.onOpenWorkspace(1),
+        return RecentAgentFeed(
+          controller: widget.activityController,
+          compact: true,
+          now: widget.now,
+          header: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _MetricCard(
+                      key: const Key('today-metric-library'),
+                      symbol: 'library',
+                      value:
+                          '${widget.libraryViewModel.configurableResources.length}',
+                      label: context.l10n.resourceLibrary,
+                      onTap: () => widget.onOpenWorkspace(1),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _MetricCard(
-                    key: const Key('today-open-clipboard'),
-                    symbol: 'clipboard',
-                    value: '${widget.clipboardViewModel.allRecords.length}',
-                    label: context.l10n.clipboardHistory,
-                    onTap: () => widget.onOpenWorkspace(2),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _MetricCard(
+                      key: const Key('today-open-clipboard'),
+                      symbol: 'clipboard',
+                      value: '${widget.clipboardViewModel.allRecords.length}',
+                      label: context.l10n.clipboardHistory,
+                      onTap: () => widget.onOpenWorkspace(2),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _MetricCard(
-                    key: const Key('today-agent-api'),
-                    symbol: 'mcp',
-                    value: widget.agentBaseUri == null
-                        ? context.l10n.check
-                        : '${widget.agentBaseUri!.port}',
-                    label: context.l10n.apiAgentConnections,
-                    badge:
-                        widget
-                            .settingsViewModel
-                            .settings
-                            .requiresAgentSetupUpdate
-                        ? _MetricCardBadge(
-                            key: const Key('today-agent-setup-update-badge'),
-                            label: context.l10n.update,
-                            semanticLabel: context.l10n.agentSetupNeedsUpdate,
-                            tone: _MetricCardBadgeTone.attention,
-                          )
-                        : !widget.settingsViewModel.settings.mcpAccessSeen
-                        ? const _MetricCardBadge(
-                            key: Key('today-mcp-badge'),
-                            label: 'MCP',
-                          )
-                        : null,
-                    onTap: widget.onOpenAgentApi,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                Text(
-                  context.l10n.recentAgents,
-                  style: TextStyle(
-                    color: PopupStyle.of(context).textSecondary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 7),
-                _RecentAgentCount(
-                  count: widget.activityController.recentCount,
-                  hours: widget.activityController.countWindowHours,
-                ),
-                if (widget.activityController.activities.length > 6 &&
-                    widget.resourceManagerLauncher != null) ...<Widget>[
-                  const Spacer(),
-                  _RecentAgentMoreButton(
-                    onTap: () => unawaited(
-                      widget.resourceManagerLauncher!.show(
-                        destination: ResourceManagerDestination.recentAgents,
-                      ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _MetricCard(
+                      key: const Key('today-agent-api'),
+                      symbol: 'mcp',
+                      value: widget.agentBaseUri == null
+                          ? context.l10n.check
+                          : '${widget.agentBaseUri!.port}',
+                      label: context.l10n.apiAgentConnections,
+                      badge:
+                          widget
+                              .settingsViewModel
+                              .settings
+                              .requiresAgentSetupUpdate
+                          ? _MetricCardBadge(
+                              key: const Key('today-agent-setup-update-badge'),
+                              label: context.l10n.update,
+                              semanticLabel: context.l10n.agentSetupNeedsUpdate,
+                              tone: _MetricCardBadgeTone.attention,
+                            )
+                          : !widget.settingsViewModel.settings.mcpAccessSeen
+                          ? const _MetricCardBadge(
+                              key: Key('today-mcp-badge'),
+                              label: 'MCP',
+                            )
+                          : null,
+                      onTap: widget.onOpenAgentApi,
                     ),
                   ),
                 ],
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (widget.activityController.activities.isEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: <Widget>[
                   Text(
-                    context.l10n.noRecentAgentEvents,
-                    style: TextStyle(
-                      color: PopupStyle.of(context).textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    context.l10n.gettingStartedAgentActivityDescription,
+                    context.l10n.recentAgents,
                     style: TextStyle(
                       color: PopupStyle.of(context).textSecondary,
                       fontSize: 10,
-                      height: 1.4,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  DesktopActionButton(
-                    key: const Key('today-connect-agent'),
-                    onPressed: widget.onOpenAgentApi,
-                    icon: Icons.hub_outlined,
-                    label: context.l10n.gettingStartedConnectAgent,
-                    tone: DesktopActionTone.soft,
-                    compact: true,
+                  const SizedBox(width: 7),
+                  _RecentAgentCount(
+                    count: widget.activityController.recentCount,
+                    hours: widget.activityController.countWindowHours,
                   ),
+                  if (widget.activityController.activities.length > 21 &&
+                      widget.resourceManagerLauncher != null) ...<Widget>[
+                    const Spacer(),
+                    _RecentAgentMoreButton(
+                      onTap: () => unawaited(
+                        widget.resourceManagerLauncher!.show(
+                          destination: ResourceManagerDestination.recentAgents,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              )
-            else
-              ...widget.activityController.activities.take(6).map((
-                AgentActivity activity,
-              ) {
-                final AgentConversationTarget? target =
-                    activity.conversationTarget;
-                final bool isSubagent =
-                    target != null &&
-                    widget.agentConversationLauncher.isSubagent(target);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 7),
-                  child: _AgentActivityCard(
-                    key: ValueKey<String>(activity.id),
-                    activity: activity,
-                    isSubagent: isSubagent,
-                    showConversationTokenUsage: widget
-                        .settingsViewModel
-                        .settings
-                        .showConversationTokenUsage,
-                    onTap: _conversationTap(context, activity),
-                    animate:
-                        activity.unseen &&
-                        widget.activityController.revealActive,
-                  ),
-                );
-              }),
-            const SizedBox(height: 28),
-            Text(
-              context.l10n.enabled2,
-              style: TextStyle(
-                color: PopupStyle.of(context).textSecondary,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
               ),
-            ),
-            const SizedBox(height: 8),
-            if (enabled.isEmpty)
+            ],
+          ),
+          empty: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
               Text(
-                context.l10n.enableResourcesFromTheLibraryToSeeThemHere,
+                context.l10n.noRecentAgentEvents,
+                style: TextStyle(
+                  color: PopupStyle.of(context).textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                context.l10n.gettingStartedAgentActivityDescription,
                 style: TextStyle(
                   color: PopupStyle.of(context).textSecondary,
                   fontSize: 10,
-                ),
-              )
-            else
-              ...enabled.map(
-                (Resource resource) => _EnabledResourceCard(
-                  resource: resource,
-                  contextMenuGateway: widget.contextMenuGateway,
-                  onEdit: widget.resourceManagerLauncher == null
-                      ? null
-                      : () => widget.resourceManagerLauncher!.show(
-                          editingResourceId: resource.id,
-                        ),
-                  onDisable: () => widget.libraryViewModel.save(
-                    resource.copyWith(enabled: false),
-                  ),
+                  height: 1.4,
                 ),
               ),
-          ],
+              const SizedBox(height: 10),
+              DesktopActionButton(
+                key: const Key('today-connect-agent'),
+                onPressed: widget.onOpenAgentApi,
+                icon: Icons.hub_outlined,
+                label: context.l10n.gettingStartedConnectAgent,
+                tone: DesktopActionTone.soft,
+                compact: true,
+              ),
+            ],
+          ),
+          rowBuilder: (context, activity) {
+            final AgentConversationTarget? target = activity.conversationTarget;
+            final bool isSubagent =
+                target != null &&
+                widget.agentConversationLauncher.isSubagent(target);
+            return _AgentActivityCard(
+              key: ValueKey<String>(activity.id),
+              activity: activity,
+              isSubagent: isSubagent,
+              showConversationTokenUsage:
+                  widget.settingsViewModel.settings.showConversationTokenUsage,
+              onTap: _conversationTap(context, activity),
+              animate:
+                  activity.unseen && widget.activityController.revealActive,
+            );
+          },
         );
       },
     );

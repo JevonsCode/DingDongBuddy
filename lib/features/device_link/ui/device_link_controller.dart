@@ -335,6 +335,10 @@ final class DeviceLinkController extends ChangeNotifier
   String? get computerDiscoveryError => _computerLink.error;
   @override
   Future<void> refreshComputers() => _computerLink.refresh();
+
+  @override
+  Future<void> discoverComputerAddress(String address) =>
+      _computerLink.discoverAddress(address);
   @override
   Future<void> beginComputerPairing() => _computerLink.beginPairing();
   @override

@@ -1,53 +1,85 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.9.1",
-  "latestBuild": "73",
-  "publishedAt": "2026-10-23T06:04:27Z",
+  "latestVersion": "1.10.0",
+  "latestBuild": "80",
+  "publishedAt": "2026-10-26T16:54:35Z",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.9.1",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.10.0",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Simplifies AI+ to on-demand Prompt, Skill and MCP selection for Agents; removes insights, suggestions, automatic analysis and check-ins.",
-    "Accepts the model token directly in local settings, with paste and show/hide controls; re-enter tokens previously saved in Keychain.",
-    "Improves resource-selection timeouts and keeps local matching available when the model cannot respond.",
-    "Fixes popup dismissal and paste focus, adds space beside resource actions, and keeps rear menu-bar reminder bubbles steady."
+    "Adds temporary reminders with a chosen color and sound for the next use only; recent Agent events keep the original reminder definition.",
+    "Recent Agents loads 21 items per page by default, supports custom page size, source and date filters, pins and scrolling to load more. Removes the duplicate enabled-resource section.",
+    "Replaces input badges with reminder-color dots and hover details, with notification counts on the left. Temporary reminders use a white dashed border.",
+    "Adds shared date presets and a compact desktop range calendar; Token usage uses the same custom dropdowns.",
+    "Adds IP-based discovery for initial computer pairing when automatic discovery finds nothing, while retaining pairing-code verification.",
+    "Shows LAN connection type, this computer’s IP and each paired computer’s current or saved IP; lets you correct an IP and reconnect with the existing pairing.",
+    "Adds space between device connection controls and improves recovery when multicast discovery is unavailable.",
+    "Adds optional Windows screenshot capture and embedded editing with annotations, undo/redo, copy and PNG saving; fixes black bands and reopening the editor.",
+    "Adds Windows text selection with copy, translate, explain and polish actions, with model requests only after an explicit action.",
+    "Adds plugin details with source, license and upstream version information; keeps Agent client plugin inventories in Resources.",
+    "Adds community notification sounds with preview, subscription and locally saved selections.",
+    "Improves Windows tray reminder motion and per-group counts, and isolates DEV preferences and resource synchronization from the stable installation."
   ],
   "notesByLanguage": {
     "en": [
-      "Simplifies AI+ to on-demand Prompt, Skill and MCP selection for Agents; removes insights, suggestions, automatic analysis and check-ins.",
-      "Accepts the model token directly in local settings, with paste and show/hide controls; re-enter tokens previously saved in Keychain.",
-      "Improves resource-selection timeouts and keeps local matching available when the model cannot respond.",
-      "Fixes popup dismissal and paste focus, adds space beside resource actions, and keeps rear menu-bar reminder bubbles steady."
+      "Adds temporary reminders with a chosen color and sound for the next use only; recent Agent events keep the original reminder definition.",
+      "Recent Agents loads 21 items per page by default, supports custom page size, source and date filters, pins and scrolling to load more. Removes the duplicate enabled-resource section.",
+      "Replaces input badges with reminder-color dots and hover details, with notification counts on the left. Temporary reminders use a white dashed border.",
+      "Adds shared date presets and a compact desktop range calendar; Token usage uses the same custom dropdowns.",
+      "Adds IP-based discovery for initial computer pairing when automatic discovery finds nothing, while retaining pairing-code verification.",
+      "Shows LAN connection type, this computer’s IP and each paired computer’s current or saved IP; lets you correct an IP and reconnect with the existing pairing.",
+      "Adds space between device connection controls and improves recovery when multicast discovery is unavailable.",
+      "Adds optional Windows screenshot capture and embedded editing with annotations, undo/redo, copy and PNG saving; fixes black bands and reopening the editor.",
+      "Adds Windows text selection with copy, translate, explain and polish actions, with model requests only after an explicit action.",
+      "Adds plugin details with source, license and upstream version information; keeps Agent client plugin inventories in Resources.",
+      "Adds community notification sounds with preview, subscription and locally saved selections.",
+      "Improves Windows tray reminder motion and per-group counts, and isolates DEV preferences and resource synchronization from the stable installation."
     ],
     "zh": [
-      "AI+ 精简为按任务为 Agent 选择 Prompt、Skill 和 MCP，移除洞察、建议、自动分析与主动关怀。",
-      "模型 Token 改为直接输入并保存在本地设置，支持粘贴和显示/隐藏；原先存入密钥库的 Token 需重新输入。",
-      "调整资源筛选超时，模型无法响应时继续使用本地匹配。",
-      "修复弹窗收起与粘贴焦点，增加资源操作按钮的边缘留白，后排菜单栏提醒气泡保持静止。"
+      "新增仅下一次生效的临时提醒，可指定颜色与声音；最近 Agents 保留提醒当时的定义。",
+      "最近 Agents 默认每页加载 21 条，可修改条数，支持来源多选、时间筛选、置顶和滚动加载，移除重复的已启用资源区块。",
+      "提醒类型文字改为颜色圆点，悬停可查看定义；提醒次数显示在圆点左侧，临时提醒使用白色虚线边框。",
+      "统一日期筛选选项，新增紧凑的桌面日期范围日历；Token 用量使用相同的自定义下拉组件。",
+      "自动发现找不到电脑时，首次配对可输入局域网 IP 查找，仍需使用配对码验证。",
+      "连接页显示局域网连接方式、本机 IP 和配对电脑当前或已保存的 IP，支持手动修改 IP 并使用原配对重连。",
+      "拉开设备操作按钮间距，并改善组播发现不可用时的重连。",
+      "新增可选的 Windows 截图与内置编辑器，支持标注、撤销/重做、复制和保存 PNG，修复黑边及重新打开编辑器的问题。",
+      "补齐 Windows 划词的复制、翻译、解释和润色操作，仅在主动点击模型动作后发送文字。",
+      "新增插件详情，展示来源、许可与上游版本；其他 Agent 客户端的插件清单放在资源中。",
+      "新增社区提醒声音，支持试听、订阅和保存本机选择。",
+      "优化 Windows 托盘提醒动画与分组数量，并隔离 DEV 偏好设置和资源同步，避免影响正式安装。"
     ],
     "es": [
-      "Simplifica AI+ a la selección de Prompts, Skills y MCP bajo demanda para los Agents; elimina información, sugerencias, análisis automáticos y recordatorios de bienestar.",
-      "Permite introducir el token del modelo en los ajustes locales, con controles para pegarlo y mostrarlo u ocultarlo; los tokens guardados antes en Keychain deben introducirse de nuevo.",
-      "Ajusta el tiempo de espera de la selección de recursos y conserva la selección local si el modelo no responde.",
-      "Corrige el cierre de ventanas y el foco al pegar, añade margen a las acciones de recursos y mantiene estables las burbujas secundarias de avisos."
+      "Añade recordatorios temporales con color y sonido para el próximo uso; los eventos recientes conservan la definición original.",
+      "Agentes recientes carga 21 elementos por página de forma predeterminada, permite cambiar la cantidad, filtrar fuentes y fechas, fijar y cargar más al desplazarse. Elimina la sección duplicada de recursos habilitados.",
+      "Sustituye las etiquetas de entrada por puntos de color con detalles al pasar el cursor. Los recuentos aparecen a la izquierda; los temporales usan un borde blanco discontinuo.",
+      "Unifica los filtros de fecha y añade un calendario compacto de escritorio. El uso de Tokens utiliza los mismos selectores personalizados.",
+      "Permite buscar por IP local al enlazar equipos cuando no aparecen automáticamente, manteniendo la verificación mediante código.",
+      "Muestra el tipo de conexión local y las IP actuales o guardadas de ambos equipos; permite corregir la IP y volver a conectar con el emparejamiento existente.",
+      "Añade espacio entre los controles de conexión y mejora la reconexión cuando no está disponible la detección por multidifusión.",
+      "Añade capturas opcionales en Windows y edición integrada con anotaciones, deshacer y rehacer, copia y guardado PNG; corrige las bandas negras y la reapertura del editor.",
+      "Añade selección de texto en Windows para copiar, traducir, explicar y pulir, con solicitudes al modelo solo tras una acción explícita.",
+      "Añade detalles de plugins con origen, licencia y versión; mantiene los inventarios de clientes Agent en Recursos.",
+      "Añade sonidos comunitarios con vista previa, suscripción y selección guardada localmente.",
+      "Mejora el movimiento y los recuentos de avisos de Windows, y aísla las preferencias y la sincronización DEV de la instalación estable."
     ]
   }
 }

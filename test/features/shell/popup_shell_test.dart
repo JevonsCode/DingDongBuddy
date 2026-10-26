@@ -2,7 +2,6 @@ import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
-import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
@@ -24,7 +23,6 @@ import 'package:dingdong/features/shell/domain/tray_buddy_controller.dart';
 import 'package:dingdong/features/shell/ui/popup_header.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -627,7 +625,7 @@ void main() {
   );
 
   testWidgets(
-    'Skill cards show parsed metadata in the library and enabled list',
+    'Dynamic omits enabled resources while the library keeps parsed Skill metadata',
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(390, 760);
@@ -664,36 +662,8 @@ Apply the user's saved preferences.''',
       );
       await tester.pumpAndSettle();
 
-      final Finder enabledCard = find.byKey(
-        const Key('today-enabled-user-taste'),
-      );
-      expect(
-        find.descendant(of: enabledCard, matching: find.text('user-taste')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: enabledCard,
-          matching: find.text(
-            'Use when product decisions should follow saved preferences.',
-          ),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: enabledCard,
-          matching: find.textContaining('--- name:'),
-        ),
-        findsNothing,
-      );
-      expect(
-        find.descendant(
-          of: enabledCard,
-          matching: find.byKey(const Key('today-enabled-scope-user-taste')),
-        ),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('today-enabled-user-taste')), findsNothing);
+      expect(find.text('user-taste'), findsNothing);
 
       controller.open(1);
       await tester.pumpAndSettle();
@@ -740,7 +710,7 @@ Apply the user's saved preferences.''',
   );
 
   testWidgets(
-    'library refresh keeps resource and enabled Skill views in sync',
+    'library refresh updates resources without duplicating them in Dynamic',
     (WidgetTester tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(390, 760);
@@ -777,7 +747,7 @@ Apply the user's saved preferences.''',
         DingDongApp(resourceStore: store, shellController: controller),
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('today-enabled-skill-one')), findsOneWidget);
+      expect(find.byKey(const Key('today-enabled-skill-one')), findsNothing);
       expect(find.byKey(const Key('today-enabled-skill-two')), findsNothing);
 
       await store.save(<Resource>[
@@ -789,12 +759,9 @@ Apply the user's saved preferences.''',
       controller.requestLibraryRefresh();
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('today-enabled-skill-one')), findsOneWidget);
-      expect(find.byKey(const Key('today-enabled-skill-two')), findsOneWidget);
-      expect(
-        find.byKey(const Key('today-enabled-skill-three')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('today-enabled-skill-one')), findsNothing);
+      expect(find.byKey(const Key('today-enabled-skill-two')), findsNothing);
+      expect(find.byKey(const Key('today-enabled-skill-three')), findsNothing);
 
       controller.open(1);
       await tester.pumpAndSettle();
@@ -905,90 +872,38 @@ description: Use when product decisions should follow saved preferences.
     );
   });
 
-  testWidgets('enabled MCP rows keep neutral surfaces and MCP icon color', (
-    WidgetTester tester,
-  ) async {
-    final DateTime now = DateTime.utc(2026, 8, 5);
-    await tester.pumpWidget(
-      DingDongApp(
-        resourceStore: InMemoryResourceStore(<Resource>[
-          Resource(
-            id: 'enabled-mcp',
-            type: ResourceType.mcp,
-            title: 'Enabled MCP',
-            content: 'npx enabled-mcp',
-            enabled: true,
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ]),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final Container card = tester.widget<Container>(
-      find.byKey(const Key('today-enabled-enabled-mcp')),
-    );
-    final BoxDecoration decoration = card.decoration! as BoxDecoration;
-    expect(decoration.color, PopupStyle.light.surface);
-    final PopupSymbolIcon icon = tester.widget<PopupSymbolIcon>(
-      find
-          .descendant(
-            of: find.byKey(const Key('today-enabled-enabled-mcp')),
-            matching: find.byType(PopupSymbolIcon),
-          )
-          .first,
-    );
-    expect(icon.color, PopupStyle.mcpAccent(Brightness.light));
-  });
-
-  testWidgets('enabled resources can be edited or disabled by right click', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 760);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final DateTime now = DateTime.utc(2026, 7, 16);
-    final InMemoryResourceStore store = InMemoryResourceStore(<Resource>[
-      Resource(
-        id: 'enabled-skill',
-        type: ResourceType.skill,
-        title: 'Enabled skill',
-        content: 'Use this skill.',
-        enabled: true,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ]);
-    final _FakeResourceManagerLauncher launcher =
-        _FakeResourceManagerLauncher();
-    final _QueuedContextMenuGateway menuGateway = _QueuedContextMenuGateway(
-      <String?>['edit', 'disable'],
-    );
-    await tester.pumpWidget(
-      DingDongApp(
-        resourceStore: store,
-        resourceManagerLauncher: launcher,
-        desktopContextMenuGateway: menuGateway,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final Finder card = find.byKey(const Key('today-enabled-enabled-skill'));
-    await tester.tap(card, buttons: kSecondaryButton);
-    await tester.pumpAndSettle();
-    expect(menuGateway.showCount, 1);
-    expect(find.byType(PopupMenuItem), findsNothing);
-    expect(launcher.lastEditingResourceId, 'enabled-skill');
-
-    await tester.tap(card, buttons: kSecondaryButton);
-    await tester.pumpAndSettle();
-
-    expect(menuGateway.showCount, 2);
-    expect((await store.load()).single.enabled, isFalse);
-    expect(card, findsNothing);
-  });
+  testWidgets(
+    'Dynamic only lists recent Agents, leaving enabled resources in the library',
+    (tester) async {
+      final now = DateTime.utc(2026, 8, 5);
+      final store = InMemoryResourceStore([
+        Resource(
+          id: 'enabled-mcp',
+          type: ResourceType.mcp,
+          title: 'Enabled MCP',
+          content: 'npx example-mcp',
+          enabled: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final controller = ShellController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        DingDongApp(resourceStore: store, shellController: controller),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('today-enabled-enabled-mcp')), findsNothing);
+      expect(
+        find.byKey(const Key('recent-agent-source-filter')),
+        findsOneWidget,
+      );
+      expect((await store.load()).single.enabled, true);
+      controller.open(1);
+      await tester.pumpAndSettle();
+      expect(find.text('Enabled MCP'), findsOneWidget);
+    },
+  );
 
   testWidgets('settings hides the callout before opening its separate panel', (
     WidgetTester tester,
@@ -2070,24 +1985,6 @@ description: Use when product decisions should follow saved preferences.
     await tester.pump();
     expect(find.byKey(const Key('popup-issues')), findsNothing);
   });
-}
-
-final class _QueuedContextMenuGateway implements DesktopContextMenuGateway {
-  _QueuedContextMenuGateway(this.results);
-
-  final List<String?> results;
-  int showCount = 0;
-
-  @override
-  Future<String?> show({
-    required double x,
-    required double y,
-    required bool isDark,
-    required List<DesktopContextMenuItem> items,
-  }) async {
-    final int index = showCount++;
-    return index < results.length ? results[index] : null;
-  }
 }
 
 final class _FakeResourceManagerLauncher implements ResourceManagerLauncher {

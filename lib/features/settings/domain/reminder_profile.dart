@@ -9,6 +9,7 @@ final class ReminderProfile {
     required this.name,
     this.description = '',
     this.enabled = true,
+    this.temporary = false,
     this.kind = AgentNotificationKind.attention,
     this.style = TrayReminderStyle.softPulse,
     this.color = TrayNotificationColor.amber,
@@ -46,7 +47,7 @@ final class ReminderProfile {
         'Unknown reminder kind, style, color or sound.',
       );
     }
-    for (final key in ['enabled', 'toPhone']) {
+    for (final key in ['enabled', 'toPhone', 'temporary']) {
       if (json[key] != null && json[key] is! bool) {
         throw FormatException('$key must be a boolean.');
       }
@@ -57,6 +58,7 @@ final class ReminderProfile {
       name: name,
       description: field('description', 160),
       enabled: json['enabled'] != false,
+      temporary: json['temporary'] == true,
       kind: AgentNotificationKind.parse(kind),
       style: TrayReminderStyle.values.byName(style),
       color: TrayNotificationColor.values.byName(color),
@@ -69,6 +71,7 @@ final class ReminderProfile {
   final String name;
   final String description;
   final bool enabled;
+  final bool temporary;
   final AgentNotificationKind kind;
   final TrayReminderStyle style;
   final TrayNotificationColor color;
@@ -84,6 +87,7 @@ final class ReminderProfile {
     'name': name,
     'description': description,
     'enabled': enabled,
+    if (temporary) 'temporary': true,
     'kind': kind.apiValue,
     'style': style.name,
     'color': color.name,
@@ -95,6 +99,7 @@ final class ReminderProfile {
     String? name,
     String? description,
     bool? enabled,
+    bool? temporary,
     AgentNotificationKind? kind,
     TrayReminderStyle? style,
     TrayNotificationColor? color,
@@ -106,6 +111,7 @@ final class ReminderProfile {
     name: name ?? this.name,
     description: description ?? this.description,
     enabled: enabled ?? this.enabled,
+    temporary: temporary ?? this.temporary,
     kind: kind ?? this.kind,
     style: style ?? this.style,
     color: color ?? this.color,
@@ -120,6 +126,7 @@ final class ReminderProfile {
       name == other.name &&
       description == other.description &&
       enabled == other.enabled &&
+      temporary == other.temporary &&
       kind == other.kind &&
       style == other.style &&
       color == other.color &&

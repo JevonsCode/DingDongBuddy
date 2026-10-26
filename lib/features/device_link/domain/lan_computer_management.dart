@@ -26,6 +26,7 @@ abstract interface class LanComputerManagement implements Listenable {
   String? get computerPairingCode;
   String? get computerDiscoveryError;
   Future<void> refreshComputers();
+  Future<void> discoverComputerAddress(String address);
   Future<void> beginComputerPairing();
   Future<void> cancelComputerPairing();
   Future<void> joinNearbyComputer(String deviceId, String code);

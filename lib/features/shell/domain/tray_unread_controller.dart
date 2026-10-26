@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 
 /// Applies the visual state of the desktop tray icon.
@@ -23,6 +24,9 @@ final class TrayUnreadController {
   int _acknowledgedEventId = 0;
   int _latestAttentionEventId = 0;
   final Map<String, int> _reminderEvents = {};
+  final Map<String, ReminderProfile> _reminderSnapshots = {};
+  Map<String, ReminderProfile> get reminderSnapshots =>
+      Map.unmodifiable(_reminderSnapshots);
   final Map<String, List<int>> _reminderEventHistory = {};
   Map<String, int?> get unreadReminderCounts => {
     for (final id in unreadReminderIds)
@@ -67,6 +71,9 @@ final class TrayUnreadController {
         0,
         _latestEventId,
       );
+      _reminderSnapshots
+        ..clear()
+        ..addAll(state.reminderSnapshots);
       _reminderEvents.clear();
       _reminderEvents.addAll(state.reminderEvents);
       // Older installations only persisted the latest event and attention event.
@@ -97,12 +104,14 @@ final class TrayUnreadController {
   Future<void> markUnread({
     AgentNotificationKind kind = AgentNotificationKind.completion,
     String? reminderId,
+    ReminderProfile? reminder,
   }) {
     return _enqueue(() async {
       _latestEventId += 1;
       _latestReminderId = reminderId;
       final id = reminderId ?? kind.apiValue;
       _reminderEvents[id] = _latestEventId;
+      if (reminder != null) _reminderSnapshots[id] = reminder;
       (_reminderEventHistory[id] ??= []).add(_latestEventId);
       if (kind == AgentNotificationKind.attention) {
         _latestAttentionEventId = _latestEventId;
@@ -187,6 +196,7 @@ final class TrayUnreadController {
       _reminderEvents.remove(oldest.key);
       _reminderEventHistory.remove(oldest.key);
     }
+    _reminderSnapshots.removeWhere((id, _) => !_reminderEvents.containsKey(id));
   }
 
   Future<void> _persist() async {
@@ -194,6 +204,7 @@ final class TrayUnreadController {
     await store?.save(
       TrayUnreadState(
         reminderEvents: Map.unmodifiable(_reminderEvents),
+        reminderSnapshots: Map.unmodifiable(_reminderSnapshots),
         reminderEventHistory: {
           for (final e in _reminderEventHistory.entries)
             e.key: List.unmodifiable(e.value),

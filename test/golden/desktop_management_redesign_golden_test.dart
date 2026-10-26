@@ -141,41 +141,43 @@ void main() {
     tags: <String>['golden'],
   );
 
-  testWidgets('empty device manager pairing and history light and dark', (
-    WidgetTester tester,
-  ) async {
-    tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(620, 580);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final _GoldenDeviceManagement controller = _GoldenDeviceManagement();
+  testWidgets(
+    'empty device manager pairing and history light and dark',
+    (WidgetTester tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(620, 580);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final _GoldenDeviceManagement controller = _GoldenDeviceManagement();
 
-    final mismatches = <Object>[];
-    for (final (ThemeMode mode, String name) in <(ThemeMode, String)>[
-      (ThemeMode.light, 'connected_devices_redesign_light'),
-      (ThemeMode.dark, 'connected_devices_redesign_dark'),
-    ]) {
-      await tester.pumpWidget(
-        _testApp(
-          mode: mode,
-          home: RepaintBoundary(
-            key: const Key('management-golden'),
-            child: DeviceLinkManagerScreen(controller: controller),
+      final mismatches = <Object>[];
+      for (final (ThemeMode mode, String name) in <(ThemeMode, String)>[
+        (ThemeMode.light, 'connected_devices_redesign_light'),
+        (ThemeMode.dark, 'connected_devices_redesign_dark'),
+      ]) {
+        await tester.pumpWidget(
+          _testApp(
+            mode: mode,
+            home: RepaintBoundary(
+              key: const Key('management-golden'),
+              child: DeviceLinkManagerScreen(controller: controller),
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      try {
-        await expectLater(
-          find.byKey(const Key('management-golden')),
-          matchesGoldenFile('goldens/$name.png'),
         );
-      } catch (error) {
-        mismatches.add(error);
+        await tester.pumpAndSettle();
+        try {
+          await expectLater(
+            find.byKey(const Key('management-golden')),
+            matchesGoldenFile('goldens/$name.png'),
+          );
+        } catch (error) {
+          mismatches.add(error);
+        }
       }
-    }
-    expect(mismatches, isEmpty);
-  }, tags: <String>['golden']);
+      expect(mismatches, isEmpty);
+    },
+    tags: <String>['golden'],
+  );
 
   testWidgets(
     'connected computer transport settings light and dark',
@@ -458,6 +460,8 @@ final class _GoldenDeviceManagement extends ChangeNotifier
   String? get computerDiscoveryError => null;
   @override
   Future<void> refreshComputers() async {}
+  @override
+  Future<void> discoverComputerAddress(String address) async {}
   @override
   Future<void> beginComputerPairing() async {}
   @override

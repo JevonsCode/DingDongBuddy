@@ -4596,4 +4596,91 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get deviceAddressUnknown => 'Esperando detectar la IP';
+
+  @override
+  String get dateFilterYesterday => 'Ayer';
+
+  @override
+  String get dateFilterLastThreeDays => 'Últimos 3 días';
+
+  @override
+  String get dateFilterThisWeek => 'Esta semana';
+
+  @override
+  String get dateFilterThisMonth => 'Este mes';
+
+  @override
+  String get dateFilterLastMonth => 'Mes pasado';
+
+  @override
+  String get dateFilterLastThreeMonths => 'Últimos 3 meses';
+
+  @override
+  String get dateFilterThisYear => 'Este año';
+
+  @override
+  String get dateFilterCustom => 'Intervalo personalizado';
+
+  @override
+  String get dateFilterAll => 'Todo el tiempo';
+
+  @override
+  String get dateFilterStart => 'Fecha de inicio';
+
+  @override
+  String get dateFilterEnd => 'Fecha de fin';
+
+  @override
+  String get dateFilterApply => 'Aplicar';
+
+  @override
+  String get dateFilterInvalidDate => 'Introduce una fecha válida (yyyy-MM-dd)';
+
+  @override
+  String get dateFilterInvalidRange =>
+      'La fecha de fin no puede ser anterior al inicio';
+
+  @override
+  String get activitySourceFilter => 'Fuentes';
+
+  @override
+  String get activityPageSize => 'Elementos por página';
+
+  @override
+  String get activityPin => 'Fijar';
+
+  @override
+  String get activityUnpin => 'Desfijar';
+
+  @override
+  String get activityLoadMore => 'Cargar más';
+
+  @override
+  String get activityNoMatches =>
+      'Ningún recordatorio coincide con estos filtros';
+
+  @override
+  String get reminderTemporary => 'Temporal · solo el próximo uso';
+
+  @override
+  String get reminderDefinitionUnavailable =>
+      'Este registro antiguo no tiene una definición guardada';
+
+  @override
+  String get reminderTemporaryHelp =>
+      'Se usa para el próximo recordatorio y se elimina automáticamente.';
+
+  @override
+  String get lanFindByIp => 'Buscar equipo por IP';
+
+  @override
+  String get lanFindByIpHelp =>
+      'Si no aparece el equipo, introduce su IP local y enlázalo con su código.';
+
+  @override
+  String get lanPortBusy =>
+      'Otra instancia de DingDong usa el puerto de descubrimiento local. Cierra las instancias duplicadas y actualiza.';
+
+  @override
+  String get activityBackToTop => 'Volver arriba';
 }

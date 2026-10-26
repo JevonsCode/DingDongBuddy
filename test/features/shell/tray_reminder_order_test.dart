@@ -5,6 +5,22 @@ import 'package:dingdong/features/shell/domain/tray_reminder_order.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('consumed temporary reminder keeps its captured tray definition', () {
+    const temp = ReminderProfile(
+      id: 'once',
+      name: 'Once',
+      temporary: true,
+      color: TrayNotificationColor.green,
+    );
+    final ordered = orderedUnreadReminderProfiles(
+      rules: const NotificationRules(),
+      completionColor: TrayNotificationColor.purple,
+      unreadIds: ['once'],
+      snapshots: {'once': temp},
+    );
+    expect(ordered.single, temp);
+  });
+
   test(
     'active reminder array order promotes the first type and restores completion',
     () {

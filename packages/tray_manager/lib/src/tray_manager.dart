@@ -238,6 +238,7 @@ class TrayManager {
     int? badgeColorRgb,
     String? badgeId,
     bool badgePulse = false,
+    bool badgeTemporary = false,
     List<Map<String, Object>> reminderBubbles = const [],
     bool badgeDimmed = false,
   }) async {
@@ -247,6 +248,7 @@ class TrayManager {
       if (badgeColorRgb != null) 'badgeColorRgb': badgeColorRgb & 0xFFFFFF,
       if (badgeId != null) 'badgeId': badgeId,
       if (badgePulse) 'badgePulse': true,
+      if (badgeTemporary) 'badgeTemporary': true,
       if (reminderBubbles.isNotEmpty) 'reminderBubbles': reminderBubbles,
       if (badgeDimmed) 'badgeDimmed': true,
     };

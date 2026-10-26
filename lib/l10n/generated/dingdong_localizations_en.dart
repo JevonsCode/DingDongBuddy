@@ -4544,4 +4544,90 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get deviceAddressUnknown => 'Waiting to discover IP';
+
+  @override
+  String get dateFilterYesterday => 'Yesterday';
+
+  @override
+  String get dateFilterLastThreeDays => 'Last 3 days';
+
+  @override
+  String get dateFilterThisWeek => 'This week';
+
+  @override
+  String get dateFilterThisMonth => 'This month';
+
+  @override
+  String get dateFilterLastMonth => 'Last month';
+
+  @override
+  String get dateFilterLastThreeMonths => 'Last 3 months';
+
+  @override
+  String get dateFilterThisYear => 'This year';
+
+  @override
+  String get dateFilterCustom => 'Custom range';
+
+  @override
+  String get dateFilterAll => 'All time';
+
+  @override
+  String get dateFilterStart => 'Start date';
+
+  @override
+  String get dateFilterEnd => 'End date';
+
+  @override
+  String get dateFilterApply => 'Apply';
+
+  @override
+  String get dateFilterInvalidDate => 'Enter a valid date (yyyy-MM-dd)';
+
+  @override
+  String get dateFilterInvalidRange =>
+      'End date must be on or after start date';
+
+  @override
+  String get activitySourceFilter => 'Sources';
+
+  @override
+  String get activityPageSize => 'Page size';
+
+  @override
+  String get activityPin => 'Pin';
+
+  @override
+  String get activityUnpin => 'Unpin';
+
+  @override
+  String get activityLoadMore => 'Load more';
+
+  @override
+  String get activityNoMatches => 'No reminders match these filters';
+
+  @override
+  String get reminderTemporary => 'Temporary · next use only';
+
+  @override
+  String get reminderDefinitionUnavailable =>
+      'This older record has no saved reminder definition';
+
+  @override
+  String get reminderTemporaryHelp =>
+      'Used for the next reminder, then removed automatically.';
+
+  @override
+  String get lanFindByIp => 'Find computer by IP';
+
+  @override
+  String get lanFindByIpHelp =>
+      'If discovery finds nothing, enter the other computer’s LAN IP, then pair with its code.';
+
+  @override
+  String get lanPortBusy =>
+      'Another DingDong instance is using the LAN discovery port. Quit duplicate instances, then refresh.';
+
+  @override
+  String get activityBackToTop => 'Back to top';
 }

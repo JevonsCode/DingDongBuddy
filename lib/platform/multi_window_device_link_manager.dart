@@ -132,6 +132,15 @@ Future<Object?> handleDeviceLinkManagerHostCall(
         return {'error': 'invalid_lan_address'};
       }
       return null;
+    case 'device_link_lan_discover_address':
+      try {
+        await (controller as LanComputerManagement).discoverComputerAddress(
+          call.arguments! as String,
+        );
+      } on FormatException {
+        return {'error': 'invalid_lan_address'};
+      }
+      return null;
     case 'device_link_lan_refresh':
       await (controller as LanComputerManagement).refreshComputers();
       return null;
@@ -211,6 +220,7 @@ Future<Object?> handleDeviceLinkManagerHostCall(
 
 bool isDeviceLinkManagerHostMethod(String method) => const <String>{
   'device_link_lan_address_set',
+  'device_link_lan_discover_address',
   'device_link_lan_refresh',
   'device_link_lan_begin',
   'device_link_lan_cancel',
@@ -281,6 +291,18 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   @override
   Future<void> refreshComputers() =>
       _invokeAndReload('device_link_lan_refresh');
+  @override
+  Future<void> discoverComputerAddress(String address) async {
+    final result = await _parentController.invokeMethod<Object?>(
+      'device_link_lan_discover_address',
+      address,
+    );
+    if (result is Map && result['error'] == 'invalid_lan_address') {
+      throw const FormatException('Invalid LAN address');
+    }
+    await reload();
+  }
+
   @override
   Future<void> beginComputerPairing() =>
       _invokeAndReload('device_link_lan_begin');

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:dingdong/app/app_dependencies.dart';
 import 'package:dingdong/features/agent_api/data/agent_router.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/agent_api/data/http_request_data.dart';
@@ -101,6 +102,111 @@ void main() {
     expect(() => validateWave(wave(seconds: 16)), throwsFormatException);
     expect(() => validateWave(wave(seconds: 0)), throwsFormatException);
   });
+  test('temporary preset is durable and can only be consumed once', () async {
+    await service.call({
+      'action': 'upsert',
+      'id': 'one-shot',
+      'name': 'Next request',
+      'temporary': true,
+      'color': 'green',
+      'sound': 'dingDeep',
+    });
+    final profile = (await repository.load()).reminderProfile('one-shot')!;
+    expect(profile.temporary, isTrue);
+    final results = await Future.wait([
+      for (var i = 0; i < 2; i++)
+        service.call({
+          'action': 'consume',
+          'id': profile.id,
+          'expected': profile.toJson(),
+        }),
+    ]);
+    expect(results.where((r) => r['consumed'] == true).length, 1);
+    expect((await repository.load()).reminderProfile('one-shot'), isNull);
+    expect(profile.color.name, 'green');
+    await expectLater(
+      service.call({'action': 'upsert', 'id': 'completion', 'temporary': true}),
+      throwsFormatException,
+    );
+  });
+  test(
+    'consuming an old snapshot cannot remove an edited temporary preset',
+    () async {
+      await service.call({
+        'action': 'upsert',
+        'id': 'next',
+        'name': 'Next',
+        'temporary': true,
+      });
+      final original = (await repository.load()).reminderProfile('next')!;
+      await service.call({'action': 'upsert', 'id': 'next', 'color': 'green'});
+      final result = await service.call({
+        'action': 'consume',
+        'id': 'next',
+        'expected': original.toJson(),
+      });
+      expect(result['consumed'], false);
+      expect(
+        (await repository.load()).reminderProfile('next')!.color.name,
+        'green',
+      );
+    },
+  );
+  test(
+    'two concurrent notifications deliver the captured temporary definition once',
+    () async {
+      await service.call({
+        'action': 'upsert',
+        'id': 'next',
+        'name': 'Next',
+        'temporary': true,
+        'sound': 'dingDeep',
+        'color': 'green',
+      });
+      final settings = await repository.load();
+      final profile = settings.reminderProfile('next')!;
+      final request = DingRequest(reminderId: profile.id, reminder: profile);
+      final delivered = <DingRequest>[];
+      Future<void> send() => deliverAgentNotification(
+        request: request,
+        settings: settings,
+        consumeTemporary: (p) async =>
+            (await service.call({
+              'action': 'consume',
+              'id': p.id,
+              'expected': p.toJson(),
+            }))['consumed'] ==
+            true,
+        nativeDelivery: (r) async {
+          delivered.add(r);
+        },
+      );
+      await Future.wait([send(), send()]);
+      expect(delivered.length, 1);
+      expect(delivered.single.sound, DingSound.dingDeep);
+      expect(delivered.single.reminder, profile);
+      expect((await repository.load()).reminderProfile('next'), isNull);
+    },
+  );
+  test('filtered notification leaves a temporary reminder available', () async {
+    await service.call({
+      'action': 'upsert',
+      'id': 'next',
+      'name': 'Next',
+      'temporary': true,
+    });
+    final settings = await repository.load();
+    final profile = settings.reminderProfile('next')!;
+    await deliverAgentNotification(
+      request: DingRequest(reminderId: profile.id, reminder: profile),
+      settings: settings,
+      isSubagentNotification: (_) async => true,
+      consumeTemporary: (_) async =>
+          throw StateError('Filtered requests must not claim'),
+      nativeDelivery: (_) async => fail('Filtered request alerted'),
+    );
+    expect((await repository.load()).reminderProfile('next'), profile);
+  });
   test('loopback API lists, patches and dispatches explicit profiles', () async {
     final delivered = <DingRequest>[];
     final router = AgentRouter(
@@ -125,6 +231,7 @@ void main() {
     );
     expect(response.statusCode, 200);
     expect(delivered.single.reminderId, 'error');
+    expect(delivered.single.reminder?.id, 'error');
     expect(delivered.single.notificationKind.apiValue, 'attention');
     final unknown = await router.route(
       HttpRequestData(

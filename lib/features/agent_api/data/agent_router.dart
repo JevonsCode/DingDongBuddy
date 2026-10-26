@@ -39,6 +39,7 @@ import 'package:dingdong/features/library/domain/resource_scope_policy.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
 import 'package:dingdong/features/library/domain/skill_package_installer.dart';
 import 'package:dingdong/features/library/domain/trigger_group.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 
 part 'agent_router_resource_handlers.dart';
 
@@ -407,6 +408,7 @@ final class AgentRouter {
             );
           }
           parsed = parsed.copyWith(
+            reminder: ReminderProfile.fromJson(matches.first),
             notificationKind: AgentNotificationKind.parse(
               matches.first['kind'],
             ),

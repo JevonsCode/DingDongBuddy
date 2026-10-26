@@ -254,7 +254,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('token-usage-range-filter')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Last 30 days').last);
+    await tester.tap(find.text('Last 3 months').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Range total'), findsOneWidget);
@@ -277,7 +277,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       savedName,
-      'dingdong-token-usage-20251212-20260110-claude-code+codex+pi.csv',
+      'dingdong-token-usage-20251101-20260110-claude-code+codex+pi.csv',
     );
     expect(savedContents, contains('2025-12-20,codex,40'));
     expect(tester.takeException(), isNull);
@@ -708,7 +708,7 @@ void main() {
       await tester.tap(export);
       await tester.pump();
       expect(tester.widget<DesktopIconButton>(export).onPressed, isNull);
-      expect(savedName, 'dingdong-token-usage-2025-codex.csv');
+      expect(savedName, 'dingdong-token-usage-20250101-20251231-codex.csv');
       expect(
         savedContents,
         contains('2025-12-20,codex,40,30,10,0,0,0,40,exact,exact,true,1,0'),

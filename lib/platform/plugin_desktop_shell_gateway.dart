@@ -257,7 +257,12 @@ final class PluginDesktopShellGateway
   Future<void> markUnread({
     AgentNotificationKind kind = AgentNotificationKind.completion,
     String? reminderId,
-  }) => _unreadController.markUnread(kind: kind, reminderId: reminderId);
+    ReminderProfile? reminder,
+  }) => _unreadController.markUnread(
+    kind: kind,
+    reminderId: reminderId,
+    reminder: reminder,
+  );
 
   Future<void> acknowledgeUnreadCount(int count) {
     if (count <= 0) {
@@ -347,11 +352,15 @@ final class PluginDesktopShellGateway
     final profiles = _notificationRules.profiles.where(
       (x) => x.id == _unreadController.primaryReminderId,
     );
-    final profile = profiles.isEmpty ? null : profiles.first;
+    final profile =
+        _unreadController.reminderSnapshots[_unreadController
+            .primaryReminderId] ??
+        (profiles.isEmpty ? null : profiles.first);
     final unreadProfiles = orderedUnreadReminderProfiles(
       rules: _notificationRules,
       completionColor: _trayNotificationColor,
       unreadIds: _unreadController.unreadReminderIds,
+      snapshots: _unreadController.reminderSnapshots,
     );
     unreadProfiles.addAll(
       TrayNotificationColor.values
@@ -489,6 +498,7 @@ final class PluginDesktopShellGateway
                   : counts[unreadProfiles.first.id]}',
         style: macOSTrayTitleStyle(hot: hot),
         badgeId: unreadProfiles.firstOrNull?.id,
+        badgeTemporary: unreadProfiles.firstOrNull?.temporary ?? false,
         badgePulse:
             unreadProfiles.firstOrNull?.style == TrayReminderStyle.softPulse,
         badgeColorRgb:
@@ -501,6 +511,7 @@ final class PluginDesktopShellGateway
                     'id': p.id,
                     'name': reminderName(p),
                     'colorRgb': p.color.rgbValue,
+                    'temporary': p.temporary,
                     if (counts[p.id] != null) 'count': counts[p.id]!,
                     'pulse': false,
                   },

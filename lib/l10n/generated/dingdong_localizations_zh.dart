@@ -4361,4 +4361,85 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get deviceAddressUnknown => '待发现 IP';
+
+  @override
+  String get dateFilterYesterday => '昨天';
+
+  @override
+  String get dateFilterLastThreeDays => '近三天';
+
+  @override
+  String get dateFilterThisWeek => '本周';
+
+  @override
+  String get dateFilterThisMonth => '本月';
+
+  @override
+  String get dateFilterLastMonth => '上个月';
+
+  @override
+  String get dateFilterLastThreeMonths => '近三个月';
+
+  @override
+  String get dateFilterThisYear => '本年';
+
+  @override
+  String get dateFilterCustom => '自定义';
+
+  @override
+  String get dateFilterAll => '全部时间';
+
+  @override
+  String get dateFilterStart => '开始日期';
+
+  @override
+  String get dateFilterEnd => '结束日期';
+
+  @override
+  String get dateFilterApply => '应用';
+
+  @override
+  String get dateFilterInvalidDate => '请输入有效日期（yyyy-MM-dd）';
+
+  @override
+  String get dateFilterInvalidRange => '结束日期不能早于开始日期';
+
+  @override
+  String get activitySourceFilter => '来源';
+
+  @override
+  String get activityPageSize => '每页条数';
+
+  @override
+  String get activityPin => '置顶';
+
+  @override
+  String get activityUnpin => '取消置顶';
+
+  @override
+  String get activityLoadMore => '加载更多';
+
+  @override
+  String get activityNoMatches => '没有符合筛选条件的提醒';
+
+  @override
+  String get reminderTemporary => '临时 · 仅下一次';
+
+  @override
+  String get reminderDefinitionUnavailable => '此历史记录未保存提醒定义';
+
+  @override
+  String get reminderTemporaryHelp => '仅用于下一次提醒，使用后自动移除。';
+
+  @override
+  String get lanFindByIp => '按 IP 查找电脑';
+
+  @override
+  String get lanFindByIpHelp => '自动发现找不到时，输入另一台电脑的局域网 IP，再使用配对码连接。';
+
+  @override
+  String get lanPortBusy => '局域网发现端口正被另一个叮咚实例占用，请退出重复打开的叮咚后刷新。';
+
+  @override
+  String get activityBackToTop => '回到顶部';
 }

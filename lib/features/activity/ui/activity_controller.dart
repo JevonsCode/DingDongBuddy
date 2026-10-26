@@ -2,13 +2,16 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/models/date_filter_range.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:flutter/widgets.dart' show Locale;
 
 const int defaultAgentActivityMaxItems = 500;
@@ -57,6 +60,8 @@ final class ActivityController extends ChangeNotifier {
   List<AgentActivity> _activities = const <AgentActivity>[];
   List<AgentTaskRun> _activeRuns = const <AgentTaskRun>[];
   List<DateTime> _completionTimes = const <DateTime>[];
+  int _recentPageSize = 21;
+  int get recentPageSize => _recentPageSize;
   int _revealRevision = 0;
   bool _revealActive = false;
   int _maxItems;
@@ -196,6 +201,7 @@ final class ActivityController extends ChangeNotifier {
     AgentConversationTarget? conversationTarget,
     AgentNotificationKind notificationKind = AgentNotificationKind.completion,
     ConversationTokenUsage? tokenUsage,
+    ReminderProfile? reminder,
     bool countAsReminder = true,
   }) {
     final DateTime resolvedCompletedAt = (completedAt ?? _now()).toUtc();
@@ -239,6 +245,7 @@ final class ActivityController extends ChangeNotifier {
         conversationTarget: resolvedTarget,
         notificationKind: notificationKind,
         tokenUsage: tokenUsage,
+        reminder: reminder,
         countAsReminder: countAsReminder,
       );
       _activities = <AgentActivity>[
@@ -273,8 +280,10 @@ final class ActivityController extends ChangeNotifier {
       notificationKind: notificationKind,
       conversationTarget: resolvedTarget,
       tokenUsage: tokenUsage,
+      reminder: reminder,
     );
-    _activities = <AgentActivity>[activity, ..._activities.take(_maxItems - 1)];
+    _activities = <AgentActivity>[activity, ..._activities];
+    _trim();
     if (notificationKind == AgentNotificationKind.completion) {
       _completionTimes = <DateTime>[resolvedCompletedAt, ..._completionTimes];
       _trimCompletionTimes();
@@ -351,6 +360,7 @@ final class ActivityController extends ChangeNotifier {
     AgentConversationTarget? target,
     AgentNotificationKind notificationKind = AgentNotificationKind.completion,
     ConversationTokenUsage? tokenUsage,
+    ReminderProfile? reminder,
   }) {
     final String normalizedSource = source.trim().isEmpty
         ? 'Agent'
@@ -365,6 +375,7 @@ final class ActivityController extends ChangeNotifier {
         conversationTarget: target,
         notificationKind: notificationKind,
         tokenUsage: tokenUsage,
+        reminder: reminder,
         countAsReminder: false,
       );
       return;
@@ -392,6 +403,7 @@ final class ActivityController extends ChangeNotifier {
       conversationTarget: target,
       notificationKind: notificationKind,
       tokenUsage: tokenUsage,
+      reminder: reminder,
       preserveLifecycle: true,
       countAsReminder: false,
     );
@@ -640,6 +652,59 @@ final class ActivityController extends ChangeNotifier {
     );
   }
 
+  List<String> get sources =>
+      (_activities.map((e) => e.source).toSet().toList()..sort());
+
+  void setRecentPageSize(int size) {
+    final next = size.clamp(1, 500);
+    if (_recentPageSize == next) return;
+    _recentPageSize = next;
+    _loaded = true;
+    _persist();
+    notifyListeners();
+  }
+
+  void setPinned(String id, bool pinned) {
+    final index = _activities.indexWhere((e) => e.id == id);
+    if (index < 0 || _activities[index].pinned == pinned) return;
+    _activities = List.of(_activities)
+      ..[index] = _activities[index].withPinned(pinned);
+    _persist();
+    notifyListeners();
+  }
+
+  /// Asynchronous local pages: filtering and pin order happen before slicing.
+  /// The widget only builds visible rows from the requested pages.
+  Future<AgentActivityPage> queryPage({
+    int offset = 0,
+    int? limit,
+    Set<String>? sources,
+    DateTimeRange? range,
+  }) async {
+    final matches =
+        _activities
+            .where(
+              (e) =>
+                  (sources == null || sources.contains(e.source)) &&
+                  dateWithinFilter(e.completedAt, range),
+            )
+            .toList()
+          ..sort(_feedOrder);
+    final start = offset.clamp(0, matches.length);
+    return AgentActivityPage(
+      items: List.unmodifiable(
+        matches.skip(start).take((limit ?? _recentPageSize).clamp(1, 500)),
+      ),
+      total: matches.length,
+    );
+  }
+
+  static int _feedOrder(AgentActivity a, AgentActivity b) {
+    if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+    final time = b.completedAt.compareTo(a.completedAt);
+    return time == 0 ? a.id.compareTo(b.id) : time;
+  }
+
   void clear() {
     _recentCountTimer?.cancel();
     _activities = const <AgentActivity>[];
@@ -652,6 +717,7 @@ final class ActivityController extends ChangeNotifier {
   }
 
   void _replaceWith(AgentActivityHistory history) {
+    _recentPageSize = history.recentPageSize.clamp(1, 500);
     _activities = List<AgentActivity>.of(history.activities)
       ..sort(
         (AgentActivity a, AgentActivity b) =>
@@ -668,7 +734,15 @@ final class ActivityController extends ChangeNotifier {
 
   void _trim() {
     if (_activities.length > _maxItems) {
-      _activities = _activities.take(_maxItems).toList(growable: false);
+      // Keep pins when the bounded local history evicts its oldest items.
+      final ranked = [
+        ..._activities.where((e) => e.pinned),
+        ..._activities.where((e) => !e.pinned),
+      ];
+      final retained = ranked.take(_maxItems).map((e) => e.id).toSet();
+      _activities = _activities
+          .where((e) => retained.contains(e.id))
+          .toList(growable: false);
     }
     _trimCompletionTimes();
   }
@@ -688,6 +762,7 @@ final class ActivityController extends ChangeNotifier {
     }
     _store.save(
       AgentActivityHistory(
+        recentPageSize: _recentPageSize,
         activities: _activities,
         completionTimes: _completionTimes,
       ),
@@ -749,4 +824,10 @@ String _generateId() {
   final Random random = Random.secure();
   return '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}-'
       '${random.nextInt(1 << 32).toRadixString(36)}';
+}
+
+final class AgentActivityPage {
+  const AgentActivityPage({required this.items, required this.total});
+  final List<AgentActivity> items;
+  final int total;
 }

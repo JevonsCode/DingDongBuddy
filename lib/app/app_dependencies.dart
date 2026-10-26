@@ -82,7 +82,7 @@ Future<bool> shouldDeliverAgentNotification({
 }) async {
   final profile = request.reminderId == null
       ? null
-      : settings.reminderProfile(request.reminderId);
+      : request.reminder ?? settings.reminderProfile(request.reminderId);
   if (request.reminderId != null
       ? profile?.enabled != true
       : !_isNotificationKindEnabled(request.notificationKind, settings)) {
@@ -160,6 +160,7 @@ Future<void> deliverAgentNotification({
   CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
   NotificationDeliveryFailureObserver? onFailure,
+  Future<bool> Function(ReminderProfile)? consumeTemporary,
   AgentTaskStartLookup? taskStartedAt,
   DateTime Function() now = DateTime.now,
 }) async {
@@ -179,7 +180,8 @@ Future<void> deliverAgentNotification({
   } on Object {
     // An unknown start time never hides a reminder.
   }
-  final profile = settings.reminderProfile(request.reminderId);
+  final profile =
+      request.reminder ?? settings.reminderProfile(request.reminderId);
   final AgentNotificationPlan plan = planAgentNotification(
     kind: profile?.kind ?? request.notificationKind,
     completionSound: profile?.sound ?? settings.selectedSound,
@@ -198,12 +200,21 @@ Future<void> deliverAgentNotification({
     now: currentTime,
     taskDuration: startedAt == null ? null : currentTime.difference(startedAt),
   );
+  if (profile?.temporary == true &&
+      (plan.alertDesktop || plan.alertPhone) &&
+      consumeTemporary != null &&
+      !await consumeTemporary(profile!)) {
+    return;
+  }
+  final snapshot =
+      profile ?? settings.reminderProfile(request.notificationKind.apiValue);
   final DingRequest resolvedRequest =
       (request.sound == DingSound.defaultSound
               ? request.copyWith(sound: DingSound.parse(plan.sound))
               : request)
           .copyWith(
             alertPhone: plan.alertPhone,
+            reminder: snapshot,
             notificationKind: profile?.kind,
           );
   await deliverNotificationIndependently(
@@ -422,6 +433,15 @@ final class AppDependencies {
         }
       },
     );
+    final reminderService = ReminderSettingsService(
+      settingsRepository,
+      ReminderAudioImporter(
+        Directory('${paths.applicationSupportDirectory.path}/Reminder Sounds'),
+      ),
+      onChanged: () async {
+        await onSettingsChangedByAgent?.call();
+      },
+    );
     final AgentRouter router = AgentRouter(
       selectBridgeResources: aiResourceSelector.select,
       jevRoutes: JevRoutes(jev),
@@ -460,8 +480,10 @@ final class AppDependencies {
               notificationGateway.trigger(
                 resolvedRequest,
                 flashCount:
-                    (settings
-                                .reminderProfile(resolvedRequest.reminderId)
+                    ((resolvedRequest.reminder ??
+                                    settings.reminderProfile(
+                                      resolvedRequest.reminderId,
+                                    ))
                                 ?.style ??
                             settings.notificationRules.trayStyleFor(
                               resolvedRequest.notificationKind,
@@ -470,13 +492,22 @@ final class AppDependencies {
                     ? 0
                     : 8,
                 customSoundPath:
-                    settings
-                        .reminderProfile(resolvedRequest.reminderId)
+                    (resolvedRequest.reminder ??
+                            settings.reminderProfile(
+                              resolvedRequest.reminderId,
+                            ))
                         ?.customSoundPath ??
                     settings.customSoundPathFor(
                       resolvedRequest.notificationKind,
                     ),
               ),
+          consumeTemporary: (profile) async =>
+              (await reminderService.call({
+                'action': 'consume',
+                'id': profile.id,
+                'expected': profile.toJson(),
+              }))['consumed'] ==
+              true,
           companionDelivery: onNotification,
           onFiltered: onFilteredNotification,
           isCodexVoiceNotification: isCodexVoiceNotification,
@@ -495,8 +526,10 @@ final class AppDependencies {
               notificationGateway.trigger(
                 resolvedRequest,
                 flashCount:
-                    (settings
-                                .reminderProfile(resolvedRequest.reminderId)
+                    ((resolvedRequest.reminder ??
+                                    settings.reminderProfile(
+                                      resolvedRequest.reminderId,
+                                    ))
                                 ?.style ??
                             settings.notificationRules.trayStyleFor(
                               resolvedRequest.notificationKind,
@@ -505,8 +538,10 @@ final class AppDependencies {
                     ? 0
                     : 8,
                 customSoundPath:
-                    settings
-                        .reminderProfile(resolvedRequest.reminderId)
+                    (resolvedRequest.reminder ??
+                            settings.reminderProfile(
+                              resolvedRequest.reminderId,
+                            ))
                         ?.customSoundPath ??
                     settings.customSoundPathFor(
                       resolvedRequest.notificationKind,
@@ -545,17 +580,7 @@ final class AppDependencies {
         );
       }()),
       onShowUi: onShowUi,
-      reminderSettings: ReminderSettingsService(
-        settingsRepository,
-        ReminderAudioImporter(
-          Directory(
-            '${paths.applicationSupportDirectory.path}/Reminder Sounds',
-          ),
-        ),
-        onChanged: () async {
-          await onSettingsChangedByAgent?.call();
-        },
-      ).call,
+      reminderSettings: reminderService.call,
       updateReminderSounds: ({String? completion, String? attention}) async {
         final AppSettings next = (await settingsRepository.load())
             .withReminderSounds(completion: completion, attention: attention);

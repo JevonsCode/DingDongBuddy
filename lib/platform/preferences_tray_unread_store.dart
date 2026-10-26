@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 import 'package:dingdong/features/shell/domain/tray_unread_store.dart';
 
 /// Stores tray attention state as one preference value so updates are atomic.
@@ -27,6 +29,16 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
         latest,
       );
       return TrayUnreadState(
+        reminderSnapshots: {
+          if (json['reminderSnapshots'] is Map)
+            for (final entry in (json['reminderSnapshots'] as Map).entries.take(
+              64,
+            ))
+              if (entry.key is String && entry.value is Map)
+                entry.key as String: ReminderProfile.fromJson(
+                  Map<String, Object?>.from(entry.value as Map),
+                ),
+        },
         reminderEventHistory: {
           if (json['reminderEventHistory'] is Map)
             for (final entry
@@ -73,6 +85,10 @@ final class PreferencesTrayUnreadStore implements TrayUnreadStore {
       _key,
       jsonEncode(<String, Object?>{
         'reminderEvents': state.reminderEvents,
+        'reminderSnapshots': {
+          for (final e in state.reminderSnapshots.entries)
+            e.key: e.value.toJson(),
+        },
         'reminderEventHistory': state.reminderEventHistory,
         'latestReminderId': state.latestReminderId,
         'latestAttentionReminderId': state.latestAttentionReminderId,

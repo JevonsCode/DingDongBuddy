@@ -301,6 +301,7 @@ Future<void> main(List<String> arguments) async {
         conversationTarget: request.conversationTarget,
         notificationKind: request.notificationKind,
         tokenUsage: request.tokenUsage,
+        reminder: request.reminder,
       );
       final target = request.conversationTarget;
       if (target != null) {
@@ -313,6 +314,7 @@ Future<void> main(List<String> arguments) async {
       await shellGateway.markUnread(
         kind: request.notificationKind,
         reminderId: request.reminderId,
+        reminder: request.reminder,
       );
       await deviceLinkController.sendAgentCompleted(
         request,
@@ -329,6 +331,7 @@ Future<void> main(List<String> arguments) async {
           target: target,
           notificationKind: request.notificationKind,
           tokenUsage: request.tokenUsage,
+          reminder: request.reminder,
         );
       }
       if (target != null) {
