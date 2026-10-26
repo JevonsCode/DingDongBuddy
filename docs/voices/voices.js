@@ -12,10 +12,10 @@ async function loadPage(reset=false) {
   if(reset){page=1;voices=[];skipped=0;partial=false;pageCache.clear();render();}
   $('status').textContent='正在读取公开 GitHub 投稿…';
   try {
-    // Discovery-only, five-minute in-memory cache. Never stores approval decisions.
+    // Discovery-only, five-minute in-memory cache. Audio validation always uses fresh data.
     let result=pageCache.get(page);
     if(!result || Date.now()-result.time>300000) {
-      const r=await fetch(`${API}/issues?state=open&labels=voice-approved&sort=created&direction=desc&per_page=30&page=${page}`,{headers:{Accept:'application/vnd.github+json'},credentials:'omit',cache:reset?'no-store':'default',signal:AbortSignal.timeout(20000)});
+      const r=await fetch(`${API}/issues?state=open&sort=created&direction=desc&per_page=30&page=${page}`,{headers:{Accept:'application/vnd.github+json'},credentials:'omit',cache:reset?'no-store':'default',signal:AbortSignal.timeout(20000)});
       if(!r.ok)throw new Error(r.status===403||r.status===429?'GitHub 公开 API 暂时限流。稍后点击刷新即可，无需提供令牌。':r.status===404?'声音仓库暂未开放或当前不可用。请稍后再来。':`读取失败（${r.status}），请稍后重试。`);
       const data=await r.json();if(!Array.isArray(data))throw new Error('GitHub 返回了无法识别的列表。');
       result={data,time:Date.now()};pageCache.set(page,result);
@@ -37,13 +37,13 @@ function render() {
 function card(voice) {
   const article=node('article',undefined,'voice-card');const top=node('div',undefined,'card-top');top.append(node('span',voice.category,'category-tag'),node('span','≤ 3 秒 · PCM WAV','duration'));
   const date=new Date(voice.created);const meta=node('p',`@${voice.author} · ${Number.isNaN(date.getTime())?'时间未知':date.toLocaleDateString('zh-CN')}`,'meta');
-  const controls=node('div',undefined,'card-controls'),audioStatus=node('p','试听 / 下载前核验审核记录和实际音频。','audio-status');audioStatus.setAttribute('role','status');
+  const controls=node('div',undefined,'card-controls'),audioStatus=node('p','试听 / 下载前检查音频格式和时长。','audio-status');audioStatus.setAttribute('role','status');
   const audio=node('audio');audio.controls=true;audio.preload='none';audio.hidden=true;audio.addEventListener('error',()=>{audioStatus.textContent='文件已通过验证，但当前浏览器无法播放。你可以下载后在 DingDong 中导入。';});
   let localUrl=null;
   async function audioAction(download) {
     const activeButtons=[...controls.querySelectorAll('button')];activeButtons.forEach(b=>b.disabled=true);audio.pause();audio.removeAttribute('src');audio.hidden=true;
     if(localUrl){URL.revokeObjectURL(localUrl);mediaUrls.delete(localUrl);localUrl=null;}
-    audioStatus.textContent='正在重新核验投稿、审核记录和 WAV 文件…';
+    audioStatus.textContent='正在读取投稿和 WAV 文件…';
     try {
       const result=await verifyAndDownload(voice.number,AbortSignal.timeout(60000));
       // Do not silently deliver audio after its title/description/license changed from the visible card.

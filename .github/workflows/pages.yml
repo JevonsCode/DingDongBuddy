@@ -1,20 +1,22 @@
 name: Pages
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/voices/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
     inputs:
       source_ref:
-        description: Exact release tag whose docs should be deployed
+        description: Exact release tag whose product docs should be deployed
         required: true
         type: string
   repository_dispatch:
-    types:
-      - deploy-release-pages
+    types: [deploy-release-pages]
   workflow_run:
-    workflows:
-      - Release
-    types:
-      - completed
+    workflows: [Release]
+    types: [completed]
 
 permissions:
   contents: read
@@ -28,6 +30,7 @@ concurrency:
 jobs:
   deploy:
     if: >-
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'repository_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
@@ -36,19 +39,44 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Resolve product documentation version
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}
+        run: |
+          if [ "$EVENT_NAME" = push ]; then
+            # Website-only changes must not publish an unreleased desktop version.
+            ref=$(gh api "repos/$REPOSITORY/releases/latest" --jq .tag_name)
+          else
+            ref="$REQUESTED_REF"
+          fi
+          test -n "$ref"
+          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
+      - name: Checkout stable product documentation
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}
-
+          ref: ${{ steps.source.outputs.ref }}
+      - name: Checkout current community catalog
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.sha || 'main' }}
+          path: community-source
+          sparse-checkout: docs/voices
+      - name: Overlay independent community catalog
+        run: |
+          rm -rf docs/voices
+          cp -R community-source/docs/voices docs/voices
+          node docs/voices/deploy-overlay.mjs
+          node --test docs/voices/deploy-overlay.test.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
-
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
-
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4

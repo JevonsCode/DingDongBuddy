@@ -1,10 +1,9 @@
 export const REPO = 'JevonsCode/dingdong-voices';
 export const API = `https://api.github.com/repos/${REPO}`;
-export const OWNER_ID = 36203025;
 export const MAX_BYTES = 5 * 1024 * 1024;
-export const APPROVED_LABEL = 'voice-approved';
-const HEX = /^[a-f0-9]{64}$/;
 export function attachmentUrl(value) {
+  // Repository audio is pinned to an immutable commit, never an editable branch.
+  if (typeof value === 'string' && /^https:\/\/raw\.githubusercontent\.com\/JevonsCode\/dingdong-voices\/[a-f0-9]{40}\/audio\/[A-Za-z0-9_-]+\.wav$/.test(value)) return value;
   if (typeof value !== 'string' || !/^https:\/\/github\.com\/user-attachments\/files\/[0-9]+\/[A-Za-z0-9_.-]+\.wav$/i.test(value)) throw new Error('需要 GitHub 上传的 .wav 附件链接。');
   const url = new URL(value);
   if (url.hostname !== 'github.com' || url.username || url.password || url.port || url.search || url.hash) throw new Error('附件地址不符合要求。');
@@ -26,7 +25,7 @@ export function fieldsFromBody(body) {
   return fields;
 }
 export function parseIssue(issue) {
-  if (!issue || issue.pull_request || issue.state !== 'open' || !Number.isSafeInteger(issue.number) || issue.number < 1 || typeof issue.title !== 'string' || !issue.title.trim() || issue.title.length > 256 || !issue.labels?.some(l => (typeof l === 'string' ? l : l.name) === APPROVED_LABEL)) throw new Error('这条投稿未开放或已撤下审核标签。');
+  if (!issue || issue.pull_request || issue.state !== 'open' || !Number.isSafeInteger(issue.number) || issue.number < 1 || typeof issue.title !== 'string' || !issue.title.trim() || issue.title.length > 256) throw new Error('这条投稿未开放或已关闭。');
   if (issue.html_url !== `https://github.com/${REPO}/issues/${issue.number}` || !/^[a-zA-Z0-9-]{1,39}$/.test(issue.user?.login || '')) throw new Error('投稿来源或作者无效。');
   const fields = fieldsFromBody(issue.body);
   for (const k of ['Description','Audio','Source','License','Rights confirmation']) if (!fields[k] || fields[k] === '_No response_') throw new Error(`缺少 ${k}。`);
@@ -39,10 +38,6 @@ export function parseIssue(issue) {
 }
 export function canonicalMetadata(voice) { return JSON.stringify([voice.title,voice.description.trim(),voice.audioUrl,voice.source.trim(),voice.license.trim(),voice.rights.trim()]); }
 export async function sha256(bytes) { const data = typeof bytes === 'string' ? new TextEncoder().encode(bytes) : bytes; return [...new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256',data))].map(b => b.toString(16).padStart(2,'0')).join(''); }
-export function approvalFromComment(comment, number, metadataHash) {
-  if (comment?.user?.id !== OWNER_ID || comment.author_association !== 'OWNER' || typeof comment.body !== 'string' || comment.body.length > 2048) return null;
-  try { const prefix = '🕵🏻‍♀️[DOT]\n'; const body = comment.body.startsWith(prefix) ? comment.body.slice(prefix.length) : comment.body; const p = JSON.parse(body.trim()); return p?.dingdongVoiceApproval === 1 && p.issue === number && p.metadataSha256 === metadataHash && HEX.test(p.metadataSha256) && HEX.test(p.audioSha256) ? p : null; } catch { return null; }
-}
 export function validateWav(input) {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
   if (bytes.length < 44 || bytes.length > MAX_BYTES) throw new Error('WAV 文件大小必须在有效范围内（最多 5 MiB）。');
@@ -85,23 +80,14 @@ export async function fetchJson(url, {fresh=false, signal}={}) {
   return response.json();
 }
 export async function verifyAndDownload(number, signal) {
-  // Never trust discovery cache for approval, revocation, or audio actions.
+  // Re-read the open submission before every audio action. No moderator gate.
   const voice = parseIssue(await fetchJson(`${API}/issues/${number}`,{fresh:true,signal}));
-  const metadataHash = await sha256(canonicalMetadata(voice)); let approval = null;
-  for (let page=1;page<=10;page++) {
-    const comments = await fetchJson(`${API}/issues/${number}/comments?per_page=100&page=${page}`,{fresh:true,signal});
-    if (!Array.isArray(comments)) throw new Error('审核记录无效。');
-    for (const comment of comments) { const found = approvalFromComment(comment,number,metadataHash); if (found) approval=found; }
-    if (comments.length < 100) break;
-    if (page === 10) throw new Error('审核记录过多，无法安全完成核验。');
-  }
-  if (!approval) throw new Error('当前内容尚未获得有效审核，或已在审核后修改。请等待重新审核。');
+  const metadataHash = await sha256(canonicalMetadata(voice));
   const response = await fetch(voice.audioUrl,{credentials:'omit',cache:'no-store',signal,referrerPolicy:'no-referrer'});
   if (!allowedFinalUrl(response.url)) { await response.body?.cancel(); throw new Error('附件重定向目标不被允许。'); }
   const bytes = await readLimited(response);
-  if (await sha256(bytes) !== approval.audioSha256) throw new Error('音频指纹与审核记录不符，已阻止使用。');
   const wav = validateWav(bytes);
-  // Recheck metadata and the label after downloading, preventing a stale approval pass.
+  // Reject concurrent metadata changes or closure during download.
   const current = parseIssue(await fetchJson(`${API}/issues/${number}`,{fresh:true,signal}));
   if (await sha256(canonicalMetadata(current)) !== metadataHash) throw new Error('投稿刚刚发生变更，请重新验证。');
   return {voice:current,bytes,wav};
