@@ -136,6 +136,23 @@ void main() {
       await waitFor(
         () => host.connectedDeviceCount == 1 && peer.connectedDeviceCount == 1,
       );
+      expect(host.computerAddressOf(peer.localDevice.id), '127.0.0.1');
+      expect(peer.devices.single.lanAddress, '127.0.0.1');
+      final originalTrust = peer.devices.single;
+      await expectLater(
+        peer.setComputerAddress(host.localDevice.id, '8.8.8.8'),
+        throwsFormatException,
+      );
+      await peer.setComputerAddress(host.localDevice.id, '127.0.0.1');
+      await waitFor(
+        () => host.connectedDeviceCount == 1 && peer.connectedDeviceCount == 1,
+      );
+      final updated = peer.devices.single;
+      expect(updated.id, originalTrust.id);
+      expect(updated.room, originalTrust.room);
+      expect(updated.secret, originalTrust.secret);
+      expect(updated.lanAddress, '127.0.0.1');
+      expect(updated.manuallyDisconnected, isFalse);
       expect(host.devices.single.relayUrl, isNull);
       expect(
         peer.devices.single.transportPreference,

@@ -14,6 +14,68 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  for (final route in [
+    DeviceLinkActiveTransport.localNetwork,
+    DeviceLinkActiveTransport.serviceRelay,
+  ]) {
+    testWidgets('phone shows the active $route route', (tester) async {
+      final controller = _FakeManagement(
+        connectionStatus: DeviceConnectionStatus.connected,
+        activeTransport: route,
+      );
+      await _pumpManager(
+        tester,
+        controller: controller,
+        locale: const Locale('zh'),
+      );
+      expect(
+        find.text(
+          route == DeviceLinkActiveTransport.localNetwork ? '直连' : '加密服务',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('device-address-edit-phone-one')),
+        findsNothing,
+      );
+    });
+  }
+
+  testWidgets('offline computers show saved IP and allow correction', (
+    tester,
+  ) async {
+    final controller = _FakeManagement(
+      deviceKind: LinkedDeviceKind.computer,
+      connectionStatus: DeviceConnectionStatus.disconnected,
+    );
+    await _pumpManager(
+      tester,
+      controller: controller,
+      size: const Size(620, 640),
+      locale: const Locale('zh'),
+    );
+    expect(find.textContaining('192.168.31.180'), findsOneWidget);
+    expect(find.textContaining('192.168.31.153'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const Key('device-settings-toggle-computer-one')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('device-address-edit-computer-one')));
+    await tester.pumpAndSettle();
+    final field = find.byKey(const Key('device-address-input'));
+    await tester.enterText(field, 'wrong-ip');
+    await tester.tap(find.byKey(const Key('device-address-save')));
+    await tester.pumpAndSettle();
+    expect(controller.editedAddress, isNull);
+    expect(find.text('请输入与这台电脑同一局域网的 IPv4 地址。'), findsOneWidget);
+    await tester.enterText(field, '192.168.31.222');
+    await tester.tap(find.byKey(const Key('device-address-save')));
+    await tester.pumpAndSettle();
+    expect(controller.editedAddress, '192.168.31.222');
+    expect(find.byKey(const Key('device-address-dialog')), findsNothing);
+    expect(find.textContaining('192.168.31.222'), findsWidgets);
+  });
+
   testWidgets(
     'manager and history remain readable in light and dark compact windows',
     (tester) async {
@@ -95,6 +157,15 @@ void main() {
         );
         if (preview) {
           await _capture(tester, 'manager-${dark ? 'dark' : 'light'}');
+          await tester.tap(
+            find.byKey(const Key('device-address-edit-computer-one')),
+          );
+          await tester.pumpAndSettle();
+          await _capture(tester, 'address-${dark ? 'dark' : 'light'}');
+          Navigator.of(
+            tester.element(find.byKey(const Key('device-address-dialog'))),
+          ).pop();
+          await tester.pumpAndSettle();
         }
         await tester.tap(find.byKey(const Key('device-transfer-history-open')));
         await tester.pumpAndSettle();
@@ -503,6 +574,7 @@ final class _FakeManagement extends ChangeNotifier
     this.connectionStatus = DeviceConnectionStatus.connecting,
     this.additionalDevices = const [],
     this.statuses = const {},
+    this.activeTransport = DeviceLinkActiveTransport.none,
     this.fileTransfers = const [],
     LinkedDeviceKind deviceKind = LinkedDeviceKind.phone,
   }) : device = LinkedDevice(
@@ -549,9 +621,23 @@ final class _FakeManagement extends ChangeNotifier
     joinedComputerLink = code;
   }
 
+  String address = '192.168.31.153';
+  String? editedAddress;
+  @override
+  List<String> get localComputerAddresses => const ['192.168.31.180'];
+  @override
+  String? computerAddressOf(String deviceId) => address;
+  @override
+  Future<void> setComputerAddress(String deviceId, String value) async {
+    editedAddress = value;
+    address = value;
+    notifyListeners();
+  }
+
   final LinkedDevice device;
   final List<LinkedDevice> additionalDevices;
   final Map<String, DeviceConnectionStatus> statuses;
+  final DeviceLinkActiveTransport activeTransport;
   @override
   final List<FileTransfer> fileTransfers;
   @override
@@ -641,6 +727,5 @@ final class _FakeManagement extends ChangeNotifier
       statuses[deviceId] ?? connectionStatus;
 
   @override
-  DeviceLinkActiveTransport transportOf(String deviceId) =>
-      DeviceLinkActiveTransport.none;
+  DeviceLinkActiveTransport transportOf(String deviceId) => activeTransport;
 }

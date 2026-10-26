@@ -7867,6 +7867,72 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Subscribed on this device'**
   String get voiceCatalogSubscribed;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'LAN'**
+  String get deviceLanConnection;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct connection'**
+  String get deviceDirectConnection;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved IP: {address}'**
+  String deviceSavedAddress(String address);
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer’s IP: {addresses}'**
+  String deviceLocalAddresses(String addresses);
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'LAN IP'**
+  String get deviceLanAddress;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit IP'**
+  String get deviceEditAddress;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the other computer’s current LAN IPv4 address. Automatic discovery stays enabled.'**
+  String get deviceAddressHint;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an IPv4 address on the same LAN as this computer.'**
+  String get deviceAddressInvalid;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the IP. Try again.'**
+  String get deviceAddressSaveFailed;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and reconnect'**
+  String get deviceSaveAndReconnect;
+
+  /// Device connection address and route controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to discover IP'**
+  String get deviceAddressUnknown;
 }
 
 class _DingDongLocalizationsDelegate

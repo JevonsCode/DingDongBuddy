@@ -11,6 +11,99 @@ import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'saved IP bootstraps authenticated LAN sessions without multicast',
+    () async {
+      final host = _service('hint-host');
+      addTearDown(host.close);
+      await host.start();
+      final peer =
+          LanComputerLink.loopbackTest(
+              unicastDiscoveryPort: host.discoveryListenPort!,
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'hint-peer',
+              name: 'Fixture peer',
+              platform: 'test',
+            )
+            ..onPaired = (_) async {};
+      addTearDown(peer.close);
+      final secret = LanPairingCrypto.token();
+      LinkedDevice trusted(String id, String side, {String? address}) =>
+          LinkedDevice.fromJson({
+            'id': id,
+            'name': 'Fixture $id',
+            'kind': 'computer',
+            'platform': 'test',
+            'room': 'hint-room',
+            'secret': secret,
+            'connectionSide': side,
+            'pairedAt': '2026-10-26T00:00:00Z',
+            'lanAddress': address,
+          });
+      final hostSession = host.session(trusted('hint-peer', 'host'));
+      final peerSession = peer.session(
+        trusted('hint-host', 'peer', address: '127.0.0.1'),
+      );
+      expect(host.nearby, isEmpty);
+      expect(peer.nearby, isEmpty);
+      await peerSession.connect();
+      await _until(() => hostSession.connected && peerSession.connected);
+      expect(await peerSession.verifyLocalNetwork(), isTrue);
+      expect(peer.connectedAddressOf('hint-host'), '127.0.0.1');
+      final received = hostSession.events
+          .where((e) => e is DeviceLinkMessageEvent)
+          .first;
+      await peerSession.send({
+        'type': 'fixture-check',
+        'value': 'authenticated',
+      });
+      expect(
+        (await received as DeviceLinkMessageEvent).message['value'],
+        'authenticated',
+      );
+    },
+  );
+
+  test(
+    'manual addresses must belong to an actual local adapter subnet',
+    () async {
+      final link =
+          LanComputerLink.loopbackTest(
+              subnetReader: () async => [
+                LanSubnet(InternetAddress('192.168.31.180'), 24),
+              ],
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'fixture',
+              name: 'Fixture',
+              platform: 'test',
+            );
+      addTearDown(link.close);
+      expect(
+        await link.validateLocalAddress(' 192.168.31.153 '),
+        '192.168.31.153',
+      );
+      expect(link.localAddresses, ['192.168.31.180']);
+      for (final invalid in [
+        'wrong-ip',
+        '8.8.8.8',
+        '192.168.1.8',
+        '100.64.0.1',
+        '192.168.31.0',
+        '192.168.31.255',
+        '::1',
+        '',
+      ]) {
+        await expectLater(
+          link.validateLocalAddress(invalid),
+          throwsFormatException,
+          reason: invalid,
+        );
+      }
+    },
+  );
+
   test('discovery replies and stays alive without outbound multicast', () async {
     // Real UDP loopback fixtures: no physical multicast interface is selected.
     final remote = await RawDatagramSocket.bind(

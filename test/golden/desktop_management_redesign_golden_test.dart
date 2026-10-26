@@ -464,6 +464,12 @@ final class _GoldenDeviceManagement extends ChangeNotifier
   Future<void> cancelComputerPairing() async {}
   @override
   Future<void> joinNearbyComputer(String deviceId, String code) async {}
+  @override
+  List<String> get localComputerAddresses => const [];
+  @override
+  String? computerAddressOf(String deviceId) => null;
+  @override
+  Future<void> setComputerAddress(String deviceId, String address) async {}
   final bool includeComputer;
 
   @override
