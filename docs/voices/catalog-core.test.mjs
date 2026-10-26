@@ -20,15 +20,24 @@ test('display fields are never interpreted as HTML and API origin is bound',()=>
 test('Source mutations invalidate approval and missing Source is rejected',async()=>{const changed={...fixture.issue,body:fixture.issue.body.replace('Original synthesis.','Different claimed provenance.')};const hash=await sha256(canonicalMetadata(parseIssue(changed)));assert.equal(approvalFromComment(fixture.approval,7,hash),null);for(const body of [fixture.issue.body.replace('Original synthesis.',''),fixture.issue.body.replace('Original synthesis.','_No response_'),fixture.issue.body.replace('### Source','### Missing source')])assert.throws(()=>parseIssue({...fixture.issue,body}));});
 test('DOT approval supports only exact optional prefix, preserving owner checks',()=>{const valid={...fixture.approval,body:'🕵🏻‍♀️[DOT]\n'+fixture.approval.body};assert.ok(approvalFromComment(valid,7,fixture.metadataSha256));assert.equal(approvalFromComment({...valid,user:{id:1}},7,fixture.metadataSha256),null);assert.equal(approvalFromComment({...valid,author_association:'CONTRIBUTOR'},7,fixture.metadataSha256),null);for(const body of ['hello\n'+fixture.approval.body,'🕵🏻‍♀️[DOT] comment\n'+fixture.approval.body,'🕵🏻‍♀️[DOT]\n```json\n'+fixture.approval.body+'\n```','🕵🏻‍♀️[DOT]\n'+fixture.approval.body+'\nextra text'])assert.equal(approvalFromComment({...fixture.approval,body},7,fixture.metadataSha256),null);});
 
-test('homepage sound section links to the lowercase catalog route in both locales', () => {
+test('homepage catalog links preserve the deployed project prefix in both locales', () => {
   const home = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const section = home.match(/<section class="sound-section"[\s\S]*?<\/section>/)?.[0];
-  assert.ok(section);
-  assert.match(section, /href="\/dingdongbuddy\/voices\/" data-i18n="sounds.catalog"/);
+  const links = [...home.matchAll(/href="([^"]+)" data-i18n="(?:nav.voices|sounds.catalog)"/g)];
+  assert.equal(links.length, 2);
   assert.equal((home.match(/"sounds.catalog":/g) || []).length, 2);
+  for (const origin of ['https://xn--8ovp9s.xn--m8txu.com', 'https://jevonscode.github.io']) {
+    for (const [, href] of links) {
+      assert.equal(new URL(href, `${origin}/DingDongBuddy/`).pathname, '/DingDongBuddy/voices/');
+    }
+  }
   assert.ok(home.includes('"sounds.catalog": "Explore community voices →"'));
   assert.ok(home.includes('"sounds.catalog": "打开社区声音库 →"'));
-  const route = new URL('/dingdongbuddy/voices/', 'https://example.test/dingdongbuddy/');
-  assert.equal(route.pathname, '/dingdongbuddy/voices/');
-  assert.ok(fs.existsSync(new URL('../dingdongbuddy/voices/index.html', import.meta.url)));
+  const page = fs.readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  for (const [, href] of page.matchAll(/(?:href|src)="([^"]+)"/g)) {
+    if (href.startsWith('http') || href.startsWith('#')) continue;
+    const resolved = new URL(href, 'https://example.test/DingDongBuddy/voices/');
+    assert.ok(resolved.pathname.startsWith('/DingDongBuddy/'));
+    const relative = resolved.pathname.slice('/DingDongBuddy/'.length);
+    assert.ok(fs.existsSync(new URL('../' + relative, import.meta.url)), relative);
+  }
 });

@@ -69,6 +69,13 @@ Future<Map<String, dynamic>> approval(
 };
 
 void main() {
+  test('catalog website uses the deployed case-sensitive project route', () {
+    expect(
+      voiceCatalogWebsite,
+      'https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/voices/',
+    );
+  });
+
   test(
     'shared JavaScript/Dart fixture canonicalization and PCM hash agree',
     () async {
