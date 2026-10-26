@@ -13,10 +13,13 @@ on:
         required: true
         type: string
   repository_dispatch:
-    types: [deploy-release-pages]
+    types:
+      - deploy-release-pages
   workflow_run:
-    workflows: [Release]
-    types: [completed]
+    workflows:
+      - Release
+    types:
+      - completed
 
 permissions:
   contents: read

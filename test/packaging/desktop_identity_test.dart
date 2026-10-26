@@ -886,10 +886,17 @@ void main() {
     expect(
       pagesWorkflow,
       contains(
-        r"ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}",
+        r"REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}",
       ),
     );
-    expect(pagesWorkflow, isNot(contains('push:')));
+    // Website-only edits deploy the current catalog over published product docs.
+    // They must not advertise an unreleased desktop version from main.
+    expect(pagesWorkflow, contains("'docs/voices/**'"));
+    expect(pagesWorkflow, contains('releases/latest'));
+    expect(pagesWorkflow, contains(r'ref: ${{ steps.source.outputs.ref }}'));
+    expect(pagesWorkflow, contains('sparse-checkout: docs/voices'));
+    expect(pagesWorkflow, contains('node docs/voices/deploy-overlay.mjs'));
+    expect(pagesWorkflow, isNot(contains('gh release create')));
     expect(deviceLinkDeployWorkflow, contains('workflow_dispatch:'));
     expect(deviceLinkDeployWorkflow, contains('device-link-production'));
     expect(
