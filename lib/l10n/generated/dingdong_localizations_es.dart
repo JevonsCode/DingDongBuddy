@@ -4683,4 +4683,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get activityBackToTop => 'Volver arriba';
+
+  @override
+  String get lanNetworkAccessDenied =>
+      'Se denegó el acceso a la red local. Revisa los permisos de DingDong y el cortafuegos de la red privada, cierra las instancias duplicadas y actualiza.';
 }

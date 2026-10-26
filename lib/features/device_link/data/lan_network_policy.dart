@@ -1,6 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
+/// Access denied can also mean an exclusive bind on Windows (WSAEACCES).
+/// Keep it distinct from a confirmed address collision or an unknown failure.
+String lanDiscoveryFailureCode(Object failure) {
+  final code = failure is SocketException ? failure.osError?.errorCode : null;
+  return switch (code) {
+    48 || 98 || 10048 => 'address_in_use',
+    1 || 13 || 10013 => 'access_denied',
+    _ => 'network',
+  };
+}
+
 /// An actual local adapter prefix, never inferred from RFC1918 membership.
 final class LanSubnet {
   LanSubnet(this.address, this.prefix);

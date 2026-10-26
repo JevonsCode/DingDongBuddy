@@ -237,11 +237,11 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
               ),
               if (widget.controller.computerDiscoveryError != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  widget.controller.computerDiscoveryError == 'address_in_use'
-                      ? l.lanPortBusy
-                      : l.lanNetworkHelp,
-                ),
+                Text(switch (widget.controller.computerDiscoveryError) {
+                  'address_in_use' => l.lanPortBusy,
+                  'access_denied' => l.lanNetworkAccessDenied,
+                  _ => l.lanNetworkHelp,
+                }),
               ],
               if (_generalError != null &&
                   widget.controller.computerDiscoveryError == null) ...[

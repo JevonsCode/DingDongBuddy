@@ -8095,6 +8095,12 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Back to top'**
   String get activityBackToTop;
+
+  /// Actionable local-network access-denied or exclusive-bind error.
+  ///
+  /// In en, this message translates to:
+  /// **'Local network access was denied. Check DingDong’s local-network permission and private-network firewall, quit duplicate instances, then refresh.'**
+  String get lanNetworkAccessDenied;
 }
 
 class _DingDongLocalizationsDelegate

@@ -197,11 +197,7 @@ final class LanComputerLink extends ChangeNotifier {
       _udp = null;
       await _server?.close();
       _server = null;
-      error =
-          failure is SocketException &&
-              const {48, 98, 10048}.contains(failure.osError?.errorCode)
-          ? 'address_in_use'
-          : 'network';
+      error = lanDiscoveryFailureCode(failure);
       notifyListeners();
       rethrow;
     }

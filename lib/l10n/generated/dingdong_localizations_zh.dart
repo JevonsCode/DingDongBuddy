@@ -4442,4 +4442,8 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get activityBackToTop => '回到顶部';
+
+  @override
+  String get lanNetworkAccessDenied =>
+      '局域网访问被系统拒绝。请检查叮咚的局域网权限和专用网络防火墙，并退出重复打开的叮咚后刷新。';
 }

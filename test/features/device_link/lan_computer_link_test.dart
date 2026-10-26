@@ -12,7 +12,34 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'a second instance gets an actionable discovery-port collision error',
+    'socket bind errors keep permission and address conflicts actionable',
+    () {
+      expect(
+        lanDiscoveryFailureCode(
+          const SocketException(
+            'exclusive socket',
+            osError: OSError('access denied', 10013),
+          ),
+        ),
+        'access_denied',
+      );
+      expect(
+        lanDiscoveryFailureCode(
+          const SocketException(
+            'occupied socket',
+            osError: OSError('in use', 10048),
+          ),
+        ),
+        'address_in_use',
+      );
+      expect(
+        lanDiscoveryFailureCode(const SocketException('unknown socket error')),
+        'network',
+      );
+    },
+  );
+  test(
+    'an occupied discovery port reports an actionable bind failure',
     () async {
       final occupied = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
@@ -28,7 +55,7 @@ void main() {
         );
       addTearDown(link.close);
       await expectLater(link.start(), throwsA(isA<SocketException>()));
-      expect(link.error, 'address_in_use');
+      expect(link.error, isIn(['address_in_use', 'access_denied']));
     },
   );
   test(

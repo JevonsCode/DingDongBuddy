@@ -5910,5 +5910,9 @@
   },
   "@activityBackToTop": {
     "description": "Scroll the virtual recent Agent list back to its top."
+  },
+  "lanNetworkAccessDenied": "局域网访问被系统拒绝。请检查叮咚的局域网权限和专用网络防火墙，并退出重复打开的叮咚后刷新。",
+  "@lanNetworkAccessDenied": {
+    "description": "Actionable local-network access-denied or exclusive-bind error."
   }
 }
