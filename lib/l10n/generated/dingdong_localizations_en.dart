@@ -4505,4 +4505,43 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get voiceCatalogSubscribed => 'Subscribed on this device';
+
+  @override
+  String get deviceLanConnection => 'LAN';
+
+  @override
+  String get deviceDirectConnection => 'Direct connection';
+
+  @override
+  String deviceSavedAddress(String address) {
+    return 'Saved IP: $address';
+  }
+
+  @override
+  String deviceLocalAddresses(String addresses) {
+    return 'This computer’s IP: $addresses';
+  }
+
+  @override
+  String get deviceLanAddress => 'LAN IP';
+
+  @override
+  String get deviceEditAddress => 'Edit IP';
+
+  @override
+  String get deviceAddressHint =>
+      'Enter the other computer’s current LAN IPv4 address. Automatic discovery stays enabled.';
+
+  @override
+  String get deviceAddressInvalid =>
+      'Enter an IPv4 address on the same LAN as this computer.';
+
+  @override
+  String get deviceAddressSaveFailed => 'Could not save the IP. Try again.';
+
+  @override
+  String get deviceSaveAndReconnect => 'Save and reconnect';
+
+  @override
+  String get deviceAddressUnknown => 'Waiting to discover IP';
 }

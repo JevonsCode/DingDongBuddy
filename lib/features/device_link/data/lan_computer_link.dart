@@ -17,18 +17,24 @@ part 'lan_computer_session.dart';
 /// Discovery packets carry device metadata only. Secrets travel after SRP.
 final class LanComputerLink extends ChangeNotifier {
   LanComputerLink({this.discoveryPort = 45893})
-    : _now = DateTime.now,
+    : _unicastDiscoveryPort = discoveryPort,
+      _now = DateTime.now,
       _readSubnets = readLanSubnets;
   @visibleForTesting
   LanComputerLink.loopbackTest({
     DateTime Function()? now,
+    int unicastDiscoveryPort = 45893,
     Future<List<LanSubnet>> Function()? subnetReader,
   }) : discoveryPort = 0,
+       // Test-only named parameter; keep runtime port state private.
+       // ignore: prefer_initializing_formals
+       _unicastDiscoveryPort = unicastDiscoveryPort,
        _now = now ?? DateTime.now,
        _readSubnets =
            subnetReader ??
            (() async => [LanSubnet(InternetAddress.loopbackIPv4, 8)]);
   final int discoveryPort;
+  final int _unicastDiscoveryPort;
   @visibleForTesting
   int? get discoveryListenPort => _udp?.port;
   final DateTime Function() _now;
@@ -64,6 +70,58 @@ final class LanComputerLink extends ChangeNotifier {
           )
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
+
+  List<String> get localAddresses => List.unmodifiable(
+    _subnets
+        .where((subnet) => isLanAddress(subnet.address) || discoveryPort == 0)
+        .map((subnet) => subnet.address.address)
+        .toSet(),
+  );
+
+  String? connectedAddressOf(String id) {
+    for (final session in _sessions.values) {
+      if (session.device.id == id && session.connected) {
+        return session._wire?.socket.remoteAddress.address;
+      }
+    }
+    return null;
+  }
+
+  Future<String> validateLocalAddress(String value) async {
+    final text = value.trim();
+    if (!RegExp(r'^\d{1,3}(?:\.\d{1,3}){3}$').hasMatch(text)) {
+      throw const FormatException('LAN IPv4 required');
+    }
+    final address = InternetAddress.tryParse(text);
+    if (address == null || address.type != InternetAddressType.IPv4) {
+      throw const FormatException('LAN IPv4 required');
+    }
+    await start();
+    await _refreshInterfaces();
+    if (!_allowedHint(address) ||
+        (discoveryPort != 0 &&
+            _subnets.any((s) => s.address.address == address.address))) {
+      throw const FormatException('Peer must be on a local physical subnet');
+    }
+    return address.address;
+  }
+
+  bool _allowedHint(InternetAddress address) =>
+      _allowed(address) &&
+      _subnets.any((s) {
+        if (!s.contains(address)) return false;
+        if (s.prefix >= 31) return true;
+        final integer = address.rawAddress.fold(0, (n, b) => (n << 8) | b);
+        final hostMask = (1 << (32 - s.prefix)) - 1;
+        final host = integer & hostMask;
+        return host != 0 && host != hostMask;
+      });
+
+  void rememberAddress(String id, String address) {
+    for (final session in _sessions.values) {
+      if (session.device.id == id) session._addressHint = address;
+    }
+  }
 
   Future<void> start() async {
     if (_closed) throw StateError('LAN service closed');
@@ -253,6 +311,21 @@ final class LanComputerLink extends ChangeNotifier {
         socket.send(bytes, endpoint.address, endpoint.discoveryPort);
       } on SocketException {
         // The next discovery tick will retry while the endpoint stays fresh.
+      }
+    }
+    // Bootstrap discovery from a saved IP even when multicast is unavailable.
+    // The peer still supplies its current TCP port and proves the original key.
+    for (final session in _sessions.values) {
+      final hint = InternetAddress.tryParse(session._addressHint ?? '');
+      if (hint == null ||
+          !_allowedHint(hint) ||
+          !sent.add((hint.address, _unicastDiscoveryPort))) {
+        continue;
+      }
+      try {
+        socket.send(bytes, hint, _unicastDiscoveryPort);
+      } on SocketException {
+        // Keep automatic discovery and retry on the next tick.
       }
     }
   }

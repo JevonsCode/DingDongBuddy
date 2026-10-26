@@ -12,6 +12,7 @@ import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
 import 'package:dingdong/features/device_link/ui/file_transfer_list.dart';
+import 'package:dingdong/features/device_link/ui/lan_computer_address_dialog.dart';
 import 'package:dingdong/features/device_link/ui/lan_computer_pairing_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -115,6 +116,22 @@ class _WorkspaceHeader extends StatelessWidget {
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
               ),
+              if (controller is LanComputerManagement &&
+                  (controller as LanComputerManagement)
+                      .localComputerAddresses
+                      .isNotEmpty) ...[
+                const SizedBox(height: 4),
+                SelectableText(
+                  context.l10n.deviceLocalAddresses(
+                    (controller as LanComputerManagement).localComputerAddresses
+                        .join(' · '),
+                  ),
+                  key: const Key('device-local-addresses'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -440,25 +457,40 @@ class _DeviceCardState extends State<_DeviceCard> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: device.name,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                      children: <InlineSpan>[
-                        if (device.platformLabel.isNotEmpty)
-                          TextSpan(
-                            text: '  ${device.platformLabel}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text.rich(
+                        TextSpan(
+                          text: device.name,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          children: <InlineSpan>[
+                            if (device.platformLabel.isNotEmpty)
+                              TextSpan(
+                                text: '  ${device.platformLabel}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  color: colors.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                        key: Key('device-name-${device.id}'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (_connectionDescription(context, connected)
+                          case final String description) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          description,
+                          key: Key('device-route-${device.id}'),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
                       ],
-                    ),
-                    key: Key('device-name-${device.id}'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -467,7 +499,7 @@ class _DeviceCardState extends State<_DeviceCard> {
                   statusKey: Key('device-status-${device.id}'),
                   palette: statusPalette,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 DesktopIconButton(
                   key: Key('device-connection-${device.id}'),
                   tooltip: connecting
@@ -484,6 +516,7 @@ class _DeviceCardState extends State<_DeviceCard> {
                         : controller.reconnect(device.id),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Semantics(
                   expanded: expanded,
                   child: DesktopIconButton(
@@ -505,6 +538,45 @@ class _DeviceCardState extends State<_DeviceCard> {
               const Divider(height: 1),
               const SizedBox(height: 10),
 
+              if (device.kind == LinkedDeviceKind.computer &&
+                  controller is LanComputerManagement) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.l10n.deviceLanAddress,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 3),
+                          SelectableText(
+                            (controller as LanComputerManagement)
+                                    .computerAddressOf(device.id) ??
+                                context.l10n.deviceAddressUnknown,
+                          ),
+                        ],
+                      ),
+                    ),
+                    DesktopIconButton(
+                      key: Key('device-address-edit-${device.id}'),
+                      tooltip: context.l10n.deviceEditAddress,
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () => unawaited(
+                        showDialog<void>(
+                          context: context,
+                          builder: (_) => LanComputerAddressDialog(
+                            controller: controller as LanComputerManagement,
+                            device: device,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
               _DeviceSettingRow(
                 key: Key('device-auto-send-${device.id}'),
                 title: context.l10n.autoSendClipboard,
@@ -558,6 +630,26 @@ class _DeviceCardState extends State<_DeviceCard> {
         ),
       ),
     );
+  }
+
+  String? _connectionDescription(BuildContext context, bool connected) {
+    final l = context.l10n;
+    if (device.kind == LinkedDeviceKind.computer) {
+      final address = controller is LanComputerManagement
+          ? (controller as LanComputerManagement).computerAddressOf(device.id)
+          : device.lanAddress;
+      final detail = address == null
+          ? l.deviceAddressUnknown
+          : connected
+          ? address
+          : l.deviceSavedAddress(address);
+      return '${l.deviceLanConnection} · $detail';
+    }
+    return switch (controller.transportOf(device.id)) {
+      DeviceLinkActiveTransport.localNetwork => l.deviceDirectConnection,
+      DeviceLinkActiveTransport.serviceRelay => l.encryptedService,
+      DeviceLinkActiveTransport.none => null,
+    };
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

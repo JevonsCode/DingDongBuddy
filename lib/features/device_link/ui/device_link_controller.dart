@@ -302,6 +302,32 @@ final class DeviceLinkController extends ChangeNotifier
   }
 
   @override
+  List<String> get localComputerAddresses => _computerLink.localAddresses;
+  @override
+  String? computerAddressOf(String deviceId) =>
+      _computerLink.connectedAddressOf(deviceId) ??
+      _device(deviceId).lanAddress;
+
+  @override
+  Future<void> setComputerAddress(String deviceId, String value) async {
+    if (_device(deviceId).kind != LinkedDeviceKind.computer) {
+      throw const FormatException('Computer address required');
+    }
+    final address = await _computerLink.validateLocalAddress(value);
+    await _updateDevice(
+      deviceId,
+      (device) =>
+          device.copyWith(lanAddress: address, manuallyDisconnected: false),
+    );
+    final device = _device(deviceId);
+    await _removeSession(device.room);
+    if (_disposed) return;
+    _statuses[deviceId] = DeviceConnectionStatus.disconnected;
+    _attachDeviceSession(device);
+    _notifyIfActive();
+  }
+
+  @override
   List<NearbyComputer> get nearbyComputers => _computerLink.nearby;
   @override
   String? get computerPairingCode => _computerLink.pairingCode;

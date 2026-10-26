@@ -12,6 +12,63 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test(
+    'child window reads addresses and forwards IP correction to its owner',
+    () async {
+      const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      var address = '192.168.31.153';
+      final calls = <Map>[];
+      messenger.setMockMethodCallHandler(channels, (call) async {
+        final args = call.arguments as Map;
+        calls.add(args);
+        if (args['method'] == 'device_link_lan_address_set') {
+          final values = args['arguments'] as Map;
+          expect(values['id'], 'fixture-peer');
+          if (values['address'] == '8.8.8.8') {
+            return {'error': 'invalid_lan_address'};
+          }
+          address = values['address'] as String;
+        }
+        if (args['method'] == deviceLinkManagerSnapshotMethod) {
+          return {
+            'localDevice': {
+              'id': 'fixture-local',
+              'name': 'Fixture host',
+              'platform': 'macos',
+            },
+            'devices': [],
+            'statuses': {},
+            'transports': {},
+            'localComputerAddresses': ['192.168.31.180'],
+            'computerAddresses': {'fixture-peer': address},
+          };
+        }
+        return null;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channels, null));
+      final controller = RemoteDeviceLinkManagement(
+        parentController: WindowController.fromWindowId('fixture-main'),
+      );
+      addTearDown(controller.dispose);
+      await controller.reload();
+      expect(controller.localComputerAddresses, ['192.168.31.180']);
+      expect(controller.computerAddressOf('fixture-peer'), address);
+      await controller.setComputerAddress('fixture-peer', '192.168.31.222');
+      expect(controller.computerAddressOf('fixture-peer'), '192.168.31.222');
+      await expectLater(
+        controller.setComputerAddress('fixture-peer', '8.8.8.8'),
+        throwsFormatException,
+      );
+      expect(controller.computerAddressOf('fixture-peer'), '192.168.31.222');
+      expect(
+        calls.where((call) => call['method'] == 'device_link_lan_address_set'),
+        hasLength(2),
+      );
+    },
+  );
+
   testWidgets('Windows connection manager close hides without exiting', (
     WidgetTester tester,
   ) async {
@@ -28,13 +85,18 @@ void main() {
     final TestDefaultBinaryMessenger messenger =
         tester.binding.defaultBinaryMessenger;
     final List<MethodCall> windowCalls = <MethodCall>[];
+    final List<String> ownerMethods = [];
     messenger.setMockMethodCallHandler(registry, (MethodCall call) async {
       if (call.method == 'getWindowDefinition') {
         return <String, String>{'windowId': windowId, 'windowArgument': ''};
       }
       return null;
     });
-    messenger.setMockMethodCallHandler(channels, (_) async => null);
+    messenger.setMockMethodCallHandler(channels, (call) async {
+      final method = (call.arguments as Map)['method'];
+      if (method is String) ownerMethods.add(method);
+      return null;
+    });
     messenger.setMockMethodCallHandler(windowManager, (MethodCall call) async {
       windowCalls.add(call);
       return null;
@@ -63,6 +125,12 @@ void main() {
             (call.arguments as Map<Object?, Object?>)['isPreventClose'] == true,
       ),
       isTrue,
+    );
+    expect(
+      ownerMethods,
+      contains('device_link_lan_refresh'),
+      reason:
+          'Opening the manager must load local IPs even when every saved computer is disconnected.',
     );
     windowCalls.clear();
     await _sendWindowManagerEvent(messenger, 'close');

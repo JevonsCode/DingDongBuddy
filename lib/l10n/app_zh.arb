@@ -5718,5 +5718,59 @@
   },
   "@voiceCatalogSubscribed": {
     "description": "Heading for pinned local community voice subscriptions, including delisted voices."
+  },
+  "deviceLanConnection": "局域网",
+  "@deviceLanConnection": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceDirectConnection": "直连",
+  "@deviceDirectConnection": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceSavedAddress": "已保存 IP：{address}",
+  "@deviceSavedAddress": {
+    "description": "Device connection address and route controls.",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLocalAddresses": "本机 IP · {addresses}",
+  "@deviceLocalAddresses": {
+    "description": "Device connection address and route controls.",
+    "placeholders": {
+      "addresses": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLanAddress": "局域网 IP",
+  "@deviceLanAddress": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceEditAddress": "修改 IP",
+  "@deviceEditAddress": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressHint": "输入对方当前的局域网 IPv4 地址，自动发现仍会继续更新地址。",
+  "@deviceAddressHint": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressInvalid": "请输入与这台电脑同一局域网的 IPv4 地址。",
+  "@deviceAddressInvalid": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressSaveFailed": "IP 保存失败，请重试。",
+  "@deviceAddressSaveFailed": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceSaveAndReconnect": "保存并重连",
+  "@deviceSaveAndReconnect": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressUnknown": "待发现 IP",
+  "@deviceAddressUnknown": {
+    "description": "Device connection address and route controls."
   }
 }

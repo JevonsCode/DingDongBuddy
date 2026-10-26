@@ -5719,5 +5719,59 @@
   "voiceCatalogSubscribed": "Subscribed on this device",
   "@voiceCatalogSubscribed": {
     "description": "Heading for pinned local community voice subscriptions, including delisted voices."
+  },
+  "deviceLanConnection": "LAN",
+  "@deviceLanConnection": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceDirectConnection": "Direct connection",
+  "@deviceDirectConnection": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceSavedAddress": "Saved IP: {address}",
+  "@deviceSavedAddress": {
+    "description": "Device connection address and route controls.",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLocalAddresses": "This computer’s IP: {addresses}",
+  "@deviceLocalAddresses": {
+    "description": "Device connection address and route controls.",
+    "placeholders": {
+      "addresses": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLanAddress": "LAN IP",
+  "@deviceLanAddress": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceEditAddress": "Edit IP",
+  "@deviceEditAddress": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressHint": "Enter the other computer’s current LAN IPv4 address. Automatic discovery stays enabled.",
+  "@deviceAddressHint": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressInvalid": "Enter an IPv4 address on the same LAN as this computer.",
+  "@deviceAddressInvalid": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressSaveFailed": "Could not save the IP. Try again.",
+  "@deviceAddressSaveFailed": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceSaveAndReconnect": "Save and reconnect",
+  "@deviceSaveAndReconnect": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressUnknown": "Waiting to discover IP",
+  "@deviceAddressUnknown": {
+    "description": "Device connection address and route controls."
   }
 }

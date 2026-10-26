@@ -9,9 +9,11 @@ final class LanComputerSession
         ConfigurableDeviceLinkSessionHandle,
         LanVerifiedDeviceLinkSessionHandle {
   LanComputerSession._(this.owner, this.device)
-    : _codec = SecureMessageCodec.fromBase64Url(device.secret);
+    : _codec = SecureMessageCodec.fromBase64Url(device.secret),
+      _addressHint = device.lanAddress;
   final LanComputerLink owner;
   final LinkedDevice device;
+  String? _addressHint;
   final SecureMessageCodec _codec;
   final _events = StreamController<DeviceLinkSessionEvent>.broadcast();
   LanWire? _wire;

@@ -92,10 +92,16 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
       } else {
         _statuses[deviceId] = event.status;
         if (event.status == DeviceConnectionStatus.connected) {
+          final address = _device(deviceId).kind == LinkedDeviceKind.computer
+              ? _computerLink.connectedAddressOf(deviceId)
+              : null;
+          if (address != null) _computerLink.rememberAddress(deviceId, address);
           await _updateDevice(
             deviceId,
-            (LinkedDevice device) =>
-                device.copyWith(lastSeenAt: DateTime.now().toUtc()),
+            (LinkedDevice device) => device.copyWith(
+              lastSeenAt: DateTime.now().toUtc(),
+              lanAddress: address,
+            ),
           );
           if (!_sessionIsCurrent(managed)) return;
           await _sendPeerHello(managed);

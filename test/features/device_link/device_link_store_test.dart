@@ -5,6 +5,33 @@ import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'saved LAN routing hints survive device serialization without changing trust',
+    () {
+      final original = LinkedDevice.fromJson({
+        'id': 'paired-computer',
+        'name': 'Fixture computer',
+        'kind': 'computer',
+        'platform': 'windows',
+        'room': 'fixture-room',
+        'secret': 'fixture-key',
+        'pairedAt': '2026-10-26T00:00:00Z',
+      });
+      final saved = LinkedDevice.fromJson({
+        ...original.toJson(),
+        'lanAddress': '192.168.31.153',
+      });
+      expect(saved.toJson()['lanAddress'], '192.168.31.153');
+      expect(saved.id, original.id);
+      expect(saved.room, original.room);
+      expect(saved.secret, original.secret);
+      expect(
+        saved.copyWith(name: 'Renamed').toJson()['lanAddress'],
+        '192.168.31.153',
+      );
+    },
+  );
+
   group('FileDeviceLinkStore', () {
     test('serializes concurrent saves to the same path', () async {
       final Directory directory = await Directory.systemTemp.createTemp(

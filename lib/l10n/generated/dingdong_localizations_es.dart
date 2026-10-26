@@ -4556,4 +4556,44 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get voiceCatalogSubscribed => 'Suscrito en este dispositivo';
+
+  @override
+  String get deviceLanConnection => 'Red local';
+
+  @override
+  String get deviceDirectConnection => 'Conexión directa';
+
+  @override
+  String deviceSavedAddress(String address) {
+    return 'IP guardada: $address';
+  }
+
+  @override
+  String deviceLocalAddresses(String addresses) {
+    return 'IP de este equipo: $addresses';
+  }
+
+  @override
+  String get deviceLanAddress => 'IP de red local';
+
+  @override
+  String get deviceEditAddress => 'Editar IP';
+
+  @override
+  String get deviceAddressHint =>
+      'Introduce la dirección IPv4 actual del otro equipo en la red local. La detección automática seguirá activa.';
+
+  @override
+  String get deviceAddressInvalid =>
+      'Introduce una dirección IPv4 de la misma red local que este equipo.';
+
+  @override
+  String get deviceAddressSaveFailed =>
+      'No se pudo guardar la IP. Inténtalo de nuevo.';
+
+  @override
+  String get deviceSaveAndReconnect => 'Guardar y reconectar';
+
+  @override
+  String get deviceAddressUnknown => 'Esperando detectar la IP';
 }

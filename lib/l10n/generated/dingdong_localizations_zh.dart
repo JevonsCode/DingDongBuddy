@@ -4324,4 +4324,41 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get voiceCatalogSubscribed => '本设备已订阅';
+
+  @override
+  String get deviceLanConnection => '局域网';
+
+  @override
+  String get deviceDirectConnection => '直连';
+
+  @override
+  String deviceSavedAddress(String address) {
+    return '已保存 IP：$address';
+  }
+
+  @override
+  String deviceLocalAddresses(String addresses) {
+    return '本机 IP · $addresses';
+  }
+
+  @override
+  String get deviceLanAddress => '局域网 IP';
+
+  @override
+  String get deviceEditAddress => '修改 IP';
+
+  @override
+  String get deviceAddressHint => '输入对方当前的局域网 IPv4 地址，自动发现仍会继续更新地址。';
+
+  @override
+  String get deviceAddressInvalid => '请输入与这台电脑同一局域网的 IPv4 地址。';
+
+  @override
+  String get deviceAddressSaveFailed => 'IP 保存失败，请重试。';
+
+  @override
+  String get deviceSaveAndReconnect => '保存并重连';
+
+  @override
+  String get deviceAddressUnknown => '待发现 IP';
 }

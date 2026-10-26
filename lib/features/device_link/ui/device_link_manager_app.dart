@@ -36,6 +36,12 @@ class _DeviceLinkManagerAppState extends State<DeviceLinkManagerApp>
   void initState() {
     super.initState();
     enableWindowsHideOnClose();
+    // Populate physical LAN addresses even if every saved peer is offline.
+    unawaited(
+      widget.controller.refreshComputers().catchError((Object _) {
+        // Discovery errors stay in shared state; the manager remains usable.
+      }),
+    );
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         switch (call.method) {

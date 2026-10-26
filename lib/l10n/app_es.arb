@@ -5718,5 +5718,59 @@
   },
   "@voiceCatalogSubscribed": {
     "description": "Heading for pinned local community voice subscriptions, including delisted voices."
+  },
+  "deviceLanConnection": "Red local",
+  "@deviceLanConnection": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceDirectConnection": "Conexión directa",
+  "@deviceDirectConnection": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceSavedAddress": "IP guardada: {address}",
+  "@deviceSavedAddress": {
+    "description": "Device connection address and route controls.",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLocalAddresses": "IP de este equipo: {addresses}",
+  "@deviceLocalAddresses": {
+    "description": "Device connection address and route controls.",
+    "placeholders": {
+      "addresses": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLanAddress": "IP de red local",
+  "@deviceLanAddress": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceEditAddress": "Editar IP",
+  "@deviceEditAddress": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressHint": "Introduce la dirección IPv4 actual del otro equipo en la red local. La detección automática seguirá activa.",
+  "@deviceAddressHint": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressInvalid": "Introduce una dirección IPv4 de la misma red local que este equipo.",
+  "@deviceAddressInvalid": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressSaveFailed": "No se pudo guardar la IP. Inténtalo de nuevo.",
+  "@deviceAddressSaveFailed": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceSaveAndReconnect": "Guardar y reconectar",
+  "@deviceSaveAndReconnect": {
+    "description": "Device connection address and route controls."
+  },
+  "deviceAddressUnknown": "Esperando detectar la IP",
+  "@deviceAddressUnknown": {
+    "description": "Device connection address and route controls."
   }
 }

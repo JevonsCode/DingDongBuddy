@@ -91,6 +91,15 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
     'pairingStatus': controller.pairingStatus.name,
     'canPair': controller.canPair,
     if (controller is LanComputerManagement) ...{
+      'localComputerAddresses':
+          (controller as LanComputerManagement).localComputerAddresses,
+      'computerAddresses': {
+        for (final device in controller.devices)
+          if (device.kind == LinkedDeviceKind.computer)
+            device.id: (controller as LanComputerManagement).computerAddressOf(
+              device.id,
+            ),
+      },
       'nearbyComputers': (controller as LanComputerManagement).nearbyComputers
           .map((c) => c.toJson())
           .toList(),
@@ -112,6 +121,17 @@ Future<Object?> handleDeviceLinkManagerHostCall(
   MethodCall call,
 ) async {
   switch (call.method) {
+    case 'device_link_lan_address_set':
+      final values = call.arguments! as Map;
+      try {
+        await (controller as LanComputerManagement).setComputerAddress(
+          values['id'] as String,
+          values['address'] as String,
+        );
+      } on FormatException {
+        return {'error': 'invalid_lan_address'};
+      }
+      return null;
     case 'device_link_lan_refresh':
       await (controller as LanComputerManagement).refreshComputers();
       return null;
@@ -190,6 +210,7 @@ Future<Object?> handleDeviceLinkManagerHostCall(
 }
 
 bool isDeviceLinkManagerHostMethod(String method) => const <String>{
+  'device_link_lan_address_set',
   'device_link_lan_refresh',
   'device_link_lan_begin',
   'device_link_lan_cancel',
@@ -234,6 +255,23 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
   bool _canPair = false;
   bool _disposed = false;
+  @override
+  List<String> localComputerAddresses = const [];
+  Map<String, String?> _computerAddresses = const {};
+  @override
+  String? computerAddressOf(String deviceId) => _computerAddresses[deviceId];
+  @override
+  Future<void> setComputerAddress(String deviceId, String address) async {
+    final response = await _parentController.invokeMethod<Object?>(
+      'device_link_lan_address_set',
+      {'id': deviceId, 'address': address},
+    );
+    if (response is Map && response['error'] == 'invalid_lan_address') {
+      throw const FormatException('Invalid LAN address');
+    }
+    await reload();
+  }
+
   @override
   List<NearbyComputer> nearbyComputers = const [];
   @override
@@ -304,6 +342,18 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
         .whereType<Map>()
         .map(NearbyComputer.fromJson)
         .toList();
+    localComputerAddresses = (json['localComputerAddresses'] as List? ?? [])
+        .whereType<String>()
+        .toList();
+    final addresses = json['computerAddresses'];
+    _computerAddresses = addresses is Map
+        ? {
+            for (final entry in addresses.entries)
+              if (entry.key is String &&
+                  (entry.value == null || entry.value is String))
+                entry.key as String: entry.value as String?,
+          }
+        : {};
     computerPairingCode = json['computerPairingCode'] as String?;
     computerDiscoveryError = json['computerDiscoveryError'] as String?;
     fileTransfers = (json['fileTransfers'] as List? ?? [])
