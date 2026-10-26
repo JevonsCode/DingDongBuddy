@@ -39,20 +39,23 @@ function card(voice) {
   const date=new Date(voice.created);const meta=node('p',`@${voice.author} · ${Number.isNaN(date.getTime())?'时间未知':date.toLocaleDateString('zh-CN')}`,'meta');
   const controls=node('div',undefined,'card-controls'),audioStatus=node('p','试听 / 下载前检查音频格式和时长。','audio-status');audioStatus.setAttribute('role','status');
   const audio=node('audio');audio.controls=true;audio.preload='none';audio.hidden=true;audio.addEventListener('error',()=>{audioStatus.textContent='文件已通过验证，但当前浏览器无法播放。你可以下载后在 DingDong 中导入。';});
-  let localUrl=null;
+  let localUrl=null, verifiedLabel='';
+  audio.addEventListener('play',()=>{document.querySelectorAll('audio').forEach(other=>{if(other!==audio)other.pause();});if(verifiedLabel)audioStatus.textContent=verifiedLabel+' · 正在播放';});
+  audio.addEventListener('ended',()=>{if(verifiedLabel)audioStatus.textContent=verifiedLabel+' · 播放完毕';});
+  audio.addEventListener('pause',()=>{if(verifiedLabel && !audio.ended && audio.currentTime>0)audioStatus.textContent=verifiedLabel+' · 已暂停';});
   async function audioAction(download) {
     const activeButtons=[...controls.querySelectorAll('button')];activeButtons.forEach(b=>b.disabled=true);audio.pause();audio.removeAttribute('src');audio.hidden=true;
     if(localUrl){URL.revokeObjectURL(localUrl);mediaUrls.delete(localUrl);localUrl=null;}
-    audioStatus.textContent='正在读取投稿和 WAV 文件…';
+    verifiedLabel='';audioStatus.textContent='正在读取投稿和 WAV 文件…';
     try {
       const result=await verifyAndDownload(voice.number,AbortSignal.timeout(60000));
       // Do not silently deliver audio after its title/description/license changed from the visible card.
       if(result.voice.title!==voice.title || result.voice.description!==voice.description || result.voice.audioUrl!==voice.audioUrl || result.voice.source!==voice.source || result.voice.license!==voice.license || result.voice.rights!==voice.rights)throw new Error('投稿内容已变更，请刷新列表后重试。');
       if (!article.isConnected) return; // A search/refresh removed this card while fetching.
       localUrl=URL.createObjectURL(new Blob([result.bytes],{type:'audio/wav'}));mediaUrls.add(localUrl);
-      audioStatus.textContent=`已验证 · ${result.wav.duration.toFixed(2)} 秒 · ${(result.bytes.length/1024).toFixed(0)} KiB`;
+      verifiedLabel=`已验证 · ${result.wav.duration.toFixed(2)} 秒 · ${(result.bytes.length/1024).toFixed(0)} KiB`;audioStatus.textContent=verifiedLabel;
       if(download){const a=document.createElement('a');a.href=localUrl;a.download=`dingdong-voice-${voice.number}.wav`;a.click();audioStatus.textContent+=' · 已准备下载';}
-      else {audio.src=localUrl;audio.hidden=false;try {await audio.play();audioStatus.textContent+=' · 正在播放';} catch {audioStatus.textContent+=' · 点击播放器播放';}}
+      else {audio.src=localUrl;audio.hidden=false;try {await audio.play();} catch {audioStatus.textContent+=' · 点击播放器播放';}}
     } catch(error){audioStatus.textContent=error.name==='TimeoutError'?'验证超时，请稍后重试。':error instanceof TypeError?'浏览器无法安全读取附件，可能是网络或跨域限制。未播放或下载未经验证的文件。':error.message;}
     finally {activeButtons.forEach(b=>b.disabled=false);}
   }
